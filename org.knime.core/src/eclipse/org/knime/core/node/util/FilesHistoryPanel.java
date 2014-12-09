@@ -212,7 +212,7 @@ public final class FilesHistoryPanel extends JPanel {
                         if (Files.isDirectory(path)) {
                             setText("Error: output location is a directory");
                             setForeground(ERROR);
-                        } else if (!Files.isWritable(path)) {
+                        } else if (!Files.isWritable(path) && !FileUtil.looksLikeUNC(path)) {
                             setText("Error: no write permission to output file");
                             setForeground(ERROR);
                         } else {
@@ -221,10 +221,10 @@ public final class FilesHistoryPanel extends JPanel {
                         }
                     } else {
                         Path parent = path.getParent();
-                        if (!Files.exists(parent)) {
+                        if ((parent == null) || !Files.exists(parent)) {
                             setText("Error: directory of output file does not exist");
                             setForeground(ERROR);
-                        } else if (!Files.isWritable(path.getParent())) {
+                        } else if (!Files.isWritable(path.getParent()) && !FileUtil.looksLikeUNC(url)) {
                             setText("Error: no write permissions in directory");
                             setForeground(ERROR);
                         }
@@ -257,12 +257,13 @@ public final class FilesHistoryPanel extends JPanel {
             try {
                 Path path = FileUtil.resolveToPath(url);
                 if (path != null) {
+                    // Java does not detect permission for UNC correctly
                     setText("");
                     if (Files.exists(path)) {
                         if (!Files.isDirectory(path)) {
                             setText("Error: output location is not a directory");
                             setForeground(ERROR);
-                        } else if (!Files.isWritable(path)) {
+                        } else if (!Files.isWritable(path) && !FileUtil.looksLikeUNC(path)) {
                             setText("Error: no write permission to output directory");
                             setForeground(ERROR);
                         }
@@ -309,11 +310,12 @@ public final class FilesHistoryPanel extends JPanel {
                 Path path = FileUtil.resolveToPath(url);
                 setText("");
                 if (path != null) {
+                    // Java does not detect permission for UNC correctly
                     if (Files.exists(path)) {
                         if (Files.isDirectory(path)) {
                             setText("Error: input location is a directory");
                             setForeground(ERROR);
-                        } else if (!Files.isReadable(path)) {
+                        } else if (!Files.isReadable(path) && !FileUtil.looksLikeUNC(path)) {
                             setText("Error: no read permission on input file");
                             setForeground(ERROR);
                         }
@@ -352,7 +354,7 @@ public final class FilesHistoryPanel extends JPanel {
                         if (!Files.isDirectory(path)) {
                             setText("Error: input location is not a directory");
                             setForeground(ERROR);
-                        } else if (!Files.isReadable(path)) {
+                        } else if (!Files.isReadable(path) && !FileUtil.looksLikeUNC(path)) {
                             setText("Error: no read permission on input directory");
                             setForeground(ERROR);
                         }
