@@ -1212,7 +1212,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         // if this node has an annotation add the first line to the label
         String customLabel = getDisplayCustomLine();
         if (!customLabel.isEmpty()) {
-            label += "(" + customLabel + ")";
+            label += " (" + customLabel + ")";
         }
         return label;
     }
