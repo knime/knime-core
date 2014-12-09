@@ -892,8 +892,8 @@
       <node
             category-path="/manipulation/column/column-convert+replace"
             after="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"
-            factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"
-            id="org.knime.base.node.preproc.domain.DomainNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.domain.dialog2.DomainNodeFactory"
+            id="org.knime.base.node.preproc.domain.dialog2.DomainNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             after="org.knime.base.node.preproc.domain.DomainNodeFactory"
@@ -1393,8 +1393,8 @@
       </node>
       <node
             category-path="/manipulation/column/binning"
-            factory-class="org.knime.base.node.preproc.autobinner2.AutoBinnerLearnNodeFactory"
-            id="org.knime.base.node.preproc.autobinner2.AutoBinnerLearnNodeFactory">
+            factory-class="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnNodeFactory"
+            id="org.knime.base.node.preproc.autobinner3.AutoBinnerLearnNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/binning"
@@ -1450,8 +1450,8 @@
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberNodeFactory"
-            id="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberNodeFactory">
+            factory-class="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory"
+            id="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
