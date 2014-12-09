@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core API
 Bundle-SymbolicName: org.knime.core;singleton:=true
-Bundle-Version: 2.11.0.qualifier
+Bundle-Version: 2.11.1.qualifier
 Bundle-ClassPath: knime-core.jar,
  lib/saxon-he-9.2.0.5.jar,
  lib/schemas.jar,
@@ -105,8 +105,7 @@ Export-Package: log4j,
  schemaorg_apache_xmlbeans.javaname.org.knime.node2012.UlDocument,
  schemaorg_apache_xmlbeans.javaname.org.knime.node2012.ViewDocument,
  schemaorg_apache_xmlbeans.javaname.org.knime.node2012.ViewsDocument,
- schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605,
- schemaorg_apache_xmlbeans.system.s972AF105C098827C11F7D0067818D011
+ schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605
 Require-Bundle: org.eclipse.osgi;bundle-version="[3.6.0,4.0.0)";visibility:=reexport,
  org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)";resolution:=optional;visibility:=reexport,
  org.apache.log4j;bundle-version="[1.2.15,1.3.0)",
