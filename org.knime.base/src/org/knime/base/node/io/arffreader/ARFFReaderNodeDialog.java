@@ -62,6 +62,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 import javax.swing.BorderFactory;
@@ -273,7 +274,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
                         errorText = "Cannot read file \"" + path + "\".";
                     }
                 }
-            } catch (IOException | URISyntaxException ex) {
+            } catch (IOException | URISyntaxException | InvalidPathException ex) {
                 // ignore
             }
         }

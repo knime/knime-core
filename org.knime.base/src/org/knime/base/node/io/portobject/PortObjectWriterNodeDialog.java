@@ -50,6 +50,7 @@ package org.knime.base.node.io.portobject;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 import javax.swing.JFileChooser;
@@ -94,7 +95,7 @@ public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
                         URL newUrl = FileUtil.toURL(selFile);
                         Path path = FileUtil.resolveToPath(newUrl);
                         overwriteOK.getModel().setEnabled(path != null);
-                    } catch (IOException | URISyntaxException ex) {
+                    } catch (IOException | URISyntaxException | InvalidPathException ex) {
                         // ignore
                     }
                 }

@@ -236,7 +236,7 @@ public final class FilesHistoryPanel extends JPanel {
                     setText("Info: remote output file will be overwritten if it exists");
                     setForeground(INFO);
                 }
-            } catch (IOException | URISyntaxException ex) {
+            } catch (IOException | URISyntaxException | InvalidPathException ex) {
                 // ignore it
             }
         }
@@ -277,7 +277,7 @@ public final class FilesHistoryPanel extends JPanel {
                     setText("Info: remote output directory will be overwritten if it exists");
                     setForeground(INFO);
                 }
-            } catch (IOException | URISyntaxException ex) {
+            } catch (IOException | URISyntaxException | InvalidPathException ex) {
                 // ignore it
             }
         }
@@ -325,7 +325,7 @@ public final class FilesHistoryPanel extends JPanel {
                     setText("Error: remote locations are not supported");
                     setForeground(ERROR);
                 }
-            } catch (IOException | URISyntaxException ex) {
+            } catch (IOException | URISyntaxException | InvalidPathException ex) {
                 // ignore it
             }
         }
@@ -364,7 +364,7 @@ public final class FilesHistoryPanel extends JPanel {
                     setText("Error: remote directories are not supported");
                     setForeground(ERROR);
                 }
-            } catch (IOException | URISyntaxException ex) {
+            } catch (IOException | URISyntaxException | InvalidPathException ex) {
                 // ignore it
             }
         }
