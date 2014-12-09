@@ -284,15 +284,16 @@ public class FixedWidthFRSettings {
      */
     public void checkSettings() throws InvalidSettingsException {
 
-        try {
-            BufferedFileReader f = createNewInputReader();
-            f.close();
-        } catch (IOException ioe) {
-            throw new InvalidSettingsException("Can't read from file '" + m_fileLocation + "'.");
-        } catch (NullPointerException npe) {
-            LOGGER.error("Filelocation is null.", npe);
+        if (m_fileLocation != null) {
+            try {
+                BufferedFileReader f = createNewInputReader();
+                f.close();
+            } catch (IOException ioe) {
+                throw new InvalidSettingsException("Can't read from file '" + m_fileLocation + "'.");
+            } catch (NullPointerException npe) {
+                LOGGER.error("Filelocation is null.", npe);
+            }
         }
-
         if (getNumberOfIncludedColumns() > getNumberOfColumns()) {
             throw new InvalidSettingsException(
                 "Looks like an internal error. More columns included than actual columns available.");
