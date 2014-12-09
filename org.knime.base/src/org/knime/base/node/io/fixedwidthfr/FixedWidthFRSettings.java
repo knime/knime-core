@@ -63,6 +63,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
@@ -283,6 +284,7 @@ public class FixedWidthFRSettings {
      * @throws InvalidSettingsException exception thrown if settings are invalid
      */
     public void checkSettings() throws InvalidSettingsException {
+        CheckUtils.checkSetting(m_fileLocation != null, "No location set");
 
         try {
             BufferedFileReader f = createNewInputReader();
