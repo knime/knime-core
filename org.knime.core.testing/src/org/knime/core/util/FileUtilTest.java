@@ -48,7 +48,6 @@
  */
 package org.knime.core.util;
 
-import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -197,7 +196,7 @@ public class FileUtilTest {
     public void testLooksLikeUNC() throws Exception {
         URL url = new URL("file://server/path/on%20server");
         assertThat("UNC URL '" + url + "' not recognized", FileUtil.looksLikeUNC(url),
-            allOf(is(true), is(Platform.OS_WIN32.equals(Platform.getOS()))));
+            is(Platform.OS_WIN32.equals(Platform.getOS())));
 
         url = new URL("file:/server/path/on%20server");
         assertThat("Non-UNC URL '" + url + "' not recognized", FileUtil.looksLikeUNC(url), is(false));
@@ -207,7 +206,7 @@ public class FileUtilTest {
 
         Path path = Paths.get("\\\\server\\path");
         assertThat("UNC path '" + path + "' not recognized", FileUtil.looksLikeUNC(path),
-            allOf(is(true), is(Platform.OS_WIN32.equals(Platform.getOS()))));
+            is(Platform.OS_WIN32.equals(Platform.getOS())));
 
         path = Paths.get("\\local\\path");
         assertThat("Non-UNC path '" + path + "' not recognized", FileUtil.looksLikeUNC(path), is(false));
