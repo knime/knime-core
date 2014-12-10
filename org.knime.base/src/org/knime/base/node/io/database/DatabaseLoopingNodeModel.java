@@ -136,7 +136,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
             throw new InvalidSettingsException("Column '" + column + "' not found in input data.");
         }
 
-        if ((inSpecs.length > 1) && (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec)) {
+        if (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec) {
             DatabaseConnectionSettings connSettings =
                 ((DatabaseConnectionPortObjectSpec)inSpecs[1]).getConnectionSettings(getCredentialsProvider());
             m_settings.setValidateQuery(connSettings.getRetrieveMetadataInConfigure());
