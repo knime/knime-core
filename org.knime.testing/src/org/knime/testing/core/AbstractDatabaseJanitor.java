@@ -55,6 +55,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -169,9 +170,14 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
             mapField.setAccessible(true);
             @SuppressWarnings("unchecked")
             Map<?, Connection> connectionMap = (Map<?, Connection>)mapField.get(null);
-            for (Connection conn : connectionMap.values()) {
-                if (!conn.isClosed() && conn.getMetaData().getURL().equals(getJDBCUrl(m_dbName))) {
-                    conn.close();
+            Iterator<Connection> it = connectionMap.values().iterator();
+            while (it.hasNext()) {
+                Connection conn = it.next();
+                if (conn.getMetaData().getURL().equals(getJDBCUrl(m_dbName))) {
+                    if (!conn.isClosed()) {
+                        conn.close();
+                    }
+                    it.remove();
                 }
             }
 
