@@ -54,7 +54,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +76,8 @@ import org.knime.core.node.workflow.FlowVariable;
  */
 public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
     private static final SecureRandom RAND = new SecureRandom();
+
+    private final DateFormat m_dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
 
     private final String m_driverName;
 
@@ -108,7 +113,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
         m_port = port;
         m_username = username;
         m_password = password;
-        m_dbName = "knime_testing_" + System.currentTimeMillis() + "_" + Long.toHexString(RAND.nextLong());
+        m_dbName = "knime_testing_" + m_dateFormat.format(new Date()) + "_" + Long.toHexString(RAND.nextLong());
     }
 
     /**
@@ -173,7 +178,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
             Iterator<Connection> it = connectionMap.values().iterator();
             while (it.hasNext()) {
                 Connection conn = it.next();
-                if (conn.getMetaData().getURL().equals(getJDBCUrl(m_dbName))) {
+                if (conn.getMetaData().getURL().contains(m_dbName)) {
                     if (!conn.isClosed()) {
                         conn.close();
                     }
@@ -184,7 +189,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
             dropDatabase(m_initialDatabase, m_username, m_password, m_dbName);
         }
 
-        m_dbName = "knime_testing_" + System.currentTimeMillis() + "_" + Long.toHexString(RAND.nextLong());
+        m_dbName = "knime_testing_" + m_dateFormat.format(new Date()) + "_" + Long.toHexString(RAND.nextLong());
     }
 
     /**
@@ -196,8 +201,8 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      * @param dbName name of the new database
      * @throws SQLException if a database error occurs
      */
-    protected void createDatabase(final String initialDatabase, final String username, final String password, final String dbName)
-        throws SQLException {
+    protected void createDatabase(final String initialDatabase, final String username, final String password,
+        final String dbName) throws SQLException {
         try (Connection conn = DriverManager.getConnection(getJDBCUrl(initialDatabase), username, password)) {
             String sql = "CREATE DATABASE " + dbName;
             try (Statement stmt = conn.createStatement()) {
@@ -216,8 +221,8 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      * @param dbName name of the database to drop
      * @throws SQLException if a database error occurs
      */
-    protected void dropDatabase(final String initialDatabase, final String username, final String password, final String dbName)
-        throws SQLException {
+    protected void dropDatabase(final String initialDatabase, final String username, final String password,
+        final String dbName) throws SQLException {
         try (Connection conn = DriverManager.getConnection(getJDBCUrl(initialDatabase), username, password)) {
             String sql = "DROP DATABASE " + dbName;
             try (Statement stmt = conn.createStatement()) {
