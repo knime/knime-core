@@ -45,9 +45,10 @@
 		</option>
 		
         <option name="Linear">
-        The missing values are replaced with an linear interpolation between the last and next found non missing cell.
-         Missings at the beginning of the table are assigned the first non missing and missings 
-        at the end of the table are assigned the last non missing cell.	
+        The missing values are replaced with a <a href="http://en.wikipedia.org/wiki/Linear_interpolation">
+        linear interpolation</a> between the most recent and next observed non 
+        missing cells. On either end of the table, leading missing values are assigned the first non missing value and
+         trailing missing values are assigned the last seen value.	
 			This option is available for all Int, Double, Long and Date/Time columns.
 		</option>
     </fullDescription>
