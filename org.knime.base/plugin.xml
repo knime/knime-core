@@ -1699,6 +1699,12 @@
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"
             id="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"/>
+      <node
+            category-path="/mining/miscClass"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory"
+            id="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory">
+      </node>
    </extension>
    
       
