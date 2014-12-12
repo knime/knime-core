@@ -106,8 +106,8 @@ public class RemoveDiacriticManipulator implements Manipulator {
     @Override
     public String getDescription() {
         return "Removes all diacritics in a string. " + "<br/><br/>" + "<strong>Examples:</strong>" + "<br/>"
-            + "<table>" + "<tr><td>removeDiacritic(\"�\")</td>" + "<td>=&nbsp;\"a\"</td></tr>"
-            + "<tr><td>removeDiacritic(\"�\")</td>" + "<td>=&nbsp;\"A\"</td></tr>" + "</table>";
+            + "<table>" + "<tr><td>removeDiacritic(\"ä\")</td>" + "<td>=&nbsp;\"a\"</td></tr>"
+            + "<tr><td>removeDiacritic(\"ä\")</td>" + "<td>=&nbsp;\"A\"</td></tr>" + "</table>";
     }
 
     /**
