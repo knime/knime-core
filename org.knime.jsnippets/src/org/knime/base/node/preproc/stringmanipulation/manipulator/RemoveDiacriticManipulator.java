@@ -52,7 +52,7 @@ import java.text.Normalizer;
 
 /**
  * This manipulator removes all diacritics from a string. A diacritic is a glyph added to a letter, or basic glyph. (Ex.
- * '�' ---> 'a')
+ * 'ä' ---> 'a')
  *
  * @author Tim-Oliver Buchholz
  * @since 2.11
@@ -64,6 +64,9 @@ public class RemoveDiacriticManipulator implements Manipulator {
      * @return string without diacritics (never null)
      */
     public static String removeDiacritic(final String str) {
+        if (str == null) {
+            return null;
+        }
         // normalize the input string and remove all letters which are part of the diacritic.
         return Normalizer.normalize(str, Normalizer.Form.NFKD).replaceAll("\\p{M}", "");
     }
@@ -106,8 +109,8 @@ public class RemoveDiacriticManipulator implements Manipulator {
     @Override
     public String getDescription() {
         return "Removes all diacritics in a string. " + "<br/><br/>" + "<strong>Examples:</strong>" + "<br/>"
-            + "<table>" + "<tr><td>removeDiacritic(\"ä\")</td>" + "<td>=&nbsp;\"a\"</td></tr>"
-            + "<tr><td>removeDiacritic(\"ä\")</td>" + "<td>=&nbsp;\"A\"</td></tr>" + "</table>";
+            + "<table>" + "<tr><td>removeDiacritic(\"äçñáÖ\")</td>" + "<td>=&nbsp;\"acnaO\"</td></tr>"
+            + "<tr><td>removeDiacritic(null)</td>" + "<td>=&nbsp;null</td></tr>" + "</table>";
     }
 
     /**
