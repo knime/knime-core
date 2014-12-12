@@ -66,6 +66,7 @@ import org.dmg.pmml.MiningFieldDocument.MiningField;
 import org.dmg.pmml.MiningModelDocument.MiningModel;
 import org.dmg.pmml.MiningSchemaDocument.MiningSchema;
 import org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel;
+import org.dmg.pmml.NearestNeighborModelDocument.NearestNeighborModel;
 import org.dmg.pmml.NeuralNetworkDocument.NeuralNetwork;
 import org.dmg.pmml.PMMLDocument;
 import org.dmg.pmml.RegressionModelDocument.RegressionModel;
@@ -252,6 +253,8 @@ public class PMMLMiningSchemaTranslator {
             ((TimeSeriesModel)model).setMiningSchema(miningSchema);
         } else if (TreeModel.type.equals(type)) {
             ((TreeModel)model).setMiningSchema(miningSchema);
+        } else if (NearestNeighborModel.type.equals(type)) {
+            ((NearestNeighborModel)model).setMiningSchema(miningSchema);
         }
     }
 
