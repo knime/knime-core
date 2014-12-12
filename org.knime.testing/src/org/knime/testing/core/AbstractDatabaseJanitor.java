@@ -173,7 +173,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
             Iterator<Connection> it = connectionMap.values().iterator();
             while (it.hasNext()) {
                 Connection conn = it.next();
-                if (conn.getMetaData().getURL().equals(getJDBCUrl(m_dbName))) {
+                if (conn.getMetaData().getURL().contains(m_dbName)) {
                     if (!conn.isClosed()) {
                         conn.close();
                     }
@@ -196,8 +196,8 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      * @param dbName name of the new database
      * @throws SQLException if a database error occurs
      */
-    protected void createDatabase(final String initialDatabase, final String username, final String password, final String dbName)
-        throws SQLException {
+    protected void createDatabase(final String initialDatabase, final String username, final String password,
+        final String dbName) throws SQLException {
         try (Connection conn = DriverManager.getConnection(getJDBCUrl(initialDatabase), username, password)) {
             String sql = "CREATE DATABASE " + dbName;
             try (Statement stmt = conn.createStatement()) {
@@ -216,8 +216,8 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      * @param dbName name of the database to drop
      * @throws SQLException if a database error occurs
      */
-    protected void dropDatabase(final String initialDatabase, final String username, final String password, final String dbName)
-        throws SQLException {
+    protected void dropDatabase(final String initialDatabase, final String username, final String password,
+        final String dbName) throws SQLException {
         try (Connection conn = DriverManager.getConnection(getJDBCUrl(initialDatabase), username, password)) {
             String sql = "DROP DATABASE " + dbName;
             try (Statement stmt = conn.createStatement()) {
