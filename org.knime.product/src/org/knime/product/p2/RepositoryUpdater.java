@@ -174,7 +174,7 @@ public class RepositoryUpdater implements ProvisioningListener {
                 } else if ("add".equals(parts[1]) && !knowRepositories.contains(uri)
                     && !preferences.getBoolean(uri + "-added", false)) {
                     repoManager.addRepository(uri);
-                    repoManager.setEnabled(uri, (parts.length > 2) && "enable".equals(parts[2]));
+                    repoManager.setEnabled(uri, (parts.length > 2) && "enabled".equals(parts[2]));
                     preferences.putBoolean(uri + "-added", true);
                 }
             }
