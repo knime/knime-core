@@ -80,6 +80,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.output.NullOutputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -1059,21 +1060,54 @@ public final class FileUtil {
      * @since 2.11
      */
     public static Path resolveToPath(final URL url) throws IOException, URISyntaxException {
-        URL resolvedUrl = url.openConnection().getURL();
-
-        if (resolvedUrl.getProtocol().equalsIgnoreCase("file")) {
-            String pathString = resolvedUrl.getPath();
-            if (pathString.contains(" ")) {
-                // fix non-encoded URL path
-                URL fixedUrl = new URL(url.toString().replace(" ", "%20"));
-                return Paths.get(fixedUrl.toURI());
-            } else {
-                return Paths.get(resolvedUrl.toURI());
-            }
+        if (looksLikeUNC(url)) {
+            return Paths.get(url.toURI());
         } else {
-            return null;
+            URL resolvedUrl = url.openConnection().getURL();
+
+            if (resolvedUrl.getProtocol().equalsIgnoreCase("file")) {
+                String pathString = resolvedUrl.getPath();
+                if (pathString.contains(" ")) {
+                    // fix non-encoded URL path
+                    URL fixedUrl = new URL(url.toString().replace(" ", "%20"));
+                    return Paths.get(fixedUrl.toURI());
+                } else {
+                    return Paths.get(resolvedUrl.toURI());
+                }
+            } else {
+                return null;
+            }
         }
     }
+
+    /**
+     * Returns whether the given URL is very likely a UNC URL. UNCs are only supported by Windows, so on all other
+     * OS this will always return <code>false</code>.
+     *
+     * @param url an URL
+     * @return <code>true</code> if it's likely a UNC URL, <code>false</code> otherwise
+     * @since 2.11
+     */
+    public static boolean looksLikeUNC(final URL url) {
+        // this looks like an UNC path, a real file URL does not have a host
+        // Java does not handle UNC URLs correctly, see bug #5864
+        return Platform.OS_WIN32.equals(Platform.getOS()) && "file".equalsIgnoreCase(url.getProtocol())
+            && !StringUtils.isEmpty(url.getHost());
+    }
+
+    /**
+     * Returns whether the given path is very likely a UNC path. UNCs are only supported by Windows, so on all other
+     * OS this will always return <code>false</code>.
+     *
+     * @param path a path
+     * @return <code>true</code> if it's likely a UNC path, <code>false</code> otherwise
+     * @since 2.11
+     */
+    public static boolean looksLikeUNC(final Path path) {
+        // Java does not handle UNC URLs correctly, see bug #5864
+        return Platform.OS_WIN32.equals(Platform.getOS()) && path.toString().startsWith("\\\\");
+    }
+
 
     /**
      * Tries to convert the given path into a URL. Either the path is already a valid URL or it denotes a local file

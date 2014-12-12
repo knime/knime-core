@@ -112,6 +112,7 @@ public class KNIMEApplication implements IApplication {
                 shell.dispose();
             }
             parseApplicationArguments(appContext);
+            RepositoryUpdater.INSTANCE.addDefaultRepositories();
             RepositoryUpdater.INSTANCE.updateArtifactRepositoryURLs();
 
             int returnCode;

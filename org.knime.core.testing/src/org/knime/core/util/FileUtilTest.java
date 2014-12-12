@@ -55,6 +55,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.eclipse.core.runtime.Platform;
 import org.junit.Test;
@@ -163,8 +165,8 @@ public class FileUtilTest {
     @Test
     public void testResolveToPathWindows() throws Exception {
         assumeThat(Platform.getOS(), is(Platform.OS_WIN32));
-        URL url = new URL("file:////server/path/on/server");
-        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("\\\\server\\path\\on\\server"));
+        URL url = new URL("file://server/path/on%20server"); // UNC path
+        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("\\\\server\\path\\on server"));
 
         url = new URL("file:/C:/tmp/with%20space");
         assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:\\tmp\\with space"));
@@ -183,5 +185,30 @@ public class FileUtilTest {
 
         url = new URL("http://www.knime.org");
         assertThat("Unexpected path", FileUtil.resolveToPath(url), is(nullValue()));
+    }
+
+    /**
+     * Test for {@link FileUtil#looksLikeUNC(Path)} and {@link FileUtil#looksLikeUNC(URL)}.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testLooksLikeUNC() throws Exception {
+        URL url = new URL("file://server/path/on%20server");
+        assertThat("UNC URL '" + url + "' not recognized", FileUtil.looksLikeUNC(url),
+            is(Platform.OS_WIN32.equals(Platform.getOS())));
+
+        url = new URL("file:/server/path/on%20server");
+        assertThat("Non-UNC URL '" + url + "' not recognized", FileUtil.looksLikeUNC(url), is(false));
+
+        url = new URL("http://server/path/on%20server");
+        assertThat("Non-UNC URL '" + url + "' not recognized", FileUtil.looksLikeUNC(url), is(false));
+
+        Path path = Paths.get("\\\\server\\path");
+        assertThat("UNC path '" + path + "' not recognized", FileUtil.looksLikeUNC(path),
+            is(Platform.OS_WIN32.equals(Platform.getOS())));
+
+        path = Paths.get("\\local\\path");
+        assertThat("Non-UNC path '" + path + "' not recognized", FileUtil.looksLikeUNC(path), is(false));
     }
 }

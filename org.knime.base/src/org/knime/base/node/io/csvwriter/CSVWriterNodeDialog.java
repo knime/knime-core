@@ -52,6 +52,7 @@ import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 import javax.swing.BorderFactory;
@@ -139,7 +140,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                         m_overwritePolicyAppendButton.setEnabled(m_isLocalDestination);
                         m_overwritePolicyOverwriteButton.setEnabled(m_isLocalDestination);
                         checkCheckerState();
-                    } catch (IOException | URISyntaxException ex) {
+                    } catch (IOException | URISyntaxException | InvalidPathException ex) {
                         // ignore
                     }
                 }
