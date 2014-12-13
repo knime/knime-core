@@ -7,5 +7,27 @@
                 <message_argument value="org.knime.core_2.11.0"/>
             </message_arguments>
         </filter>
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605.TypeSystemHolder"/>
+                <message_argument value="org.knime.core_2.12.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/FileUtil.java" type="org.knime.core.util.FileUtil">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.11"/>
+                <message_argument value="2.12"/>
+                <message_argument value="looksLikeUNC(Path)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.11"/>
+                <message_argument value="2.12"/>
+                <message_argument value="looksLikeUNC(URL)"/>
+            </message_arguments>
+        </filter>
     </resource>
 </component>
