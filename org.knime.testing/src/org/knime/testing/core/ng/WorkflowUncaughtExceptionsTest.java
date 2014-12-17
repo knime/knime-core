@@ -47,6 +47,8 @@
  */
 package org.knime.testing.core.ng;
 
+import javax.swing.SwingUtilities;
+
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
@@ -94,6 +96,13 @@ class WorkflowUncaughtExceptionsTest extends WorkflowTest {
     public void run(final TestResult result) {
         result.startTest(this);
         try {
+            assert !SwingUtilities.isEventDispatchThread() : "This part must not be executed in the AWT thread";
+            SwingUtilities.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    // do nothing, just wait for all previous events to be processed (e.g. close dialog and views)
+                }
+            });
             synchronized (m_context.getUncaughtExceptions()) {
                 for (Pair<Thread, Throwable> p : m_context.getUncaughtExceptions()) {
                     AssertionFailedError error =
