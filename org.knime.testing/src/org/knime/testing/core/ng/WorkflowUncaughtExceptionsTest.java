@@ -54,6 +54,7 @@ import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.util.Pair;
 
 /**
@@ -82,8 +83,13 @@ class WorkflowUncaughtExceptionsTest extends WorkflowTest {
             public void uncaughtException(final Thread t, final Throwable e) {
                 synchronized (m_context.getUncaughtExceptions()) {
                     m_context.getUncaughtExceptions().add(new Pair<Thread, Throwable>(t, e));
-                    LOGGER.debug("Uncaught " + e.getClass().getName() + " in thread " + t.getName() + ": "
-                                         + e.getMessage(), e);
+
+                    String msg = "Uncaught " + e.getClass().getName() + " in thread " + t.getName();
+                    if (NodeContext.getContext() != null) {
+                        msg += " with node context '" + NodeContext.getContext() + "'";
+                    }
+                    msg += ": " + e.getMessage();
+                    LOGGER.debug(msg, e);
                 }
             }
         });
