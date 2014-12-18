@@ -142,6 +142,7 @@ public class QuickNodeInsertionHandler extends AbstractHandler {
                                 m_text.setFocus();
                             }
                         });
+                        m_text.selectAll();
                     } else if (IDialogConstants.CANCEL_ID == buttonId) {
                         cancelPressed();
                     }
