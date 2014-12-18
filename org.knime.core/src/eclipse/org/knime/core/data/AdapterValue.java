@@ -86,6 +86,7 @@ public interface AdapterValue extends DataValue {
      *
      * @param valueClass a value class
      * @return a missing value or <code>null</code>
+     * @throws IllegalArgumentException if this value is not adaptable to the given value class
      */
     public <V extends DataValue> MissingValue getAdapterError(final Class<V> valueClass);
 
