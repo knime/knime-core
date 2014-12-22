@@ -116,7 +116,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends NodeView<TreeEnsem
 
     private JMenu m_hiLiteMenu;
 
-    private AtomicReference<UpdateTreeWorker> m_updateWorkerRef;
+    private final AtomicReference<UpdateTreeWorker> m_updateWorkerRef;
 
     private final ChangeListener m_spinnerChangeListener;
 
@@ -580,7 +580,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends NodeView<TreeEnsem
         /** {@inheritDoc} */
         @Override
         protected void doneWithContext() {
-            if (!isCancelled()) {
+            if (!isCancelled() && isOpen()) {
                 DecisionTreeNode root = null;
                 try {
                     root = get();
