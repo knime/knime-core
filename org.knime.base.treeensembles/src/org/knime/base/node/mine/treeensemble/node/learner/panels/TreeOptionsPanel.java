@@ -76,7 +76,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeOptionsPanel extends JPanel {
@@ -234,7 +234,12 @@ public final class TreeOptionsPanel extends JPanel {
                 nrNumericCols += 1;
             }
         }
-        boolean hasOrdinaryColumnsInInput = nrNominalCols > 1 || nrNumericCols > 0;
+        boolean hasOrdinaryColumnsInInput;
+        if (cfg.isRegression()) {
+            hasOrdinaryColumnsInInput = nrNominalCols > 0 || nrNumericCols > 1;
+        } else {
+            hasOrdinaryColumnsInInput = nrNominalCols > 1 || nrNumericCols > 0;
+        }
         m_splitCriterionsBox.setSelectedItem(cfg.getSplitCriterion());
         m_useAverageSplitPointsChecker.setSelected(cfg.isUseAverageSplitPoints());
         int maxLevel = cfg.getMaxLevels();

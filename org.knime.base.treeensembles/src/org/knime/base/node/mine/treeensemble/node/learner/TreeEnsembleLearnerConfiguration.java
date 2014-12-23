@@ -85,7 +85,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeEnsembleLearnerConfiguration {
@@ -278,7 +278,7 @@ public class TreeEnsembleLearnerConfiguration {
     /**
      * The maximum tree depth (root has level 1) or {@link #MAX_LEVEL_INFINITE} if complete tree is to be built. Value
      * is strictly larger than 0 (or {@link #MAX_LEVEL_INFINITE}).
-     * 
+     *
      * @return tree depth as described above
      */
     public int getMaxLevels() {
@@ -303,7 +303,7 @@ public class TreeEnsembleLearnerConfiguration {
      * The minimum number of objects in a node so that a split is attempted. Not evaluated if value is
      * {@link #MIN_NODE_SIZE_UNDEFINED} AND {@link #getMinChildSize()} is unset; otherwise it needs to be twice as
      * large.
-     * 
+     *
      * @return the minNodeSize
      */
     public int getMinNodeSize() {
@@ -312,7 +312,7 @@ public class TreeEnsembleLearnerConfiguration {
 
     /**
      * The minimum objects in either child node, at most 1/2 {@link #getMinNodeSize()}.
-     * 
+     *
      * @return the minChildSize value or {@link #MIN_CHILD_SIZE_UNDEFINED}.
      */
     public int getMinChildSize() {
@@ -321,7 +321,7 @@ public class TreeEnsembleLearnerConfiguration {
 
     /**
      * See size values for minimum split and child node.
-     * 
+     *
      * @param minNodeSize the minChildSize to set (or {@link #MIN_CHILD_SIZE_UNDEFINED}).
      * @param minChildSize the minChildSize to set (or {@link #MIN_CHILD_SIZE_UNDEFINED}).
      * @throws InvalidSettingsException if either value is invalid or min child size is larger than minnodesize/2
@@ -353,7 +353,7 @@ public class TreeEnsembleLearnerConfiguration {
     /**
      * The fraction of data that is used to train a model (each model in the bag gets a different (overlapping) portion
      * of the data).
-     * 
+     *
      * @return The above value. It must be 0 &lt; value &lt;= 1.
      */
     public double getDataFractionPerTree() {
@@ -412,7 +412,7 @@ public class TreeEnsembleLearnerConfiguration {
      * The fraction of number of columns/attributes that is used to train a model (each model in the bag learns on a
      * different (overlapping) portion of the attributes). This value is only of relevance if
      * {@link #getColumnSamplingMode()} is {@link ColumnSamplingMode#Linear}.
-     * 
+     *
      * @return The above value. It must be 0 &lt; value &lt;= 1.
      */
     public double getColumnFractionLinearValue() {
@@ -437,7 +437,7 @@ public class TreeEnsembleLearnerConfiguration {
      * variable). If this number is larger than the number of appropriate columns/attributes, all atts will be used.
      * <p>
      * Only relevant if {@link #getColumnSamplingMode()} is {@link ColumnSamplingMode#Absolute}.
-     * 
+     *
      * @return number of columns (strictly larger 0)
      */
     public int getColumnAbsoluteValue() {
@@ -446,7 +446,7 @@ public class TreeEnsembleLearnerConfiguration {
 
     /**
      * See {@link #getColumnAbsoluteValue()}.
-     * 
+     *
      * @param columnAbsoluteValue the value
      * @throws InvalidSettingsException If out of bounds (see get method).
      */
@@ -569,10 +569,10 @@ public class TreeEnsembleLearnerConfiguration {
     /**
      * Whether the model should save the target distribution in each tree node (when classification). This is very
      * memory consuming and only useful when exporting to PMML or when viewing at distributions in the tree view.
-     * 
+     *
      * <p>
      * Only applies for classification.
-     * 
+     *
      * @return that property.
      */
     public boolean isSaveTargetDistributionInNodes() {
@@ -581,7 +581,7 @@ public class TreeEnsembleLearnerConfiguration {
 
     /**
      * Setter for {@link #isSaveTargetDistributionInNodes()}.
-     * 
+     *
      * @param value The value
      */
     public void setSaveTargetDistributionInNodes(final boolean value) {

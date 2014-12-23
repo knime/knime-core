@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.mine.treeensemble.data;
 
+import org.apache.commons.math.util.MathUtils;
 import org.knime.base.node.mine.treeensemble.learner.IImpurity;
 import org.knime.base.node.mine.treeensemble.learner.NumericSplitCandidate;
 import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
@@ -57,7 +58,7 @@ import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerCon
 import org.knime.base.node.util.DoubleFormat;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeNumericColumnData extends TreeAttributeColumnData {
@@ -252,8 +253,7 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
     }
 
     private static boolean areApproximatelyEqual(final double d1, final double d2) {
-        double quot = d1 / d2;
-        return Math.abs(quot - 1.0) < 0.001;
+        return MathUtils.equals(d1, d2, 0.0001);
     }
 
     private static double getCenter(final double left, final double right) {

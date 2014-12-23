@@ -405,7 +405,11 @@ final class DBGroupByNodeModel2 extends DBNodeModel {
         final List<DataColumnSpec> colSpecs = new ArrayList<>();
         // Add all group by columns
         for (String col : m_groupByCols.getIncludeList()) {
-            colSpecs.add(inSpec.getColumnSpec(col));
+            final DataColumnSpec columnSpec = inSpec.getColumnSpec(col);
+            if (columnSpec == null) {
+                throw new InvalidSettingsException("Group column '" + col + "' not found in input table");
+            }
+            colSpecs.add(columnSpec);
         }
         if (m_addCountStar.getBooleanValue()) {
             colSpecs.add(new DataColumnSpecCreator(manipulator.getValidColumnName(m_countStarColName.getStringValue()),
