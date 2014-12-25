@@ -329,7 +329,7 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
         m_ensembleModelPortObject = (TreeEnsembleModelPortObject)portObjects[0];
     }
 
-    /** @return the ensembleModel */
+    /** {@inheritDoc} */
     @Override
     public TreeEnsembleModel getEnsembleModel() {
         if (m_oldStyleEnsembleModel_deprecated != null) {
@@ -338,13 +338,13 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
         return m_ensembleModelPortObject == null ? null : m_ensembleModelPortObject.getEnsembleModel();
     }
 
-    /** @return the hiliteRowSample */
+    /** {@inheritDoc} */
     @Override
     public DataTable getHiliteRowSample() {
         return m_hiliteRowSample;
     }
 
-    /** @return the viewMessage */
+    /** {@inheritDoc} */
     @Override
     public String getViewMessage() {
         return m_viewMessage;

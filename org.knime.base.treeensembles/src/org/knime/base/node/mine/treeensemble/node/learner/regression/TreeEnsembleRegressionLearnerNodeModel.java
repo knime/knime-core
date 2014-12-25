@@ -313,9 +313,7 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements 
         m_ensembleModelPortObject = (TreeEnsembleModelPortObject)portObjects[0];
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public TreeEnsembleModel getEnsembleModel() {
         if (m_oldStyleEnsembleModel_deprecated != null) {
@@ -324,17 +322,13 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements 
         return m_ensembleModelPortObject == null ? null : m_ensembleModelPortObject.getEnsembleModel();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public DataTable getHiliteRowSample() {
         return m_hiliteRowSample;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public String getViewMessage() {
         return m_viewMessage;
