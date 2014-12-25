@@ -65,6 +65,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeView.ViewContentProvider;
 import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictor;
 import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTable;
@@ -89,7 +90,7 @@ import org.knime.core.node.port.PortType;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements PortObjectHolder {
+final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements PortObjectHolder, ViewContentProvider {
 
     /** The file name where to write the internals to. */
     private static final String INTERNAL_DATASAMPLE_FILE = "datasample.zip";
@@ -312,7 +313,10 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements 
         m_ensembleModelPortObject = (TreeEnsembleModelPortObject)portObjects[0];
     }
 
-    /** @return the ensembleModel */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public TreeEnsembleModel getEnsembleModel() {
         if (m_oldStyleEnsembleModel_deprecated != null) {
             return m_oldStyleEnsembleModel_deprecated;
@@ -320,12 +324,18 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel implements 
         return m_ensembleModelPortObject == null ? null : m_ensembleModelPortObject.getEnsembleModel();
     }
 
-    /** @return the hiliteRowSample */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public DataTable getHiliteRowSample() {
         return m_hiliteRowSample;
     }
 
-    /** @return the viewMessage */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getViewMessage() {
         return m_viewMessage;
     }

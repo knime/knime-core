@@ -47,12 +47,13 @@
  */
 package org.knime.base.node.mine.treeensemble.node.learner.regression;
 
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleRegressionLearnerNodeFactory extends NodeFactory<TreeEnsembleRegressionLearnerNodeModel> {
@@ -73,7 +74,7 @@ public final class TreeEnsembleRegressionLearnerNodeFactory extends NodeFactory<
     @Override
     public NodeView<TreeEnsembleRegressionLearnerNodeModel> createNodeView(final int viewIndex,
         final TreeEnsembleRegressionLearnerNodeModel nodeModel) {
-        return new TreeEnsembleRegressionLearnerNodeView(nodeModel);
+        return new TreeEnsembleLearnerNodeView<TreeEnsembleRegressionLearnerNodeModel>(nodeModel);
     }
 
     /** {@inheritDoc} */

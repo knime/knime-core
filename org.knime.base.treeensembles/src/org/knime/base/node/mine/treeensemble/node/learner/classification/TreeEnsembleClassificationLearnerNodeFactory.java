@@ -47,12 +47,13 @@
  */
 package org.knime.base.node.mine.treeensemble.node.learner.classification;
 
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeEnsembleClassificationLearnerNodeFactory extends
@@ -74,7 +75,7 @@ public class TreeEnsembleClassificationLearnerNodeFactory extends
     @Override
     public NodeView<TreeEnsembleClassificationLearnerNodeModel> createNodeView(final int viewIndex,
         final TreeEnsembleClassificationLearnerNodeModel nodeModel) {
-        return new TreeEnsembleClassificationLearnerNodeView(nodeModel);
+        return new TreeEnsembleLearnerNodeView<TreeEnsembleClassificationLearnerNodeModel>(nodeModel);
     }
 
     /** {@inheritDoc} */

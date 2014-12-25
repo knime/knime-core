@@ -66,6 +66,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeView.ViewContentProvider;
 import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictor;
 import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataCell;
@@ -91,7 +92,8 @@ import org.knime.core.node.port.PortType;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel implements PortObjectHolder {
+final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
+    implements PortObjectHolder, ViewContentProvider {
 
     /** The file name where to write the internals to. */
     private static final String INTERNAL_DATASAMPLE_FILE = "datasample.zip";
@@ -328,6 +330,7 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel impleme
     }
 
     /** @return the ensembleModel */
+    @Override
     public TreeEnsembleModel getEnsembleModel() {
         if (m_oldStyleEnsembleModel_deprecated != null) {
             return m_oldStyleEnsembleModel_deprecated;
@@ -336,11 +339,13 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel impleme
     }
 
     /** @return the hiliteRowSample */
+    @Override
     public DataTable getHiliteRowSample() {
         return m_hiliteRowSample;
     }
 
     /** @return the viewMessage */
+    @Override
     public String getViewMessage() {
         return m_viewMessage;
     }

@@ -45,7 +45,7 @@
  * History
  *   10.11.2011 (hofer): created
  */
-package org.knime.base.node.mine.treeensemble.node.learner.regression;
+package org.knime.base.node.mine.treeensemble.node.learner;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -90,10 +90,12 @@ import org.knime.base.node.mine.decisiontree2.view.DecTreeGraphView;
 import org.knime.base.node.mine.decisiontree2.view.graph.CollapseBranchAction;
 import org.knime.base.node.mine.decisiontree2.view.graph.ExpandBranchAction;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModel;
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeView.ViewContentProvider;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
@@ -102,15 +104,15 @@ import org.knime.core.node.util.ViewUtils;
 import org.knime.core.util.SwingWorkerWithContext;
 
 /**
- * The view of the Decision Tree to Image node.
+ * View to tree ensemble learner nodes (both classification and regression).
  *
- * @author Heiko Hofer
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class TreeEnsembleRegressionLearnerNodeView extends NodeView<TreeEnsembleRegressionLearnerNodeModel> implements
-    HiLiteListener {
+public final class TreeEnsembleLearnerNodeView<MODEL extends NodeModel & ViewContentProvider>
+    extends NodeView<MODEL> implements HiLiteListener {
 
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(TreeEnsembleRegressionLearnerNodeView.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(TreeEnsembleLearnerNodeView.class);
 
     private HiLiteHandler m_hiLiteHdl;
 
@@ -135,7 +137,7 @@ final class TreeEnsembleRegressionLearnerNodeView extends NodeView<TreeEnsembleR
      *
      * @param model the underlying NodeModel
      */
-    public TreeEnsembleRegressionLearnerNodeView(final TreeEnsembleRegressionLearnerNodeModel model) {
+    public TreeEnsembleLearnerNodeView(final MODEL model) {
         super(model);
         m_updateWorkerRef = new AtomicReference<UpdateTreeWorker>();
         m_modelSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 0, 1));
@@ -354,7 +356,7 @@ final class TreeEnsembleRegressionLearnerNodeView extends NodeView<TreeEnsembleR
 
     private void modelChangedInUI() {
         assert SwingUtilities.isEventDispatchThread();
-        final TreeEnsembleRegressionLearnerNodeModel nodeModel = getNodeModel();
+        final MODEL nodeModel = getNodeModel();
         TreeEnsembleModel ensembleModel = nodeModel.getEnsembleModel();
         int nrModels = ensembleModel == null ? 0 : ensembleModel.getNrModels();
         m_nrModelLabel.setText(nrModels + " model(s) in total");
@@ -375,7 +377,7 @@ final class TreeEnsembleRegressionLearnerNodeView extends NodeView<TreeEnsembleR
 
     private void newModel(final int index) {
         assert SwingUtilities.isEventDispatchThread();
-        final TreeEnsembleRegressionLearnerNodeModel nodeModel = getNodeModel();
+        final MODEL nodeModel = getNodeModel();
         TreeEnsembleModel model = nodeModel.getEnsembleModel();
         DataTable hiliteRowSample = nodeModel.getHiliteRowSample();
         UpdateTreeWorker updateWorker = new UpdateTreeWorker(hiliteRowSample, model, index);
@@ -554,6 +556,20 @@ final class TreeEnsembleRegressionLearnerNodeView extends NodeView<TreeEnsembleR
     }
 
     /////////////////////////////////////////////////////
+
+    /** Implemented by node model. */
+    public interface ViewContentProvider {
+
+        /** @return the ensembleModel */
+        public TreeEnsembleModel getEnsembleModel();
+
+        /** @return the hiliteRowSample */
+        public DataTable getHiliteRowSample();
+
+        /** @return the viewMessage */
+        public String getViewMessage();
+
+    }
 
     private final class UpdateTreeWorker extends SwingWorkerWithContext<DecisionTreeNode, Void> {
 
