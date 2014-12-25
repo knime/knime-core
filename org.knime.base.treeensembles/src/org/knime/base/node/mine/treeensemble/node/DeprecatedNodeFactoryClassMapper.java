@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,21 +41,35 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Dec 25, 2011 (wiswedel): created
+ *   Dec 25, 2014 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble.node.learner;
+package org.knime.base.node.mine.treeensemble.node;
 
 import org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory;
+import org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeFactoryClassMapper;
+import org.knime.core.node.NodeModel;
 
 /**
- * Deprecated. The new implementation is in {@link TreeEnsembleClassificationLearnerNodeFactory}. (This node definition
- * became deprecated before the node was released.)
- * 
+ * Fixes fully qualified name from 2.5.x into current version - factory was renamed.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeEnsembleLearnerNodeFactory extends TreeEnsembleClassificationLearnerNodeFactory {
-    // extend new impl.
+public final class DeprecatedNodeFactoryClassMapper extends NodeFactoryClassMapper {
+
+    @Override
+    public NodeFactory<? extends NodeModel> mapFactoryClassName(final String factoryClassName) {
+        switch (factoryClassName) {
+            case "org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeFactory":
+                return new TreeEnsembleClassificationLearnerNodeFactory();
+            case "org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory":
+                return new TreeEnsembleClassificationPredictorNodeFactory();
+            default:
+                return null;
+        }
+    }
+
 }

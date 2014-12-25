@@ -48,5 +48,11 @@
             path="/labs">
       </category>
    </extension>
+   <extension
+         point="org.knime.core.NodeFactoryClassMapper">
+      <NodeFactoryClassMapper
+            classMapper="org.knime.base.node.mine.treeensemble.node.DeprecatedNodeFactoryClassMapper">
+      </NodeFactoryClassMapper>
+   </extension>
 
 </plugin>
