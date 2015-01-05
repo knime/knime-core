@@ -154,7 +154,7 @@ public class ColCombine2NodeModel extends NodeModel {
                 m_newColName, StringCell.TYPE).createSpec();
         final int[] indices = new int[m_included.length];
         int j = 0;
-        for (int k = 0; k < spec.getNumColumns(); k++) {
+        for (int k = 0; k < spec.getNumColumns() && j < m_included.length; k++) {
             DataColumnSpec cs = spec.getColumnSpec(k);
             if (m_included[j].equals(cs.getName())) {
                indices[j++] = k;
