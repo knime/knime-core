@@ -163,6 +163,10 @@ public class RepositoryUpdater implements ProvisioningListener {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(usFileUrl.openStream()))) {
             String line;
             while ((line = in.readLine()) != null) {
+                if (line.startsWith("#")) {
+                    continue;
+                }
+
                 String[] parts = line.split(",");
                 URI uri = new URI(parts[0]);
 
