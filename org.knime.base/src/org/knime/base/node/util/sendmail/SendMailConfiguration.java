@@ -77,6 +77,7 @@ import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.StringHistory;
@@ -89,6 +90,23 @@ import org.knime.core.util.FileUtil;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class SendMailConfiguration {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(SendMailConfiguration.class);
+
+    static {
+        // see bug 5316: Send Email node sometimes fails with attachments (mime.types not correctly located)
+        // verify bug http://bugs.java.com/bugdatabase/view_bug.do?bug_id=7096063
+        // we had cases at a user where the mime types were not correctly detected, resulting in errors during delivery
+        try {
+            String contentType = new javax.activation.FileDataSource("test.html").getContentType();
+            if (!"text/html".equals(contentType)) {
+                LOGGER.errorWithFormat("Sendmail failed initial mime type validation - is the mime.types file "
+                        + "present and accessible? Expected: \"text/html\", got \"%s\"", contentType);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Unable to validate mime.types - got " + e.getClass().getName(), e);
+        }
+    }
 
     /** A system property that, if set, will disallow emails sent to recipients other than specified in a
      * comma separate list. For instance-D{@value #PROPERTY_ALLOWED_RECIPIENT_DOMAINS}=foo.com,bar.org would allow only
