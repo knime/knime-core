@@ -190,7 +190,7 @@ final class LinReg2Learner {
             warning.append(columnWithTooManyDomainValues.size() == 1 ? "Column " : "Columns ");
             warning.append(ConvenienceMethods.getShortStringFrom(columnWithTooManyDomainValues, 5));
             warning.append(columnWithTooManyDomainValues.size() == 1 ? " has " : " have ");
-            warning.append("too many different values - will be ignored during training ");
+            warning.append("too many different values - will be ignored during training");
             //warning.append("(enforce inclusion by using a domain calculator node before)");
             LOGGER.warn(warning.toString());
             m_warningMessage = (m_warningMessage == null ? "" : m_warningMessage + "\n") + warning.toString();
