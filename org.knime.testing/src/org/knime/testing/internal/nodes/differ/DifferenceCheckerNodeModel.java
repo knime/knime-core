@@ -406,13 +406,18 @@ class DifferenceCheckerNodeModel extends NodeModel {
         DataColumnDomain refDom = refColSpec.getDomain();
 
         if (refDom.hasValues() && !testDom.hasValues()) {
+            getLogger().debug("Expected possible values: " + refDom.getValues());
             throw new IllegalStateException("Possible values in domain of column '" + testColSpec.getName()
                     + "' expected");
         } else if (!refDom.hasValues() && testDom.hasValues()) {
+            getLogger().debug("Actual possible values: " + testDom.getValues());
             throw new IllegalStateException("No possible values in domain of column '" + testColSpec.getName()
                     + "' expected");
         } else if (refDom.hasValues() && testDom.hasValues()) {
             if (refDom.getValues().size() != testDom.getValues().size()) {
+                getLogger().debug(
+                    "Expected possible values: " + refDom.getValues() + "; actual possible values: "
+                        + testDom.getValues());
                 throw new IllegalStateException("Unequal number of possible values in column '" + refColSpec.getName()
                         + "': expected " + refDom.getValues().size() + ", got " + testDom.getValues().size());
             }
