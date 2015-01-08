@@ -335,7 +335,7 @@ public final class DatabaseWriterConnection {
             boolean first = true;
             for (int i = 0; i < mapping.length; i++) {
                 if (mapping[i] >= 0 || insertNullForMissingCols) {
-                        //insert only a ? if the column is available in the input table or the insert null for missing 
+                        //insert only a ? if the column is available in the input table or the insert null for missing
                 	    //columns option is enabled
                     if (first) {
                         first = false;
@@ -720,6 +720,12 @@ public final class DatabaseWriterConnection {
                                 deleteStatus[cnt - 1] = status;
                             }
                         } catch (Throwable t) {
+                            // Postgres will refuse any more commands in this transaction after errors
+                            // Therefore we commit the changes that were possible. We commit everything at the end
+                            // anyway.
+                            if (!conn.getAutoCommit()) {
+                                conn.commit();
+                            }
                             allErrors++;
                             if (errorCnt > -1) {
                                 final String errorMsg;
