@@ -184,7 +184,7 @@ public class ColumnHeaderExtractorNodeModel extends NodeModel {
             final boolean includeIgnoredCols) throws InvalidSettingsException {
         ColType colType = getColType();
         ColumnFilter filter = colType.getFilter();
-        String namePrefix = m_unifyHeaderPrefix.getStringValue();
+        final String namePrefix = m_unifyHeaderPrefix.getStringValue();
 
         HashSet<String> usedNames = new HashSet<String>();
         for (DataColumnSpec c : in) {
@@ -195,9 +195,9 @@ public class ColumnHeaderExtractorNodeModel extends NodeModel {
         }
 
         List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
+        int index = 0; // re-use index in loop - prevent repeated adds to the hash set - fixes bug 5920
         for (DataColumnSpec c : in) {
             if (filter.includeColumn(c)) {
-                int index = 0;
                 String newName;
                 do {
                     newName = namePrefix + (index++);
