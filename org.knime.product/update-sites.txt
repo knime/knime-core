@@ -1,3 +1,9 @@
+# Format for each line:
+#
+# URL, action ("add" or "remove"), state ("enabled" or "disabled"), name
+#
+# state and name are not needed for "remove"
+#
 http://www.knime.org/update/2.10,remove
 http://www.knime.org/update/store/2.10,remove
 http://tech.knime.org/update/community-contributions/trusted/2.10,remove

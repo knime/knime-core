@@ -639,8 +639,12 @@ final class SendMailConfiguration {
 
         List<File> tempDirs = new ArrayList<File>();
         Transport t = null;
+        // read file type map before setting context class loader as mime.types is located in this plug-in
+        FileTypeMap defaultFileTypeMap = FileTypeMap.getDefaultFileTypeMap();
+        ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
+        // make sure to set class loader to javax.mail - this has caused problems in the past, see bug 5316
+        Thread.currentThread().setContextClassLoader(Session.class.getClassLoader());
         try {
-            FileTypeMap defaultFileTypeMap = FileTypeMap.getDefaultFileTypeMap();
             for (URL url : getAttachedURLs()) {
                 MimeBodyPart filePart = new MimeBodyPart();
                 File file;
@@ -690,6 +694,7 @@ final class SendMailConfiguration {
             message.setContent(mp);
             t.sendMessage(message, message.getAllRecipients());
         } finally {
+            Thread.currentThread().setContextClassLoader(oldContextClassLoader);
             for (File d : tempDirs) {
                 FileUtils.deleteQuietly(d);
             }
