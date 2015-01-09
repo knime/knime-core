@@ -8732,7 +8732,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (nc instanceof NativeNodeContainer) {
                     NativeNodeContainer nnc = (NativeNodeContainer)nc;
                     NodeModel model = nnc.getNode().getNodeModel();
-                    if (nodeModelClass.isAssignableFrom(model.getClass())) {
+                    boolean included = nodeModelClass.isAssignableFrom(model.getClass())
+                            && filter.include(nodeModelClass.cast(model));
+                    if (included) {
                         result.put(nnc.getID(), nodeModelClass.cast(model));
                     }
                 }
