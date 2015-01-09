@@ -364,12 +364,8 @@ public final class DatabaseWriterConnection {
             final PreparedStatement stmt = conn.prepareStatement(query);
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
+            DatabaseConnectionSettings.setAutoCommit(conn, false);
             try {
-                try {
-                    conn.setAutoCommit(false);
-                } catch (Exception e) {
-                    // might not be supported, HIVE
-                }
                 final TimeZone timezone = dbConn.getTimeZone();
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
                     exec.checkCanceled();
@@ -405,6 +401,13 @@ public final class DatabaseWriterConnection {
                                 stmt.execute();
                             }
                         } catch (Throwable t) {
+                            // Postgres will refuse any more commands in this transaction after errors
+                            // Therefore we commit the changes that were possible. We commit everything at the end
+                            // anyway.
+                            if (!conn.getAutoCommit()) {
+                                conn.commit();
+                            }
+
                             allErrors++;
                             if (errorCnt > -1) {
                                 final String errorMsg;
@@ -434,13 +437,13 @@ public final class DatabaseWriterConnection {
                 if (!conn.getAutoCommit()) {
                     conn.commit();
                 }
-                DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 if (allErrors == 0) {
                     return null;
                 } else {
                     return "Errors \"" + allErrors + "\" writing " + rowCount + " rows.";
                 }
             } finally {
+                DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 stmt.close();
             }
         }
@@ -542,8 +545,8 @@ public final class DatabaseWriterConnection {
             final PreparedStatement stmt = conn.prepareStatement(query.toString());
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
+            DatabaseConnectionSettings.setAutoCommit(conn, false);
             try {
-                DatabaseConnectionSettings.setAutoCommit(conn, false);
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
                     exec.checkCanceled();
                     exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
@@ -586,6 +589,13 @@ public final class DatabaseWriterConnection {
                                 updateStatus[cnt - 1] = status;
                             }
                         } catch (Throwable t) {
+                            // Postgres will refuse any more commands in this transaction after errors
+                            // Therefore we commit the changes that were possible. We commit everything at the end
+                            // anyway.
+                            if (!conn.getAutoCommit()) {
+                                conn.commit();
+                            }
+
                             allErrors++;
                             if (errorCnt > -1) {
                                 final String errorMsg;
@@ -615,13 +625,13 @@ public final class DatabaseWriterConnection {
                 if (!conn.getAutoCommit()) {
                     conn.commit();
                 }
-                DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 if (allErrors == 0) {
                     return null;
                 } else {
                     return "Errors \"" + allErrors + "\" updating " + rowCount + " rows.";
                 }
             } finally {
+                DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 stmt.close();
             }
         }
@@ -684,8 +694,8 @@ public final class DatabaseWriterConnection {
             final PreparedStatement stmt = conn.prepareStatement(query.toString());
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
+            DatabaseConnectionSettings.setAutoCommit(conn, false);
             try {
-                DatabaseConnectionSettings.setAutoCommit(conn, false);
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
                     exec.checkCanceled();
                     exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
@@ -755,13 +765,13 @@ public final class DatabaseWriterConnection {
                 if (!conn.getAutoCommit()) {
                     conn.commit();
                 }
-                DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 if (allErrors == 0) {
                     return null;
                 } else {
                     return "Errors \"" + allErrors + "\" deleting " + rowCount + " rows.";
                 }
             } finally {
+                DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                 stmt.close();
             }
         }
