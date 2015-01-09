@@ -460,6 +460,7 @@ final class MissingValueHandling2Panel extends JPanel {
                     if (value instanceof DataColumnSpec
                         && MissingValueHandling2NodeDialogPane.isIncompatible((DataColumnSpec)value)) {
                         setBorder(BorderFactory.createLineBorder(Color.YELLOW));
+                        text = "Column " + ((DataColumnSpec)value).getName() + " is incompatible to the current settings";
                     }
                     setToolTipText(text);
                     return this;
