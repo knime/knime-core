@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    12.03.2007 (Tobias Koetter): created
  */
@@ -62,11 +62,11 @@ import org.knime.core.data.DataValue;
  */
 public class DataValueColumnFilter implements ColumnFilter {
 
-    
+
     private final Class<? extends DataValue>[] m_filterClasses;
 
     /**Constructor for class DataValueColumnFilter.
-     * @param filterValueClasses classes derived from DataValue. 
+     * @param filterValueClasses classes derived from DataValue.
      * All other columns will be filtered.
      */
     public DataValueColumnFilter(
@@ -74,10 +74,10 @@ public class DataValueColumnFilter implements ColumnFilter {
         if (filterValueClasses == null || filterValueClasses.length == 0) {
             throw new NullPointerException("Classes must not be null");
         }
-        List<Class<? extends DataValue>> list = 
+        List<Class<? extends DataValue>> list =
             Arrays.asList(filterValueClasses);
         if (list.contains(null)) {
-            throw new NullPointerException("List of value classes must not " 
+            throw new NullPointerException("List of value classes must not "
                     + "contain null elements.");
         }
         m_filterClasses = filterValueClasses;
@@ -86,6 +86,7 @@ public class DataValueColumnFilter implements ColumnFilter {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean includeColumn(final DataColumnSpec colSpec) {
         if (colSpec == null) {
             throw new NullPointerException(
@@ -98,10 +99,11 @@ public class DataValueColumnFilter implements ColumnFilter {
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public String allFilteredMsg() {
         StringBuffer error = new StringBuffer(
         "No column in spec compatible to");
@@ -121,5 +123,11 @@ public class DataValueColumnFilter implements ColumnFilter {
         }
         error.append('.');
         return error.toString();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return "Filter on " + ConvenienceMethods.getShortStringFrom(Arrays.asList(m_filterClasses), 3);
     }
 }
