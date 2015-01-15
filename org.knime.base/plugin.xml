@@ -896,7 +896,7 @@
             id="org.knime.base.node.preproc.domain.dialog2.DomainNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            after="org.knime.base.node.preproc.domain.DomainNodeFactory"
+            after="org.knime.base.node.preproc.domain.dialog2.DomainNodeFactory"
             factory-class="org.knime.base.node.preproc.domain.editnumeric.EditNumericDomainNodeFactory"
             id="org.knime.base.node.preproc.domain.editnumeric.EditNumericDomainNodeFactory">
       </node>
@@ -1170,6 +1170,16 @@
             id="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory">
       </node>
       <node
+            category-path="/flowcontrol/switches"
+            factory-class="org.knime.base.node.switches.caseswitchvariable.start.CaseSwitchVariableNodeFactory"
+            id="org.knime.base.node.switches.caseswitchvariable.start.CaseSwitchVariableNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/switches"
+            factory-class="org.knime.base.node.switches.caseswitchvariable.end.CaseSwitchVariableNodeFactory"
+            id="org.knime.base.node.switches.caseswitchvariable.end.CaseSwitchVariableNodeFactory">
+      </node>
+      <node
             after="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
@@ -1413,8 +1423,8 @@
       </node>  
       <node
             category-path="/io/io-other"
-            factory-class="org.knime.base.node.io.listfiles.ListFilesNodeFactory"
-            id="org.knime.base.node.io.listfiles.ListFilesNodeFactory">
+            factory-class="org.knime.base.node.io.listfiles2.ListFilesNodeFactory"
+            id="org.knime.base.node.io.listfiles2.ListFilesNodeFactory">
       </node>
       <node
             category-path="/misc"
