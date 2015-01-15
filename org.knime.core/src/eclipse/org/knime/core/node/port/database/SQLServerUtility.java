@@ -72,7 +72,7 @@ public class SQLServerUtility extends DatabaseUtility {
          */
         @Override
         public String[] createTableAsSelect(final String tableName, final String query) {
-            return new String[] {"SELECT * INTO " + quoteIdentifier(tableName) + " FROM (" + query + ") as "
+            return new String[] {"SELECT * INTO " + tableName + " FROM (" + query + ") as "
                     + getTempTableName()};
         }
 

@@ -98,7 +98,7 @@ public class OracleUtility extends DatabaseUtility {
         @Override
         public String dropTable(final String tableName, final boolean cascade) {
             final StringBuilder buf = new StringBuilder("DROP TABLE ");
-            buf.append(quoteIdentifier(tableName));
+            buf.append(tableName);
             if (cascade) {
                 buf.append(" CASCADE CONSTRAINTS");
             }

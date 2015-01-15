@@ -101,7 +101,7 @@ public class SQLiteUtility extends DatabaseUtility {
          */
         @Override
         public String[] createTableAsSelect(final String tableName, final String query) {
-            return new String[] {"CREATE TABLE " + quoteIdentifier(tableName) + " AS " + query};
+            return new String[] {"CREATE TABLE " + tableName + " AS " + query};
         }
     }
 

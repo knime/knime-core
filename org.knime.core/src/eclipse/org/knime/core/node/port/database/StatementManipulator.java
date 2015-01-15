@@ -122,7 +122,7 @@ public class StatementManipulator {
      * @since 2.11
      */
     public String[] createTableAsSelect(final String tableName, final String query) {
-        return new String[] {"CREATE TABLE " + quoteIdentifier(tableName) + " AS (" + query + ")"};
+        return new String[] {"CREATE TABLE " + tableName + " AS (" + query + ")"};
     }
 
     /**
@@ -133,7 +133,7 @@ public class StatementManipulator {
      */
     public String dropTable(final String tableName, final boolean cascade) {
         final StringBuilder buf = new StringBuilder("DROP TABLE ");
-        buf.append(quoteIdentifier(tableName));
+        buf.append(tableName);
         if (cascade) {
             buf.append(" CASCADE");
         }
