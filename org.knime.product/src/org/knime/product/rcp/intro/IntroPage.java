@@ -47,9 +47,12 @@
  */
 package org.knime.product.rcp.intro;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -395,7 +398,10 @@ public class IntroPage implements LocationListener {
         throws TransformerFactoryConfigurationError, TransformerException, IOException {
         File temp = FileUtil.createTempFile("workbench", ".xml", true);
         Transformer serializer = m_transformerFactory.newTransformer();
-        serializer.transform(new DOMSource(doc), new StreamResult(temp));
+
+        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(temp))) {
+            serializer.transform(new DOMSource(doc), new StreamResult(os));
+        }
 
         Files.move(temp.toPath(), workbenchFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
