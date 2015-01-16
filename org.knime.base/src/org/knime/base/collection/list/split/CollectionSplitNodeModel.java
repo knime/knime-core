@@ -49,10 +49,8 @@ package org.knime.base.collection.list.split;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import org.knime.core.data.DataCell;
@@ -61,11 +59,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.container.BlobWrapperDataCell;
-import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -349,93 +343,93 @@ final class CollectionSplitNodeModel extends NodeModel {
             throws IOException, CanceledExecutionException {
     }
 
-    /** CellFactory being used to split the column. */
-    private static final class SplitCellFactory implements CellFactory {
-
-        private final DataColumnSpec[] m_colSpecs;
-        private final DataType[] m_commonTypes;
-        private final int m_colIndex;
-        private String m_warnMessage;
-
-        /** Create new cell factory.
-         * @param colIndex Index of collection column
-         * @param colSpecs The column specs of the new columns.
-         */
-        SplitCellFactory(final int colIndex, final DataColumnSpec[] colSpecs) {
-            m_commonTypes = new DataType[colSpecs.length];
-            m_colSpecs = colSpecs;
-            m_colIndex = colIndex;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public DataColumnSpec[] getColumnSpecs() {
-            return m_colSpecs;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public DataCell[] getCells(final DataRow row) {
-            DataCell inCell = row.getCell(m_colIndex);
-            DataCell[] result = new DataCell[m_colSpecs.length];
-            Arrays.fill(result, DataType.getMissingCell());
-            if (inCell.isMissing()) {
-                if (m_warnMessage == null) {
-                    m_warnMessage = "Some rows contain missing values";
-                }
-                return result;
-            }
-            CollectionDataValue v = (CollectionDataValue)inCell;
-            Iterator<DataCell> it = v.iterator();
-            for (int i = 0; i < m_colSpecs.length && it.hasNext(); i++) {
-                DataCell next;
-                DataType type;
-                if (it instanceof BlobSupportDataCellIterator) {
-                    next =
-                        ((BlobSupportDataCellIterator)it).nextWithBlobSupport();
-                    if (next instanceof BlobWrapperDataCell) {
-                        // try to not access the cell (will get deserialized)
-                        BlobWrapperDataCell bw = (BlobWrapperDataCell)next;
-                        type = DataType.getType(bw.getBlobClass());
-                    } else {
-                        type = next.getType();
-                    }
-                } else {
-                    next = it.next();
-                    type = next.getType();
-                }
-                if (m_commonTypes[i] == null) {
-                    m_commonTypes[i] = type;
-                } else {
-                    m_commonTypes[i] =
-                        DataType.getCommonSuperType(m_commonTypes[i], type);
-                }
-                result[i] = next;
-            }
-            if (it.hasNext()) {
-                m_warnMessage = "At least one row had more elements than "
-                    + "specified; row was truncated.";
-            }
-            return result;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void setProgress(final int curRowNr, final int rowCount,
-                final RowKey lastKey, final ExecutionMonitor exec) {
-            exec.setProgress(curRowNr / (double)rowCount, "Split row "
-                    + curRowNr + " (\"" + lastKey + "\")");
-        }
-
-        /** @return the commonTypes */
-        public DataType[] getCommonTypes() {
-            return m_commonTypes;
-        }
-
-        /** @return the warnMessage or null */
-        public String getWarnMessage() {
-            return m_warnMessage;
-        }
-
-    }
+//    /** CellFactory being used to split the column. */
+//    public static final class SplitCellFactory implements CellFactory {
+//
+//        private final DataColumnSpec[] m_colSpecs;
+//        private final DataType[] m_commonTypes;
+//        private final int m_colIndex;
+//        private String m_warnMessage;
+//
+//        /** Create new cell factory.
+//         * @param colIndex Index of collection column
+//         * @param colSpecs The column specs of the new columns.
+//         */
+//        SplitCellFactory(final int colIndex, final DataColumnSpec[] colSpecs) {
+//            m_commonTypes = new DataType[colSpecs.length];
+//            m_colSpecs = colSpecs;
+//            m_colIndex = colIndex;
+//        }
+//
+//        /** {@inheritDoc} */
+//        @Override
+//        public DataColumnSpec[] getColumnSpecs() {
+//            return m_colSpecs;
+//        }
+//
+//        /** {@inheritDoc} */
+//        @Override
+//        public DataCell[] getCells(final DataRow row) {
+//            DataCell inCell = row.getCell(m_colIndex);
+//            DataCell[] result = new DataCell[m_colSpecs.length];
+//            Arrays.fill(result, DataType.getMissingCell());
+//            if (inCell.isMissing()) {
+//                if (m_warnMessage == null) {
+//                    m_warnMessage = "Some rows contain missing values";
+//                }
+//                return result;
+//            }
+//            CollectionDataValue v = (CollectionDataValue)inCell;
+//            Iterator<DataCell> it = v.iterator();
+//            for (int i = 0; i < m_colSpecs.length && it.hasNext(); i++) {
+//                DataCell next;
+//                DataType type;
+//                if (it instanceof BlobSupportDataCellIterator) {
+//                    next =
+//                        ((BlobSupportDataCellIterator)it).nextWithBlobSupport();
+//                    if (next instanceof BlobWrapperDataCell) {
+//                        // try to not access the cell (will get deserialized)
+//                        BlobWrapperDataCell bw = (BlobWrapperDataCell)next;
+//                        type = DataType.getType(bw.getBlobClass());
+//                    } else {
+//                        type = next.getType();
+//                    }
+//                } else {
+//                    next = it.next();
+//                    type = next.getType();
+//                }
+//                if (m_commonTypes[i] == null) {
+//                    m_commonTypes[i] = type;
+//                } else {
+//                    m_commonTypes[i] =
+//                        DataType.getCommonSuperType(m_commonTypes[i], type);
+//                }
+//                result[i] = next;
+//            }
+//            if (it.hasNext()) {
+//                m_warnMessage = "At least one row had more elements than "
+//                    + "specified; row was truncated.";
+//            }
+//            return result;
+//        }
+//
+//        /** {@inheritDoc} */
+//        @Override
+//        public void setProgress(final int curRowNr, final int rowCount,
+//                final RowKey lastKey, final ExecutionMonitor exec) {
+//            exec.setProgress(curRowNr / (double)rowCount, "Split row "
+//                    + curRowNr + " (\"" + lastKey + "\")");
+//        }
+//
+//        /** @return the commonTypes */
+//        public DataType[] getCommonTypes() {
+//            return m_commonTypes;
+//        }
+//
+//        /** @return the warnMessage or null */
+//        public String getWarnMessage() {
+//            return m_warnMessage;
+//        }
+//
+//    }
 }
