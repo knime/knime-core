@@ -1326,8 +1326,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 DialogNode node = entry.getValue();
                 NodeContext.pushContext(m_wfm.getNodeContainer(id));
                 try {
-                    final DialogNodeValue emptyDialogValue = node.createEmptyDialogValue();
-                    emptyDialogValue.validateSettings(conf);
+                    final DialogNodeValue validationDialogValue = node.createEmptyDialogValue();
+                    validationDialogValue.loadFromNodeSettings(conf);
+                    node.validateDialogValue(validationDialogValue);
                 } catch (InvalidSettingsException ise) {
                     throw ise;
                 } catch (Throwable e) {

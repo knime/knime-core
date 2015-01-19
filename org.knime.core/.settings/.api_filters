@@ -22,6 +22,22 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/dialog/DialogNode.java" type="org.knime.core.node.dialog.DialogNode">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="validateDialogValue(VAL)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/dialog/DialogNodeValue.java" type="org.knime.core.node.dialog.DialogNodeValue">
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNodeValue"/>
+                <message_argument value="validateSettings(NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/util/FileUtil.java" type="org.knime.core.util.FileUtil">
         <filter id="1141899266">
             <message_arguments>

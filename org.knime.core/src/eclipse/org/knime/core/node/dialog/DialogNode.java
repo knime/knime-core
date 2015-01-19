@@ -46,6 +46,8 @@
  */
 package org.knime.core.node.dialog;
 
+import org.knime.core.node.InvalidSettingsException;
+
 
 /**
  *
@@ -76,6 +78,14 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
     /** Get the currently set dialog value or null if non is set (use defaults as per node configuration).
      * @return The value currently set. */
     public VAL getDialogValue();
+
+    /** Called prior setting a new dialog value. Implements can make sanity checks on the argument. Calling this
+     * method does not change the state/value set in the node.
+     * @param value The validate - not null.
+     * @throws InvalidSettingsException If invalid.
+     * @since 2.12
+     */
+    public void validateDialogValue(final VAL value) throws InvalidSettingsException;
 
     /** Property set in the configuration dialog of the node to hide this quickform/dialog node in the
      * meta or subnode dialog.

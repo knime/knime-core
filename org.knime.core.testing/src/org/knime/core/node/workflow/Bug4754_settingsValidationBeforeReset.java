@@ -104,7 +104,8 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
      */
     public void testLoadBogusIntoSubNode() throws Exception {
         WorkflowManager manager = getManager();
-        checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreator_1, m_subNode_3, m_tableChecker_5);
+        checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreator_1);
+        checkStateOfMany(InternalNodeContainerState.IDLE, m_subNode_3, m_tableChecker_6);
         NodeSettings s = new NodeSettings("sub-node");
         manager.saveNodeSettings(m_subNode_3, s);
         NodeSettings bogusSettings = new NodeSettings("sub-node");
@@ -116,9 +117,10 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
             manager.loadNodeSettings(m_subNode_3, bogusSettings);
             fail("not expected to reach this point");
         } catch (InvalidSettingsException ise) {
+            ise.printStackTrace();
             // expected
         }
-        checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableCreator_1, m_subNode_3, m_tableChecker_5);
+        checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableCreator_1, m_subNode_3, m_tableChecker_6);
         reset(m_tableCreator_1);
         executeAllAndWait();
         checkState(manager, InternalNodeContainerState.EXECUTED);
@@ -163,7 +165,7 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
             for (String childKey : childSettings.keySet()) {
                 int value = childSettings.getInt(childKey, -1);
                 if (value != -1) {
-                    childSettings.addString(childKey, "this was the int: " + value);
+                    childSettings.addInt(childKey, -value);
                     return settings;
                 }
             }
