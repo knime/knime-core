@@ -117,7 +117,6 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
             manager.loadNodeSettings(m_subNode_3, bogusSettings);
             fail("not expected to reach this point");
         } catch (InvalidSettingsException ise) {
-            ise.printStackTrace();
             // expected
         }
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableCreator_1, m_subNode_3, m_tableChecker_6);
@@ -143,7 +142,6 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
             manager.loadNodeSettings(m_rowSampler_4, bogusSettings);
             fail("not expected to reach this point");
         } catch (InvalidSettingsException ise) {
-            ise.printStackTrace();
             // expected
         }
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableCreator_1, m_rowSampler_4, m_tableChecker_5);
