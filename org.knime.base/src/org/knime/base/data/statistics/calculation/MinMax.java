@@ -104,10 +104,10 @@ public class MinMax extends Statistic {
         for (int i : getIndices()) {
             DataCell cell = dataRow.getCell(i);
             if (!cell.isMissing()) {
-                if (m_min[index] == DataType.getMissingCell() || m_comparators[i].compare(cell, m_min[index]) < 0) {
+                if (m_min[index] == DataType.getMissingCell() || m_comparators[index].compare(cell, m_min[index]) < 0) {
                     m_min[index] = cell;
                 }
-                if (m_max[index] == DataType.getMissingCell() || m_comparators[i].compare(cell, m_max[index]) > 0) {
+                if (m_max[index] == DataType.getMissingCell() || m_comparators[index].compare(cell, m_max[index]) > 0) {
                     m_max[index] = cell;
                 }
             }
