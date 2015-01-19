@@ -296,6 +296,14 @@
             path="/flowcontrol">
       </category>
       <category
+            after="flowcontrol"
+            description="Nodes for workflow pausing/sleep"
+            icon="icons/16x16/sleep.png"
+            level-id="sleep"
+            name="Sleep"
+            path="/flowcontrol">
+      </category>
+      <category
             after="switches"
             icon="icons/16x16/trycatch.png"
             level-id="trycatch"
@@ -1259,7 +1267,11 @@
             factory-class="org.knime.base.node.flowcontrol.breakpoint.BreakpointNodeFactory"
             id="org.knime.base.node.flowcontrol.breakpoint.BreakpointNodeFactory">
       </node>
-
+      <node
+            category-path="/flowcontrol/sleep"
+            factory-class="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory"
+            id="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory">
+      </node>
       <node
             after="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"
             category-path="/manipulation/row/row-transform"

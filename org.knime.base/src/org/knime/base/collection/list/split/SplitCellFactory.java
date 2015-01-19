@@ -66,7 +66,7 @@ import org.knime.core.node.ExecutionMonitor;
  * CellFactory being used to split the column.
  * Extracted this class from CollectionSplitNodeModel because it is used in XPath since 2.11.
  * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
- * @since 2.11
+ * @since 2.12
  */
 public class SplitCellFactory implements CellFactory {
     private final DataColumnSpec[] m_colSpecs;
