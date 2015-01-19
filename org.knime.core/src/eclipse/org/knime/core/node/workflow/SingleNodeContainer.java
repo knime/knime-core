@@ -323,6 +323,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
         NodeContext.pushContext(this);
         try {
+            performValidateSettings(fromModel);
             performLoadModelSettingsFrom(fromModel);
         } catch (InvalidSettingsException e) {
             throw new InvalidSettingsException("Errors loading flow variables into node : " + e.getMessage(), e);
@@ -823,34 +824,26 @@ public abstract class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    boolean areSettingsValid(final NodeSettingsRO settings) {
-        if (!super.areSettingsValid(settings)) {
-            return false;
-        }
-        final SingleNodeContainerSettings sncSettings;
-        try {
-            sncSettings = new SingleNodeContainerSettings(settings);
-        } catch (InvalidSettingsException ise) {
-            return false;
-        }
+    void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.validateSettings(settings);
+        final SingleNodeContainerSettings sncSettings = new SingleNodeContainerSettings(settings);
         NodeSettingsRO modelSettings = sncSettings.getModelSettings();
         if (modelSettings == null) {
             modelSettings = new NodeSettings("empty");
         }
         NodeContext.pushContext(this);
         try {
-            return performAreModelSettingsValid(modelSettings);
+            performValidateSettings(modelSettings);
         } finally {
             NodeContext.removeLastContext();
         }
     }
 
     /** Validate settings of specific implementation.
-    *
-    * @param modelSettings ...
-    * @return true if settings are ok.
-    */
-   abstract boolean performAreModelSettingsValid(final NodeSettingsRO modelSettings);
+     * @param modelSettings ...
+     * @throws InvalidSettingsException ...
+     */
+   abstract void performValidateSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException;
 
 
     ////////////////////////////////////

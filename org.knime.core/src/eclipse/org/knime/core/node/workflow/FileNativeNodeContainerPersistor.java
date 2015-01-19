@@ -217,7 +217,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         NodeSettingsRO washedModelSettings = modelSettings;
         try {
             if (modelSettings != null) { // null if the node never had settings - no reason to load them
-                // this also validates the settings
+                m_node.validateModelSettings(modelSettings);
                 m_node.loadModelSettingsFrom(modelSettings);
 
                 // previous versions of KNIME (2.7 and before) kept the model settings only in the node;

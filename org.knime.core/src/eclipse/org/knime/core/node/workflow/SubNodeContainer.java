@@ -1316,23 +1316,29 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @SuppressWarnings("rawtypes")
     @Override
-    boolean performAreModelSettingsValid(final NodeSettingsRO modelSettings) {
+    void performValidateSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
         Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
         for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
             NodeID id = entry.getKey();
             String nodeID = Integer.toString(id.getIndex());
             if (modelSettings.containsKey(nodeID)) {
+                NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
+                DialogNode node = entry.getValue();
+                NodeContext.pushContext(m_wfm.getNodeContainer(id));
                 try {
-                    NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
-                    DialogNode node = entry.getValue();
                     final DialogNodeValue emptyDialogValue = node.createEmptyDialogValue();
                     emptyDialogValue.validateSettings(conf);
-                } catch (InvalidSettingsException e) {
-                    return false;
+                } catch (InvalidSettingsException ise) {
+                    throw ise;
+                } catch (Throwable e) {
+                    LOGGER.coding("Settings validation threw \"" + e.getClass().getSimpleName()
+                        + "\": " + e.getMessage(), e);
+                    throw new InvalidSettingsException(e.getMessage(), e);
+                } finally {
+                    NodeContext.removeLastContext();
                 }
             }
         }
-        return true;
     }
 
     /** {@inheritDoc} */
@@ -1390,7 +1396,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                         } catch (InvalidSettingsException e) {
                             throw new InvalidSettingsException(String.format(
                                 "Cannot load dialog value for node \"%s\": %s",
-                                ((NodeContainer)node).getNameWithID(), e.getMessage()), e);
+                                m_wfm.getNodeContainer(id).getNameWithID(), e.getMessage()), e);
                         }
                     } else {
                         newDialogValue = null;

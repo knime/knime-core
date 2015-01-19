@@ -134,6 +134,7 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
         try {
             final NodeSettingsRO modelSettings = getSNCSettings().getModelSettings();
             if (modelSettings != null) {
+                m_lastCreatedNode.validateModelSettings(modelSettings);
                 m_lastCreatedNode.loadModelSettingsFrom(modelSettings);
             }
         } catch (InvalidSettingsException e) {

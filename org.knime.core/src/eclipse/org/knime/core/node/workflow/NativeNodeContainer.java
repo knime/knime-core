@@ -877,8 +877,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    boolean performAreModelSettingsValid(final NodeSettingsRO modelSettings) {
-        return getNode().areSettingsValid(modelSettings);
+    void performValidateSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
+        getNode().validateModelSettings(modelSettings);
     }
 
     /* ------------ Stacks and Co --------------- */

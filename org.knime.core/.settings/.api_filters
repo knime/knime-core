@@ -14,6 +14,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
+        <filter comment="as part of bug 4754" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="areSettingsValid(NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/util/FileUtil.java" type="org.knime.core.util.FileUtil">
         <filter id="1141899266">
             <message_arguments>

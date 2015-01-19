@@ -549,10 +549,11 @@ public final class Node implements NodeModelWarningListener {
         }
     }
     /**
-     * Loads the settings (but not the data) from the given settings object.
+     * Loads the settings (but not the data) from the given settings object. Caller is required to only call this
+     * method with validated settings (as per {@link #validateModelSettings(NodeSettingsRO)}).
      *
      * @param modelSettings a settings object
-     * @throws InvalidSettingsException if an expected setting is missing
+     * @throws InvalidSettingsException not expected if validation and model loading are consistent...
      * @noreference This method is not intended to be referenced by clients.
      */
     public void loadModelSettingsFrom(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
@@ -562,7 +563,6 @@ public final class Node implements NodeModelWarningListener {
                 "No node context available, please check call hierarchy and fix it");
 
         try {
-            m_model.validateSettings(modelSettings);
             m_model.loadSettingsFrom(modelSettings);
         } catch (InvalidSettingsException e) {
             throw e;
@@ -578,23 +578,25 @@ public final class Node implements NodeModelWarningListener {
      * Validates the argument settings.
      *
      * @param modelSettings a settings object
-     * @return if valid.
      * @noreference This method is not intended to be referenced by clients.
+     * @throws InvalidSettingsException Missing/invalid settings.
+     * @since 2.12
      */
-    public boolean areSettingsValid(final NodeSettingsRO modelSettings) {
+    // (previously called areSettingsValid with boolean return type)
+    public void validateModelSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
         m_logger.assertLog(NodeContext.getContext() != null,
-            "No node context available, please check call hierarchy and fix it");
+                "No node context available, please check call hierarchy and fix it");
 
         /* Note the comment in method loadSettingsFrom(NodeSettingsROf) */
         try {
             m_model.validateSettings(modelSettings);
         } catch (InvalidSettingsException e) {
-            return false;
+            throw e;
         } catch (Throwable t) {
-            m_logger.error("Validating settings failed", t);
-            return false;
+            m_logger.coding(String.format("Validating settings failed - \"%s\" threw %s: %s",
+                m_model.getClass().getName(), t.getClass().getSimpleName(), t.getMessage()), t);
+            throw new InvalidSettingsException("Coding issue: " + t.getMessage(), t);
         }
-        return true;
     }
 
     /**

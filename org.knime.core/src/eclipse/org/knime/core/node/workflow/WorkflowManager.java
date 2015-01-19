@@ -1631,10 +1631,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     throws InvalidSettingsException {
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(id);
-            if (!nc.getInternalState().isExecutionInProgress()
-                    && !hasSuccessorInProgress(id)) {
+            if (!nc.getInternalState().isExecutionInProgress() && !hasSuccessorInProgress(id)) {
                 // make sure we are consistent (that is reset + configure)
                 // if we touch upstream nodes implicitly (e.g. loop heads)
+                nc.validateSettings(settings);
                 resetNodeAndSuccessors(id);
                 nc.loadSettings(settings);
                 // bug fix 2593: can't simply call configureNodeAndSuccessor
@@ -1647,8 +1647,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             } else {
                 throw new IllegalStateException(
-                        "Cannot load settings into node; it is executing or "
-                        + "has executing successors");
+                    "Cannot load settings into node; it is executing or has executing successors");
             }
         }
     }
@@ -8287,7 +8286,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // snc.reset();
                     @SuppressWarnings("unchecked")
                     AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration> config =
-                        (AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration>)qfin.getConfiguration();
+                    (AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration>)qfin.getConfiguration();
                     if (config != null) {
                         config.getValueConfiguration().loadValueInModel(conf);
                         saveNodeSettingsToDefault(id);
@@ -8296,7 +8295,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // this.configureNodeAndSuccessors(id, true);
                 }
             }
-    }
+        }
     }
 
 
@@ -8332,12 +8331,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         ncSet.save(settings);
         s.save(settings);
 
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    boolean areSettingsValid(final NodeSettingsRO settings) {
-        return super.areSettingsValid(settings);
     }
 
     /** {@inheritDoc} */

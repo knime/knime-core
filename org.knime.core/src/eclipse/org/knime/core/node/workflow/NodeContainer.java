@@ -76,6 +76,7 @@ import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.web.WebTemplate;
@@ -969,10 +970,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @throws InvalidSettingsException if settings are not applicable.
      */
     public void applySettingsFromDialog() throws InvalidSettingsException {
-        if (!hasDialog()) {
-            throw new IllegalStateException(
-                    "Node \"" + getName() + "\" has no dialog");
-        }
+        CheckUtils.checkState(hasDialog(), "Node \"%s\" has no dialog", getName());
         // TODO do we need to reset the node first??
         NodeSettings sett = new NodeSettings("node settings");
         NodeContext.pushContext(this);
@@ -985,15 +983,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     }
 
     public boolean areDialogSettingsValid() {
-        if (!hasDialog()) {
-            throw new IllegalStateException(
-                    "Node \"" + getName() + "\" has no dialog");
-        }
+        CheckUtils.checkState(hasDialog(), "Node \"%s\" has no dialog", getName());
         NodeSettings sett = new NodeSettings("node settings");
         NodeContext.pushContext(this);
         try {
             getDialogPane().finishEditingAndSaveSettingsTo(sett);
-            return areSettingsValid(sett);
+            validateSettings(sett);
+            return true;
         } catch (InvalidSettingsException nce) {
             return false;
         } finally {
@@ -1051,13 +1047,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         ncSet.save(settings);
     }
 
-    boolean areSettingsValid(final NodeSettingsRO settings) {
-        try {
-            new NodeContainerSettings().load(settings);
-        } catch (InvalidSettingsException ise) {
-            return false;
-        }
-        return true;
+    void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        new NodeContainerSettings().load(settings);
     }
 
     SplitType getSplitType() {
