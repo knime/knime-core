@@ -100,8 +100,9 @@ public class Median extends StatisticSorted {
         m_medianIndex = new double[size];
         m_isDouble = new boolean[size];
         Arrays.fill(m_medians, DataType.getMissingCell());
+        int index = 0;
         for (int i : getIndices()) {
-            m_isDouble[i] = spec.getColumnSpec(i).getType().isCompatible(DoubleValue.class);
+            m_isDouble[index++] = spec.getColumnSpec(i).getType().isCompatible(DoubleValue.class);
         }
     }
 
