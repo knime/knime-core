@@ -1,0 +1,134 @@
+package org.knime.base.node.preproc.pmml.missingval.apply;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.dmg.pmml.PMMLDocument;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellReplacingDataTable;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.pmml.PMMLPortObject;
+
+/**
+ * This is the model implementation of CompiledModelReader.
+ *
+ *
+ * @author Alexander Fillbrunn
+ */
+public class MissingValueApplyNodeModel extends NodeModel {
+
+    private static final int PMML_PORT_IDX = 0;
+
+    private static final int DATA_PORT_IDX = 1;
+
+    /**
+     * Constructor for the node model.
+     */
+    protected MissingValueApplyNodeModel() {
+        super(new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE});
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
+
+        BufferedDataTable inTable = (BufferedDataTable)inData[DATA_PORT_IDX];
+        DataTableSpec inSpec = inTable.getDataTableSpec();
+
+        PMMLPortObject pmmlIn = (PMMLPortObject)inData[PMML_PORT_IDX];
+        MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable(inSpec, PMMLDocument.Factory.parse(pmmlIn.getPMMLValue().getDocument()));
+
+        // Calculate the statistics
+        mvTable.init(inTable, exec.createSubExecutionContext(0.5));
+
+        int rowCounter = 0;
+        DataContainer container = exec.createDataContainer(mvTable.getDataTableSpec());
+
+        for (DataRow row : mvTable) {
+            exec.checkCanceled();
+            exec.setProgress(0.5 + (double)(rowCounter++) / inTable.getRowCount());
+            if (row != null) {
+                container.addRowToTable(row);
+            }
+        }
+        container.close();
+
+        // Collect warning messages
+        String warnings = mvTable.finish();
+
+        // Handle the warnings
+        if (warnings.length() > 0) {
+            setWarningMessage(warnings);
+        }
+
+        return new PortObject[]{(BufferedDataTable)container.getTable()};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        // TODO: If we want correct specs, we cannot allow a handler t output an other data type as comes in
+        return new PortObjectSpec[]{null};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+    }
+
+}
