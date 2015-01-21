@@ -61,10 +61,8 @@ import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -80,12 +78,9 @@ import javax.swing.event.ListSelectionListener;
 import org.knime.base.node.preproc.pmml.missingval.MVColumnSettings;
 import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
 import org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCellHandlerFactory;
-import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObjectSpec;
@@ -110,22 +105,6 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
     private MissingValueHandlerFactorySelectionPanel m_settingsPanel;
 
     /**
-     * @return the columns for which this panel handles the settings
-     */
-    public Set<String> getColumns() {
-        return m_settings.getColumns();
-    }
-
-    /**
-     * @return the settings made for the columns
-     * @throws InvalidSettingsException if settings cannot be loaded from a custom panel
-     */
-    public MVColumnSettings getSettings() throws InvalidSettingsException {
-        m_settings.setSettings(m_settingsPanel.getSettings());
-        return m_settings;
-    }
-
-    /**
      * Constructor for ColumnHandlingFactorySelectionPanel
      * @param cols the columns for which settings are made in this panel
      * @param specs the input specs
@@ -140,13 +119,6 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
     }
 
     /**
-     * @return The selected factory.
-     */
-    public MissingCellHandlerFactory getSelectedFactory() {
-        return m_settingsPanel.getSelectedFactory();
-    }
-
-    /**
      * Constructor for the MissingValueHandlerFactorySelectionPanel.
      * @param s the current settings for this data type
      * @param specs the input specs
@@ -158,18 +130,26 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
     }
 
     /**
-     * @return
+     * @return The selected factory.
      */
-    private static Map<String, String> creaeteInvalidPropertiesMap() {
-        final Map<String, String> map = new HashMap<String, String>(1);
-        map.put(DataColumnSpecListCellRenderer.INVALID_PROPERTY_NAME, DataColumnSpecListCellRenderer.INVALID_PROPERTY_NAME);
-        return map;
+    public MissingCellHandlerFactory getSelectedFactory() {
+        return m_settingsPanel.getSelectedFactory();
     }
 
-    private static DataColumnSpec createInvalidSpec(final String colName) {
-        DataColumnSpecCreator creator = new DataColumnSpecCreator(colName, StringCell.TYPE);
-        creator.setProperties(new DataColumnProperties(creaeteInvalidPropertiesMap()));
-        return creator.createSpec();
+    /**
+     * @return the columns for which this panel handles the settings
+     */
+    public Set<String> getColumns() {
+        return m_settings.getColumns();
+    }
+
+    /**
+     * @return the settings made for the columns
+     * @throws InvalidSettingsException if settings cannot be loaded from a custom panel
+     */
+    public MVColumnSettings getSettings() throws InvalidSettingsException {
+        m_settings.setSettings(m_settingsPanel.getSettings());
+        return m_settings;
     }
 
     private void createContent(final PortObjectSpec[] specs, final int tableIndex) {
