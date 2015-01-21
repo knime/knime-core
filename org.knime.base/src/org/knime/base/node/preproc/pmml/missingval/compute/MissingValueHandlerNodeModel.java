@@ -48,6 +48,10 @@ public class MissingValueHandlerNodeModel extends NodeModel {
         BufferedDataTable inTable = (BufferedDataTable)inData[0];
         DataTableSpec inSpec = inTable.getDataTableSpec();
 
+        if (m_settings == null) {
+            m_settings = new MVSettings(inSpec);
+        }
+
         MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable(inSpec, m_settings);
 
         // Calculate the statistics
@@ -115,7 +119,13 @@ public class MissingValueHandlerNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings = MVSettings.loadSettings(settings);
+        try {
+            m_settings = MVSettings.loadSettings(settings);
+        } catch (InvalidSettingsException e) {
+            m_settings = null;
+            setWarningMessage("Setting could not be loaded and are reset.");
+            throw e;
+        }
     }
 
     /**
