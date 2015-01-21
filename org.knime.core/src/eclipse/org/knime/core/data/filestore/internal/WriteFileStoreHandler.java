@@ -56,6 +56,7 @@ import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LRUCache;
 
@@ -91,9 +92,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     /**
      *  */
     public WriteFileStoreHandler(final String name, final UUID storeUUID) {
-        if (name == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
+        CheckUtils.checkArgumentNotNull(name, "Argument must not be null.");
         m_name = name;
         m_storeUUID = storeUUID;
     }
@@ -106,11 +105,8 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     }
 
     public void setBaseDir(final File baseDir) {
-        if (!baseDir.isDirectory()) {
-            throw new IllegalStateException(
-                    "Base directory of file store to node " + m_name
-                    + " does not exist: " + baseDir.getAbsolutePath());
-        }
+        CheckUtils.checkState(baseDir.isDirectory(), "Base directory of file store to node %s does not exist: %s",
+            m_name, baseDir.getAbsolutePath());
         m_baseDir = baseDir;
     }
 
@@ -205,19 +201,14 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     @Override
     public FileStore getFileStore(final FileStoreKey key) {
         IFileStoreHandler ownerHandler = getOwnerHandler(key);
-        if (!(ownerHandler instanceof WriteFileStoreHandler)) {
-            throw new IllegalStateException(String.format(
-                    "Owner file store handler \"%s\" to file store key \"%s\" "
-                    + "is not of expected type %s",
-                    ownerHandler, key,
-                    WriteFileStoreHandler.class.getSimpleName()));
-        }
+        CheckUtils.checkState(ownerHandler instanceof WriteFileStoreHandler, "Owner file store handler \"%s\" to file "
+                + "store key \"%s\" is not of expected type %s",
+                ownerHandler, key, WriteFileStoreHandler.class.getSimpleName());
         try {
             WriteFileStoreHandler owner = (WriteFileStoreHandler)ownerHandler;
             return owner.getFileStoreInternal(key);
         } catch (IOException e) {
-            throw new IllegalStateException("Could not init file store \""
-                    + ownerHandler + "\"", e);
+            throw new IllegalStateException("Could not init file store \"" + ownerHandler + "\"", e);
         }
     }
 
@@ -243,10 +234,8 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     private synchronized FileStore getFileStoreInternal(final FileStoreKey key)
         throws IOException {
         assert key.getStoreUUID().equals(getStoreUUID());
-        if (getBaseDir() == null && m_baseDirInWorkflowFolder == null) {
-            throw new IllegalStateException(
-                    "No file stores in \"" + toString() + "\"");
-        }
+        CheckUtils.checkState(getBaseDir() != null || m_baseDirInWorkflowFolder != null,
+                "No file stores in \"%s\"", toString());
         ensureOpenAfterLoad();
         return FileStoreUtil.createFileStore(this, key);
     }
@@ -265,6 +254,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         return b.toString();
     }
 
+    @Override
     public synchronized FileStore createFileStore(final String name) throws IOException {
         addToDuplicateChecker(name);
         return createFileStoreInternal(name, null, -1);
@@ -274,25 +264,19 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
      * @param name
      * @throws IOException */
     void addToDuplicateChecker(final String name) throws IOException {
-        if (m_duplicateChecker == null) {
-            throw new IllegalStateException("File store on node " + m_name + " is read only/closed");
-        }
+        CheckUtils.checkState(m_duplicateChecker != null, "File store on node %s is read only/closed", m_name);
         m_duplicateChecker.add(name);
     }
 
     FileStore createFileStoreInternal(final String name,
             final byte[] nestedLoopPath, final int iterationIndex) throws IOException {
         assert Thread.holdsLock(this);
-        if (name == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
+        CheckUtils.checkArgumentNotNull(name, "Argument must not be null.");
         if (name.startsWith(".")) {
-            throw new IOException("Name must not start with a dot: \""
-                    + name + "\"");
+            throw new IOException("Name must not start with a dot: \"" + name + "\"");
         }
         if (name.contains("/") || name.contains("\\")) {
-            throw new IOException("Invalid file name, must not contain (back)"
-                    + " slash: \"" + name + "\"");
+            throw new IOException("Invalid file name, must not contain (back) slash: \"" + name + "\"");
         }
         FileStoreKey key = new FileStoreKey(m_storeUUID, m_nextIndex, nestedLoopPath, iterationIndex, name);
         ensureInitBaseDirectory();
@@ -361,6 +345,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         m_duplicateChecker = new InternalDuplicateChecker();
     }
 
+    @Override
     public void close() {
         if (m_duplicateChecker != null) {
             m_duplicateChecker.close();
@@ -374,8 +359,8 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         if (m_baseDirInWorkflowFolder != null) {
             assert m_baseDir == null;
             ensureInitBaseDirectory();
-            LOGGER.debug(String.format("Restoring file store directory \"%s\" from \"%s\"",
-                    toString(), m_baseDirInWorkflowFolder));
+            LOGGER.debugWithFormat("Restoring file store directory \"%s\" from \"%s\"",
+                toString(), m_baseDirInWorkflowFolder);
             File source = m_baseDirInWorkflowFolder;
             m_baseDirInWorkflowFolder = null;
             FileUtil.copyDir(source, m_baseDir);
