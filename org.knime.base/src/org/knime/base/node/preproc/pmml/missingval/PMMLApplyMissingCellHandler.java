@@ -55,6 +55,7 @@ import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.knime.base.data.statistics.Statistic;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.BooleanCell;
@@ -140,4 +141,27 @@ public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
         return m_derivedField;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getOutputDataType() {
+        return getKnimeDataTypeForPMML(m_derivedField.getDataType());
+    }
+
+    /**
+     * Maps the columns data type to a PMML data type.
+     * @return The PMML data type for this handler's column
+     */
+    private DataType getKnimeDataTypeForPMML(final DATATYPE.Enum dt) {
+        if (dt.equals(DATATYPE.DOUBLE)) {
+            return DoubleCell.TYPE;
+        } else if (dt.equals(DATATYPE.BOOLEAN)) {
+            return BooleanCell.TYPE;
+        } else if (dt.equals(DATATYPE.INTEGER)) {
+            return IntCell.TYPE;
+        } else  {
+            return StringCell.TYPE;
+        }
+    }
 }
