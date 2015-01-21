@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
-import org.dmg.pmml.DATATYPE;
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.knime.base.data.statistics.Statistic;
 import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
@@ -115,6 +114,6 @@ public class MostFrequentValueMissingCellHandler extends DefaultMissingCellHandl
      */
     @Override
     public DerivedField getPMMLDerivedField() {
-        return createValueReplacingDerivedField(DATATYPE.STRING, m_stat.getMostFrequent().toString());
+        return createValueReplacingDerivedField(getPMMLDataTypeForColumn(), m_stat.getMostFrequent().toString());
     }
 }
