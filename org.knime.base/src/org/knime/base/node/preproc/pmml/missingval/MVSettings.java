@@ -175,24 +175,55 @@ public class MVSettings {
      * @return the missing value handling settings
      * @throws InvalidSettingsException when the settings cannot be retrieved
      */
-    public static MVSettings loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        MVSettings mvSettings = new MVSettings();
-
+    public String loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (!settings.containsKey(COL_SETTINGS_CFG) || !settings.containsKey(DT_SETTINGS_CFG)) {
             return null;
         }
-
+        StringBuffer warning = new StringBuffer();
+        m_columnSettings.clear();
+        m_generalSettings.clear();
         NodeSettingsRO colSettings = settings.getNodeSettings(COL_SETTINGS_CFG);
         for (String key : colSettings.keySet()) {
-            mvSettings.m_columnSettings.add(MVColumnSettings.loadSettings(colSettings.getNodeSettings(key)));
+            MVColumnSettings colSet = new MVColumnSettings();
+            String w = colSet.loadSettings(colSettings.getNodeSettings(key));
+            if (w != null) {
+                if (warning.length() > 0) {
+                    warning.append("\n");
+                }
+                warning.append(w);
+            }
+            this.m_columnSettings.add(colSet);
         }
 
         NodeSettingsRO dtSettings = settings.getNodeSettings(DT_SETTINGS_CFG);
         for (String key : dtSettings.keySet()) {
-            MVIndividualSettings dtSetting = MVIndividualSettings.loadSettings(dtSettings.getNodeSettings(key));
-            mvSettings.m_generalSettings.put(key, dtSetting);
+            MVIndividualSettings dtSetting = new MVIndividualSettings();
+            String w = dtSetting.loadSettings(dtSettings.getNodeSettings(key));
+            if (w != null) {
+                if (warning.length() > 0) {
+                    warning.append("\n");
+                }
+                warning.append(w);
+            }
+            this.m_generalSettings.put(key, dtSetting);
         }
+        if (warning.length() == 0) {
+            return null;
+        } else {
+            return warning.toString();
+        }
+    }
 
-        return mvSettings;
+    /**
+     * Adds do nothing handlers for all types that have no setting yet.
+     * @param dataTableSpec the spec for which to configure
+     */
+    public void configure(final DataTableSpec dataTableSpec) {
+        for (int i = 0; i < dataTableSpec.getNumColumns(); i++) {
+            DataType type = dataTableSpec.getColumnSpec(i).getType();
+            if (!m_generalSettings.containsKey(type.getCellClass().getCanonicalName())) {
+                setSettingsForDataType(type, new MVIndividualSettings(DoNothingMissingCellHandlerFactory.getInstance()));
+            }
+        }
     }
 }

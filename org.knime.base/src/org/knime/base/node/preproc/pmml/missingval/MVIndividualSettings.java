@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.preproc.pmml.missingval;
 
+import org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCellHandlerFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -72,7 +73,7 @@ public class MVIndividualSettings {
     /**
      * Empty constructor for loading from settings
      */
-    private MVIndividualSettings() {
+    MVIndividualSettings() {
         m_settings = new NodeSettings("");
     }
 
@@ -110,20 +111,20 @@ public class MVIndividualSettings {
      * @return the MVColumnSettings
      * @throws InvalidSettingsException when the settings are not properly structured
      */
-    public static MVIndividualSettings loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-
+    public String loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         String factID = settings.getString(FACTORY_ID_CFG);
-        MVIndividualSettings mvSettings = new MVIndividualSettings();
-
-        mvSettings.m_factory = MissingCellHandlerFactoryManager.getInstance().getFactoryByID(factID);
-        if (mvSettings.m_factory == null) {
-            throw new InvalidSettingsException("The factory " + factID + " was not loaded but is chosen in the settings.");
+        String warning = null;
+        m_factory = MissingCellHandlerFactoryManager.getInstance().getFactoryByID(factID);
+        if (m_factory == null) {
+            m_factory = DoNothingMissingCellHandlerFactory.getInstance();
+            warning = "The factory " + factID + " was not loaded but is chosen in the settings.";
         }
 
         if (settings.containsKey(SETTINGS_CFG)) {
-            settings.getNodeSettings(SETTINGS_CFG).copyTo(mvSettings.m_settings);
+            m_settings = new NodeSettings("");
+            settings.getNodeSettings(SETTINGS_CFG).copyTo(this.m_settings);
         }
-        return mvSettings;
+        return warning;
     }
 
     /**

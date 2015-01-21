@@ -37,7 +37,7 @@ public class MissingValueHandlerNodeModel extends NodeModel {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
-    MVSettings m_settings;
+    MVSettings m_settings = new MVSettings();
 
     /**
      * {@inheritDoc}
@@ -47,10 +47,6 @@ public class MissingValueHandlerNodeModel extends NodeModel {
 
         BufferedDataTable inTable = (BufferedDataTable)inData[0];
         DataTableSpec inSpec = inTable.getDataTableSpec();
-
-        if (m_settings == null) {
-            m_settings = new MVSettings(inSpec);
-        }
 
         MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable(inSpec, m_settings);
 
@@ -96,12 +92,8 @@ public class MissingValueHandlerNodeModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        if (m_settings == null) {
-            m_settings = new MVSettings((DataTableSpec)inSpecs[0]);
-        }
-
+        m_settings.configure((DataTableSpec)inSpecs[0]);
         MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable((DataTableSpec)inSpecs[0], m_settings);
-
         PMMLPortObjectSpecCreator pmmlC = new PMMLPortObjectSpecCreator((DataTableSpec)inSpecs[0]);
         return new PortObjectSpec[]{mvTable.getDataTableSpec(), pmmlC.createSpec()};
     }
@@ -120,10 +112,10 @@ public class MissingValueHandlerNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         try {
-            m_settings = MVSettings.loadSettings(settings);
+            m_settings.loadSettings(settings);
         } catch (InvalidSettingsException e) {
-            m_settings = null;
             setWarningMessage("Setting could not be loaded and are reset.");
+            m_settings = new MVSettings();
             throw e;
         }
     }
@@ -133,7 +125,6 @@ public class MissingValueHandlerNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        MVSettings.loadSettings(settings);
     }
 
     /**
@@ -142,7 +133,6 @@ public class MissingValueHandlerNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO: generated method stub
     }
 
     /**
@@ -151,7 +141,6 @@ public class MissingValueHandlerNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO: generated method stub
     }
 
 }

@@ -85,6 +85,8 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
 
     private JLabel m_pmmlLabel2;
 
+    private JLabel m_warnings;
+
     LinkedHashMap<DataType, MissingValueHandlerFactorySelectionPanel> m_types;
 
     /**
@@ -118,7 +120,13 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         southPanel.add(buttonPanel, gbc);
+
         gbc.gridy = 1;
+        m_warnings = new JLabel();
+        m_warnings.setForeground(Color.RED);
+        southPanel.add(m_warnings, gbc);
+
+        gbc.gridy = 2;
         southPanel.add(m_pmmlLabel2, gbc);
         m_addButton = new JButton("Add");
         m_addButton.addActionListener(new ActionListener() {
@@ -277,20 +285,21 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
             throws NotConfigurableException {
-        MVSettings mvSettings = null;
+        MVSettings mvSettings = new MVSettings();
         m_specs = specs;
         DataTableSpec spec = (DataTableSpec)specs[0];
 
         m_searchableListModifier = m_searchableListPanel.update(spec);
-
+        String warning = null;
         try {
-            mvSettings = MVSettings.loadSettings(settings);
+            warning = mvSettings.loadSettings(settings);
         } catch (Exception e) {
-            throw new NotConfigurableException("The settings are malformed", e);
+            m_warnings.setText("The settings are malformed and have to be reset");
+            mvSettings = new MVSettings(spec);
         }
 
-        if (mvSettings == null) {
-            mvSettings = new MVSettings(spec);
+        if (warning != null) {
+            m_warnings.setText(warning);
         }
 
         m_types = new LinkedHashMap<DataType, MissingValueHandlerFactorySelectionPanel>();

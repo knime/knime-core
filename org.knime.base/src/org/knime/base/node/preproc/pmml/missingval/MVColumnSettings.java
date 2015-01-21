@@ -53,6 +53,7 @@ package org.knime.base.node.preproc.pmml.missingval;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCellHandlerFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -69,8 +70,12 @@ public class MVColumnSettings {
     private Set<String> m_columns;
     private MVIndividualSettings m_settings;
 
-    private MVColumnSettings() {
+    /**
+     * Initializes a new MVColumnSettings object without columns and a do nothing factory.
+     */
+    MVColumnSettings() {
         m_columns = new HashSet<String>();
+        m_settings = new MVIndividualSettings(DoNothingMissingCellHandlerFactory.getInstance());
     }
 
     /**
@@ -78,7 +83,7 @@ public class MVColumnSettings {
      * @param factory the factory that is assigned to the columns that are configured with this settings object
      */
     public MVColumnSettings(final MissingCellHandlerFactory factory) {
-        this();
+        m_columns = new HashSet<String>();
         m_settings = new MVIndividualSettings(factory);
     }
 
@@ -88,13 +93,15 @@ public class MVColumnSettings {
      * @return the MVColumnSettings stored in the NodeSettingsRO object
      * @throws InvalidSettingsException if the settings cannot be loaded
      */
-    public static MVColumnSettings loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        MVColumnSettings s = new MVColumnSettings();
-        s.m_settings = MVIndividualSettings.loadSettings(settings.getNodeSettings(SETTINGS_KEY));
+    public String loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        this.m_columns.clear();
+
+        m_settings = new MVIndividualSettings();
+        String warning = m_settings.loadSettings(settings.getNodeSettings(SETTINGS_KEY));
         for (String col : settings.getStringArray(COLUMN_NAMES_KEY)) {
-            s.m_columns.add(col);
+            m_columns.add(col);
         }
-        return s;
+        return warning;
     }
 
     /**
