@@ -147,7 +147,7 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
      * @return the settings made for the columns
      * @throws InvalidSettingsException if settings cannot be loaded from a custom panel
      */
-    public MVColumnSettings getSettings() throws InvalidSettingsException {
+    public MVColumnSettings getUpdatedSettings() throws InvalidSettingsException {
         m_settings.setSettings(m_settingsPanel.getSettings());
         return m_settings;
     }
@@ -277,13 +277,7 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
         // Determine data type
         List<String> validCols = new ArrayList<String>();
         validCols.addAll(m_settings.getColumns());
-        for (int i = validCols.size() - 1; i >= 0; i--) {
-            for (String spec : invalidColumns) {
-                if (spec.equals(validCols.get(i))) {
-                    validCols.remove(i);
-                }
-            }
-        }
+        validCols.removeAll(invalidColumns);
 
         DataType[] dt = new DataType[validCols.size()];
         if (validCols.size() > 0) {

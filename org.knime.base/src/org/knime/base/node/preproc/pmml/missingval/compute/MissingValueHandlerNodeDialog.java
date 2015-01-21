@@ -274,7 +274,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
             mvSettings.setSettingsForDataType(type, panel.getSettings());
         }
         for (Component panel : m_individualsPanel.getComponents()) {
-            mvSettings.getColumnSettings().add(((ColumnHandlingFactorySelectionPanel)panel).getSettings());
+            mvSettings.getColumnSettings().add(((ColumnHandlingFactorySelectionPanel)panel).getUpdatedSettings());
         }
         mvSettings.saveToSettings(settings);
     }
