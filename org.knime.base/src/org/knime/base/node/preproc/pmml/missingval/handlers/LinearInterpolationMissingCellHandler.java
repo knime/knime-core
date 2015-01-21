@@ -56,8 +56,10 @@ import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -124,5 +126,13 @@ public class LinearInterpolationMissingCellHandler extends DefaultMissingCellHan
     @Override
     public DerivedField getPMMLDerivedField() {
         return createExtensionDerivedField(DATATYPE.DOUBLE, NextMissingCellHandlerFactory.ID);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getOutputDataType() {
+        return DoubleCell.TYPE;
     }
 }

@@ -52,11 +52,12 @@ package org.knime.base.node.preproc.pmml.missingval.handlers;
 
 import org.knime.base.data.statistics.Statistic;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.MissingCell;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -67,13 +68,14 @@ import org.knime.core.data.def.DoubleCell;
  */
 public class LinearInterpolationStatistic extends Statistic {
 
-    DataCell m_previous;
-    DataContainer m_nextCells;
-    DataContainer m_queued;
-    DataTable m_result;
+    private int m_numMissing = 0;
+    private DataCell m_previous;
+    private DataContainer m_nextCells;
+    private DataContainer m_queued;
+    private DataTable m_result;
 
-    String m_columnName;
-    int m_index = -1;
+    private String m_columnName;
+    private int m_index = -1;
 
     /**
      * Constructor for NextValidValueStatistic.
@@ -91,9 +93,9 @@ public class LinearInterpolationStatistic extends Statistic {
     @Override
     protected void init(final DataTableSpec spec, final int amountOfColumns) {
         m_index = spec.findColumnIndex(m_columnName);
-        m_nextCells = new DataContainer(new DataTableSpec(spec.getColumnSpec(m_index)));
+        m_nextCells = new DataContainer(new DataTableSpec(new DataColumnSpecCreator("value", DoubleCell.TYPE).createSpec()));
         m_queued = new DataContainer(new DataTableSpec());
-        m_previous = new MissingCell("");
+        m_previous = DataType.getMissingCell();
     }
 
     /**
@@ -104,21 +106,27 @@ public class LinearInterpolationStatistic extends Statistic {
         DataCell cell = dataRow.getCell(m_index);
         if (cell.isMissing()) {
             m_queued.addRowToTable(new DefaultRow(dataRow.getKey(), new DataCell[0]));
+            m_numMissing++;
         } else {
             DoubleValue val = (DoubleValue)cell;
             m_queued.close();
             DataTable table = m_queued.getTable();
+            int count = 1;
             for (DataRow row : table) {
                 DataCell res;
                 if (m_previous.isMissing()) {
-                    res = m_previous;
+                    res = new DoubleCell(val.getDoubleValue());
                 } else {
-                    res = new DoubleCell((val.getDoubleValue() + ((DoubleValue)m_previous).getDoubleValue()) / 2.0);
+                    double prev = ((DoubleValue)m_previous).getDoubleValue();
+                    double next = val.getDoubleValue();
+                    double lin = prev + 1.0 * (count++) / (1.0 * (m_numMissing + 1)) * (next - prev);
+                    res = new DoubleCell(lin);
                 }
                 m_nextCells.addRowToTable(new DefaultRow(row.getKey(), res));
             }
             m_queued = new DataContainer(new DataTableSpec());
             m_previous = cell;
+            m_numMissing = 0;
         }
     }
 
@@ -131,7 +139,7 @@ public class LinearInterpolationStatistic extends Statistic {
         m_queued.close();
         DataTable table = m_queued.getTable();
         for (DataRow row : table) {
-            m_nextCells.addRowToTable(new DefaultRow(row.getKey(), new MissingCell("No next value available")));
+            m_nextCells.addRowToTable(new DefaultRow(row.getKey(), new DoubleCell(((DoubleValue)m_previous).getDoubleValue())));
         }
 
         m_nextCells.close();
