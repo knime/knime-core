@@ -265,7 +265,14 @@ public class MissingCellReplacingDataTable implements DataTable {
         } else {
             for(Extension ext : df.getExtensionList()) {
                 if (ext.getName().equals(MissingCellHandler.CUSTOM_HANDLER_EXTENSION_NAME)) {
-                    return MissingCellHandler.fromPMMLExtension(spec, ext);
+                    MissingCellHandler handler;
+                    try {
+                        handler = MissingCellHandler.fromPMMLExtension(spec, ext);
+                    } catch(InvalidSettingsException e) {
+                        handler = DoNothingMissingCellHandlerFactory.getInstance().createHandler(spec);
+                        addWarningMessage(e.getMessage() + " Falling back to \"do nothing\" handler.");
+                    }
+                    return handler;
                 }
             }
             if (df.getApply() != null) {

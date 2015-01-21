@@ -264,10 +264,16 @@ public abstract class MissingCellHandler {
      * @param column the column this handler is used for
      * @param ext the extension containing the necessary information
      * @return a missing cell handler that was initialized from the extension
+     * @throws InvalidSettingsException
      */
-    public static MissingCellHandler fromPMMLExtension(final DataColumnSpec column, final Extension ext) {
+    public static MissingCellHandler fromPMMLExtension(final DataColumnSpec column, final Extension ext) throws InvalidSettingsException {
         String factoryID = ext.getValue();
         MissingCellHandlerFactory fac = MissingCellHandlerFactoryManager.getInstance().getFactoryByID(factoryID);
+        if (!fac.isApplicable(column.getType())) {
+            throw new InvalidSettingsException("Missing cell handler " + fac.getDisplayName()
+                + " is not applicable for columns of type " + column.getType().toString() + ".");
+        }
+
         // Create document from empty node settings
         NodeSettings nodeSettings = new NodeSettings("");
         MissingCellHandler handler = fac.createHandler(column);
