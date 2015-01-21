@@ -84,7 +84,7 @@ public class FixedIntegerValueMissingCellHandlerFactory extends MissingCellHandl
      */
     @Override
     public String getDisplayName() {
-        return "Fixed Value";
+        return "Fix Value";
     }
 
     /**

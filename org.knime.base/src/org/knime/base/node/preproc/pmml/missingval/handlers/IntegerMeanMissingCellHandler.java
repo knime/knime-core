@@ -58,7 +58,6 @@ import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
 import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -111,10 +110,10 @@ public class IntegerMeanMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        if (getColumnSpec().getType().equals(LongCell.TYPE)) {
-            return new LongCell(Math.round(m_mean.getResult(getColumnSpec().getName())));
-        } else {
+        if (getColumnSpec().getType().equals(IntCell.TYPE)) {
             return new IntCell((int)Math.round(m_mean.getResult(getColumnSpec().getName())));
+        } else {
+            return new LongCell(Math.round(m_mean.getResult(getColumnSpec().getName())));
         }
     }
 
@@ -130,17 +129,5 @@ public class IntegerMeanMissingCellHandler extends DefaultMissingCellHandler {
         String val = Integer.toString((int)Math.round(m_mean.getResult(getColumnSpec().getName())));
 
         return createValueReplacingDerivedField(dt, val);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataType getOutputDataType() {
-        if (getColumnSpec().getType().equals(LongCell.TYPE)) {
-            return LongCell.TYPE;
-        } else {
-            return IntCell.TYPE;
-        }
     }
 }

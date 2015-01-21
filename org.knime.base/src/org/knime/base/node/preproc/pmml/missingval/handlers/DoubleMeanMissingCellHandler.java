@@ -58,6 +58,7 @@ import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
 import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.InvalidSettingsException;
@@ -124,5 +125,13 @@ public class DoubleMeanMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public void saveSettingsTo(final NodeSettingsWO settings) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getOutputDataType() {
+        return DoubleCell.TYPE;
     }
 }

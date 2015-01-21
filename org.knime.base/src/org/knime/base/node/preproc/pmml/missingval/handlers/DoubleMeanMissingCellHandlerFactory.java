@@ -84,7 +84,7 @@ public class DoubleMeanMissingCellHandlerFactory extends MissingCellHandlerFacto
      */
     @Override
     public String getDisplayName() {
-        return "Double Mean";
+        return "Mean";
     }
 
     /**
