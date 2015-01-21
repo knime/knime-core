@@ -79,7 +79,6 @@ public class LinearInterpolationStatistic extends Statistic {
 
     /**
      * Constructor for NextValidValueStatistic.
-     * @param clazz the class of the data value this statistic can be used for
      * @param column the column for which this statistic is calculated
      */
     public LinearInterpolationStatistic(final String column) {
