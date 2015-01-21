@@ -48,16 +48,20 @@
 package org.knime.core.node.workflow;
 
 import java.awt.BorderLayout;
+import java.awt.FontMetrics;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 
 import org.knime.core.node.util.FlowVariableTableCellRenderer;
 import org.knime.core.node.workflow.FlowVariable.Type;
@@ -70,6 +74,8 @@ import org.knime.core.util.Pair;
  */
 final class FlowObjectStackView extends JPanel {
 
+    private static final String[] COLUMN_NAMES = new String[]{"Index", "Owner ID", "Name", "Value"};
+
     /** Table displaying name, value and owner of a {@link FlowVariable}. */
     private final JTable m_table;
 
@@ -81,10 +87,10 @@ final class FlowObjectStackView extends JPanel {
             @Override
             public Class<?> getColumnClass(final int columnIndex) {
                 switch (columnIndex) {
-                case 2:
-                    return FlowVariable.class;
-                default:
-                    return super.getColumnClass(columnIndex);
+                case 0: return Integer.class;
+                case 1: return NodeID.class;
+                case 2: return FlowVariable.class;
+                default: return super.getColumnClass(columnIndex);
                 }
             }
             /** {@inheritDoc} */
@@ -94,29 +100,32 @@ final class FlowObjectStackView extends JPanel {
             }
         });
         m_table.setAutoCreateRowSorter(true);
-        m_table.setDefaultRenderer(FlowVariable.class,
-                new FlowVariableTableCellRenderer());
+        m_table.setDefaultRenderer(FlowVariable.class, new FlowVariableTableCellRenderer());
         add(new JScrollPane(m_table), BorderLayout.CENTER);
     }
 
     /** Updates the view to display the given stack.
      * @param stack Whose values are to be displayed. */
     public void update(final FlowObjectStack stack) {
+        final FontMetrics fontMetrics = m_table.getFontMetrics(m_table.getFont());
         List<Object[]> values;
+        // relative width of each column - make important columns wider
+        int[] colRelativeWidth = new int[4];
+        for (int i = 0; i < colRelativeWidth.length; i++) {
+            colRelativeWidth[i] = SwingUtilities.computeStringWidth(fontMetrics, COLUMN_NAMES[i]);
+        }
         if (stack != null) {
             values = new ArrayList<Object[]>();
             int loopCount = 0;
             int counter = 0;
-            Set<Pair<String, Type>> duplicateElementsSet =
-                new HashSet<Pair<String, Type>>();
+            Set<Pair<String, Type>> duplicateElementsSet = new HashSet<Pair<String, Type>>();
             for (FlowObject s : stack) {
                 Object[] obj = new Object[4];
                 obj[0] = Integer.valueOf(counter);
                 obj[1] = s.getOwner();
                 if (s instanceof FlowVariable) {
                     FlowVariable v = (FlowVariable)s;
-                    final Pair<String, Type> key =
-                        new Pair<String, Type>(v.getName(), v.getType());
+                    final Pair<String, Type> key = new Pair<String, Type>(v.getName(), v.getType());
                     if (!duplicateElementsSet.add(key)) {
                         continue;
                     }
@@ -156,14 +165,27 @@ final class FlowObjectStackView extends JPanel {
                     obj[3] = null;
                 }
                 values.add(obj);
+                for (int i = 0; i < colRelativeWidth.length; i++) {
+                    String representation;
+                    if (obj[i] instanceof FlowVariable) {
+                        representation = "ICON" + ((FlowVariable)obj[i]).getName();
+                    } else {
+                        representation = Objects.toString(obj[i], "");
+                    }
+                    colRelativeWidth[i] = Math.max(colRelativeWidth[i],
+                        SwingUtilities.computeStringWidth(fontMetrics, representation));
+                }
             }
         } else {
             values = Collections.emptyList();
         }
-        String[] colNames = new String[]{"Index", "Owner ID", "Name", "Value"};
-        DefaultTableModel model = (DefaultTableModel)m_table.getModel();
-        model.setDataVector(
-                values.toArray(new Object[values.size()][]), colNames);
+        final DefaultTableModel model = (DefaultTableModel)m_table.getModel();
+        model.setDataVector(values.toArray(new Object[values.size()][]), COLUMN_NAMES);
+        final TableColumnModel columnModel = m_table.getColumnModel();
+        for (int i = 0; i < colRelativeWidth.length; i++) {
+            columnModel.getColumn(i).setPreferredWidth(colRelativeWidth[i]);
+        }
+        m_table.setCellSelectionEnabled(true);
     }
 
 }
