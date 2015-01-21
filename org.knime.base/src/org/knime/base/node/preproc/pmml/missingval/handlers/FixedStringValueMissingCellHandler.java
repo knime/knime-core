@@ -50,33 +50,65 @@
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
-import org.knime.base.node.preproc.pmml.missingval.MissingCellHandler;
-import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
-import org.knime.base.node.preproc.pmml.missingval.MissingValueHandlerPanel;
+import org.dmg.pmml.DATATYPE;
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.knime.base.data.statistics.Statistic;
+import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
+import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.NominalValue;
-import org.knime.core.data.def.IntCell;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- *
+ * Replaces missing values with a fixed integer.
  * @author Alexander Fillbrunn
  */
-public class MostFrequentStringMissingCellHandlerFactory extends MissingCellHandlerFactory {
+public class FixedStringValueMissingCellHandler extends DefaultMissingCellHandler {
+
+    static final String FIX_VAL_CFG = "fixStringValue";
 
     /**
-     * {@inheritDoc}
+     * @return a new SettingsModel for the fixed integer value the user can select
      */
-    @Override
-    public boolean hasSettingsPanel() {
-        return false;
+    public static SettingsModelString createStringValueSettingsModel() {
+        return new SettingsModelString(FIX_VAL_CFG, "");
+    }
+
+    private SettingsModelString m_fixVal = createStringValueSettingsModel();
+
+    /**
+     * @param col the column this handler is configured for
+     */
+    public FixedStringValueMissingCellHandler(final DataColumnSpec col) {
+        super(col);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MissingValueHandlerPanel getSettingsPanel() {
+    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_fixVal.loadSettingsFrom(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveSettingsTo(final NodeSettingsWO settings) {
+        m_fixVal.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Statistic getStatistic() {
         return null;
     }
 
@@ -84,32 +116,15 @@ public class MostFrequentStringMissingCellHandlerFactory extends MissingCellHand
      * {@inheritDoc}
      */
     @Override
-    public String getDisplayName() {
-        return "Most Frequent Value";
+    public DataCell getCell(final RowKey key, final DataColumnWindow window) {
+        return new StringCell(m_fixVal.getStringValue());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MissingCellHandler createHandler(final DataColumnSpec column) {
-        return new MostFrequentStringMissingCellHandler(column);
+    public DerivedField getPMMLDerivedField() {
+        return createValueReplacingDerivedField(DATATYPE.STRING, m_fixVal.getStringValue());
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean producesPMML4_2() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isApplicable(final DataType type) {
-        return type.isCompatible(NominalValue.class) || type.equals(IntCell.TYPE);
-    }
-
 }

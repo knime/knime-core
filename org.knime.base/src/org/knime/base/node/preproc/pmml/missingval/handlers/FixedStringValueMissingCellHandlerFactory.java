@@ -50,71 +50,65 @@
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
-import org.dmg.pmml.DATATYPE;
-import org.dmg.pmml.DerivedFieldDocument.DerivedField;
-import org.knime.base.data.statistics.Statistic;
-import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
-import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
-import org.knime.core.data.DataCell;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandler;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
+import org.knime.base.node.preproc.pmml.missingval.MissingValueHandlerPanel;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.RowKey;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.StringCell;
 
 /**
  *
  * @author Alexander Fillbrunn
  */
-public class MostFrequentStringMissingCellHandler extends DefaultMissingCellHandler {
-
-    MostFrequentValueStatistic m_stat;
+public class FixedStringValueMissingCellHandlerFactory extends MissingCellHandlerFactory {
 
     /**
-     * @param col the column this handler is configured for
+     * {@inheritDoc}
      */
-    public MostFrequentStringMissingCellHandler(final DataColumnSpec col) {
-        super(col);
+    @Override
+    public boolean hasSettingsPanel() {
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public MissingValueHandlerPanel getSettingsPanel() {
+        return new FixedStringValuePanel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void saveSettingsTo(final NodeSettingsWO settings) {
+    public String getDisplayName() {
+        return "Fix Value";
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Statistic getStatistic() {
-        if (m_stat == null) {
-            m_stat = new MostFrequentValueStatistic(getColumnSpec().getName());
-        }
-        return m_stat;
+    public MissingCellHandler createHandler(final DataColumnSpec column) {
+        return new FixedStringValueMissingCellHandler(column);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        return m_stat.getMostFrequent();
+    public boolean producesPMML4_2() {
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DerivedField getPMMLDerivedField() {
-        return createValueReplacingDerivedField(DATATYPE.STRING, m_stat.getMostFrequent().toString());
+    public boolean isApplicable(final DataType type) {
+        return type.equals(StringCell.TYPE);
     }
+
 }
