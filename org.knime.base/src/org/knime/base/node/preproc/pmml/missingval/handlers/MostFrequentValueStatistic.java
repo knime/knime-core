@@ -93,6 +93,9 @@ public class MostFrequentValueStatistic extends Statistic {
     @Override
     protected void consumeRow(final DataRow dataRow) {
         DataCell cell = dataRow.getCell(m_colIdx);
+        if (cell.isMissing()) {
+            return;
+        }
         MutableInteger i = m_nominalValues.get(cell);
         if (i == null) {
             i = new MutableInteger(1);
