@@ -2062,10 +2062,13 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             if (!saveHelper.isAutoSave() && nodeContainerDirectory == null) {
                 wm.setNodeContainerDirectory(workflowDirRef);
             }
-            if (workflowDirRef.equals(nodeContainerDirectory)) {
+            NodeContainerState wmState = wm.getNodeContainerState();
+            // non remote executions
+            boolean isExecutingLocally = wmState.isExecutionInProgress() && !wmState.isExecutingRemotely();
+            if (workflowDirRef.equals(nodeContainerDirectory) && !isExecutingLocally) {
                 wm.unsetDirty();
             }
-            workflowDirRef.setDirty(false);
+            workflowDirRef.setDirty(isExecutingLocally);
             execMon.setProgress(1.0);
         } finally {
             workflowDirRef.fileUnlockRootForVM();

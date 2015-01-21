@@ -3155,8 +3155,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             LoopStartParallelizeNode startNode;
             try {
                 // just for validation
-                startNode = castNodeModel(startID,
-                                             LoopStartParallelizeNode.class);
+                startNode = castNodeModel(startID, LoopStartParallelizeNode.class);
                 endNode = castNodeModel(endID, LoopEndParallelizeNode.class);
             } catch (IllegalArgumentException iae) {
                 throw new IllegalLoopException("Parallel Chunk Start Node not connected to matching end node!", iae);
@@ -3196,7 +3195,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     createNewWithOffsetPosition(new int[]{60, -60, 0, 0});
                 subwfm.setUIInformation(startUI);
             }
-            // connect outside(!) nodes to new sub metanote
+            // connect outside(!) nodes to new sub metanode
             for (Map.Entry<Pair<NodeID, Integer>, Integer> entry : extInConnections.entrySet()) {
                 final Pair<NodeID, Integer> npi = entry.getKey();
                 int metanodeindex = entry.getValue();

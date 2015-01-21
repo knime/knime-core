@@ -55,7 +55,10 @@ import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowLoopContext;
+import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.NativeNodeContainer;
 
 /**
  *
@@ -67,18 +70,22 @@ public class LoopStartWritableFileStoreHandler
     private static final byte[] OUTER_LOOP_PATH = new byte[] {};
 
     private final FlowLoopContext m_flowLoopContext;
+    private final NativeNodeContainer m_startNodeContainer;
     private FileStoresInLoopCache m_fileStoresInLoopCache;
     private final NestedLoopIdentifierProvider m_nestedLoopIdentifierProvider;
 
     private BufferedDataTable m_tableWithKeysToPersist;
 
     /**
-     * @param name
+     * @param startNode
      * @param storeUUID
      * @param flowLoopContext */
-    public LoopStartWritableFileStoreHandler(final String name, final UUID storeUUID,
+    public LoopStartWritableFileStoreHandler(final NativeNodeContainer startNode, final UUID storeUUID,
             final FlowLoopContext flowLoopContext) {
-        super(name, storeUUID);
+        super(startNode.getNameWithID(), storeUUID);
+        CheckUtils.checkArgument(startNode.isModelCompatibleTo(
+            LoopStartNode.class), "Node not a start node: %s", startNode);
+        m_startNodeContainer = startNode;
         m_flowLoopContext = flowLoopContext;
         m_nestedLoopIdentifierProvider = new NestedLoopIdentifierProvider();
     }
@@ -129,11 +136,20 @@ public class LoopStartWritableFileStoreHandler
         return createFileStoreInternal(name, nestedLoopPath, iterationIndex);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    FileStore createFileStoreInternal(final String name, final byte[] nestedLoopPath,
+        final int iterationIndex) throws IOException {
+        markStartNodeDirty();
+        return super.createFileStoreInternal(name, nestedLoopPath, iterationIndex);
+    }
+
     /** {@inheritDoc}
      * @throws CanceledExecutionException */
     @Override
     public synchronized void onLoopEndFinish(final BufferedDataTable tableWithKeysToPersist)
     throws CanceledExecutionException {
+        markStartNodeDirty();
         m_tableWithKeysToPersist = tableWithKeysToPersist;
     }
 
@@ -159,6 +175,10 @@ public class LoopStartWritableFileStoreHandler
     @Override
     public boolean isCreatedInThisLoop(final FileStoreKey key) {
         return key.getStoreUUID().equals(getStoreUUID());
+    }
+
+    private void markStartNodeDirty() {
+        m_startNodeContainer.setDirty();
     }
 
     static final class NestedLoopIdentifierProvider {

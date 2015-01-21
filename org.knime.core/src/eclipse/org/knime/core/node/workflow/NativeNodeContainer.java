@@ -682,13 +682,13 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 if (oldFSHandler instanceof IWriteFileStoreHandler) {
                     assert false : "Loop Start " + getNameWithID() + " must not have file store handler at this point "
                             + "(no iteration ran), disposing old handler";
-                clearFileStoreHandler();
+                    clearFileStoreHandler();
                 }
                 if (upstreamFLC != null) {
                     ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
                     newFSHandler = new LoopStartReferenceWriteFileStoreHandler(upStreamFSHandler, innerFLC);
                 } else {
-                    newFSHandler = new LoopStartWritableFileStoreHandler(getNameWithID(), UUID.randomUUID(), innerFLC);
+                    newFSHandler = new LoopStartWritableFileStoreHandler(this, UUID.randomUUID(), innerFLC);
                 }
                 newFSHandler.addToRepository(fileStoreHandlerRepository);
                 innerFLC.setFileStoreHandler((ILoopStartWriteFileStoreHandler)newFSHandler);

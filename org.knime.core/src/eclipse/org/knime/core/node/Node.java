@@ -2371,8 +2371,7 @@ public final class Node implements NodeModelWarningListener {
             m_model.setLoopEndNode(null);
         } else {
             if (!(tail.m_model instanceof LoopEndNode)) {
-                throw new ClassCastException("Node.setLoopEndNode called with"
-                        + "wrong argument. Not a LoopEndNode!");
+                throw new ClassCastException("Node.setLoopEndNode called with wrong argument. Not a LoopEndNode!");
             }
             m_model.setLoopEndNode((LoopEndNode)tail.m_model);
         }
@@ -2387,8 +2386,7 @@ public final class Node implements NodeModelWarningListener {
             m_model.setLoopStartNode(null);
         } else {
             if (!(head.m_model instanceof LoopStartNode)) {
-                throw new ClassCastException("Node.setLoopStartNode called with"
-                    + "wrong argument. Not a LoopStartNode!");
+                throw new ClassCastException("Node.setLoopStartNode called with wrong argument. Not a LoopStartNode!");
             }
             m_model.setLoopStartNode((LoopStartNode)head.m_model);
         }

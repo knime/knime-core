@@ -523,6 +523,11 @@ public abstract class WorkflowTestCase extends TestCase {
         r.close();
     }
 
+    /** @return the logger set up for the concreate test case class. */
+    protected final NodeLogger getLogger() {
+        return m_logger;
+    }
+
     protected abstract class Hold {
         protected abstract boolean shouldHold();
         protected int getSecondsToWaitAtMost() {

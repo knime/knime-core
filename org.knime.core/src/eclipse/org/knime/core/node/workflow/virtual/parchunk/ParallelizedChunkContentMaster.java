@@ -49,28 +49,28 @@
 package org.knime.core.node.workflow.virtual.parchunk;
 
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
+import org.knime.core.node.workflow.LoopStartParallelizeNode;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Represents all parallel chunks (@see{ParallelChunkContext}) together and
- * also encapsulating metanode.
+ * Represents all parallel chunks ({@link ParallelChunkContent}) together and also encapsulating metanode.
  *
  * @author M. Berthold, University of Konstanz
  */
-public class ParallelizedChunkContentMaster
-implements NodeStateChangeListener {
+public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
 
-    /** individual chunks */
-    ParallelizedChunkContent[] m_chunks;
+    /** Individual chunks. */
+    private ParallelizedChunkContent[] m_chunks;
 
-    /** metanode container for all chunks */
-    WorkflowManager m_manager;
+    /** metanode container for all chunks. */
+    private WorkflowManager m_manager;
 
-    /** end node waiting for chunks */
-    LoopEndParallelizeNode m_endNode;
+    /** end node waiting for chunks. */
+    private LoopEndParallelizeNode m_endNode;
 
     /** Create new chunk object master - also knows Workflowmanager
      * the chunks are located in.
@@ -94,8 +94,7 @@ implements NodeStateChangeListener {
      */
     public void addParallelChunk(final int index, final ParallelizedChunkContent pcc) {
         if (m_chunks[index] != null) {
-            throw new IllegalArgumentException("Duplicate chunk index: "
-                    + index);
+            throw new IllegalArgumentException("Duplicate chunk index: " + index);
         }
         m_chunks[index] = pcc;
         pcc.registerLoopEndStateChangeListener(this);
