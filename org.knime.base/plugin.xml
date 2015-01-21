@@ -3,6 +3,7 @@
 <plugin>
    <extension-point id="pmmlports" name="pmml.ports" schema="schema/pmmlports.exsd"/>
    <extension-point id="AggregationOperator" name="AggregationOperator" schema="schema/org.knime.base.AggregationOperator.exsd"/>
+   <extension-point id="MissingCellHandler" name="MissingCellHandler" schema="schema/MissingCellHandler.exsd"/>
     <extension
          point="org.knime.workbench.repository.categories">
       <category
@@ -1727,6 +1728,18 @@
             factory-class="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory"
             id="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column/column-transform"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.pmml.missingval.compute.MissingValueHandlerNodeFactory"
+            id="org.knime.base.node.preproc.pmml.missingval.compute.MissingValueHandlerNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-transform"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory"
+            id="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory">
+      </node>
    </extension>
    
       
@@ -1816,5 +1829,50 @@
                  extension=".pmml">
            </FileExtension>
         </FileExtensionMapping>
+     </extension>
+     <extension
+           point="org.knime.base.MissingCellHandler">
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.DoubleMeanMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.DoubleMovingAverageMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.FixedDoubleValueMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MaxNumberMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.IntegerMeanMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.FixedIntegerValueMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MinNumberMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MostFrequentValueMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.NextMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.RemoveRowMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MedianNumberMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.PreviousMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.LinearInterpolationMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.FixedStringValueMissingCellHandlerFactory">
+        </MissingCellHandler>
      </extension>   
 </plugin>
