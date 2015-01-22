@@ -54,13 +54,13 @@ import org.knime.base.node.preproc.pmml.missingval.DefaultMissingValueHandlerPan
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 
 /**
- *
+ * A panel that has a field for entering a double value.
  * @author Alexander Fillbrunn
  */
 public class FixedDoubleValuePanel extends DefaultMissingValueHandlerPanel {
 
     /**
-     * Constructor for a FixedDoubleValuePanel
+     * Constructor for a FixedDoubleValuePanel.
      */
     public FixedDoubleValuePanel() {
         addDialogComponent(new DialogComponentNumber(

@@ -57,15 +57,16 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 
 /**
- *
+ * Creates a handler that removes rows with a missing value in the column it is configured for.
  * @author Alexander Fillbrunn
  */
 public class RemoveRowMissingCellHandlerFactory extends MissingCellHandlerFactory {
 
     /**
-     * The ID of the do nothing factory
+     * The ID of the do nothing factory.
      */
-    public static final String ID = "org.knime.base.node.preproc.pmml.missingval.pmml.RemoveRowMissingCellHandlerFactory";
+    public static final String ID =
+            "org.knime.base.node.preproc.pmml.missingval.pmml.RemoveRowMissingCellHandlerFactory";
 
     /**
      * {@inheritDoc}

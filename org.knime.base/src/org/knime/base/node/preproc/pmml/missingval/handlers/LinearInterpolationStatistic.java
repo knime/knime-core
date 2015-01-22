@@ -63,7 +63,8 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 
 /**
- *
+ * A statistic that calculates for each missing cell the linear interpolation
+ * between the previous and next valid cell.
  * @author Alexander Fillbrunn
  */
 public class LinearInterpolationStatistic extends Statistic {
@@ -92,7 +93,8 @@ public class LinearInterpolationStatistic extends Statistic {
     @Override
     protected void init(final DataTableSpec spec, final int amountOfColumns) {
         m_index = spec.findColumnIndex(m_columnName);
-        m_nextCells = new DataContainer(new DataTableSpec(new DataColumnSpecCreator("value", DoubleCell.TYPE).createSpec()));
+        m_nextCells = new DataContainer(new DataTableSpec(
+                new DataColumnSpecCreator("value", DoubleCell.TYPE).createSpec()));
         m_queued = new DataContainer(new DataTableSpec());
         m_previous = DataType.getMissingCell();
     }
@@ -138,7 +140,8 @@ public class LinearInterpolationStatistic extends Statistic {
         m_queued.close();
         DataTable table = m_queued.getTable();
         for (DataRow row : table) {
-            m_nextCells.addRowToTable(new DefaultRow(row.getKey(), new DoubleCell(((DoubleValue)m_previous).getDoubleValue())));
+            m_nextCells.addRowToTable(new DefaultRow(row.getKey(),
+                                        new DoubleCell(((DoubleValue)m_previous).getDoubleValue())));
         }
 
         m_nextCells.close();

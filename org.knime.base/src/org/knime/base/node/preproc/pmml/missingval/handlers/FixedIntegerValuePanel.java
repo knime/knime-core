@@ -54,13 +54,13 @@ import org.knime.base.node.preproc.pmml.missingval.DefaultMissingValueHandlerPan
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 
 /**
- *
+ * A panel that has a field for entering an integer value.
  * @author Alexander Fillbrunn
  */
 public class FixedIntegerValuePanel extends DefaultMissingValueHandlerPanel {
 
     /**
-     * Constructor for a FixedIntegerValuePanel
+     * Constructor for a FixedIntegerValuePanel.
      */
     public FixedIntegerValuePanel() {
         addDialogComponent(new DialogComponentNumber(

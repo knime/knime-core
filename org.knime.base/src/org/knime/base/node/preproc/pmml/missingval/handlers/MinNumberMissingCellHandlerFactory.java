@@ -58,7 +58,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 
 /**
- *
+ * Creates a handler that replaces missing values with the column's minimum value.
  * @author Alexander Fillbrunn
  */
 public class MinNumberMissingCellHandlerFactory extends MissingCellHandlerFactory {

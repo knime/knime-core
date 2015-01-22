@@ -58,7 +58,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.def.IntCell;
 
 /**
- *
+ * Creates a handler that replaces missing values with a fixed integer.
  * @author Alexander Fillbrunn
  */
 public class FixedIntegerValueMissingCellHandlerFactory extends MissingCellHandlerFactory {

@@ -71,7 +71,7 @@ public class MVIndividualSettings {
     private NodeSettings m_settings;
 
     /**
-     * Empty constructor for loading from settings
+     * Empty constructor for loading from settings.
      */
     MVIndividualSettings() {
         m_settings = new NodeSettings("");
@@ -98,7 +98,7 @@ public class MVIndividualSettings {
     }
 
     /**
-     * Returns the factory selected by the user
+     * Returns the factory selected by the user.
      * @return the factory
      */
     public MissingCellHandlerFactory getFactory() {
@@ -128,7 +128,7 @@ public class MVIndividualSettings {
     }
 
     /**
-     * Saves settings for a column
+     * Saves settings for a column.
      * @param settings the settings to write to
      */
     protected void saveSettings(final NodeSettingsWO settings) {

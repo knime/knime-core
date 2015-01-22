@@ -206,9 +206,8 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
     /**
      * Find the currently visible settings panel.
      */
-    private MissingValueHandlerPanel getCurrentPanel()
-    {
-        for (Component comp : m_argumentsPanel.getComponents() ) {
+    private MissingValueHandlerPanel getCurrentPanel() {
+        for (Component comp : m_argumentsPanel.getComponents()) {
             if (comp.isVisible()) {
                 return (MissingValueHandlerPanel)comp;
             }
@@ -217,7 +216,7 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
     }
 
     /**
-     * Dummy panel for when a factory has no panel
+     * Dummy panel for when a factory has no panel.
      */
     private class EmptyMissingValueHandlerPanel extends DefaultMissingValueHandlerPanel {
     }
@@ -245,7 +244,8 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
          * {@inheritDoc}
          */
         @Override
-        public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
+        public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+                                                                    throws NotConfigurableException {
         }
     }
 }

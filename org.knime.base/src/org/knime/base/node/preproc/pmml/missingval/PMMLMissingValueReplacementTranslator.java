@@ -67,7 +67,7 @@ public class PMMLMissingValueReplacementTranslator implements PMMLTranslator {
     private MissingCellHandler[] m_handlers;
 
     /**
-     * Constructor for a PMMLMissingValueReplacementTranslator
+     * Constructor for a PMMLMissingValueReplacementTranslator.
      * @param handlers the handlers that were used to replace missing values
      */
     public PMMLMissingValueReplacementTranslator(final MissingCellHandler[] handlers) {

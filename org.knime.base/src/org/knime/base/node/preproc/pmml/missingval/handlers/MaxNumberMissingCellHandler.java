@@ -103,7 +103,8 @@ public class MaxNumberMissingCellHandler extends DefaultMissingCellHandler {
         if (m_minMax == null) {
             throw new IllegalStateException("The field can only be created after the statistic has been filled");
         }
-        return createValueReplacingDerivedField(getPMMLDataTypeForColumn(), m_minMax.getMax(getColumnSpec().getName()).toString());
+        return createValueReplacingDerivedField(getPMMLDataTypeForColumn(),
+                                                    m_minMax.getMax(getColumnSpec().getName()).toString());
     }
 
     /**

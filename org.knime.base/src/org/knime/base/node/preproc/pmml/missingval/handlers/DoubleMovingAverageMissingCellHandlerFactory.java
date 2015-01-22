@@ -58,15 +58,16 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 
 /**
- *
+ * Creates a handler that replaces missing values with the moving average of cells around it.
  * @author Alexander Fillbrunn
  */
 public class DoubleMovingAverageMissingCellHandlerFactory extends MissingCellHandlerFactory {
 
     /**
-     * The ID of the DoubleMovingAverageMissingCellHandlerFactory
+     * The ID of the DoubleMovingAverageMissingCellHandlerFactory.
      */
-    public static final String ID = "org.knime.base.node.preproc.pmml.missingval.handlers.DoubleMovingAverageMissingCellHandlerFactory";
+    public static final String ID =
+            "org.knime.base.node.preproc.pmml.missingval.handlers.DoubleMovingAverageMissingCellHandlerFactory";
 
     /**
      * {@inheritDoc}

@@ -67,13 +67,13 @@ import org.knime.core.node.NodeLogger;
  * Manager for missing cell handler factories that are provided by extensions.
  * @author Alexander Fillbrunn
  */
-public class MissingCellHandlerFactoryManager {
+public final class MissingCellHandlerFactoryManager {
 
     /** The id of the MissingCellHandler extension point. */
     public static final String EXT_POINT_ID = "org.knime.base.MissingCellHandler";
 
     /**
-     * The attribute of the missing cell handler extension point pointing to the factory class
+     * The attribute of the missing cell handler extension point pointing to the factory class.
      */
     public static final String EXT_POINT_ATTR_DF = "MissingCellHandlerFactory";
 
@@ -81,21 +81,21 @@ public class MissingCellHandlerFactoryManager {
 
     private static MissingCellHandlerFactoryManager instance;
 
-    /** List of registered factories **/
+    /** List of registered factories. **/
     private List<MissingCellHandlerFactory> m_factories
                 = new ArrayList<MissingCellHandlerFactory>();
 
-    /** Map for resolving registered factories by id **/
+    /** Map for resolving registered factories by id. **/
     private Map<String, MissingCellHandlerFactory> m_factoryNameMap
                 = new HashMap<String, MissingCellHandlerFactory>();
 
-    /** private constructor because this class is a singleton **/
+    /** private constructor because this class is a singleton. **/
     private MissingCellHandlerFactoryManager() {
         registerExtensionPoints();
     }
 
     /**
-     * Singleton instance of the MissingCellHandlerManager
+     * Singleton instance of the MissingCellHandlerManager.
      * @return the instance of the MissingCellHandlerManager
      */
     public static MissingCellHandlerFactoryManager getInstance() {
@@ -141,7 +141,8 @@ public class MissingCellHandlerFactoryManager {
                             (MissingCellHandlerFactory)elem.createExecutableExtension(EXT_POINT_ATTR_DF);
                     addMissingCellHandlerFactory(factory);
                 } catch (final Exception t) {
-                    LOGGER.error("Problems during initialization of missing cell handler (with id '" + operator + "'.)");
+                    LOGGER.error("Problems during initialization of missing cell handler (with id '"
+                                + operator + "'.)");
                     if (decl != null) {
                         LOGGER.error("Extension " + decl + " ignored.", t);
                     }
@@ -153,7 +154,7 @@ public class MissingCellHandlerFactoryManager {
     }
 
     /**
-     * Returns a list of missing cell handler factories for a certain data type
+     * Returns a list of missing cell handler factories for a certain data type.
      * @param type the data type
      * @return the list of suitable missing cell handler factories
      */
@@ -172,7 +173,7 @@ public class MissingCellHandlerFactoryManager {
     }
 
     /**
-     * Returns a list of missing cell handler factories for certain data types
+     * Returns a list of missing cell handler factories for certain data types.
      * @param types the data types
      * @return the list of suitable missing cell handler factories
      */
@@ -194,7 +195,7 @@ public class MissingCellHandlerFactoryManager {
     }
 
     /**
-     * Returns a factory instance with the given class name
+     * Returns a factory instance with the given class name.
      * @param id the id of the factory
      * @return the factory with the given name
      */

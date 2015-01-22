@@ -57,10 +57,10 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 
 /**
- *
+ * A factory that creates a handler that does nothing.
  * @author Alexander Fillbrunn
  */
-public class DoNothingMissingCellHandlerFactory extends MissingCellHandlerFactory {
+public final class DoNothingMissingCellHandlerFactory extends MissingCellHandlerFactory {
 
     private DoNothingMissingCellHandlerFactory() {
     }
@@ -78,9 +78,10 @@ public class DoNothingMissingCellHandlerFactory extends MissingCellHandlerFactor
     }
 
     /**
-     * The ID of the do nothing factory
+     * The ID of the do nothing factory.
      */
-    public static final String ID = "org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCellHandlerFactory";
+    public static final String ID =
+            "org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCellHandlerFactory";
 
     /**
      * {@inheritDoc}

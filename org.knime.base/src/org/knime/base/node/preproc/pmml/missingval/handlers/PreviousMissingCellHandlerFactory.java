@@ -57,15 +57,16 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 
 /**
- *
+ * Creates a handler that replaces missing values with the last previously encountered valid value.
  * @author Alexander Fillbrunn
  */
 public class PreviousMissingCellHandlerFactory extends MissingCellHandlerFactory {
 
     /**
-     * The ID of the next value factory
+     * The ID of the next value factory.
      */
-    public static final String ID = "org.knime.base.node.preproc.pmml.missingval.handlers.PreviousMissingCellHandlerFactory";
+    public static final String ID =
+            "org.knime.base.node.preproc.pmml.missingval.handlers.PreviousMissingCellHandlerFactory";
 
     /**
      * {@inheritDoc}

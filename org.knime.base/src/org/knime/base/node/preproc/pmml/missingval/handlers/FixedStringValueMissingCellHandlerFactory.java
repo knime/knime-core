@@ -58,7 +58,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.def.StringCell;
 
 /**
- *
+ * Creates a handler that replaces missing values witha fixed string.
  * @author Alexander Fillbrunn
  */
 public class FixedStringValueMissingCellHandlerFactory extends MissingCellHandlerFactory {

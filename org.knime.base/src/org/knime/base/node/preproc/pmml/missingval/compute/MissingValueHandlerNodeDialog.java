@@ -87,7 +87,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
 
     private JLabel m_warnings;
 
-    LinkedHashMap<DataType, MissingValueHandlerFactorySelectionPanel> m_types;
+    private LinkedHashMap<DataType, MissingValueHandlerFactorySelectionPanel> m_types;
 
     /**
      * New pane for configuring the CompiledModelReader node.
@@ -176,7 +176,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         m_columnsPanel.add(m_searchableListPanel, BorderLayout.WEST);
 
         JScrollPane scroller = new JScrollPane(m_individualsPanel);
-        scroller.setPreferredSize(new Dimension(0,0));
+        scroller.setPreferredSize(new Dimension(0, 0));
         m_columnsPanel.add(scroller, BorderLayout.CENTER);
         addTab("Column Settings", new JScrollPane(m_columnsPanel));
     }
@@ -330,7 +330,8 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
             gbc.ipadx = 0;
 
             MVIndividualSettings s = mvSettings.getSettingsForDataType(type);
-            // Should not happen if node model is properly configured, but check anyways and fall back to do nothing factory
+            // Should not happen if node model is properly configured,
+            // but check anyways and fall back to do nothing factory
             if (s == null) {
                 s = new MVIndividualSettings(DoNothingMissingCellHandlerFactory.getInstance());
             }
@@ -346,7 +347,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         updatePMMLLabelColor();
     }
 
-    /** Makes the PMML warning red if a PMML-incompatible missing cell handler was selected **/
+    /** Makes the PMML warning red if a PMML-incompatible missing cell handler was selected. **/
     private void updatePMMLLabelColor() {
         boolean allValidPMML = true;
         // Go through type settings

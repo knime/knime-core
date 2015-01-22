@@ -81,12 +81,13 @@ public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
      * @param df the derived field that has the information for the missing value replacement
      * @throws InvalidSettingsException if the PMML structure cannot be interpreted
      */
-    public PMMLApplyMissingCellHandler(final DataColumnSpec col, final DerivedField df) throws InvalidSettingsException {
+    public PMMLApplyMissingCellHandler(final DataColumnSpec col, final DerivedField df)
+                                                        throws InvalidSettingsException {
         super(col);
         m_derivedField = df;
         try {
             m_value = df.getApply().getConstantList().get(0).getStringValue();
-        } catch(NullPointerException e) {
+        } catch (NullPointerException e) {
             throw new InvalidSettingsException("The derived field for column " + col.getName()
                                                + " is malformed for missing value replacement", e);
         }
@@ -127,7 +128,7 @@ public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
             } else if (m_derivedField.getDataType() == DATATYPE.DOUBLE) {
                 return new DoubleCell(Double.parseDouble(m_value));
             }
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             return new MissingCell("Could not parse PMML value");
         }
         return new StringCell(m_value);

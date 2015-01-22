@@ -60,7 +60,7 @@ import org.knime.core.data.DataRow;
 public class DataColumnWindow {
 
     // Ring buffer for the cells in the column
-    DataCell[] m_buffer;
+    private DataCell[] m_buffer;
 
     private int m_lookahead;
 

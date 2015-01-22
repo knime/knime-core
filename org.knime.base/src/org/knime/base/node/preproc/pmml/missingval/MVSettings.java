@@ -79,7 +79,7 @@ public class MVSettings {
     private HashMap<String, MVIndividualSettings> m_generalSettings;
 
     /**
-     * Default constructor for MVSettings
+     * Default constructor for MVSettings.
      */
     public MVSettings() {
         m_columnSettings = new ArrayList<MVColumnSettings>();
@@ -87,8 +87,9 @@ public class MVSettings {
     }
 
     /**
-     *
-     * @param spec
+     * Constructor for MVSettings where each column in the spec is configured
+     * with a do nothing missing cell handler.
+     * @param spec the DataTableSpec the settings are for.
      */
     public MVSettings(final DataTableSpec spec) {
         this();
@@ -130,8 +131,10 @@ public class MVSettings {
                 if (colName.equals(col.getName())) {
                     // Check if there is a misconfiguration
                     if (!colSetting.getSettings().getFactory().isApplicable(col.getType())) {
-                        throw new InvalidSettingsException("The selected missing value handler (" + colSetting.getSettings().getFactory().getDisplayName()
-                                                           + ") for column " + col.getName() + " cannot handle columns of type " + col.getType().toString());
+                        throw new InvalidSettingsException("The selected missing value handler ("
+                                            + colSetting.getSettings().getFactory().getDisplayName()
+                                            + ") for column " + col.getName() + " cannot handle columns of type "
+                                            + col.getType().toString());
                     }
                     return colSetting.getSettings();
                 }
@@ -142,7 +145,7 @@ public class MVSettings {
     }
 
     /**
-     * Returns the missing value handling settings for a data type
+     * Returns the missing value handling settings for a data type.
      * @param dt the data type
      * @return the settings
      */
@@ -151,7 +154,7 @@ public class MVSettings {
     }
 
     /**
-     * Saves the settings
+     * Saves the settings.
      * @param settings the settings to save to
      */
     public void saveToSettings(final NodeSettingsWO settings) {
@@ -170,7 +173,7 @@ public class MVSettings {
     }
 
     /**
-     * Loads the settings from a read only node settings object
+     * Loads the settings from a read only node settings object.
      * @param settings the settings
      * @return the missing value handling settings
      * @throws InvalidSettingsException when the settings cannot be retrieved
@@ -222,7 +225,8 @@ public class MVSettings {
         for (int i = 0; i < dataTableSpec.getNumColumns(); i++) {
             DataType type = dataTableSpec.getColumnSpec(i).getType();
             if (!m_generalSettings.containsKey(type.getCellClass().getCanonicalName())) {
-                setSettingsForDataType(type, new MVIndividualSettings(DoNothingMissingCellHandlerFactory.getInstance()));
+                setSettingsForDataType(type, new MVIndividualSettings(
+                                                    DoNothingMissingCellHandlerFactory.getInstance()));
             }
         }
     }

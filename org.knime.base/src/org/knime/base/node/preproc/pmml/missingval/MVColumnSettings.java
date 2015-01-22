@@ -88,7 +88,7 @@ public class MVColumnSettings {
     }
 
     /**
-     * Loads settings from a NodeSettings object
+     * Loads settings from a NodeSettings object.
      * @param settings the settings to load from
      * @return the MVColumnSettings stored in the NodeSettingsRO object
      * @throws InvalidSettingsException if the settings cannot be loaded
@@ -105,8 +105,8 @@ public class MVColumnSettings {
     }
 
     /**
-     *
-     * @param settings
+     * Saves the settings to a NodeSettings object.
+     * @param settings the settings to save to
      */
     protected void saveSettings(final NodeSettingsWO settings) {
         settings.addStringArray(COLUMN_NAMES_KEY, m_columns.toArray(new String[0]));

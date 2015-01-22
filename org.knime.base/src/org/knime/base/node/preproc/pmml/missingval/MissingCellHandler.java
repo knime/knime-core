@@ -88,14 +88,14 @@ import org.w3c.dom.Node;
 public abstract class MissingCellHandler {
 
     /**
-     * Name of the pmml extension that holds the name of a custom missing value handler
+     * Name of the pmml extension that holds the name of a custom missing value handler.
      */
     public static final String CUSTOM_HANDLER_EXTENSION_NAME = "customMissingValueHandler";
 
     // Some constants for PMML
-    static final String IS_MISSING_FUNCTION_NAME = "isMissing";
+    private static final String IS_MISSING_FUNCTION_NAME = "isMissing";
 
-    static final String IF_FUNCTION_NAME = "if";
+    private static final String IF_FUNCTION_NAME = "if";
 
     private DataColumnSpec m_col;
 
@@ -129,7 +129,7 @@ public abstract class MissingCellHandler {
     public abstract void loadSettingsFrom(NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
-     * Saves user settings
+     * Saves user settings.
      * @param settings the settings
      */
     public abstract void saveSettingsTo(NodeSettingsWO settings);
@@ -142,10 +142,12 @@ public abstract class MissingCellHandler {
     public abstract Statistic getStatistic();
 
     /**
-     * Calculates the replacement value for a cell. If the returned value is null, the row this cell in is removed from the output table.
+     * Calculates the replacement value for a cell.
+     * If the returned value is null, the row this cell in is removed from the output table.
      * @param key the row key of the row where the cell should be replaced.
      * @param window the window over the previous and next cells as defined by
-     * {@link #getPreviousCellsWindowSize() getPreviousCellsWindowSize} and {@link #getNextCellsWindowSize() getNextCellsWindowSize}.
+     * {@link #getPreviousCellsWindowSize() getPreviousCellsWindowSize}
+     * and {@link #getNextCellsWindowSize() getNextCellsWindowSize}.
      * @return a data cell with the replacement value or null if the row should be removed completely
      */
     public abstract DataCell getCell(RowKey key, DataColumnWindow window);
@@ -197,14 +199,14 @@ public abstract class MissingCellHandler {
         Apply isMissingApply = Apply.Factory.newInstance();
         FieldRef fieldRef = FieldRef.Factory.newInstance();
         fieldRef.setField(m_col.getName());
-        isMissingApply.setFieldRefArray(new FieldRef[]{ fieldRef });
+        isMissingApply.setFieldRefArray(new FieldRef[]{fieldRef});
         isMissingApply.setFunction(IS_MISSING_FUNCTION_NAME);
         ifApply.setApplyArray(new Apply[]{isMissingApply});
         Constant replacement = Constant.Factory.newInstance();
         replacement.setDataType(dataType);
         replacement.setStringValue(value);
         ifApply.setConstantArray(new Constant[] {replacement});
-        ifApply.setFieldRefArray(new FieldRef[] { fieldRef });
+        ifApply.setFieldRefArray(new FieldRef[] {fieldRef});
         field.setDataType(dataType);
         field.setName(m_col.getName());
         field.setDisplayName(m_col.getName());
@@ -212,7 +214,8 @@ public abstract class MissingCellHandler {
     }
 
     /**
-     * Creates a derived field that contains an extension which contains the name of the factory to use for the replacement.
+     * Creates a derived field that contains an extension which
+     * contains the name of the factory to use for the replacement.
      * The result may be adjusted to contain necessary information for the handler.
      * @param dataType the data type of the derived field
      * @param factoryID the id of the factory
@@ -234,10 +237,11 @@ public abstract class MissingCellHandler {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             nodeSettings.saveToXML(baos);
-            Document doc = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(baos.toByteArray()));
+            Document doc = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                            .newDocumentBuilder().parse(new ByteArrayInputStream(baos.toByteArray()));
             Node copy = e.getDomNode().getOwnerDocument().importNode(doc.getFirstChild(), true);
             e.getDomNode().appendChild(copy);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             return null;
         }
         return field;
@@ -260,13 +264,14 @@ public abstract class MissingCellHandler {
     }
 
     /**
-     * Creates a missing cell handler from an extension that is inside of a PMML derived field
+     * Creates a missing cell handler from an extension that is inside of a PMML derived field.
      * @param column the column this handler is used for
      * @param ext the extension containing the necessary information
      * @return a missing cell handler that was initialized from the extension
-     * @throws InvalidSettingsException
+     * @throws InvalidSettingsException if the the factory from the extension is not applicable for the column
      */
-    public static MissingCellHandler fromPMMLExtension(final DataColumnSpec column, final Extension ext) throws InvalidSettingsException {
+    public static MissingCellHandler fromPMMLExtension(final DataColumnSpec column, final Extension ext)
+                                                                throws InvalidSettingsException {
         String factoryID = ext.getValue();
         MissingCellHandlerFactory fac = MissingCellHandlerFactoryManager.getInstance().getFactoryByID(factoryID);
         if (!fac.isApplicable(column.getType())) {
@@ -287,7 +292,8 @@ public abstract class MissingCellHandler {
             // Create an XML document from empty settings
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             nodeSettings.saveToXML(baos);
-            Document doc = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(baos.toByteArray()));
+            Document doc = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                            .newDocumentBuilder().parse(new ByteArrayInputStream(baos.toByteArray()));
             // Remove original settings
             doc.removeChild(doc.getFirstChild());
             // And plug in those from the PMML

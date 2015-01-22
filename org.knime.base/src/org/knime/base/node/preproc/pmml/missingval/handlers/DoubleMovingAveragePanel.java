@@ -54,21 +54,21 @@ import org.knime.base.node.preproc.pmml.missingval.DefaultMissingValueHandlerPan
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 
 /**
- * A panel where the user can select lookbehind and lookahead for the DoubleMovingAverageMissingCellHandler
+ * A panel where the user can select lookbehind and lookahead for the DoubleMovingAverageMissingCellHandler.
  * @author Alexander Fillbrunn
  */
 public class DoubleMovingAveragePanel extends DefaultMissingValueHandlerPanel {
 
     /**
-     * Constructor for the panel
+     * Constructor for the panel.
      */
     public DoubleMovingAveragePanel() {
         addDialogComponent(new DialogComponentNumber(
-                                                     DoubleMovingAverageMissingCellHandler.createLookbehindSettingsModel(),
-                                                     "Lookbehind", 1));
+                                DoubleMovingAverageMissingCellHandler.createLookbehindSettingsModel(),
+                                "Lookbehind", 1));
         addDialogComponent(new DialogComponentNumber(
-                                                     DoubleMovingAverageMissingCellHandler.createLookaheadSettingsModel(),
-                                                     "Lookahead", 1));
+                                DoubleMovingAverageMissingCellHandler.createLookaheadSettingsModel(),
+                                "Lookahead", 1));
     }
 
 }

@@ -64,12 +64,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 
 /**
- * Replaces missing values with a fixed double value
+ * Replaces missing values with a fixed double value.
  * @author Alexander Fillbrunn
  */
 public class FixedDoubleValueMissingCellHandler extends MissingCellHandler {
 
-    static final String FIX_VAL_CFG = "fixDoubleValue";
+    private static final String FIX_VAL_CFG = "fixDoubleValue";
 
     /**
      * @return a new SettingsModel for the fix value the user can select
@@ -108,7 +108,8 @@ public class FixedDoubleValueMissingCellHandler extends MissingCellHandler {
      */
     @Override
     public DerivedField getPMMLDerivedField() {
-        return createValueReplacingDerivedField(org.dmg.pmml.DATATYPE.DOUBLE, Double.toString(m_fixVal.getDoubleValue()));
+        return createValueReplacingDerivedField(org.dmg.pmml.DATATYPE.DOUBLE,
+                                        Double.toString(m_fixVal.getDoubleValue()));
     }
 
     /**

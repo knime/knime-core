@@ -118,7 +118,8 @@ public class DefaultMissingValueHandlerPanel extends MissingValueHandlerPanel {
      * {@inheritDoc}
      */
     @Override
-    public final void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException, InvalidSettingsException {
+    public final void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+                                            throws NotConfigurableException, InvalidSettingsException {
         for (DialogComponent dc : m_comp) {
             dc.loadSettingsFrom(settings, specs);
         }

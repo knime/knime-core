@@ -70,7 +70,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class FixedStringValueMissingCellHandler extends DefaultMissingCellHandler {
 
-    static final String FIX_VAL_CFG = "fixStringValue";
+    private static final String FIX_VAL_CFG = "fixStringValue";
 
     /**
      * @return a new SettingsModel for the fixed integer value the user can select

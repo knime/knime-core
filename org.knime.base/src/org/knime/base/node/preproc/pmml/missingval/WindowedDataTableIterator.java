@@ -78,7 +78,7 @@ public class WindowedDataTableIterator extends RowIterator {
     // Ring buffer
     private DataRow[] m_buffer;
 
-    boolean m_hasMore = true;
+    private boolean m_hasMore = true;
 
     // Windows for the individual columns
     private DataColumnWindow[] m_colWindows;

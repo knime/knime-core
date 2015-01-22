@@ -50,7 +50,8 @@ public class MissingValueApplyNodeModel extends NodeModel {
         DataTableSpec inSpec = inTable.getDataTableSpec();
 
         PMMLPortObject pmmlIn = (PMMLPortObject)inData[PMML_PORT_IDX];
-        MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable(inSpec, PMMLDocument.Factory.parse(pmmlIn.getPMMLValue().getDocument()));
+        MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable(inSpec,
+                        PMMLDocument.Factory.parse(pmmlIn.getPMMLValue().getDocument()));
 
         // Calculate the statistics
         mvTable.init(inTable, exec.createSubExecutionContext(0.5));

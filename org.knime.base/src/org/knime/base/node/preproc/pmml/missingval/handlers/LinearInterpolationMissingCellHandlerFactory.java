@@ -56,7 +56,8 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 
 /**
- *
+ * Creates a handler that replaces missing values with the a linear interpolation of the
+ * previous and next non-missing values.
  * @author Alexander Fillbrunn
  */
 public class LinearInterpolationMissingCellHandlerFactory extends MissingCellHandlerFactory {

@@ -58,7 +58,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
 
 /**
- *
+ * Creates a handler that replaces missing values with a fixed value.
  * @author Alexander Fillbrunn
  */
 public class FixedDoubleValueMissingCellHandlerFactory extends MissingCellHandlerFactory {

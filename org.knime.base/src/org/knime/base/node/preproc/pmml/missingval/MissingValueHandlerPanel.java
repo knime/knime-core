@@ -78,5 +78,6 @@ public abstract class MissingValueHandlerPanel extends JPanel {
      * @throws NotConfigurableException if SettingModels used by the panel cannot be configured
      * @throws InvalidSettingsException if an error occurs during loading
      */
-    public abstract void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs) throws NotConfigurableException, InvalidSettingsException;
+    public abstract void loadSettingsFrom(NodeSettingsRO settings, PortObjectSpec[] specs)
+                                throws NotConfigurableException, InvalidSettingsException;
 }

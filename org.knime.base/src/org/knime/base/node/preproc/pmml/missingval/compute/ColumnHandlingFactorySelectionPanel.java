@@ -105,12 +105,14 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
     private MissingValueHandlerFactorySelectionPanel m_settingsPanel;
 
     /**
-     * Constructor for ColumnHandlingFactorySelectionPanel
+     * Constructor for ColumnHandlingFactorySelectionPanel.
      * @param cols the columns for which settings are made in this panel
      * @param specs the input specs
      * @param tableIndex the index of the input table in the specs
      */
-    public ColumnHandlingFactorySelectionPanel(final List<DataColumnSpec> cols, final PortObjectSpec[] specs, final int tableIndex) {
+    public ColumnHandlingFactorySelectionPanel(final List<DataColumnSpec> cols,
+                                                final PortObjectSpec[] specs,
+                                                final int tableIndex) {
         m_settings = new MVColumnSettings(DoNothingMissingCellHandlerFactory.getInstance());
         for (DataColumnSpec cspec : cols) {
             m_settings.getColumns().add(cspec.getName());
@@ -124,7 +126,9 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
      * @param specs the input specs
      * @param tableIndex the index of the input table in the specs
      */
-    public ColumnHandlingFactorySelectionPanel(final MVColumnSettings s, final PortObjectSpec[] specs, final int tableIndex) {
+    public ColumnHandlingFactorySelectionPanel(final MVColumnSettings s,
+                                                final PortObjectSpec[] specs,
+                                                final int tableIndex) {
         m_settings = s;
         createContent(specs, tableIndex);
     }
@@ -209,7 +213,8 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
 
         final List<String> notExistingColumns = getNotExistingColumns(tableSpec);
         // If the factory allows all types, there are no incompatible columns
-        final List<String> incompatibleColumns = getIncompatibleTypedColumns(m_settings.getSettings().getFactory(), tableSpec);
+        final List<String> incompatibleColumns =
+                getIncompatibleTypedColumns(m_settings.getSettings().getFactory(), tableSpec);
         final List<String> warningMessages = new ArrayList<String>();
 
         if (!notExistingColumns.isEmpty()) {
@@ -291,8 +296,8 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 if (evt.getPropertyName().equals(MissingValueHandlerFactorySelectionPanel.SELECTED_FACTORY_CHANGE)) {
-                    ColumnHandlingFactorySelectionPanel.this.firePropertyChange(MissingValueHandlerFactorySelectionPanel.SELECTED_FACTORY_CHANGE,
-                                                                            null, null);
+                    ColumnHandlingFactorySelectionPanel.this.firePropertyChange(
+                        MissingValueHandlerFactorySelectionPanel.SELECTED_FACTORY_CHANGE, null, null);
                 }
             }
         });
@@ -319,7 +324,8 @@ public class ColumnHandlingFactorySelectionPanel extends JPanel {
         return toReturn;
     }
 
-    private List<String> getIncompatibleTypedColumns(final MissingCellHandlerFactory fac, final DataTableSpec tableSpec) {
+    private List<String> getIncompatibleTypedColumns(final MissingCellHandlerFactory fac,
+                                                     final DataTableSpec tableSpec) {
         List<String> toReturn = new ArrayList<String>();
         for (String col : m_settings.getColumns()) {
             DataColumnSpec spec = tableSpec.getColumnSpec(col);

@@ -54,13 +54,13 @@ import org.knime.base.node.preproc.pmml.missingval.DefaultMissingValueHandlerPan
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 
 /**
- *
+ * A panel with a field for entering a string value.
  * @author Alexander Fillbrunn
  */
 public class FixedStringValuePanel extends DefaultMissingValueHandlerPanel {
 
     /**
-     * Constructor for a FixedIntegerValuePanel
+     * Constructor for a FixedIntegerValuePanel.
      */
     public FixedStringValuePanel() {
         addDialogComponent(new DialogComponentString(

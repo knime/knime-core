@@ -59,7 +59,7 @@ import org.knime.core.data.DataType;
  */
 public abstract class MissingCellHandlerFactory {
 
-    /** The postfix for the factory name if the factory cannot produce valid PMML 4.2 **/
+    /** The postfix for the factory name if the factory cannot produce valid PMML 4.2. **/
     private static final String NO_PMML_INDICATOR = "*";
 
     /**
@@ -94,7 +94,8 @@ public abstract class MissingCellHandlerFactory {
     public abstract MissingValueHandlerPanel getSettingsPanel();
 
     /**
-     * @return the name of the factory. May be appended automatically by an asterisk (*) if the factory does not support PMML 4.2.
+     * @return the name of the factory.
+     * May be appended automatically by an asterisk (*) if the factory does not support PMML 4.2.
      */
     public abstract String getDisplayName();
 
@@ -106,20 +107,15 @@ public abstract class MissingCellHandlerFactory {
     public abstract MissingCellHandler createHandler(final DataColumnSpec column);
 
     /**
+     * Determines whether the missing cell handler created by this factory can be applied to cells of a data type.
      * @param type the data type to check
      * @return true, if the handler created by the factory can handle the column.
      */
     public abstract boolean isApplicable(final DataType type);
 
     /**
-     * Determines whether the missing cell handler created by this factory can be applied to a column.
-     * @param spec the column spec to check
-     * @return true, if the handler can be applied to the column
-     */
-    //public abstract boolean isApplicableFor(DataColumnSpec spec);
-
-    /**
-     * Determines whether the missing value handler managed by this factory does operations that can be represented in PMML 4.2.
+     * Determines whether the missing value handler managed by
+     * this factory does operations that can be represented in PMML 4.2.
      * @return true, if the handler only does operations that can be described by a PMML 4.2 derived field.
      */
     public abstract boolean producesPMML4_2();

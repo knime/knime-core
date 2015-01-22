@@ -65,16 +65,16 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- *
+ * A handler that replaces missing values with a linear interpolation of the next and previous valid values.
  * @author Alexander Fillbrunn
  */
 public class LinearInterpolationMissingCellHandler extends DefaultMissingCellHandler {
 
-    LinearInterpolationStatistic m_stat;
-    RowIterator m_iter;
+    private LinearInterpolationStatistic m_stat;
+    private RowIterator m_iter;
 
     /**
-     * @param col
+     * @param col the column this handler is for
      */
     public LinearInterpolationMissingCellHandler(final DataColumnSpec col) {
         super(col);

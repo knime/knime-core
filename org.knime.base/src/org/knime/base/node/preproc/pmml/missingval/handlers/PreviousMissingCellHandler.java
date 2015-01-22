@@ -69,8 +69,8 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class PreviousMissingCellHandler extends DefaultMissingCellHandler {
 
-    PreviousValidValueStatistic m_stat;
-    RowIterator m_iter;
+    private PreviousValidValueStatistic m_stat;
+    private RowIterator m_iter;
 
     /**
      * @param col the column this handler is configured for

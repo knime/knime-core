@@ -61,17 +61,17 @@ import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 
 /**
- *
+ * Statistic that finds for each missing value the previous valid one.
  * @author Alexander Fillbrunn
  */
 public class PreviousValidValueStatistic extends Statistic {
 
-    DataCell m_previous;
-    DataContainer m_queued;
-    DataTable m_result;
+    private DataCell m_previous;
+    private DataContainer m_queued;
+    private DataTable m_result;
 
-    String m_columnName;
-    int m_index = -1;
+    private String m_columnName;
+    private int m_index = -1;
 
     /**
      * Constructor for NextValidValueStatistic.

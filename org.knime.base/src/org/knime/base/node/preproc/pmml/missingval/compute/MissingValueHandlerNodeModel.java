@@ -37,7 +37,7 @@ public class MissingValueHandlerNodeModel extends NodeModel {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
-    MVSettings m_settings = new MVSettings();
+    private MVSettings m_settings = new MVSettings();
 
     /**
      * {@inheritDoc}
@@ -93,7 +93,8 @@ public class MissingValueHandlerNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         m_settings.configure((DataTableSpec)inSpecs[0]);
-        MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable((DataTableSpec)inSpecs[0], m_settings);
+        MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable(
+                                                        (DataTableSpec)inSpecs[0], m_settings);
         PMMLPortObjectSpecCreator pmmlC = new PMMLPortObjectSpecCreator((DataTableSpec)inSpecs[0]);
         return new PortObjectSpec[]{mvTable.getDataTableSpec(), pmmlC.createSpec()};
     }

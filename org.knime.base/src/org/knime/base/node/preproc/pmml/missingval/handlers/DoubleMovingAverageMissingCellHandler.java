@@ -67,7 +67,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 
 /**
- *
+ * A handler that replaces missing values in a cell with the average of cells before and after it.
  * @author Alexander Fillbrunn
  */
 public class DoubleMovingAverageMissingCellHandler extends MissingCellHandler {
@@ -142,7 +142,8 @@ public class DoubleMovingAverageMissingCellHandler extends MissingCellHandler {
      */
     @Override
     public DerivedField getPMMLDerivedField() {
-        DerivedField f = createExtensionDerivedField(org.dmg.pmml.DATATYPE.DOUBLE, DoubleMovingAverageMissingCellHandlerFactory.ID);
+        DerivedField f = createExtensionDerivedField(org.dmg.pmml.DATATYPE.DOUBLE,
+                                    DoubleMovingAverageMissingCellHandlerFactory.ID);
         return f;
     }
 

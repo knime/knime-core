@@ -91,12 +91,13 @@ public class MissingCellReplacingDataTable implements DataTable {
 
     private StringBuffer m_warningMessage = new StringBuffer();
 
-    final int[] m_lookaheads;
+    private final int[] m_lookaheads;
 
-    final int[] m_lookbehinds;
+    private final int[] m_lookbehinds;
 
     /**
-     * Constructor for MissingCellReplacingDataTable that loads the settings for the replacements from a NodeSettings object.
+     * Constructor for MissingCellReplacingDataTable that
+     * loads the settings for the replacements from a NodeSettings object.
      * @param inTableSpec the input table spec for the table handled by this MissingCellReplacingDataTable.
      * @param settings the settings for the missing cell replacement
      * @throws InvalidSettingsException if the settings cannot be read
@@ -141,10 +142,12 @@ public class MissingCellReplacingDataTable implements DataTable {
      * Initializes the statistics for the handlers. Only has to be called if actual replacement should take place.
      * @param inTable the actual DataTable which this table wraps.
      * @param exec the execution context for the iteration which calculates statistics
-     * @throws InvalidSettingsException if the statistics from the missing cell handlers are conflicting with the table specs
+     * @throws InvalidSettingsException if the statistics from the
+     *                                  missing cell handlers are conflicting with the table specs
      * @throws CanceledExecutionException when the user cancels the execution
      */
-    public void init(final BufferedDataTable inTable, final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
+    public void init(final BufferedDataTable inTable, final ExecutionContext exec)
+                        throws InvalidSettingsException, CanceledExecutionException {
         m_table = inTable;
         // Calculate necessary statistics
         ArrayList<Statistic> statistics = new ArrayList<Statistic>();
@@ -157,7 +160,8 @@ public class MissingCellReplacingDataTable implements DataTable {
 
         // Fill the statistics retrieved from the handlers
         if (statistics.size() > 0) {
-            StatisticCalculator calc = new StatisticCalculator(m_table.getDataTableSpec(), statistics.toArray(new Statistic[0]));
+            StatisticCalculator calc = new StatisticCalculator(m_table.getDataTableSpec(),
+                                                                statistics.toArray(new Statistic[0]));
             String res = calc.evaluate(m_table, exec.createSubExecutionContext(0.5));
             if (res != null) {
                 addWarningMessage(res);
@@ -180,7 +184,8 @@ public class MissingCellReplacingDataTable implements DataTable {
     }
 
     /**
-     * @return a PMML translator that inserts DerivedFields documenting the missing value replacements into a PMML document.
+     * @return a PMML translator that inserts DerivedFields
+     *          documenting the missing value replacements into a PMML document.
      */
     public PMMLTranslator getPMMLTranslator() {
         return new PMMLMissingValueReplacementTranslator(m_handlers);
@@ -210,7 +215,8 @@ public class MissingCellReplacingDataTable implements DataTable {
         m_warningMessage.append(msg);
     }
 
-    private MissingCellHandler[] prepareHandlers(final DataTableSpec inSpec, final MVSettings settings) throws InvalidSettingsException {
+    private MissingCellHandler[] prepareHandlers(final DataTableSpec inSpec, final MVSettings settings)
+                                                                        throws InvalidSettingsException {
         MissingCellHandler[] handlers = new MissingCellHandler[inSpec.getNumColumns()];
         boolean validPMML = true;
         for (int i = 0; i < inSpec.getNumColumns(); i++) {
@@ -224,7 +230,8 @@ public class MissingCellReplacingDataTable implements DataTable {
             handlers[i] = handler;
         }
         if (!validPMML) {
-            addWarningMessage("The current settings use missing value handling methods that cannot be represented in PMML 4.2");
+            addWarningMessage("The current settings use missing value handling "
+                + "methods that cannot be represented in PMML 4.2");
         }
         return handlers;
     }
@@ -235,12 +242,14 @@ public class MissingCellReplacingDataTable implements DataTable {
      * @return
      * @throws InvalidSettingsException
      */
-    private MissingCellHandler[] prepareHandlers(final DataTableSpec inTableSpec, final PMMLDocument pmmlDoc) throws InvalidSettingsException {
+    private MissingCellHandler[] prepareHandlers(final DataTableSpec inTableSpec, final PMMLDocument pmmlDoc)
+                                                                                throws InvalidSettingsException {
         MissingCellHandler[] handlers = new MissingCellHandler[inTableSpec.getNumColumns()];
         if (pmmlDoc.getPMML().getTransformationDictionary() == null
             || pmmlDoc.getPMML().getTransformationDictionary().getDerivedFieldList().size() == 0) {
             for (int i = 0; i < inTableSpec.getNumColumns(); i++) {
-                handlers[i] = DoNothingMissingCellHandlerFactory.getInstance().createHandler(inTableSpec.getColumnSpec(i));
+                handlers[i] = DoNothingMissingCellHandlerFactory.getInstance()
+                                .createHandler(inTableSpec.getColumnSpec(i));
             }
             return handlers;
         }
@@ -259,16 +268,17 @@ public class MissingCellReplacingDataTable implements DataTable {
         return handlers;
     }
 
-    private MissingCellHandler createHandlerForColumn(final DataColumnSpec spec, final DerivedField df) throws InvalidSettingsException {
+    private MissingCellHandler createHandlerForColumn(final DataColumnSpec spec, final DerivedField df)
+                                                                        throws InvalidSettingsException {
         if (df == null) {
             return DoNothingMissingCellHandlerFactory.getInstance().createHandler(spec);
         } else {
-            for(Extension ext : df.getExtensionList()) {
+            for (Extension ext : df.getExtensionList()) {
                 if (ext.getName().equals(MissingCellHandler.CUSTOM_HANDLER_EXTENSION_NAME)) {
                     MissingCellHandler handler;
                     try {
                         handler = MissingCellHandler.fromPMMLExtension(spec, ext);
-                    } catch(InvalidSettingsException e) {
+                    } catch (InvalidSettingsException e) {
                         handler = DoNothingMissingCellHandlerFactory.getInstance().createHandler(spec);
                         addWarningMessage(e.getMessage() + " Falling back to \"do nothing\" handler.");
                     }
@@ -278,7 +288,8 @@ public class MissingCellReplacingDataTable implements DataTable {
             if (df.getApply() != null) {
                 return new PMMLApplyMissingCellHandler(spec, df);
             }
-            throw new InvalidSettingsException("No valid missing value replacement found in derived field for column " + spec.getName());
+            throw new InvalidSettingsException("No valid missing value replacement found in derived field for column "
+                                               + spec.getName());
         }
     }
 
@@ -299,7 +310,7 @@ public class MissingCellReplacingDataTable implements DataTable {
      *
      * @author Alexander Fillbrunn
      */
-    private class MissingValueReplacingIterator extends RowIterator {
+    private final class MissingValueReplacingIterator extends RowIterator {
 
         private WindowedDataTableIterator m_iter;
 
@@ -331,7 +342,8 @@ public class MissingCellReplacingDataTable implements DataTable {
                     cells[i] = m_handlers[i].getCell(row.getKey(), m_iter.getWindowForColumn(i));
                     if (cells[i] == null) {
                         removeRow = true;
-                        // Other handlers might rely on the correct order and no skipped rows (eg NextValue), so we cannot break here.
+                        // Other handlers might rely on the correct order and no skipped rows (eg NextValue),
+                        // so we cannot break here.
                     }
                 } else {
                     cells[i] = row.getCell(i);

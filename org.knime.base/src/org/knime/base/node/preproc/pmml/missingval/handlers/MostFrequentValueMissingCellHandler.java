@@ -62,12 +62,12 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- *
+ * Replaces missing values with the column's most frequent value.
  * @author Alexander Fillbrunn
  */
 public class MostFrequentValueMissingCellHandler extends DefaultMissingCellHandler {
 
-    MostFrequentValueStatistic m_stat;
+    private MostFrequentValueStatistic m_stat;
 
     /**
      * @param col the column this handler is configured for
