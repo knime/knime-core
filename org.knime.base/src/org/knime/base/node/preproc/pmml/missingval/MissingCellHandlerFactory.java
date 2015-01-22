@@ -106,6 +106,7 @@ public abstract class MissingCellHandlerFactory {
     public abstract MissingCellHandler createHandler(final DataColumnSpec column);
 
     /**
+     * @param type the data type to check
      * @return true, if the handler created by the factory can handle the column.
      */
     public abstract boolean isApplicable(final DataType type);
