@@ -80,6 +80,7 @@ import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceChecker.Result;
 import org.knime.testing.core.DifferenceCheckerFactory;
 import org.knime.testing.internal.diffcheckers.EqualityChecker;
+import org.knime.testing.internal.diffcheckers.IgnoreChecker;
 
 /**
  * Model for the difference checker node.
@@ -177,6 +178,9 @@ class DifferenceCheckerNodeModel extends NodeModel {
         for (int i = 0; i < spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = spec.getColumnSpec(i);
             DifferenceChecker<DataValue> checker = (DifferenceChecker<DataValue>)m_checkers.get(colSpec);
+            if (checker instanceof IgnoreChecker) {
+                continue;
+            }
 
             DataCell testCell = testRow.getCell(i);
             DataCell refCell = refRow.getCell(i);

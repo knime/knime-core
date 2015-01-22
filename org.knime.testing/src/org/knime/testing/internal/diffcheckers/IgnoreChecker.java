@@ -63,7 +63,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class IgnoreChecker implements DifferenceChecker<DataValue> {
+public final class IgnoreChecker implements DifferenceChecker<DataValue> {
     /**
      * Factory for the {@link IgnoreChecker}.
      */
