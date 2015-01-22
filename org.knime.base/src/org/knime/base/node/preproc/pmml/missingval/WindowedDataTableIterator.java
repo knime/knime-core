@@ -141,7 +141,7 @@ public class WindowedDataTableIterator extends RowIterator {
     }
 
     /**
-     * Indicates whether more rows are available
+     * Indicates whether more rows are available.
      * @return true, if more rows can be read from the table
      */
     @Override

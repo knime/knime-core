@@ -401,7 +401,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
     @SuppressWarnings("serial")
     private class IndividualsPanel extends JPanel implements Scrollable {
 
-        private final ColumnHandlingFactorySelectionPanel DUMMY = createDummyPanel();
+        private final ColumnHandlingFactorySelectionPanel m_dummy = createDummyPanel();
         private ColumnHandlingFactorySelectionPanel createDummyPanel() {
             DataColumnSpec cspec = new DataColumnSpecCreator("____________________", StringCell.TYPE).createSpec();
             List<DataColumnSpec> cspecs = Arrays.asList(cspec);
@@ -450,7 +450,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         @Override
         public Dimension getPreferredSize() {
             if (getComponentCount() < 1) {
-                return DUMMY.getPreferredSize();
+                return m_dummy.getPreferredSize();
             }
             int height = 0;
             int width = 0;
