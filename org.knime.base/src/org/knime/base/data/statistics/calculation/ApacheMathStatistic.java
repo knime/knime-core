@@ -13,6 +13,7 @@ import org.knime.core.data.DoubleValue;
  * Base class for apache math {@link StorelessUnivariateStatistic}s implementations.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class ApacheMathStatistic extends Statistic {
 

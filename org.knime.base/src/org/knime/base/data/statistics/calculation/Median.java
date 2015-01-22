@@ -65,6 +65,7 @@ import org.knime.core.data.def.DoubleCell;
  * Calculates the median of the given column.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class Median extends StatisticSorted {
 

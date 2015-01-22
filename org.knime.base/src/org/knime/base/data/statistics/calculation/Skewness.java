@@ -54,6 +54,7 @@ package org.knime.base.data.statistics.calculation;
  * Calculates the skewness.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class Skewness extends ApacheMathStatistic {
     /**

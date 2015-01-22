@@ -68,6 +68,7 @@ import org.knime.core.util.MutableInteger;
  * Computes the nominal values of a column.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class NominalValue extends Statistic {
     private final int m_maxAmountOfCountedValues;

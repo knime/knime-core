@@ -60,6 +60,7 @@ import org.knime.core.data.DoubleValue;
  * Counts the number of special Double values: the NaN values, positive infinity and negative infinity.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class SpecialDoubleCells extends Statistic {
     private int[] m_numberNaNValues;

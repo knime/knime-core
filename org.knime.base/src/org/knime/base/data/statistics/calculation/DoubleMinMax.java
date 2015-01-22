@@ -60,6 +60,7 @@ import org.knime.core.data.DoubleValue;
  * data.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class DoubleMinMax extends Statistic {
 

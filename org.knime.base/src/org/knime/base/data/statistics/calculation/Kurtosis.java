@@ -55,6 +55,7 @@ package org.knime.base.data.statistics.calculation;
  * Calculates the Kurtosis of the given columns.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class Kurtosis extends ApacheMathStatistic {
 

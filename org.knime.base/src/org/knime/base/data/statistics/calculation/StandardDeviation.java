@@ -54,6 +54,7 @@ package org.knime.base.data.statistics.calculation;
  * Calculates the standard deviation.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class StandardDeviation extends ApacheMathStatistic {
 

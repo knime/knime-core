@@ -59,6 +59,7 @@ import org.knime.core.data.DataValue;
  * Calculates the number of missing values.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class MissingValue extends Statistic {
     private int[] m_missingValues;

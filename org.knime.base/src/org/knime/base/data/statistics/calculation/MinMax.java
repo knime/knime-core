@@ -63,6 +63,7 @@ import org.knime.core.data.DataValue;
  * Calculates the min/max values.
  *
  * @author Marcel Hanser
+ * @since 2.12
  */
 public class MinMax extends Statistic {
 
