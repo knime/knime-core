@@ -65,6 +65,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
@@ -186,8 +187,13 @@ public class TestflowRunnerApplication implements IApplication {
 
     private void dispatchLoop(final Display display) {
         while (!m_stopped) {
-            if (!display.readAndDispatch()) {
-                display.sleep();
+            try {
+                if (!display.readAndDispatch()) {
+                    display.sleep();
+                }
+            } catch (SWTException ex) {
+                System.err.print("Unhandled exception in SWT display thread: ");
+                ex.printStackTrace();
             }
         }
         m_leftDispatchLoop = true;
