@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,61 +40,52 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   17.06.2014 (thor): created
+ * ------------------------------------------------------------------------
  */
-package org.knime.core.node.port.database;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
+import java.util.List;
+
+import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.util.Pair;
 
 
-/**
- * Database utility for MS SQL Server.
+
+/** 5517: New API method to query node messages from workflow instance (needed in KNIME server)
+ * http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=5517
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.10
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class SQLServerUtility extends DatabaseUtility {
-    private static class SQLServerStatementManipulator extends StatementManipulator {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String limitRows(final String sql, final long count) {
-            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName();
-        }
+public class Bug5936_FileStoreDocumentVectorIssue extends WorkflowTestCase {
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String[] createTableAsSelect(final String tableName, final String query) {
-            return new String[] {"SELECT * INTO " + tableName + " FROM (" + query + ") as "
-                    + getTempTableName()};
-        }
+    private NodeID m_tableReader_1;
+    private NodeID m_docVector_3;
+    private NodeID m_tagger_4;
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String dropTable(final String tableName, final boolean cascade) {
-            //sql server does not support the cascade option
-            return super.dropTable(tableName, false);
-        }
+    /** {@inheritDoc} */
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        NodeID baseID = loadAndSetWorkflow();
+        m_tableReader_1 = new NodeID(baseID, 1);
+        m_docVector_3 = new NodeID(baseID, 3);
+        m_tagger_4 = new NodeID(baseID, 4);
     }
 
-    private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
-
-    /**The unique database identifier.
-     * @since 2.11*/
-    public static final String DATABASE_IDENTIFIER = "sqlserver";
-
-    /**
-     * Constructor.
-     */
-    public SQLServerUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
+    public void testExecAllThenReexecute() throws Exception {
+        WorkflowManager manager = getManager();
+        checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableReader_1, m_docVector_3, m_tagger_4);
+        executeAllAndWait();
+        checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableReader_1, m_docVector_3, m_tagger_4);
+        reset(m_tagger_4, m_docVector_3);
+        executeAllAndWait();
+        List<Pair<String, NodeMessage>> warnErrorMsgs =
+                manager.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR);
+        if (!warnErrorMsgs.isEmpty()) {
+            fail("Message list not empty: " + ConvenienceMethods.getShortStringFrom(warnErrorMsgs, 3));
+        }
+        checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableReader_1, m_docVector_3, m_tagger_4);
     }
+
+
 }

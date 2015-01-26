@@ -72,8 +72,8 @@ public class DB2Utility extends DatabaseUtility {
          */
         @Override
         public String[] createTableAsSelect(final String tableName, final String query) {
-            return new String[] {"CREATE TABLE  " + quoteIdentifier(tableName) + " AS (" + query + ") WITH NO DATA",
-                "INSERT INTO " + quoteIdentifier(tableName) + " (" + query + ")"};
+            return new String[] {"CREATE TABLE  " + tableName + " AS (" + query + ") WITH NO DATA",
+                "INSERT INTO " + tableName + " (" + query + ")"};
         }
 
         /**

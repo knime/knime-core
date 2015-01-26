@@ -278,7 +278,7 @@ public class SVMLearnerNodeModel extends NodeModel {
             kernel.setParameter(i, kernelparams.get(i).getDoubleValue());
         }
 
-        m_svms = new Svm[categories.size()];
+        final Svm[] svms = new Svm[categories.size()];
         exec.setMessage("Training SVM");
         final BinarySvmRunnable[] bst =
                 new BinarySvmRunnable[categories.size()];
@@ -320,7 +320,7 @@ public class SVMLearnerNodeModel extends NodeModel {
                     for (int i = 0; i < fut.length; ++i) {
                         fut[i].get();
                         bst[i].ok();
-                        m_svms[i] = bst[i].getSvm();
+                        svms[i] = bst[i].getSvm();
                     }
                     return null;
                 }
@@ -357,8 +357,8 @@ public class SVMLearnerNodeModel extends NodeModel {
         PMMLPortObject outPMMLPort = new PMMLPortObject(
                 specCreator.createSpec(), inPMMLPort, inSpec);
         outPMMLPort.addModelTranslater(new PMMLSVMTranslator(categories,
-                Arrays.asList(m_svms), kernel));
-
+                Arrays.asList(svms), kernel));
+        m_svms = svms;
         return new PortObject[]{outPMMLPort};
     }
 
@@ -500,19 +500,21 @@ public class SVMLearnerNodeModel extends NodeModel {
      * @return a string containing all SVM infos in HTML for the view.
      */
     String getSVMInfos() {
-        if (m_svmInfo.length() > 0) {
+        if (!m_svmInfo.isEmpty()) {
             return m_svmInfo;
         }
-        StringBuffer sb = new StringBuffer();
-        if (m_svms != null) {
+        StringBuilder sb = new StringBuilder();
+        // avoid NPE when reset is called during view update
+        Svm[] svms = m_svms;
+        if (svms != null) {
             sb.append("<html>\n");
             sb.append("<body>\n");
-            for (int i = 0; i < m_svms.length; i++) {
-                if (m_svms[i] != null) {
+            for (int i = 0; i < svms.length; i++) {
+                if (svms[i] != null) {
                     sb.append("<h1> SVM " + i + " Class: "
-                            + m_svms[i].getPositive() + "</h1>");
+                            + svms[i].getPositive() + "</h1>");
                     sb.append("<b> Support Vectors: </b><br>");
-                    DoubleVector[] supvecs = m_svms[i].getSupportVectors();
+                    DoubleVector[] supvecs = svms[i].getSupportVectors();
                     for (DoubleVector vec : supvecs) {
                         for (int s = 0; s < vec.getNumberValues(); s++) {
                             sb.append(vec.getValue(s) + ", ");

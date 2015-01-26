@@ -64,6 +64,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
@@ -94,12 +95,14 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         String tableName = m_tableName.getStringValue();
         DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
         CredentialsProvider cp = getCredentialsProvider();
+        final StatementManipulator statementManipulator = conn.getUtility().getStatementManipulator();
         try {
-            conn.execute("DROP TABLE " + tableName, cp);
+            //use the statement manipulator to create the drop table statement
+            conn.execute(statementManipulator.dropTable(tableName, false), cp);
         } catch (Exception e) {
             // suppress exception thrown when table does not exist in database
         }
-        String[] stmts = conn.getUtility().getStatementManipulator().createTableAsSelect(tableName, conn.getQuery());
+        String[] stmts = statementManipulator.createTableAsSelect(tableName, conn.getQuery());
         for (final String stmt : stmts) {
             conn.execute(stmt, cp);
         }

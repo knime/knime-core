@@ -59,6 +59,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.xerces.parsers.XMLGrammarCachingConfiguration;
+import org.knime.core.data.util.memory.MemoryWarningSystem;
+import org.knime.core.data.util.memory.MemoryWarningSystem.MemoryWarningListener;
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
 import org.knime.core.node.NodeLogger;
@@ -71,9 +74,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * A @link{XMLCellReader} to read a single cell from given
- *
- * @link{InputStream .
+ * A @link{XMLCellReader} to read a single cell from given.
  *
  * @author Heiko Hofer
  */
@@ -87,6 +88,12 @@ class XMLDOMCellReader implements XMLCellReader {
     private static final DocumentBuilderFactory PARSER_FAC;
 
     static {
+        if (System.getProperty("org.apache.xerces.xni.parser.XMLParserConfiguration") == null) {
+        	// setting this property makes all Xerces parsers use a grammar pool, see
+        	// http://xerces.apache.org/xerces2-j/faq-grammars.html#faq-4
+            System.setProperty("org.apache.xerces.xni.parser.XMLParserConfiguration",
+                XMLGrammarCachingConfiguration.class.getName());
+        }
         PARSER_FAC = DocumentBuilderFactory.newInstance();
 
         PARSER_FAC.setValidating(false);
@@ -99,6 +106,19 @@ class XMLDOMCellReader implements XMLCellReader {
                     "Could not enable usage of Java encodings in XML parser: "
                     + ex.getMessage(), ex);
         }
+
+        MemoryWarningSystem.getInstance().registerListener(new MemoryWarningListener() {
+            private final XMLGrammarCachingConfiguration m_conf = new XMLGrammarCachingConfiguration();
+
+            @Override
+            public void memoryUsageLow(final long usedMemory, final long maxMemory) {
+                // all XMLGrammarCachingConfigurations use a shared static pool, therefore
+                // freeing this pool also frees the pool used by the parsers
+                NodeLogger.getLogger(XMLDOMCellReader.class)
+                    .debug("Clearing XML grammar cache due to low memory event");
+                m_conf.clearGrammarPool();
+            }
+        });
     }
 
 

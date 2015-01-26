@@ -70,6 +70,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.eclipse.core.runtime.AssertionFailedException;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Display;
@@ -287,9 +288,19 @@ abstract class AbstractInjector implements Runnable {
             return false;
         }
 
-        IEditorInput input = ref.getEditorInput();
-        return (input instanceof WebBrowserEditorInput)
-            && ((WebBrowserEditorInput)input).getURL().getPath()
-                .endsWith(introPageFile.getAbsolutePath().replace("\\", "/"));
+        try {
+            IEditorInput input = ref.getEditorInput();
+            return (input instanceof WebBrowserEditorInput)
+                && ((WebBrowserEditorInput)input).getURL().getPath()
+                    .endsWith(introPageFile.getAbsolutePath().replace("\\", "/"));
+        } catch (AssertionFailedException ex) {
+            // may happen if the editor "ref" points to a resource that doesn't exist any more
+            NodeLogger
+                .getLogger(IntroPage.class)
+                .error(
+                    "Could not get editor input, probably the resource was removed outside Eclipse: " + ex.getMessage(),
+                    ex);
+            return false;
+        }
     }
 }
