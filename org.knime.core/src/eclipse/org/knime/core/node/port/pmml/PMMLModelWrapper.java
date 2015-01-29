@@ -215,6 +215,9 @@ public abstract class PMMLModelWrapper {
         for (SupportVectorMachineModel m : pmml.getSupportVectorMachineModelList()) {
             list.add(new PMMLSupportVectorMachineModelWrapper(m));
         }
+        for (MiningModel m : pmml.getMiningModelList()) {
+            list.add(new PMMLMiningModelWrapper(m));
+        }
         return list;
     }
 
