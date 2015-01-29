@@ -20,7 +20,11 @@
             extra handling, click "Add", and set the parameters. Click on the 
             label with the column name(s), will select all covered columns 
             in the column list. To remove this extra handling (and instead use 
-            the default handling), click the "Remove" button for this column. 
+            the default handling), click the "Remove" button for this column.<br/>
+            Options marked with an asterisk (*) will result in non-standard PMML.
+            If you select such an option, the warning label in the dialog will become
+            red and a warning will be shown during execution of the node. Non-standard
+            PMML uses extensions that cannot be read by other tools than Knime.
         </intro>
     </fullDescription>
     

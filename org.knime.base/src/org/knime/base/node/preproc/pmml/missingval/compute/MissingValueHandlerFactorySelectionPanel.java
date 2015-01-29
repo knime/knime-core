@@ -58,11 +58,25 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.DirectColorModel;
+import java.awt.image.IndexColorModel;
+import java.awt.image.WritableRaster;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.PaletteData;
+import org.eclipse.swt.graphics.RGB;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 import org.knime.base.node.preproc.pmml.missingval.DefaultMissingValueHandlerPanel;
 import org.knime.base.node.preproc.pmml.missingval.MVIndividualSettings;
 import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
@@ -81,6 +95,9 @@ import org.knime.core.node.port.PortObjectSpec;
  * @author Alexander Fillbrunn
  */
 public class MissingValueHandlerFactorySelectionPanel extends JPanel implements ActionListener {
+
+    private static final Icon ICON = toIcon(PlatformUI.getWorkbench().getSharedImages()
+                                            .getImage(ISharedImages.IMG_LCL_LINKTO_HELP));
 
     /**
      * Event identifier for the event that is fired when the selected factory changes.
@@ -130,6 +147,17 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
             }
         }
 
+        final JButton btnHelp = new JButton(ICON);
+        btnHelp.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                MissingCellHandlerDescriptionWindow.openHelpWindow();
+            }
+        });
+        btnHelp.setPreferredSize(new Dimension(25, 25));
+        btnHelp.setToolTipText("Shows detailed information about the missing value handler.");
+
         // Add listener to respond to a changing selection so the settings panel cards can be updated
         m_comboBox.addActionListener(this);
         // Now set the selected item. The change action event is triggered and the correct panel shown.
@@ -145,6 +173,9 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
         gbc.ipadx = 10;
         gbc.ipady = 5;
         add(m_comboBox, gbc);
+        gbc.gridx = 1;
+        add(btnHelp, gbc);
+        gbc.gridx = 0;
         gbc.gridy++;
         add(m_argumentsPanel, gbc);
     }
@@ -155,9 +186,8 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
     @SuppressWarnings("unchecked")
     @Override
     public void actionPerformed(final ActionEvent e) {
-        // Retrieve selected factory
-        JComboBox<MissingCellHandlerFactory> sender = (JComboBox<MissingCellHandlerFactory>)e.getSource();
-        MissingCellHandlerFactory fac = ((MissingCellHandlerFactory)sender.getSelectedItem());
+        MissingCellHandlerFactory fac = getSelectedFactory();
+        MissingCellHandlerDescriptionWindow.setFactory(getSelectedFactory());
         if (fac.hasSettingsPanel()) {
             // Show card layout panel and activate the correct settings panel
             m_argumentsPanel.setVisible(true);
@@ -246,6 +276,68 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
         @Override
         public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
                                                                     throws NotConfigurableException {
+        }
+    }
+
+    /**
+     * Converts a swt image to an awt compatible image. Adapted implementation from from
+     * http://www.javadocexamples.com/java_source/org/eclipse/swt/snippets/Snippet156.java.html
+     *
+     * @param image swt image to convert
+     * @return an awt image containing same image data as the given swt image
+     */
+    private static Icon toIcon(final Image image) {
+        ImageData data = image.getImageData();
+
+        ColorModel colorModel = null;
+        PaletteData palette = data.palette;
+        if (palette.isDirect) {
+            colorModel = new DirectColorModel(data.depth, palette.redMask, palette.greenMask, palette.blueMask);
+            BufferedImage bufferedImage =
+                new BufferedImage(colorModel, colorModel.createCompatibleWritableRaster(data.width, data.height),
+                    false, null);
+            WritableRaster raster = bufferedImage.getRaster();
+            int[] pixelArray = new int[3];
+            for (int y = 0; y < data.height; y++) {
+                for (int x = 0; x < data.width; x++) {
+                    int pixel = data.getPixel(x, y);
+                    RGB rgb = palette.getRGB(pixel);
+                    pixelArray[0] = rgb.red;
+                    pixelArray[1] = rgb.green;
+                    pixelArray[2] = rgb.blue;
+                    raster.setPixels(x, y, 1, 1, pixelArray);
+                }
+            }
+            return new ImageIcon(bufferedImage);
+        } else {
+            RGB[] rgbs = palette.getRGBs();
+            byte[] red = new byte[rgbs.length];
+            byte[] green = new byte[rgbs.length];
+            byte[] blue = new byte[rgbs.length];
+            for (int i = 0; i < rgbs.length; i++) {
+                RGB rgb = rgbs[i];
+                red[i] = (byte)rgb.red;
+                green[i] = (byte)rgb.green;
+                blue[i] = (byte)rgb.blue;
+            }
+            if (data.transparentPixel != -1) {
+                colorModel = new IndexColorModel(data.depth, rgbs.length, red, green, blue, data.transparentPixel);
+            } else {
+                colorModel = new IndexColorModel(data.depth, rgbs.length, red, green, blue);
+            }
+            BufferedImage bufferedImage =
+                new BufferedImage(colorModel, colorModel.createCompatibleWritableRaster(data.width, data.height),
+                    false, null);
+            WritableRaster raster = bufferedImage.getRaster();
+            int[] pixelArray = new int[1];
+            for (int y = 0; y < data.height; y++) {
+                for (int x = 0; x < data.width; x++) {
+                    int pixel = data.getPixel(x, y);
+                    pixelArray[0] = pixel;
+                    raster.setPixel(x, y, pixelArray);
+                }
+            }
+            return new ImageIcon(bufferedImage);
         }
     }
 }

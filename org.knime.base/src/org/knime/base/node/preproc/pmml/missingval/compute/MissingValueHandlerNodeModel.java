@@ -112,12 +112,17 @@ public class MissingValueHandlerNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        String warning = null;
+        // TODO: The node should be reset
         try {
-            m_settings.loadSettings(settings);
+            warning = m_settings.loadSettings(settings);
         } catch (InvalidSettingsException e) {
             setWarningMessage("Setting could not be loaded and are reset.");
             m_settings = new MVSettings();
             throw e;
+        }
+        if (warning != null) {
+            setWarningMessage(warning);
         }
     }
 

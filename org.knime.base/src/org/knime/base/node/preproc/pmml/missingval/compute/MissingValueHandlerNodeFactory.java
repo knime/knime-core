@@ -1,8 +1,14 @@
 package org.knime.base.node.preproc.pmml.missingval.compute;
 
+import java.io.IOException;
+
+import org.apache.xmlbeans.XmlException;
+import org.knime.base.node.preproc.pmml.missingval.utils.MissingValueNodeDescriptionHelper;
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.xml.sax.SAXException;
 
 /**
  * <code>NodeFactory</code> for the "CompiledModelReader" Node.
@@ -54,5 +60,13 @@ public class MissingValueHandlerNodeFactory
         return new MissingValueHandlerNodeDialog();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
+        NodeDescription createNodeDescription = super.createNodeDescription();
+        return MissingValueNodeDescriptionHelper.createNodeDescription(createNodeDescription);
+    }
 }
 

@@ -1,4 +1,4 @@
-package org.knime.base.node.preproc.pmml.missingval.compute;
+ package org.knime.base.node.preproc.pmml.missingval.compute;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -243,12 +243,11 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
                                             /** {@inheritDoc} */
                                             @Override
                                             public void propertyChange(final PropertyChangeEvent evt) {
-                                                DataColumnSpec[] removedSpecs = (DataColumnSpec[])evt.getNewValue();
+                                                String[] removedSpecs = (String[])evt.getNewValue();
                                                 if (removedSpecs != null) {
-                                                    for (DataColumnSpec spec : removedSpecs) {
-                                                        if (m_searchableListPanel.isAdditionalColumn(spec.getName())) {
-                                                            m_searchableListModifier.removeAdditionalColumn(spec
-                                                                    .getName());
+                                                    for (String spec : removedSpecs) {
+                                                        if (m_searchableListPanel.isAdditionalColumn(spec)) {
+                                                            m_searchableListModifier.removeAdditionalColumn(spec);
                                                         }
                                                     }
                                                 }
