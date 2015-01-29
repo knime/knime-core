@@ -27,8 +27,8 @@
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="Input table">Table with missing values</inPort>
+        <inPort index="0" name="PMML">Document describing the missing value replacement operations</inPort>
+        <inPort index="1" name="Input table">Table with missing values</inPort>
         <outPort index="0" name="Output table">Table with replaced missing values</outPort>
-        <outPort index="1" name="PMML Transformations">Table with PMML documenting the missing value replacement</outPort>
     </ports>
 </knimeNode>
