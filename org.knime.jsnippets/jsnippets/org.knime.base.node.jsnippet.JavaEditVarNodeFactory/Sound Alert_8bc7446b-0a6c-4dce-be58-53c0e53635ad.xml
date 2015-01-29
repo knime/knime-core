@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="Sound Alert_8bc7446b-0a6c-4dce-be58-53c0e53635ad.xml">
+<entry key="Meta category" type="xstring" value="org.knime.base.node.jsnippet.JavaEditVarNodeFactory"/>
+<entry key="Category" type="xstring" value="System"/>
+<entry key="Name" type="xstring" value="Sound Alert"/>
+<entry key="Description" type="xstring" value="Plays a simple system sound. Useful when a long-running%%00010(part of a) workflow finishes execution and the user wants%%00010to be notified to take further actions, e.g. inspect results.%%00010No input is needed/modified and no output is generated."/>
+<entry key="Version" type="xstring" value="version 1.x"/>
+<config key="Snippet">
+<entry key="scriptImports" type="xstring" value="import javax.sound.sampled.AudioFormat;%%00010import javax.sound.sampled.SourceDataLine;%%00010import javax.sound.sampled.AudioSystem;%%00010import javax.sound.sampled.LineUnavailableException;%%00010"/>
+<entry key="scriptFields" type="xstring" value=""/>
+<entry key="scriptBody" type="xstring" value="/** Plays a fake audio file - frequency, volume and duration can be specified. */%%00010%%00010try {%%00010    int hertz = 500;%%00010    int millisecs = 500;%%00010    double volume = 1.0;%%00010%%00010    byte[] buf = new byte[1];%%00010    AudioFormat af = %%00010        new AudioFormat(%%00010            8000f,       // sampleRate%%00010            8,           // sampleSizeInBits%%00010            1,           // channels%%00010            true,        // signed%%00010            false);      // bigEndian%%00010    SourceDataLine sdl = AudioSystem.getSourceDataLine(af);%%00010    sdl.open(af);%%00010    sdl.start();%%00010    for (int i=0; i &lt; millisecs * 8; i++) {%%00010      double angle = i / (8000f / hertz) * 2.0 * Math.PI;%%00010      buf[0] = (byte)(Math.sin(angle) * 127.0 * volume);%%00010      sdl.write(buf,0,1);%%00010    }%%00010    sdl.drain();%%00010    sdl.stop();%%00010    sdl.close();%%00010} catch (LineUnavailableException ex) {%%00010%%00009throw new Abort(&quot;Couldn't play sound&quot;, ex);%%00010}%%00010%%00010%%00010%%00010"/>
+<config key="jarFiles">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="outCols">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="outVars">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="inCols">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="inVars">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="version" type="xstring" value="version 1.x"/>
+<entry key="templateUUID" type="xstring" value="8bc7446b-0a6c-4dce-be58-53c0e53635ad"/>
+<entry key="runOnExecute" type="xboolean" value="true"/>
+</config>
+</config>
