@@ -117,9 +117,8 @@ public class MVIndividualSettings {
         m_factory = MissingCellHandlerFactoryManager.getInstance().getFactoryByID(factID);
         if (m_factory == null) {
             m_factory = DoNothingMissingCellHandlerFactory.getInstance();
-            warning = "The factory " + factID + " was not loaded but is chosen in the settings.";
+            warning = "The factory " + factID + " is not a registered extension but is chosen in the settings.";
         }
-
         if (settings.containsKey(SETTINGS_CFG)) {
             m_settings = new NodeSettings("");
             settings.getNodeSettings(SETTINGS_CFG).copyTo(this.m_settings);
