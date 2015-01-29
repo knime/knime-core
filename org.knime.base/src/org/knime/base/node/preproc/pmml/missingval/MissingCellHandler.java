@@ -69,11 +69,13 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -86,6 +88,8 @@ import org.w3c.dom.Node;
  * @author Alexander Fillbrunn
  */
 public abstract class MissingCellHandler {
+
+    private static NodeLogger LOGGER = NodeLogger.getLogger(MissingCellHandler.class);
 
     /**
      * Name of the pmml extension that holds the name of a custom missing value handler.
@@ -242,6 +246,7 @@ public abstract class MissingCellHandler {
             Node copy = e.getDomNode().getOwnerDocument().importNode(doc.getFirstChild(), true);
             e.getDomNode().appendChild(copy);
         } catch (Exception ex) {
+            LOGGER.error("An error occurred while writing settings to PMML.\n" + ex.getMessage());
             return null;
         }
         return field;
@@ -258,6 +263,8 @@ public abstract class MissingCellHandler {
             return org.dmg.pmml.DATATYPE.BOOLEAN;
         } else if (m_col.getType().equals(IntCell.TYPE) || m_col.getType().equals(LongCell.TYPE)) {
             return org.dmg.pmml.DATATYPE.INTEGER;
+        } else if (m_col.getType().equals(DateAndTimeCell.TYPE)) {
+            return org.dmg.pmml.DATATYPE.DATE_TIME;
         } else {
             return org.dmg.pmml.DATATYPE.STRING;
         }
@@ -311,7 +318,8 @@ public abstract class MissingCellHandler {
             NodeSettingsRO settings = NodeSettings.loadFromXML(bis);
             handler.loadSettingsFrom(settings);
         } catch (Exception ex) {
-            // If error occurs, return handler with default settings, so we have to do nothing here
+            LOGGER.error("An error occurred while loading settings for a MissingCellHandler from PMML.\n"
+                            + ex.getMessage());
         }
         return handler;
     }
