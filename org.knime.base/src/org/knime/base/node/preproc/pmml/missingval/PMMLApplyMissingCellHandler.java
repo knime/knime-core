@@ -50,6 +50,8 @@
  */
 package org.knime.base.node.preproc.pmml.missingval;
 
+import java.text.ParseException;
+
 import org.dmg.pmml.DATATYPE;
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.knime.base.data.statistics.Statistic;
@@ -58,9 +60,11 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -75,6 +79,8 @@ public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
     private DerivedField m_derivedField;
 
     private String m_value;
+
+    private DataType m_dataType;
 
     /**
      * @param col the column for which this handler is created
@@ -91,6 +97,9 @@ public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
             throw new InvalidSettingsException("The derived field for column " + col.getName()
                                                + " is malformed for missing value replacement", e);
         }
+
+        DataType type = getKnimeDataTypeForPMML(df.getDataType());
+        m_dataType = DataType.getCommonSuperType(type, col.getType());
     }
 
     /**
@@ -121,14 +130,19 @@ public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
     @Override
     public DataCell getCell(final RowKey key, final DataColumnWindow window) {
         try {
-            if (m_derivedField.getDataType() == DATATYPE.BOOLEAN) {
+            if (m_dataType.equals(BooleanCell.TYPE)) {
                 return BooleanCell.get(Boolean.parseBoolean(m_value));
-            } else if (m_derivedField.getDataType() == DATATYPE.INTEGER) {
+            } else if (m_dataType.equals(IntCell.TYPE)) {
                 return new IntCell(Integer.parseInt(m_value));
+            } else if (m_dataType.equals(LongCell.TYPE)) {
+                return new LongCell(Long.parseLong(m_value));
             } else if (m_derivedField.getDataType() == DATATYPE.DOUBLE) {
                 return new DoubleCell(Double.parseDouble(m_value));
+            } else if (m_derivedField.getDataType() == DATATYPE.DATE_TIME) {
+                // TODO: The node must be added to the DateAndTimeCell
+                return DateAndTimeCell.fromString(m_value);
             }
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException | ParseException e) {
             return new MissingCell("Could not parse PMML value");
         }
         return new StringCell(m_value);
@@ -147,7 +161,7 @@ public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public DataType getOutputDataType() {
-        return getKnimeDataTypeForPMML(m_derivedField.getDataType());
+        return m_dataType;
     }
 
     /**
@@ -161,6 +175,8 @@ public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
             return BooleanCell.TYPE;
         } else if (dt.equals(DATATYPE.INTEGER)) {
             return IntCell.TYPE;
+        } else if (dt.equals(DATATYPE.DATE_TIME)) {
+            return DateAndTimeCell.TYPE;
         } else  {
             return StringCell.TYPE;
         }
