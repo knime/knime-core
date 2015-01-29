@@ -96,6 +96,8 @@ import org.knime.core.node.port.PortObjectSpec;
  */
 public class MissingValueHandlerFactorySelectionPanel extends JPanel implements ActionListener {
 
+    private static final int ALPHA_MASK = -16777216;
+
     private static final Icon ICON = toIcon(PlatformUI.getWorkbench().getSharedImages()
                                             .getImage(ISharedImages.IMG_LCL_LINKTO_HELP));
 
@@ -288,16 +290,16 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
      */
     private static Icon toIcon(final Image image) {
         ImageData data = image.getImageData();
-
         ColorModel colorModel = null;
         PaletteData palette = data.palette;
         if (palette.isDirect) {
-            colorModel = new DirectColorModel(data.depth, palette.redMask, palette.greenMask, palette.blueMask);
+            colorModel = new DirectColorModel(data.depth, palette.redMask, palette.greenMask,
+                                                palette.blueMask, ALPHA_MASK);
             BufferedImage bufferedImage =
                 new BufferedImage(colorModel, colorModel.createCompatibleWritableRaster(data.width, data.height),
                     false, null);
             WritableRaster raster = bufferedImage.getRaster();
-            int[] pixelArray = new int[3];
+            int[] pixelArray = new int[4];
             for (int y = 0; y < data.height; y++) {
                 for (int x = 0; x < data.width; x++) {
                     int pixel = data.getPixel(x, y);
@@ -305,6 +307,7 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
                     pixelArray[0] = rgb.red;
                     pixelArray[1] = rgb.green;
                     pixelArray[2] = rgb.blue;
+                    pixelArray[3] = (pixel == data.transparentPixel) ? 0 : 255;
                     raster.setPixels(x, y, 1, 1, pixelArray);
                 }
             }
