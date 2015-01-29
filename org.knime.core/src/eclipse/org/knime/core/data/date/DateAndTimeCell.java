@@ -48,10 +48,12 @@
 package org.knime.core.data.date;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
@@ -401,25 +403,66 @@ public class DateAndTimeCell extends DataCell
     @Override
     public String getStringValue() {
         Date date = getInternalUTCCalendarMember().getTime();
+        DateFormat format = getFormat(m_hasDate, m_hasTime, m_hasMillis);
+        synchronized (format) {
+            return format.format(date);
+        }
+    }
+
+    private static DateFormat getFormat(final boolean hasDate, final boolean hasTime, final boolean hasMillis) {
         DateFormat format;
-        if (m_hasDate && m_hasTime && m_hasMillis) {
+        if (hasDate && hasTime && hasMillis) {
             format = FORMAT_DATE_AND_TIME_AND_MS;
-        } else if (m_hasDate && m_hasTime && !m_hasMillis) {
+        } else if (hasDate && hasTime && !hasMillis) {
             format = FORMAT_DATE_AND_TIME;
-        } else if (m_hasDate && !m_hasTime && !m_hasMillis) {
+        } else if (hasDate && !hasTime && !hasMillis) {
             format = FORMAT_DATE;
-        } else if (!m_hasDate && m_hasTime && m_hasMillis) {
+        } else if (!hasDate && hasTime && hasMillis) {
             format = FORMAT_TIME_AND_MS;
-        } else if (!m_hasDate && m_hasTime && !m_hasMillis) {
+        } else if (!hasDate && hasTime && !hasMillis) {
             format = FORMAT_TIME;
         } else {
             // ill-posed format (should have been rejected in constructor),
             // use full precision
             format = FORMAT_DATE_AND_TIME_AND_MS;
         }
-        synchronized (format) {
-            return format.format(date);
+        return format;
+    }
+
+    private static final Pattern MS_PATTERN = Pattern.compile("\\.[0-9]{1,3}$");
+
+    private static final Pattern DATE_PATTERN = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}");
+
+    private static final Pattern TIME_PATTERN = Pattern.compile("[0-9]{2}:[0-9]{2}:[0-9]{2}");
+
+    /**
+     * Creates a new DateAndTimeCell from the given string.
+     * The string must consist of only a date, only a time or both, separated with the capital letter "T".
+     * The milliseconds part of the time is optional.
+     * The following formats are allowed:
+     * Date: yyyy-MM-dd
+     * Time: HH:mm:ss
+     * Time with milliseconds: HH:mm:ss.S
+     * Date and time: yyyy-MM-dd'T'HH:mm:ss
+     * Date and time with milliseconds: yyyy-MM-dd'T'HH:mm:ss.S
+     * @param s the string to parse into date
+     * @return the cell containing the parsed date
+     * @throws ParseException when the string cannot be parsed
+     * @since 2.12
+     */
+    public static DateAndTimeCell fromString(final String s) throws ParseException {
+        boolean hasMillis = MS_PATTERN.matcher(s).find();
+        boolean hasDate = DATE_PATTERN.matcher(s).find();
+        boolean hasTime = TIME_PATTERN.matcher(s).find();
+        if (!(hasMillis || hasDate || hasTime) || (!hasTime && hasMillis)) {
+            throw new ParseException("The given string does not conform to the required format.", 0);
         }
+        DateFormat format = getFormat(hasDate, hasTime, hasMillis);
+        Date date;
+        synchronized (format) {
+            date = format.parse(s);
+        }
+        return new DateAndTimeCell(date.getTime(), hasDate, hasTime, hasMillis);
     }
 
     // ***************************************************************
