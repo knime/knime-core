@@ -50,6 +50,8 @@
  */
 package org.knime.base.node.preproc.pmml.missingval;
 
+import org.knime.base.node.preproc.pmml.missingval.utils.MissingCellHandlerDescription;
+import org.knime.base.node.preproc.pmml.missingval.utils.MissingCellHandlerDescriptionFactory;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 
@@ -119,4 +121,8 @@ public abstract class MissingCellHandlerFactory {
      * @return true, if the handler only does operations that can be described by a PMML 4.2 derived field.
      */
     public abstract boolean producesPMML4_2();
+
+    public MissingCellHandlerDescription getDescription() {
+        return MissingCellHandlerDescriptionFactory.getDescription(this);
+    }
 }

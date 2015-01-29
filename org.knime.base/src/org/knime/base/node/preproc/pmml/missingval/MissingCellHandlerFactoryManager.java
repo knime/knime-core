@@ -106,6 +106,13 @@ public final class MissingCellHandlerFactoryManager {
     }
 
     /**
+     * @return all factories managed by this class.
+     */
+    public Iterable<MissingCellHandlerFactory> getFactories() {
+        return m_factories;
+    }
+
+    /**
      * Registers a handler factory.
      * @param factory the factory to register
      */
