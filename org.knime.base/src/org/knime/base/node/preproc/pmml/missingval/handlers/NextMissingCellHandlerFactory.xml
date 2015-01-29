@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<missingcellhandler name="Previous" xmlns="http://knime.org/missingval/v1.0">
+    <shortDescription 
+        intro="Replaces missing values with the last encountered non-missing value." />
+
+    <fullDescription>
+        <p>
+            This missing value handler replaces missing values with the last encountered
+            non-missing value in the column it is configured for.
+            <br/>
+            <b>This missing value handler does not produce standard PMML 4.2!</b>
+        </p>
+    </fullDescription>
+</missingcellhandler>

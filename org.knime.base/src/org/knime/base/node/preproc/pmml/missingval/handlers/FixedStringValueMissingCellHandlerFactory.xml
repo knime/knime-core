@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<missingcellhandler name="Fix Value (String)" xmlns="http://knime.org/missingval/v1.0">
+    <shortDescription 
+        intro="Replaces missing values with a fixed string." />
+
+    <fullDescription>
+        <p>
+            Replaces missing values with a string given by the user.<br/>
+            This missing value handler produces valid PMML 4.2.
+        </p>
+        <option name="Value">The replacement value.</option>
+    </fullDescription>
+</missingcellhandler>

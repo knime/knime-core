@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<missingcellhandler name="Do Nothing" xmlns="http://knime.org/missingval/v1.0">
+    <shortDescription 
+        intro="Does not replace missing values." />
+
+    <fullDescription>
+        <p>
+            This missing value handler does not replace missing values.<br/>
+            This missing value handler is not represented in the output PMML document.
+        </p>
+    </fullDescription>
+</missingcellhandler>

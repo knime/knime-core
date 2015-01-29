@@ -126,7 +126,8 @@ public class IntegerMeanMissingCellHandler extends DefaultMissingCellHandler {
             throw new IllegalStateException("The field can only be created after the statistic has been filled");
         }
         DATATYPE.Enum dt = DATATYPE.INTEGER;
-        String val = Integer.toString((int)Math.round(m_mean.getResult(getColumnSpec().getName())));
+        long value = Math.round(m_mean.getResult(getColumnSpec().getName()));
+        String val = Long.toString(value);
 
         return createValueReplacingDerivedField(dt, val);
     }

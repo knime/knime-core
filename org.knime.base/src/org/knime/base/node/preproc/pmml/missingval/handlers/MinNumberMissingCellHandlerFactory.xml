@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<missingcellhandler name="Minimum" xmlns="http://knime.org/missingval/v1.0">
+    <shortDescription 
+        intro="Replaces missing values with the column's smallest value." />
+
+    <fullDescription>
+        <p>
+            Finds the column's smallest value and replaces all missing values with it.<br/>
+            This missing value handler produces valid PMML 4.2.
+        </p>
+    </fullDescription>
+</missingcellhandler>

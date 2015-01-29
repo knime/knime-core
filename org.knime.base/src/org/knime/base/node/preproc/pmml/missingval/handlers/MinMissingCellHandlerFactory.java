@@ -46,93 +46,69 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   15.12.2014 (Alexander): created
+ *   16.12.2014 (Alexander): created
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
-import org.dmg.pmml.DerivedFieldDocument.DerivedField;
-import org.knime.base.data.statistics.Statistic;
-import org.knime.base.data.statistics.calculation.MinMax;
-import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
-import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
-import org.knime.core.data.DataCell;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandler;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
+import org.knime.base.node.preproc.pmml.missingval.MissingValueHandlerPanel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.date.DateAndTimeValue;
 
 /**
- * Replaces missing values in a column with the smallest value in this column.
+ * Creates a handler that replaces missing values with the column's minimum value.
  * @author Alexander Fillbrunn
  */
-public class MinNumberMissingCellHandler extends DefaultMissingCellHandler {
-
-    /**
-     * @param col the column this handler is configured for
-     */
-    public MinNumberMissingCellHandler(final DataColumnSpec col) {
-        super(col);
-    }
-
-    private MinMax m_minMax;
+public class MinMissingCellHandlerFactory extends MissingCellHandlerFactory {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Statistic getStatistic() {
-        if (m_minMax == null) {
-            m_minMax = new MinMax(getColumnSpec().getName());
-        }
-        return m_minMax;
+    public MissingCellHandler createHandler(final DataColumnSpec column) {
+        return new MinMissingCellHandler(column);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        return m_minMax.getMin(getColumnSpec().getName());
+    public String getDisplayName() {
+        return "Minimum";
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DataType getOutputDataType() {
-        if (!(getColumnSpec().getType().equals(IntCell.TYPE) || getColumnSpec().getType().equals(LongCell.TYPE))) {
-            return DoubleCell.TYPE;
-        }
-        return getColumnSpec().getType();
+    public boolean producesPMML4_2() {
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DerivedField getPMMLDerivedField() {
-        if (m_minMax == null) {
-            throw new IllegalStateException("The field can only be created after the statistic has been filled");
-        }
-        return createValueReplacingDerivedField(getPMMLDataTypeForColumn(),
-                                                m_minMax.getMin(getColumnSpec().getName()).toString());
+    public MissingValueHandlerPanel getSettingsPanel() {
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void loadSettingsFrom(final NodeSettingsRO settings) {
+    public boolean hasSettingsPanel() {
+        return false;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void saveSettingsTo(final NodeSettingsWO settings) {
+    public boolean isApplicable(final DataType type) {
+        return type.isCompatible(DoubleValue.class) || type.isCompatible(DateAndTimeValue.class);
     }
 }
