@@ -1842,7 +1842,7 @@
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.FixedDoubleValueMissingCellHandlerFactory">
         </MissingCellHandler>
         <MissingCellHandler
-              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MaxNumberMissingCellHandlerFactory">
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MaxMissingCellHandlerFactory">
         </MissingCellHandler>
         <MissingCellHandler
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.IntegerMeanMissingCellHandlerFactory">
@@ -1851,7 +1851,7 @@
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.FixedIntegerValueMissingCellHandlerFactory">
         </MissingCellHandler>
         <MissingCellHandler
-              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MinNumberMissingCellHandlerFactory">
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MinMissingCellHandlerFactory">
         </MissingCellHandler>
         <MissingCellHandler
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MostFrequentValueMissingCellHandlerFactory">
