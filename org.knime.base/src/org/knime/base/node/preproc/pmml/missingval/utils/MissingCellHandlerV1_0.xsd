@@ -10,7 +10,7 @@
 	owner or * as specified in the license file distributed with this product. 
 	* * If you have any questions please contact the copyright holder: * website: 
 	www.knime.org * email: contact@knime.org =============================================================================== 
-	This XSD describes distance description introduced with KNIME 2.10. -->
+	This XSD describes missing cell handler description introduced with KNIME 2.12. -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://knime.org/missingval/v1.0"
 	targetNamespace="http://knime.org/missingval/v1.0">
 	<xs:element name="missingcellhandler">
@@ -21,9 +21,6 @@
                     <xs:attribute name="deprecated" default="false" type="xs:boolean" />
 			      </xs:extension>
 		    </xs:simpleContent>
-			<!-- <xs:sequence>
-				<xs:element name="shortDescription" type="xs:string" minOccurs="1" maxOccurs="1"/>
-			</xs:sequence> -->
 		</xs:complexType>
 	</xs:element>
 </xs:schema>
