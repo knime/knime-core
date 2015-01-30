@@ -63,7 +63,6 @@ import javax.xml.transform.stream.StreamResult;
 import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
 import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactoryManager;
 import org.knime.core.node.NodeDescription;
-import org.knime.core.node.NodeFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -71,21 +70,11 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * Helper class to generate {@link NodeDescription}s for Distance category nodes. The usage takes place within the
- * {@link NodeFactory#createNodeDescription()} method, as shown in the following example.
- * <pre>
- * &#064;Override
- * protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
- *     return DistanceCategoryNodeDescriptionHelper.createNodeDescription(super.createNodeDescription(),
- *         NumericalDistanceMeasureFactory.class);
- * }
- * </pre>
+ * Helper class to generate the {@link NodeDescription} for the Missing Value Handler node.
  *
- *
- * @author Marcel Hanser
- * @since 2.10
+ * @author Marcel Hanser, Alexander Fillbrunn
+ * @since 2.12
  */
-@SuppressWarnings("javadoc")
 public final class MissingValueNodeDescriptionHelper {
 
     private MissingValueNodeDescriptionHelper() {

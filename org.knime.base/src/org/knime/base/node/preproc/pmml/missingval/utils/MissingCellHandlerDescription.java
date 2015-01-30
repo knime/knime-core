@@ -53,7 +53,7 @@ import org.w3c.dom.Element;
  * Detailed description of a missing cell handler.
  *
  * @author Marcel Hanser, Alexander Fillbrunn
- * @since 2.10
+ * @since 2.12
  */
 public interface MissingCellHandlerDescription {
     /**
