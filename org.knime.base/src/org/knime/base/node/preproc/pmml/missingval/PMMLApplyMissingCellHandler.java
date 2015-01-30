@@ -71,7 +71,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * A missing cell handler that is initalized from a PMML document instead of a factory.
+ * A missing cell handler that is initialized from a PMML document instead of a factory.
+ * Only works with the data types boolean, int, long, double and date time.
  * @author Alexander Fillbrunn
  */
 public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
@@ -139,7 +140,6 @@ public class PMMLApplyMissingCellHandler extends DefaultMissingCellHandler {
             } else if (m_derivedField.getDataType() == DATATYPE.DOUBLE) {
                 return new DoubleCell(Double.parseDouble(m_value));
             } else if (m_derivedField.getDataType() == DATATYPE.DATE_TIME) {
-                // TODO: The node must be added to the DateAndTimeCell
                 return DateAndTimeCell.fromString(m_value);
             }
         } catch (NumberFormatException | ParseException e) {
