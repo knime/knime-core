@@ -436,7 +436,8 @@ public class DateAndTimeCell extends DataCell
     private static final Pattern TIME_PATTERN = Pattern.compile("[0-9]{2}:[0-9]{2}:[0-9]{2}");
 
     /**
-     * Creates a new DateAndTimeCell from the given string.
+     * Creates a new DateAndTimeCell from the given string. All strings created by DateAndTimeCell.toString() or
+     * DateAndTimeCell.getStringValue() are accepted.
      * The string must consist of only a date, only a time or both, separated with the capital letter "T".
      * The milliseconds part of the time is optional.
      * The following formats are allowed:
