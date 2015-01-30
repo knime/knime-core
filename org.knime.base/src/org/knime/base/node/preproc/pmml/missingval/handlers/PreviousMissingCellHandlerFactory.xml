@@ -1,15 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <missingcellhandler name="Linear Interpolation" xmlns="http://knime.org/missingval/v1.0">
-    <shortDescription 
-        intro="Replaces missing values with the next encountered non-missing value." />
-
-    <fullDescription>
-        <p>
             This missing value handler replaces missing values with the linear interpolation
             between the last encountered and next non-missing value.
             The column 1 2 ? ? 5 6, for example, would be interpolated to 1 2 3 4 5 6.
-            <br/>
-            <b>This missing value handler does not produce standard PMML 4.2!</b>
-        </p>
-    </fullDescription>
+            This missing value handler does not produce standard PMML 4.2!
 </missingcellhandler>

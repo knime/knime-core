@@ -204,7 +204,6 @@ public class MissingCellReplacingDataTable implements DataTable {
      */
     @Override
     public RowIterator iterator() {
-        // TODO: Should not be called when not initialized. How can we enforce this?
         return new MissingValueReplacingIterator();
     }
 

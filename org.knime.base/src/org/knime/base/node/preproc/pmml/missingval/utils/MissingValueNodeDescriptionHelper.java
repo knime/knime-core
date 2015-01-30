@@ -82,7 +82,8 @@ public final class MissingValueNodeDescriptionHelper {
     }
 
     /**
-     * Adds an additional option tag with name "Distance Selection" to the fullDescription of the given node
+     * Adds an additional option tag with name "Missing Value Handler Selection"
+     * to the fullDescription of the given node
      * description.
      *
      * @param parentDescription the parent description to add the tag to

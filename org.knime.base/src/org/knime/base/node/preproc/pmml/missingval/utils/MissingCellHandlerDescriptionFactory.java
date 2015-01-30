@@ -73,7 +73,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * Factory for distance descriptions.
+ * Factory for missing cell handler descriptions.
  *
  * @author Marcel Hanser, Alexander Fillbrunn
  * @since 2.12
@@ -81,8 +81,6 @@ import org.xml.sax.SAXException;
 public final class MissingCellHandlerDescriptionFactory {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MissingCellHandlerDescriptionFactory.class);
-
-    private static final String DESCRIPTION_TEMPLATE;
 
     private static final String SHORT_DESCRIPTION_TEMPLATE;
 
@@ -92,7 +90,6 @@ public final class MissingCellHandlerDescriptionFactory {
         namespaceMap.put("", MissingcellhandlerDocument.type.getContentModel().getName().getNamespaceURI());
         OPTIONS.setLoadSubstituteNamespaces(namespaceMap);
 
-        DESCRIPTION_TEMPLATE = readFile("description_template.html");
         SHORT_DESCRIPTION_TEMPLATE = readFile("short_description_template.html");
     }
 
@@ -101,9 +98,9 @@ public final class MissingCellHandlerDescriptionFactory {
 
     /**
      * Creates the default {@link MissingCellHandlerDescription}
-     * for the given distance factory. The description xml file.
-     * which is named as the simple class name of the distanceFactory + .xml is expected to be located at the same
-     * package as the distanceFactory.
+     * for the given missing cell handler factory. The description xml file.
+     * which is named as the simple class name of the missing cell handler factory + .xml
+     * is expected to be located at the same factory.
      *
      * @param fac the missing cell handler factory to create the description for
      * @return creates parses the configuration file expected in the same package as the given distance factory class
@@ -129,7 +126,7 @@ public final class MissingCellHandlerDescriptionFactory {
     }
 
     /**
-     * Adds the short description of the given {@link DistanceMeasureRegistration}s to the fullDescription DOM-Element.
+     * Adds the short description of the given {@link MissingCellHandlerFactory}s to the fullDescription DOM-Element.
      *
      * @param fullDescription DOM-Element of a Knime-Node
      * @param factoriesOfType registration types
@@ -140,11 +137,11 @@ public final class MissingCellHandlerDescriptionFactory {
         StringBuilder builder =
             new StringBuilder("<option name='Missing Value Handler Selection' optional='false'>"
                 + "Select and configure the missing value handler to be used for data types or columns. "
-                + "Additional information is available through the help button in the configuration dialog.");
+                + "Handlers that do not produce valid PMML 4.2 are marked with an asterisk (*).");
 
         for (MissingCellHandlerFactory reg : factoriesOfType) {
             String shortDescription = StringEscapeUtils.escapeXml(reg.getDescription().getShortDescription());
-            String name = StringEscapeUtils.escapeXml(reg.getDescription().getName());
+            String name = reg.toString();
 
             String subDescription = SHORT_DESCRIPTION_TEMPLATE.replace("[NAME]", name).replace("[SHORT_DESCRIPTION]",
                 shortDescription);
@@ -153,7 +150,7 @@ public final class MissingCellHandlerDescriptionFactory {
                 loadXmlFromString(subDescription);
                 builder.append(subDescription);
             } catch (ParserConfigurationException | SAXException | IOException e2) {
-                LOGGER.coding("Fail on adding description for distance: " + reg.getID(), e2);
+                LOGGER.coding("Fail on adding description for missing cell handler: " + reg.getID(), e2);
             }
         }
         builder.append("</option>");
@@ -186,16 +183,6 @@ public final class MissingCellHandlerDescriptionFactory {
     }
 
     /**
-     * @param description to render in Html
-     * @return a default Html representation of the given {@link MissingCellHandlerDescription}
-     */
-    public static String generateFullDescriptionHtml(final MissingCellHandlerDescription description) {
-        CheckUtils.checkNotNull(description);
-        return DESCRIPTION_TEMPLATE.replace("[NAME]", description.getName()).replace("[NODE_DESCRIPTION]",
-            description.getFullDescription());
-    }
-
-    /**
      * @param factoryClass
      * @return
      */
@@ -225,7 +212,8 @@ public final class MissingCellHandlerDescriptionFactory {
     }
 
     /**
-     * A {@link MissingCellHandlerDescription} implementation for distances without an explicit distance description xml.
+     * A {@link MissingCellHandlerDescription} implementation
+     * for missing cell handlers without an explicit description xml.
      *
      * @author Marcel Hanser, Alexander Fillbrunn
      */
@@ -258,14 +246,6 @@ public final class MissingCellHandlerDescriptionFactory {
          */
         @Override
         public String getShortDescription() {
-            return m_defaultDescription;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getFullDescription() {
             return m_defaultDescription;
         }
 

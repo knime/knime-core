@@ -1,15 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <missingcellhandler name="Moving Average" xmlns="http://knime.org/missingval/v1.0">
-    <shortDescription 
-        intro="Replaces missing values with the average of surrounding cells." />
-
-    <fullDescription>
-        <p>
             Calculates the mean of all values that are within the window given by
-            the lookahead and lookbehind and replaces missing values with this mean.<br/>
-            <b>This missing value handler does not produce standard PMML 4.2!</b>
-        </p>
-        <option name="Lookbehind">The number of cells to take into account before the current cell.</option>
-        <option name="Lookahead">The number of cells to take into account after the current cell.</option>
-    </fullDescription>
+            the lookahead and lookbehind and replaces missing values with this mean.
+            This missing value handler does not produce standard PMML 4.2!
+            The number of cells to take into account before and after the current cell can be
+            set using the options lookbehind and lookahead respectively.
 </missingcellhandler>

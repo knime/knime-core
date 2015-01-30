@@ -67,11 +67,6 @@ public interface MissingCellHandlerDescription {
     String getShortDescription();
 
     /**
-     * @return a Html representation of detailed information about the missing cell handler
-     */
-    String getFullDescription();
-
-    /**
      * @return <code>true</code> if no description has been provided, therefore this description is guessed
      */
     boolean isMissing();

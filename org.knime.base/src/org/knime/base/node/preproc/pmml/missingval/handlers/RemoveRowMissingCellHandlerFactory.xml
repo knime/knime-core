@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <missingcellhandler name="Remove Row" xmlns="http://knime.org/missingval/v1.0">
-    <shortDescription 
-        intro="Removes rows from a table." />
-
-    <fullDescription>
-        <p>
             This missing value handler removes rows that have a missing value in the column
-            it is configured for.<br/>
-            <b>This missing value handler does not produce standard PMML 4.2!</b>
-        </p>
-    </fullDescription>
+            it is configured for.
+            This missing value handler does not produce standard PMML 4.2!
 </missingcellhandler>

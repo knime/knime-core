@@ -49,23 +49,11 @@ package org.knime.base.node.preproc.pmml.missingval.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
-
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 import org.apache.xmlbeans.XmlException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.missingval.v10.MissingcellhandlerDocument;
-import org.knime.missingval.v10.ShortDescriptionDocument.ShortDescription;
-import org.knime.workbench.repository.util.NodeFactoryHTMLCreator;
 import org.w3c.dom.Element;
 
 /**
@@ -80,7 +68,7 @@ final class MissingCellHandlerDescriptionV1 implements MissingCellHandlerDescrip
 
     private final String m_name;
 
-    private final ShortDescription m_shortDescription;
+    private final String m_shortDescription;
 
     /**
      * @param stream the XML stream to parse
@@ -91,7 +79,13 @@ final class MissingCellHandlerDescriptionV1 implements MissingCellHandlerDescrip
         super();
         this.m_document = MissingcellhandlerDocument.Factory.parse(stream);
         this.m_name = CheckUtils.checkNotNull(m_document.getMissingcellhandler().getName());
-        this.m_shortDescription = CheckUtils.checkNotNull(m_document.getMissingcellhandler().getShortDescription());
+        String descr;
+        try {
+            descr = CheckUtils.checkNotNull(m_document.getMissingcellhandler().getStringValue());
+        } catch (NullPointerException e) {
+            descr = "No description provided.";
+        }
+        this.m_shortDescription = descr;
     }
 
     /**
@@ -107,19 +101,11 @@ final class MissingCellHandlerDescriptionV1 implements MissingCellHandlerDescrip
      */
     @Override
     public String getShortDescription() {
-        return m_shortDescription.getIntro();
+        return m_shortDescription;
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getFullDescription() {
-        return generateHtml();
-    }
-
-    /**
-     * @return the getDistanceElement
+     * @return the root element
      */
     @Override
     public Element getElement() {
@@ -132,28 +118,5 @@ final class MissingCellHandlerDescriptionV1 implements MissingCellHandlerDescrip
     @Override
     public boolean isMissing() {
         return false;
-    }
-
-    /**
-     * @return
-     */
-    private String generateHtml() {
-        try {
-            InputStream is = getClass().getResourceAsStream("MissingCellHandlerV1_0.xslt");
-
-            StreamSource stylesheet = new StreamSource(is);
-            Transformer transformer = TransformerFactory.newInstance().newTemplates(stylesheet).newTransformer();
-            transformer.setParameter("css", NodeFactoryHTMLCreator.instance.getCss());
-            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-
-            StreamResult result = new StreamResult(new StringWriter());
-            DOMSource source = new DOMSource(m_document.getDomNode());
-            transformer.transform(source, result);
-            return result.getWriter().toString();
-        } catch (TransformerFactoryConfigurationError | TransformerException e) {
-            LOGGER.coding("Error on generating html", e);
-            throw new RuntimeException("Error on generating html", e);
-        }
     }
 }
