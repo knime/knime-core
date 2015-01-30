@@ -91,7 +91,6 @@ public class MissingValueApplyNodeModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        // TODO: If we want correct specs, we cannot allow a handler t output an other data type as comes in
         return new PortObjectSpec[]{null};
     }
 
