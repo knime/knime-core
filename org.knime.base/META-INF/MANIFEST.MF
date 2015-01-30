@@ -4,8 +4,7 @@ Bundle-Name: KNIME Base Nodes
 Bundle-SymbolicName: org.knime.base;singleton:=true
 Bundle-Version: 2.12.0.qualifier
 Bundle-ClassPath: knime-base.jar,
- lib/Jama-1.0.2.jar,
- lib/schemas.jar
+ lib/Jama-1.0.2.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: Jama,
  Jama.examples,
@@ -269,15 +268,12 @@ Export-Package: Jama,
  org.knime.base.util.kdtree,
  org.knime.base.util.math,
  org.knime.base.util.pmml.samples
-Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
- org.knime.core;bundle-version="[2.12.0,3.0.0)";visibility:=reexport,
- org.knime.workbench.core;bundle-version="[2.5.0,3.0.0)",
- org.knime.workbench.repository;bundle-version="[2.5.0,3.0.0)",
+Require-Bundle: org.knime.core;bundle-version="[2.12.0,3.0.0)";visibility:=reexport,
  org.apache.commons.math;bundle-version="[2.1.0,2.2.0)",
  org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)",
  org.apache.commons.lang;bundle-version="[2.6.0,2.7.0)",
  org.apache.commons.math3;bundle-version="[3.2.0,4.0.0)",
- javax.mail.glassfish;bundle-version="[1.4.1,2.0.0)"
+ javax.mail.glassfish;bundle-version="[1.4.1,2.0.0)",
+ org.knime.workbench.repository
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Eclipse-BuddyPolicy: dependent
-
