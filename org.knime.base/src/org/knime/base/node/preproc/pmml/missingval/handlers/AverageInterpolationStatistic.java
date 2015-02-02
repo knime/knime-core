@@ -93,7 +93,7 @@ public class AverageInterpolationStatistic extends InterpolationStatistic {
                 } else {
                     double prev = ((DoubleValue)getPrevious()).getDoubleValue();
                     double next = val.getDoubleValue();
-                    double lin = (prev + (prev + next) / 2);
+                    double lin = (prev + next) / 2;
 
                     if (getPrevious() instanceof IntValue) {
                         // get an int, create an int

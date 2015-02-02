@@ -96,7 +96,7 @@ public class AverageDateTimeInterpolationStatistic extends InterpolationStatisti
 
                     long prev = prevVal.getUTCTimeInMillis();
                     long next = val.getUTCTimeInMillis();
-                    long lin = Math.round(prev + (prev + next) / 2);
+                    long lin = Math.round((prev + next) / 2);
                     res = new DateAndTimeCell(lin, hasDate, hasTime, hasMilis);
                 }
                 addMapping(row.getKey(), res);
