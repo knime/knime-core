@@ -148,7 +148,7 @@ public class LinearInterpolationStatistic extends MappingTableStatistic {
      */
     @Override
     protected String afterEvaluation() {
-        // All remaining enqueued cells have no next value and stay missing
+        // All remaining enqueued cells have no next value, so we return the previous one
         m_queued.close();
         DataTable table = m_queued.getTable();
         for (DataRow row : table) {
