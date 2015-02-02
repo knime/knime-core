@@ -141,8 +141,10 @@ public final class MissingCellHandlerDescriptionFactory {
 
         for (MissingCellHandlerFactory reg : factoriesOfType) {
             String shortDescription = StringEscapeUtils.escapeXml(reg.getDescription().getShortDescription());
-            String name = reg.toString();
-
+            String name = reg.getDescription().getName();
+            if (!reg.producesPMML4_2()) {
+                name += MissingCellHandlerFactory.NO_PMML_INDICATOR;
+            }
             String subDescription = SHORT_DESCRIPTION_TEMPLATE.replace("[NAME]", name).replace("[SHORT_DESCRIPTION]",
                 shortDescription);
             try {
