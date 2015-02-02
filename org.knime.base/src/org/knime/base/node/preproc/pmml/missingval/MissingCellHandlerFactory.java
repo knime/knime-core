@@ -62,7 +62,7 @@ import org.knime.core.data.DataType;
 public abstract class MissingCellHandlerFactory {
 
     /** The postfix for the factory name if the factory cannot produce valid PMML 4.2. **/
-    private static final String NO_PMML_INDICATOR = "*";
+    public static final String NO_PMML_INDICATOR = "*";
 
     /**
      * @return the id of this factory.
