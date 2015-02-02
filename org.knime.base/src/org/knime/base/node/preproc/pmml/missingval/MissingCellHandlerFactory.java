@@ -122,6 +122,9 @@ public abstract class MissingCellHandlerFactory {
      */
     public abstract boolean producesPMML4_2();
 
+    /**
+     * @return the description of the missing cell handler that is created by this factory.
+     */
     public MissingCellHandlerDescription getDescription() {
         return MissingCellHandlerDescriptionFactory.getDescription(this);
     }

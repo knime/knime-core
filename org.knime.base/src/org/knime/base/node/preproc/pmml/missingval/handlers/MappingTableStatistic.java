@@ -59,12 +59,16 @@ import org.knime.core.data.DataValue;
 public abstract class MappingTableStatistic extends Statistic {
 
     /**
-     * @param clazz
-     * @param columns
+     * Constructor for MappingTableStatistic.
+     * @param clazz the class of the value type this statistic is used for
+     * @param column the column for which this statistic is calculated
      */
     public MappingTableStatistic(final Class<? extends DataValue> clazz, final String column) {
         super(clazz, new String[] {column});
     }
 
+    /**
+     * @return the mapping table created by this statistic
+     */
     public abstract DataTable getMappingTable();
 }
