@@ -54,6 +54,7 @@ import org.knime.base.node.preproc.pmml.missingval.MissingValueHandlerPanel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.date.DateAndTimeValue;
 
 /**
  * Creates a handler that replaces missing values with the a linear interpolation of the
@@ -99,7 +100,7 @@ public class LinearInterpolationMissingCellHandlerFactory extends MissingCellHan
      */
     @Override
     public boolean isApplicable(final DataType type) {
-        return type.isCompatible(DoubleValue.class);
+        return type.isCompatible(DoubleValue.class) || type.isCompatible(DateAndTimeValue.class);
     }
 
     /**

@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
-import org.knime.base.data.statistics.Statistic;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -64,7 +63,7 @@ import org.knime.core.data.def.DefaultRow;
  * Statistic that finds for each missing value the previous valid one.
  * @author Alexander Fillbrunn
  */
-public class PreviousValidValueStatistic extends Statistic {
+public class PreviousValidValueStatistic extends MappingTableStatistic {
 
     private DataCell m_previous;
     private DataContainer m_queued;
@@ -79,7 +78,7 @@ public class PreviousValidValueStatistic extends Statistic {
      * @param column the column for which this statistic is calculated
      */
     public PreviousValidValueStatistic(final Class<? extends DataValue> clazz, final String column) {
-        super(clazz, new String[] {column});
+        super(clazz, column);
         m_columnName = column;
     }
 
@@ -119,6 +118,7 @@ public class PreviousValidValueStatistic extends Statistic {
     /**
      * @return the table where the next valid value for each row key is given.
      */
+    @Override
     public DataTable getMappingTable() {
         return m_result;
     }

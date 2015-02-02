@@ -56,21 +56,17 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
 
 /**
  * A statistic that calculates for each missing cell the linear interpolation
  * between the previous and next valid cell.
  * @author Alexander Fillbrunn
  */
-public class LinearInterpolationStatistic extends MappingTableStatistic {
+public class LinearDateTimeInterpolationStatistic extends MappingTableStatistic {
 
     private int m_numMissing = 0;
     private DataCell m_previous;
@@ -85,8 +81,8 @@ public class LinearInterpolationStatistic extends MappingTableStatistic {
      * Constructor for NextValidValueStatistic.
      * @param column the column for which this statistic is calculated
      */
-    public LinearInterpolationStatistic(final String column) {
-        super(DoubleValue.class, column);
+    public LinearDateTimeInterpolationStatistic(final String column) {
+        super(DateAndTimeValue.class, column);
         m_columnName = column;
     }
 
@@ -97,7 +93,7 @@ public class LinearInterpolationStatistic extends MappingTableStatistic {
     protected void init(final DataTableSpec spec, final int amountOfColumns) {
         m_index = spec.findColumnIndex(m_columnName);
         m_nextCells = new DataContainer(new DataTableSpec(
-                new DataColumnSpecCreator("value", spec.getColumnSpec(m_index).getType()).createSpec()));
+                new DataColumnSpecCreator("value", DateAndTimeCell.TYPE).createSpec()));
         m_queued = new DataContainer(new DataTableSpec());
         m_previous = DataType.getMissingCell();
     }
@@ -112,7 +108,7 @@ public class LinearInterpolationStatistic extends MappingTableStatistic {
             m_queued.addRowToTable(new DefaultRow(dataRow.getKey(), new DataCell[0]));
             m_numMissing++;
         } else {
-            DoubleValue val = (DoubleValue)cell;
+            DateAndTimeValue val = (DateAndTimeValue)cell;
             m_queued.close();
             DataTable table = m_queued.getTable();
             int count = 1;
@@ -121,19 +117,17 @@ public class LinearInterpolationStatistic extends MappingTableStatistic {
                 if (m_previous.isMissing()) {
                     res = cell;
                 } else {
-                    double prev = ((DoubleValue)m_previous).getDoubleValue();
-                    double next = val.getDoubleValue();
-                    double lin = prev + 1.0 * (count++) / (1.0 * (m_numMissing + 1)) * (next - prev);
 
-                    if (m_previous instanceof IntValue) {
-                        // get an int, create an int
-                        res = new IntCell((int)Math.round(lin));
-                    }
-                    if (m_previous instanceof LongValue) {
-                        // get an long, create an long
-                        res = new LongCell(Math.round(lin));
-                    }
-                    res = new DoubleCell(lin);
+                    DateAndTimeValue prevVal = (DateAndTimeValue)m_previous;
+
+                    boolean hasDate = val.hasDate() | prevVal.hasDate();
+                    boolean hasTime = val.hasTime() | prevVal.hasTime();
+                    boolean hasMilis = val.hasMillis() | prevVal.hasMillis();
+
+                    long prev = prevVal.getUTCTimeInMillis();
+                    long next = val.getUTCTimeInMillis();
+                    long lin = Math.round(prev + 1.0 * (count++) / (1.0 * (m_numMissing + 1)) * (next - prev));
+                    res = new DateAndTimeCell(lin, hasDate, hasTime, hasMilis);
                 }
                 m_nextCells.addRowToTable(new DefaultRow(row.getKey(), res));
             }
