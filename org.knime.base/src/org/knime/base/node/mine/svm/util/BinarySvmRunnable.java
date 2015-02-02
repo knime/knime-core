@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.svm.util;
 
@@ -52,19 +52,21 @@ import org.knime.core.node.ExecutionMonitor;
 
 /**
  * Utility class to run a Binary SVM learning process.
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class BinarySvmRunnable implements Runnable {
-    
+
     private SvmAlgorithm m_svmAlgo;
-    
+
     private Exception m_exception;
-    
+
     private ExecutionMonitor m_exec;
-    
+
     private Svm m_svm;
-    
+
+    private String m_warning;
+
     /**
      * @param inputData the input data to train with
      * @param positiveClass the positive class value
@@ -73,25 +75,29 @@ public class BinarySvmRunnable implements Runnable {
      * @param exec the execution process to report to
      */
     public BinarySvmRunnable(final DoubleVector[] inputData,
-            final String positiveClass, 
+            final String positiveClass,
             final Kernel kernel, final double paramC,
             final ExecutionMonitor exec) {
         m_svmAlgo = new SvmAlgorithm(inputData, positiveClass, kernel, paramC);
         m_exception = null;
         m_exec = exec;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public void run() {
         try {
             m_svm = m_svmAlgo.run(m_exec);
+            if (SvmAlgorithm.MAXIMUM_NUMBER_OF_ITERATIONS_REACHED.equals(m_exec.getProgressMonitor().getMessage())) {
+                m_warning = SvmAlgorithm.MAXIMUM_NUMBER_OF_ITERATIONS_REACHED;
+            }
         } catch (Exception e) {
             m_exception = e;
         }
     }
-    
+
     /**
      * @throws Exception if something went wrong.
      */
@@ -100,11 +106,19 @@ public class BinarySvmRunnable implements Runnable {
             throw m_exception;
         }
     }
-    
+
     /**
      * @return the trained Support Vector Machine.
      */
     public Svm getSvm() {
         return m_svm;
+    }
+
+    /**
+     * @return the warning (can be {@code null})
+     * @since 2.12
+     */
+    public String getWarning() {
+        return m_warning;
     }
 }

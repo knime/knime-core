@@ -48,6 +48,7 @@ package org.knime.base.node.mine.svm.learner;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.math.MaxIterationsExceededException;
 import org.knime.base.node.mine.svm.Svm;
 import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.util.DoubleVector;
@@ -75,12 +76,17 @@ import org.knime.core.node.ExecutionMonitor;
  */
 public class SvmAlgorithm {
 
+    /**
+     * Warning message when maximum number of iterations is reached.
+     * @since 2.12
+     */
+    public static final String MAXIMUM_NUMBER_OF_ITERATIONS_REACHED = "Maximum number of iterations reached.";
     /*
      * NodeLogger for this class.
      */
 //    private static final NodeLogger LOGGER =
 //            NodeLogger.getLogger(SvmAlgorithm.class);
-//
+
     /*
      * the input data.
      */
@@ -128,6 +134,12 @@ public class SvmAlgorithm {
      */
     private Set<Integer> m_i0, m_i1, m_i2, m_i3, m_i4;
 
+    /** Maximal iteration. */
+    private final int m_maxIteration;
+
+    /** Actual iteration count. */
+    private int m_iteration = 0;
+
     /*
      * the tolerance level for optimality.
      */
@@ -156,6 +168,8 @@ public class SvmAlgorithm {
         m_kernel = kernel;
         m_paramC = paramC;
         m_alpha = new double[m_inputData.length];
+        //See: https://github.com/cran/e1071/blob/R-3.0.3/src/svm.cpp#L567
+        m_maxIteration = Math.max(10000000, inputData.length > Integer.MAX_VALUE / 100 ? Integer.MAX_VALUE - 1 : 100*inputData.length);
     }
 
     /**
@@ -324,8 +338,13 @@ public class SvmAlgorithm {
      * @param i1 first index
      * @param i2 second index
      * @return was the optimization successful?
+     * @throws MaxIterationsExceededException More than maximal allowed iterations performed.
      */
-    private boolean takeStep(final int i1, final int i2) {
+    private boolean takeStep(final int i1, final int i2) throws MaxIterationsExceededException {
+        m_iteration++;
+        if (m_iteration == m_maxIteration) {
+            throw new MaxIterationsExceededException(m_maxIteration);
+        }
         if (i1 == i2) {
             return false;
         }
@@ -336,7 +355,7 @@ public class SvmAlgorithm {
         double f1 = m_fcache[i1];
         double f2 = m_fcache[i2];
         double s = y1 * y2;
-        double low, high; // L, H -- equations (13), (14) from the paper above
+        double low, high; // L, H -- equations (3), (4) from the paper above
         if (y1 != y2) {
             low = Math.max(0, alpha2 - alpha1);
             high = Math.min(m_paramC, m_paramC + alpha2 - alpha1);
@@ -350,6 +369,7 @@ public class SvmAlgorithm {
         double k11 = m_kernel.evaluate(m_inputData[i1], m_inputData[i1]);
         double k12 = m_kernel.evaluate(m_inputData[i1], m_inputData[i2]);
         double k22 = m_kernel.evaluate(m_inputData[i2], m_inputData[i2]);
+        //-eta as in the Pratt paper.
         double eta = k11 + k22 - 2.0 * k12; // value of second derivative
         double a2;
         if (eta > 0) {
@@ -360,7 +380,16 @@ public class SvmAlgorithm {
                 a2 = high;
             }
         } else {
+            //TODO why?
             return false;
+            //Lobj = objective function at a2=L
+            //Hobj = objective function at a2=H
+            //if Lobj > Hobj + eps
+            //  a2 = L
+            //else if Lobj < Hobj -eps
+            //  a2 = H
+            //else
+            //  a2 = alpha2
         }
         if (a2 < EPSILON) {
             a2 = 0.0;
@@ -401,8 +430,9 @@ public class SvmAlgorithm {
      * see Sequential Minimal Optimization: A Fast Algorithm for Training
      * Support Vector Machines by John C. Platt and also Improvements to Platt's
      * SMO Algorithm for SVM Classifier Design
+     * @throws MaxIterationsExceededException Maximal iterations performed, should stop.
      */
-    private boolean examineExample(final int i2) {
+    private boolean examineExample(final int i2) throws MaxIterationsExceededException {
         int i1 = -1;
         double y2 = target(i2);
         double f2;
@@ -421,6 +451,7 @@ public class SvmAlgorithm {
             }
         }
         boolean optimality = true;
+        //Method 1
         if (m_i0.contains(i2) || m_i1.contains(i2) || m_i2.contains(i2)) {
             if (m_bLow - f2 > 2.0 * TOLERANCE) {
                 optimality = false;
@@ -436,6 +467,7 @@ public class SvmAlgorithm {
         if (optimality) {
             return false;
         }
+        //TODO why?
         if (m_i0.contains(i2)) {
             if (m_bLow - f2 > f2 - m_bUp) {
                 i1 = m_iLow;
@@ -551,26 +583,31 @@ public class SvmAlgorithm {
 //                exec.setProgress(progress);
 //            }
             exec.checkCanceled();
-            numChanged = 0;
-            if (examineAll) {
-                for (int i = 0; i < m_inputData.length; ++i) {
-                    exec.checkCanceled();
-                    if (examineExample(i)) {
-                        numChanged++;
+            try {
+                numChanged = 0;
+                if (examineAll) {
+                    for (int i = 0; i < m_inputData.length; ++i) {
+                        exec.checkCanceled();
+                        if (examineExample(i)) {
+                            numChanged++;
+                        }
+                    }
+                } else {
+                    Set<Integer> i0 = new HashSet<Integer>(m_i0);
+                    for (int i : i0) {
+                        exec.checkCanceled();
+                        if (examineExample(i)) {
+                            numChanged++;
+                        }
+                        if (m_bUp > m_bLow - 2.0 * TOLERANCE) {
+                            numChanged = 0;
+                            break;
+                        }
                     }
                 }
-            } else {
-                Set<Integer> i0 = new HashSet<Integer>(m_i0);
-                for (int i : i0) {
-                    exec.checkCanceled();
-                    if (examineExample(i)) {
-                        numChanged++;
-                    }
-                    if (m_bUp > m_bLow - 2.0 * TOLERANCE) {
-                        numChanged = 0;
-                        break;
-                    }
-                }
+            } catch (MaxIterationsExceededException e) {
+                exec.setMessage(MAXIMUM_NUMBER_OF_ITERATIONS_REACHED);
+                break;
             }
 
             if (examineAll) {

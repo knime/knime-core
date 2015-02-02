@@ -94,6 +94,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.KNIMETimer;
 import org.knime.core.util.ThreadPool;
 
@@ -236,6 +237,7 @@ public class SVMLearnerNodeModel extends NodeModel {
                 tuple.getTrainingRearranger(), exec.createSubProgress(0.0));
         DataTableSpec trainSpec = trainTable.getDataTableSpec();
         int classpos = trainSpec.findColumnIndex(m_classcol.getStringValue());
+        CheckUtils.checkArgument(classpos >= 0, "Selected class column not found: " + m_classcol.getStringValue());
 
         // convert input data
         ArrayList<DoubleVector> inputData = new ArrayList<DoubleVector>();
@@ -261,8 +263,9 @@ public class SVMLearnerNodeModel extends NodeModel {
                 }
             }
             if (add) {
-                inputData.add(new DoubleVector(row.getKey(), values, classvalue
-                        .getStringValue()));
+                @SuppressWarnings("null")
+                final String nonNullClassValue = classvalue.getStringValue();
+                inputData.add(new DoubleVector(row.getKey(), values, nonNullClassValue));
             }
         }
         if (categories.isEmpty()) {
@@ -320,6 +323,9 @@ public class SVMLearnerNodeModel extends NodeModel {
                     for (int i = 0; i < fut.length; ++i) {
                         fut[i].get();
                         bst[i].ok();
+                        if (bst[i].getWarning() != null) {
+                            setWarningMessage(bst[i].getWarning());
+                        }
                         svms[i] = bst[i].getSvm();
                     }
                     return null;
