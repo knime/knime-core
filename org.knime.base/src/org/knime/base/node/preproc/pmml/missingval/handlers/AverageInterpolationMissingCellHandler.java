@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,73 +44,35 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.12.2014 (Alexander): created
+ *   20.01.2015 (Alexander): created
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.date.DateAndTimeValue;
 
 /**
- * A statistic that calculates for each missing cell the linear interpolation
- * between the previous and next valid cell.
+ * A handler that replaces missing values with a linear interpolation of the next and previous valid values.
+ *
  * @author Alexander Fillbrunn
  */
-public class LinearInterpolationStatistic extends InterpolationStatistic {
-
-    private int m_numMissing = 0;
-
+public class AverageInterpolationMissingCellHandler extends InterpolationMissingCellHandler {
     /**
-     * Constructor for NextValidValueStatistic.
-     * @param column the column for which this statistic is calculated
+     * @param col the column this handler is for
      */
-    public LinearInterpolationStatistic(final String column) {
-        super(DoubleValue.class, column);
+    public AverageInterpolationMissingCellHandler(final DataColumnSpec col) {
+        super(col);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void consumeRow(final DataRow dataRow) {
-        DataCell cell = dataRow.getCell(getColumnIndex());
-        if (cell.isMissing()) {
-            addToQueue(dataRow.getKey());
-            m_numMissing++;
+    public MappingTableStatistic createStatistic() {
+        if (getColumnSpec().getType().isCompatible(DateAndTimeValue.class)) {
+            return new AverageDateTimeInterpolationStatistic(getColumnSpec().getName());
         } else {
-            DoubleValue val = (DoubleValue)cell;
-            DataTable table = closeQueued();
-            int count = 1;
-            for (DataRow row : table) {
-                DataCell res;
-                if (getPrevious().isMissing()) {
-                    res = cell;
-                } else {
-                    double prev = ((DoubleValue)getPrevious()).getDoubleValue();
-                    double next = val.getDoubleValue();
-                    double lin = prev + 1.0 * (count++) / (1.0 * (m_numMissing + 1)) * (next - prev);
-
-                    if (getPrevious() instanceof IntValue) {
-                        // get an int, create an int
-                        res = new IntCell((int)Math.round(lin));
-                    }
-                    if (getPrevious() instanceof LongValue) {
-                        // get an long, create an long
-                        res = new LongCell(Math.round(lin));
-                    }
-                    res = new DoubleCell(lin);
-                }
-                addMapping(row.getKey(), res);
-            }
-            resetQueue(cell);
-            m_numMissing = 0;
+            return new AverageInterpolationStatistic(getColumnSpec().getName());
         }
     }
 }

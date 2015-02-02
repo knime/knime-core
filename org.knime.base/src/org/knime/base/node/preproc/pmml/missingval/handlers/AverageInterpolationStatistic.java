@@ -65,15 +65,13 @@ import org.knime.core.data.def.LongCell;
  * between the previous and next valid cell.
  * @author Alexander Fillbrunn
  */
-public class LinearInterpolationStatistic extends InterpolationStatistic {
-
-    private int m_numMissing = 0;
+public class AverageInterpolationStatistic extends InterpolationStatistic {
 
     /**
      * Constructor for NextValidValueStatistic.
      * @param column the column for which this statistic is calculated
      */
-    public LinearInterpolationStatistic(final String column) {
+    public AverageInterpolationStatistic(final String column) {
         super(DoubleValue.class, column);
     }
 
@@ -85,11 +83,9 @@ public class LinearInterpolationStatistic extends InterpolationStatistic {
         DataCell cell = dataRow.getCell(getColumnIndex());
         if (cell.isMissing()) {
             addToQueue(dataRow.getKey());
-            m_numMissing++;
         } else {
             DoubleValue val = (DoubleValue)cell;
             DataTable table = closeQueued();
-            int count = 1;
             for (DataRow row : table) {
                 DataCell res;
                 if (getPrevious().isMissing()) {
@@ -97,7 +93,7 @@ public class LinearInterpolationStatistic extends InterpolationStatistic {
                 } else {
                     double prev = ((DoubleValue)getPrevious()).getDoubleValue();
                     double next = val.getDoubleValue();
-                    double lin = prev + 1.0 * (count++) / (1.0 * (m_numMissing + 1)) * (next - prev);
+                    double lin = (prev + (prev + next) / 2);
 
                     if (getPrevious() instanceof IntValue) {
                         // get an int, create an int
@@ -112,7 +108,6 @@ public class LinearInterpolationStatistic extends InterpolationStatistic {
                 addMapping(row.getKey(), res);
             }
             resetQueue(cell);
-            m_numMissing = 0;
         }
     }
 }

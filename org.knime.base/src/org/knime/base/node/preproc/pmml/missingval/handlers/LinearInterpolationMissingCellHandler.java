@@ -48,87 +48,32 @@
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
-import org.dmg.pmml.DerivedFieldDocument.DerivedField;
-import org.knime.base.data.statistics.Statistic;
-import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
-import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.RowIterator;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.date.DateAndTimeValue;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 
 /**
  * A handler that replaces missing values with a linear interpolation of the next and previous valid values.
+ *
  * @author Alexander Fillbrunn
  */
-public class LinearInterpolationMissingCellHandler extends DefaultMissingCellHandler {
-
-    private MappingTableStatistic m_stat;
-    private RowIterator m_iter;
-    private boolean m_isDateTime;
+public class LinearInterpolationMissingCellHandler extends InterpolationMissingCellHandler {
 
     /**
      * @param col the column this handler is for
      */
     public LinearInterpolationMissingCellHandler(final DataColumnSpec col) {
         super(col);
-        m_isDateTime = col.getType().isCompatible(DateAndTimeValue.class);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void saveSettingsTo(final NodeSettingsWO settings) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Statistic getStatistic() {
-        if (m_stat == null) {
-            if (m_isDateTime) {
-                m_stat = new LinearDateTimeInterpolationStatistic(getColumnSpec().getName());
-            } else {
-                m_stat = new LinearInterpolationStatistic(getColumnSpec().getName());
-            }
+    public MappingTableStatistic createStatistic() {
+        if (getColumnSpec().getType().isCompatible(DateAndTimeValue.class)) {
+            return new LinearDateTimeInterpolationStatistic(getColumnSpec().getName());
+        } else {
+            return new LinearInterpolationStatistic(getColumnSpec().getName());
         }
-        return m_stat;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        if (m_iter == null) {
-            m_iter = m_stat.getMappingTable().iterator();
-        }
-        assert m_iter.hasNext();
-        DataRow row = m_iter.next();
-        // Check if the calculated statistics and the currently evaluated table match
-        assert row.getKey().equals(key);
-        return row.getCell(0);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DerivedField getPMMLDerivedField() {
-        return createExtensionDerivedField(getPMMLDataTypeForColumn(), NextMissingCellHandlerFactory.ID);
     }
 }

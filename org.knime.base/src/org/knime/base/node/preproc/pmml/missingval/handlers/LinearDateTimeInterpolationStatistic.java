@@ -51,31 +51,19 @@
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.date.DateAndTimeValue;
-import org.knime.core.data.def.DefaultRow;
 
 /**
  * A statistic that calculates for each missing cell the linear interpolation
  * between the previous and next valid cell.
  * @author Alexander Fillbrunn
  */
-public class LinearDateTimeInterpolationStatistic extends MappingTableStatistic {
+public class LinearDateTimeInterpolationStatistic extends InterpolationStatistic {
 
     private int m_numMissing = 0;
-    private DataCell m_previous;
-    private DataContainer m_nextCells;
-    private DataContainer m_queued;
-    private DataTable m_result;
-
-    private String m_columnName;
-    private int m_index = -1;
 
     /**
      * Constructor for NextValidValueStatistic.
@@ -83,19 +71,6 @@ public class LinearDateTimeInterpolationStatistic extends MappingTableStatistic 
      */
     public LinearDateTimeInterpolationStatistic(final String column) {
         super(DateAndTimeValue.class, column);
-        m_columnName = column;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void init(final DataTableSpec spec, final int amountOfColumns) {
-        m_index = spec.findColumnIndex(m_columnName);
-        m_nextCells = new DataContainer(new DataTableSpec(
-                new DataColumnSpecCreator("value", DateAndTimeCell.TYPE).createSpec()));
-        m_queued = new DataContainer(new DataTableSpec());
-        m_previous = DataType.getMissingCell();
     }
 
     /**
@@ -103,22 +78,21 @@ public class LinearDateTimeInterpolationStatistic extends MappingTableStatistic 
      */
     @Override
     protected void consumeRow(final DataRow dataRow) {
-        DataCell cell = dataRow.getCell(m_index);
+        DataCell cell = dataRow.getCell(getColumnIndex());
         if (cell.isMissing()) {
-            m_queued.addRowToTable(new DefaultRow(dataRow.getKey(), new DataCell[0]));
+            addToQueue(dataRow.getKey());
             m_numMissing++;
         } else {
             DateAndTimeValue val = (DateAndTimeValue)cell;
-            m_queued.close();
-            DataTable table = m_queued.getTable();
+            DataTable table = closeQueued();
             int count = 1;
             for (DataRow row : table) {
                 DataCell res;
-                if (m_previous.isMissing()) {
+                if (getPrevious().isMissing()) {
                     res = cell;
                 } else {
 
-                    DateAndTimeValue prevVal = (DateAndTimeValue)m_previous;
+                    DateAndTimeValue prevVal = (DateAndTimeValue)getPrevious();
 
                     boolean hasDate = val.hasDate() | prevVal.hasDate();
                     boolean hasTime = val.hasTime() | prevVal.hasTime();
@@ -129,36 +103,10 @@ public class LinearDateTimeInterpolationStatistic extends MappingTableStatistic 
                     long lin = Math.round(prev + 1.0 * (count++) / (1.0 * (m_numMissing + 1)) * (next - prev));
                     res = new DateAndTimeCell(lin, hasDate, hasTime, hasMilis);
                 }
-                m_nextCells.addRowToTable(new DefaultRow(row.getKey(), res));
+                addMapping(row.getKey(), res);
             }
-            m_queued = new DataContainer(new DataTableSpec());
-            m_previous = cell;
+            resetQueue(cell);
             m_numMissing = 0;
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String afterEvaluation() {
-     // All remaining enqueued cells have no next value, so we return the previous one
-        m_queued.close();
-        DataTable table = m_queued.getTable();
-        for (DataRow row : table) {
-            m_nextCells.addRowToTable(new DefaultRow(row.getKey(), m_previous));
-        }
-
-        m_nextCells.close();
-        m_result = m_nextCells.getTable();
-        return super.afterEvaluation();
-    }
-
-    /**
-     * @return the table where the next valid value for each row key is given.
-     */
-    @Override
-    public DataTable getMappingTable() {
-        return m_result;
     }
 }

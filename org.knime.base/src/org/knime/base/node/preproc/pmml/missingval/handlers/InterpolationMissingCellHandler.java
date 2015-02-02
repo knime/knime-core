@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,73 +44,91 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.12.2014 (Alexander): created
+ *   02.02.2015 (Alexander): created
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.knime.base.data.statistics.Statistic;
+import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
+import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * A statistic that calculates for each missing cell the linear interpolation
- * between the previous and next valid cell.
+ *
  * @author Alexander Fillbrunn
  */
-public class LinearInterpolationStatistic extends InterpolationStatistic {
+public abstract class InterpolationMissingCellHandler extends DefaultMissingCellHandler {
 
-    private int m_numMissing = 0;
+    private MappingTableStatistic m_stat;
+    private RowIterator m_iter;
 
     /**
-     * Constructor for NextValidValueStatistic.
-     * @param column the column for which this statistic is calculated
+     * Returns the statistic filled by a StatisticCalculator
+     * or null if the statistic was not yet filled.
+     * @return the statistic with the mapping table
      */
-    public LinearInterpolationStatistic(final String column) {
-        super(DoubleValue.class, column);
+    protected abstract MappingTableStatistic createStatistic();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Statistic getStatistic() {
+        if (m_stat == null) {
+            m_stat = createStatistic();
+        }
+        return m_stat;
+    }
+
+    /**
+     * @param col the column this handler is for
+     */
+    public InterpolationMissingCellHandler(final DataColumnSpec col) {
+        super(col);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void consumeRow(final DataRow dataRow) {
-        DataCell cell = dataRow.getCell(getColumnIndex());
-        if (cell.isMissing()) {
-            addToQueue(dataRow.getKey());
-            m_numMissing++;
-        } else {
-            DoubleValue val = (DoubleValue)cell;
-            DataTable table = closeQueued();
-            int count = 1;
-            for (DataRow row : table) {
-                DataCell res;
-                if (getPrevious().isMissing()) {
-                    res = cell;
-                } else {
-                    double prev = ((DoubleValue)getPrevious()).getDoubleValue();
-                    double next = val.getDoubleValue();
-                    double lin = prev + 1.0 * (count++) / (1.0 * (m_numMissing + 1)) * (next - prev);
+    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+    }
 
-                    if (getPrevious() instanceof IntValue) {
-                        // get an int, create an int
-                        res = new IntCell((int)Math.round(lin));
-                    }
-                    if (getPrevious() instanceof LongValue) {
-                        // get an long, create an long
-                        res = new LongCell(Math.round(lin));
-                    }
-                    res = new DoubleCell(lin);
-                }
-                addMapping(row.getKey(), res);
-            }
-            resetQueue(cell);
-            m_numMissing = 0;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveSettingsTo(final NodeSettingsWO settings) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataCell getCell(final RowKey key, final DataColumnWindow window) {
+        if (m_iter == null) {
+            m_iter = m_stat.getMappingTable().iterator();
         }
+        assert m_iter.hasNext();
+        DataRow row = m_iter.next();
+        // Check if the calculated statistics and the currently evaluated table match
+        assert row.getKey().equals(key);
+        return row.getCell(0);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DerivedField getPMMLDerivedField() {
+        return createExtensionDerivedField(getPMMLDataTypeForColumn(), NextMissingCellHandlerFactory.ID);
     }
 }
