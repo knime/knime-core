@@ -102,7 +102,22 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         m_pmmlLabel2 = new JLabel(PMML_WARNING);
         m_pmmlLabel1.setHorizontalAlignment(SwingConstants.CENTER);
         m_pmmlLabel2.setHorizontalAlignment(SwingConstants.CENTER);
-        m_defaultsPanel.add(m_pmmlLabel1, BorderLayout.SOUTH);
+
+        JPanel messagePanel = new JPanel();
+        messagePanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc1 = new GridBagConstraints();
+        gbc1.gridx = 0;
+        gbc1.gridy = 0;
+        gbc1.weightx = 1.0;
+
+        m_warnings = new JLabel();
+        m_warnings.setForeground(Color.RED);
+        messagePanel.add(m_warnings, gbc1);
+        gbc1.gridy = 1;
+        messagePanel.add(m_pmmlLabel1, gbc1);
+
+        m_defaultsPanel.add(messagePanel, BorderLayout.SOUTH);
+
         addTab("Default", new JScrollPane(m_defaultsPanel));
 
         // Panel for the tab where the user selects column specific missing cell handlers
@@ -122,11 +137,6 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         southPanel.add(buttonPanel, gbc);
 
         gbc.gridy = 1;
-        m_warnings = new JLabel();
-        m_warnings.setForeground(Color.RED);
-        southPanel.add(m_warnings, gbc);
-
-        gbc.gridy = 2;
         southPanel.add(m_pmmlLabel2, gbc);
         m_addButton = new JButton("Add");
         m_addButton.addActionListener(new ActionListener() {
@@ -284,22 +294,35 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
             throws NotConfigurableException {
+
         MVSettings mvSettings = new MVSettings();
         m_specs = specs;
         DataTableSpec spec = (DataTableSpec)specs[0];
 
+        StringBuffer warning = new StringBuffer();
+        if (spec.getNumColumns() == 0) {
+            warning.append("The input table does not have any columns");
+        }
+
         m_searchableListModifier = m_searchableListPanel.update(spec);
-        String warning = null;
+
         try {
-            warning = mvSettings.loadSettings(settings);
+            String w =  mvSettings.loadSettings(settings);
+            if (w != null) {
+                if (warning.length() > 0) {
+                    warning.append("\n");
+                }
+                warning.append(w);
+            }
         } catch (Exception e) {
-            m_warnings.setText("The settings are malformed and have to be reset");
+            if (warning.length() > 0) {
+                warning.append("\n");
+            }
+            warning.append("The settings are malformed and had to be reset");
             mvSettings = new MVSettings(spec);
         }
 
-        if (warning != null) {
-            m_warnings.setText(warning);
-        }
+        m_warnings.setText(warning.toString());
 
         m_types = new LinkedHashMap<DataType, MissingValueHandlerFactorySelectionPanel>();
         for (int i = 0; i < spec.getNumColumns(); i++) {
