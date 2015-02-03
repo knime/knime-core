@@ -83,7 +83,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
 
     private DataTableSpec m_lastSpec = null;
 
-    private final DatabaseReaderConnection m_load =
+    private DatabaseReaderConnection m_load =
         new DatabaseReaderConnection(null);
 
 
@@ -150,6 +150,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
      */
     @Override
     protected void reset() {
+        m_load = null;
         // empty: don't reset m_lastSpec that is only touched when the actual
         // settings in the node dialog have changed.
     }
@@ -198,15 +199,9 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_lastSpec != null) {
-            return new DataTableSpec[]{m_lastSpec};
-        }
         try {
             if ((m_settings.getQuery() == null) || m_settings.getQuery().isEmpty()) {
                 throw new InvalidSettingsException("No query configured.");
-            }
-            if (!m_settings.getValidateQuery()) {
-                return new DataTableSpec[] {null};
             }
 
             String query = parseQuery(m_settings.getQuery());
@@ -221,8 +216,13 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
                 connSettings = new DatabaseQueryConnectionSettings(m_settings, query);
             }
 
-            m_load.setDBQueryConnection(connSettings);
-            m_lastSpec = m_load.getDataTableSpec(getCredentialsProvider());
+            m_load = new DatabaseReaderConnection(connSettings);
+            if (!m_settings.getValidateQuery()) {
+                return new DataTableSpec[] {null};
+            }
+            if (m_lastSpec == null) {
+                m_lastSpec = m_load.getDataTableSpec(getCredentialsProvider());
+            }
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException e) {
             m_lastSpec = null;
@@ -268,7 +268,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
 
         if (settingsChanged || (m_settings.getQuery() == null) || m_settings.getQuery().isEmpty()) {
             m_lastSpec = null;
-            m_load.setDBQueryConnection(m_settings);
+            m_load = new DatabaseReaderConnection(m_settings);
         }
     }
 
