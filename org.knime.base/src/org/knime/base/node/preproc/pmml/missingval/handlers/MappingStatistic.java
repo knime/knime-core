@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,62 +44,25 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.12.2014 (Alexander): created
+ *   04.02.2015 (Alexander): created
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
+import org.knime.base.data.statistics.Statistic;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
-import org.knime.core.data.date.DateAndTimeCell;
-import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.data.DataValue;
 
 /**
- * A statistic that calculates for each missing cell the linear interpolation
- * between the previous and next valid cell.
+ *
  * @author Alexander Fillbrunn
  */
-public class AverageDateTimeInterpolationStatistic extends InterpolationStatistic {
+public abstract class MappingStatistic extends Statistic implements Iterable<DataCell> {
 
     /**
-     * Constructor for NextValidValueStatistic.
-     * @param column the column for which this statistic is calculated
+     * @param clazz the value class permitted for this statistic
+     * @param column the column the statistic is calculated for
      */
-    public AverageDateTimeInterpolationStatistic(final String column) {
-        super(DateAndTimeValue.class, column);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void consumeRow(final DataRow dataRow) {
-        DataCell cell = dataRow.getCell(getColumnIndex());
-        if (cell.isMissing()) {
-            addToQueue(dataRow.getKey());
-        } else {
-            DateAndTimeValue val = (DateAndTimeValue)cell;
-            DataTable table = closeQueued();
-            for (DataRow row : table) {
-                DataCell res;
-                if (getPrevious().isMissing()) {
-                    res = cell;
-                } else {
-
-                    DateAndTimeValue prevVal = (DateAndTimeValue)getPrevious();
-
-                    boolean hasDate = val.hasDate() | prevVal.hasDate();
-                    boolean hasTime = val.hasTime() | prevVal.hasTime();
-                    boolean hasMilis = val.hasMillis() | prevVal.hasMillis();
-
-                    long prev = prevVal.getUTCTimeInMillis();
-                    long next = val.getUTCTimeInMillis();
-                    long lin = Math.round((prev + next) / 2);
-                    res = new DateAndTimeCell(lin, hasDate, hasTime, hasMilis);
-                }
-                addMapping(row.getKey(), res);
-            }
-            resetQueue(cell);
-        }
+    public MappingStatistic(final Class<? extends DataValue> clazz, final String column) {
+        super(clazz, column);
     }
 }

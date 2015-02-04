@@ -68,7 +68,7 @@ public class AverageInterpolationMissingCellHandlerFactory extends MissingCellHa
      */
     @Override
     public boolean hasSettingsPanel() {
-        return false;
+        return true;
     }
 
     /**
@@ -76,7 +76,7 @@ public class AverageInterpolationMissingCellHandlerFactory extends MissingCellHa
      */
     @Override
     public MissingValueHandlerPanel getSettingsPanel() {
-        return null;
+        return new TimeseriesMissingCellHandlerPanel();
     }
 
     /**

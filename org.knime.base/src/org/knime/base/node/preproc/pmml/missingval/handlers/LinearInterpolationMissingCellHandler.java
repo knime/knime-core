@@ -69,11 +69,13 @@ public class LinearInterpolationMissingCellHandler extends InterpolationMissingC
      * {@inheritDoc}
      */
     @Override
-    public MappingTableStatistic createStatistic() {
-        if (getColumnSpec().getType().isCompatible(DateAndTimeValue.class)) {
-            return new LinearDateTimeInterpolationStatistic(getColumnSpec().getName());
+    public MappingStatistic createStatistic() {
+        if (isTableBacked()) {
+            return new LinearInterpolationStatisticTB(getColumnSpec().getName(),
+                getColumnSpec().getType().isCompatible(DateAndTimeValue.class));
         } else {
-            return new LinearInterpolationStatistic(getColumnSpec().getName());
+            return new LinearInterpolationStatisticMB(getColumnSpec().getName(),
+                getColumnSpec().getType().isCompatible(DateAndTimeValue.class));
         }
     }
 }

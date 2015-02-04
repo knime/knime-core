@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,73 +44,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.12.2014 (Alexander): created
+ *   04.02.2015 (Alexander): created
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
- * A statistic that calculates for each missing cell the linear interpolation
- * between the previous and next valid cell.
+ * Helper class for creating the settings models used by timeseries missing cell handlers.
  * @author Alexander Fillbrunn
  */
-public class LinearInterpolationStatistic extends InterpolationStatistic {
+public final class TimeseriesMissingCellHandlerHelper {
 
-    private int m_numMissing = 0;
+    private static final String TABLE_BACKED_EXECUTION = "tableBackedExec";
 
-    /**
-     * Constructor for NextValidValueStatistic.
-     * @param column the column for which this statistic is calculated
-     */
-    public LinearInterpolationStatistic(final String column) {
-        super(DoubleValue.class, column);
+    private TimeseriesMissingCellHandlerHelper() {
     }
 
     /**
-     * {@inheritDoc}
+     * @return a SettingsModelBoolean which is used to let the user choose if the missing cell handler
+     * uses a table or a HashMap to store statistics.
      */
-    @Override
-    protected void consumeRow(final DataRow dataRow) {
-        DataCell cell = dataRow.getCell(getColumnIndex());
-        if (cell.isMissing()) {
-            addToQueue(dataRow.getKey());
-            m_numMissing++;
-        } else {
-            DoubleValue val = (DoubleValue)cell;
-            DataTable table = closeQueued();
-            int count = 1;
-            for (DataRow row : table) {
-                DataCell res;
-                if (getPrevious().isMissing()) {
-                    res = cell;
-                } else {
-                    double prev = ((DoubleValue)getPrevious()).getDoubleValue();
-                    double next = val.getDoubleValue();
-                    double lin = prev + 1.0 * (count++) / (1.0 * (m_numMissing + 1)) * (next - prev);
-
-                    if (getPrevious() instanceof IntValue) {
-                        // get an int, create an int
-                        res = new IntCell((int)Math.round(lin));
-                    }
-                    if (getPrevious() instanceof LongValue) {
-                        // get an long, create an long
-                        res = new LongCell(Math.round(lin));
-                    }
-                    res = new DoubleCell(lin);
-                }
-                addMapping(row.getKey(), res);
-            }
-            resetQueue(cell);
-            m_numMissing = 0;
-        }
+    public static SettingsModelBoolean createTableBackedExecutionSettingsModel() {
+        return new SettingsModelBoolean(TABLE_BACKED_EXECUTION, false);
     }
+
 }

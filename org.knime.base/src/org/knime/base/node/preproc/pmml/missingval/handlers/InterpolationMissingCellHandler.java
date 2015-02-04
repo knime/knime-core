@@ -48,18 +48,19 @@
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
+import java.util.Iterator;
+
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.knime.base.data.statistics.Statistic;
 import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
 import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
  *
@@ -67,15 +68,25 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public abstract class InterpolationMissingCellHandler extends DefaultMissingCellHandler {
 
-    private MappingTableStatistic m_stat;
-    private RowIterator m_iter;
+    private MappingStatistic m_stat;
+    private Iterator<DataCell> m_iter;
 
     /**
      * Returns the statistic filled by a StatisticCalculator
      * or null if the statistic was not yet filled.
      * @return the statistic with the mapping table
      */
-    protected abstract MappingTableStatistic createStatistic();
+    protected abstract MappingStatistic createStatistic();
+
+    private SettingsModelBoolean m_tableBacked =
+            TimeseriesMissingCellHandlerHelper.createTableBackedExecutionSettingsModel();
+
+    /**
+     * @return true, if a buffered data table is used to store statistics.
+     */
+    public boolean isTableBacked() {
+        return m_tableBacked.getBooleanValue();
+    }
 
     /**
      * {@inheritDoc}
@@ -100,6 +111,7 @@ public abstract class InterpolationMissingCellHandler extends DefaultMissingCell
      */
     @Override
     public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_tableBacked.loadSettingsFrom(settings);
     }
 
     /**
@@ -107,6 +119,7 @@ public abstract class InterpolationMissingCellHandler extends DefaultMissingCell
      */
     @Override
     public void saveSettingsTo(final NodeSettingsWO settings) {
+        m_tableBacked.saveSettingsTo(settings);
     }
 
     /**
@@ -115,13 +128,22 @@ public abstract class InterpolationMissingCellHandler extends DefaultMissingCell
     @Override
     public DataCell getCell(final RowKey key, final DataColumnWindow window) {
         if (m_iter == null) {
-            m_iter = m_stat.getMappingTable().iterator();
+            m_iter = m_stat.iterator();
         }
         assert m_iter.hasNext();
-        DataRow row = m_iter.next();
-        // Check if the calculated statistics and the currently evaluated table match
-        assert row.getKey().equals(key);
-        return row.getCell(0);
+        return m_iter.next();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void rowRemoved(final RowKey key) {
+        if (m_iter == null) {
+            m_iter = m_stat.iterator();
+        }
+        assert m_iter.hasNext();
+        m_iter.next();
     }
 
     /**

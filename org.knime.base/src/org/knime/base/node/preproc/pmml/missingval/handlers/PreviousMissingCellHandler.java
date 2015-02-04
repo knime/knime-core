@@ -56,9 +56,7 @@ import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
 import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.RowIterator;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -69,8 +67,7 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class PreviousMissingCellHandler extends DefaultMissingCellHandler {
 
-    private PreviousValidValueStatistic m_stat;
-    private RowIterator m_iter;
+    private DataCell m_previous = DataType.getMissingCell();
 
     /**
      * @param col the column this handler is configured for
@@ -84,10 +81,7 @@ public class PreviousMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public Statistic getStatistic() {
-        if (m_stat == null) {
-            m_stat = new PreviousValidValueStatistic(DataValue.class, getColumnSpec().getName());
-        }
-        return m_stat;
+        return null;
     }
 
     /**
@@ -95,14 +89,15 @@ public class PreviousMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        if (m_iter == null) {
-            m_iter = m_stat.getMappingTable().iterator();
-        }
-        assert m_iter.hasNext();
-        DataRow row = m_iter.next();
-        // Check if the calculated statistics and the currently evaluated table math
-        assert row.getKey().equals(key);
-        return row.getCell(0);
+        return m_previous;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void nonMissingValueSeen(final RowKey key, final DataColumnWindow window) {
+        m_previous = window.getCurrentCell();
     }
 
     /**
@@ -110,9 +105,6 @@ public class PreviousMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public DerivedField getPMMLDerivedField() {
-        if (m_stat == null) {
-            throw new IllegalStateException("The field can only be created after the statistic has been filled");
-        }
         return createExtensionDerivedField(getPMMLDataTypeForColumn(), NextMissingCellHandlerFactory.ID);
     }
 

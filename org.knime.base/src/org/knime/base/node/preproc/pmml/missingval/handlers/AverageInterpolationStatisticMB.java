@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,31 +44,55 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.12.2014 (Alexander): created
+ *   04.02.2015 (Alexander): created
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 
 /**
- * A statistic that calculates for each missing cell the linear interpolation
- * between the previous and next valid cell.
+ * HashMap based statistic for average interpolation.
  * @author Alexander Fillbrunn
  */
-public class LinearDateTimeInterpolationStatistic extends InterpolationStatistic {
+public class AverageInterpolationStatisticMB extends MappingStatistic {
 
+    private List<DataCell> m_values;
     private int m_numMissing = 0;
+    private boolean m_isDateColumn;
+    private DataCell m_previous = DataType.getMissingCell();
+    private int m_colIdx;
 
     /**
-     * Constructor for NextValidValueStatistic.
-     * @param column the column for which this statistic is calculated
+     * @param column the column this statistic is created for
+     * @param isDateColumn true if the statistic is used on a date column
      */
-    public LinearDateTimeInterpolationStatistic(final String column) {
-        super(DateAndTimeValue.class, column);
+    public AverageInterpolationStatisticMB(final String column, final boolean isDateColumn) {
+        super(isDateColumn ? DateAndTimeValue.class : DoubleValue.class, column);
+        m_isDateColumn = isDateColumn;
+        m_values = new ArrayList<DataCell>();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void init(final DataTableSpec spec, final int amountOfColumns) {
+        m_colIdx = spec.findColumnIndex(getColumns()[0]);
     }
 
     /**
@@ -78,21 +100,17 @@ public class LinearDateTimeInterpolationStatistic extends InterpolationStatistic
      */
     @Override
     protected void consumeRow(final DataRow dataRow) {
-        DataCell cell = dataRow.getCell(getColumnIndex());
+        DataCell cell = dataRow.getCell(m_colIdx);
         if (cell.isMissing()) {
-            addToQueue(dataRow.getKey());
             m_numMissing++;
         } else {
-            DateAndTimeValue val = (DateAndTimeValue)cell;
-            DataTable table = closeQueued();
-            int count = 1;
-            for (DataRow row : table) {
-                DataCell res;
-                if (getPrevious().isMissing()) {
-                    res = cell;
-                } else {
-
-                    DateAndTimeValue prevVal = (DateAndTimeValue)getPrevious();
+            DataCell res;
+            if (m_previous.isMissing()) {
+                res = cell;
+            } else {
+                if (m_isDateColumn) {
+                    DateAndTimeValue val = (DateAndTimeValue)cell;
+                    DateAndTimeValue prevVal = (DateAndTimeValue)m_previous;
 
                     boolean hasDate = val.hasDate() | prevVal.hasDate();
                     boolean hasTime = val.hasTime() | prevVal.hasTime();
@@ -100,13 +118,50 @@ public class LinearDateTimeInterpolationStatistic extends InterpolationStatistic
 
                     long prev = prevVal.getUTCTimeInMillis();
                     long next = val.getUTCTimeInMillis();
-                    long lin = Math.round(prev + 1.0 * (count++) / (1.0 * (m_numMissing + 1)) * (next - prev));
+                    long lin = Math.round((prev + next) / 2);
                     res = new DateAndTimeCell(lin, hasDate, hasTime, hasMilis);
+                } else {
+                    DoubleValue val = (DoubleValue)cell;
+                    double prev = ((DoubleValue)m_previous).getDoubleValue();
+                    double next = val.getDoubleValue();
+                    double lin = (prev + next) / 2;
+
+                    if (m_previous instanceof IntValue) {
+                        // get an int, create an int
+                        res = new IntCell((int)Math.round(lin));
+                    } else if (m_previous instanceof LongValue) {
+                        // get an long, create an long
+                        res = new LongCell(Math.round(lin));
+                    } else {
+                        res = new DoubleCell(lin);
+                    }
                 }
-                addMapping(row.getKey(), res);
             }
-            resetQueue(cell);
+            for (int i = 0; i < m_numMissing; i++) {
+                m_values.add(res);
+            }
+            m_previous = cell;
             m_numMissing = 0;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String afterEvaluation() {
+        // Rest cannot be calculated and therefore is set to the previous value
+        for (int i = 0; i < m_numMissing; i++) {
+            m_values.add(m_previous);
+        }
+        return super.afterEvaluation();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Iterator<DataCell> iterator() {
+        return m_values.iterator();
     }
 }

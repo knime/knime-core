@@ -50,18 +50,20 @@
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
+import java.util.Iterator;
+
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.knime.base.data.statistics.Statistic;
 import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
 import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
  * Selects the next non-missing value as the replacement value.
@@ -69,8 +71,11 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class NextMissingCellHandler extends DefaultMissingCellHandler {
 
-    private NextValidValueStatistic m_stat;
-    private RowIterator m_iter;
+    private MappingStatistic m_stat;
+    private Iterator<DataCell> m_iter;
+
+    private SettingsModelBoolean m_tableBacked =
+            TimeseriesMissingCellHandlerHelper.createTableBackedExecutionSettingsModel();
 
     /**
      * @param col the column this handler is configured for
@@ -85,7 +90,11 @@ public class NextMissingCellHandler extends DefaultMissingCellHandler {
     @Override
     public Statistic getStatistic() {
         if (m_stat == null) {
-            m_stat = new NextValidValueStatistic(DataValue.class, getColumnSpec().getName());
+            if (m_tableBacked.getBooleanValue()) {
+                m_stat = new NextValidValueStatisticTB(DataValue.class, getColumnSpec().getName());
+            } else {
+                m_stat = new NextValidValueStatisticMB(DataValue.class, getColumnSpec().getName());
+            }
         }
         return m_stat;
     }
@@ -96,13 +105,22 @@ public class NextMissingCellHandler extends DefaultMissingCellHandler {
     @Override
     public DataCell getCell(final RowKey key, final DataColumnWindow window) {
         if (m_iter == null) {
-            m_iter = m_stat.getMappingTable().iterator();
+            m_iter = m_stat.iterator();
         }
         assert m_iter.hasNext();
-        DataRow row = m_iter.next();
-        // Check if the calculated statistics and the currently evaluated table match
-        assert row.getKey().equals(key);
-        return row.getCell(0);
+        return m_iter.next();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void rowRemoved(final RowKey key) {
+        if (m_iter == null) {
+            m_iter = m_stat.iterator();
+        }
+        assert m_iter.hasNext();
+        m_iter.next();
     }
 
     /**
@@ -118,9 +136,11 @@ public class NextMissingCellHandler extends DefaultMissingCellHandler {
 
     /**
      * {@inheritDoc}
+     * @throws InvalidSettingsException
      */
     @Override
-    public void loadSettingsFrom(final NodeSettingsRO settings) {
+    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_tableBacked.loadSettingsFrom(settings);
     }
 
     /**
@@ -128,5 +148,6 @@ public class NextMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public void saveSettingsTo(final NodeSettingsWO settings) {
+        m_tableBacked.saveSettingsTo(settings);
     }
 }

@@ -1,7 +1,9 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,12 +46,14 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   02.02.2015 (Alexander): created
+ *   18.12.2014 (Alexander): created
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
+import java.util.Iterator;
+
+import org.knime.base.node.preproc.pmml.missingval.handlers.MappingTableInterpolationStatistic.MappingTableIterator;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -60,73 +64,24 @@ import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 
 /**
- *
+ * Table based statistic that finds for each missing value the next valid one.
  * @author Alexander Fillbrunn
  */
-public abstract class InterpolationStatistic extends MappingTableStatistic {
+public class NextValidValueStatisticTB extends MappingStatistic {
 
-    private DataCell m_previous;
     private DataContainer m_nextCells;
-    private DataContainer m_queued;
-    private DataTable m_result;
-
+    private int m_numMissing = 0;
+    private int m_counter = 0;
+    private DataTable m_table;
     private String m_columnName;
     private int m_index = -1;
 
     /**
-     * @return the index of the column for which the statistics are calulated.
+     * Constructor for NextValidValueStatistic.
+     * @param clazz the class of the data value this statistic can be used for
+     * @param column the column for which this statistic is calculated
      */
-    protected int getColumnIndex() {
-        return m_index;
-    }
-
-    /**
-     * Closes the data container for enqueued rows and returns its table.
-     * @return the table of enqueued rows
-     */
-    protected DataTable closeQueued() {
-        m_queued.close();
-        return m_queued.getTable();
-    }
-
-    /**
-     * Adds a row key to the queue of rows with missing values.
-     * @param key the row key of the column with the missing value
-     */
-    protected void addToQueue(final RowKey key) {
-        m_queued.addRowToTable(new DefaultRow(key, new DataCell[0]));
-    }
-
-    /**
-     * @return the last encountered valid, non-missing value or a missing value, if none exists.
-     */
-    protected DataCell getPrevious() {
-        return m_previous;
-    }
-
-    /**
-     * Empties the queue and sets a new previous value.
-     * @param nextPrevious the previous value for the next row.
-     */
-    protected void resetQueue(final DataCell nextPrevious) {
-        m_queued = new DataContainer(new DataTableSpec());
-        m_previous = nextPrevious;
-    }
-
-    /**
-     * Adds a mapping of a row key to a replacement value.
-     * @param row the row key
-     * @param val the replacement value
-     */
-    protected void addMapping(final RowKey row, final DataCell val) {
-        m_nextCells.addRowToTable(new DefaultRow(row, val));
-    }
-
-    /**
-     * @param clazz the class of the value for which this statistic can be calculated
-     * @param column the column for which the column is calculated
-     */
-    public InterpolationStatistic(final Class<? extends DataValue> clazz, final String column) {
+    public NextValidValueStatisticTB(final Class<? extends DataValue> clazz, final String column) {
         super(clazz, column);
         m_columnName = column;
     }
@@ -135,23 +90,40 @@ public abstract class InterpolationStatistic extends MappingTableStatistic {
      * {@inheritDoc}
      */
     @Override
-    public DataTable getMappingTable() {
-        return m_result;
+    protected void init(final DataTableSpec spec, final int amountOfColumns) {
+        m_index = spec.findColumnIndex(m_columnName);
+        m_nextCells = new DataContainer(new DataTableSpec(spec.getColumnSpec(m_index)));
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void consumeRow(final DataRow dataRow) {
+        DataCell cell = dataRow.getCell(m_index);
+        if (cell.isMissing()) {
+            m_numMissing++;
+        } else {
+            for (int i = 0; i < m_numMissing; i++) {
+                m_nextCells.addRowToTable(new DefaultRow(new RowKey(Integer.toString(m_counter++)), cell));
+            }
+            m_numMissing = 0;
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected String afterEvaluation() {
-        // All remaining enqueued cells have no next value, so we return the previous one
-        m_queued.close();
-        DataTable table = m_queued.getTable();
-        for (DataRow row : table) {
-            m_nextCells.addRowToTable(new DefaultRow(row.getKey(), m_previous));
+        // All remaining enqueued cells have no next value and stay missing
+        for (int i = 0; i < m_numMissing; i++) {
+            m_nextCells.addRowToTable(new DefaultRow(new RowKey(Integer.toString(m_counter++)),
+                                        DataType.getMissingCell()));
         }
 
         m_nextCells.close();
-        m_result = m_nextCells.getTable();
+        m_table = m_nextCells.getTable();
         return super.afterEvaluation();
     }
 
@@ -159,11 +131,7 @@ public abstract class InterpolationStatistic extends MappingTableStatistic {
      * {@inheritDoc}
      */
     @Override
-    protected void init(final DataTableSpec spec, final int amountOfColumns) {
-        m_index = spec.findColumnIndex(m_columnName);
-        m_nextCells = new DataContainer(new DataTableSpec(
-                new DataColumnSpecCreator("value", spec.getColumnSpec(m_index).getType()).createSpec()));
-        m_queued = new DataContainer(new DataTableSpec());
-        m_previous = DataType.getMissingCell();
+    public Iterator<DataCell> iterator() {
+        return new MappingTableIterator(m_table);
     }
 }

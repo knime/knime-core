@@ -52,27 +52,32 @@ package org.knime.base.node.preproc.pmml.missingval.handlers;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 
 /**
- * A statistic that calculates for each missing cell the linear interpolation
+ * Table based statistic that calculates for each missing cell the linear interpolation
  * between the previous and next valid cell.
  * @author Alexander Fillbrunn
  */
-public class AverageInterpolationStatistic extends InterpolationStatistic {
+public class LinearInterpolationStatisticTB extends MappingTableInterpolationStatistic {
+
+    private boolean m_isDateColumn;
 
     /**
      * Constructor for NextValidValueStatistic.
      * @param column the column for which this statistic is calculated
+     * @param isDateColumn determines whether the given column is a date column.
      */
-    public AverageInterpolationStatistic(final String column) {
-        super(DoubleValue.class, column);
+    public LinearInterpolationStatisticTB(final String column, final boolean isDateColumn) {
+        super(isDateColumn ? DateAndTimeValue.class : DoubleValue.class, column);
+        m_isDateColumn = isDateColumn;
     }
 
     /**
@@ -82,32 +87,45 @@ public class AverageInterpolationStatistic extends InterpolationStatistic {
     protected void consumeRow(final DataRow dataRow) {
         DataCell cell = dataRow.getCell(getColumnIndex());
         if (cell.isMissing()) {
-            addToQueue(dataRow.getKey());
+            incMissing();
         } else {
-            DoubleValue val = (DoubleValue)cell;
-            DataTable table = closeQueued();
-            for (DataRow row : table) {
+            for (int i = 0; i < getNumMissing(); i++) {
                 DataCell res;
                 if (getPrevious().isMissing()) {
                     res = cell;
                 } else {
-                    double prev = ((DoubleValue)getPrevious()).getDoubleValue();
-                    double next = val.getDoubleValue();
-                    double lin = (prev + next) / 2;
+                    if (m_isDateColumn) {
+                        DateAndTimeValue val = (DateAndTimeValue)cell;
+                        DateAndTimeValue prevVal = (DateAndTimeValue)getPrevious();
 
-                    if (getPrevious() instanceof IntValue) {
-                        // get an int, create an int
-                        res = new IntCell((int)Math.round(lin));
+                        boolean hasDate = val.hasDate() | prevVal.hasDate();
+                        boolean hasTime = val.hasTime() | prevVal.hasTime();
+                        boolean hasMilis = val.hasMillis() | prevVal.hasMillis();
+
+                        long prev = prevVal.getUTCTimeInMillis();
+                        long next = val.getUTCTimeInMillis();
+                        long lin = Math.round(prev + 1.0 * (i + 1) / (1.0 * (getNumMissing() + 1)) * (next - prev));
+                        res = new DateAndTimeCell(lin, hasDate, hasTime, hasMilis);
+                    } else {
+                        DoubleValue val = (DoubleValue)cell;
+                        double prev = ((DoubleValue)getPrevious()).getDoubleValue();
+                        double next = val.getDoubleValue();
+                        double lin = prev + 1.0 * (i + 1) / (1.0 * (getNumMissing() + 1)) * (next - prev);
+
+                        if (getPrevious() instanceof IntValue) {
+                            // get an int, create an int
+                            res = new IntCell((int)Math.round(lin));
+                        } else if (getPrevious() instanceof LongValue) {
+                            // get an long, create an long
+                            res = new LongCell(Math.round(lin));
+                        } else {
+                            res = new DoubleCell(lin);
+                        }
                     }
-                    if (getPrevious() instanceof LongValue) {
-                        // get an long, create an long
-                        res = new LongCell(Math.round(lin));
-                    }
-                    res = new DoubleCell(lin);
                 }
-                addMapping(row.getKey(), res);
+                addMapping(res);
             }
-            resetQueue(cell);
+            resetMissing(cell);
         }
     }
 }

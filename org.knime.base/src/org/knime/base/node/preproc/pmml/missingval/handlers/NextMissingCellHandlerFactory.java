@@ -106,7 +106,7 @@ public class NextMissingCellHandlerFactory extends MissingCellHandlerFactory {
      */
     @Override
     public MissingValueHandlerPanel getSettingsPanel() {
-        return null;
+        return new TimeseriesMissingCellHandlerPanel();
     }
 
     /**
@@ -114,7 +114,7 @@ public class NextMissingCellHandlerFactory extends MissingCellHandlerFactory {
      */
     @Override
     public boolean hasSettingsPanel() {
-        return false;
+        return true;
     }
 
 

@@ -68,11 +68,13 @@ public class AverageInterpolationMissingCellHandler extends InterpolationMissing
      * {@inheritDoc}
      */
     @Override
-    public MappingTableStatistic createStatistic() {
-        if (getColumnSpec().getType().isCompatible(DateAndTimeValue.class)) {
-            return new AverageDateTimeInterpolationStatistic(getColumnSpec().getName());
+    public MappingStatistic createStatistic() {
+        if (isTableBacked()) {
+            return new AverageInterpolationStatisticTB(getColumnSpec().getName(),
+                getColumnSpec().getType().isCompatible(DateAndTimeValue.class));
         } else {
-            return new AverageInterpolationStatistic(getColumnSpec().getName());
+            return new AverageInterpolationStatisticMB(getColumnSpec().getName(),
+                getColumnSpec().getType().isCompatible(DateAndTimeValue.class));
         }
     }
 }

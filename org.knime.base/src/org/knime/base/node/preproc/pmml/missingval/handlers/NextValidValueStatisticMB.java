@@ -50,26 +50,24 @@
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.MissingCell;
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.def.DefaultRow;
 
 /**
- * Statistic that finds for each missing value the previous valid one.
+ * HashMap based statistic that finds for each missing value the next valid one.
  * @author Alexander Fillbrunn
  */
-public class PreviousValidValueStatistic extends MappingTableStatistic {
+public class NextValidValueStatisticMB extends MappingStatistic {
 
-    private DataCell m_previous;
-    private DataContainer m_queued;
-    private DataTable m_result;
-
-    private String m_columnName;
+    private int m_numMissing = 0;
+    private List<DataCell> m_values;
     private int m_index = -1;
 
     /**
@@ -77,9 +75,9 @@ public class PreviousValidValueStatistic extends MappingTableStatistic {
      * @param clazz the class of the data value this statistic can be used for
      * @param column the column for which this statistic is calculated
      */
-    public PreviousValidValueStatistic(final Class<? extends DataValue> clazz, final String column) {
+    public NextValidValueStatisticMB(final Class<? extends DataValue> clazz, final String column) {
         super(clazz, column);
-        m_columnName = column;
+        m_values = new ArrayList<DataCell>();
     }
 
     /**
@@ -87,9 +85,7 @@ public class PreviousValidValueStatistic extends MappingTableStatistic {
      */
     @Override
     protected void init(final DataTableSpec spec, final int amountOfColumns) {
-        m_index = spec.findColumnIndex(m_columnName);
-        m_queued = new DataContainer(new DataTableSpec(spec.getColumnSpec(m_index)));
-        m_previous = new MissingCell("No previous valid value");
+        m_index = spec.findColumnIndex(getColumns()[0]);
     }
 
     /**
@@ -99,9 +95,12 @@ public class PreviousValidValueStatistic extends MappingTableStatistic {
     protected void consumeRow(final DataRow dataRow) {
         DataCell cell = dataRow.getCell(m_index);
         if (cell.isMissing()) {
-            m_queued.addRowToTable(new DefaultRow(dataRow.getKey(), m_previous));
+            m_numMissing++;
         } else {
-            m_previous = dataRow.getCell(m_index);
+            for (int i = 0; i < m_numMissing; i++) {
+                m_values.add(cell);
+            }
+            m_numMissing = 0;
         }
     }
 
@@ -110,16 +109,18 @@ public class PreviousValidValueStatistic extends MappingTableStatistic {
      */
     @Override
     protected String afterEvaluation() {
-        m_queued.close();
-        m_result = m_queued.getTable();
+        // Rest cannot be calculated and therefore is still missing
+        for (int i = 0; i < m_numMissing; i++) {
+            m_values.add(DataType.getMissingCell());
+        }
         return super.afterEvaluation();
     }
 
     /**
-     * @return the table where the next valid value for each row key is given.
+     * {@inheritDoc}
      */
     @Override
-    public DataTable getMappingTable() {
-        return m_result;
+    public Iterator<DataCell> iterator() {
+        return m_values.iterator();
     }
 }

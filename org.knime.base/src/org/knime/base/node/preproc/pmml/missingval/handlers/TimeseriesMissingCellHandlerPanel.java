@@ -44,31 +44,26 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   02.02.2015 (Alexander): created
+ *   04.02.2015 (Alexander): created
  */
 package org.knime.base.node.preproc.pmml.missingval.handlers;
 
-import org.knime.base.data.statistics.Statistic;
-import org.knime.core.data.DataTable;
-import org.knime.core.data.DataValue;
+import org.knime.base.node.preproc.pmml.missingval.DefaultMissingValueHandlerPanel;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 
 /**
- *
+ * Panel with one checkbox that lets the user choose to use a disk based statistic instead of
+ * an in-memory hashmap.
  * @author Alexander Fillbrunn
  */
-public abstract class MappingTableStatistic extends Statistic {
+public class TimeseriesMissingCellHandlerPanel extends DefaultMissingValueHandlerPanel {
 
     /**
-     * Constructor for MappingTableStatistic.
-     * @param clazz the class of the value type this statistic is used for
-     * @param column the column for which this statistic is calculated
+     * Default constructor for TimeseriesMissingCellHandlerPanel.
      */
-    public MappingTableStatistic(final Class<? extends DataValue> clazz, final String column) {
-        super(clazz, new String[] {column});
+    public TimeseriesMissingCellHandlerPanel() {
+        DialogComponentBoolean tableBacked = new DialogComponentBoolean(
+            TimeseriesMissingCellHandlerHelper.createTableBackedExecutionSettingsModel(), "Use disk based statistic");
+        addDialogComponent(tableBacked);
     }
-
-    /**
-     * @return the mapping table created by this statistic
-     */
-    public abstract DataTable getMappingTable();
 }
