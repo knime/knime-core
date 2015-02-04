@@ -118,11 +118,11 @@ public class WindowedDataTableIterator extends RowIterator {
         // We need to count how many cells we actually read to handle tables smaller than the lookahead
         int counter = 0;
         // Fill the buffer so we have enough rows for the lookahead of the first row
-        for (int i = m_lookbehind; i < m_lookbehind + m_lookahead + 1 && m_iter.hasNext(); i++) {
+        for (int i = m_lookbehind; i < m_lookbehind + m_lookahead && m_iter.hasNext(); i++) {
             m_buffer[i] = m_iter.next();
             counter++;
         }
-        m_currentLookahead = counter - 1;
+        m_currentLookahead = counter;
         m_pointer = m_lookbehind - 1;
 
         // Initialize the column windows with the buffer
@@ -165,26 +165,30 @@ public class WindowedDataTableIterator extends RowIterator {
         // Advance pointer and wrap around if necessary (ring buffer)
         m_pointer = (m_pointer + 1) % m_buffer.length;
 
-        DataRow row = m_buffer[m_pointer];
         // At the beginning the actual lookbehind might be smaller than the desired one, so we update it accordingly
         m_currentLookbehind = Math.min(m_currentLookbehind + 1, m_lookbehind);
 
         // Add a new row to the buffer
         if (m_iter.hasNext()) {
             // Calculate index where to put the new item and read it from the table
-            int idx = (m_pointer + m_lookahead + 1) % m_buffer.length;
+            int idx = (m_pointer + m_lookahead) % m_buffer.length;
             m_buffer[idx] = m_iter.next();
-            m_hasMore = true;
+            m_hasMore = m_currentLookahead > 0 || m_iter.hasNext();
         } else {
             m_currentLookahead--;
-            m_hasMore = m_currentLookahead >= 0;
+            m_hasMore = m_currentLookahead > 0;
         }
+
         // Update all the column windows.
         // They might get an older row if their lookahead is smaller than the maximum lookahead
         for (int i = 0; i < m_colWindows.length; i++) {
-            DataRow next = m_buffer[(m_pointer + m_colWindows[i].getLookaheadSize()) % m_buffer.length];
-            m_colWindows[i].addCell(next);
+            if (m_currentLookahead >= m_colWindows[i].getLookaheadSize()) {
+                DataRow next = m_buffer[(m_pointer + m_colWindows[i].getLookaheadSize()) % m_buffer.length];
+                m_colWindows[i].addCell(next);
+            }
         }
+
+        DataRow row = m_buffer[m_pointer];
         return row;
     }
 }
