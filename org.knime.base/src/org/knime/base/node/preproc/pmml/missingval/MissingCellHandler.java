@@ -157,6 +157,25 @@ public abstract class MissingCellHandler {
     public abstract DataCell getCell(RowKey key, DataColumnWindow window);
 
     /**
+     * Is called when the iterator over the table passes over a row that has a
+     * non-missing cell in this handler's column.
+     * @param key the key of the row
+     * @param window the sliding window over the column
+     */
+    public void nonMissingValueSeen(final RowKey key, final DataColumnWindow window) {
+    }
+
+    /**
+     * Is called when the current value is missing but the current row is skipped because a previous column had a
+     * handler that requested to remove the row. When a handler requests to remove a row after
+     * this handler's column has been treated (getCell has been called already) then this method is not called.
+     * This method should be used to advance iterators for statistics etc.
+     * @param key the key of the row that is removed
+     */
+    public void rowRemoved(final RowKey key) {
+    }
+
+    /**
      * Creates a derived field for the documentation of the operation in PMML.
      * @return the derived field
      */

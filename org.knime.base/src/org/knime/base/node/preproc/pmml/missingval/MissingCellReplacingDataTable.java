@@ -338,13 +338,19 @@ public class MissingCellReplacingDataTable implements DataTable {
             boolean removeRow = false;
             for (int i = 0; i < m_spec.getNumColumns(); i++) {
                 if (row.getCell(i).isMissing()) {
-                    cells[i] = m_handlers[i].getCell(row.getKey(), m_iter.getWindowForColumn(i));
-                    if (cells[i] == null) {
-                        removeRow = true;
-                        // Other handlers might rely on the correct order and no skipped rows (eg NextValue),
-                        // so we cannot break here.
+                    if (removeRow) {
+                        m_handlers[i].rowRemoved(row.getKey());
+                    } else {
+                        cells[i] = m_handlers[i].getCell(row.getKey(), m_iter.getWindowForColumn(i));
+                        if (cells[i] == null) {
+                            removeRow = true;
+                            // Other handlers might rely on the correct order and no skipped rows (eg NextValue),
+                            // so we cannot break here. Instead from now on the rowRemoved method
+                            // is called instead of getCell() to avoid unnecessary computations
+                        }
                     }
                 } else {
+                    m_handlers[i].nonMissingValueSeen(row.getKey(), m_iter.getWindowForColumn(i));
                     cells[i] = row.getCell(i);
                 }
             }
