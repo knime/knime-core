@@ -73,7 +73,8 @@ class DeleteColumnsAction extends AbstractAction {
         m_table = table;
         m_table.getColumnModel().getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-           public void valueChanged(final ListSelectionEvent e) {
+           @Override
+        public void valueChanged(final ListSelectionEvent e) {
                setEnabled(!m_table.getColumnModel().getSelectionModel()
                        .isSelectionEmpty());
            }
@@ -85,9 +86,12 @@ class DeleteColumnsAction extends AbstractAction {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void actionPerformed(final ActionEvent e) {
         int[] cols = m_table.getColumnModel().getSelectedColumns();
         ((SpreadsheetTableModel)m_table.getModel()).deleteColumns(cols);
+        int i = Math.max(0, cols[0]);
+        m_table.getColumnModel().getSelectionModel().setSelectionInterval(i, i);
     }
 
 }

@@ -530,7 +530,8 @@ class SpreadsheetTable extends JTable {
             Map<Integer, ColProperty> changedProps = new HashMap<Integer, ColProperty>();
 
             Map<Integer, ColProperty> props = model.getColumnProperties();
-            for (int col : m_table.getColumnModel().getSelectedColumns()) {
+            int[] selectedColumns = m_table.getColumnModel().getSelectedColumns();
+            for (int col : selectedColumns) {
                 if (props.containsKey(col)) {
                     DataType colType = props.get(col).getColumnSpec().getType();
                     if (!colType.equals(type)) {
@@ -549,29 +550,8 @@ class SpreadsheetTable extends JTable {
 
             }
             model.addColProperties(changedProps);
-        }
-
-        private boolean selectColumnAt(final MouseEvent e) {
-            int col = m_table.getTableHeader().columnAtPoint(e.getPoint());
-            // The autoscroller can generate drag events outside the
-            // table's range.
-            if (col == -1) {
-                return false;
-            }
-            boolean isSelected = m_table.getColumnModel().getSelectionModel().isSelectedIndex(col);
-            if (!isSelected) {
-                m_table.changeSelection(0, col, e.isControlDown(), e.isShiftDown());
-            }
-            // isSelEmpty==false may happen with e.isControlDown() on a
-            // selected column
-            boolean isSelEmpty = m_table.getColumnModel().getSelectionModel().isSelectionEmpty();
-            if (!isSelEmpty) {
-                m_table.getSelectionModel().setSelectionInterval(m_table.getRowCount() - 1, 0);
-                return true;
-            } else {
-                m_table.getSelectionModel().clearSelection();
-                return false;
-            }
+            m_table.getColumnModel().getSelectionModel()
+                .setSelectionInterval(selectedColumns[0], selectedColumns[selectedColumns.length - 1]);
         }
 
         /**
@@ -604,8 +584,6 @@ class SpreadsheetTable extends JTable {
                     m_table.getSelectionModel().clearSelection();
                 }
             } else {
-                int col = m_table.getTableHeader().columnAtPoint(e.getPoint());
-                m_table.changeSelection(0, col, false, false);
                 m_popup.show(m_table.getTableHeader(), e.getX(), e.getY());
             }
         }

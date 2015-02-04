@@ -85,6 +85,7 @@ class PropertyColumnsAction extends AbstractAction {
         m_table = table;
         m_table.getColumnModel().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 
+            @Override
             public void valueChanged(final ListSelectionEvent e) {
                 ListSelectionModel sel =
                     m_table.getColumnModel().getSelectionModel();
@@ -100,6 +101,7 @@ class PropertyColumnsAction extends AbstractAction {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void actionPerformed(final ActionEvent e) {
         int colIdx = m_table.getColumnModel().getSelectionModel()
                         .getMinSelectionIndex();
@@ -139,6 +141,7 @@ class PropertyColumnsAction extends AbstractAction {
             ((SpreadsheetTableModel)m_table.getModel()).setColProperty(colIdx,
                     result.get(colProps.size() - 1));
         }
+        m_table.getColumnModel().getSelectionModel().setSelectionInterval(colIdx, colIdx);
     }
 
     /**

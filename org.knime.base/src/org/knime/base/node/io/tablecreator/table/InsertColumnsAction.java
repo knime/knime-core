@@ -73,7 +73,8 @@ class InsertColumnsAction extends AbstractAction {
         m_table = table;
         m_table.getColumnModel().getSelectionModel().addListSelectionListener(
                 new ListSelectionListener() {
-           public void valueChanged(final ListSelectionEvent e) {
+           @Override
+        public void valueChanged(final ListSelectionEvent e) {
                setEnabled(!m_table.getColumnModel().getSelectionModel()
                        .isSelectionEmpty());
            }
@@ -85,9 +86,11 @@ class InsertColumnsAction extends AbstractAction {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void actionPerformed(final ActionEvent e) {
         int[] cols = m_table.getColumnModel().getSelectedColumns();
         ((SpreadsheetTableModel)m_table.getModel()).insertColumns(cols);
+        m_table.getColumnModel().getSelectionModel().setSelectionInterval(cols[0], cols[cols.length - 1]);
     }
 
 }
