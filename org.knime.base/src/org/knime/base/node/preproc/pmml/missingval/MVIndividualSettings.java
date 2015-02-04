@@ -108,16 +108,21 @@ public class MVIndividualSettings {
     /**
      * Loads settings for a column.
      * @param settings the settings
-     * @return the MVColumnSettings
+     * @param repair if true, missing factories are replaced by the do nothing factory, else an exception is thrown
+     * @return if repair is false, any warning message that occurred, else null
      * @throws InvalidSettingsException when the settings are not properly structured
+     *          or repair is false and a factory is missing
      */
-    public String loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public String loadSettings(final NodeSettingsRO settings, final boolean repair) throws InvalidSettingsException {
         String factID = settings.getString(FACTORY_ID_CFG);
         String warning = null;
         m_factory = MissingCellHandlerFactoryManager.getInstance().getFactoryByID(factID);
         if (m_factory == null) {
-            m_factory = DoNothingMissingCellHandlerFactory.getInstance();
             warning = "The factory " + factID + " is not a registered extension but is chosen in the settings.";
+            if (!repair) {
+                throw new InvalidSettingsException(warning);
+            }
+            m_factory = DoNothingMissingCellHandlerFactory.getInstance();
         }
         if (settings.containsKey(SETTINGS_CFG)) {
             m_settings = new NodeSettings("");

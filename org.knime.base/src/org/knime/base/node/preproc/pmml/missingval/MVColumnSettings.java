@@ -90,14 +90,15 @@ public class MVColumnSettings {
     /**
      * Loads settings from a NodeSettings object.
      * @param settings the settings to load from
+     * @param repair if true, missing factories are replaced by the do nothing factory, else an exception is thrown
      * @return the MVColumnSettings stored in the NodeSettingsRO object
      * @throws InvalidSettingsException if the settings cannot be loaded
      */
-    public String loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public String loadSettings(final NodeSettingsRO settings, final boolean repair) throws InvalidSettingsException {
         this.m_columns.clear();
 
         m_settings = new MVIndividualSettings();
-        String warning = m_settings.loadSettings(settings.getNodeSettings(SETTINGS_KEY));
+        String warning = m_settings.loadSettings(settings.getNodeSettings(SETTINGS_KEY), repair);
         for (String col : settings.getStringArray(COLUMN_NAMES_KEY)) {
             m_columns.add(col);
         }

@@ -30,6 +30,8 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  */
 public class MissingValueHandlerNodeModel extends NodeModel {
 
+    private static final double STAT_MAX_PROGRESS = 0.5;
+
     /**
      * Constructor for the node model.
      */
@@ -51,14 +53,14 @@ public class MissingValueHandlerNodeModel extends NodeModel {
         MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable(inSpec, m_settings);
 
         // Calculate the statistics
-        mvTable.init(inTable, exec.createSubExecutionContext(0.5));
+        mvTable.init(inTable, exec.createSubExecutionContext(STAT_MAX_PROGRESS));
 
         int rowCounter = 0;
         DataContainer container = exec.createDataContainer(mvTable.getDataTableSpec());
 
         for (DataRow row : mvTable) {
             exec.checkCanceled();
-            exec.setProgress(0.5 + (double)(rowCounter++) / inTable.getRowCount());
+            exec.setProgress(STAT_MAX_PROGRESS + (double)(rowCounter++) / inTable.getRowCount());
             if (row != null) {
                 container.addRowToTable(row);
             }
@@ -112,16 +114,7 @@ public class MissingValueHandlerNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        String warning = null;
-        try {
-            warning = m_settings.loadSettings(settings);
-        } catch (InvalidSettingsException e) {
-            m_settings = new MVSettings();
-            throw e;
-        }
-        if (warning != null) {
-            setWarningMessage(warning);
-        }
+        m_settings.loadSettings(settings, false);
     }
 
     /**

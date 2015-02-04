@@ -307,13 +307,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         m_searchableListModifier = m_searchableListPanel.update(spec);
 
         try {
-            String w =  mvSettings.loadSettings(settings);
-            if (w != null) {
-                if (warning.length() > 0) {
-                    warning.append("\n");
-                }
-                warning.append(w);
-            }
+             mvSettings.loadSettings(settings, true);
         } catch (Exception e) {
             if (warning.length() > 0) {
                 warning.append("\n");

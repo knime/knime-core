@@ -175,10 +175,11 @@ public class MVSettings {
     /**
      * Loads the settings from a read only node settings object.
      * @param settings the settings
+     * @param repair if true, missing factories are replaced by the do nothing factory, else an exception is thrown
      * @return the missing value handling settings
      * @throws InvalidSettingsException when the settings cannot be retrieved
      */
-    public String loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public String loadSettings(final NodeSettingsRO settings, final boolean repair) throws InvalidSettingsException {
         if (!settings.containsKey(COL_SETTINGS_CFG) || !settings.containsKey(DT_SETTINGS_CFG)) {
             return null;
         }
@@ -188,7 +189,7 @@ public class MVSettings {
         NodeSettingsRO colSettings = settings.getNodeSettings(COL_SETTINGS_CFG);
         for (String key : colSettings.keySet()) {
             MVColumnSettings colSet = new MVColumnSettings();
-            String w = colSet.loadSettings(colSettings.getNodeSettings(key));
+            String w = colSet.loadSettings(colSettings.getNodeSettings(key), repair);
             if (w != null) {
                 if (warning.length() > 0) {
                     warning.append("\n");
@@ -201,7 +202,7 @@ public class MVSettings {
         NodeSettingsRO dtSettings = settings.getNodeSettings(DT_SETTINGS_CFG);
         for (String key : dtSettings.keySet()) {
             MVIndividualSettings dtSetting = new MVIndividualSettings();
-            String w = dtSetting.loadSettings(dtSettings.getNodeSettings(key));
+            String w = dtSetting.loadSettings(dtSettings.getNodeSettings(key), repair);
             if (w != null) {
                 if (warning.length() > 0) {
                     warning.append("\n");
