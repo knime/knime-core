@@ -197,6 +197,7 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
         m_localdirectory =
             new FilesHistoryPanel(fvm, "filereader_history", LocationValidation.DirectoryInput, new String[]{});
         m_localdirectory.setSelectMode(JFileChooser.DIRECTORIES_ONLY);
+        m_localdirectory.setAllowRemoteURLs(false);
 
         m_recursive = new JCheckBox();
         m_recursive.setText("include sub folders");
