@@ -1857,7 +1857,7 @@
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MostFrequentValueMissingCellHandlerFactory">
         </MissingCellHandler>
         <MissingCellHandler
-              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.NextMissingCellHandlerFactory">
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.timeseries.NextMissingCellHandlerFactory">
         </MissingCellHandler>
         <MissingCellHandler
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.RemoveRowMissingCellHandlerFactory">
@@ -1866,13 +1866,16 @@
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.MedianNumberMissingCellHandlerFactory">
         </MissingCellHandler>
         <MissingCellHandler
-              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.PreviousMissingCellHandlerFactory">
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.timeseries.PreviousMissingCellHandlerFactory">
         </MissingCellHandler>
         <MissingCellHandler
-              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.LinearInterpolationMissingCellHandlerFactory">
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.timeseries.LinearInterpolationMissingCellHandlerFactory">
         </MissingCellHandler>
         <MissingCellHandler
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.FixedStringValueMissingCellHandlerFactory">
+        </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.timeseries.AverageInterpolationMissingCellHandlerFactory">
         </MissingCellHandler>
      </extension>   
 </plugin>

@@ -46,35 +46,69 @@
  * History
  *   20.01.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandler;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
+import org.knime.base.node.preproc.pmml.missingval.MissingValueHandlerPanel;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.date.DateAndTimeValue;
 
 /**
- * A handler that replaces missing values with a linear interpolation of the next and previous valid values.
- *
+ * Creates a handler that replaces missing values with the a linear interpolation of the
+ * previous and next non-missing values.
  * @author Alexander Fillbrunn
  */
-public class AverageInterpolationMissingCellHandler extends InterpolationMissingCellHandler {
+public class LinearInterpolationMissingCellHandlerFactory extends MissingCellHandlerFactory {
+
     /**
-     * @param col the column this handler is for
+     * {@inheritDoc}
      */
-    public AverageInterpolationMissingCellHandler(final DataColumnSpec col) {
-        super(col);
+    @Override
+    public boolean hasSettingsPanel() {
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MappingStatistic createStatistic() {
-        if (isTableBacked()) {
-            return new AverageInterpolationStatisticTB(getColumnSpec().getName(),
-                getColumnSpec().getType().isCompatible(DateAndTimeValue.class));
-        } else {
-            return new AverageInterpolationStatisticMB(getColumnSpec().getName(),
-                getColumnSpec().getType().isCompatible(DateAndTimeValue.class));
-        }
+    public MissingValueHandlerPanel getSettingsPanel() {
+        return new TimeseriesMissingCellHandlerPanel();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDisplayName() {
+        return "Linear Interpolation";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MissingCellHandler createHandler(final DataColumnSpec column) {
+        return new LinearInterpolationMissingCellHandler(column);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isApplicable(final DataType type) {
+        return type.isCompatible(DoubleValue.class) || type.isCompatible(DateAndTimeValue.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean producesPMML4_2() {
+        return false;
+    }
+
 }

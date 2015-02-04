@@ -46,27 +46,23 @@
  * History
  *   04.02.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.base.data.statistics.Statistic;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 
 /**
- * Helper class for creating the settings models used by timeseries missing cell handlers.
+ *
  * @author Alexander Fillbrunn
  */
-public final class TimeseriesMissingCellHandlerHelper {
-
-    private static final String TABLE_BACKED_EXECUTION = "tableBackedExec";
-
-    private TimeseriesMissingCellHandlerHelper() {
-    }
+public abstract class MappingStatistic extends Statistic implements Iterable<DataCell> {
 
     /**
-     * @return a SettingsModelBoolean which is used to let the user choose if the missing cell handler
-     * uses a table or a HashMap to store statistics.
+     * @param clazz the value class permitted for this statistic
+     * @param column the column the statistic is calculated for
      */
-    public static SettingsModelBoolean createTableBackedExecutionSettingsModel() {
-        return new SettingsModelBoolean(TABLE_BACKED_EXECUTION, false);
+    public MappingStatistic(final Class<? extends DataValue> clazz, final String column) {
+        super(clazz, column);
     }
-
 }

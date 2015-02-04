@@ -48,106 +48,90 @@
  * History
  *   18.12.2014 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
 import java.util.Iterator;
 
-import org.dmg.pmml.DerivedFieldDocument.DerivedField;
-import org.knime.base.data.statistics.Statistic;
-import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
-import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
+import org.knime.base.node.preproc.pmml.missingval.handlers.timeseries.MappingTableInterpolationStatistic.MappingTableIterator;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.RowKey;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.def.DefaultRow;
 
 /**
- * Selects the next non-missing value as the replacement value.
+ * Table based statistic that finds for each missing value the next valid one.
  * @author Alexander Fillbrunn
  */
-public class NextMissingCellHandler extends DefaultMissingCellHandler {
+public class NextValidValueStatisticTB extends MappingStatistic {
 
-    private MappingStatistic m_stat;
-    private Iterator<DataCell> m_iter;
-
-    private SettingsModelBoolean m_tableBacked =
-            TimeseriesMissingCellHandlerHelper.createTableBackedExecutionSettingsModel();
+    private DataContainer m_nextCells;
+    private int m_numMissing = 0;
+    private int m_counter = 0;
+    private DataTable m_table;
+    private String m_columnName;
+    private int m_index = -1;
 
     /**
-     * @param col the column this handler is configured for
+     * Constructor for NextValidValueStatistic.
+     * @param clazz the class of the data value this statistic can be used for
+     * @param column the column for which this statistic is calculated
      */
-    public NextMissingCellHandler(final DataColumnSpec col) {
-        super(col);
+    public NextValidValueStatisticTB(final Class<? extends DataValue> clazz, final String column) {
+        super(clazz, column);
+        m_columnName = column;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Statistic getStatistic() {
-        if (m_stat == null) {
-            if (m_tableBacked.getBooleanValue()) {
-                m_stat = new NextValidValueStatisticTB(DataValue.class, getColumnSpec().getName());
-            } else {
-                m_stat = new NextValidValueStatisticMB(DataValue.class, getColumnSpec().getName());
+    protected void init(final DataTableSpec spec, final int amountOfColumns) {
+        m_index = spec.findColumnIndex(m_columnName);
+        m_nextCells = new DataContainer(new DataTableSpec(spec.getColumnSpec(m_index)));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void consumeRow(final DataRow dataRow) {
+        DataCell cell = dataRow.getCell(m_index);
+        if (cell.isMissing()) {
+            m_numMissing++;
+        } else {
+            for (int i = 0; i < m_numMissing; i++) {
+                m_nextCells.addRowToTable(new DefaultRow(new RowKey(Integer.toString(m_counter++)), cell));
             }
+            m_numMissing = 0;
         }
-        return m_stat;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        if (m_iter == null) {
-            m_iter = m_stat.iterator();
+    protected String afterEvaluation() {
+        // All remaining enqueued cells have no next value and stay missing
+        for (int i = 0; i < m_numMissing; i++) {
+            m_nextCells.addRowToTable(new DefaultRow(new RowKey(Integer.toString(m_counter++)),
+                                        DataType.getMissingCell()));
         }
-        assert m_iter.hasNext();
-        return m_iter.next();
+
+        m_nextCells.close();
+        m_table = m_nextCells.getTable();
+        return super.afterEvaluation();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void rowRemoved(final RowKey key) {
-        if (m_iter == null) {
-            m_iter = m_stat.iterator();
-        }
-        assert m_iter.hasNext();
-        m_iter.next();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DerivedField getPMMLDerivedField() {
-        if (m_stat == null) {
-            throw new IllegalStateException("The field can only be created after the statistic has been filled");
-        }
-        return createExtensionDerivedField(getPMMLDataTypeForColumn(), NextMissingCellHandlerFactory.ID);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws InvalidSettingsException
-     */
-    @Override
-    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_tableBacked.loadSettingsFrom(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void saveSettingsTo(final NodeSettingsWO settings) {
-        m_tableBacked.saveSettingsTo(settings);
+    public Iterator<DataCell> iterator() {
+        return new MappingTableIterator(m_table);
     }
 }

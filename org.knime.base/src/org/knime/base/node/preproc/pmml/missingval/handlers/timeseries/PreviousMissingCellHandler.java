@@ -48,7 +48,7 @@
  * History
  *   18.12.2014 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.knime.base.data.statistics.Statistic;
@@ -105,7 +105,7 @@ public class PreviousMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public DerivedField getPMMLDerivedField() {
-        return createExtensionDerivedField(getPMMLDataTypeForColumn(), NextMissingCellHandlerFactory.ID);
+        return createExtensionDerivedField(getPMMLDataTypeForColumn(), PreviousMissingCellHandlerFactory.ID);
     }
 
     /**

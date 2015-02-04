@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,44 +44,47 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.12.2014 (Alexander): created
+ *   04.02.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
-import org.knime.base.node.preproc.pmml.missingval.handlers.MappingTableInterpolationStatistic.MappingTableIterator;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
+import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 
 /**
- * Table based statistic that finds for each missing value the next valid one.
+ * HashMap based statistic for average interpolation.
  * @author Alexander Fillbrunn
  */
-public class NextValidValueStatisticTB extends MappingStatistic {
+public class AverageInterpolationStatisticMB extends MappingStatistic {
 
-    private DataContainer m_nextCells;
+    private List<DataCell> m_values;
     private int m_numMissing = 0;
-    private int m_counter = 0;
-    private DataTable m_table;
-    private String m_columnName;
-    private int m_index = -1;
+    private boolean m_isDateColumn;
+    private DataCell m_previous = DataType.getMissingCell();
+    private int m_colIdx;
 
     /**
-     * Constructor for NextValidValueStatistic.
-     * @param clazz the class of the data value this statistic can be used for
-     * @param column the column for which this statistic is calculated
+     * @param column the column this statistic is created for
+     * @param isDateColumn true if the statistic is used on a date column
      */
-    public NextValidValueStatisticTB(final Class<? extends DataValue> clazz, final String column) {
-        super(clazz, column);
-        m_columnName = column;
+    public AverageInterpolationStatisticMB(final String column, final boolean isDateColumn) {
+        super(isDateColumn ? DateAndTimeValue.class : DoubleValue.class, column);
+        m_isDateColumn = isDateColumn;
+        m_values = new ArrayList<DataCell>();
     }
 
     /**
@@ -91,8 +92,7 @@ public class NextValidValueStatisticTB extends MappingStatistic {
      */
     @Override
     protected void init(final DataTableSpec spec, final int amountOfColumns) {
-        m_index = spec.findColumnIndex(m_columnName);
-        m_nextCells = new DataContainer(new DataTableSpec(spec.getColumnSpec(m_index)));
+        m_colIdx = spec.findColumnIndex(getColumns()[0]);
     }
 
     /**
@@ -100,13 +100,47 @@ public class NextValidValueStatisticTB extends MappingStatistic {
      */
     @Override
     protected void consumeRow(final DataRow dataRow) {
-        DataCell cell = dataRow.getCell(m_index);
+        DataCell cell = dataRow.getCell(m_colIdx);
         if (cell.isMissing()) {
             m_numMissing++;
         } else {
-            for (int i = 0; i < m_numMissing; i++) {
-                m_nextCells.addRowToTable(new DefaultRow(new RowKey(Integer.toString(m_counter++)), cell));
+            DataCell res;
+            if (m_previous.isMissing()) {
+                res = cell;
+            } else {
+                if (m_isDateColumn) {
+                    DateAndTimeValue val = (DateAndTimeValue)cell;
+                    DateAndTimeValue prevVal = (DateAndTimeValue)m_previous;
+
+                    boolean hasDate = val.hasDate() | prevVal.hasDate();
+                    boolean hasTime = val.hasTime() | prevVal.hasTime();
+                    boolean hasMilis = val.hasMillis() | prevVal.hasMillis();
+
+                    long prev = prevVal.getUTCTimeInMillis();
+                    long next = val.getUTCTimeInMillis();
+                    long lin = Math.round((prev + next) / 2);
+                    res = new DateAndTimeCell(lin, hasDate, hasTime, hasMilis);
+                } else {
+                    DoubleValue val = (DoubleValue)cell;
+                    double prev = ((DoubleValue)m_previous).getDoubleValue();
+                    double next = val.getDoubleValue();
+                    double lin = (prev + next) / 2;
+
+                    if (m_previous instanceof IntValue) {
+                        // get an int, create an int
+                        res = new IntCell((int)Math.round(lin));
+                    } else if (m_previous instanceof LongValue) {
+                        // get an long, create an long
+                        res = new LongCell(Math.round(lin));
+                    } else {
+                        res = new DoubleCell(lin);
+                    }
+                }
             }
+            for (int i = 0; i < m_numMissing; i++) {
+                m_values.add(res);
+            }
+            m_previous = cell;
             m_numMissing = 0;
         }
     }
@@ -116,14 +150,10 @@ public class NextValidValueStatisticTB extends MappingStatistic {
      */
     @Override
     protected String afterEvaluation() {
-        // All remaining enqueued cells have no next value and stay missing
+        // Rest cannot be calculated and therefore is set to the previous value
         for (int i = 0; i < m_numMissing; i++) {
-            m_nextCells.addRowToTable(new DefaultRow(new RowKey(Integer.toString(m_counter++)),
-                                        DataType.getMissingCell()));
+            m_values.add(m_previous);
         }
-
-        m_nextCells.close();
-        m_table = m_nextCells.getTable();
         return super.afterEvaluation();
     }
 
@@ -132,6 +162,6 @@ public class NextValidValueStatisticTB extends MappingStatistic {
      */
     @Override
     public Iterator<DataCell> iterator() {
-        return new MappingTableIterator(m_table);
+        return m_values.iterator();
     }
 }

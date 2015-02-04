@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,81 +44,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.12.2014 (Alexander): created
+ *   04.02.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
- * HashMap based statistic that finds for each missing value the next valid one.
+ * Helper class for creating the settings models used by timeseries missing cell handlers.
  * @author Alexander Fillbrunn
  */
-public class NextValidValueStatisticMB extends MappingStatistic {
+public final class TimeseriesMissingCellHandlerHelper {
 
-    private int m_numMissing = 0;
-    private List<DataCell> m_values;
-    private int m_index = -1;
+    private static final String TABLE_BACKED_EXECUTION = "tableBackedExec";
 
-    /**
-     * Constructor for NextValidValueStatistic.
-     * @param clazz the class of the data value this statistic can be used for
-     * @param column the column for which this statistic is calculated
-     */
-    public NextValidValueStatisticMB(final Class<? extends DataValue> clazz, final String column) {
-        super(clazz, column);
-        m_values = new ArrayList<DataCell>();
+    private TimeseriesMissingCellHandlerHelper() {
     }
 
     /**
-     * {@inheritDoc}
+     * @return a SettingsModelBoolean which is used to let the user choose if the missing cell handler
+     * uses a table or a HashMap to store statistics.
      */
-    @Override
-    protected void init(final DataTableSpec spec, final int amountOfColumns) {
-        m_index = spec.findColumnIndex(getColumns()[0]);
+    public static SettingsModelBoolean createTableBackedExecutionSettingsModel() {
+        return new SettingsModelBoolean(TABLE_BACKED_EXECUTION, false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void consumeRow(final DataRow dataRow) {
-        DataCell cell = dataRow.getCell(m_index);
-        if (cell.isMissing()) {
-            m_numMissing++;
-        } else {
-            for (int i = 0; i < m_numMissing; i++) {
-                m_values.add(cell);
-            }
-            m_numMissing = 0;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String afterEvaluation() {
-        // Rest cannot be calculated and therefore is still missing
-        for (int i = 0; i < m_numMissing; i++) {
-            m_values.add(DataType.getMissingCell());
-        }
-        return super.afterEvaluation();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Iterator<DataCell> iterator() {
-        return m_values.iterator();
-    }
 }

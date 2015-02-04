@@ -44,113 +44,71 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   02.02.2015 (Alexander): created
+ *   20.01.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
-import java.util.Iterator;
-
-import org.dmg.pmml.DerivedFieldDocument.DerivedField;
-import org.knime.base.data.statistics.Statistic;
-import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
-import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
-import org.knime.core.data.DataCell;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandler;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
+import org.knime.base.node.preproc.pmml.missingval.MissingValueHandlerPanel;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.RowKey;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.date.DateAndTimeValue;
 
 /**
- *
+ * Creates a handler that replaces missing values with the a linear interpolation of the
+ * previous and next non-missing values.
  * @author Alexander Fillbrunn
  */
-public abstract class InterpolationMissingCellHandler extends DefaultMissingCellHandler {
-
-    private MappingStatistic m_stat;
-    private Iterator<DataCell> m_iter;
+public class AverageInterpolationMissingCellHandlerFactory extends MissingCellHandlerFactory {
 
     /**
-     * Returns the statistic filled by a StatisticCalculator
-     * or null if the statistic was not yet filled.
-     * @return the statistic with the mapping table
+     * {@inheritDoc}
      */
-    protected abstract MappingStatistic createStatistic();
-
-    private SettingsModelBoolean m_tableBacked =
-            TimeseriesMissingCellHandlerHelper.createTableBackedExecutionSettingsModel();
-
-    /**
-     * @return true, if a buffered data table is used to store statistics.
-     */
-    public boolean isTableBacked() {
-        return m_tableBacked.getBooleanValue();
+    @Override
+    public boolean hasSettingsPanel() {
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Statistic getStatistic() {
-        if (m_stat == null) {
-            m_stat = createStatistic();
-        }
-        return m_stat;
-    }
-
-    /**
-     * @param col the column this handler is for
-     */
-    public InterpolationMissingCellHandler(final DataColumnSpec col) {
-        super(col);
+    public MissingValueHandlerPanel getSettingsPanel() {
+        return new TimeseriesMissingCellHandlerPanel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_tableBacked.loadSettingsFrom(settings);
+    public String getDisplayName() {
+        return "Average Interpolation";
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void saveSettingsTo(final NodeSettingsWO settings) {
-        m_tableBacked.saveSettingsTo(settings);
+    public MissingCellHandler createHandler(final DataColumnSpec column) {
+        return new AverageInterpolationMissingCellHandler(column);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        if (m_iter == null) {
-            m_iter = m_stat.iterator();
-        }
-        assert m_iter.hasNext();
-        return m_iter.next();
+    public boolean isApplicable(final DataType type) {
+        return type.isCompatible(DoubleValue.class) || type.isCompatible(DateAndTimeValue.class);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void rowRemoved(final RowKey key) {
-        if (m_iter == null) {
-            m_iter = m_stat.iterator();
-        }
-        assert m_iter.hasNext();
-        m_iter.next();
+    public boolean producesPMML4_2() {
+        return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DerivedField getPMMLDerivedField() {
-        return createExtensionDerivedField(getPMMLDataTypeForColumn(), NextMissingCellHandlerFactory.ID);
-    }
 }

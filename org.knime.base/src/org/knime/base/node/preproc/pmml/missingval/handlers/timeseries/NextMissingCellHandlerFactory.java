@@ -1,7 +1,9 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,31 +46,59 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.01.2015 (Alexander): created
+ *   18.12.2014 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
 import org.knime.base.node.preproc.pmml.missingval.MissingCellHandler;
 import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
 import org.knime.base.node.preproc.pmml.missingval.MissingValueHandlerPanel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.date.DateAndTimeValue;
 
 /**
- * Creates a handler that replaces missing values with the a linear interpolation of the
- * previous and next non-missing values.
+ * Creates a handler that replaces missing values with the next valid value.
  * @author Alexander Fillbrunn
  */
-public class LinearInterpolationMissingCellHandlerFactory extends MissingCellHandlerFactory {
+public class NextMissingCellHandlerFactory extends MissingCellHandlerFactory {
+
+    /**
+     * The ID of the next value factory.
+     */
+    public static final String ID =
+            "org.knime.base.node.preproc.pmml.missingval.handlers.timeseries.NextMissingCellHandlerFactory";
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean hasSettingsPanel() {
-        return true;
+    public String getID() {
+        return ID;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDisplayName() {
+        return "Next Value";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MissingCellHandler createHandler(final DataColumnSpec column) {
+        return new NextMissingCellHandler(column);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean producesPMML4_2() {
+        return false;
     }
 
     /**
@@ -83,32 +113,16 @@ public class LinearInterpolationMissingCellHandlerFactory extends MissingCellHan
      * {@inheritDoc}
      */
     @Override
-    public String getDisplayName() {
-        return "Linear Interpolation";
+    public boolean hasSettingsPanel() {
+        return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MissingCellHandler createHandler(final DataColumnSpec column) {
-        return new LinearInterpolationMissingCellHandler(column);
-    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean isApplicable(final DataType type) {
-        return type.isCompatible(DoubleValue.class) || type.isCompatible(DateAndTimeValue.class);
+        return true;
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean producesPMML4_2() {
-        return false;
-    }
-
 }

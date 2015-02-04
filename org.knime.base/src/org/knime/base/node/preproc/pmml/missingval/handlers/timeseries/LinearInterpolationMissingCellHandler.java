@@ -46,7 +46,7 @@
  * History
  *   20.01.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.date.DateAndTimeValue;

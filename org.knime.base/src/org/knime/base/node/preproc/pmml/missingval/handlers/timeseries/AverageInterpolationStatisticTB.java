@@ -48,7 +48,7 @@
  * History
  *   18.12.2014 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -62,20 +62,22 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 
 /**
- * Table based statistic that calculates for each missing cell the linear interpolation
- * between the previous and next valid cell.
+ * Table based statistic that calculates for each missing cell the
+ * linear interpolation between the previous and next valid cell.
+ *
  * @author Alexander Fillbrunn
  */
-public class LinearInterpolationStatisticTB extends MappingTableInterpolationStatistic {
+public class AverageInterpolationStatisticTB extends MappingTableInterpolationStatistic {
 
     private boolean m_isDateColumn;
 
     /**
      * Constructor for NextValidValueStatistic.
+     *
      * @param column the column for which this statistic is calculated
-     * @param isDateColumn determines whether the given column is a date column.
+     * @param isDateColumn true, if the column this statistic is calculated for is a date column
      */
-    public LinearInterpolationStatisticTB(final String column, final boolean isDateColumn) {
+    public AverageInterpolationStatisticTB(final String column, final boolean isDateColumn) {
         super(isDateColumn ? DateAndTimeValue.class : DoubleValue.class, column);
         m_isDateColumn = isDateColumn;
     }
@@ -104,13 +106,13 @@ public class LinearInterpolationStatisticTB extends MappingTableInterpolationSta
 
                         long prev = prevVal.getUTCTimeInMillis();
                         long next = val.getUTCTimeInMillis();
-                        long lin = Math.round(prev + 1.0 * (i + 1) / (1.0 * (getNumMissing() + 1)) * (next - prev));
+                        long lin = Math.round((prev + next) / 2);
                         res = new DateAndTimeCell(lin, hasDate, hasTime, hasMilis);
                     } else {
                         DoubleValue val = (DoubleValue)cell;
                         double prev = ((DoubleValue)getPrevious()).getDoubleValue();
                         double next = val.getDoubleValue();
-                        double lin = prev + 1.0 * (i + 1) / (1.0 * (getNumMissing() + 1)) * (next - prev);
+                        double lin = (prev + next) / 2;
 
                         if (getPrevious() instanceof IntValue) {
                             // get an int, create an int

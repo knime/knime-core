@@ -46,7 +46,7 @@
  * History
  *   02.02.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
 import java.util.Iterator;
 

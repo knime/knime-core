@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,83 +44,113 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.12.2014 (Alexander): created
+ *   02.02.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
-import org.knime.base.node.preproc.pmml.missingval.MissingCellHandler;
-import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
-import org.knime.base.node.preproc.pmml.missingval.MissingValueHandlerPanel;
+import java.util.Iterator;
+
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.knime.base.data.statistics.Statistic;
+import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
+import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
- * Creates a handler that replaces missing values with the next valid value.
+ *
  * @author Alexander Fillbrunn
  */
-public class NextMissingCellHandlerFactory extends MissingCellHandlerFactory {
+public abstract class InterpolationMissingCellHandler extends DefaultMissingCellHandler {
+
+    private MappingStatistic m_stat;
+    private Iterator<DataCell> m_iter;
 
     /**
-     * The ID of the next value factory.
+     * Returns the statistic filled by a StatisticCalculator
+     * or null if the statistic was not yet filled.
+     * @return the statistic with the mapping table
      */
-    public static final String ID =
-            "org.knime.base.node.preproc.pmml.missingval.handlers.NextMissingCellHandlerFactory";
+    protected abstract MappingStatistic createStatistic();
+
+    private SettingsModelBoolean m_tableBacked =
+            TimeseriesMissingCellHandlerHelper.createTableBackedExecutionSettingsModel();
 
     /**
-     * {@inheritDoc}
+     * @return true, if a buffered data table is used to store statistics.
      */
-    @Override
-    public String getID() {
-        return ID;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return "Next Value";
+    public boolean isTableBacked() {
+        return m_tableBacked.getBooleanValue();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MissingCellHandler createHandler(final DataColumnSpec column) {
-        return new NextMissingCellHandler(column);
+    public Statistic getStatistic() {
+        if (m_stat == null) {
+            m_stat = createStatistic();
+        }
+        return m_stat;
+    }
+
+    /**
+     * @param col the column this handler is for
+     */
+    public InterpolationMissingCellHandler(final DataColumnSpec col) {
+        super(col);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean producesPMML4_2() {
-        return false;
+    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_tableBacked.loadSettingsFrom(settings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public MissingValueHandlerPanel getSettingsPanel() {
-        return new TimeseriesMissingCellHandlerPanel();
+    public void saveSettingsTo(final NodeSettingsWO settings) {
+        m_tableBacked.saveSettingsTo(settings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean hasSettingsPanel() {
-        return true;
+    public DataCell getCell(final RowKey key, final DataColumnWindow window) {
+        if (m_iter == null) {
+            m_iter = m_stat.iterator();
+        }
+        assert m_iter.hasNext();
+        return m_iter.next();
     }
-
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isApplicable(final DataType type) {
-        return true;
+    public void rowRemoved(final RowKey key) {
+        if (m_iter == null) {
+            m_iter = m_stat.iterator();
+        }
+        assert m_iter.hasNext();
+        m_iter.next();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DerivedField getPMMLDerivedField() {
+        return createExtensionDerivedField(getPMMLDataTypeForColumn(), NextMissingCellHandlerFactory.ID);
     }
 }

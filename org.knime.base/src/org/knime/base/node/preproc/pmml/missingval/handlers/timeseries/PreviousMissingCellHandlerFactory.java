@@ -1,7 +1,9 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,26 +46,81 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.02.2015 (Alexander): created
+ *   18.12.2014 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
 
-import org.knime.base.node.preproc.pmml.missingval.DefaultMissingValueHandlerPanel;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandler;
+import org.knime.base.node.preproc.pmml.missingval.MissingCellHandlerFactory;
+import org.knime.base.node.preproc.pmml.missingval.MissingValueHandlerPanel;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
 
 /**
- * Panel with one checkbox that lets the user choose to use a disk based statistic instead of
- * an in-memory hashmap.
+ * Creates a handler that replaces missing values with the last previously encountered valid value.
  * @author Alexander Fillbrunn
  */
-public class TimeseriesMissingCellHandlerPanel extends DefaultMissingValueHandlerPanel {
+public class PreviousMissingCellHandlerFactory extends MissingCellHandlerFactory {
 
     /**
-     * Default constructor for TimeseriesMissingCellHandlerPanel.
+     * The ID of the next value factory.
      */
-    public TimeseriesMissingCellHandlerPanel() {
-        DialogComponentBoolean tableBacked = new DialogComponentBoolean(
-            TimeseriesMissingCellHandlerHelper.createTableBackedExecutionSettingsModel(), "Use disk based statistic");
-        addDialogComponent(tableBacked);
+    public static final String ID =
+            "org.knime.base.node.preproc.pmml.missingval.handlers.timeseries.PreviousMissingCellHandlerFactory";
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getID() {
+        return ID;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDisplayName() {
+        return "Previous Value";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MissingCellHandler createHandler(final DataColumnSpec column) {
+        return new PreviousMissingCellHandler(column);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean producesPMML4_2() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MissingValueHandlerPanel getSettingsPanel() {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasSettingsPanel() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isApplicable(final DataType type) {
+        return true;
     }
 }

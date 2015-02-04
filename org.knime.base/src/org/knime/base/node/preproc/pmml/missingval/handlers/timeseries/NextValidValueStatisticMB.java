@@ -48,38 +48,44 @@
  * History
  *   18.12.2014 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.node.preproc.pmml.missingval.handlers.timeseries;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.LongValue;
-import org.knime.core.data.date.DateAndTimeCell;
-import org.knime.core.data.date.DateAndTimeValue;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 
 /**
- * Table based statistic that calculates for each missing cell the
- * linear interpolation between the previous and next valid cell.
- *
+ * HashMap based statistic that finds for each missing value the next valid one.
  * @author Alexander Fillbrunn
  */
-public class AverageInterpolationStatisticTB extends MappingTableInterpolationStatistic {
+public class NextValidValueStatisticMB extends MappingStatistic {
 
-    private boolean m_isDateColumn;
+    private int m_numMissing = 0;
+    private List<DataCell> m_values;
+    private int m_index = -1;
 
     /**
      * Constructor for NextValidValueStatistic.
-     *
+     * @param clazz the class of the data value this statistic can be used for
      * @param column the column for which this statistic is calculated
-     * @param isDateColumn true, if the column this statistic is calculated for is a date column
      */
-    public AverageInterpolationStatisticTB(final String column, final boolean isDateColumn) {
-        super(isDateColumn ? DateAndTimeValue.class : DoubleValue.class, column);
-        m_isDateColumn = isDateColumn;
+    public NextValidValueStatisticMB(final Class<? extends DataValue> clazz, final String column) {
+        super(clazz, column);
+        m_values = new ArrayList<DataCell>();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void init(final DataTableSpec spec, final int amountOfColumns) {
+        m_index = spec.findColumnIndex(getColumns()[0]);
     }
 
     /**
@@ -87,47 +93,34 @@ public class AverageInterpolationStatisticTB extends MappingTableInterpolationSt
      */
     @Override
     protected void consumeRow(final DataRow dataRow) {
-        DataCell cell = dataRow.getCell(getColumnIndex());
+        DataCell cell = dataRow.getCell(m_index);
         if (cell.isMissing()) {
-            incMissing();
+            m_numMissing++;
         } else {
-            for (int i = 0; i < getNumMissing(); i++) {
-                DataCell res;
-                if (getPrevious().isMissing()) {
-                    res = cell;
-                } else {
-                    if (m_isDateColumn) {
-                        DateAndTimeValue val = (DateAndTimeValue)cell;
-                        DateAndTimeValue prevVal = (DateAndTimeValue)getPrevious();
-
-                        boolean hasDate = val.hasDate() | prevVal.hasDate();
-                        boolean hasTime = val.hasTime() | prevVal.hasTime();
-                        boolean hasMilis = val.hasMillis() | prevVal.hasMillis();
-
-                        long prev = prevVal.getUTCTimeInMillis();
-                        long next = val.getUTCTimeInMillis();
-                        long lin = Math.round((prev + next) / 2);
-                        res = new DateAndTimeCell(lin, hasDate, hasTime, hasMilis);
-                    } else {
-                        DoubleValue val = (DoubleValue)cell;
-                        double prev = ((DoubleValue)getPrevious()).getDoubleValue();
-                        double next = val.getDoubleValue();
-                        double lin = (prev + next) / 2;
-
-                        if (getPrevious() instanceof IntValue) {
-                            // get an int, create an int
-                            res = new IntCell((int)Math.round(lin));
-                        } else if (getPrevious() instanceof LongValue) {
-                            // get an long, create an long
-                            res = new LongCell(Math.round(lin));
-                        } else {
-                            res = new DoubleCell(lin);
-                        }
-                    }
-                }
-                addMapping(res);
+            for (int i = 0; i < m_numMissing; i++) {
+                m_values.add(cell);
             }
-            resetMissing(cell);
+            m_numMissing = 0;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String afterEvaluation() {
+        // Rest cannot be calculated and therefore is still missing
+        for (int i = 0; i < m_numMissing; i++) {
+            m_values.add(DataType.getMissingCell());
+        }
+        return super.afterEvaluation();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Iterator<DataCell> iterator() {
+        return m_values.iterator();
     }
 }
