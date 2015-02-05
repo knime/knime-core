@@ -4,15 +4,15 @@
 #
 # state and name are not needed for "remove"
 #
-http://www.knime.org/update/2.10,remove
-http://www.knime.org/update/store/2.10,remove
-http://tech.knime.org/update/community-contributions/trusted/2.10,remove
-http://tech.knime.org/update/community-contributions/2.10,remove
-http://www.knime.org/commercial/server/3.9,remove
-http://www.knime.org/commercial/teamspace/3.4,remove
-http://www.knime.org/update/2.11,add,enabled,KNIME Analytics Platform Update Site
-http://www.knime.org/update/store/2.11,add,enabled,KNIME Store Update Site
-http://tech.knime.org/update/community-contributions/trusted/2.11,add,enabled,Trusted Community Contributions
-http://tech.knime.org/update/community-contributions/2.11,add,disabled,Stable Community Contributions
-http://www.knime.org/commercial/server/3.10,add,disabled,KNIME Server Update Site
-http://www.knime.org/commercial/teamspace/3.5,add,disabled,KNIME TeamSpace Update Site
+http://www.knime.org/update/2.11,remove
+http://www.knime.org/update/store/2.11,remove
+http://tech.knime.org/update/community-contributions/trusted/2.11,remove
+http://tech.knime.org/update/community-contributions/2.11,remove
+http://www.knime.org/commercial/server/3.10,remove
+http://www.knime.org/commercial/teamspace/3.5,remove
+http://www.knime.org/update/2.12,add,enabled,KNIME Analytics Platform Update Site
+http://www.knime.org/update/store/2.12,add,enabled,KNIME Store Update Site
+http://tech.knime.org/update/community-contributions/trusted/2.12,add,enabled,Trusted Community Contributions
+http://tech.knime.org/update/community-contributions/2.12,add,disabled,Stable Community Contributions
+http://www.knime.org/commercial/server/4.0,add,disabled,KNIME Server Update Site
+http://www.knime.org/commercial/teamspace/3.6,add,disabled,KNIME TeamSpace Update Site

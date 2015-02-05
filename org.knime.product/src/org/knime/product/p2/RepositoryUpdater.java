@@ -170,20 +170,25 @@ public class RepositoryUpdater implements ProvisioningListener {
                 String[] parts = line.split(",");
                 URI uri = new URI(parts[0]);
 
+                String oldPrefName = uri.toString(); // preference key until 2.11
+                String newPrefName = "us_info-" + uri; // preference key since 2.12
+
                 // Only make any modification if this is the first time. We store the information and if the user
                 // has re-added or removed an entry himself, we don't try it a second time
-                if ("remove".equals(parts[1]) && !preferences.getBoolean(uri + "-removed", false)) {
+                if ("remove".equals(parts[1]) && !preferences.getBoolean(oldPrefName + "-removed", false)
+                    && !preferences.getBoolean(newPrefName + "-removed", false)) {
                     repoManager.removeRepository(uri);
-                    preferences.putBoolean(uri + "-removed", true);
+                    preferences.putBoolean(newPrefName + "-removed", true);
                 } else if ("add".equals(parts[1]) && !knowRepositories.contains(uri)
-                    && !preferences.getBoolean(uri + "-added", false)) {
+                    && !preferences.getBoolean(oldPrefName + "-added", false)
+                    && !preferences.getBoolean(newPrefName + "-added", false)) {
                     repoManager.addRepository(uri);
                     repoManager.setEnabled(uri, (parts.length > 2) && "enabled".equals(parts[2]));
                     if (parts.length > 3) {
                         repoManager.setRepositoryProperty(uri, IRepository.PROP_NAME, parts[3]);
                     }
 
-                    preferences.putBoolean(uri + "-added", true);
+                    preferences.putBoolean(newPrefName + "-added", true);
                 }
             }
         } catch (IOException | URISyntaxException ex) {

@@ -159,7 +159,8 @@ public class ExportPreferencesAction extends Action {
                     "Exporting preferences to file "
                             + outFile.getAbsolutePath());
             /* Do not export the default values and the profile (contains only update site URLs). */
-            prefService.exportPreferences(prefService.getRootNode(), out, new String[]{"bundle_defaults", "profile"});
+            prefService.exportPreferences(prefService.getRootNode(), out, new String[]{"bundle_defaults", "profile",
+                "instance/org.knime.product//us_info-"});
         } catch (Throwable t) {
             String msg = "Unable to write preferences to output file";
             if (t.getMessage() != null && !t.getMessage().isEmpty()) {
