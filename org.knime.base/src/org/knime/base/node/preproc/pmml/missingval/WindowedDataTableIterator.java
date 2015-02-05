@@ -50,6 +50,8 @@
  */
 package org.knime.base.node.preproc.pmml.missingval;
 
+import java.util.NoSuchElementException;
+
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.RowIterator;
@@ -111,6 +113,7 @@ public class WindowedDataTableIterator extends RowIterator {
         m_lookbehind = maxLookbehind;
         m_buffer = new DataRow[maxLookahead + maxLookbehind + 1];
         m_iter = table.iterator();
+        m_hasMore = m_iter.hasNext();
     }
 
     /** Initializes the iterator to have enough cells for the lookahead at the start. **/
@@ -155,6 +158,9 @@ public class WindowedDataTableIterator extends RowIterator {
      */
     @Override
     public DataRow next() {
+        if (!m_hasMore) {
+            throw new NoSuchElementException("There are no more elements");
+        }
         // Check if iterator is initialized and if it is at the end
         if (m_pointer == -1) {
             init();
