@@ -282,6 +282,11 @@ abstract class AbstractColumnTableSorter {
 
         clearBuffer();
 
+        // if the table is empty or has only one row, we can stop here
+        if (currentTotalRows <= 1) {
+            return;
+        }
+
         readProgress.setProgress(1.0);
 
         // phase 2: merge the temporary tables

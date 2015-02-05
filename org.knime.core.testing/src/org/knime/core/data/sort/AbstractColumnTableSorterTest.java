@@ -56,6 +56,8 @@ public class AbstractColumnTableSorterTest {
 
     private BufferedDataTable testTable;
 
+    private BufferedDataTable emptyTestTable;
+
     /**
      * @throws java.lang.Exception
      */
@@ -89,6 +91,11 @@ public class AbstractColumnTableSorterTest {
         container.addRowToTable(creatRow(i++, 8, 8, null, "Class8"));
         container.close();
         testTable = container.getTable();
+
+        final BufferedDataContainer emptyContainer = m_exec.createDataContainer(spec);
+        emptyContainer.close();
+        emptyTestTable = emptyContainer.getTable();
+
     }
 
     /**
@@ -99,12 +106,28 @@ public class AbstractColumnTableSorterTest {
      */
     @Test
     public void testSorting() throws CanceledExecutionException, InvalidSettingsException {
-        assertSorting(FEATURE1);
-        assertSorting(STRING_FEATURE);
-        assertSorting(CLASS);
+        assertSorting(testTable, FEATURE1);
+        assertSorting(testTable, STRING_FEATURE);
+        assertSorting(testTable, CLASS);
 
-        assertSorting(FEATURE1, CLASS);
-        assertSorting(FEATURE1, STRING_FEATURE);
+        assertSorting(testTable, FEATURE1, CLASS);
+        assertSorting(testTable, FEATURE1, STRING_FEATURE);
+    }
+
+    /**
+     * Tests the default sorting for an empty table.
+     *
+     * @throws CanceledExecutionException
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public void testEmptyTableSorting() throws CanceledExecutionException, InvalidSettingsException {
+        assertSorting(emptyTestTable, FEATURE1);
+        assertSorting(emptyTestTable, STRING_FEATURE);
+        assertSorting(emptyTestTable, CLASS);
+
+        assertSorting(emptyTestTable, FEATURE1, CLASS);
+        assertSorting(emptyTestTable, FEATURE1, STRING_FEATURE);
     }
 
     /**
@@ -172,13 +195,13 @@ public class AbstractColumnTableSorterTest {
      * @throws CanceledExecutionException
      * @throws InvalidSettingsException
      */
-    private void assertSorting(final String... toSort) throws CanceledExecutionException, InvalidSettingsException {
+    private void assertSorting(final BufferedDataTable table, final String... toSort) throws CanceledExecutionException, InvalidSettingsException {
         ColumnBufferedDataTableSorter dataTableSorter =
-            new ColumnBufferedDataTableSorter(testTable.getDataTableSpec(), testTable.getRowCount(), toSort);
+            new ColumnBufferedDataTableSorter(table.getDataTableSpec(), table.getRowCount(), toSort);
 
-        final Comparator<DataRow> ascendingOrderAssertion = createAscendingOrderAssertingComparator(testTable, toSort);
+        final Comparator<DataRow> ascendingOrderAssertion = createAscendingOrderAssertingComparator(table, toSort);
 
-        dataTableSorter.sort(testTable, m_exec, new SortingConsumer() {
+        dataTableSorter.sort(table, m_exec, new SortingConsumer() {
             final AtomicReference<DataRow> lastRow = new AtomicReference<>();
 
             @Override
