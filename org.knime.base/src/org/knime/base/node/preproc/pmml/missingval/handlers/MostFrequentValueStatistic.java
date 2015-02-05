@@ -57,6 +57,7 @@ import org.knime.base.data.statistics.Statistic;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.util.MutableInteger;
 
 /**
@@ -76,7 +77,7 @@ public class MostFrequentValueStatistic extends Statistic {
     private Map<DataCell, MutableInteger> m_nominalValues;
     private int m_colIdx;
     private int m_maxCount = 0;
-    private DataCell m_mostFrequent = null;
+    private DataCell m_mostFrequent = DataType.getMissingCell();
 
     /**
      * {@inheritDoc}

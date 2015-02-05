@@ -116,7 +116,11 @@ public class MedianNumberMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public DerivedField getPMMLDerivedField() {
-        return createValueReplacingDerivedField(getPMMLDataTypeForColumn(), m_median.toString());
+        DataCell median = m_median.getMedian(getColumnSpec().getName());
+        if (median.isMissing()) {
+            return null;
+        }
+        return createValueReplacingDerivedField(getPMMLDataTypeForColumn(), median.toString());
     }
 
     /**

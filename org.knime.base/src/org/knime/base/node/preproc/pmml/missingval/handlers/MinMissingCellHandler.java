@@ -103,8 +103,11 @@ public class MinMissingCellHandler extends DefaultMissingCellHandler {
         if (m_minMax == null) {
             throw new IllegalStateException("The field can only be created after the statistic has been filled");
         }
-        return createValueReplacingDerivedField(getPMMLDataTypeForColumn(),
-                                                m_minMax.getMin(getColumnSpec().getName()).toString());
+        DataCell min = m_minMax.getMin(getColumnSpec().getName());
+        if (min.isMissing()) {
+            return null;
+        }
+        return createValueReplacingDerivedField(getPMMLDataTypeForColumn(), min.toString());
     }
 
     /**

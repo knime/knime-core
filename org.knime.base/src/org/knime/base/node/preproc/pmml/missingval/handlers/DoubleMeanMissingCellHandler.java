@@ -115,6 +115,9 @@ public class DoubleMeanMissingCellHandler extends DefaultMissingCellHandler {
         if (m_mean == null) {
             throw new IllegalStateException("The field can only be created after the statistic has been filled");
         }
+        if (Double.isNaN(m_mean.getResult(getColumnSpec().getName()))) {
+            return null;
+        }
         DATATYPE.Enum dt = DATATYPE.DOUBLE;
         String val = Double.toString(m_mean.getResult(getColumnSpec().getName()));
         return createValueReplacingDerivedField(dt, val);

@@ -114,6 +114,9 @@ public class MostFrequentValueMissingCellHandler extends DefaultMissingCellHandl
      */
     @Override
     public DerivedField getPMMLDerivedField() {
+        if (m_stat.getMostFrequent().isMissing()) {
+            return null;
+        }
         return createValueReplacingDerivedField(getPMMLDataTypeForColumn(), m_stat.getMostFrequent().toString());
     }
 }
