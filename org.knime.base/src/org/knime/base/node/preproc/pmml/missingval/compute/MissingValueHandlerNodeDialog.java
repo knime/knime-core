@@ -301,7 +301,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
 
         StringBuffer warning = new StringBuffer();
         if (spec.getNumColumns() == 0) {
-            warning.append("The input table does not have any columns");
+            throw new NotConfigurableException("There are no columns for missing value replacement available.");
         }
 
         m_searchableListModifier = m_searchableListPanel.update(spec);
