@@ -297,11 +297,10 @@
             path="/flowcontrol">
       </category>
       <category
-            after="flowcontrol"
-            description="Nodes for workflow pausing/sleep"
+            description="Nodes for waiting"
             icon="icons/16x16/sleep.png"
-            level-id="sleep"
-            name="Sleep"
+            level-id="wait"
+            name="Wait"
             path="/flowcontrol">
       </category>
       <category
@@ -1269,7 +1268,7 @@
             id="org.knime.base.node.flowcontrol.breakpoint.BreakpointNodeFactory">
       </node>
       <node
-            category-path="/flowcontrol/sleep"
+            category-path="/flowcontrol/wait"
             factory-class="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory"
             id="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory">
       </node>

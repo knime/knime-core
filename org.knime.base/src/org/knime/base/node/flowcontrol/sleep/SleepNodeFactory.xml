@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="sleep.png" type="Manipulator">
+    <name>Wait...</name>
+    
+    <shortDescription>
+        This node waits for a certain time, to a certain time or for a file event.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+            This node waits for a certain time, to a certain time or for a file event. <br/><br/>
+	        <i>This node was kindly sponsored by the Vernalis.</i>
+        </intro>
+        <option name="Wait for time:">The node waits for the entered time (HH:mm:ss). </option>
+        <option name="Wait to time:">The node waits until the entered daytime has passed. If the entered daytime
+        has already passed the node executes immediately. </option>
+        <option name="Wait for file:">The node waits until the selected file either gets created, modified or deleted.</option>
+        
+    </fullDescription>
+        
+        
+
+    
+    <ports>
+        <inPort index="0" name="Input table">The input variables.</inPort>
+        <outPort index="0" name="Output table">The input variables</outPort>
+    </ports>
+</knimeNode>
