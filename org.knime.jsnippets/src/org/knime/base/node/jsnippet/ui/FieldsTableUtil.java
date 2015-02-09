@@ -155,11 +155,11 @@ final class FieldsTableUtil {
         }
         String baseName = builder.toString();
         String name = baseName;
-        boolean isDublicate = taken.contains(name);
+        boolean isDuplicate = taken.contains(name);
         i = 1;
-        while (isDublicate) {
+        while (isDuplicate) {
             name = baseName + "_" + i;
-            isDublicate = taken.contains(name);
+            isDuplicate = taken.contains(name);
             i++;
         }
         return name;
