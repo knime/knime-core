@@ -273,7 +273,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
                 throw new InvalidSettingsException(warnMessage);
             }
 
-            // check for dublicates with configured names
+            // check for duplicates with configured names
             RenameColumnSetting put = duplicateHash.put(newName, colSet);
 
             if (put != null) {
@@ -281,19 +281,19 @@ public class RenameNodeDialogPane extends NodeDialogPane {
                 int index2 = getIndexIndividualIndex(put);
 
                 String warnMessage =
-                    String.format("Dublicate column name: '%s' on index %d and %d.", newName, index1, index2);
+                    String.format("Duplicate column name: '%s' on index %d and %d.", newName, index1, index2);
 
                 addToErrornousColNames(newName, index1, index2);
 
                 throw new InvalidSettingsException(warnMessage);
             }
 
-            // check for dublicates with column names
+            // check for duplicates with column names
             if (oldColumnNames.contains(newName) && colSet.getNewColumnName() != null) {
                 int index1 = getIndexIndividualIndex(colSet);
 
                 String warnMessage =
-                    String.format("Dublicate column name: '%s' on index %d and existing column.", newName, index1);
+                    String.format("Duplicate column name: '%s' on index %d and existing column.", newName, index1);
 
                 addToErrornousColNames(newName, index1);
 
