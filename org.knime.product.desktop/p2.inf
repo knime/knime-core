@@ -1,5 +1,5 @@
 #
-#Mon Jul 21 16:45:06 CEST 2014
+#Tue Feb 10 15:04:43 CET 2015
 units.2.instructions.unconfigure=removeJvmArg(jvmArg\:-Xmx512m);
 units.2.touchpoint.version=1.0.0
 units.1.id=toolingorg.knime.product.desktop.ini.x86_64

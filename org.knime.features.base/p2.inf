@@ -1,5 +1,5 @@
 #
-#Mon Jul 21 16:45:03 CEST 2014
+#Tue Feb 10 15:04:41 CET 2015
 provides.1.name=org.knime.features.explorer.feature.group
 provides.1.version=2.5.2.99999
 provides.1.namespace=org.eclipse.equinox.p2.iu
