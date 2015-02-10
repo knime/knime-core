@@ -83,10 +83,6 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
 
     private DataTableSpec m_lastSpec = null;
 
-    private final DatabaseReaderConnection m_load =
-        new DatabaseReaderConnection(null);
-
-
     /**
      * Creates a new model with the given number (and types!) of input and output types.
      *
@@ -114,7 +110,32 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
+        final DatabaseReaderConnection load = new DatabaseReaderConnection(null);
+        try {
+            exec.setProgress("Reading data from database...");
+            final BufferedDataTable result = getResultTable(exec, inData, load);
+            setLastSpec(result.getDataTableSpec());
+            return new BufferedDataTable[]{result};
+        } catch (CanceledExecutionException cee) {
+            throw cee;
+        } catch (Exception e) {
+            setLastSpec(null);
+            throw e;
+        }
+    }
 
+    /**
+     * @param exec {@link ExecutionContext} to create the table
+     * @param inData
+     * @param load {@link DatabaseReaderConnection}
+     * @return the result table for the
+     * @throws CanceledExecutionException
+     * @throws SQLException
+     * @throws InvalidSettingsException
+     */
+    protected BufferedDataTable getResultTable(final ExecutionContext exec, final PortObject[] inData,
+        final DatabaseReaderConnection load)
+        throws CanceledExecutionException, SQLException, InvalidSettingsException {
         String query = parseQuery(m_settings.getQuery());
         DatabaseQueryConnectionSettings connSettings;
         if ((inData[getNrInPorts() - 1] instanceof DatabaseConnectionPortObject)) {
@@ -125,20 +146,10 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         } else {
             connSettings = new DatabaseQueryConnectionSettings(m_settings, query);
         }
-
-        try {
-            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(connSettings, query));
-            exec.setProgress("Reading data from database...");
-            CredentialsProvider cp = getCredentialsProvider();
-            final BufferedDataTable result = m_load.createTable(exec, cp);
-            m_lastSpec = result.getDataTableSpec();
-            return new BufferedDataTable[]{result};
-        } catch (CanceledExecutionException cee) {
-            throw cee;
-        } catch (Exception e) {
-            m_lastSpec = null;
-            throw e;
-        }
+        load.setDBQueryConnection(new DatabaseQueryConnectionSettings(connSettings, query));
+        CredentialsProvider cp = getCredentialsProvider();
+        final BufferedDataTable result = load.createTable(exec, cp);
+        return result;
     }
 
     private String parseQuery(final String query) {
@@ -171,7 +182,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         NodeSettingsRO specSett =
             NodeSettings.loadFromXML(new FileInputStream(specFile));
         try {
-            m_lastSpec = DataTableSpec.load(specSett);
+            setLastSpec(DataTableSpec.load(specSett));
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException("Could not read output spec.");
             ioe.initCause(ise);
@@ -180,14 +191,29 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
     }
 
     /**
+     * @param spec the {@link DataTableSpec} of the result table to cache
+     */
+    protected void setLastSpec(final DataTableSpec spec) {
+        m_lastSpec = spec;
+    }
+
+    /**
+     * @return the cached result spec
+     */
+    protected DataTableSpec getLastSpec() {
+        return m_lastSpec;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        assert (m_lastSpec != null) : "Spec must not be null!";
+        final DataTableSpec lastSpec = getLastSpec();
+        assert (lastSpec != null) : "Spec must not be null!";
         NodeSettings specSett = new NodeSettings("spec.xml");
-        m_lastSpec.save(specSett);
+        lastSpec.save(specSett);
         File specFile = new File(nodeInternDir, "spec.xml");
         specSett.saveToXML(new FileOutputStream(specFile));
     }
@@ -198,8 +224,9 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_lastSpec != null) {
-            return new DataTableSpec[]{m_lastSpec};
+        final DataTableSpec lastSpec = getLastSpec();
+        if (lastSpec != null) {
+            return new DataTableSpec[]{lastSpec};
         }
         try {
             if ((m_settings.getQuery() == null) || m_settings.getQuery().isEmpty()) {
@@ -208,27 +235,15 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             if (!m_settings.getValidateQuery()) {
                 return new DataTableSpec[] {null};
             }
-
-            String query = parseQuery(m_settings.getQuery());
-            DatabaseQueryConnectionSettings connSettings;
-            if ((inSpecs.length > getNrInPorts() - 1)
-                && (inSpecs[getNrInPorts() - 1] instanceof DatabaseConnectionPortObjectSpec)) {
-                DatabaseConnectionPortObjectSpec connSpec =
-                    (DatabaseConnectionPortObjectSpec)inSpecs[getNrInPorts() - 1];
-                connSettings = new DatabaseQueryConnectionSettings(
-                    connSpec.getConnectionSettings(getCredentialsProvider()), query);
-            } else {
-                connSettings = new DatabaseQueryConnectionSettings(m_settings, query);
-            }
-
-            m_load.setDBQueryConnection(connSettings);
-            m_lastSpec = m_load.getDataTableSpec(getCredentialsProvider());
-            return new DataTableSpec[]{m_lastSpec};
+            final DatabaseReaderConnection load = new DatabaseReaderConnection(null);
+            DataTableSpec resultSpec = getResultSpec(inSpecs, load);
+            setLastSpec(resultSpec);
+            return new DataTableSpec[]{resultSpec};
         } catch (InvalidSettingsException e) {
-            m_lastSpec = null;
+            setLastSpec(null);
             throw e;
         } catch (SQLException ex) {
-            m_lastSpec = null;
+            setLastSpec(null);
             Throwable cause = ExceptionUtils.getRootCause(ex);
             if (cause == null) {
                 cause = ex;
@@ -237,6 +252,31 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             throw new InvalidSettingsException("Could not determine table spec from database query: "
                 + cause.getMessage(), ex);
         }
+    }
+
+    /**
+     * @param inSpecs input spec
+     * @param load {@link DatabaseReaderConnection} to use
+     * @return the {@link DataTableSpec} of the result table
+     * @throws InvalidSettingsException if the connection settings are invalid
+     * @throws SQLException if the query is invalid
+     */
+    protected DataTableSpec getResultSpec(final PortObjectSpec[] inSpecs, final DatabaseReaderConnection load)
+        throws InvalidSettingsException, SQLException {
+        String query = parseQuery(m_settings.getQuery());
+        DatabaseQueryConnectionSettings connSettings;
+        if ((inSpecs.length > getNrInPorts() - 1)
+            && (inSpecs[getNrInPorts() - 1] instanceof DatabaseConnectionPortObjectSpec)) {
+            DatabaseConnectionPortObjectSpec connSpec =
+                (DatabaseConnectionPortObjectSpec)inSpecs[getNrInPorts() - 1];
+            connSettings = new DatabaseQueryConnectionSettings(
+                connSpec.getConnectionSettings(getCredentialsProvider()), query);
+        } else {
+            connSettings = new DatabaseQueryConnectionSettings(m_settings, query);
+        }
+        load.setDBQueryConnection(connSettings);
+        final DataTableSpec resultSpec = load.getDataTableSpec(getCredentialsProvider());
+        return resultSpec;
     }
 
     /**
@@ -267,8 +307,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         boolean settingsChanged = m_settings.loadValidatedConnection(settings, getCredentialsProvider());
 
         if (settingsChanged || (m_settings.getQuery() == null) || m_settings.getQuery().isEmpty()) {
-            m_lastSpec = null;
-            m_load.setDBQueryConnection(m_settings);
+            setLastSpec(null);
         }
     }
 

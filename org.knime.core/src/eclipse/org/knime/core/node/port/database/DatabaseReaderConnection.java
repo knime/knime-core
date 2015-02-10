@@ -239,7 +239,7 @@ public final class DatabaseReaderConnection {
     }
 
     // internal execution context used to create blob/binary objects
-    private BinaryObjectCellFactory m_blobFactory = new BinaryObjectCellFactory();
+    private BinaryObjectCellFactory m_blobFactory = null;
 
     /**
      * Read data from database.
@@ -252,7 +252,9 @@ public final class DatabaseReaderConnection {
     public BufferedDataTable createTable(final ExecutionContext exec,
             final CredentialsProvider cp)
             throws CanceledExecutionException, SQLException {
-        m_blobFactory = new BinaryObjectCellFactory(exec);
+        if (m_blobFactory == null) {
+            m_blobFactory = new BinaryObjectCellFactory(exec);
+        }
         // retrieve connection
         final Connection conn = initConnection(cp);
         exec.setMessage("Waiting for free database connection...");
@@ -309,6 +311,9 @@ public final class DatabaseReaderConnection {
      * @throws SQLException if the connection could not be opened
      */
     DataTable createTable(final int cachedNoRows, final CredentialsProvider cp) throws SQLException {
+        if (m_blobFactory == null) {
+            m_blobFactory = new BinaryObjectCellFactory();
+        }
         // retrieve connection
         final Connection conn = initConnection(cp);
         synchronized (m_conn.syncConnection(conn)) {
