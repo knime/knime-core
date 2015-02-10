@@ -14,4 +14,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src-deprecated/org/knime/base/node/io/listfiles/ListFilesNodeFactory.java" type="org.knime.base.node.io.listfiles.ListFilesNodeFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.io.listfiles.ListFilesNodeFactory"/>
+                <message_argument value="org.knime.base_2.12.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
