@@ -92,6 +92,15 @@ public class DBDataTypeAggregationFunctionRow extends AbstractDBAggregationFunct
     }
 
     /**
+     * @param dataType {@link DataType} to check
+     * @return <code>true</code> if the given {@link DataType} is compatible to the user selected {@link DataType}
+     * of this aggregator
+     */
+    public boolean isCompatibleType(final DataType dataType) {
+        return m_type.equals(dataType) || m_type.isASuperTypeOf(dataType);
+    }
+
+    /**
      * @param settings {@link NodeSettingsWO}
      * @param key the config key
      * @param rows the {@link DBDataTypeAggregationFunctionRow}s to save
