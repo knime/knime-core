@@ -21,12 +21,20 @@ APPLICATION_OR_PRODUCT_SET=0
 INI_FILE="$APP_DIR/${SOURCE##*/}".ini
 
 readArguments() {
-    local params=("$@")
+    if [[ $# -eq 1 ]] && [[ -f "$1" ]]; then
+        local params=()
+        while read line; do
+            params+=("$line")
+        done < "$1"
+	echo $params
+    else
+        local params=("$@")
+    fi
     
     local i=0
     local inVmargs=0
     while [[ $i -lt ${#params[@]} ]]; do
-        arg=${params[$i]}
+        arg="${params[$i]}"
         
         if [[ $inVmargs -gt 0 ]]; then
             VM_ARGS+=("$arg")
@@ -34,13 +42,13 @@ readArguments() {
             inVmargs=1
             VM_ARGS=()
         elif [[ "$arg" == "-vm" ]]; then
-            JAVA=${params[i+1]}
+            JAVA="${params[i+1]}"
             ((i++))
         elif [[ "$arg" == "-startup" ]]; then
             CLASSPATH="${params[i+1]}"
             ((i++))
         elif [[ "$arg" == "--launcher.ini" ]] ; then
-        	INI_FILE=${params[i+1]}
+        	INI_FILE="${params[i+1]}"
         	((i++))
         elif [[ "$arg" == "--launcher.library" ]] || [[ "$arg" == "--launcher.timeout" ]] || \
         	 [[ "$arg" == "--launcher.XXMaxPermSize" ]]; then
@@ -78,8 +86,7 @@ VM_ARGS=()
 APP_ARGS=()
 
 # extract parameters from Knime.ini
-ALL_ARGUMENTS=( $(cat "$INI_FILE") )
-readArguments "${ALL_ARGUMENTS[@]}"
+readArguments "$INI_FILE"
 
 # add command line parameters, they should override the parameters from the ini file
 readArguments "$@"
