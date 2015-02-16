@@ -91,6 +91,13 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
      * to fall back to the defaults (as per configuration). */
     public void setDialogValue(VAL value);
 
+    /** Get the default dialog value (use defaults as per node configuration).
+     * @return The default value.
+     *
+     * @since 2.12
+     */
+    public VAL getDefaultValue();
+
     /** Get the currently set dialog value or null if non is set (use defaults as per node configuration).
      * @return The value currently set. */
     public VAL getDialogValue();

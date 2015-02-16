@@ -32,6 +32,12 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="getDefaultValue()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
                 <message_argument value="getParameterName()"/>
             </message_arguments>
         </filter>
