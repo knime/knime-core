@@ -234,10 +234,12 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 NodeSettingsWO subSettings = settings.addNodeSettings((Integer.toString(key.getIndex())));
                 valueConfig.saveValue(subSettings);
             } else if (e.getValue() instanceof DialogNode) {
+                DialogNode dialogNode = (DialogNode)e.getValue();
                 DialogNodePanel nodePanel = m_dialogNodePanels.get(key);
                 DialogNodeValue nodeValue = nodePanel.getNodeValue();
+                final String parameterName = SubNodeContainer.getDialogNodeParameterName(dialogNode, key);
                 if (nodeValue != null) {
-                    NodeSettingsWO subSettings = settings.addNodeSettings((Integer.toString(key.getIndex())));
+                    NodeSettingsWO subSettings = settings.addNodeSettings((parameterName));
                     nodeValue.saveToNodeSettings(subSettings);
                 }
             }
@@ -265,9 +267,11 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                     // no op
                 }
             } else if (e.getValue() instanceof DialogNode) {
-                DialogNodeValue nodeValue = ((DialogNode)e.getValue()).createEmptyDialogValue();
+                final DialogNode dialogNode = (DialogNode)e.getValue();
+                final DialogNodeValue nodeValue = dialogNode.createEmptyDialogValue();
+                final String parameterName = SubNodeContainer.getDialogNodeParameterName(dialogNode, e.getKey());
                 try {
-                    NodeSettingsRO subSettings = settings.getNodeSettings(Integer.toString(e.getKey().getIndex()));
+                    NodeSettingsRO subSettings = settings.getNodeSettings(parameterName);
                     nodeValue.loadFromNodeSettingsInDialog(subSettings);
                     final DialogNodePanel dialogNodePanel = m_dialogNodePanels.get(e.getKey());
                     dialogNodePanel.loadNodeValue(nodeValue);

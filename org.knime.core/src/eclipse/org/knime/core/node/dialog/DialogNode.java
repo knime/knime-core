@@ -46,6 +46,8 @@
  */
 package org.knime.core.node.dialog;
 
+import java.util.regex.Pattern;
+
 import org.knime.core.node.InvalidSettingsException;
 
 
@@ -58,6 +60,20 @@ import org.knime.core.node.InvalidSettingsException;
  */
 public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL extends DialogNodeValue>
         extends MetaNodeDialogNode, ValueControlledNode {
+
+    /** Pattern used for {@link #getParameterName() parameter name} validation. Must only consist of word characters or
+     * dashes - no spaces no special characters. Name must start with a letter, then it may contain any word character
+     * (including '-' and '_') and ends with a word character (no '-' or '_'), for instance:<br />
+     * <pre>
+     * "abc"       - OK
+     * "foo-bar-0" - OK
+     * "013"       - NOT OK
+     * "foo-_bar"  - NOT OK
+     * "foo-bar"-  - NOT OK
+     * </pre>
+     * @since 2.12
+     */
+    public static final Pattern PARAMETER_NAME_PATTERN = Pattern.compile("^[a-zA-Z](?:[-_]?[a-zA-Z0-9]+)*$");
 
     /**
      * @return The representation content of the dialog node.
@@ -86,6 +102,15 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
      * @since 2.12
      */
     public void validateDialogValue(final VAL value) throws InvalidSettingsException;
+
+    /** A simple name that is associated with this node for external parameterization. This is for instance used
+     * in command line control or when parameters are set via a web service invocation (that is, the workflow itself
+     * is the web service implementation). The returned value must not be null. An empty string is discouraged and
+     * only used for backward compatibility reasons (workflows saved prior 2.12 do not have this property).
+     * @return Parameter name used for external parameterization. Result must match {@link #PARAMETER_NAME_PATTERN}
+     * @since 2.12
+     */
+    public String getParameterName();
 
     /** Property set in the configuration dialog of the node to hide this quickform/dialog node in the
      * meta or subnode dialog.

@@ -80,10 +80,17 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.JsonObject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -108,6 +115,9 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.DialogNodeValue;
+import org.knime.core.node.dialog.JSONOutputNode;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveNode;
@@ -8893,6 +8903,105 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Get quickform nodes on the root level along with their currently set value. These are all
+     * {@link org.knime.core.node.dialog.DialogNode} including special nodes like "JSON Input".
+     *
+     * <p>Method is used to allow clients to retrieve an example input.
+     * @return A map from {@link DialogNode#getParameterName() node's parameter name} to its (JSON object value)
+     * @since 2.12
+     */
+    public Map<String, JsonObject> getInputNodes() {
+        Map<String, JsonObject> result = new LinkedHashMap<>();
+        synchronized (getWorkflowMutex()) {
+            Map<NodeID, DialogNode> nodeMap = findNodes(DialogNode.class, false);
+            for (Map.Entry<NodeID, DialogNode> e : nodeMap.entrySet()) {
+                DialogNode dialogNode = e.getValue();
+                String parameterName = StringUtils.defaultString(dialogNode.getParameterName());
+                parameterName = (parameterName.isEmpty() ? "" : "-") + Integer.toString(e.getKey().getIndex());
+                DialogNodeValue dialogValue = dialogNode.getDialogValue();
+                JsonObject jsonObject = dialogValue != null ? dialogValue.toJson() : null;
+                if (jsonObject == null) {
+                    jsonObject = Json.createObjectBuilder().build();
+                }
+                result.put(parameterName, jsonObject);
+            }
+            return result;
+        }
+    }
+
+    /** Counterpart to {@link #getInputNodes()} - it sets new values into quickform nodes on the root level.
+     * All nodes as per map argument will be reset as part of this call.
+     * @param input a map from {@link org.knime.core.node.dialog.DialogNode#getParameterName() node's parameter name}
+     * to its (JSON object value). Invalid entries cause an exception.
+     * @since 2.12
+     */
+    public void setInputNodes(final Map<String, JsonObject> input) {
+        synchronized (getWorkflowMutex()) {
+            CheckUtils.checkState(!getNodeContainerState().isExecutionInProgress(),
+                "Cannot apply new parameters - workflow still in execution");
+            // splits "foobar-123-xy-2" into "foobar-123-xy" (parameter name) and 2 (node id suffix)
+            Pattern p = Pattern.compile("^(?:(.+)-)?(\\d+)$");
+            Map<NodeID, DialogNode> nodeMap = findNodes(DialogNode.class, false);
+            Map<NodeID, DialogNodeValue> valueMap = new LinkedHashMap<>();
+            for (Map.Entry<String, JsonObject> entry : input.entrySet()) {
+                String parameterName = entry.getKey();
+                Matcher parameterNameMatcher = p.matcher(parameterName);
+                CheckUtils.checkArgument(parameterNameMatcher.matches(),
+                    "Invalid parameter name \"%s\" (invalid pattern)", parameterName);
+                String paramBase = StringUtils.defaultString(parameterNameMatcher.group(1));
+                Integer idSuffix = Integer.parseInt(parameterNameMatcher.group(2));
+                NodeID id = new NodeID(getID(), idSuffix);
+                DialogNode dialogNode = nodeMap.get(id);
+                CheckUtils.checkArgument(dialogNode != null && paramBase.equals(StringUtils.defaultString(
+                    dialogNode.getParameterName())),
+                    "Invalid parameter name \"%s\" - could not locate corresponding node in workflow", parameterName);
+                DialogNodeValue dialogValue = dialogNode.createEmptyDialogValue();
+                try {
+                    dialogValue.loadFromJson(entry.getValue());
+                    dialogNode.validateDialogValue(dialogValue);
+                } catch (JsonException e) {
+                    throw new IllegalArgumentException("Invalid JSON parameter for node \"" + parameterName
+                        + "\" - node doesn't understand JSON: " + e.getMessage(), e);
+                } catch (InvalidSettingsException se) {
+                    throw new IllegalArgumentException("Invalid parameter for node \"" + parameterName
+                        + "\" - didn't pass node's validation method: " + se.getMessage(), se);
+                }
+                valueMap.put(id, dialogValue);
+            }
+
+            for (Map.Entry<NodeID, DialogNodeValue> entry : valueMap.entrySet()) {
+                NativeNodeContainer nnc = getNodeContainer(entry.getKey(), NativeNodeContainer.class, true);
+                final DialogNode dialogNode = (DialogNode)nnc.getNodeModel();
+                LOGGER.debugWithFormat("Setting new parameter for node \"%s\" (%s)",
+                    nnc.getNameWithID(), dialogNode.getParameterName());
+                resetAndConfigureNode(entry.getKey());
+            }
+        }
+    }
+
+    /** Receive output from workflow by means of {@link org.knime.core.node.dialog.JSONOutputNode}. Calling
+     * this method on a non-fully executed workflow causes an exception to be thrown.
+     * @return A map from node's parameter name to its JSON object result.
+     * @since 2.12
+     */
+    public Map<String, JsonObject> getOutputNodes() {
+        Map<String, JsonObject> result = new LinkedHashMap<>();
+        synchronized (getWorkflowMutex()) {
+            CheckUtils.checkState(getNodeContainerState().isExecuted(), "Workflow not completely executed");
+            Map<NodeID, JSONOutputNode> nodeMap = findNodes(JSONOutputNode.class, false);
+            for (Map.Entry<NodeID, JSONOutputNode> e : nodeMap.entrySet()) {
+                JSONOutputNode jsonOutNode = e.getValue();
+                String parameterName = StringUtils.defaultString(jsonOutNode.getParameterName());
+                parameterName = (parameterName.isEmpty() ? "" : "-") + Integer.toString(e.getKey().getIndex());
+                JsonObject jsonObject = jsonOutNode.getJSONObject();
+                if (jsonObject == null) {
+                    jsonObject = Json.createObjectBuilder().build();
+                }
+                result.put(parameterName, jsonObject);
+            }
+            return result;
+        }
+    }
 
     /** Remove workflow variable of given name.
      * The method may change in future versions or removed entirely (bug 1937).
@@ -8907,7 +9016,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
     }
-
 
     /**
      * @param id of node

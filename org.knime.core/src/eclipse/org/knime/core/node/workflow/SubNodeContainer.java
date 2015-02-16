@@ -1312,18 +1312,45 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /* ------------------ Load&Save ------------------------- */
 
     /**
-     * {@inheritDoc}
+     * The default parameter name for dialog nodes. The parameter name is used as identifier in batch or web service
+     * execution and is derived from the class name.
+     * @param cl the class of the dialog node - only using its name
+     * @return default parameter name, e.g. for StringInputQuickFormNodeModel -&gt; string-input
+     * @since 2.12
      */
+    public static final String getDialogNodeParameterNameDefault(final Class<?> cl) {
+        CheckUtils.checkArgumentNotNull(cl, "Must not be null");
+        String[] segments = StringUtils.splitByCharacterTypeCamelCase(
+            StringUtils.removeEndIgnoreCase(
+                StringUtils.removeEndIgnoreCase(cl.getSimpleName(), "quickformnodemodel"),
+                "nodemodel"));
+        String result = StringUtils.lowerCase(StringUtils.join(segments, '-'));
+        assert DialogNode.PARAMETER_NAME_PATTERN.matcher(result).matches() : "Doesn't match: " + cl.getName();
+        return result;
+    }
+
+    /** The parameter name under which the subnode's flow variables tab, the batch executor or a web service caller
+     * will find a dialog node. It's part of the node's configuration.
+     * @param node The node itself - for querying its {@link DialogNode#getParameterName() parameter name}.
+     * @param id The id of the node, not null - the suffix is always appended to avoid duplicates
+     * @return The parameter name, not null.
+     */
+    static final String getDialogNodeParameterName(final DialogNode<?, ?> node, final NodeID id) {
+        final String parameterName = node.getParameterName();
+        return (!StringUtils.isEmpty(parameterName) ? parameterName + "-" : "") + id.getIndex();
+    }
+
+    /** {@inheritDoc} */
     @SuppressWarnings("rawtypes")
     @Override
     void performValidateSettings(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
         Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
         for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
             NodeID id = entry.getKey();
-            String nodeID = Integer.toString(id.getIndex());
-            if (modelSettings.containsKey(nodeID)) {
-                NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
-                DialogNode node = entry.getValue();
+            DialogNode node = entry.getValue();
+            String parameterName = getDialogNodeParameterName(node, id);
+            if (modelSettings.containsKey(parameterName)) {
+                NodeSettingsRO conf = modelSettings.getNodeSettings(parameterName);
                 NodeContext.pushContext(m_wfm.getNodeContainer(id));
                 try {
                     final DialogNodeValue validationDialogValue = node.createEmptyDialogValue();
@@ -1372,19 +1399,19 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
                 final NodeID id = entry.getKey();
                 final DialogNode node = entry.getValue();
-                final String nodeIDSuffix = Integer.toString(id.getIndex());
+                final String parameterName = getDialogNodeParameterName(node, id);
 
                 // the old/previously set value in the node
                 final DialogNodeValue oldDialogValue = node.getDialogValue();
                 final NodeSettings oldDialogValueSettings;
                 if (oldDialogValue != null) {
-                    oldDialogValueSettings = new NodeSettings(nodeIDSuffix);
+                    oldDialogValueSettings = new NodeSettings(parameterName);
                     oldDialogValue.saveToNodeSettings(oldDialogValueSettings);
                 } else {
                     oldDialogValueSettings = null;
                 }
-                final NodeSettingsRO newDialogValueSettings = modelSettings.containsKey(nodeIDSuffix)
-                        ? modelSettings.getNodeSettings(nodeIDSuffix) : null;
+                final NodeSettingsRO newDialogValueSettings = modelSettings.containsKey(parameterName)
+                        ? modelSettings.getNodeSettings(parameterName) : null;
 
                 // only apply if different to previous value. Fall back to equality on settings object ass
                 // #equals on DialogNodeValue might not be implemented.
@@ -1565,11 +1592,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     void performSaveModelSettingsTo(final NodeSettings modelSettings) {
         Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
         for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
-            String nodeID = Integer.toString(entry.getKey().getIndex());
             final DialogNode dialogNode = entry.getValue();
+            final String parameterName = getDialogNodeParameterName(dialogNode, entry.getKey());
             final DialogNodeValue dialogValue = dialogNode.getDialogValue();
             if (dialogValue != null) {
-                NodeSettingsWO subSettings = modelSettings.addNodeSettings(nodeID);
+                NodeSettingsWO subSettings = modelSettings.addNodeSettings(parameterName);
                 dialogValue.saveToNodeSettings(subSettings);
             }
         }

@@ -46,6 +46,10 @@
  */
 package org.knime.core.node.dialog;
 
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.naming.OperationNotSupportedException;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -72,4 +76,31 @@ public interface DialogNodeValue {
      * @param settings
      */
     public abstract void loadFromNodeSettingsInDialog(final NodeSettingsRO settings);
+
+    /** Parses the value from command line - default implement will just fail as 'complex' nodes such as the column
+     * filter can not be parameterized via commandline. Simple nodes (integer & string input, ...) will just parse
+     * the value.
+     * @param fromCmdLine Argument as per commandline.
+     * @throws OperationNotSupportedException ... as per above.
+     * @since 2.12
+     */
+    public abstract void loadFromString(final String fromCmdLine) throws OperationNotSupportedException;
+
+    /**
+     * Called when parameterized via web service invocation. Each implementation should support reading its value from
+     * a JSON object.
+     * @param json To read from, not null.
+     * @throws JsonException If parsing fails.
+     * @since 2.12
+     */
+    public abstract void loadFromJson(final JsonObject json) throws JsonException;
+
+    /** Reverse operation to {@link #loadFromJson(JsonObject)}. This can be used to dump the current configuration to a
+     * file that can then be modified by the user. It helps the user to understand the structure of the expected
+     * {@link JsonObject}
+     * @return Content as {@link JsonObject}, not null.
+     * @since 2.12
+     */
+    public JsonObject toJson();
+
 }
