@@ -8917,8 +8917,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (Map.Entry<NodeID, DialogNode> e : nodeMap.entrySet()) {
                 DialogNode dialogNode = e.getValue();
                 String parameterName = StringUtils.defaultString(dialogNode.getParameterName());
-                parameterName = (parameterName.isEmpty() ? "" : "-") + Integer.toString(e.getKey().getIndex());
-                DialogNodeValue dialogValue = dialogNode.getDialogValue();
+                parameterName = (parameterName.isEmpty() ? "" : parameterName + "-")
+                        + Integer.toString(e.getKey().getIndex());
+                DialogNodeValue dialogValue = dialogNode.getDefaultValue();
                 JsonObject jsonObject = dialogValue != null ? dialogValue.toJson() : null;
                 if (jsonObject == null) {
                     jsonObject = Json.createObjectBuilder().build();
