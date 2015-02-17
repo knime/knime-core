@@ -8993,7 +8993,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (Map.Entry<NodeID, JSONOutputNode> e : nodeMap.entrySet()) {
                 JSONOutputNode jsonOutNode = e.getValue();
                 String parameterName = StringUtils.defaultString(jsonOutNode.getParameterName());
-                parameterName = (parameterName.isEmpty() ? "" : "-") + Integer.toString(e.getKey().getIndex());
+                parameterName = (parameterName.isEmpty() ? "" : (parameterName + "-"))
+                        + Integer.toString(e.getKey().getIndex());
                 JsonObject jsonObject = jsonOutNode.getJSONObject();
                 if (jsonObject == null) {
                     jsonObject = Json.createObjectBuilder().build();
