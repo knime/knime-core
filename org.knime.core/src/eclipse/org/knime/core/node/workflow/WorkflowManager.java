@@ -8973,6 +8973,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (Map.Entry<NodeID, DialogNodeValue> entry : valueMap.entrySet()) {
                 NativeNodeContainer nnc = getNodeContainer(entry.getKey(), NativeNodeContainer.class, true);
                 final DialogNode dialogNode = (DialogNode)nnc.getNodeModel();
+                dialogNode.setDialogValue(entry.getValue());
                 LOGGER.debugWithFormat("Setting new parameter for node \"%s\" (%s)",
                     nnc.getNameWithID(), dialogNode.getParameterName());
                 resetAndConfigureNode(entry.getKey());
