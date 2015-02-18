@@ -78,6 +78,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 /**
  * This class performs the ungroup operation.
  * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
+ * @since 2.12
  */
 public class UngroupOperation {
 
