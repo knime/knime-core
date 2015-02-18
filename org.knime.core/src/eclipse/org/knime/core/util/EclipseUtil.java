@@ -46,7 +46,25 @@
  */
 package org.knime.core.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.osgi.baseadaptor.bundlefile.BundleFile;
+import org.eclipse.osgi.baseadaptor.loader.BaseClassLoader;
+import org.eclipse.osgi.baseadaptor.loader.ClasspathEntry;
+import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.knime.core.node.NodeLogger;
 
@@ -56,7 +74,57 @@ import org.knime.core.node.NodeLogger;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.9
  */
+@SuppressWarnings("restriction")
 public final class EclipseUtil {
+    /**
+     * Interface for filtering classes in {@link EclipseUtil#findClasses(ClassFilter, ClassLoader)}.
+     *
+     * @since 2.12
+     */
+    public interface ClassFilter {
+        /**
+         * Returns whether the given class should be included in the resulting list.
+         *
+         * @param clazz a class
+         * @return <code>true</code> if it should be included, <code>false</code> otherwise
+         */
+        boolean accept(Class<?> clazz);
+    }
+
+    /**
+     * Class filter that checks for presence of certain annotations.
+     *
+     * @since 2.12
+     */
+    public static class AnnotationClassFilter implements ClassFilter {
+        private final List<Class<? extends Annotation>> m_annotations;
+
+        /**
+         * Creates a new annotation filter.
+         *
+         * @param annotations a list of annotations classes
+         */
+        public AnnotationClassFilter(final Class<? extends Annotation>... annotations) {
+            m_annotations = new ArrayList<>(annotations.length);
+            for (Class<? extends Annotation> cl : annotations) {
+                m_annotations.add(cl);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean accept(final Class<?> clazz) {
+            for (Class<? extends Annotation> a : m_annotations) {
+                if (clazz.getAnnotation(a) != null) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
     private static final boolean RUN_FROM_SDK;
 
     static {
@@ -72,12 +140,13 @@ public final class EclipseUtil {
         }
     }
 
-    private EclipseUtil() { }
+    private EclipseUtil() {
+    }
 
     /**
      * Returns the whether the current application has been started from an SDK or if it is a standalone instance. Note
-     * that this method only guesses based on some indications and may be wrong (i.e. it returns <code>false</code>
-     * even though the application has been started from the SDK) in some rare cases.
+     * that this method only guesses based on some indications and may be wrong (i.e. it returns <code>false</code> even
+     * though the application has been started from the SDK) in some rare cases.
      *
      * @return <code>true</code> if the application has been started from an SDK, <code>false</code> otherwise
      */
@@ -96,5 +165,121 @@ public final class EclipseUtil {
         }
 
         return configurationLocation.getURL().getPath().contains("/.metadata/.plugins/org.eclipse.pde.core/");
+    }
+
+    /**
+     * Searches the given class loader for classes that match the given class filter. This method is capable of
+     * searching through Eclipse plug-ins but it will not recursivly search dependencies.
+     *
+     * @param filter a filter for classes
+     * @param classLoader the class loader that should be used for searching
+     * @return a collection with matching classes
+     * @throws IOException if an I/O error occurs while scanning the class path
+     * @since 2.12
+     */
+    public static Collection<Class<?>> findClasses(final ClassFilter filter, final ClassLoader classLoader)
+        throws IOException {
+        List<URL> classPathUrls = new ArrayList<>();
+
+        if (classLoader instanceof BaseClassLoader) {
+            BaseClassLoader cl = (BaseClassLoader)classLoader;
+            ClasspathManager cpm = cl.getClasspathManager();
+            // String classPath = this.getClass().getName().replace(".", "/") + ".class";
+
+            for (ClasspathEntry e : cpm.getHostClasspathEntries()) {
+                BundleFile bf = e.getBundleFile();
+                classPathUrls.add(bf.getEntry("").getLocalURL());
+            }
+        } else if (classLoader instanceof URLClassLoader) {
+            URLClassLoader cl = (URLClassLoader)classLoader;
+            for (URL u : cl.getURLs()) {
+                classPathUrls.add(u);
+            }
+        } else {
+            FileLocator.toFileURL(classLoader.getResource(""));
+        }
+
+        // filter classpath for nested entries
+        for (Iterator<URL> it = classPathUrls.iterator(); it.hasNext();) {
+            URL url1 = it.next();
+            for (URL url2 : classPathUrls) {
+                if ((url1 != url2) && url2.getPath().startsWith(url1.getPath())) {
+                    it.remove();
+                    break;
+                }
+            }
+        }
+
+        List<Class<?>> classes = new ArrayList<>();
+        for (URL url : classPathUrls) {
+            if ("file".equals(url.getProtocol())) {
+                String path = url.getPath();
+                // path = path.replaceFirst(Pattern.quote(classPath) + "$", "");
+                collectInDirectory(new File(path), "", filter, classes, classLoader);
+            } else if ("jar".equals(url.getProtocol())) {
+                String path = url.getPath().replaceFirst("^file:", "").replaceFirst("\\!.+$", "");
+                collectInJar(new JarFile(path), filter, classes, classLoader);
+            } else {
+                throw new IllegalStateException("Cannot read from protocol '" + url.getProtocol() + "'");
+            }
+        }
+
+        return classes;
+    }
+
+    /**
+     * Recursively Collects and returns all classes (excluding inner classes) that are in the specified directory.
+     *
+     * @param directory the directory
+     * @param packageName the package name, initially the empty string
+     * @param classNames a list that is filled with class names
+     */
+    private static void collectInDirectory(final File directory, final String packageName, final ClassFilter filter,
+        final List<Class<?>> classes, final ClassLoader classLoader) {
+        for (File f : directory.listFiles()) {
+            if (f.isDirectory()) {
+                collectInDirectory(f, packageName + f.getName() + ".", filter, classes, classLoader);
+            } else if (f.getName().endsWith(".class")) {
+                String className = packageName + f.getName().replaceFirst("\\.class$", "");
+                try {
+                    Class<?> cl = classLoader.loadClass(className);
+                    if (filter.accept(cl)) {
+                        classes.add(cl);
+                    }
+                } catch (ClassNotFoundException ex) {
+                    NodeLogger.getLogger(EclipseUtil.class).error(
+                        "Could not load class '" + className + "': " + ex.getMessage(), ex);
+                }
+            }
+        }
+    }
+
+    /**
+     * Collects and returns all classes inside the given JAR file (excluding inner classes).
+     *
+     * @param jar the jar file
+     * @param classNames a list that is filled with class names
+     * @throws IOException if an I/O error occurs
+     */
+    private static void collectInJar(final JarFile jar, final ClassFilter filter, final List<Class<?>> classes,
+        final ClassLoader classLoader) throws IOException {
+        Enumeration<JarEntry> entries = jar.entries();
+        while (entries.hasMoreElements()) {
+            JarEntry e = entries.nextElement();
+            String className = e.getName();
+            if (className.endsWith(".class")) {
+                className = className.replaceFirst("\\.class$", "").replace('/', '.');
+                try {
+                    Class<?> cl = classLoader.loadClass(className);
+                    if (filter.accept(cl)) {
+                        classes.add(cl);
+                    }
+                } catch (ClassNotFoundException ex) {
+                    NodeLogger.getLogger(EclipseUtil.class).error(
+                        "Could not load class '" + className + "': " + ex.getMessage(), ex);
+                }
+            }
+        }
+        jar.close();
     }
 }
