@@ -44,12 +44,14 @@
  */
 package org.knime.base.node.io.database;
 
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -65,6 +67,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -78,6 +81,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.util.MutableInteger;
 
@@ -125,8 +129,11 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        final DataTableSpec lastSpec = getLastSpec();
+        if (lastSpec != null) {
+            return new DataTableSpec[]{lastSpec};
+        }
         final DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
-
         String column = m_columnModel.getStringValue();
         if (column == null) {
             throw new InvalidSettingsException("No column selected.");
@@ -143,7 +150,10 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         } else {
             m_settings.setValidateQuery(true);
         }
-
+        if (!m_settings.getValidateQuery()) {
+            setLastSpec(null);
+            return new DataTableSpec[] {null};
+        }
         final String oQuery = getQuery();
         PortObjectSpec[] spec = null;
         try {
@@ -155,14 +165,28 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                 newQuery = oQuery.replace(IN_PLACE_HOLDER, "");
             }
             setQuery(newQuery);
-            spec = super.configure(inSpecs);
+            final DatabaseReaderConnection load = new DatabaseReaderConnection(null);
+            spec = new DataTableSpec[] {getResultSpec(inSpecs, load)};
+        } catch (InvalidSettingsException e) {
+            setLastSpec(null);
+            throw e;
+        } catch (SQLException ex) {
+            setLastSpec(null);
+            Throwable cause = ExceptionUtils.getRootCause(ex);
+            if (cause == null) {
+                cause = ex;
+            }
+            throw new InvalidSettingsException("Could not determine table spec from database query: "
+                + cause.getMessage(), ex);
         } finally {
             setQuery(oQuery);
         }
         if (spec[0] == null) {
             return spec;
         } else {
-            return new DataTableSpec[]{createSpec((DataTableSpec)spec[0], tableSpec.getColumnSpec(column))};
+            final DataTableSpec resultSpec = createSpec((DataTableSpec)spec[0], tableSpec.getColumnSpec(column));
+            setLastSpec(resultSpec);
+            return new DataTableSpec[]{resultSpec};
         }
     }
 
@@ -185,6 +209,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         BufferedDataContainer buf = null;
         final String oQuery = getQuery();
         final Collection<DataCell> curSet = new LinkedHashSet<>();
+        final DatabaseReaderConnection load = new DatabaseReaderConnection(null);
         try {
             final int noValues = m_noValues.getIntValue();
             MutableInteger rowCnt = new MutableInteger(0);
@@ -210,7 +235,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                     setQuery(newQuery);
                     exec.setProgress(values.size() * (double)noValues / rowCount, "Selecting all values \""
                         + queryValues + "\"...");
-                    BufferedDataTable table = (BufferedDataTable)super.execute(inData, exec)[0];
+                    final BufferedDataTable table = getResultTable(exec, inData, load);
                     if (buf == null) {
                         DataTableSpec resSpec = table.getDataTableSpec();
                         buf = exec.createDataContainer(createSpec(resSpec,
@@ -229,16 +254,30 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
 
             if (buf == null) {
                 // create empty dummy container with spec generated during #configure
-                final DataTableSpec outSpec =
-                        (DataTableSpec)this.configure(new PortObjectSpec[]{inputTable.getSpec()})[0];
+                final PortObjectSpec[] inSpec;
+                if ((inData.length > 1) && (inData[1] instanceof DatabaseConnectionPortObject)) {
+                    DatabaseConnectionPortObject dbPort = (DatabaseConnectionPortObject)inData[1];
+                    inSpec = new PortObjectSpec[]{inputTable.getSpec(), dbPort.getSpec()};
+                } else {
+                    inSpec = new PortObjectSpec[]{inputTable.getSpec()};
+                }
+                final DataTableSpec resultSpec = getResultSpec(inSpec, load);
+                final DataTableSpec outSpec = createSpec(resultSpec, spec.getColumnSpec(column));
                 buf = exec.createDataContainer(outSpec);
             }
             buf.close();
+        } catch (CanceledExecutionException cee) {
+            throw cee;
+        } catch (Exception e) {
+            setLastSpec(null);
+            throw e;
         } finally {
             // reset query to original
             setQuery(oQuery);
         }
-        return new BufferedDataTable[]{buf.getTable()};
+        final BufferedDataTable resultTable = buf.getTable();
+        setLastSpec(resultTable.getDataTableSpec());
+        return new BufferedDataTable[]{resultTable};
     }
 
     private DataTableSpec createSpec(final DataTableSpec spec,
@@ -368,6 +407,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         m_aggByRow.loadSettingsFrom(settings);
         m_appendGridColumn.loadSettingsFrom(settings);
         m_noValues.loadSettingsFrom(settings);
+        setLastSpec(null);
     }
 
     /**
