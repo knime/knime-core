@@ -209,7 +209,10 @@ public class NumberToCategoryApplyNodeModel extends NodeModel {
             MapValues map = derivedField.getMapValues();
             if (null != map) {
                 // This is the field name the mapValues is based on
-                String name = derivedField.getName();
+                String name = derivedField.getDisplayName();
+                if (name == null) {
+                    name = derivedField.getName();
+                }
                 mapValues.put(name, derivedField);
             }
         }
