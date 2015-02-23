@@ -1743,6 +1743,12 @@
             factory-class="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory"
             id="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory"
+            id="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory">
+      </node>
    </extension>
    
       
