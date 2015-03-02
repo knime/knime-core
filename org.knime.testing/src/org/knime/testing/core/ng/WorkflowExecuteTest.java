@@ -47,12 +47,7 @@
  */
 package org.knime.testing.core.ng;
 
-import java.lang.management.LockInfo;
-import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
-import java.lang.management.MonitorInfo;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
 import java.util.Formatter;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -69,6 +64,7 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.GUIDeadlockDetector;
 import org.knime.testing.core.TestrunConfiguration;
 import org.knime.testing.node.config.TestConfigNodeModel;
 
@@ -137,7 +133,7 @@ class WorkflowExecuteTest extends WorkflowTest {
                                 usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
                                 (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
                             message += "\n" + formatter.out().toString();
-                            message += "\nThread status:\n" + createStacktrace();
+                            message += "\nThread status:\n" + GUIDeadlockDetector.createStacktrace();
                         }
                         NodeLogger.getLogger(WorkflowExecuteTest.class).info(message);
                         result.addFailure(WorkflowExecuteTest.this, new AssertionFailedError(message));
@@ -174,74 +170,6 @@ class WorkflowExecuteTest extends WorkflowTest {
         }
     }
 
-    private static String createStacktrace() {
-        StringBuilder buf = new StringBuilder(4096);
-
-        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
-        for (ThreadInfo ti : bean.dumpAllThreads(true, true)) {
-            fillStackFromThread(ti, buf);
-        }
-        return buf.toString();
-    }
-
-    private static void fillStackFromThread(final ThreadInfo ti, final StringBuilder buf) {
-        buf.append("\"" + ti.getThreadName() + "\" Id=" + ti.getThreadId() + " " + ti.getThreadState());
-        if (ti.getLockName() != null) {
-            buf.append(" on " + ti.getLockName());
-        }
-        if (ti.getLockOwnerName() != null) {
-            buf.append(" owned by \"" + ti.getLockOwnerName() + "\" Id=" + ti.getLockOwnerId());
-        }
-        if (ti.isSuspended()) {
-            buf.append(" (suspended)");
-        }
-        if (ti.isInNative()) {
-            buf.append(" (in native)");
-        }
-        buf.append('\n');
-        int i = 0;
-        for (StackTraceElement ste : ti.getStackTrace()) {
-            buf.append("\tat " + ste.toString());
-            buf.append('\n');
-            if ((i == 0) && (ti.getLockInfo() != null)) {
-                Thread.State ts = ti.getThreadState();
-                switch (ts) {
-                    case BLOCKED:
-                        buf.append("\t-  blocked on " + ti.getLockInfo());
-                        buf.append('\n');
-                        break;
-                    case WAITING:
-                        buf.append("\t-  waiting on " + ti.getLockInfo());
-                        buf.append('\n');
-                        break;
-                    case TIMED_WAITING:
-                        buf.append("\t-  waiting on " + ti.getLockInfo());
-                        buf.append('\n');
-                        break;
-                    default:
-                }
-            }
-
-            for (MonitorInfo mi : ti.getLockedMonitors()) {
-                if (mi.getLockedStackDepth() == i) {
-                    buf.append("\t-  locked " + mi);
-                    buf.append('\n');
-                }
-            }
-            i++;
-        }
-
-        LockInfo[] locks = ti.getLockedSynchronizers();
-        if (locks.length > 0) {
-            buf.append("\n\tNumber of locked synchronizers = " + locks.length);
-            buf.append('\n');
-            for (LockInfo li : locks) {
-                buf.append("\t- " + li);
-                buf.append('\n');
-            }
-        }
-        buf.append('\n');
-    }
 
     /**
      * {@inheritDoc}
