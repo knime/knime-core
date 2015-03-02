@@ -16,6 +16,7 @@
  *******************************************************************************/
 package org.knime.product.rcp;
 
+import java.awt.EventQueue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -58,6 +59,7 @@ import org.eclipse.ui.internal.ide.ChooseWorkspaceData;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.knime.core.util.CLibrary;
+import org.knime.core.util.GUIDeadlockDetector;
 import org.knime.core.util.MutableBoolean;
 import org.knime.product.ProductPlugin;
 import org.knime.product.p2.RepositoryUpdater;
@@ -119,6 +121,8 @@ public class KNIMEApplication implements IApplication {
             if (m_checkForUpdates && checkForUpdates(shell)) {
                 returnCode = PlatformUI.RETURN_RESTART;
             } else {
+                startDeadlockDetectors(display);
+
                 // create the workbench with this advisor and run it until it
                 // exits
                 // N.B. createWorkbench remembers the advisor, and also
@@ -598,5 +602,31 @@ public class KNIMEApplication implements IApplication {
         } catch (InterruptedException e) {
         }
         return restart.booleanValue();
+    }
+
+    private void startDeadlockDetectors(final Display display) {
+        new GUIDeadlockDetector() {
+            @Override
+            protected String getThreadName() {
+                return "SWT Display thread";
+            }
+
+            @Override
+            protected void enqueue(final Runnable r) {
+                display.asyncExec(r);
+            }
+        };
+
+        new GUIDeadlockDetector() {
+            @Override
+            protected String getThreadName() {
+                return "AWT Event Queue";
+            }
+
+            @Override
+            protected void enqueue(final Runnable r) {
+                EventQueue.invokeLater(r);
+            }
+        };
     }
 }
