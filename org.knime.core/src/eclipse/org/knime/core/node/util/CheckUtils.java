@@ -349,7 +349,8 @@ public final class CheckUtils {
                     Path parent = localPath.getParent();
                     if (!Files.exists(parent)) {
                         throw new InvalidSettingsException("Directory '" + parent + "' of output file does not exist");
-                    } else if (!Files.isWritable(localPath.getParent())) {
+                    } else if (!Files.isWritable(localPath.getParent())
+                        && !FileUtil.looksLikeUNC(localPath.getParent())) {
                         throw new InvalidSettingsException("Directory '" + parent + "' is not writable");
                     }
                 }
