@@ -48,11 +48,11 @@ import java.net.BindException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.util.log.Log;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.nio.SelectChannelConnector;
-import org.mortbay.log.Log;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -115,7 +115,7 @@ public class HelpviewPlugin extends AbstractUIPlugin {
             }
         }
         m_server.addConnector(connector);
-        m_server.addHandler(FileHandler.instance);
+        m_server.setHandler(FileHandler.instance);
         try {
             m_server.start();
         } catch (BindException ex) {

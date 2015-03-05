@@ -61,11 +61,11 @@ import java.util.jar.JarFile;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.osgi.baseadaptor.bundlefile.BundleFile;
-import org.eclipse.osgi.baseadaptor.loader.BaseClassLoader;
-import org.eclipse.osgi.baseadaptor.loader.ClasspathEntry;
-import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
+import org.eclipse.osgi.internal.loader.ModuleClassLoader;
+import org.eclipse.osgi.internal.loader.classpath.ClasspathEntry;
+import org.eclipse.osgi.internal.loader.classpath.ClasspathManager;
 import org.eclipse.osgi.service.datalocation.Location;
+import org.eclipse.osgi.storage.bundlefile.BundleFile;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -181,8 +181,8 @@ public final class EclipseUtil {
         throws IOException {
         List<URL> classPathUrls = new ArrayList<>();
 
-        if (classLoader instanceof BaseClassLoader) {
-            BaseClassLoader cl = (BaseClassLoader)classLoader;
+        if (classLoader instanceof ModuleClassLoader) {
+            ModuleClassLoader cl = (ModuleClassLoader)classLoader;
             ClasspathManager cpm = cl.getClasspathManager();
             // String classPath = this.getClass().getName().replace(".", "/") + ".class";
 

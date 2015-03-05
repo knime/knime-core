@@ -399,10 +399,14 @@ public class KNIMEApplication implements IApplication {
         // At this point workspace has been detected to be from a version
         // other than the current ide version -- find out if the user wants
         // to use it anyhow.
-        String title = IDEWorkbenchMessages.IDEApplication_versionTitle;
-        String message =
-                NLS.bind(IDEWorkbenchMessages.IDEApplication_versionMessage,
-                        url.getFile());
+        String title, message;
+        if (workspace_version > ide_version) {
+            title = IDEWorkbenchMessages.IDEApplication_versionTitle_newerWorkspace;
+            message = NLS.bind(IDEWorkbenchMessages.IDEApplication_versionMessage_newerWorkspace, url.getFile());
+        } else {
+            title = IDEWorkbenchMessages.IDEApplication_versionTitle_olderWorkspace;
+            message = NLS.bind(IDEWorkbenchMessages.IDEApplication_versionMessage_olderWorkspace, url.getFile());
+        }
 
         MessageBox mbox =
                 new MessageBox(shell, SWT.OK | SWT.CANCEL | SWT.ICON_WARNING
