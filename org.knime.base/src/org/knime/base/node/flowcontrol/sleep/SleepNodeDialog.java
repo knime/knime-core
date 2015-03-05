@@ -106,14 +106,14 @@ public class SleepNodeDialog extends NodeDialogPane {
         waitForFile();
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.NONE;
+        c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(2, 4, 2, 4);
         c.gridx = 0;
         c.gridy = 0;
         c.gridwidth = 1;
         c.gridheight = 1;
-        c.weightx = 0;
+        c.weightx = 1;
         c.weighty = 0;
 
         p.add(m_forRB, c);
