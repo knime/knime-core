@@ -79,6 +79,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import javax.swing.filechooser.FileSystemView;
+
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.Platform;
@@ -1091,8 +1093,17 @@ public final class FileUtil {
     public static boolean looksLikeUNC(final URL url) {
         // this looks like an UNC path, a real file URL does not have a host
         // Java does not handle UNC URLs correctly, see bug #5864
-        return Platform.OS_WIN32.equals(Platform.getOS()) && "file".equalsIgnoreCase(url.getProtocol())
-            && !StringUtils.isEmpty(url.getHost());
+        if (!Platform.OS_WIN32.equals(Platform.getOS())) {
+            return false;
+        } else if (!"file".equalsIgnoreCase(url.getProtocol())) {
+            return false;
+        } else if (!StringUtils.isEmpty(url.getHost())) {
+            return true;
+        } else {
+            // file URL without host => check if the drive letter is a mounted network share
+            Path path = getFileFromURL(url).toPath();
+            return looksLikeUNC(path);
+        }
     }
 
     /**
@@ -1105,7 +1116,15 @@ public final class FileUtil {
      */
     public static boolean looksLikeUNC(final Path path) {
         // Java does not handle UNC URLs correctly, see bug #5864
-        return Platform.OS_WIN32.equals(Platform.getOS()) && path.toString().startsWith("\\\\");
+        if (!Platform.OS_WIN32.equals(Platform.getOS())) {
+            return false;
+        } else if (path.toString().startsWith("\\\\")) {
+            return false;
+        } else {
+            Path root = path.getRoot();
+            FileSystemView fsv = FileSystemView.getFileSystemView();
+            return fsv.getSystemDisplayName(root.toFile()).contains("\\\\");
+        }
     }
 
 
