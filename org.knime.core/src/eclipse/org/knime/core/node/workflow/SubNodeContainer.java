@@ -447,7 +447,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @return the subnode data input (incl. mandatory flow var port object).
      * @throws ExecutionException any exception thrown while waiting for upstream nodes to finish execution. */
     public PortObject[] fetchInputDataFromParent() throws ExecutionException {
-        return ThreadPool.currentPool().runInvisible(new Callable<PortObject[]>() {
+        Callable<PortObject[]> c = new Callable<PortObject[]>() {
             @Override
             public PortObject[] call() throws Exception {
                 final WorkflowManager parent = getParent();
@@ -461,7 +461,17 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 }
                 return null;
             }
-        });
+        };
+        ThreadPool currentPool = ThreadPool.currentPool();
+        if (currentPool != null) {
+            return currentPool.runInvisible(c);
+        } else {
+            try {
+                return c.call();
+            } catch (Exception e) {
+                throw new ExecutionException(e);
+            }
+        }
     }
 
     /** Fetches input specs of subnode, including mandatory flow var port. Used by virtual sub node input during

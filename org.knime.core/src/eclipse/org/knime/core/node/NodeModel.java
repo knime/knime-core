@@ -414,19 +414,23 @@ public abstract class NodeModel {
         return m_outPortTypes.length;
     }
 
-    /**
+    /** Port type as specified in constructor.
      * @param index
      * @return Type of the specified input port
+     * @throws IndexOutOfBoundsException ...
+     * @since 2.12
      */
-    final PortType getInPortType(final int index) {
+    protected final PortType getInPortType(final int index) {
         return m_inPortTypes[index];
     }
 
-    /**
+    /** Port type as specified in constructor.
      * @param index
      * @return Type of the specified output port
+     * @throws IndexOutOfBoundsException ...
+     * @since 2.12
      */
-    final PortType getOutPortType(final int index) {
+    protected final PortType getOutPortType(final int index) {
         return m_outPortTypes[index];
     }
 
