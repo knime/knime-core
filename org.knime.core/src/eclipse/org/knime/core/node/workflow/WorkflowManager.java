@@ -5897,6 +5897,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /**
+     * @param id
+     * @return current set of PortObjectSpecs of the given node
+     */
+    public PortObjectSpec[] getNodeInputSpecs(final NodeID id) {
+        NodeContainer nc = this.getNodeContainer(id);
+        PortObjectSpec[] result = new PortObjectSpec[nc.getNrInPorts()];
+        assembleInputSpecs(id, result);
+        return result;
+    }
+
     /** Fill array holding input data for a given node.
      * @param id the node
      * @param inData An empty array being filled by this method
