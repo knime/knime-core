@@ -165,7 +165,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel 
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
                     throws Exception {
-                PortObject[] inObjects = new PortObject[getNrOutPorts()];
+                PortObject[] inObjects = new PortObject[getNrInPorts()];
                 for (int i = 0; i < inObjects.length; i++) {
                     PortType inPortType = getInPortType(i);
                     if (BufferedDataTable.TYPE.equals(inPortType)) {
