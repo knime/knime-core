@@ -65,7 +65,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Date;
 import java.util.zip.GZIPOutputStream;
 
-import org.eclipse.core.runtime.Assert;
 import org.knime.base.node.io.csvwriter.FileWriterNodeSettings.FileOverwritePolicy;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -224,83 +223,13 @@ public class CSVWriterNodeModel extends NodeModel {
         throws InvalidSettingsException {
 
         return new StreamableOperator() {
-
             @Override
-            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                    throws Exception {
                 assert outputs.length == 0;
                 RowInput input = (RowInput)inputs[0];
-                CheckUtils.checkDestinationFile(m_settings.getFileName(),
-                    m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Abort);
-
-                URL url = FileUtil.toURL(m_settings.getFileName());
-                Path localPath = FileUtil.resolveToPath(url);
-
-                boolean writeColHeader = m_settings.writeColumnHeader();
-                OutputStream tempOut;
-                URLConnection urlConnection = null;
-                boolean appendToFile;
-                if (localPath != null) {
-                    // figure out if the writer is actually supposed to write col headers
-                    if (Files.exists(localPath)) {
-                        appendToFile = m_settings.getFileOverwritePolicy() == FileOverwritePolicy.Append;
-                        if (writeColHeader && appendToFile) {
-                            // do not write headers if the file exists and we append to it
-                            writeColHeader = !m_settings.skipColHeaderIfFileExists();
-                        }
-                    } else {
-                        appendToFile = false;
-                    }
-                    if (appendToFile) {
-                        tempOut = Files.newOutputStream(localPath, StandardOpenOption.APPEND);
-                    } else {
-                        tempOut = Files.newOutputStream(localPath);
-                    }
-                } else {
-                    urlConnection = FileUtil.openOutputConnection(url, "PUT");
-                    tempOut = urlConnection.getOutputStream();
-                    appendToFile = false;
-                }
-
-                // make a copy of the settings with the modified value
-                FileWriterSettings writerSettings = new FileWriterSettings(m_settings);
-                writerSettings.setWriteColumnHeader(writeColHeader);
-
-                if (m_settings.isGzipOutput()) {
-                    tempOut = new GZIPOutputStream(tempOut);
-                }
-                tempOut = new BufferedOutputStream(tempOut);
-                CSVWriter tableWriter = new CSVWriter(new OutputStreamWriter(tempOut, Charset.defaultCharset()), writerSettings);
-                // write the comment header, if we are supposed to
-                writeCommentHeader(m_settings, tableWriter, input, appendToFile);
-
-                try {
-                    tableWriter.write(input, exec);
-                    tableWriter.close();
-
-                    if (tableWriter.hasWarningMessage()) {
-                        setWarningMessage(tableWriter.getLastWarningMessage());
-                    }
-
-                    // execution successful
-                    return;
-                } catch (CanceledExecutionException cee) {
-                    try {
-                        tableWriter.close();
-                    } catch (IOException ex) {
-                        // may happen if the stream is already closed by the interrupted thread
-                    }
-                    if (localPath != null) {
-                        LOGGER.info("Table FileWriter canceled.");
-                        try {
-                            Files.delete(localPath);
-                            LOGGER.debug("File '" + m_settings.getFileName() + "' deleted after node has been canceled.");
-                        } catch (IOException ex) {
-                            LOGGER.warn("Unable to delete file '"
-                                    + m_settings.getFileName() + "' after cancellation: " + ex.getMessage(), ex);
-                        }
-                    }
-                    throw cee;
-                }
+                doIt(null, input, exec);
+                return;
             }
         };
     }
@@ -312,10 +241,100 @@ public class CSVWriterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
-        Assert.isTrue(false); // not called anymore
-        return null;
+        return doIt(data[0], null, exec);
     }
 
+    private BufferedDataTable[] doIt(final BufferedDataTable data, final RowInput input, final ExecutionContext exec)
+            throws Exception {
+
+        CheckUtils.checkDestinationFile(m_settings.getFileName(),
+            m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Abort);
+
+        URL url = FileUtil.toURL(m_settings.getFileName());
+        Path localPath = FileUtil.resolveToPath(url);
+
+        boolean writeColHeader = m_settings.writeColumnHeader();
+        OutputStream tempOut;
+        URLConnection urlConnection = null;
+        boolean appendToFile;
+        if (localPath != null) {
+            // figure out if the writer is actually supposed to write col headers
+            if (Files.exists(localPath)) {
+                appendToFile = m_settings.getFileOverwritePolicy() == FileOverwritePolicy.Append;
+                if (writeColHeader && appendToFile) {
+                    // do not write headers if the file exists and we append to it
+                    writeColHeader = !m_settings.skipColHeaderIfFileExists();
+                }
+            } else {
+                appendToFile = false;
+            }
+            if (appendToFile) {
+                tempOut = Files.newOutputStream(localPath, StandardOpenOption.APPEND);
+            } else {
+                tempOut = Files.newOutputStream(localPath);
+            }
+        } else {
+            urlConnection = FileUtil.openOutputConnection(url, "PUT");
+            tempOut = urlConnection.getOutputStream();
+            appendToFile = false;
+        }
+
+        // make a copy of the settings with the modified value
+        FileWriterSettings writerSettings = new FileWriterSettings(m_settings);
+        writerSettings.setWriteColumnHeader(writeColHeader);
+
+        if (m_settings.isGzipOutput()) {
+            tempOut = new GZIPOutputStream(tempOut);
+        }
+        tempOut = new BufferedOutputStream(tempOut);
+        CSVWriter tableWriter = new CSVWriter(new OutputStreamWriter(tempOut, Charset.defaultCharset()), writerSettings);
+        // write the comment header, if we are supposed to
+        String tableName;
+        if (input == null) {
+            tableName = data.getDataTableSpec().getName();
+        } else {
+            tableName = input.getDataTableSpec().getName();
+        }
+        writeCommentHeader(m_settings, tableWriter, tableName, appendToFile);
+
+        try {
+            if (input == null) {
+                tableWriter.write(data, exec);
+            } else {
+                tableWriter.write(input, exec);
+            }
+            tableWriter.close();
+
+            if (tableWriter.hasWarningMessage()) {
+                setWarningMessage(tableWriter.getLastWarningMessage());
+            }
+
+            // execution successful
+            if (input == null) {
+                return new BufferedDataTable[0];
+            } else {
+                return null;
+            }
+        } catch (CanceledExecutionException cee) {
+            try {
+                tableWriter.close();
+            } catch (IOException ex) {
+                // may happen if the stream is already closed by the interrupted thread
+            }
+            if (localPath != null) {
+                LOGGER.info("Table FileWriter canceled.");
+                try {
+                    Files.delete(localPath);
+                    LOGGER.debug("File '" + m_settings.getFileName() + "' deleted after node has been canceled.");
+                } catch (IOException ex) {
+                    LOGGER.warn("Unable to delete file '"
+                            + m_settings.getFileName() + "' after cancellation: " + ex.getMessage(), ex);
+                }
+            }
+            throw cee;
+        }
+
+    }
     /**
      * Writes a comment header to the file, if specified so in the settings.
      *
@@ -327,7 +346,7 @@ public class CSVWriterNodeModel extends NodeModel {
      * @throws IOException if something went wrong during writing.
      */
     private void writeCommentHeader(final FileWriterNodeSettings settings,
-            final BufferedWriter file, final RowInput inData,
+            final BufferedWriter file, final String tableName,
             final boolean append) throws IOException {
         if ((file == null) || (settings == null)) {
             return;
@@ -381,7 +400,7 @@ public class CSVWriterNodeModel extends NodeModel {
                 file.write(settings.getCommentBegin());
             }
             file.write("   The data was read from the \""
-                    + inData.getDataTableSpec().getName() + "\" data table.");
+                    + tableName + "\" data table.");
             file.newLine();
         }
 
