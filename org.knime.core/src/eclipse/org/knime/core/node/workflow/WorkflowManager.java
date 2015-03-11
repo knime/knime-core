@@ -5256,7 +5256,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (true always except for loading)
      */
     void checkForNodeStateChanges(final boolean propagateChanges) {
-        assert Thread.holdsLock(m_workflowMutex);
+//        assert Thread.holdsLock(m_workflowMutex);
         int[] nrNodesInState = new int[InternalNodeContainerState.values().length];
         int nrNodes = 0;
         boolean internalNodeHasError = false;
@@ -5518,7 +5518,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param keepNodeMessage Whether to retain the previously set node message.
      */
     private void configureAllNodesInWFM(final boolean keepNodeMessage) {
-        assert Thread.holdsLock(m_workflowMutex);
+//        assert Thread.holdsLock(m_workflowMutex);
         Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(
                 m_workflow.getNodeIDs(), true).keySet();
         for (NodeID id : bfsSortedSet) {
@@ -5869,8 +5869,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param id of node
      * @param inSpecs return array for specs of all predecessors
      */
-    void assembleInputSpecs(final NodeID id,
-            final PortObjectSpec[] inSpecs) {
+    void assembleInputSpecs(final NodeID id, final PortObjectSpec[] inSpecs) {
         NodeOutPort[] ports = assemblePredecessorOutPorts(id);
         assert inSpecs.length == ports.length;
         for (int i = 0; i < inSpecs.length; i++) {

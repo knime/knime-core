@@ -264,7 +264,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     void setJobManager(final NodeExecutionJobManager je) {
         synchronized (m_nodeMutex) {
-            if (m_parent == null && !(je instanceof ThreadNodeExecutionJobManager)) {
+            if (getDirectNCParent() == null && !(je instanceof ThreadNodeExecutionJobManager)) {
                 // ROOT and workflow with no parent (inner wfm of subnode) must have the default job manager set
                 throw new IllegalArgumentException(String.format("Can only set the default job manager (%s) on a "
                     + "no-parent workflow manager (%s); got %s", ThreadNodeExecutionJobManager.class.getSimpleName(),
@@ -289,14 +289,11 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         return m_jobManager;
     }
 
-    /**
-     * @return NodeExecutionJobManager
-     * responsible for this node and all its children.
-     */
+    /** @return NodeExecutionJobManager responsible for this node and all its children. */
     public final NodeExecutionJobManager findJobManager() {
         if (m_jobManager == null) {
-            assert m_parent != null : "Root has no associated job manager";
-            return m_parent.findJobManager();
+            assert getDirectNCParent() != null : "Root has no associated job manager";
+            return getDirectNCParent().findJobManager();
         }
         return m_jobManager;
     }
