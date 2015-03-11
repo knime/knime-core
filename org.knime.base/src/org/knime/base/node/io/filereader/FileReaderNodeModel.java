@@ -52,9 +52,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Vector;
 
+import org.eclipse.core.runtime.Assert;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -65,6 +65,12 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.tokenizer.SettingsStatus;
@@ -153,6 +159,82 @@ public class FileReaderNodeModel extends NodeModel {
         // m_frSettings = null;
     }
 
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+            final PortObjectSpec[] inSpecs)
+    throws InvalidSettingsException {
+
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                assert inputs.length == 0;
+
+
+                LOGGER.info("Preparing to read from '"
+                        + m_frSettings.getDataFileLocation().toString() + "'.");
+
+                // check again the settings - especially file existence (under Linux
+                // files could be deleted/renamed since last config-call...
+                SettingsStatus status = m_frSettings.getStatusOfSettings(true, null);
+                if (status.getNumOfErrors() > 0) {
+                    throw new InvalidSettingsException(status.getAllErrorMessages(10));
+                }
+
+                DataTableSpec tSpec = m_frSettings.createDataTableSpec();
+
+                FileTable fTable =
+                        new FileTable(tSpec, m_frSettings,
+                                m_frSettings.getSkippedColumns(), exec);
+
+                RowOutput rowOutput = (RowOutput)outputs[0]; // data output port
+
+                int row = 0;
+                FileRowIterator it = fTable.iterator();
+                try {
+                    if (it.getZipEntryName() != null) {
+                        // seems we are reading a ZIP archive.
+                        LOGGER.info("Reading entry '" + it.getZipEntryName()
+                                + "' from the specified ZIP archive.");
+                    }
+
+                    while (it.hasNext()) {
+                        row++;
+                        DataRow next = it.next();
+                        String message =
+                                "Reading row #" + row + " (\"" + next.getKey() + "\")";
+                        exec.setMessage(message);
+                        exec.checkCanceled();
+                        rowOutput.push(next);
+                    }
+                    rowOutput.close();
+
+                    if (it.zippedSourceHasMoreEntries()) {
+                        // after reading til the end of the file this returns a valid
+                        // result
+                        setWarningMessage("Source is a ZIP archive with multiple "
+                                + "entries. Only reading first entry!");
+                    }
+                } catch (DuplicateKeyException dke) {
+                    String msg = dke.getMessage();
+                    if (msg == null) {
+                        msg = "Duplicate row IDs";
+                    }
+                    msg += ". Consider making IDs unique in the advanced settings.";
+                    DuplicateKeyException newDKE = new DuplicateKeyException(msg);
+                    newDKE.initCause(dke);
+                    throw newDKE;
+                }
+                // user settings allow for truncating the table
+                if (it.iteratorEndedEarly()) {
+                    setWarningMessage("Data was truncated due to user settings.");
+                }
+                // closes all sources.
+                fTable.dispose();
+            }
+        };
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -160,81 +242,8 @@ public class FileReaderNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException,
             InvalidSettingsException {
-
-        LOGGER.info("Preparing to read from '"
-                + m_frSettings.getDataFileLocation().toString() + "'.");
-
-        // check again the settings - especially file existence (under Linux
-        // files could be deleted/renamed since last config-call...
-        SettingsStatus status = m_frSettings.getStatusOfSettings(true, null);
-        if (status.getNumOfErrors() > 0) {
-            throw new InvalidSettingsException(status.getAllErrorMessages(10));
-        }
-
-        DataTableSpec tSpec = m_frSettings.createDataTableSpec();
-
-        FileTable fTable =
-                new FileTable(tSpec, m_frSettings,
-                        m_frSettings.getSkippedColumns(), exec);
-
-        // create a DataContainer and fill it with the rows read. It is faster
-        // then reading the file every time (for each row iterator), and it
-        // collects the domain for each column for us. Also, if things fail,
-        // the error message is printed during file reader execution (were it
-        // belongs to) and not some time later when a node uses the row
-        // iterator from the file table.
-
-        BufferedDataContainer c =
-                exec.createDataContainer(fTable.getDataTableSpec(), /*
-                                                                     * initDomain=
-                                                                     */true);
-        int row = 0;
-        FileRowIterator it = fTable.iterator();
-        try {
-            if (it.getZipEntryName() != null) {
-                // seems we are reading a ZIP archive.
-                LOGGER.info("Reading entry '" + it.getZipEntryName()
-                        + "' from the specified ZIP archive.");
-            }
-
-            while (it.hasNext()) {
-                row++;
-                DataRow next = it.next();
-                String message =
-                        "Caching row #" + row + " (\"" + next.getKey() + "\")";
-                exec.setMessage(message);
-                exec.checkCanceled();
-                c.addRowToTable(next);
-            }
-
-            if (it.zippedSourceHasMoreEntries()) {
-                // after reading til the end of the file this returns a valid
-                // result
-                setWarningMessage("Source is a ZIP archive with multiple "
-                        + "entries. Only reading first entry!");
-            }
-            c.close();
-        } catch (DuplicateKeyException dke) {
-            String msg = dke.getMessage();
-            if (msg == null) {
-                msg = "Duplicate row IDs";
-            }
-            msg += ". Consider making IDs unique in the advanced settings.";
-            DuplicateKeyException newDKE = new DuplicateKeyException(msg);
-            newDKE.initCause(dke);
-            throw newDKE;
-        }
-
-        // user settings allow for truncating the table
-        if (it.iteratorEndedEarly()) {
-            setWarningMessage("Data was truncated due to user settings.");
-        }
-        BufferedDataTable out = c.getTable();
-
-        // closes all sources.
-        fTable.dispose();
-
-        return new BufferedDataTable[]{out};
+        Assert.isTrue(false); // not called.
+        return null;
     }
 
     /**
