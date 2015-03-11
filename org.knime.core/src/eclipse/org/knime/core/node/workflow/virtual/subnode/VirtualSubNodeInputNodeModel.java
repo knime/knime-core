@@ -112,12 +112,12 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
                 assert inputs.length == 0;
-                PortObject[] dataFromParent = m_subNodeContainer.fetchInputDataFromParent();
+                PortObject[] dataFromParent = ArrayUtils.remove(m_subNodeContainer.fetchInputDataFromParent(), 0);
                 for (int i = 0; i < outputs.length; i++) {
                     if (BufferedDataTable.TYPE.equals(getOutPortType(i))) {
                         // stream port content if it's data
                         BufferedDataTable bdt = (BufferedDataTable)(dataFromParent[i]);
-                        RowOutput rowOutput = (RowOutput)outputs[0];
+                        RowOutput rowOutput = (RowOutput)outputs[i];
                         for (DataRow dr : bdt) {
                             rowOutput.push(dr);
                         }
