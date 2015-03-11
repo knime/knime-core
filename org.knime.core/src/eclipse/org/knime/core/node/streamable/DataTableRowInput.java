@@ -52,6 +52,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.node.BufferedDataTable;
 
 /** Default implementation of a {@link RowInput}. It reads data
  * from a {@link DataTable}.
@@ -63,12 +64,18 @@ public final class DataTableRowInput extends RowInput {
 
     private final DataTableSpec m_tableSpec;
     private final RowIterator m_iterator;
+    private final long m_rowCount;
 
     /** Initialize with table.
      * @param The table to read from.  */
     public DataTableRowInput(final DataTable table) {
         m_tableSpec = table.getDataTableSpec();
         m_iterator = table.iterator();
+        if (table instanceof BufferedDataTable) {
+            m_rowCount = ((BufferedDataTable)table).getRowCount();
+        } else {
+            m_rowCount = -1;
+        }
     }
 
     /** {@inheritDoc} */
@@ -92,6 +99,16 @@ public final class DataTableRowInput extends RowInput {
         if (m_iterator instanceof CloseableRowIterator) {
             ((CloseableRowIterator)m_iterator).close();
         }
+    }
+
+    /**
+     * Returns the row count if the table passed during construction was a {@link BufferedDataTable}. Otherwise -1 is
+     * returned.
+     *
+     * @return the number of rows in the table - or -1 if the underlying table is not a buffered data table.
+     */
+    public long getRowCount() {
+        return m_rowCount;
     }
 
 }
