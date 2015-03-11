@@ -52,7 +52,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Vector;
 
-import org.eclipse.core.runtime.Assert;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -66,6 +65,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.PortInput;
 import org.knime.core.node.streamable.PortOutput;
@@ -240,10 +240,11 @@ public class FileReaderNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            InvalidSettingsException {
-        Assert.isTrue(false); // not called.
-        return null;
+            final ExecutionContext exec) throws Exception {
+        DataTableSpec spec = m_frSettings.createDataTableSpec(false);
+        BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(exec.createDataContainer(spec));
+        createStreamableOperator(null, null).runFinal(new PortInput[0], new PortOutput[] {output}, exec);
+        return new BufferedDataTable[] {output.getDataTable()};
     }
 
     /**

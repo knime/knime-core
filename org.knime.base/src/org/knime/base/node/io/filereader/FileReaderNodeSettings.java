@@ -379,6 +379,9 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      *
      */
     public DataTableSpec createDataTableSpec() {
+        return createDataTableSpec(true);
+    }
+    public DataTableSpec createDataTableSpec(final boolean checkFile) {
 
         // first check if the settings are in a state we can create a valid
         // table spec for.
