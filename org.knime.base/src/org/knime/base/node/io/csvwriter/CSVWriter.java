@@ -58,9 +58,10 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.RowInput;
 
 /**
  * Class to write a {@link org.knime.core.data.DataTable} to an output stream.
@@ -151,8 +152,26 @@ public class CSVWriter extends BufferedWriter {
      */
     public void write(final DataTable table, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
+        try {
+            write(new DataTableRowInput(table), exec);
+        } catch (InterruptedException e) {
+            CanceledExecutionException cce = new CanceledExecutionException();
+            cce.initCause(e);
+            throw cce;
+        }
+    }
+    /**
+     * Same as above just usable with a streaming node implementation.
+     * @param input
+     * @param exec
+     * @throws IOException
+     * @throws CanceledExecutionException
+     * @throws InterruptedException
+     */
+    public void write(final RowInput input, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException, InterruptedException {
 
-        DataTableSpec inSpec = table.getDataTableSpec();
+        DataTableSpec inSpec = input.getDataTableSpec();
         final int colCount = inSpec.getNumColumns();
         boolean first; // if first entry in the row (skip separator then)
         m_lastWarning = null; // reset any previous warning
@@ -179,12 +198,13 @@ public class CSVWriter extends BufferedWriter {
 
         // write each row of the data
         int i = 0;
-        int rowCnt = -1;
-        if (table instanceof BufferedDataTable) {
-            rowCnt = ((BufferedDataTable)table).getRowCount();
+        long rowCnt = -1;
+        if (input instanceof DataTableRowInput) {
+            rowCnt = ((DataTableRowInput)input).getRowCount();
         }
 
-        for (DataRow row : table) {
+        DataRow row;
+        while ((row = input.poll()) != null) {
 
             String rowKey = row.getKey().toString();
             String msg;
