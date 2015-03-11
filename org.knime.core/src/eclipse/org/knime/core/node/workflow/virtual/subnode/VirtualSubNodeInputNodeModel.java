@@ -107,31 +107,24 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
 
     @Override
     public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
-            final PortObjectSpec[] inSpecs)
-    throws InvalidSettingsException {
-
+            final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         return new StreamableOperator() {
-
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
                 assert inputs.length == 0;
                 PortObject[] dataFromParent = m_subNodeContainer.fetchInputDataFromParent();
-                int next = 1;
-                if (dataFromParent[next] instanceof BufferedDataTable) {
-                    // stream out first port content if it's data
-                    BufferedDataTable bdt = (BufferedDataTable)(dataFromParent[next]);
-                    RowOutput rowOutput = (RowOutput)outputs[0];
-                    for (DataRow dr : bdt) {
-                        rowOutput.push(dr);
+                for (int i = 0; i < outputs.length; i++) {
+                    if (BufferedDataTable.TYPE.equals(getOutPortType(i))) {
+                        // stream port content if it's data
+                        BufferedDataTable bdt = (BufferedDataTable)(dataFromParent[i]);
+                        RowOutput rowOutput = (RowOutput)outputs[0];
+                        for (DataRow dr : bdt) {
+                            rowOutput.push(dr);
+                        }
+                        rowOutput.close();
+                    } else {
+                        ((PortObjectOutput)outputs[i]).setPortObject(dataFromParent[i]);
                     }
-                    rowOutput.close();
-                    next = 1;
-
-                }
-                // forward content of remaining ports:
-                while (next < inputs.length) {
-                    ((PortObjectOutput)outputs[next]).setPortObject(dataFromParent[next]);
-                    next++;
                 }
             }
         };
