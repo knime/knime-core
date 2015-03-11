@@ -90,7 +90,7 @@ public class ExecuteAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Execute";
+        return "Execute\t" + getHotkey("knime.commands.execute");
     }
 
     /**

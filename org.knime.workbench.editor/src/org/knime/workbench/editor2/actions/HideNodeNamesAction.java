@@ -82,7 +82,7 @@ public class HideNodeNamesAction extends AbstractClipboardAction {
      */
     @Override
     public String getText() {
-        return "Hide Node Names";
+        return "Hide Node Names\t" + getHotkey("knime.commands.hideNodeNames");
     }
 
     /**

@@ -92,7 +92,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Execute and Open Views";
+        return "Execute and Open Views\t" + getHotkey("knime.commands.executeAndOpenView");
     }
 
     /**

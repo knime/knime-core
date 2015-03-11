@@ -89,7 +89,7 @@ public class CancelAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Cancel";
+        return "Cancel\t" + getHotkey("knime.commands.cancel");
     }
 
     /**

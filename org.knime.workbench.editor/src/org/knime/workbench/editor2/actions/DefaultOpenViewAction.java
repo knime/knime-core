@@ -95,7 +95,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Open first view";
+        return "Open first view\t" + getHotkey("knime.commands.openView");
     }
 
     /**

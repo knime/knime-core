@@ -83,7 +83,7 @@ public class MoveNodeDownAction extends MoveNodeAbstractAction {
      */
     @Override
     public String getText() {
-        return "Move node down";
+        return "Move node down\t" + getHotkey("knime.commands.editor.moveNodesDown");
     }
 
     /**

@@ -84,7 +84,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Execute All";
+        return "Execute All\t" + getHotkey("knime.commands.executeall");
     }
 
     /**

@@ -95,7 +95,7 @@ public class ResetAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Reset";
+        return "Reset\t" + getHotkey("knime.commands.reset");
     }
 
     /**
@@ -192,4 +192,5 @@ public class ResetAction extends AbstractNodeAction {
         }
         return false;
     }
+
 }
