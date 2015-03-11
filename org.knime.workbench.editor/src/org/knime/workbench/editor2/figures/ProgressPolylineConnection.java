@@ -45,6 +45,8 @@
  */
 package org.knime.workbench.editor2.figures;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.eclipse.draw2d.ConnectionLocator;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
@@ -52,7 +54,6 @@ import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.ConnectionProgress;
 
 /**
@@ -99,6 +100,9 @@ public final class ProgressPolylineConnection extends PolylineConnection {
         super.outlineShape(g);
     }
 
+    /** Next to process update event or null ... used to avoid intermediate updates. */
+    private final AtomicReference<ConnectionProgress> m_atomicConnectionProgressReference = new AtomicReference<>();
+
     /**
      * Update the progress. Calling this method serves two purposes. First, it
      * updates the label. Second it updates the animation.
@@ -106,21 +110,21 @@ public final class ProgressPolylineConnection extends PolylineConnection {
      * @param e the connection progress
      */
     public void progressChanged(final ConnectionProgress e) {
-        // not being called from the ui thread, need to invoke in the ui
-        Display workbenchDisplay = PlatformUI.getWorkbench().getDisplay();
-        if (Display.getCurrent() != workbenchDisplay) {
-            workbenchDisplay.syncExec(new Runnable() {
+        if (m_atomicConnectionProgressReference.getAndSet(e) == null) {
+            Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    progressChanged(e);
+                    if (!Display.getDefault().isDisposed()) {
+                        progressChangedInternal(m_atomicConnectionProgressReference.getAndSet(null));
+                    }
                 }
             });
-            return;
         }
+    }
 
+    private void progressChangedInternal(final ConnectionProgress e) {
         if (e.inProgress()) {
-            // currently in-progress--advance to the next position in the
-            // animation
+            // currently in-progress--advance to the next position in the animation
             step();
         } else {
             // not in-progress--set to solid
