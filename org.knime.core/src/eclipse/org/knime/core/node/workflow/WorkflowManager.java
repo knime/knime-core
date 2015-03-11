@@ -2132,7 +2132,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // (reset) and configure yellow AND red nodes - it could be
                     // that the reason for the red state were the variables!
                     if (nc.isResetable()) {
-                        ((SingleNodeContainer)nc).reset();
+                        invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
                     }
                     if (nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)
                             || nc.getInternalState().equals(InternalNodeContainerState.IDLE)) {
@@ -2183,7 +2183,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = m_workflow.getNode(id);
                 if (nc.isResetable()) {
                     if (nc instanceof SingleNodeContainer) {
-                        ((SingleNodeContainer)nc).reset();
+                        invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
                     } else {
                         assert nc instanceof WorkflowManager;
                         ((WorkflowManager)nc).resetAllNodesInWFM();
@@ -2226,7 +2226,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (nc.isResetable()) {
                     if (nc instanceof SingleNodeContainer) {
                         // reset node
-                        ((SingleNodeContainer)nc).reset();
+                        invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
                     } else {
                         assert nc instanceof WorkflowManager;
                         ((WorkflowManager)nc).resetNodesInWFMConnectedToInPorts(nai.getInports());
@@ -2788,6 +2788,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert !nc.isLocalWFM() : "No execution of local meta nodes";
         synchronized (m_workflowMutex) {
             LOGGER.debug(nc.getNameWithID() + " doBeforeExecution");
+            nc.getNodeTimer().startExec();
             // allow NNC to update states etc
             if (nc instanceof NativeNodeContainer) {
                 NativeNodeContainer nnc = (NativeNodeContainer)nc;
@@ -2846,6 +2847,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert !nc.getID().equals(this.getID());
         boolean success = status.isSuccess();
         synchronized (m_workflowMutex) {
+            nc.getNodeTimer().endExec(success);
             String st = success ? " - success" : " - failure";
             LOGGER.debug(nc.getNameWithID() + " doAfterExecute" + st);
             if (!success) {
@@ -3059,7 +3061,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     continue;
                 }
                 if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).reset();
+                    invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
                 } else {
                     assert nc instanceof WorkflowManager;
                     // only reset the nodes connected to relevant ports.
@@ -4337,28 +4339,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    // TODO: This function needs to go!
-    // replaced by invokeResetOnSNC and invokeResetOnPortSuccessors...
-    @Deprecated
-    private void invokeResetOnNode(final NodeID nodeID) {
-        assert Thread.holdsLock(m_workflowMutex);
-        NodeContainer nc = getNodeContainer(nodeID);
-        if (nc.getInternalState().isExecuted()) {
-            if (nc instanceof SingleNodeContainer) {
-                invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
-            } else {
-                // TODO - this case should never happen but can not yet be
-                // guaranteed since Bernd's persistor grap calls it left and right.
-                assert nc instanceof WorkflowManager;
-                ((WorkflowManager)nc).resetAllNodesInWFM();
-            }
-        }
-    }
-
     /** Reset node and notify listeners. */
     private void invokeResetOnSingleNodeContainer(final SingleNodeContainer snc) {
         assert Thread.holdsLock(m_workflowMutex);
-        snc.reset();
+        snc.rawReset();
+        snc.getNodeTimer().resetNode();
         if (snc.isModelCompatibleTo(LoopStartNode.class)) {
             ((NativeNodeContainer)snc).getNode().setLoopEndNode(null);
         }
@@ -5679,7 +5664,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // (ought to be red with this type of error!)
                     if (!snc.getInternalState().equals(InternalNodeContainerState.IDLE)) {
                         // if not already idle make sure it is!
-                        snc.reset();
+                        invokeResetOnSingleNodeContainer(snc);
                     }
                     // report the problem
                     snc.setNodeMessage(new NodeMessage(Type.ERROR,
@@ -8017,7 +8002,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 ((SingleNodeContainer)nc).cancelExecution();
                             case EXECUTED:
                                 resetSuccessors(nc.getID());
-                                invokeResetOnNode(nc.getID());
+                                if (nc.getInternalState().isExecuted()) {
+                                    if (nc instanceof SingleNodeContainer) {
+                                        invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
+                                    } else {
+                                        assert nc instanceof WorkflowManager;
+                                        ((WorkflowManager)nc).resetAllNodesInWFM();
+                                    }
+                                }
                                 break;
                             case EXECUTING:
                             case EXECUTINGREMOTELY:
@@ -8045,7 +8037,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (!hasData && nc.getInternalState().equals(InternalNodeContainerState.EXECUTED)) {
                         wasClean = false;
                         resetSuccessors(nc.getID());
-                        invokeResetOnNode(nc.getID());
+                        if (nc.getInternalState().isExecuted()) {
+                            if (nc instanceof SingleNodeContainer) {
+                                invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
+                            } else {
+                                assert nc instanceof WorkflowManager;
+                                ((WorkflowManager)nc).resetAllNodesInWFM();
+                            }
+                        }
                     }
                 }
             }

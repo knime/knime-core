@@ -165,6 +165,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     private final NodeAnnotation m_annotation;
 
+    private NodeTimer m_nodeTimer = new NodeTimer();
+
     /**
      * semaphore to make sure never try to work on inconsistent internal node
      * states. This semaphore will be used by a node alone to synchronize
@@ -1295,6 +1297,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
                     m_customDescription));
         }
+    }
+
+    /**
+     * @return what you think this returns, Bernd.
+     */
+    public NodeTimer getNodeTimer() {
+        return m_nodeTimer;
     }
 
     /** Is this node a to be locally executed workflow. In contrast to remotely

@@ -382,7 +382,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
     /** Reset underlying node and update state accordingly.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    void reset() {
+    void rawReset() {
         // TODO move copies into Native/SubNodecontainer?
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
