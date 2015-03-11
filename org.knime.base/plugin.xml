@@ -1749,6 +1749,12 @@
             factory-class="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory"
             id="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory">
       </node>
+      <node
+            category-path="/flowcontrol/loopsupport"
+            expert-flag="false"
+            factory-class="org.knime.base.node.flowcontrol.timerinfo.TimerinfoNodeFactory"
+            id="org.knime.base.node.flowcontrol.timerinfo.TimerinfoNodeFactory">
+      </node>
    </extension>
    
       
