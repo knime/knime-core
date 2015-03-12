@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow;
 
+import com.google.common.util.concurrent.AtomicLongMap;
+
 /** Holds execution timing information about a specific node.
  *
  * @author Michael Berthold
@@ -60,6 +62,16 @@ public class NodeTimer {
     private long m_executionDurationOverall;
     private int m_numberOfExecutionsSinceReset;
     private int m_numberOfExecutionsOverall;
+
+    public class GlobalNodeTimer {
+        private AtomicLongMap m_exectimes;
+        private AtomicLongMap m_execcounts;
+        void addExecutionTime(final String cname, final long exectime) {
+            m_exectimes.addAndGet(cname, exectime);
+            m_execcounts.incrementAndGet(cname);
+        }
+    }
+    public static GlobalNodeTimer m_globalTimer;
 
     NodeTimer() {
         initialize();
