@@ -6,11 +6,7 @@
     <shortDescription>Collects all timer information from nodes in this workflow.</shortDescription>
     
     <fullDescription>
-        <intro>
-            This node halts execution when the incoming data table fulfills
-            a user specified condition (empty, inactive branch, variable has
-            specified value...).
-        </intro>
+        <intro>This node reports individual and aggreate timing/execution information for all nodes of the workflow (at the node's level).</intro>
     </fullDescription>
     
     <ports>
