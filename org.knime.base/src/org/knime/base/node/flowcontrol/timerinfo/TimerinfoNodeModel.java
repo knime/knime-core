@@ -114,8 +114,9 @@ public class TimerinfoNodeModel extends NodeModel implements InactiveBranchConsu
             new DataColumnSpecCreator("Name", StringCell.TYPE).createSpec(),
             new DataColumnSpecCreator("Execution Time", LongCell.TYPE).createSpec(),
             new DataColumnSpecCreator("Execution Time since last Reset", LongCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Nr of Executions", IntCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Execution Time since Start", LongCell.TYPE).createSpec(),
             new DataColumnSpecCreator("Nr of Executions since last Reset", IntCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Nr of Executions since Start", IntCell.TYPE).createSpec(),
             new DataColumnSpecCreator("NodeID", StringCell.TYPE).createSpec(),
             new DataColumnSpecCreator("Classname", StringCell.TYPE).createSpec()
         };
@@ -138,8 +139,9 @@ public class TimerinfoNodeModel extends NodeModel implements InactiveBranchConsu
                 nt.getLastExecutionDuration() >= 0
                     ? new LongCell(nt.getLastExecutionDuration()) : DataType.getMissingCell(),
                 new LongCell(nt.getExecutionDurationSinceReset()),
-                new IntCell(nt.getNrExecsSinceStart()),
+                new LongCell(nt.getExecutionDurationSinceStart()),
                 new IntCell(nt.getNrExecsSinceReset()),
+                new IntCell(nt.getNrExecsSinceStart()),
                 new StringCell(nc.getID().toString()),
                 new StringCell(nc instanceof NativeNodeContainer
                     ? ((NativeNodeContainer)nc).getNodeModel().getClass().getName() : "n/a")
