@@ -117,7 +117,8 @@ public class GlobalTimerinfoNodeModel extends NodeModel implements InactiveBranc
     private DataTableSpec createSpecOut1() {
         DataTableSpecCreator dtsc = new DataTableSpecCreator();
         DataColumnSpec[] colSpecs = new DataColumnSpec[] {
-            new DataColumnSpecCreator("Name", StringCell.TYPE).createSpec()
+            new DataColumnSpecCreator("Feature Name", StringCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Version", StringCell.TYPE).createSpec()
         };
         dtsc.addColumns(colSpecs);
         return dtsc.createSpec();
@@ -145,10 +146,10 @@ public class GlobalTimerinfoNodeModel extends NodeModel implements InactiveBranc
         BufferedDataContainer result1 = exec.createDataContainer(createSpecOut1());
         for (IBundleGroupProvider provider : Platform.getBundleGroupProviders()) {
             for (IBundleGroup feature : provider.getBundleGroups()) {
-               final String featureName = feature.getIdentifier();
                DataRow row = new DefaultRow(
                    new RowKey("Row " + rowcount++),
-                   new StringCell(featureName)
+                   new StringCell(feature.getIdentifier()),
+                   new StringCell(feature.getVersion())
                );
                result1.addRowToTable(row);
             }

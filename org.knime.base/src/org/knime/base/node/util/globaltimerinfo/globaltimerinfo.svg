@@ -125,10 +125,10 @@
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1210"
+     inkscape:window-width="1362"
      inkscape:window-height="761"
-     inkscape:window-x="26"
-     inkscape:window-y="26"
+     inkscape:window-x="155"
+     inkscape:window-y="40"
      inkscape:window-maximized="0" />
   <metadata
      id="metadata7">
@@ -148,7 +148,7 @@
      id="layer1"
      transform="translate(0,-1020.3622)">
     <ellipse
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.74873877;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="fill:#ffffff;fill-rule:evenodd;stroke:#000000;stroke-width:2.74873877;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1"
        id="path3355"
        cx="11.581921"
        cy="1031.7238"
@@ -174,7 +174,9 @@
        width="17.059336"
        height="15.056448"
        x="13.371485"
-       y="1035.9515" />
+       y="1035.9515"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
     <path
        style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.90582335px;stroke-linecap:round;stroke-linejoin:miter;stroke-opacity:1"
        d="m 16.62466,1040.0294 c 10.07691,-0.078 10.07691,-0.078 10.07691,-0.078 l 0,0 0.07934,0"
