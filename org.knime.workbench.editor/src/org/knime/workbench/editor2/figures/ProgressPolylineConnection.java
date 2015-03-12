@@ -72,7 +72,7 @@ public final class ProgressPolylineConnection extends PolylineConnection {
             private final AtomicInteger m_threadCreateCounter = new AtomicInteger();
             @Override
             public Thread newThread(final Runnable r) {
-                return new Thread("Delayed Progress Updater-" + m_threadCreateCounter.getAndIncrement());
+                return new Thread(r, "Delayed Progress Updater-" + m_threadCreateCounter.getAndIncrement());
             }
         });
 
