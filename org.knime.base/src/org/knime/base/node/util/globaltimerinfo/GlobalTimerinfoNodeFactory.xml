@@ -10,6 +10,7 @@
     </fullDescription>
     
     <ports>
-        <outPort index="0" name="Output table">The collected timer information.</outPort>
+        <outPort index="0" name="Used Nodes">The collected timer information.</outPort>
+        <outPort index="1" name="Installed Features">A list of all installed features.</outPort>
     </ports>
 </knimeNode>
