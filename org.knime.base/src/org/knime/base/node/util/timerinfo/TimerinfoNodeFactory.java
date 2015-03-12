@@ -45,7 +45,7 @@
  * History
  *   Sept 30, 2010 (mb): created
  */
-package org.knime.base.node.misc.timerinfo;
+package org.knime.base.node.util.timerinfo;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

@@ -1752,8 +1752,8 @@
       <node
             category-path="/misc"
             expert-flag="false"
-            factory-class="org.knime.base.node.misc.timerinfo.TimerinfoNodeFactory"
-            id="org.knime.base.node.misc.timerinfo.TimerinfoNodeFactory">
+            factory-class="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory"
+            id="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory">
       </node>
    </extension>
    
