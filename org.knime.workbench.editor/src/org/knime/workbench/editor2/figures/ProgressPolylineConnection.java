@@ -45,6 +45,10 @@
  */
 package org.knime.workbench.editor2.figures;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.draw2d.ConnectionLocator;
@@ -61,6 +65,16 @@ import org.knime.core.node.workflow.ConnectionProgress;
  * produce a flowing effect.
  */
 public final class ProgressPolylineConnection extends PolylineConnection {
+
+    /** Service to make the marching ants go slow ... not updating with each event. */
+    private static ScheduledExecutorService UI_PROGESS_UPDATE_SERVICE = Executors.newSingleThreadScheduledExecutor(
+        new ThreadFactory() {
+            private final AtomicInteger m_threadCreateCounter = new AtomicInteger();
+            @Override
+            public Thread newThread(final Runnable r) {
+                return new Thread("Delayed Progress Updater-" + m_threadCreateCounter.getAndIncrement());
+            }
+        });
 
     /** display label for showing connection statistics. */
     private final Label m_label;
