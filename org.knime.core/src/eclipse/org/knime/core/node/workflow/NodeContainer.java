@@ -1297,7 +1297,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     }
 
     /**
-     * @return what you think this returns, Bernd.
+     * @return an object holding information about execution frequency and times.
      */
     public NodeTimer getNodeTimer() {
         return m_nodeTimer;
