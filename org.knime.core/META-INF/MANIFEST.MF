@@ -98,7 +98,8 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.10.2,4.0.0)";visibility:=ree
  com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.4.3,3.0.0)",
  com.fasterxml.jackson.core.jackson-core;bundle-version="[2.4.3,3.0.0)",
  com.sun.jna;bundle-version="[3.5.2,4.0.0)",
- org.glassfish.javax.json;bundle-version="[1.0.4,2.0.0)";visibility:=reexport
+ org.glassfish.javax.json;bundle-version="[1.0.4,2.0.0)";visibility:=reexport,
+ com.google.guava;bundle-version="[16.0.0,17.0.0)"
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy
