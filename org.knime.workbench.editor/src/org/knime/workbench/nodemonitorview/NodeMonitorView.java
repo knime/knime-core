@@ -500,21 +500,21 @@ public class NodeMonitorView extends ViewPart
         item.setText(1, nt.getLastExecutionDuration() < 0 ? "n/a" : "" + nt.getLastExecutionDuration());
         if (nt.getLastExecutionDuration() < nt.getExecutionDurationSinceReset()) {
             item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "Total Exec Time since Reset");
+            item.setText(0, "Total Execution Time since Reset");
             item.setText(1, "" + nt.getExecutionDurationSinceReset());
         }
         if (nt.getLastExecutionDuration() < nt.getExecutionDurationSinceStart()) {
             item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "Total Exec Time");
+            item.setText(0, "Total Execution Time");
             item.setText(1, "" + nt.getExecutionDurationSinceStart());
         }
         if (nt.getNrExecsSinceReset() != 1) {
             item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, "#executions since reset");
+            item.setText(0, "#Executions since Reset");
             item.setText(1, "" + nt.getNrExecsSinceReset());
         }
         item = new TableItem(m_table, SWT.NONE);
-        item.setText(0, "#executions");
+        item.setText(0, "Total #Executions");
         item.setText(1, "" + nt.getNrExecsSinceStart());
         // finalize table
         for (int i = 0; i < m_table.getColumnCount(); i++) {
