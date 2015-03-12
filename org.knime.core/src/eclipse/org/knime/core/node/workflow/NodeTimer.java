@@ -48,7 +48,23 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
+import javax.json.JsonWriter;
+import javax.json.stream.JsonGenerator;
+
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 
 import com.google.common.util.concurrent.AtomicLongMap;
 
@@ -67,11 +83,33 @@ public class NodeTimer {
     private int m_numberOfExecutionsOverall;
 
     public static class GlobalNodeTimer {
+        private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalNodeTimer.class);
         private AtomicLongMap m_exectimes = AtomicLongMap.create();
         private AtomicLongMap m_execcounts = AtomicLongMap.create();
+        private long m_startTime;
+        private long m_avgUpTime;
+        private long m_currentInstanceLaunchTime;
+        private int m_launches;
+        private final String FILENAME = "nodeusage.log";
+        GlobalNodeTimer() {
+            m_currentInstanceLaunchTime = System.currentTimeMillis();
+            readFromFile();
+            new Thread() {
+                @Override
+                public void run() {
+                    while (true) {
+                    try {
+                        Thread.sleep(1*60*1000); // 1mins
+                    } catch (InterruptedException ie) {}
+                    writeToFile(false);
+                    }
+                }
+            }.start();
+        }
         void addExecutionTime(final String cname, final long exectime) {
             m_exectimes.addAndGet(cname, exectime);
             m_execcounts.incrementAndGet(cname);
+            m_startTime = System.currentTimeMillis();
         }
         public Set<String> getNodeNames() {
             return m_exectimes.asMap().keySet();
@@ -81,6 +119,77 @@ public class NodeTimer {
         }
         public long getExecutionTime(final String cname) {
             return m_exectimes.get(cname);
+        }
+        public long getAvgUpTime() {
+            return (m_avgUpTime * m_launches + (System.currentTimeMillis() - m_currentInstanceLaunchTime)) / (m_launches + 1);
+        }
+        public int getNrLaunches() {
+            return m_launches + 1;
+        }
+        public void writeToFile(final boolean properShutdown) {
+            try {
+                JsonObjectBuilder job = Json.createObjectBuilder();
+                for (String cname : getNodeNames()) {
+                    JsonObjectBuilder job2 = Json.createObjectBuilder();
+                    job2.add("count", getExecutionCount(cname));
+                    job2.add("time", getExecutionTime(cname));
+                    job.add(cname, job2);
+                }
+                job.add("_uptime", getAvgUpTime());
+                job.add("_launches", getNrLaunches());
+                job.add("_properlyShutDown", properShutdown);
+                JsonObject jo = job.build();
+                File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
+                FileOutputStream fos = new FileOutputStream(propfile);
+//                JsonWriter jw = Json.createWriter(fos);
+                Map<String, Boolean> cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
+                JsonWriter jw = Json.createWriterFactory(cfg).createWriter(fos);
+                jw.write(jo);
+                jw.close();
+                LOGGER.debug("Successfully wrote node usage stats to file: " + propfile.getCanonicalPath());
+            } catch (IOException ioe) {
+                LOGGER.debug("Failed to write node usage stats to file.");
+                // TODO: report or just skip?
+            }
+        }
+        public void readFromFile() {
+            try {
+                File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
+                FileInputStream fis = new FileInputStream(propfile);
+                JsonReader jr = Json.createReader(fis);
+                JsonObject jo = jr.readObject();
+                jr.close();
+                for (String key : jo.keySet()) {
+                    if (key.charAt(0) != '_') {
+                        // key represents name of NodeModel
+                        JsonObject job2 = jo.getJsonObject(key);
+                        Long count = job2.getJsonNumber("count").longValue();
+                        Long time = job2.getJsonNumber("time").longValue();
+                        m_execcounts.put(key, count);
+                        m_exectimes.put(key, time);
+                    } else {
+                        // other entry
+                        switch (key) {
+                            case "_uptime":
+                                m_avgUpTime = jo.getJsonNumber(key).longValue();
+                                break;
+                            case "_launches":
+                                m_launches = jo.getInt(key);
+                                break;
+                            case "_properlyShutDown":
+                                if (!jo.getBoolean(key)) {
+                                    // TODO: what do we do then? - include it in as a flag to be sent?
+                                }
+                            default:
+                                // TODO: complain?
+                        }
+                    }
+                }
+                LOGGER.debug("Successfully read node usage stats from file: " + propfile.getCanonicalPath());
+            } catch (IOException ioe) {
+                // TODO: should we do more than just log this?
+                LOGGER.debug("Failed reading node usage file");
+            }
         }
     }
     public static final GlobalNodeTimer m_globalTimer = new GlobalNodeTimer();
