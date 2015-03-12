@@ -48,9 +48,7 @@
  */
 package org.knime.core.node.workflow;
 
-/** Holds execution timing information about a specific node. The information
- * will be updated by the specific executor and the information stored therefore
- * depends heavily on the execution mechanism.
+/** Holds execution timing information about a specific node.
  *
  * @author Michael Berthold
  */
@@ -59,6 +57,7 @@ public class NodeTimer {
     private long m_startTime;
     private long m_lastExecutionDuration;
     private long m_executionDurationSinceReset;
+    private long m_executionDurationOverall;
     private int m_numberOfExecutionsSinceReset;
     private int m_numberOfExecutionsOverall;
 
@@ -72,6 +71,10 @@ public class NodeTimer {
 
     public long getExecutionDurationSinceReset() {
         return m_executionDurationSinceReset;
+    }
+
+    public long getExecutionDurationSinceStart() {
+        return m_executionDurationOverall;
     }
 
     public int getNrExecsSinceReset() {
@@ -88,6 +91,7 @@ public class NodeTimer {
         m_executionDurationSinceReset = 0;
         m_numberOfExecutionsSinceReset = 0;
         m_numberOfExecutionsOverall = 0;
+        m_executionDurationOverall = 0;
     }
 
     public void resetNode() {
@@ -105,6 +109,7 @@ public class NodeTimer {
             // only do this if startExec() was called before (which it should...)
             m_lastExecutionDuration = currentTime - m_startTime;
             m_executionDurationSinceReset += m_lastExecutionDuration;
+            m_executionDurationOverall += m_lastExecutionDuration;
             m_numberOfExecutionsOverall++;
             m_numberOfExecutionsSinceReset++;
         }
