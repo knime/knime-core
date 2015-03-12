@@ -15,7 +15,7 @@
    version="1.1"
    inkscape:version="0.91 r13725"
    sodipodi:docname="timerinfo.svg"
-   inkscape:export-filename="C:\Users\adae\Desktop\breakpoint.png"
+   inkscape:export-filename="C:\Users\Berthold\Desktop\timerinfo.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <defs
@@ -120,7 +120,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="11.483414"
-     inkscape:cx="7.4115538"
+     inkscape:cx="9.7478412"
      inkscape:cy="19.347095"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -138,7 +138,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
