@@ -533,16 +533,10 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** {@inheritDoc} */
     @Override
     public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects) {
-        IFileStoreHandler fsh = m_node.getFileStoreHandler();
-
-        // this call requires the FSH to be set on the node (ideally would take
-        // it as an argument but createExecutionContext became API unfortunately)
         ExecutionContext ec = createExecutionContext();
-        if (fsh instanceof IWriteFileStoreHandler)  {
-            ((IWriteFileStoreHandler)fsh).open(ec);
-        }
-        ExecutionEnvironment ev = getExecutionEnvironment();
+        m_node.openFileStoreHandler(ec);
 
+        ExecutionEnvironment ev = getExecutionEnvironment();
         boolean success;
         try {
             ec.checkCanceled();

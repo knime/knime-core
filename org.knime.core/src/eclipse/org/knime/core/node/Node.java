@@ -73,6 +73,7 @@ import org.knime.core.data.container.DataContainerException;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.dialog.ValueControlledDialogPane;
@@ -97,6 +98,7 @@ import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.wizard.WizardNode;
@@ -1227,6 +1229,18 @@ public final class Node implements NodeModelWarningListener {
      * @noreference This method is not intended to be referenced by clients.  */
     public IFileStoreHandler getFileStoreHandler() {
         return m_fileStoreHandler;
+    }
+
+    /** Called immediately before execution to open the file store handler.
+     * @param ec The (freshly created) file store handler
+     */
+    public void openFileStoreHandler(final ExecutionContext ec) {
+        // this call requires the FSH to be set on the node (ideally NativeNodeContainer.createExecutionContext
+        // would take a FSH as argument but it became API unfortunately)
+        CheckUtils.checkState(m_fileStoreHandler != null, "No file store handler set on node");
+        if (m_fileStoreHandler instanceof IWriteFileStoreHandler)  {
+            ((IWriteFileStoreHandler)m_fileStoreHandler).open(ec);
+        }
     }
 
     /** Copies the PortObject so that the copy can be given to the node model
