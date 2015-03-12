@@ -50,15 +50,16 @@ package org.knime.base.node.util.globaltimerinfo;
 import java.io.File;
 import java.io.IOException;
 
+import org.eclipse.core.runtime.IBundleGroup;
+import org.eclipse.core.runtime.IBundleGroupProvider;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -74,17 +75,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeTimer;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * A simple node collecting timer information from the current workflow and
- * providing it as output table.
+ * A simple node reporting global node timing and execution information for the entire
+ * KNIME installation during it's life span.
  *
  * @author Michael Berthold, University of Konstanz
  */
@@ -93,11 +89,10 @@ public class GlobalTimerinfoNodeModel extends NodeModel implements InactiveBranc
     private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalTimerinfoNodeModel.class);
 
     /**
-     * One optional variable input, one data output.
+     * No input, two data outputs.
      */
     protected GlobalTimerinfoNodeModel() {
-        super(new PortType[] {FlowVariablePortObject.TYPE_OPTIONAL},
-              new PortType[] {BufferedDataTable.TYPE});
+        super(new PortType[] {}, new PortType[] {BufferedDataTable.TYPE, BufferedDataTable.TYPE});
     }
 
     /**
@@ -105,20 +100,24 @@ public class GlobalTimerinfoNodeModel extends NodeModel implements InactiveBranc
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[] { createSpec() };
+        return new PortObjectSpec[] { createSpecOut0(), createSpecOut1() };
     }
 
-    private DataTableSpec createSpec() {
+    private DataTableSpec createSpecOut0() {
         DataTableSpecCreator dtsc = new DataTableSpecCreator();
         DataColumnSpec[] colSpecs = new DataColumnSpec[] {
             new DataColumnSpecCreator("Name", StringCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Execution Time", LongCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Execution Time since last Reset", LongCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Execution Time since Start", LongCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Nr of Executions since last Reset", IntCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Nr of Executions since Start", IntCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("NodeID", StringCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Classname", StringCell.TYPE).createSpec()
+            new DataColumnSpecCreator("Aggregate Execution Time", LongCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("Overall Nr of Executions", LongCell.TYPE).createSpec(),
+        };
+        dtsc.addColumns(colSpecs);
+        return dtsc.createSpec();
+    }
+
+    private DataTableSpec createSpecOut1() {
+        DataTableSpecCreator dtsc = new DataTableSpecCreator();
+        DataColumnSpec[] colSpecs = new DataColumnSpec[] {
+            new DataColumnSpecCreator("Name", StringCell.TYPE).createSpec()
         };
         dtsc.addColumns(colSpecs);
         return dtsc.createSpec();
@@ -129,27 +128,33 @@ public class GlobalTimerinfoNodeModel extends NodeModel implements InactiveBranc
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
-        BufferedDataContainer result = exec.createDataContainer(createSpec());
-        WorkflowManager wfm = NodeContext.getContext().getWorkflowManager();
-        for (NodeContainer nc : wfm.getNodeContainers()) {
-            NodeTimer nt = nc.getNodeTimer();
+        BufferedDataContainer result0 = exec.createDataContainer(createSpecOut0());
+        NodeTimer.GlobalNodeTimer gnt = NodeTimer.m_globalTimer;
+        assert gnt != null;
+        int rowcount = 0;
+        for (String cname : gnt.getNodeNames()) {
             DataRow row = new DefaultRow(
-                new RowKey("Node " + nc.getID().getIndex()),
-                new StringCell(nc.getName()),
-                nt.getLastExecutionDuration() >= 0
-                    ? new LongCell(nt.getLastExecutionDuration()) : DataType.getMissingCell(),
-                new LongCell(nt.getExecutionDurationSinceReset()),
-                new LongCell(nt.getExecutionDurationSinceStart()),
-                new IntCell(nt.getNrExecsSinceReset()),
-                new IntCell(nt.getNrExecsSinceStart()),
-                new StringCell(nc.getID().toString()),
-                new StringCell(nc instanceof NativeNodeContainer
-                    ? ((NativeNodeContainer)nc).getNodeModel().getClass().getName() : "n/a")
+                new RowKey("Row " + rowcount++),
+                new StringCell(cname),
+                new LongCell(gnt.getExecutionTime(cname)),
+                new LongCell(gnt.getExecutionCount(cname))
             );
-            result.addRowToTable(row);
+            result0.addRowToTable(row);
         }
-        result.close();
-        return new PortObject[] { result.getTable() };
+        result0.close();
+        BufferedDataContainer result1 = exec.createDataContainer(createSpecOut1());
+        for (IBundleGroupProvider provider : Platform.getBundleGroupProviders()) {
+            for (IBundleGroup feature : provider.getBundleGroups()) {
+               final String featureName = feature.getIdentifier();
+               DataRow row = new DefaultRow(
+                   new RowKey("Row " + rowcount++),
+                   new StringCell(featureName)
+               );
+               result1.addRowToTable(row);
+            }
+         }
+        result1.close();
+        return new PortObject[] { result0.getTable(), result1.getTable() };
     }
 
     /**
