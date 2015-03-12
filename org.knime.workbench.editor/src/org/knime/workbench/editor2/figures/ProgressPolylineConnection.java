@@ -48,6 +48,7 @@ package org.knime.workbench.editor2.figures;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -125,14 +126,19 @@ public final class ProgressPolylineConnection extends PolylineConnection {
      */
     public void progressChanged(final ConnectionProgress e) {
         if (m_atomicConnectionProgressReference.getAndSet(e) == null) {
-            Display.getDefault().asyncExec(new Runnable() {
+            UI_PROGESS_UPDATE_SERVICE.schedule(new Runnable() {
                 @Override
                 public void run() {
-                    if (!Display.getDefault().isDisposed()) {
-                        progressChangedInternal(m_atomicConnectionProgressReference.getAndSet(null));
-                    }
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!Display.getDefault().isDisposed()) {
+                                progressChangedInternal(m_atomicConnectionProgressReference.getAndSet(null));
+                            }
+                        }
+                    });
                 }
-            });
+            }, 250, TimeUnit.MILLISECONDS);
         }
     }
 
