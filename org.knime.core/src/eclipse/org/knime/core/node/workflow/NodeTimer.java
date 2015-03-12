@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Set;
+
 import com.google.common.util.concurrent.AtomicLongMap;
 
 /** Holds execution timing information about a specific node.
@@ -56,6 +58,7 @@ import com.google.common.util.concurrent.AtomicLongMap;
  */
 public class NodeTimer {
 
+    private final NodeContainer m_parent;
     private long m_startTime;
     private long m_lastExecutionDuration;
     private long m_executionDurationSinceReset;
@@ -63,17 +66,27 @@ public class NodeTimer {
     private int m_numberOfExecutionsSinceReset;
     private int m_numberOfExecutionsOverall;
 
-    public class GlobalNodeTimer {
-        private AtomicLongMap m_exectimes;
-        private AtomicLongMap m_execcounts;
+    public static class GlobalNodeTimer {
+        private AtomicLongMap m_exectimes = AtomicLongMap.create();
+        private AtomicLongMap m_execcounts = AtomicLongMap.create();
         void addExecutionTime(final String cname, final long exectime) {
             m_exectimes.addAndGet(cname, exectime);
             m_execcounts.incrementAndGet(cname);
         }
+        public Set<String> getNodeNames() {
+            return m_exectimes.asMap().keySet();
+        }
+        public long getExecutionCount(final String cname) {
+            return m_execcounts.get(cname);
+        }
+        public long getExecutionTime(final String cname) {
+            return m_exectimes.get(cname);
+        }
     }
-    public static GlobalNodeTimer m_globalTimer;
+    public static final GlobalNodeTimer m_globalTimer = new GlobalNodeTimer();
 
-    NodeTimer() {
+    NodeTimer(final NodeContainer parent) {
+        m_parent = parent;
         initialize();
     }
 
@@ -124,6 +137,11 @@ public class NodeTimer {
             m_executionDurationOverall += m_lastExecutionDuration;
             m_numberOfExecutionsOverall++;
             m_numberOfExecutionsSinceReset++;
+            String cname = "NodeContainer";
+            if (m_parent instanceof NativeNodeContainer) {
+                cname = ((NativeNodeContainer)m_parent).getNodeModel().getClass().getName();
+            }
+            m_globalTimer.addExecutionTime(cname, m_lastExecutionDuration);
         }
         m_startTime = -1;
     }
