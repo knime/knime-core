@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="globaltimerinfo.png" type="Sink">
+    <name>Global Timer Info</name>
+    
+    <shortDescription>Reports installation wide node usage.</shortDescription>
+    
+    <fullDescription>
+        <intro>This node reports collected usage information for nodes for the life span of this KNIME installation.</intro>
+    </fullDescription>
+    
+    <ports>
+        <outPort index="0" name="Output table">The collected timer information.</outPort>
+    </ports>
+</knimeNode>
