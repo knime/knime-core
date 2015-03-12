@@ -165,7 +165,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     private final NodeAnnotation m_annotation;
 
-    private NodeTimer m_nodeTimer = new NodeTimer();
+    private final NodeTimer m_nodeTimer = new NodeTimer(this);
 
     /**
      * semaphore to make sure never try to work on inconsistent internal node
