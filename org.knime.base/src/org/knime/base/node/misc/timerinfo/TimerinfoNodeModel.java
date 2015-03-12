@@ -45,7 +45,7 @@
  * History
  *   Sept 17 2008 (mb): created (from wiswedel's TableToVariableNode)
  */
-package org.knime.base.node.flowcontrol.timerinfo;
+package org.knime.base.node.misc.timerinfo;
 
 import java.io.File;
 import java.io.IOException;

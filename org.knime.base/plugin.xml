@@ -1752,7 +1752,7 @@
       <node
             category-path="/flowcontrol/loopsupport"
             expert-flag="false"
-            factory-class="org.knime.base.node.flowcontrol.timerinfo.TimerinfoNodeFactory"
+            factory-class="org.knime.base.node.misc.timerinfo.TimerinfoNodeFactory"
             id="org.knime.base.node.flowcontrol.timerinfo.TimerinfoNodeFactory">
       </node>
    </extension>
