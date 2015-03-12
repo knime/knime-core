@@ -62,7 +62,7 @@ import org.knime.core.node.workflow.FlowLoopContext;
 /**
  * File store handler that is associated with a loop start node that is part of a loop body (nested loops).
  * They delegate to the outer loop start node but also keep a history of which file stores were created
- * in there (inner) loop execution to allow for a cleanup after each iteration.
+ * in their (inner) loop execution to allow for a cleanup after each iteration.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
