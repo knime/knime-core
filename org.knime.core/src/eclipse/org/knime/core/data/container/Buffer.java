@@ -103,9 +103,9 @@ import org.knime.core.data.filestore.internal.NotInWorkflowFileStoreHandlerRepos
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
 import org.knime.core.data.util.NonClosableOutputStream;
-import org.knime.core.data.util.memory.MemoryAlertObject;
-import org.knime.core.data.util.memory.MemoryObjectTracker;
-import org.knime.core.data.util.memory.MemoryReleasable;
+import org.knime.core.data.util.memory.MemoryAlert;
+import org.knime.core.data.util.memory.MemoryAlertListener;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -393,13 +393,6 @@ class Buffer implements KNIMEStreamConstants {
     private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
 
     /**
-     * Field that is non-null in the following cases. - Writes data into m_list (
-     * {@link BufferMemoryReleasable}), - Closed and holds data in m_list (
-     * {@link WhileReadingMemoryReleasableNotifier}), - Reads data back into memory
-     */
-    private MemoryReleasable m_memoryReleasable;
-
-    /**
      * the stream that writes to the file, it's a special object output stream, in which we can mark the end of an entry
      * (to figure out when a cell implementation reads too many or too few bytes).
      */
@@ -603,20 +596,15 @@ class Buffer implements KNIMEStreamConstants {
     synchronized void addRow(final DataRow r, final boolean isCopyOfExisting, final boolean forceCopyOfBlobs) {
         try {
             BlobSupportDataRow row = saveBlobsAndFileStores(r, isCopyOfExisting, forceCopyOfBlobs);
-            m_list.add(row);
-            int oldTotalSize = getAndIncrementSize();
-            int currentListSize = m_list.size();
-            if (currentListSize > m_maxRowsInMem) {
-                if (m_outStream == null) {
-                    writeAllRowsFromListToFile(true);
-                    // write next row to file directly
-                    unregisterMemoryReleasable();
-                } else {
-                    writeRow(m_list.remove(0), m_outStream);
+            getAndIncrementSize();
+            if ((m_list != null) && (m_maxRowsInMem > 0)) {
+                m_list.add(row);
+                if (m_list.size() > m_maxRowsInMem) {
+                    flushBuffer();
                 }
-            } else if (oldTotalSize == 0 && m_bufferID >= 0) {
-                // starting to cache rows in memory, add mem observer
-                registerMemoryReleasable();
+            } else {
+                flushBuffer();
+                writeRow(row, m_outStream);
             }
         } catch (Exception e) {
             if (!(e instanceof IOException)) {
@@ -641,14 +629,12 @@ class Buffer implements KNIMEStreamConstants {
     /**
      * Write all rows from list into file. Used while rows are added and if low mem condition is met.
      *
-     * @param clearListAndReset If true the list will be cleared (true only if called during addRow/writing).
      * @return number rows written
      * @throws IOException ...
      */
-    final int writeAllRowsFromListToFile(final boolean clearListAndReset) throws IOException {
+    final int writeAllRowsFromListToFile() throws IOException {
         assert Thread.holdsLock(this);
         ensureTempFileExists();
-        int result = m_list.size();
         if (m_outStream == null) {
             if (!m_binFile.getParentFile().isDirectory()) {
                 throw new FileNotFoundException("Directory " + m_binFile.getParentFile() + " for buffer " + m_bufferID
@@ -657,15 +643,17 @@ class Buffer implements KNIMEStreamConstants {
 
             m_outStream = initOutFile(new BufferedOutputStream(new FileOutputStream(m_binFile)));
             Buffer.onFileCreated(m_binFile);
+        }
+
+        if (m_list != null) {
+            int result = m_list.size();
             for (BlobSupportDataRow rowInList : m_list) {
                 writeRow(rowInList, m_outStream);
             }
-            if (clearListAndReset) {
-                m_list.clear();
-                m_maxRowsInMem = 0;
-            }
+            return result;
+        } else {
+            return 0;
         }
-        return result;
     }
 
     private BlobSupportDataRow saveBlobsAndFileStores(final DataRow row, final boolean isCopyOfExisting,
@@ -936,11 +924,12 @@ class Buffer implements KNIMEStreamConstants {
             // disallow modification
             List<BlobSupportDataRow> newList = Collections.unmodifiableList(m_list);
             m_list = newList;
+            if (!m_list.isEmpty()) {
+                registerMemoryAlertListener();
+            }
         } else {
             try {
-                // spec != null ==> called while reading from buffer (memoryAlert)
-                // spec == null ==> called while writing to buffer (close(DTS)) - list must be empty
-                assert (m_spec != null || m_list.isEmpty()) : "In-Memory list is not empty.";
+                flushBuffer();
                 m_shortCutsLookup = closeFile(m_outStream);
                 m_typeShortCuts = null; // garbage
                 m_list = null;
@@ -950,12 +939,32 @@ class Buffer implements KNIMEStreamConstants {
             } catch (IOException ioe) {
                 throw new RuntimeException("Cannot close stream of file \"" + m_binFile.getName() + "\"", ioe);
             }
-            if (m_memoryReleasable != null) {
-                MemoryObjectTracker.getInstance().removeMemoryReleaseable(m_memoryReleasable);
-            }
         }
         m_localRepository = null;
     } // close()
+
+    private MemoryAlertListener m_memoryAlertListener;
+
+    private void registerMemoryAlertListener() {
+        m_memoryAlertListener = new MemoryAlertListener() {
+            @Override
+            protected boolean memoryAlert(final MemoryAlert alert) {
+                if ((m_list != null) && !m_list.isEmpty()) {
+                    new Thread(() -> flushBuffer(), "KNIME Buffer flusher").start();
+                }
+                return true;
+            }
+        };
+        MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
+    }
+
+    private void unregisterMemoryAlertListener() {
+        if (m_memoryAlertListener != null) {
+            MemoryAlertSystem.getInstance().removeListener(m_memoryAlertListener);
+            m_memoryAlertListener = null;
+        }
+    }
+
 
     /**
      * Called when the buffer is closed or when the in-memory content (i.e. using m_list) is written to a file.
@@ -1223,24 +1232,17 @@ class Buffer implements KNIMEStreamConstants {
 
     /** Called from back into memory iterator when the last row was read. */
     final synchronized void onAllRowsReadBackIntoMemory() {
-        registerMemoryReleasable();
-    }
-
-    /** Adds this buffer to the {@link MemoryObjectTracker} (if it is part of the workflow). */
-    private void registerMemoryReleasable() {
-        if (m_bufferID != DataContainer.NOT_IN_WORKFLOW_BUFFER) {
-            m_memoryReleasable = new BufferMemoryReleasable();
-            MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
+        if (m_memoryAlertListener == null) {
+            m_memoryAlertListener = new MemoryAlertListener() {
+                @Override
+                protected boolean memoryAlert(final MemoryAlert alert) {
+                    m_list = null;
+                    return true;
+                }
+            };
         }
     }
 
-    /** Unregisters this object from the {@link MemoryObjectTracker}. */
-    private void unregisterMemoryReleasable() {
-        if (m_memoryReleasable != null) {
-            MemoryObjectTracker.getInstance().removeMemoryReleaseable(m_memoryReleasable);
-            m_memoryReleasable = null;
-        }
-    }
 
     /**
      * Get reference to the table repository that this buffer was initially instantiated with. Used for blob
@@ -1654,7 +1656,6 @@ class Buffer implements KNIMEStreamConstants {
             }
             return f;
         } else {
-            MemoryObjectTracker.getInstance().promoteMemoryReleaseable(m_memoryReleasable);
             return new FromListIterator();
         }
     }
@@ -1856,6 +1857,7 @@ class Buffer implements KNIMEStreamConstants {
     /** Clears the temp file. Any subsequent iteration will fail! */
     synchronized void clear() {
         m_list = null;
+        unregisterMemoryAlertListener();
         if (m_binFile != null) {
             synchronized (m_openIteratorSet) {
                 for (FromFileIterator f : m_openIteratorSet.keySet()) {
@@ -1879,7 +1881,6 @@ class Buffer implements KNIMEStreamConstants {
         }
         m_binFile = null;
         m_blobDir = null;
-        unregisterMemoryReleasable();
     }
 
     private static final int MAX_FILES_TO_CREATE_BEFORE_GC = 10000;
@@ -1924,30 +1925,12 @@ class Buffer implements KNIMEStreamConstants {
         }
     }
 
-    private final class BufferMemoryReleasable implements MemoryReleasable {
-
-        @Override
-        public boolean memoryAlert(final MemoryAlertObject alert) {
-            synchronized (Buffer.this) {
-                if (m_list == null) {
-                    // cleared while sleeping on Buffer.this
-                    return true;
-                } else {
-                    // is buffer open and addRow can be called (close not called --> spec is null)
-                    boolean isWhileWritingTable = m_spec == null;
-                    try {
-                        int nrRowsWritten = writeAllRowsFromListToFile(isWhileWritingTable);
-                        LOGGER.debug("Wrote " + nrRowsWritten + " rows in order to free memory");
-                        if (!isWhileWritingTable) {
-                            closeInternal();
-                            m_list = null;
-                        }
-                    } catch (IOException ioe) {
-                        LOGGER.error("Failed to swap to disc while freeing memory", ioe);
-                    }
-                    return false; // don't unregister, we do it ourselves
-                }
-            }
+    synchronized void flushBuffer() {
+        try {
+            writeAllRowsFromListToFile();
+            m_list = null; // don't write to internal cache any more
+        } catch (IOException ioe) {
+            LOGGER.error("Failed to swap to disc while freeing memory", ioe);
         }
     }
 
