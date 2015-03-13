@@ -52,6 +52,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -87,9 +88,6 @@ import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.XMLConfig;
 import org.xml.sax.SAXException;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 /**
  * Supports a mechanism to save settings by their type and a key. Furthermore,
@@ -977,7 +975,7 @@ public abstract class Config extends ConfigBase
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(o);
         oos.close();
-        return new BASE64Encoder().encode(baos.toByteArray());
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
     /**
@@ -992,7 +990,7 @@ public abstract class Config extends ConfigBase
     private static final Object readObject(final String className,
             final String serString)
             throws IOException, ClassNotFoundException {
-        byte[] bytes = new BASE64Decoder().decodeBuffer(serString);
+        byte[] bytes = Base64.getDecoder().decode(serString);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         GlobalObjectInputStream ois;
         if (className == null) {

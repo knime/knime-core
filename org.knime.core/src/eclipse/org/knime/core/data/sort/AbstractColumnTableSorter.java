@@ -75,6 +75,7 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobSupportDataRow;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -106,7 +107,7 @@ abstract class AbstractColumnTableSorter {
      */
     public static final int DEF_MAX_OPENCONTAINER = 500;
 
-    private MemoryService m_memService = new MemoryService(DEF_MEM_THRESHOLD);
+    private MemoryAlertSystem m_memService = MemoryAlertSystem.getInstance();
 
     private final Map<SortingDescription, List<DataRow>> m_buffer;
 
@@ -209,7 +210,7 @@ abstract class AbstractColumnTableSorter {
      *
      * @param memService the memService to set
      */
-    void setMemService(final MemoryService memService) {
+    void setMemService(final MemoryAlertSystem memService) {
         m_memService = memService;
     }
 

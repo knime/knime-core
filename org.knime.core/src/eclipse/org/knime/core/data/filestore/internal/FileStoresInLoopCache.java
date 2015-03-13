@@ -66,6 +66,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.MutableInteger;
@@ -96,10 +97,10 @@ final class FileStoresInLoopCache {
         m_createdFileStoresContainer = exec.createDataContainer(LOOP_FILE_STORE_SPEC);
     }
 
-    void onIterationEnd(final BufferedDataTable tableWithKeysToRetain,
+    void onIterationEnd(final FileStoresInLoopCache endNodeCacheWithKeysToPersist,
             final ILoopStartWriteFileStoreHandler handler) throws CanceledExecutionException {
         close();
-        deletableUnusedFileStores(tableWithKeysToRetain, handler);
+        deletableUnusedFileStores(endNodeCacheWithKeysToPersist, handler);
     }
 
     void add(final FileStore fs) {
@@ -123,19 +124,19 @@ final class FileStoresInLoopCache {
     }
 
     /**
-     * @param keysFromNestedLoop */
-    synchronized void addFileStoreKeysFromNestedLoops(final BufferedDataTable keysFromNestedLoop) {
-        for (DataRow r : keysFromNestedLoop) {
+     * @param endNodeCacheWithKeysToPersist */
+    synchronized void addFileStoreKeysFromNestedLoops(final FileStoresInLoopCache endNodeCacheWithKeysToPersist) {
+        for (DataRow r : endNodeCacheWithKeysToPersist.getCreatedFileStoresTable()) {
             add(getFileStoreKey(r));
         }
     }
 
-    void deletableUnusedFileStores(final BufferedDataTable tableFromEndNode,
+    void deletableUnusedFileStores(final FileStoresInLoopCache endNodeCacheWithKeysToPersist,
             final ILoopStartWriteFileStoreHandler handler) throws CanceledExecutionException {
         MutableInteger nrFilesDeleted = new MutableInteger(0);
         MutableInteger nrFailedDeletes = new MutableInteger(0);
         CloseableRowIterator allKeysIterator = m_createdFileStoresTable.iterator();
-        CloseableRowIterator endNodeKeysIterator = tableFromEndNode.iterator();
+        CloseableRowIterator endNodeKeysIterator = endNodeCacheWithKeysToPersist.getCreatedFileStoresTable().iterator();
 
         FileStoreKey nextLoopEndFSKey = next(endNodeKeysIterator, null);
         FileStoreKey nextAllFSKey = next(allKeysIterator, null);
@@ -201,6 +202,21 @@ final class FileStoresInLoopCache {
             m_createdFileStoresTable = unique.getTable();
         }
         return m_createdFileStoresTable;
+    }
+
+    /**
+     * @return the createdFileStoresTable
+     */
+    BufferedDataTable getCreatedFileStoresTable() {
+        CheckUtils.checkState(m_createdFileStoresTable != null, "Close has not been called");
+        return m_createdFileStoresTable;
+    }
+
+    void dispose() {
+        if (m_createdFileStoresTable != null) {
+            m_exec.clearTable(m_createdFileStoresTable);
+            m_createdFileStoresTable = null;
+        }
     }
 
     private void delete(final FileStoreKey key, final ILoopStartWriteFileStoreHandler handler,

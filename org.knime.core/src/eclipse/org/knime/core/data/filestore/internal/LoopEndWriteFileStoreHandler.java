@@ -53,7 +53,6 @@ import java.util.UUID;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.LRUCache;
@@ -151,8 +150,8 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
         if (m_duplicateChecker != null) {
             m_duplicateChecker.close();
             try {
-                BufferedDataTable keysToRetainTable = m_fileStoresInLoopCache.close();
-                m_loopStartFSHandler.onLoopEndFinish(keysToRetainTable);
+                m_fileStoresInLoopCache.close();
+                m_loopStartFSHandler.onLoopEndFinish(m_fileStoresInLoopCache);
             } catch (CanceledExecutionException e) {
                 throw new RuntimeException("Canceled", e);
             } finally {

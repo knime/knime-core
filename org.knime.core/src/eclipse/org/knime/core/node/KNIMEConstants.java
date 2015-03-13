@@ -126,7 +126,11 @@ public final class KNIMEConstants {
      * The default value is {@value
      * org.knime.core.data.container.DataContainer#DEF_ASYNC_CACHE_SIZE}. This
      * property has no effect if tables are written synchronously
-     * (see {@link #PROPERTY_SYNCHRONOUS_IO}). */
+     * (see {@link #PROPERTY_SYNCHRONOUS_IO}).
+     *
+     * @deprecated not used anymore since 2.12
+     * */
+    @Deprecated
     public static final String PROPERTY_ASYNC_WRITE_CACHE_SIZE =
         "knime.async.io.cachesize";
 

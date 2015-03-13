@@ -75,7 +75,7 @@ import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.sort.MemoryService;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -132,9 +132,6 @@ public final class Joiner {
 
     private int m_numBits;
     private int m_bitMask;
-
-    /** The memory service used to detect the low memory condition. */
-    private MemoryService m_memService;
 
     /** The initial number of partitions the rows are read in. If not all
      * partitions fit in main memory, they are joined subsequently using as
@@ -516,10 +513,6 @@ public final class Joiner {
                 rightTable.getDataTableSpec(),
                 rightSurvivors);
 
-        if (null == m_memService) {
-            m_memService = new MemoryService();
-        }
-
         /* numBits -> numPartitions
          * 0 -> 1
          * 1 -> 2
@@ -668,7 +661,7 @@ public final class Joiner {
         while (leftIter.hasNext()) {
             exec.checkCanceled();
             boolean saveToAddMoreRows =
-                !m_memService.isMemoryLow()
+                !MemoryAlertSystem.getInstance().isMemoryLow()
                     && ((m_rowsAddedBeforeForcedOOM == 0)
                             || (rowsAdded % m_rowsAddedBeforeForcedOOM != (m_rowsAddedBeforeForcedOOM - 1)));
 

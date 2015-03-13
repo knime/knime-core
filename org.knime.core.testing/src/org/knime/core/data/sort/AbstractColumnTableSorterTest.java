@@ -25,6 +25,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -145,7 +146,7 @@ public class AbstractColumnTableSorterTest {
             new ColumnBufferedDataTableSorter(bt.getDataTableSpec(), bt.getRowCount(), bt.getDataTableSpec()
                 .getColumnNames());
 
-        dataTableSorter.setMemService(new MemoryService(0.02));
+        dataTableSorter.setMemService(new MemoryAlertSystem(0.02));
         dataTableSorter.setMaxOpenContainers(60);
 
         final Comparator<DataRow> ascendingOrderAssertion =

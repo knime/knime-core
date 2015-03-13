@@ -54,7 +54,6 @@ import java.util.UUID;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.data.filestore.internal.LoopStartWritableFileStoreHandler.NestedLoopIdentifierProvider;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.workflow.FlowLoopContext;
@@ -76,7 +75,7 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     private InternalDuplicateChecker m_duplicateChecker;
 
     private FileStoresInLoopCache m_fileStoresInLoopCache;
-    private BufferedDataTable m_tableWithKeysToPersist;
+    private FileStoresInLoopCache m_endNodeCacheWithKeysToPersist;
 
 
     /**
@@ -166,13 +165,14 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     /**
      *  */
     private void clearFileStoresFromPreviousIteration() {
-        if (m_tableWithKeysToPersist != null) {
+        if (m_endNodeCacheWithKeysToPersist != null) {
             try {
-                m_fileStoresInLoopCache.onIterationEnd(m_tableWithKeysToPersist, this);
+                m_fileStoresInLoopCache.onIterationEnd(m_endNodeCacheWithKeysToPersist, this);
             } catch (CanceledExecutionException e) {
                 throw new RuntimeException("Canceled", e);
             }
-            m_tableWithKeysToPersist = null;
+            m_endNodeCacheWithKeysToPersist.dispose();
+            m_endNodeCacheWithKeysToPersist = null;
         }
     }
 
@@ -201,15 +201,15 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     /** {@inheritDoc} */
     @Override
     public synchronized void onLoopEndFinish(
-            final BufferedDataTable tableWithKeysToPersist) throws CanceledExecutionException {
-        m_tableWithKeysToPersist = tableWithKeysToPersist;
-        m_reference.addFileStoreKeysFromNestedLoop(m_tableWithKeysToPersist);
+            final FileStoresInLoopCache endNodeCacheWithKeysToPersist) throws CanceledExecutionException {
+        m_endNodeCacheWithKeysToPersist = endNodeCacheWithKeysToPersist;
+        m_reference.addFileStoreKeysFromNestedLoop(m_endNodeCacheWithKeysToPersist);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void addFileStoreKeysFromNestedLoop(final BufferedDataTable keysFromNestedLoop) {
-        m_fileStoresInLoopCache.addFileStoreKeysFromNestedLoops(keysFromNestedLoop);
+    public void addFileStoreKeysFromNestedLoop(final FileStoresInLoopCache endNodeCacheWithKeysToPersist) {
+        m_fileStoresInLoopCache.addFileStoreKeysFromNestedLoops(endNodeCacheWithKeysToPersist);
     }
 
     /** {@inheritDoc} */

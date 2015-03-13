@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,58 +41,55 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   11.03.2015 (thor): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.data.util.memory;
 
-import org.knime.core.data.util.memory.MemoryAlertSystem;
+import org.knime.core.node.workflow.NodeContext;
 
 /**
+ * Listener that gets notified when free memory get low.
  *
- * @author wiswedel, University of Konstanz
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 2.12
  */
-public class Bug4385_FileStoresWithLowMemory extends WorkflowTestCase {
+public abstract class MemoryAlertListener {
+    private final NodeContext m_nodeContext;
 
-    private NodeID m_dataGenStart1;
-    private NodeID m_testAfterLoop2;
-    private NodeID m_testSingle8;
+    /**
+     * Default constructor.
+     */
+    protected MemoryAlertListener() {
+        m_nodeContext = NodeContext.getContext();
+    }
 
-    /** {@inheritDoc} */
+    /**
+     * This method is called if memory is low. Please make sure that implementations of this methods return a soon as
+     * possible and don't perform any long-running iterations. Otherwise the other listeners may get notified too late.
+     *
+     * @param alert an object containing more information about the event
+     * @return <code>true</code> if this listener should be removed, <code>false</code> otherwise
+     */
+    protected abstract boolean memoryAlert(MemoryAlert alert);
+
+    /**
+     * Returns the node context for this listener.
+     *
+     * @return the node context, which may be <code>null</code>
+     */
+    protected final NodeContext getNodeContext() {
+        return m_nodeContext;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        NodeID baseID = loadAndSetWorkflow();
-        m_dataGenStart1 = new NodeID(baseID, 1);
-        m_testAfterLoop2 = new NodeID(baseID, 2);
-        m_testSingle8 = new NodeID(baseID, 8);
+    public String toString() {
+        return (m_nodeContext != null) ? ("Listener for node " + m_nodeContext.getNodeContainer())
+            : ("Listener " + super.toString());
     }
-
-    public void testExecuteFlow() throws Exception {
-        checkState(InternalNodeContainerState.CONFIGURED);
-        executeAllAndWait();
-        for (NodeContainer nc : getManager().getNodeContainers()) {
-            assertEquals("Node " + nc.getNameWithID() + ": " + nc.getNodeMessage(),
-                NodeMessage.Type.RESET, nc.getNodeMessage().getMessageType());
-        }
-        MemoryAlertSystem.getInstance().sendMemoryAlert();
-        checkState(InternalNodeContainerState.EXECUTED);
-        reset(m_testAfterLoop2, m_testSingle8);
-        executeAndWait(m_testAfterLoop2, m_testSingle8);
-        checkState(InternalNodeContainerState.EXECUTED);
-        // interesting part (where the error used to occur) happens in shutdown.
-        // it threw an exception as documented in the bug report
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        // m_manger is shut down, which caused exceptions
-        super.tearDown();
-    }
-
-    private void checkState(final InternalNodeContainerState state) throws Exception {
-        checkState(m_dataGenStart1, state);
-        checkState(m_testAfterLoop2, state);
-        checkState(m_testSingle8, state);
-    }
-
 }

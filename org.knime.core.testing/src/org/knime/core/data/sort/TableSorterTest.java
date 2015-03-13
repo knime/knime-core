@@ -69,6 +69,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -157,8 +158,10 @@ public class TableSorterTest {
 
         sorter.setMaxRows(maxNumRowsPerContainer);
         // 10MB free memory
-        sorter.setMemService(
-        		MemoryService.createTestCaseMemoryService(10000000L));
+        long currentlyUsed = MemoryAlertSystem.getInstance().getUsedMemory();
+        double fraction = Math.max(1, currentlyUsed + (10 << 20) / MemoryAlertSystem.getInstance().getMaximumMemory());
+
+        sorter.setMemService(new MemoryAlertSystem(fraction));
 
         // run again with change settings
         BufferedDataTable result = sorter.sort(m_exec);

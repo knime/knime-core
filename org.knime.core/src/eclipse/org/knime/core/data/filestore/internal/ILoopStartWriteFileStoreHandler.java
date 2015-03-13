@@ -51,7 +51,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 
 /**
@@ -60,7 +59,7 @@ import org.knime.core.node.CanceledExecutionException;
  */
 public interface ILoopStartWriteFileStoreHandler extends IWriteFileStoreHandler {
 
-    public void onLoopEndFinish(final BufferedDataTable tableWithKeysToPersist) throws CanceledExecutionException;
+    public void onLoopEndFinish(final FileStoresInLoopCache endNodeCacheWithKeysToPersist) throws CanceledExecutionException;
 
     public byte[] createNestedLoopPath();
 
@@ -71,7 +70,7 @@ public interface ILoopStartWriteFileStoreHandler extends IWriteFileStoreHandler 
     public FileStore createFileStoreInNestedLoop(final String name,
             final byte[] nestedLoopPath, final int iterationIndex) throws IOException;
 
-    public void addFileStoreKeysFromNestedLoop(final BufferedDataTable keysFromNestedLoop);
+    public void addFileStoreKeysFromNestedLoop(final FileStoresInLoopCache endNodeCacheWithKeysToPersist);
 
     public boolean isCreatedInThisLoop(final FileStoreKey key);
 

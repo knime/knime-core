@@ -14,6 +14,47 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/DataContainer.java" type="org.knime.core.data.container.DataContainer">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="DEF_MAX_CELLS_IN_MEMORY"/>
+                <message_argument value="100000"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryWarningSystem.java" type="org.knime.core.data.util.memory.MemoryWarningSystem">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.util.memory.MemoryWarningSystem"/>
+                <message_argument value="setPercentageUsageThreshold(double)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setFractionUsageThreshold(double)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryWarningSystem.java" type="org.knime.core.data.util.memory.MemoryWarningSystem$MemoryWarningListener">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.util.memory.MemoryWarningSystem.MemoryWarningListener"/>
+                <message_argument value="freeMemoryLow(long, long)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.util.memory.MemoryWarningSystem.MemoryWarningListener"/>
+                <message_argument value="memoryUsageLow(long, long)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="freeMemoryLow(long, long)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
         <filter comment="as part of bug 4754" id="338792546">
             <message_arguments>

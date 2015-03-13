@@ -40,58 +40,50 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * Created on 21.03.2013 by Mia
  */
-package org.knime.core.node.workflow;
-
-import org.knime.core.data.util.memory.MemoryAlertSystem;
+package org.knime.core.data.util.memory;
 
 /**
+ * Object that carries information about a memory alert.
  *
- * @author wiswedel, University of Konstanz
+ * @author Christian Dietz, University of Konstanz
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 2.12
  */
-public class Bug4385_FileStoresWithLowMemory extends WorkflowTestCase {
+public final class MemoryAlert {
+    private final long m_usedMemory;
+    private final long m_maxMemory;
 
-    private NodeID m_dataGenStart1;
-    private NodeID m_testAfterLoop2;
-    private NodeID m_testSingle8;
-
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        NodeID baseID = loadAndSetWorkflow();
-        m_dataGenStart1 = new NodeID(baseID, 1);
-        m_testAfterLoop2 = new NodeID(baseID, 2);
-        m_testSingle8 = new NodeID(baseID, 8);
+    /**
+     * Create a new memory alter.
+     *
+     * @param usedMemory the amount of currently used memory (in bytes)
+     * @param maxMemory the maximum amount of available memory (in bytes)
+     */
+    MemoryAlert(final long usedMemory, final long maxMemory) {
+        m_usedMemory = usedMemory;
+        m_maxMemory = maxMemory;
     }
 
-    public void testExecuteFlow() throws Exception {
-        checkState(InternalNodeContainerState.CONFIGURED);
-        executeAllAndWait();
-        for (NodeContainer nc : getManager().getNodeContainers()) {
-            assertEquals("Node " + nc.getNameWithID() + ": " + nc.getNodeMessage(),
-                NodeMessage.Type.RESET, nc.getNodeMessage().getMessageType());
-        }
-        MemoryAlertSystem.getInstance().sendMemoryAlert();
-        checkState(InternalNodeContainerState.EXECUTED);
-        reset(m_testAfterLoop2, m_testSingle8);
-        executeAndWait(m_testAfterLoop2, m_testSingle8);
-        checkState(InternalNodeContainerState.EXECUTED);
-        // interesting part (where the error used to occur) happens in shutdown.
-        // it threw an exception as documented in the bug report
+
+    /**
+     * Returns the currently used memory.
+     *
+     * @return the used memory in bytes
+     */
+    public long getUsedMemory() {
+        return m_usedMemory;
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        // m_manger is shut down, which caused exceptions
-        super.tearDown();
+    /**
+     * Returns the maximum available memory.
+     *
+     * @return the maximum memory in bytes
+     */
+    public long getMaxMemory() {
+        return m_maxMemory;
     }
-
-    private void checkState(final InternalNodeContainerState state) throws Exception {
-        checkState(m_dataGenStart1, state);
-        checkState(m_testAfterLoop2, state);
-        checkState(m_testSingle8, state);
-    }
-
 }

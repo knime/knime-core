@@ -52,7 +52,6 @@ import java.util.BitSet;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.util.CheckUtils;
@@ -74,7 +73,7 @@ public class LoopStartWritableFileStoreHandler
     private FileStoresInLoopCache m_fileStoresInLoopCache;
     private final NestedLoopIdentifierProvider m_nestedLoopIdentifierProvider;
 
-    private BufferedDataTable m_tableWithKeysToPersist;
+    private FileStoresInLoopCache m_endNodeCacheWithKeysToPersist;
 
     /**
      * @param startNode
@@ -100,13 +99,15 @@ public class LoopStartWritableFileStoreHandler
     @Override
     public void open(final ExecutionContext exec) {
         super.open(exec);
-        if (m_tableWithKeysToPersist != null) {
+        if (m_endNodeCacheWithKeysToPersist != null) {
             try {
-                m_fileStoresInLoopCache.onIterationEnd(m_tableWithKeysToPersist, this);
+                m_fileStoresInLoopCache.onIterationEnd(m_endNodeCacheWithKeysToPersist, this);
+                m_fileStoresInLoopCache.dispose();
             } catch (CanceledExecutionException e) {
                 throw new RuntimeException("Canceled", e);
             }
-            m_tableWithKeysToPersist = null;
+            m_endNodeCacheWithKeysToPersist.dispose();
+            m_endNodeCacheWithKeysToPersist = null;
         }
         m_fileStoresInLoopCache = new FileStoresInLoopCache(exec);
     }
@@ -147,16 +148,27 @@ public class LoopStartWritableFileStoreHandler
     /** {@inheritDoc}
      * @throws CanceledExecutionException */
     @Override
-    public synchronized void onLoopEndFinish(final BufferedDataTable tableWithKeysToPersist)
+    public synchronized void onLoopEndFinish(final FileStoresInLoopCache endNodeCacheWithKeysToPersist)
     throws CanceledExecutionException {
         markStartNodeDirty();
-        m_tableWithKeysToPersist = tableWithKeysToPersist;
+        m_endNodeCacheWithKeysToPersist = endNodeCacheWithKeysToPersist;
     }
 
     /** {@inheritDoc} */
     @Override
-    public synchronized void addFileStoreKeysFromNestedLoop(final BufferedDataTable keysFromNestedLoop) {
-        m_fileStoresInLoopCache.addFileStoreKeysFromNestedLoops(keysFromNestedLoop);
+    public synchronized void addFileStoreKeysFromNestedLoop(final FileStoresInLoopCache endNodeCacheWithKeysToPersist) {
+        m_fileStoresInLoopCache.addFileStoreKeysFromNestedLoops(endNodeCacheWithKeysToPersist);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clearAndDispose() {
+        super.clearAndDispose();
+        if (m_endNodeCacheWithKeysToPersist != null) {
+            m_endNodeCacheWithKeysToPersist.dispose();
+        }
     }
 
     /** {@inheritDoc} */
