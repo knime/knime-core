@@ -130,7 +130,7 @@ public class GlobalTimerinfoNodeModel extends NodeModel implements InactiveBranc
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         BufferedDataContainer result0 = exec.createDataContainer(createSpecOut0());
-        NodeTimer.GlobalNodeTimer gnt = NodeTimer.m_globalTimer;
+        NodeTimer.GlobalNodeTimer gnt = NodeTimer.GLOBAL_TIMER;
         assert gnt != null;
         int rowcount = 0;
         for (String cname : gnt.getNodeNames()) {
