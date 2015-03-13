@@ -148,7 +148,7 @@ public final class NodeTimer {
         private void writeToFile(final boolean properShutdown) {
             try {
                 JsonObjectBuilder job = Json.createObjectBuilder();
-                job.add("version", "1.0");
+                job.add("version", KNIMEConstants.VERSION);
                 JsonObjectBuilder job2 = Json.createObjectBuilder();
                 for (String cname : getNodeNames()) {
                     JsonObjectBuilder job3 = Json.createObjectBuilder();
