@@ -96,10 +96,15 @@ public abstract class GUIDeadlockDetector {
      * Creates a new deadlock detector.
      */
     protected GUIDeadlockDetector() {
-        if (!DONT_WATCH) {
+        if (!DONT_WATCH && !isInDebug()) {
             m_executor.scheduleAtFixedRate(new SubmitTask(), 0, CHECK_INTERVAL, TimeUnit.MILLISECONDS);
             m_executor.scheduleAtFixedRate(new CheckTask(), 1000, CHECK_INTERVAL, TimeUnit.MILLISECONDS);
         }
+    }
+
+    /** @return true if the VM runs in debug mode -- don't enable deadlock detector then. */
+    private static final boolean isInDebug() {
+        return ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp");
     }
 
     /**
