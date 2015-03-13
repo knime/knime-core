@@ -86,30 +86,33 @@ public class NodeTimer {
         private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalNodeTimer.class);
         private AtomicLongMap m_exectimes = AtomicLongMap.create();
         private AtomicLongMap m_execcounts = AtomicLongMap.create();
-        private long m_startTime;
-        private long m_avgUpTime;
-        private long m_currentInstanceLaunchTime;
-        private int m_launches;
-        private final String FILENAME = "nodeusage.log";
+        private long m_startTime= -1;
+        private long m_avgUpTime = 0;
+        private long m_currentInstanceLaunchTime = System.currentTimeMillis();
+        private int m_launches = 0;
+        private int m_crashes = 0;
+        private long m_timeOfLastSave = System.currentTimeMillis() - SAVEINTERVAL + 1000*60;
+        private static final long SAVEINTERVAL = 15*60*1000;  // save no more than every 15mins
+        private static final String FILENAME = "nodeusage.log";
         GlobalNodeTimer() {
-            m_currentInstanceLaunchTime = System.currentTimeMillis();
             readFromFile();
-            new Thread() {
+            Thread hook = new Thread() {
                 @Override
                 public void run() {
-                    while (true) {
-                    try {
-                        Thread.sleep(1*60*1000); // 1mins
-                    } catch (InterruptedException ie) {}
-                    writeToFile(false);
-                    }
+                    writeToFile(true);
                 }
-            }.start();
+            };
+            Runtime.getRuntime().addShutdownHook(hook);
         }
+
         void addExecutionTime(final String cname, final long exectime) {
             m_exectimes.addAndGet(cname, exectime);
             m_execcounts.incrementAndGet(cname);
             m_startTime = System.currentTimeMillis();
+            if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
+                asyncWriteToFile();
+                m_timeOfLastSave = System.currentTimeMillis();
+            }
         }
         public Set<String> getNodeNames() {
             return m_exectimes.asMap().keySet();
@@ -126,22 +129,28 @@ public class NodeTimer {
         public int getNrLaunches() {
             return m_launches + 1;
         }
+        public int getNrCrashes() {
+            return m_crashes;
+        }
         public void writeToFile(final boolean properShutdown) {
             try {
                 JsonObjectBuilder job = Json.createObjectBuilder();
+                job.add("_version", "1.0");
+                JsonObjectBuilder job2 = Json.createObjectBuilder();
                 for (String cname : getNodeNames()) {
-                    JsonObjectBuilder job2 = Json.createObjectBuilder();
-                    job2.add("count", getExecutionCount(cname));
-                    job2.add("time", getExecutionTime(cname));
-                    job.add(cname, job2);
+                    JsonObjectBuilder job3 = Json.createObjectBuilder();
+                    job3.add("count", getExecutionCount(cname));
+                    job3.add("time", getExecutionTime(cname));
+                    job2.add(cname, job3);
                 }
+                job.add("_nodestats", job2);
                 job.add("_uptime", getAvgUpTime());
                 job.add("_launches", getNrLaunches());
+                job.add("_crashes", getNrCrashes());
                 job.add("_properlyShutDown", properShutdown);
                 JsonObject jo = job.build();
                 File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
                 FileOutputStream fos = new FileOutputStream(propfile);
-//                JsonWriter jw = Json.createWriter(fos);
                 Map<String, Boolean> cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
                 JsonWriter jw = Json.createWriterFactory(cfg).createWriter(fos);
                 jw.write(jo);
@@ -152,6 +161,14 @@ public class NodeTimer {
                 // TODO: report or just skip?
             }
         }
+        public void asyncWriteToFile() {
+            new Thread() {
+                @Override
+                public void run() {
+                    writeToFile(false);
+                }
+            }.start();
+        }
         public void readFromFile() {
             try {
                 File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
@@ -160,33 +177,40 @@ public class NodeTimer {
                 JsonObject jo = jr.readObject();
                 jr.close();
                 for (String key : jo.keySet()) {
-                    if (key.charAt(0) != '_') {
-                        // key represents name of NodeModel
-                        JsonObject job2 = jo.getJsonObject(key);
-                        Long count = job2.getJsonNumber("count").longValue();
-                        Long time = job2.getJsonNumber("time").longValue();
-                        m_execcounts.put(key, count);
-                        m_exectimes.put(key, time);
-                    } else {
-                        // other entry
-                        switch (key) {
-                            case "_uptime":
-                                m_avgUpTime = jo.getJsonNumber(key).longValue();
-                                break;
-                            case "_launches":
-                                m_launches = jo.getInt(key);
-                                break;
-                            case "_properlyShutDown":
-                                if (!jo.getBoolean(key)) {
-                                    // TODO: what do we do then? - include it in as a flag to be sent?
-                                }
-                            default:
-                                // TODO: complain?
-                        }
+                    switch (key) {
+                        case "_version":
+                            String v = jo.getString(key);
+                            break;
+                        case "_nodestats":
+                            JsonObject jo2 = jo.getJsonObject(key);
+                            for (String key2 : jo2.keySet()) {
+                                // key represents name of NodeModel
+                                JsonObject job3 = jo2.getJsonObject(key2);
+                                Long count = job3.getJsonNumber("count").longValue();
+                                Long time = job3.getJsonNumber("time").longValue();
+                                m_execcounts.put(key2, count);
+                                m_exectimes.put(key2, time);
+                            }
+                            break;
+                        case "_uptime":
+                            m_avgUpTime = jo.getJsonNumber(key).longValue();
+                            break;
+                        case "_launches":
+                            m_launches = jo.getInt(key);
+                            break;
+                        case "_crashes":
+                            m_crashes = jo.getInt(key);
+                            break;
+                        case "_properlyShutDown":
+                            if (!jo.getBoolean(key)) {
+                                m_crashes++;
+                            }
+                        default:
+                            // TODO: complain?
                     }
                 }
                 LOGGER.debug("Successfully read node usage stats from file: " + propfile.getCanonicalPath());
-            } catch (IOException ioe) {
+            } catch (Exception e) {
                 // TODO: should we do more than just log this?
                 LOGGER.debug("Failed reading node usage file");
             }
