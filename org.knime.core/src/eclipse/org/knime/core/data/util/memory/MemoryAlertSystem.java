@@ -108,6 +108,7 @@ public final class MemoryAlertSystem {
      * {@link #getInstance()} instead of creating your own instance.</b>
      *
      * @param usageThreshold the threshold above which a low memory condition will be reported; a value between 0 and 1
+     * @noreference This constructor is not intended to be referenced by clients. Only used in test cases.
      */
     public MemoryAlertSystem(final double usageThreshold) {
         setFractionUsageThreshold(usageThreshold);
