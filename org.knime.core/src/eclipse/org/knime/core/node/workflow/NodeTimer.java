@@ -53,6 +53,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -86,10 +87,13 @@ public final class NodeTimer {
     private int m_numberOfExecutionsOverall;
 
     public static final class GlobalNodeTimer {
+
+        private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+
         private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalNodeTimer.class);
         private AtomicLongMap<String> m_exectimes = AtomicLongMap.create();
         private AtomicLongMap<String> m_execcounts = AtomicLongMap.create();
-        private String m_created = DateFormat.getInstance().format(new Date());
+        private String m_created = DATE_FORMAT.format(new Date());
         private long m_avgUpTime = 0;
         private long m_currentInstanceLaunchTime = System.currentTimeMillis();
         private int m_launches = 0;
