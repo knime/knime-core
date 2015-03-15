@@ -52,7 +52,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
@@ -87,6 +89,7 @@ public final class NodeTimer {
         private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalNodeTimer.class);
         private AtomicLongMap<String> m_exectimes = AtomicLongMap.create();
         private AtomicLongMap<String> m_execcounts = AtomicLongMap.create();
+        private String m_created = DateFormat.getInstance().format(new Date());
         private long m_avgUpTime = 0;
         private long m_currentInstanceLaunchTime = System.currentTimeMillis();
         private int m_launches = 0;
@@ -149,6 +152,7 @@ public final class NodeTimer {
             try {
                 JsonObjectBuilder job = Json.createObjectBuilder();
                 job.add("version", KNIMEConstants.VERSION);
+                job.add("created", m_created);
                 JsonObjectBuilder job2 = Json.createObjectBuilder();
                 for (String cname : getNodeNames()) {
                     JsonObjectBuilder job3 = Json.createObjectBuilder();
@@ -193,6 +197,9 @@ public final class NodeTimer {
                     switch (key) {
                         case "version":
                             // ignored (for now)
+                            break;
+                        case "created":
+                            m_created = jo.getString(key);
                             break;
                         case "nodestats":
                             JsonObject jo2 = jo.getJsonObject(key);
@@ -285,6 +292,8 @@ public final class NodeTimer {
             String cname = "NodeContainer";
             if (m_parent instanceof NativeNodeContainer) {
                 cname = ((NativeNodeContainer)m_parent).getNodeModel().getClass().getName();
+            } else if (m_parent instanceof SubNodeContainer) {
+                cname = m_parent.getClass().getName();
             }
             GLOBAL_TIMER.addExecutionTime(cname, m_lastExecutionDuration);
         }
