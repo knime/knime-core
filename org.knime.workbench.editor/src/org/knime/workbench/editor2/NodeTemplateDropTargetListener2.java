@@ -49,6 +49,7 @@ package org.knime.workbench.editor2;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.requests.CreateRequest;
 import org.eclipse.jface.util.LocalSelectionTransfer;
@@ -57,6 +58,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.graphics.Color;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCopyContent;
@@ -64,6 +67,10 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.commands.CreateMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
+import org.knime.workbench.editor2.commands.InsertNewNodeCommand;
+import org.knime.workbench.editor2.commands.ReplaceNodeCommand;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.RepositoryFactory;
@@ -75,14 +82,33 @@ import org.knime.workbench.repository.model.NodeTemplate;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class NodeTemplateDropTargetListener2 implements
-        TransferDropTargetListener {
+public class NodeTemplateDropTargetListener2 implements TransferDropTargetListener {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            NodeTemplateDropTargetListener2.class);
+    /**
+     *
+     */
+    private static final Color BLACK = new Color(null, 0, 0, 0);
 
+    /**
+     *
+     */
+    private static final Color RED = new Color(null, 255, 0, 0);
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeTemplateDropTargetListener2.class);
 
     private final EditPartViewer m_viewer;
+
+    private NodeContainerEditPart m_markedNode;
+
+    private ConnectionContainerEditPart m_markedEdge;
+
+    private int nodeCount;
+
+    private int edgeCount;
+
+    private NodeContainerEditPart node;
+
+    private ConnectionContainerEditPart edge;
 
     public NodeTemplateDropTargetListener2(final EditPartViewer viewer) {
         m_viewer = viewer;
@@ -124,23 +150,27 @@ public class NodeTemplateDropTargetListener2 implements
      */
     @Override
     public void dragLeave(final DropTargetEvent event) {
-        // do nothing
+        if (m_markedNode != null) {
+            redrawNode();
+        }
+        if (m_markedEdge != null) {
+            m_markedEdge.getFigure().setForegroundColor(BLACK);
+            m_markedEdge = null;
+        }
     }
 
     /**
      *
-     * @param event drop target event containing the position
-     *  (relative to whole display)
+     * @param event drop target event containing the position (relative to whole display)
      * @return point converted to the editor coordinates
      */
     protected Point getDropLocation(final DropTargetEvent event) {
         /* NB: don't break in this method - it ruins the cursor location! */
         event.x = event.display.getCursorLocation().x;
         event.y = event.display.getCursorLocation().y;
-        Point p = new Point(m_viewer.getControl()
-                    .toControl(event.x, event.y).x,
-                    m_viewer.getControl()
-                    .toControl(event.x, event.y).y);
+        Point p =
+            new Point(m_viewer.getControl().toControl(event.x, event.y).x, m_viewer.getControl().toControl(event.x,
+                event.y).y);
         return p;
     }
 
@@ -157,7 +187,74 @@ public class NodeTemplateDropTargetListener2 implements
      */
     @Override
     public void dragOver(final DropTargetEvent event) {
-        // do nothing
+        WorkflowManager wfm = ((WorkflowRootEditPart)m_viewer.getRootEditPart().getContents()).getWorkflowManager();
+        node = null;
+        edge = null;
+        nodeCount = 0;
+        edgeCount = 0;
+
+        double edgedist = 100;
+        double nodedist = 100;
+        for (int i = -8; i < 9; i++) {
+            for (int j = -8; j < 9; j++) {
+                Point dropLocation = getDropLocation(event);
+                EditPart ep = m_viewer.findObjectAt(dropLocation.getTranslated(i, j));
+                if (ep instanceof NodeContainerEditPart) {
+                    double temp = dropLocation.getDistance(dropLocation.getTranslated(i, j));
+                    if (nodedist >= temp) {
+                        node = (NodeContainerEditPart)ep;
+                        nodedist = temp;
+                    }
+                    nodeCount++;
+                } else if (ep instanceof ConnectionContainerEditPart) {
+                    double temp = dropLocation.getDistance(dropLocation.getTranslated(i, j));
+                    if (edgedist >= temp) {
+                        edge = (ConnectionContainerEditPart)ep;
+                        edgedist = temp;
+                    }
+                    edgeCount++;
+                }
+            }
+        }
+        if (nodeCount > 0 || edgeCount > 0) {
+            m_viewer.getControl().setRedraw(false);
+        }
+        if (m_markedNode != null) {
+            redrawNode();
+        }
+
+        if (m_markedEdge != null) {
+            if (wfm.getNodeContainer(m_markedEdge.getModel().getSource()).getType().compareTo(NodeType.Meta) != 0
+                && m_markedEdge.getModel().getSourcePort() > 0) {
+                m_markedEdge.getFigure().setForegroundColor(BLACK);
+            } else if (wfm.getNodeContainer(m_markedEdge.getModel().getSource()).getType().compareTo(NodeType.Meta) == 0) {
+                m_markedEdge.getFigure().setForegroundColor(BLACK);
+            }
+            m_markedEdge = null;
+
+        }
+
+        if (node != null && nodeCount >= edgeCount) {
+            m_markedNode = node;
+            m_markedNode.mark();
+
+        } else if (edge != null) {
+            m_markedEdge = edge;
+            m_markedEdge.getFigure().setForegroundColor(RED);
+        }
+
+        if (nodeCount > 0 || edgeCount > 0) {
+            m_viewer.getControl().setRedraw(true);
+        }
+    }
+
+    /**
+     *
+     */
+    private void redrawNode() {
+        m_markedNode.unmark();
+        m_viewer.getControl().redraw();
+        m_markedNode = null;
     }
 
     /**
@@ -169,20 +266,39 @@ public class NodeTemplateDropTargetListener2 implements
         // check instanceof NodeTemplate and fire a CreateRequest
         LOGGER.debug("drop: " + event);
         AbstractNodeTemplate ant = getSelectionNodeTemplate();
-        WorkflowManager wfm = ((WorkflowRootEditPart)m_viewer.getRootEditPart()
-                .getContents()).getWorkflowManager();
+        WorkflowManager wfm = ((WorkflowRootEditPart)m_viewer.getRootEditPart().getContents()).getWorkflowManager();
         if (ant instanceof NodeTemplate) {
             NodeTemplate template = (NodeTemplate)ant;
             CreateRequest request = new CreateRequest();
             // TODO for some reason sometimes the event contains no object - but
             // this doesn't seem to matter - dragging continues as expected
             // Set the factory on the current request
-            NodeFromNodeTemplateCreationFactory factory
-                = new NodeFromNodeTemplateCreationFactory(template);
+            NodeFromNodeTemplateCreationFactory factory = new NodeFromNodeTemplateCreationFactory(template);
             request.setFactory(factory);
-            m_viewer.getEditDomain().getCommandStack().execute(
-                    new CreateNodeCommand(wfm, factory.getNewObject(),
-                            getDropLocation(event), WorkflowEditor.getActiveEditorSnapToGrid()));
+
+            if (node != null && nodeCount >= edgeCount) {
+
+                m_viewer
+                    .getEditDomain()
+                    .getCommandStack()
+                    .execute(
+                        new ReplaceNodeCommand(wfm, factory.getNewObject(), node, WorkflowEditor
+                            .getActiveEditorSnapToGrid()));
+            } else if (edge != null) {
+                m_viewer
+                    .getEditDomain()
+                    .getCommandStack()
+                    .execute(
+                        new InsertNewNodeCommand(wfm, factory.getNewObject(), edge, WorkflowEditor
+                            .getActiveEditorSnapToGrid()));
+            } else {
+                m_viewer
+                    .getEditDomain()
+                    .getCommandStack()
+                    .execute(
+                        new CreateNodeCommand(wfm, factory.getNewObject(), getDropLocation(event), WorkflowEditor
+                            .getActiveEditorSnapToGrid()));
+            }
             NodeUsageRegistry.addNode(template);
             // bugfix: 1500
             m_viewer.getControl().setFocus();
@@ -193,9 +309,12 @@ public class NodeTemplateDropTargetListener2 implements
             WorkflowCopyContent content = new WorkflowCopyContent();
             content.setNodeIDs(id);
             WorkflowPersistor copy = sourceManager.copy(content);
-            m_viewer.getEditDomain().getCommandStack().execute(
-                new CreateMetaNodeCommand(wfm, copy, getDropLocation(event),
-                        WorkflowEditor.getActiveEditorSnapToGrid()));
+            m_viewer
+                .getEditDomain()
+                .getCommandStack()
+                .execute(
+                    new CreateMetaNodeCommand(wfm, copy, getDropLocation(event), WorkflowEditor
+                        .getActiveEditorSnapToGrid()));
         }
     }
 
@@ -203,21 +322,18 @@ public class NodeTemplateDropTargetListener2 implements
         if (LocalSelectionTransfer.getTransfer().getSelection() == null) {
             return null;
         }
-        if (((IStructuredSelection)LocalSelectionTransfer
-                .getTransfer().getSelection()).size() > 1) {
+        if (((IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection()).size() > 1) {
             // allow dropping a single node only
             return null;
         }
 
-        Object template = ((IStructuredSelection)LocalSelectionTransfer
-                .getTransfer().getSelection()).getFirstElement();
+        Object template = ((IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection()).getFirstElement();
         if (template instanceof AbstractNodeTemplate) {
             return (AbstractNodeTemplate)template;
         }
         // Last change: Ask adaptables for an adapter object
         if (template instanceof IAdaptable) {
-            return (AbstractNodeTemplate)((IAdaptable) template).getAdapter(
-                    AbstractNodeTemplate.class);
+            return (AbstractNodeTemplate)((IAdaptable)template).getAdapter(AbstractNodeTemplate.class);
         }
         return null;
     }
