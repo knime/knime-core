@@ -47,6 +47,7 @@
  */
 package org.knime.workbench.editor2;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPart;
@@ -59,6 +60,8 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.internal.win32.OS;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
@@ -72,6 +75,7 @@ import org.knime.workbench.editor2.commands.ReplaceNodeCommand;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.RepositoryFactory;
 import org.knime.workbench.repository.model.AbstractNodeTemplate;
@@ -150,14 +154,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
      */
     @Override
     public void dragLeave(final DropTargetEvent event) {
-        if (m_markedNode != null) {
-            m_markedNode.unmark();
-            m_markedNode = null;
-        }
-        if (m_markedEdge != null) {
-            m_markedEdge.getFigure().setForegroundColor(BLACK);
-            m_markedEdge = null;
-        }
+        // do nothing
     }
 
     /**
@@ -186,6 +183,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("restriction")
     @Override
     public void dragOver(final DropTargetEvent event) {
         WorkflowManager wfm = ((WorkflowRootEditPart)m_viewer.getRootEditPart().getContents()).getWorkflowManager();
@@ -194,8 +192,10 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
         nodeCount = 0;
         edgeCount = 0;
 
-        double edgedist = 100;
-        double nodedist = 100;
+        // edge-/nodedist
+        double edgedist = Integer.MAX_VALUE;
+        double nodedist = Integer.MAX_VALUE;
+        // hitbox size: (-8 to 8 = 16) * (-8 to 8 = 16)
         for (int i = -8; i < 9; i++) {
             for (int j = -8; j < 9; j++) {
                 Point dropLocation = getDropLocation(event);
@@ -220,27 +220,67 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
 
         if (m_markedNode != null) {
             m_markedNode.unmark();
+
             m_markedNode = null;
+
+            showDragImage();
         }
 
         if (m_markedEdge != null) {
             if (wfm.getNodeContainer(m_markedEdge.getModel().getSource()).getType().compareTo(NodeType.Meta) != 0
                 && m_markedEdge.getModel().getSourcePort() > 0) {
+                // connection from a normal node which is not flow variable port
                 m_markedEdge.getFigure().setForegroundColor(BLACK);
             } else if (wfm.getNodeContainer(m_markedEdge.getModel().getSource()).getType().compareTo(NodeType.Meta) == 0) {
+                // connection from a meta node
                 m_markedEdge.getFigure().setForegroundColor(BLACK);
             }
+            ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(1);
             m_markedEdge = null;
-
+            showDragImage();
         }
 
         if (node != null && nodeCount >= edgeCount) {
             m_markedNode = node;
             m_markedNode.mark();
-
+            hideDragImage();
         } else if (edge != null) {
             m_markedEdge = edge;
+            ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(3);
             m_markedEdge.getFigure().setForegroundColor(RED);
+            hideDragImage();
+        }
+    }
+
+    /**
+     * This is part of a workaround for windows where parts of the nodes/connections don't get repainted if we drag over.
+     * Take a look at eclipse bug 393868. (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+     */
+    private void hideDragImage() {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            Display.getDefault().asyncExec(new Runnable() {
+
+                @Override
+                public void run() {
+                    OS.ImageList_DragShowNolock(false);
+                }
+            });
+        }
+    }
+
+    /**
+     * This is part of a workaround for windows where parts of the nodes/connections don't get repainted if we drag over.
+     * Take a look at eclipse bug 393868. (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+     */
+    private void showDragImage() {
+        if (SystemUtils.IS_OS_WINDOWS) {
+            Display.getDefault().asyncExec(new Runnable() {
+
+                @Override
+                public void run() {
+                    OS.ImageList_DragShowNolock(true);
+                }
+            });
         }
     }
 
