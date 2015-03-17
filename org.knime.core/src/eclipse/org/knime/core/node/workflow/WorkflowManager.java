@@ -7121,22 +7121,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    public WorkflowExecutionResult createExecutionResult(
-            final ExecutionMonitor exec) throws CanceledExecutionException {
+    public WorkflowExecutionResult createExecutionResult(final ExecutionMonitor exec)
+            throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
-            WorkflowExecutionResult result =
-                new WorkflowExecutionResult(getID());
+            WorkflowExecutionResult result = new WorkflowExecutionResult(getID());
             super.saveExecutionResult(result);
-            Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(
-                    m_workflow.getNodeIDs(), true).keySet();
+            Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet();
             boolean success = false;
             for (NodeID id : bfsSortedSet) {
                 NodeContainer nc = getNodeContainer(id);
                 exec.setMessage(nc.getNameWithID());
-                ExecutionMonitor subExec = exec.createSubProgress(
-                        1.0 / bfsSortedSet.size());
-                NodeContainerExecutionResult subResult =
-                    getNodeContainer(id).createExecutionResult(subExec);
+                ExecutionMonitor subExec = exec.createSubProgress(1.0 / bfsSortedSet.size());
+                NodeContainerExecutionResult subResult = getNodeContainer(id).createExecutionResult(subExec);
                 if (subResult.isSuccess()) {
                     success = true;
                 }
@@ -7154,22 +7150,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    public void loadExecutionResult(
-            final NodeContainerExecutionResult result,
-            final ExecutionMonitor exec, final LoadResult loadResult) {
-        if (result == null) {
-            throw new IllegalArgumentException(
-            "Workflow result must not be null");
-        } else if (!(result instanceof WorkflowExecutionResult)) {
-            throw new IllegalArgumentException("Argument must be instance "
-                    + "of \"" + WorkflowExecutionResult.class.getSimpleName()
-                    + "\": " + result.getClass().getSimpleName());
-        }
+    public void loadExecutionResult(final NodeContainerExecutionResult result, final ExecutionMonitor exec,
+        final LoadResult loadResult) {
+        CheckUtils.checkArgument(result instanceof WorkflowExecutionResult, "Argument must be instance of \"%s\": %s",
+            WorkflowExecutionResult.class.getSimpleName(), result == null ? "null" : result.getClass().getSimpleName());
         WorkflowExecutionResult r = (WorkflowExecutionResult)result;
         synchronized (m_workflowMutex) {
             super.loadExecutionResult(result, exec, loadResult);
-            Map<NodeID, NodeContainerExecutionResult> map =
-                r.getExecutionResultMap();
+            Map<NodeID, NodeContainerExecutionResult> map = r.getExecutionResultMap();
             final int count = map.size();
             // contains the corrected NodeID in this workflow (the node ids in
             // the execution result refer to the base id of the remote workflow)
@@ -7179,14 +7167,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 assert otherID.hasSamePrefix(otherIDPrefix);
                 transMap.put(new NodeID(getID(), otherID.getIndex()), otherID);
             }
-            for (NodeID id : m_workflow.createBreadthFirstSortedList(
-                    transMap.keySet(), true).keySet()) {
+            for (NodeID id : m_workflow.createBreadthFirstSortedList(transMap.keySet(), true).keySet()) {
                 NodeID otherID = transMap.get(id);
                 NodeContainer nc = m_workflow.getNode(id);
                 NodeContainerExecutionResult exResult = map.get(otherID);
                 if (exResult == null) {
-                    loadResult.addError("No execution result for node "
-                            + nc.getNameWithID());
+                    loadResult.addError("No execution result for node " + nc.getNameWithID());
                     continue;
                 }
                 exec.setMessage(nc.getNameWithID());
