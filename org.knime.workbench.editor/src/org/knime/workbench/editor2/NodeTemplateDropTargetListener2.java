@@ -151,7 +151,8 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
     @Override
     public void dragLeave(final DropTargetEvent event) {
         if (m_markedNode != null) {
-            redrawNode();
+            m_markedNode.unmark();
+            m_markedNode = null;
         }
         if (m_markedEdge != null) {
             m_markedEdge.getFigure().setForegroundColor(BLACK);
@@ -216,11 +217,10 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
                 }
             }
         }
-        if (nodeCount > 0 || edgeCount > 0) {
-            m_viewer.getControl().setRedraw(false);
-        }
+
         if (m_markedNode != null) {
-            redrawNode();
+            m_markedNode.unmark();
+            m_markedNode = null;
         }
 
         if (m_markedEdge != null) {
@@ -242,19 +242,6 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
             m_markedEdge = edge;
             m_markedEdge.getFigure().setForegroundColor(RED);
         }
-
-        if (nodeCount > 0 || edgeCount > 0) {
-            m_viewer.getControl().setRedraw(true);
-        }
-    }
-
-    /**
-     *
-     */
-    private void redrawNode() {
-        m_markedNode.unmark();
-        m_viewer.getControl().redraw();
-        m_markedNode = null;
     }
 
     /**
