@@ -212,7 +212,8 @@ public final class FilesHistoryPanel extends JPanel {
                         if (Files.isDirectory(path)) {
                             setText("Error: output location is a directory");
                             setForeground(ERROR);
-                        } else if (!Files.isWritable(path) && !FileUtil.looksLikeUNC(path)) {
+                        } else if (!Files.isWritable(path)
+                            && !(FileUtil.looksLikeUNC(path) || FileUtil.isWindowsNetworkMount(path))) {
                             setText("Error: no write permission to output file");
                             setForeground(ERROR);
                         } else {
@@ -224,7 +225,8 @@ public final class FilesHistoryPanel extends JPanel {
                         if ((parent == null) || !Files.exists(parent)) {
                             setText("Error: directory of output file does not exist");
                             setForeground(ERROR);
-                        } else if (!Files.isWritable(path.getParent()) && !FileUtil.looksLikeUNC(url)) {
+                        } else if (!Files.isWritable(path.getParent())
+                            && !(FileUtil.looksLikeUNC(url) || FileUtil.isWindowsNetworkMount(path.getParent()))) {
                             setText("Error: no write permissions in directory");
                             setForeground(ERROR);
                         }
@@ -263,7 +265,8 @@ public final class FilesHistoryPanel extends JPanel {
                         if (!Files.isDirectory(path)) {
                             setText("Error: output location is not a directory");
                             setForeground(ERROR);
-                        } else if (!Files.isWritable(path) && !FileUtil.looksLikeUNC(path)) {
+                        } else if (!Files.isWritable(path)
+                            && !(FileUtil.looksLikeUNC(path) || FileUtil.isWindowsNetworkMount(path))) {
                             setText("Error: no write permission to output directory");
                             setForeground(ERROR);
                         }
@@ -315,7 +318,8 @@ public final class FilesHistoryPanel extends JPanel {
                         if (Files.isDirectory(path)) {
                             setText("Error: input location is a directory");
                             setForeground(ERROR);
-                        } else if (!Files.isReadable(path) && !FileUtil.looksLikeUNC(path)) {
+                        } else if (!Files.isReadable(path)
+                            && !(FileUtil.looksLikeUNC(path) || FileUtil.isWindowsNetworkMount(path))) {
                             setText("Error: no read permission on input file");
                             setForeground(ERROR);
                         }
@@ -354,7 +358,8 @@ public final class FilesHistoryPanel extends JPanel {
                         if (!Files.isDirectory(path)) {
                             setText("Error: input location is not a directory");
                             setForeground(ERROR);
-                        } else if (!Files.isReadable(path) && !FileUtil.looksLikeUNC(path)) {
+                        } else if (!Files.isReadable(path)
+                            && !(FileUtil.looksLikeUNC(path) || FileUtil.isWindowsNetworkMount(path))) {
                             setText("Error: no read permission on input directory");
                             setForeground(ERROR);
                         }

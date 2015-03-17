@@ -1093,18 +1093,48 @@ public final class FileUtil {
     public static boolean looksLikeUNC(final URL url) {
         // this looks like an UNC path, a real file URL does not have a host
         // Java does not handle UNC URLs correctly, see bug #5864
+        return Platform.OS_WIN32.equals(Platform.getOS()) && "file".equalsIgnoreCase(url.getProtocol())
+            && !StringUtils.isEmpty(url.getHost());
+    }
+
+
+    /**
+     * Returns whether the given path is within a mounted network drive on Windows.
+     *
+     * @param path any path
+     * @return <code>true</code> if the path is on a network drive, <code>false</code> otherwise or if the current OS is
+     *         not Windows
+     * @since 2.11
+     */
+    public static boolean isWindowsNetworkMount(final Path path) {
         if (!Platform.OS_WIN32.equals(Platform.getOS())) {
             return false;
-        } else if (!"file".equalsIgnoreCase(url.getProtocol())) {
-            return false;
-        } else if (!StringUtils.isEmpty(url.getHost())) {
-            return true;
-        } else {
-            // file URL without host => check if the drive letter is a mounted network share
-            Path path = getFileFromURL(url).toPath();
-            return looksLikeUNC(path);
         }
+
+        Path root = path.getRoot();
+        FileSystemView fsv = FileSystemView.getFileSystemView();
+        return fsv.getSystemDisplayName(root.toFile()).contains("\\\\");
     }
+
+    /**
+     * Returns whether the given file-URL is within a mounted network drive on Windows.
+     *
+     * @param url any file-URL
+     * @return <code>true</code> if the path is on a network drive, <code>false</code> otherwise or if the current OS is
+     *         not Windows
+     * @since 2.11
+     */
+    public static boolean isWindowsNetworkMount(final URL url) {
+        if (!Platform.OS_WIN32.equals(Platform.getOS()) || !"file".equals(url.getProtocol())) {
+            return false;
+        }
+
+        Path path = getFileFromURL(url).toPath();
+        Path root = path.getRoot();
+        FileSystemView fsv = FileSystemView.getFileSystemView();
+        return fsv.getSystemDisplayName(root.toFile()).contains("\\\\");
+    }
+
 
     /**
      * Returns whether the given path is very likely a UNC path. UNCs are only supported by Windows, so on all other
@@ -1116,17 +1146,8 @@ public final class FileUtil {
      */
     public static boolean looksLikeUNC(final Path path) {
         // Java does not handle UNC URLs correctly, see bug #5864
-        if (!Platform.OS_WIN32.equals(Platform.getOS())) {
-            return false;
-        } else if (path.toString().startsWith("\\\\")) {
-            return false;
-        } else {
-            Path root = path.getRoot();
-            FileSystemView fsv = FileSystemView.getFileSystemView();
-            return fsv.getSystemDisplayName(root.toFile()).contains("\\\\");
-        }
+        return Platform.OS_WIN32.equals(Platform.getOS()) && path.toString().startsWith("\\\\");
     }
-
 
     /**
      * Tries to convert the given path into a URL. Either the path is already a valid URL or it denotes a local file
