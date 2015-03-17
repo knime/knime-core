@@ -2857,10 +2857,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // in case of success (w/ or w/out loop) or IDLE in case of error.
             nc.performStateTransitionEXECUTED(status);
             boolean canConfigureSuccessors = true;
+            // remember previous message in case loop restart fails...
+            NodeMessage latestNodeMessage = nc.getNodeMessage();
             if (nc instanceof NativeNodeContainer) {
                 NativeNodeContainer nnc = (NativeNodeContainer)nc;
-                // remember previous message in case loop restart fails...
-                NodeMessage latestNodeMessage = nnc.getNodeMessage();
                 if (success) {
                     Node node = nnc.getNode();
                     // process start of bundle of parallel chunks
@@ -2940,14 +2940,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         }
                     }
                 }
-                // note this is NOT the else of the if above - success can
-                // be modified...
-                if (!success) {
-                    // clean up node interna and status (but keep org. message!)
-                    // switch from IDLE to CONFIGURED if possible!
-                    configureSingleNodeContainer(nnc, /*keepNodeMessage=*/false);
-                    nnc.setNodeMessage(latestNodeMessage);
-                }
+            }
+            // note this is NOT the else of the if above - success can be modified...
+            if (!success && nc instanceof SingleNodeContainer) {
+                // clean up node interna and status (but keep org. message!)
+                // switch from IDLE to CONFIGURED if possible!
+                configureSingleNodeContainer((SingleNodeContainer)nc, /*keepNodeMessage=*/true);
+                nc.setNodeMessage(latestNodeMessage);
             }
             // now handle non success for all types of nodes:
             if (!success) {

@@ -926,11 +926,20 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         // theoretically we can come from any state into queued state, e.g. this node can be marked for
         // execution (which is the most likely state when run from the outer workflow) and then something is done
         // internally that causes an internal checkForNodeStateChanges.
-        if (!m_wfm.isLocalWFM() ) {
-            m_wfm.markForExecution(true);
-        }
+        runIfInExternalExecutor(() -> m_wfm.markForExecution(true));
         setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
         return true;
+    }
+
+    private void runIfInExternalExecutor(final Runnable r) {
+        if (!m_wfm.isLocalWFM()) {
+            m_isPerformingActionCalledFromParent = true;
+            try {
+                r.run();
+            } finally {
+                m_isPerformingActionCalledFromParent = false;
+            }
+        }
     }
 
     /** {@inheritDoc} */
@@ -941,9 +950,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             switch (getInternalState()) {
             case EXECUTED_QUEUED:
             case CONFIGURED_QUEUED:
-                if (!m_wfm.isLocalWFM()) {
-                    m_wfm.mimicRemotePreExecute();
-                }
+                runIfInExternalExecutor(() -> m_wfm.mimicRemotePreExecute());
                 setInternalState(InternalNodeContainerState.PREEXECUTE);
                 return true;
             default:
@@ -971,9 +978,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
                     setInternalState(InternalNodeContainerState.EXECUTING);
                 } else {
-                    if (!m_wfm.isLocalWFM()) {
-                        m_wfm.mimicRemoteExecuting();
-                    }
+                    runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuting());
                     setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
                 }
                 break;
@@ -992,9 +997,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                              // encountered during doBeforeExecution
             case EXECUTING:
             case EXECUTINGREMOTELY:
-                if (!m_wfm.isLocalWFM()) {
-                    m_wfm.mimicRemotePostExecute();
-                }
+                runIfInExternalExecutor(() -> m_wfm.mimicRemotePostExecute());
                 setInternalState(InternalNodeContainerState.POSTEXECUTE);
                 break;
             default:
@@ -1010,9 +1013,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
             case POSTEXECUTE:
-                if (!m_wfm.isLocalWFM()) {
-                    m_wfm.mimicRemoteExecuted(status);
-                }
+                runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuted(status));
                 if (status.isSuccess()) {
                     setInternalState(InternalNodeContainerState.EXECUTED);
                 } else {
