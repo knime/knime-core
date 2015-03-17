@@ -158,7 +158,7 @@ public class TableSorterTest {
 
         sorter.setMaxRows(maxNumRowsPerContainer);
         // 10MB free memory
-        long currentlyUsed = MemoryAlertSystem.getInstance().getUsedMemory();
+        long currentlyUsed = MemoryAlertSystem.getUsedMemory();
         double fraction = Math.max(1, currentlyUsed + (10 << 20) / MemoryAlertSystem.getInstance().getMaximumMemory());
 
         sorter.setMemService(new MemoryAlertSystem(fraction));
