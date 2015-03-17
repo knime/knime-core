@@ -65,45 +65,49 @@ import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.util.Pair;
 
 /**
+ * Class which holds a all input columns and all configuration panels.
  *
- * @author tibuch
+ * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
 public abstract class SelectionConfiguration {
     /**
-     *
+     * List model which holds the input columns. All columns in this list will not be modified.
      */
     protected DefaultListModel<String> m_inputListModel = null;
 
 
     /**
-     *
+     * The indices of the added configuration panels.
      */
     protected List<Integer> m_dropPaneIndices;
 
     /**
-     *
+     * Mapping from dropPaneIndices to configuration panel configurations.
      */
     protected HashMap<Integer, DropPaneConfig> m_panelList;
 
     /**
-     *
+     * Index of the next added configuration panel.
+     * This member will always get incremented.
      */
     protected int m_index = 0;
 
     /**
-     *
+     * The configuration dialog factory.
      */
     protected ConfigurationDialogFactory m_fac;
 
 
     /**
-     *
+     * The input column filter.
      */
     protected InputFilter<DataColumnSpec> m_filter;
 
     /**
-     * @param filter
-     * @param fac
+     * A new SelectionConfiguration which filters the input columns.
+     *
+     * @param filter to filter all input columns.
+     * @param fac the factory to create a new instance of the configuration dialog for each configuration panel
      */
     public SelectionConfiguration(final InputFilter<DataColumnSpec> filter, final ConfigurationDialogFactory fac ) {
         m_filter = filter;
@@ -113,7 +117,9 @@ public abstract class SelectionConfiguration {
     }
 
     /**
-     * @param configurationDialogFactory
+     * A new SelectionConfiguration which does not filter the input columns.
+     *
+     * @param fac the factory to create a new instance of the configuration dialog for each configuration panel
      */
     public SelectionConfiguration(final ConfigurationDialogFactory fac) {
         m_filter = null;
@@ -122,40 +128,56 @@ public abstract class SelectionConfiguration {
         m_panelList = new HashMap<Integer, DropPaneConfig>();
     }
 
-    public abstract int drop(final String s);
+    /**
+     * Add a new configuration panel to the drop panel.
+     *
+     * @param columnName the column name which will be dropped
+     * @return the index of the new added configuration panel
+     */
+    public abstract int drop(final String columnName);
 
     /**
-     * @return
+     * @return the model of the input list
      */
     public ListModel<String> getInputListModel() {
-        // TODO Auto-generated method stub
         return m_inputListModel;
     }
 
-    public void addElement(final String str) {
-        m_inputListModel.addElement(str);
+    /**
+     * @param columnName the column name to add to the input list
+     */
+    public void addElement(final String columnName) {
+        m_inputListModel.addElement(columnName);
     }
 
     /**
-     *
+     * Clear input list and panel list.
      */
     public void clear() {
-        // TODO Auto-generated method stub
         m_inputListModel.clear();
         m_panelList.clear();
     }
 
     /**
-     * @param size
+     * @param i set the index.
+     * Note: this index should always be incremented.
      */
-    public void setIndex(final int size) {
-        // TODO Auto-generated method stub
-        m_index = size;
+    public void setIndex(final int i) {
+        m_index = i;
     }
 
+    /**
+     * @param settings
+     * @param specs
+     * @throws NotConfigurableException
+     */
     public abstract void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException;
 
+    /**
+     * @param settings
+     * @throws InvalidSettingsException
+     */
     public abstract void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
@@ -164,15 +186,29 @@ public abstract class SelectionConfiguration {
      */
     public abstract void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException;
 
+    /**
+     * @param settings
+     * @throws InvalidSettingsException
+     */
     public abstract void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException;
 
+    /**
+     * @param settings
+     */
     public abstract void saveSettings(final NodeSettingsWO settings);
 
 
+    /**
+     * @return
+     */
     public HashMap<Integer, DropPaneConfig> getData() {
         return m_panelList;
     }
 
+    /**
+     * @param spec
+     * @return
+     */
     public abstract List<Pair<String, PaneConfigurationDialog>> configure(final DataTableSpec spec);
 
     /**

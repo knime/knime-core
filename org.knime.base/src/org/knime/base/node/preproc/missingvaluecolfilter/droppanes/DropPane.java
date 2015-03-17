@@ -127,22 +127,18 @@ public class DropPane extends Pane {
             new GridBagConstraints(0, 0, 2, 1, 0, 0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
                 new Insets(4, 4, 4, 0), 0, 0);
         c.gridwidth = 1;
-        c.gridheight = 2;
-        getComponentPanel().add(m_columnList, c);
-        c.anchor = GridBagConstraints.NORTHEAST;
-        c.fill = GridBagConstraints.NONE;
-        c.gridx++;
-        getComponentPanel().add(m_removeButton, c);
-        c.gridy++;
+        c.gridheight = 1;
+        getBody().add(m_columnList, c);
         c.anchor = GridBagConstraints.CENTER;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 1;
         c.weightx = 1;
         c.gridheight = 1;
-        getComponentPanel().add(m_dialog.getComponentPanel(), c);
+        getBody().add(m_dialog.getComponentPanel(), c);
         getParent().revalidate();
         m_loading = false;
     }
+
 
     /**
      *

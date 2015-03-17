@@ -48,12 +48,16 @@
  */
 package org.knime.base.node.preproc.missingvaluecolfilter.droppanes;
 
+import java.awt.Color;
+import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.SwingConstants;
 
 import org.knime.base.node.preproc.missingvaluecolfilter.PaneConfigurationDialog;
 import org.knime.base.node.preproc.missingvaluecolfilter.SelectionConfiguration;
@@ -103,6 +107,14 @@ public abstract class Pane {
      */
     protected JButton m_removeButton;
 
+    private JSeparator m_sep;
+
+    private JPanel m_header;
+
+    private JPanel m_body;
+
+    private JPanel m_footer;
+
     /**
      * @param parent of this panel
      * @param config which holds all other dialog panels.
@@ -113,6 +125,10 @@ public abstract class Pane {
         m_position = position;
         m_config = config;
         m_panel = new JPanel(new GridBagLayout());
+
+        m_header = new JPanel(new GridBagLayout());
+        m_body = new JPanel(new GridBagLayout());
+        m_footer = new JPanel(new GridBagLayout());
         m_dialog = m_config.getData().get(m_position).getDialog();
 
         m_removeButton = new JButton(new ImageIcon(getClass().getResource("../remove_icon.png")));
@@ -121,6 +137,60 @@ public abstract class Pane {
         m_removeButton.setOpaque(true);
         m_removeButton.setContentAreaFilled(false);
         m_removeButton.setToolTipText("Remove this panel");
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 0;
+        c.gridheight = 0;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(2, 0, 0, 0);
+        m_header.add(m_removeButton, c);
+
+        m_sep = new JSeparator(SwingConstants.HORIZONTAL);
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 2, 0);
+        c.weightx = 1;
+        c.gridy++;
+        c.weighty = 1;
+        m_footer.setBackground(Color.black);
+        m_footer.add(m_sep, c);
+
+        c.insets = new Insets(0, 0, 0, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weighty = 1;
+        c.weightx = 1;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        m_panel.add(m_header, c);
+
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
+        c.gridy++;
+        m_panel.add(m_body, c);
+        c.gridy++;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weighty = 0;
+        c.gridheight = 1;
+
+        m_panel.add(m_footer, c);
+
+    }
+
+
+    /**
+     * @param visibility of the separator
+     *
+     */
+    public void setSeparatorVisibility(final boolean visibility) {
+        m_sep.setVisible(visibility);
+    }
+
+    public JPanel getBody() {
+        return m_body;
     }
 
     /**

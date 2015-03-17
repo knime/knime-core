@@ -265,8 +265,14 @@ public abstract class SelectionPanel extends JPanel implements DropTargetListene
             }
             int i = m_config.drop(s);
             Pane dp = getNewPane(m_includePanel, m_config, i);
+            if (m_config.getData().size() > 1) {
+                dp.setSeparatorVisibility(true);
+            }
             m_includePanel.add(dp.getComponentPanel(), m_gbc);
             m_gbc.gridy++;
+//            m_includePanel.add(new JSeparator(SwingConstants.HORIZONTAL), m_gbc);
+//            m_gbc.gridy++;
+
 
             m_includePanel.setBackground(UIManager.getColor("Panel.background"));
             m_scrollPane.revalidate();
