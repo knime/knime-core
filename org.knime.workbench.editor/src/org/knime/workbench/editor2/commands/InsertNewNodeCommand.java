@@ -176,11 +176,11 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         p = 0;
         while (!hostWFM.canAddConnection(m_container.getID(), p, m_edge.getDest(), m_edge.getDestPort())) {
             p++;
-            if (p > m_container.getNrInPorts()) {
+            if (p > m_container.getNrOutPorts()) {
                 break;
             }
         }
-        if (p < m_container.getNrInPorts()) {
+        if (p < m_container.getNrOutPorts()) {
             hostWFM.addConnection(m_container.getID(), p, m_edge.getDest(), m_edge.getDestPort());
         }
 
