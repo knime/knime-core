@@ -106,6 +106,7 @@ public final class DataTableRowInput extends RowInput {
      * returned.
      *
      * @return the number of rows in the table - or -1 if the underlying table is not a buffered data table.
+     * @since 2.12
      */
     public long getRowCount() {
         return m_rowCount;

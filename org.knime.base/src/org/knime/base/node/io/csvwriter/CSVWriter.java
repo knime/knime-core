@@ -160,6 +160,7 @@ public class CSVWriter extends BufferedWriter {
             throw cce;
         }
     }
+
     /**
      * Same as above just usable with a streaming node implementation.
      * @param input
@@ -167,6 +168,7 @@ public class CSVWriter extends BufferedWriter {
      * @throws IOException
      * @throws CanceledExecutionException
      * @throws InterruptedException
+     * @since 2.12
      */
     public void write(final RowInput input, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException, InterruptedException {

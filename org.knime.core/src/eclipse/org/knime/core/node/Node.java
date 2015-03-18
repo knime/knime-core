@@ -1231,8 +1231,11 @@ public final class Node implements NodeModelWarningListener {
         return m_fileStoreHandler;
     }
 
-    /** Called immediately before execution to open the file store handler.
+    /**
+     * Called immediately before execution to open the file store handler.
+     *
      * @param ec The (freshly created) file store handler
+     * @since 2.12
      */
     public void openFileStoreHandler(final ExecutionContext ec) {
         // this call requires the FSH to be set on the node (ideally NativeNodeContainer.createExecutionContext

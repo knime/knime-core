@@ -115,6 +115,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
+                <message_argument value="findJobManager()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/util/FileUtil.java" type="org.knime.core.util.FileUtil">
         <filter id="1141899266">
             <message_arguments>

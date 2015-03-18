@@ -54,7 +54,9 @@ import org.knime.core.node.BufferedDataTable;
 
 /**
  * Convenient class to create a buffered data table where a row output is required.
+ *
  * @author ohl
+ * @since 2.12
  */
 public class BufferedDataTableRowOutput extends RowOutput {
 

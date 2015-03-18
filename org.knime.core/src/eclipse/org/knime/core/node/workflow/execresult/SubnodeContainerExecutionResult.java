@@ -53,7 +53,9 @@ import org.knime.core.node.workflow.SubNodeContainer;
 /**
  * Specialized execution result for {@link SubNodeContainer}. Offers access
  * to all contained node's execution result.
+ *
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 2.12
  */
 public class SubnodeContainerExecutionResult extends NodeContainerExecutionResult {
 
