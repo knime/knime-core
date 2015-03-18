@@ -82,35 +82,33 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
 
     private final NodeFactory<? extends NodeModel> m_factory;
 
-    private final boolean m_snapToGrid;
-
     private NodeContainer m_container;
 
     private NodeContainerEditPart m_oldNodeID;
 
-    private DeleteCommand m_dc;
+    private DeleteCommand m_deleteCommand;
 
     /**
-     * Creates a new command.
+     * Replaces a node with a new node.
+     *
      *
      * @param manager The workflow manager that should host the new node
      * @param factory The factory of the Node that should be added
-     * @param location Initial visual location in the
+     * @param nodeToReplace the node which should be replaced.
      */
     public ReplaceNodeCommand(final WorkflowManager manager,
-            final NodeFactory<? extends NodeModel> factory, final NodeContainerEditPart oldNodeID, final boolean snapToGrid) {
+            final NodeFactory<? extends NodeModel> factory, final NodeContainerEditPart nodeToReplace) {
         super(manager);
         m_factory = factory;
-        m_oldNodeID = oldNodeID;
-        m_snapToGrid = snapToGrid;
-        m_dc = new DeleteCommand(Collections.singleton(m_oldNodeID), manager);
+        m_oldNodeID = nodeToReplace;
+        m_deleteCommand = new DeleteCommand(Collections.singleton(m_oldNodeID), manager);
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.
      * {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return m_dc.canExecute();
+        return m_deleteCommand.canExecute();
     }
 
     /** {@inheritDoc} */
@@ -145,7 +143,7 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
         Set<ConnectionContainer> incomingConnectionsForOldNode = hostWFM.getIncomingConnectionsFor(nodeContainer.getID());
         Set<ConnectionContainer> outgoingConnectionsForOldNode = hostWFM.getOutgoingConnectionsFor(nodeContainer.getID());
 
-        m_dc.execute();
+        m_deleteCommand.execute();
 
         LOGGER.debug("Replacing " + m_oldNodeID + ".");
         // Add node to workflow and get the container
@@ -164,15 +162,15 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
             return;
         }
         int[] bounds = uiInformation.getBounds();
-        // create extra info and set it
 
+        // replace info of the new node with info of the old one
         NodeUIInformation info = new NodeUIInformation(
                 bounds[0], bounds[1], -1, -1, true);
-        info.setSnapToGrid(false);
+        info.setSnapToGrid(uiInformation.getSnapToGrid());
         info.setIsDropLocation(false);
         m_container.setUIInformation(info);
 
-        // set connections
+        // set incoming connections
         Iterator<ConnectionContainer> itr = incomingConnectionsForOldNode.iterator();
         while (itr.hasNext()) {
             ConnectionContainer cc = itr.next();
@@ -183,6 +181,7 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
             }
         }
 
+        // set outgoing connections
         itr = outgoingConnectionsForOldNode.iterator();
         while (itr.hasNext()) {
             ConnectionContainer cc = itr.next();
@@ -192,15 +191,12 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
                 }
             }
         }
-
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        return m_dc.canUndo();
-//        return m_container != null
-//            && getHostWFM().canRemoveNode(m_container.getID());
+        return m_deleteCommand.canUndo();
     }
 
     /**
@@ -208,10 +204,10 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        LOGGER.debug("Undo: Removing node #" + m_container.getID());
+        LOGGER.debug("Undo: Replace node #" + m_container.getID());
         if (canUndo()) {
             getHostWFM().removeNode(m_container.getID());
-            m_dc.undo();
+            m_deleteCommand.undo();
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),
                     "Operation no allowed", "The node "

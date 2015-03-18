@@ -47,7 +47,6 @@
  */
 package org.knime.workbench.editor2;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPart;
@@ -60,8 +59,6 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.internal.win32.OS;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
@@ -116,6 +113,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
 
     public NodeTemplateDropTargetListener2(final EditPartViewer viewer) {
         m_viewer = viewer;
+
     }
 
     /**
@@ -202,6 +200,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
                 EditPart ep = m_viewer.findObjectAt(dropLocation.getTranslated(i, j));
                 if (ep instanceof NodeContainerEditPart) {
                     double temp = dropLocation.getDistance(dropLocation.getTranslated(i, j));
+                    // choose nearest node to mouse position
                     if (nodedist >= temp) {
                         node = (NodeContainerEditPart)ep;
                         nodedist = temp;
@@ -209,6 +208,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
                     nodeCount++;
                 } else if (ep instanceof ConnectionContainerEditPart) {
                     double temp = dropLocation.getDistance(dropLocation.getTranslated(i, j));
+                    // choose nearest edge to mouse-position
                     if (edgedist >= temp) {
                         edge = (ConnectionContainerEditPart)ep;
                         edgedist = temp;
@@ -218,12 +218,34 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
             }
         }
 
+        unmark(wfm);
+
+        if (node != null && nodeCount >= edgeCount) {
+            m_markedNode = node;
+            m_markedNode.mark();
+            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+            WindowsDNDHelper.hideDragImage();
+        } else if (edge != null) {
+            m_markedEdge = edge;
+            ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(3);
+            m_markedEdge.getFigure().setForegroundColor(RED);
+
+            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+            WindowsDNDHelper.hideDragImage();
+        }
+    }
+
+    /**
+     * Unmark node and edge.
+     * @param wfm the workflow manager
+     */
+    private void unmark(final WorkflowManager wfm) {
         if (m_markedNode != null) {
             m_markedNode.unmark();
-
             m_markedNode = null;
 
-            showDragImage();
+            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+            WindowsDNDHelper.showDragImage();
         }
 
         if (m_markedEdge != null) {
@@ -237,50 +259,9 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
             }
             ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(1);
             m_markedEdge = null;
-            showDragImage();
-        }
 
-        if (node != null && nodeCount >= edgeCount) {
-            m_markedNode = node;
-            m_markedNode.mark();
-            hideDragImage();
-        } else if (edge != null) {
-            m_markedEdge = edge;
-            ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(3);
-            m_markedEdge.getFigure().setForegroundColor(RED);
-            hideDragImage();
-        }
-    }
-
-    /**
-     * This is part of a workaround for windows where parts of the nodes/connections don't get repainted if we drag over.
-     * Take a look at eclipse bug 393868. (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-     */
-    private void hideDragImage() {
-        if (SystemUtils.IS_OS_WINDOWS) {
-            Display.getDefault().asyncExec(new Runnable() {
-
-                @Override
-                public void run() {
-                    OS.ImageList_DragShowNolock(false);
-                }
-            });
-        }
-    }
-
-    /**
-     * This is part of a workaround for windows where parts of the nodes/connections don't get repainted if we drag over.
-     * Take a look at eclipse bug 393868. (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-     */
-    private void showDragImage() {
-        if (SystemUtils.IS_OS_WINDOWS) {
-            Display.getDefault().asyncExec(new Runnable() {
-
-                @Override
-                public void run() {
-                    OS.ImageList_DragShowNolock(true);
-                }
-            });
+            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+            WindowsDNDHelper.showDragImage();
         }
     }
 
@@ -289,6 +270,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
      */
     @Override
     public void drop(final DropTargetEvent event) {
+
         // TODO: get the Selection from the LocalSelectionTransfer
         // check instanceof NodeTemplate and fire a CreateRequest
         LOGGER.debug("drop: " + event);
@@ -304,14 +286,14 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
             request.setFactory(factory);
 
             if (node != null && nodeCount >= edgeCount) {
-
+                // more node pixels than edge pixels found in hit-box
                 m_viewer
                     .getEditDomain()
                     .getCommandStack()
                     .execute(
-                        new ReplaceNodeCommand(wfm, factory.getNewObject(), node, WorkflowEditor
-                            .getActiveEditorSnapToGrid()));
+                        new ReplaceNodeCommand(wfm, factory.getNewObject(), node));
             } else if (edge != null) {
+                // more edge pixels found
                 m_viewer
                     .getEditDomain()
                     .getCommandStack()
@@ -319,6 +301,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
                         new InsertNewNodeCommand(wfm, factory.getNewObject(), edge, WorkflowEditor
                             .getActiveEditorSnapToGrid()));
             } else {
+                // normal insert
                 m_viewer
                     .getEditDomain()
                     .getCommandStack()
@@ -343,6 +326,8 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
                     new CreateMetaNodeCommand(wfm, copy, getDropLocation(event), WorkflowEditor
                         .getActiveEditorSnapToGrid()));
         }
+
+        unmark(wfm);
     }
 
     private AbstractNodeTemplate getSelectionNodeTemplate() {

@@ -84,14 +84,13 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
 
     private ConnectionContainer m_edge;
 
-    private DeleteCommand m_dc;
-
     /**
      * Creates a new command.
      *
      * @param manager The workflow manager that should host the new node
      * @param factory The factory of the Node that should be added
-     * @param location Initial visual location in the
+     * @param edge The edge on which a node should be inserted
+     * @param snapToGrid enabled
      */
     public InsertNewNodeCommand(final WorkflowManager manager,
             final NodeFactory<? extends NodeModel> factory, final ConnectionContainerEditPart edge, final boolean snapToGrid) {
@@ -153,17 +152,18 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         }
 
         // create extra info and set it
-
         int[] boundsSource = hostWFM.getNodeContainer(m_edge.getSource()).getUIInformation().getBounds();
         int[] boundsDest = hostWFM.getNodeContainer(m_edge.getDest()).getUIInformation().getBounds();
+        // insert node between the source and destination of the edge.
         NodeUIInformation info = new NodeUIInformation(
                 (boundsSource[0] + boundsDest[0]) / 2, (boundsSource[1] + boundsDest[1]) / 2, -1, -1, true);
-        info.setSnapToGrid(false);
+        info.setSnapToGrid(m_snapToGrid);
         info.setIsDropLocation(false);
         m_container.setUIInformation(info);
 
         int p = 0;
         while (!hostWFM.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), m_container.getID(), p)) {
+            // search for a valid connection of the source node to this node
             p++;
             if (p > m_container.getNrInPorts()) {
                 break;
@@ -175,6 +175,7 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
 
         p = 0;
         while (!hostWFM.canAddConnection(m_container.getID(), p, m_edge.getDest(), m_edge.getDestPort())) {
+            // search for a valid connection of this node to the destination node of the edge
             p++;
             if (p > m_container.getNrOutPorts()) {
                 break;
@@ -183,8 +184,6 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         if (p < m_container.getNrOutPorts()) {
             hostWFM.addConnection(m_container.getID(), p, m_edge.getDest(), m_edge.getDestPort());
         }
-
-
     }
 
     /** {@inheritDoc} */
