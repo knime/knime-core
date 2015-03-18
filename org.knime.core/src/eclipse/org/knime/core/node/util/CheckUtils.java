@@ -351,7 +351,7 @@ public final class CheckUtils {
                     if (!Files.exists(parent)) {
                         throw new InvalidSettingsException("Directory '" + parent + "' of output file does not exist");
                     } else if (!Files.isWritable(localPath.getParent())
-                        && !FileUtil.looksLikeUNC(localPath.getParent())) {
+                        && !(FileUtil.looksLikeUNC(localPath.getParent()) || FileUtil.isWindowsNetworkMount(localPath))) {
                         throw new InvalidSettingsException("Directory '" + parent + "' is not writable");
                     }
                 }
