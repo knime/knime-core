@@ -5883,6 +5883,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * @param id
      * @return current set of PortObjectSpecs of the given node
+     * @since 2.12
      */
     public PortObjectSpec[] getNodeInputSpecs(final NodeID id) {
         NodeContainer nc = this.getNodeContainer(id);
