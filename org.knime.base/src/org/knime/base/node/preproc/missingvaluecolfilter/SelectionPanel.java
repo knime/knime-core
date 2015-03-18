@@ -63,12 +63,14 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.io.IOException;
 import java.util.HashMap;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -173,6 +175,42 @@ public abstract class SelectionPanel extends JPanel implements DropTargetListene
 
     private void createInputList() {
         m_inputList = new JList<String>(m_config.getInputListModel());
+        m_inputList.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseReleased(final MouseEvent e) {
+                // nothing to do
+            }
+
+            @Override
+            public void mousePressed(final MouseEvent e) {
+             // nothing to do
+            }
+
+            @Override
+            public void mouseExited(final MouseEvent e) {
+             // nothing to do
+            }
+
+            @Override
+            public void mouseEntered(final MouseEvent e) {
+             // nothing to do
+            }
+
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() > 1) {
+                    int selectedIndex = m_inputList.getSelectedIndex();
+                    int i = m_config.drop((String)((DefaultListModel) m_inputList.getModel()).get(selectedIndex));
+                     Pane dp = getNewPane(m_includePanel, m_config, i);
+                     m_includePanel.add(dp.getComponentPanel(), m_gbc);
+                     m_gbc.gridy++;
+                     m_includePanel.setBackground(UIManager.getColor("Panel.background"));
+                     m_scrollPane.revalidate();
+                ((DefaultListModel) m_inputList.getModel()).removeElementAt(selectedIndex);
+                }
+            }
+        });
         m_inputList.setDragEnabled(true);
         m_inputList.setTransferHandler(new ListTransferHandler());
         m_inputList.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
@@ -265,14 +303,8 @@ public abstract class SelectionPanel extends JPanel implements DropTargetListene
             }
             int i = m_config.drop(s);
             Pane dp = getNewPane(m_includePanel, m_config, i);
-            if (m_config.getData().size() > 1) {
-                dp.setSeparatorVisibility(true);
-            }
             m_includePanel.add(dp.getComponentPanel(), m_gbc);
             m_gbc.gridy++;
-//            m_includePanel.add(new JSeparator(SwingConstants.HORIZONTAL), m_gbc);
-//            m_gbc.gridy++;
-
 
             m_includePanel.setBackground(UIManager.getColor("Panel.background"));
             m_scrollPane.revalidate();

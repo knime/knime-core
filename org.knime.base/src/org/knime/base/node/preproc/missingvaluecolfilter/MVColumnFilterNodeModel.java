@@ -141,17 +141,18 @@ public class MVColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
-        long rowWeight = 100 / inData[0].getRowCount();
+        int[] missingCount = new int[inData[0].getDataTableSpec().getNumColumns()];
         boolean stop = true;
+        double rowCount = inData[0].getRowCount();
+        long processedRows = 0;
         for (DataRow row : inData[0]) {
+            exec.setProgress(processedRows++/rowCount);
+
             for (int i = 0; i < row.getNumCells(); i++) {
                 if (percentages[i] > 0) {
                     stop = false;
                     if (row.getCell(i).isMissing()) {
-                        percentages[i] -= rowWeight;
-                        if (percentages[i] <= 0) {
-                            percentages[i] = -1;
-                        }
+                        missingCount[i]++;
                     }
                 }
             }
@@ -165,8 +166,10 @@ public class MVColumnFilterNodeModel extends NodeModel {
         ColumnRearranger r = new ColumnRearranger(inData[0].getDataTableSpec());
         int alreadyRemoved = 0;
         for (int i = 0; i < percentages.length; i++) {
-            if (percentages[i] < 0) {
+            if (percentages[i] > 0) {
+                if (((double)missingCount[i] / inData[0].getRowCount())*100 >= percentages[i]) {
                 r.remove(i - alreadyRemoved++);
+                }
             }
         }
 

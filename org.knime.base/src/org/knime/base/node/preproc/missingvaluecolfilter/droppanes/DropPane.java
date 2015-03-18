@@ -56,6 +56,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
@@ -146,6 +147,41 @@ public class DropPane extends Pane {
     protected void createColumnList() {
         m_columnListModel = new DefaultListModel<String>();
         m_columnList = new JList<String>(m_columnListModel);
+        m_columnList.addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseReleased(final MouseEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void mousePressed(final MouseEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void mouseExited(final MouseEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void mouseEntered(final MouseEvent e) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() > 1) {
+                    int i = m_columnList.getSelectedIndex();
+                    getConfig().addElement(m_columnListModel.get(i));
+                    m_columnListModel.remove(i);
+                }
+            }
+        });
         m_columnList.setCellRenderer(new ListCellRenderer<String>() {
 
             @Override

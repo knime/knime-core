@@ -53,6 +53,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -151,6 +152,8 @@ public abstract class Pane {
         m_header.add(m_removeButton, c);
 
         m_sep = new JSeparator(SwingConstants.HORIZONTAL);
+        m_sep.setVisible(false);
+
         c.anchor = GridBagConstraints.CENTER;
         c.insets = new Insets(0, 0, 2, 0);
         c.weightx = 1;
@@ -177,7 +180,7 @@ public abstract class Pane {
         c.gridheight = 1;
 
         m_panel.add(m_footer, c);
-
+        m_panel.setBorder(BorderFactory.createLoweredBevelBorder());
     }
 
 
@@ -241,6 +244,15 @@ public abstract class Pane {
      */
     public SelectionConfiguration getConfig() {
         return m_config;
+    }
+
+
+    /**
+     * @param sep
+     */
+    public void setSeparator(final JSeparator sep) {
+        // TODO Auto-generated method stub
+        m_sep = sep;
     }
 
 }
