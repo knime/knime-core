@@ -144,7 +144,6 @@ public final class MemoryAlertSystem {
         if (m_lastEventTimestamp.getAndAccumulate(not.getTimeStamp(), (a, b) -> Math.max(a, b)) < not.getTimeStamp()) {
             m_lowMemory = true;
             sendMemoryAlert();
-            System.err.println("Memory event " + not.getTimeStamp());
         }
     }
 
@@ -154,7 +153,6 @@ public final class MemoryAlertSystem {
         if (m_lastEventTimestamp.getAndAccumulate(not.getTimeStamp(), (a, b) -> Math.max(a, b)) < not.getTimeStamp()) {
             LOGGER.debug("Memory usage below threshold of " + usageThreshold + " after GC run");
             m_lowMemory = false;
-            System.err.println("GC event " + not.getTimeStamp());
         }
 
         m_gcEventLock.lock();
