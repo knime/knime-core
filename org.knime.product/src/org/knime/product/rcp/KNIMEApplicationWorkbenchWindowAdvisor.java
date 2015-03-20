@@ -55,6 +55,9 @@ import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.ui.IViewReference;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -66,6 +69,11 @@ import org.eclipse.ui.internal.WorkbenchWindow;
 import org.eclipse.ui.internal.ide.IDEInternalPreferences;
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.EclipseUtil;
+import org.knime.product.rcp.intro.IntroPage;
+import org.knime.workbench.explorer.view.ExplorerView;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.knime.workbench.ui.startup.StartupMessage;
 
 /**
@@ -123,6 +131,39 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
     }
 
     /**
+     *
+     */
+    private void showIntroPage() {
+        IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
+
+//        if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
+            IntroPage.INSTANCE.show(false);
+            if (IntroPage.INSTANCE.isFreshWorkspace()) {
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setMaximized(true);
+            }
+//        }
+
+        if (!EclipseUtil.isRunFromSDK() && IntroPage.INSTANCE.isFreshWorkspace()) {
+            for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+                for (IWorkbenchPage page : window.getPages()) {
+                    for (IViewReference ref : page.getViewReferences()) {
+                        if (ExplorerView.ID.equals(ref.getId())) {
+                            final ExplorerView explorer = (ExplorerView)ref.getView(true);
+                            explorer.getViewer().getControl().getDisplay().asyncExec(new Runnable() {
+                                @Override
+                                public void run() {
+                                    explorer.getViewer().expandAll();
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @SuppressWarnings("restriction")
@@ -147,6 +188,7 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
             .forEach(item -> toolbarManager.remove(item));
         toolbarManager.update(true);
 
+        showIntroPage();
         showStartupMessages();
     }
 

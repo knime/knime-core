@@ -51,10 +51,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.IViewReference;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -62,7 +58,6 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.EclipseUtil;
 import org.knime.product.rcp.intro.IntroPage;
-import org.knime.workbench.explorer.view.ExplorerView;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.Bundle;
@@ -134,35 +129,6 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         // for the Update Manager is set and it asks the user for a password
         // if the Update Site is password protected
         IProxyService.class.getName();
-
-
-        IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
-        boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
-
-        if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
-            IntroPage.INSTANCE.show(false);
-            if (IntroPage.INSTANCE.isFreshWorkspace()) {
-                PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setMaximized(true);
-            }
-        }
-
-        if (!EclipseUtil.isRunFromSDK() && IntroPage.INSTANCE.isFreshWorkspace()) {
-            for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
-                for (IWorkbenchPage page : window.getPages()) {
-                    for (IViewReference ref : page.getViewReferences()) {
-                        if (ExplorerView.ID.equals(ref.getId())) {
-                            final ExplorerView explorer = (ExplorerView)ref.getView(true);
-                            explorer.getViewer().getControl().getDisplay().asyncExec(new Runnable() {
-                                @Override
-                                public void run() {
-                                    explorer.getViewer().expandAll();
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**
