@@ -44,6 +44,7 @@
  */
 package org.knime.core.node;
 
+import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.workflow.NodeContext;
 
 
@@ -168,20 +169,32 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * at most once per view instance!
      * @param title The view title.
      * @see #closeView() */
-    final void openView(final String title) {
+    final void openView(final String title, final Rectangle knimeWindowBounds) {
         m_nodeModel.registerView(this);
         m_viewName = title;
-        callOpenView(title);
+        callOpenView(title, knimeWindowBounds);
     }
 
     /** Direct(!) subclasses override this method and open the view or frame.
-     * This method is called from {@link #openView(String)} and is called
+     * This method is called
      * at most once.
      * @param title the default title of the view. It should be shown in the
      * view title bar (if at all possible).
      * @since 2.8
      */
     protected abstract void callOpenView(final String title);
+
+    /** Direct(!) subclasses override this method and open the view or frame.
+     * This method is called
+     * at most once.
+     * @param title the default title of the view. It should be shown in the
+     * view title bar (if at all possible).
+     * @param knimeWindowBounds the window bounds
+     * @since 2.12
+     */
+    protected void callOpenView(final String title, final Rectangle knimeWindowBounds) {
+        callOpenView(title);
+    }
 
     /** Closes the view and disposes all allocated resources. The view is not
      * meant to be opened again. This method is the counterpart to

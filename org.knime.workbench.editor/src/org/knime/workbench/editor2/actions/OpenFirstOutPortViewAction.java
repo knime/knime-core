@@ -48,6 +48,8 @@ package org.knime.workbench.editor2.actions;
 import javax.swing.SwingUtilities;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
@@ -146,6 +148,7 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
                 + nodeParts.length + " node(s)...");
         for (NodeContainerEditPart p : nodeParts) {
             final NodeContainer cont = p.getNodeContainer();
+            final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
             // first port is flow var port
             if (cont.getNrOutPorts() >= 2) {
                 SwingUtilities.invokeLater(new Runnable() {
@@ -155,7 +158,7 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
                         NodeOutPort port = cont.getOutPort(1);
                         LOGGER.debug("Open First Out-Port View "
                            + cont.getName() + " on port " + port.getPortName());
-                        port.openPortView(port.getPortName());
+                        port.openPortView(port.getPortName(), knimeWindowBounds);
                     }
                 });
             }

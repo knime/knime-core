@@ -69,6 +69,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
+import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContext;
 
@@ -313,17 +314,25 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         return m_frame.getJMenuBar();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void callOpenView(final String title) {
+        callOpenView(title, null);
+    }
+
     /** {@inheritDoc}
      *
      * <strong>Do not</strong> call this method. It's being used by the framework
      * (if views are shown within a JFrame) or by eclipse (if available, i.e. when
      * views are embedded in eclipse).
      *
-     * @since 2.8
+     * @since 2.12
      * @noreference This method is not intended to be referenced by clients.
      */
     @Override
-    protected final void callOpenView(final String title) {
+    protected final void callOpenView(final String title, final Rectangle knimeWindowBounds) {
         NodeContext.pushContext(m_nodeContext);
         try {
             getNodeModel().addWarningListener(NodeView.this);
@@ -342,7 +351,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
                         m_comp.repaint();
                     }
                     m_frame.pack();
-                    m_frame.setLocationRelativeTo(null); // puts in screen center
+                    ViewUtils.centerLocation(m_frame, knimeWindowBounds);
                     m_frame.setVisible(true);
                     m_frame.toFront();
                 }
@@ -435,13 +444,30 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      */
     @Deprecated
     public final JFrame createFrame(final String viewTitle) {
+        return createFrame(viewTitle, null);
+    }
+
+    /** Opens the new view. Subclasses should not be required to open views
+     * programmatically. Opening is done via the framework and dedicated user
+     * actions.
+     * @param viewTitle the tile for this view
+     * @param knimeWindowBounds Bounds of the KNIME window
+     * @return a {@link JFrame} with an initialized {@link NodeView}
+     * @deprecated This method will be removed without replacement in future
+     *             versions of KNIME as client code should not be required to
+     *             open views.
+     * @since 2.12
+     */
+    @Deprecated
+    public final JFrame createFrame(final String viewTitle, final Rectangle knimeWindowBounds) {
         final String name;
         if (viewTitle == null) {
             name = "View \"no title\"";
         } else {
             name = viewTitle;
         }
-        openView(name);
+        //openView(name, knimeWindowBounds);
+        openView(name, null);
         return m_frame;
     }
 

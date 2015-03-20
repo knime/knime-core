@@ -52,8 +52,10 @@ import javax.swing.SwingUtilities;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -119,10 +121,11 @@ public class OpenViewAction extends Action {
         LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#" + m_index + ")");
         try {
             final String title = m_nodeContainer.getViewName(m_index) + " - " + m_nodeContainer.getDisplayLabel();
+            final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    Node.invokeOpenView(m_nodeContainer.getView(m_index), title);
+                    Node.invokeOpenView(m_nodeContainer.getView(m_index), title, knimeWindowBounds);
                 }
             });
         } catch (Throwable t) {

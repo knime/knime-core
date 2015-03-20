@@ -480,6 +480,7 @@ public class WrappedNodeDialog extends Dialog {
             m_nodeContainer.getParent()
                     .executeUpToHere(m_nodeContainer.getID());
             if (openView) {
+                final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
                 SwingUtilities.invokeLater(new Runnable() {
                     /** {inheritDoc} */
                     @Override
@@ -497,7 +498,7 @@ public class WrappedNodeDialog extends Dialog {
                         if (m_nodeContainer.getNrOutPorts() > pIndex) {
                             NodeOutPort port =
                                     m_nodeContainer.getOutPort(pIndex);
-                            port.openPortView(port.getPortName());
+                            port.openPortView(port.getPortName(), knimeWindowBounds);
                         }
                     }
                 });

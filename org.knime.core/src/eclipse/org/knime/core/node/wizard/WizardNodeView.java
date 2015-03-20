@@ -58,6 +58,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -139,7 +140,15 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
      * {@inheritDoc}
      */
     @Override
-    public final void callOpenView(final String title) {
+    protected void callOpenView(final String title) {
+        callOpenView(title, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final void callOpenView(final String title, final Rectangle knimeWindowBounds) {
         m_title = (title == null ? "View" : title);
 
         Display display = getDisplay();

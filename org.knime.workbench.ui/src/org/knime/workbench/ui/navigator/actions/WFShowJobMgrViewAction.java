@@ -47,6 +47,8 @@ package org.knime.workbench.ui.navigator.actions;
 import javax.swing.SwingUtilities;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.Node;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -99,11 +101,12 @@ public class WFShowJobMgrViewAction extends AbstractWorkflowAction {
     @Override
     public void run() {
         final WorkflowManager workflow = getWorkflow();
+        final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
         Runnable runner = new Runnable() {
             @Override
             public void run() {
                 Node.invokeOpenView(workflow.getJobManager().getView(workflow),
-                        workflow.getNameWithID());
+                        workflow.getNameWithID(), knimeWindowBounds);
             }
         };
         SwingUtilities.invokeLater(runner);

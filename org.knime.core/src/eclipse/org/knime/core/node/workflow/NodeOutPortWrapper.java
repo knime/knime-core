@@ -50,6 +50,7 @@ package org.knime.core.node.workflow;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -217,10 +218,19 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
      */
     @Override
     public void openPortView(final String name) {
+        openPortView(name, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.12
+     */
+    @Override
+    public void openPortView(final String name, final Rectangle knimeWindowBounds) {
         if (m_underlyingPort == null) {
             return;
         }
-        m_underlyingPort.openPortView(name);
+        m_underlyingPort.openPortView(name, knimeWindowBounds);
     }
 
     /** {@inheritDoc} */

@@ -48,6 +48,8 @@
 package org.knime.workbench.editor2.actions;
 
 
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObject;
@@ -113,7 +115,8 @@ public class OpenWorkflowPortViewAction extends OpenPortViewAction {
     public void run() {
         LOGGER.debug("Open Workflow Port View " + getNodeContainer().getName()
                 + " (#" + getPortIndex() + ")");
-        m_port.openPortView(m_port.getPortName());
+        final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
+        m_port.openPortView(m_port.getPortName(), knimeWindowBounds);
     }
 
 }

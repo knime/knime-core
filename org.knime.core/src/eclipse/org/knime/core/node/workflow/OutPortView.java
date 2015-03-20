@@ -46,8 +46,6 @@ package org.knime.core.node.workflow;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.LinkedHashMap;
@@ -69,6 +67,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
 
+import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;
@@ -145,11 +144,11 @@ public class OutPortView extends JFrame {
     /**
      * shows this view and brings it to front.
      */
-    void openView() {
+    void openView(final Rectangle knimeWindowBounds) {
         if (!m_wasOpened) {
             m_wasOpened = true;
             updatePortView();
-            setLocation();
+            ViewUtils.centerLocation(this, knimeWindowBounds);
         }
         // if the view was already visible
         /* bug1922: if the portview is minimized and then opened again (from the
@@ -170,15 +169,6 @@ public class OutPortView extends JFrame {
         invalidate();
         validate();
         repaint();
-    }
-
-    /**
-     * Sets this frame in the center of the screen observing the current screen size.
-     */
-    private void setLocation() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds(Math.max(0, (screenSize.width - getWidth()) / 2), Math.max(0, (screenSize.height - getHeight()) / 2),
-            Math.min(screenSize.width, getWidth()), Math.min(screenSize.height, getHeight()));
     }
 
     /**

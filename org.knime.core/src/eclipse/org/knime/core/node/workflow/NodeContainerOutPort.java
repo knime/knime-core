@@ -52,6 +52,7 @@ import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
+import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -189,15 +190,24 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
     /**
      * {@inheritDoc}
      */
-    // TODO: return component with convenience method for Frame construction.
     @Override
     public void openPortView(final String name) {
+        openPortView(name, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.12
+     */
+    // TODO: return component with convenience method for Frame construction.
+    @Override
+    public void openPortView(final String name, final Rectangle knimeWindowBounds) {
         NodeContext.pushContext(m_snc);
         try {
             ViewUtils.invokeLaterInEDT(new Runnable() {
                 @Override
                 public void run() {
-                    openPortViewInEDT(name);
+                    openPortViewInEDT(name, knimeWindowBounds);
                 }
             });
         } finally {
@@ -205,7 +215,7 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
         }
     }
 
-    private void openPortViewInEDT(final String name) {
+    private void openPortViewInEDT(final String name, final Rectangle knimeWindowBounds) {
         assert SwingUtilities.isEventDispatchThread();
         if (m_portView == null) {
             setPortView(new OutPortView(m_snc.getDisplayLabel(), getPortName()));
@@ -214,7 +224,7 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
             m_portView.setTitle(getPortName() + " - " + m_snc.getDisplayLabel());
         }
         m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(), m_snc.getCredentialsProvider());
-        m_portView.openView();
+        m_portView.openView(knimeWindowBounds);
     }
 
     /** {@inheritDoc} */

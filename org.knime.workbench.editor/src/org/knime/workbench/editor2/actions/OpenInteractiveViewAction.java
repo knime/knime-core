@@ -49,8 +49,10 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
@@ -142,7 +144,8 @@ public class OpenInteractiveViewAction extends Action {
                 Assert.isNotNull(view, "Interactive view could not be instantiated. Probably a coding error.");
             }
             final String title = m_nodeContainer.getInteractiveViewName();
-            Node.invokeOpenView(view, title);
+            final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
+            Node.invokeOpenView(view, title, knimeWindowBounds);
         } catch (Throwable t) {
             final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("Interactive View cannot be opened");

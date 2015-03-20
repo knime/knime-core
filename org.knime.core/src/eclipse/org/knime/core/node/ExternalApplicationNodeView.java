@@ -47,6 +47,8 @@
  */
 package org.knime.core.node;
 
+import org.eclipse.swt.graphics.Rectangle;
+
 /**
  * Node view which opens an external application. Opening, closing and
  * updating the application is task of derived view classes.
@@ -73,12 +75,13 @@ public abstract class ExternalApplicationNodeView<T extends NodeModel>
         onClose();
     }
 
-    /** {@inheritDoc}
-    * @since 2.8
-    */
+    /**
+     * {@inheritDoc}
+     * @since 2.12
+     */
     @Override
-    protected void callOpenView(final String title) {
-        onOpen(title);
+    protected void callOpenView(final String title, final Rectangle knimeWindowBounds) {
+        onOpen(title, knimeWindowBounds);
     }
 
     /** To be called by client code when the external view is closed. This will
@@ -95,6 +98,17 @@ public abstract class ExternalApplicationNodeView<T extends NodeModel>
      * @param title The desired title of the application, possibly ignored.
      */
     protected abstract void onOpen(final String title);
+
+    /**
+     * Open the external application.
+     * @param title The desired title of the application, possibly ignored.
+     * @param knimeWindowBounds Bounds of the KNIME window, of interest for window alignment.
+     * @since 2.12
+     */
+    protected void onOpen(final String title, final Rectangle knimeWindowBounds) {
+        // Default is to ignore knimeWindowBounds
+        onOpen(title);
+    }
 
     /** Close the view. This method is called when the node is deleted or
      * {@link #closeView()} is called. This method should not be used if the

@@ -47,7 +47,11 @@
  */
 package org.knime.core.node.util;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.Window;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -59,6 +63,7 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.NodeLogger;
@@ -311,6 +316,25 @@ public final class ViewUtils {
         }
     }
 
+    /**
+     * Centers a window relative to the KNIME window.
+     *
+     * @param window The window that will be centered
+     * @param knimeWindowBounds Bounds of the KNIME window
+     * @since 2.12
+     */
+    public static void centerLocation(final Window window, Rectangle knimeWindowBounds) {
+        if (knimeWindowBounds!=null) {
+            // Middle point of rectangle
+            Point middle = new Point(knimeWindowBounds.width / 2, knimeWindowBounds.height / 2);
+            // Left upper point for window
+            Point newLocation = new Point(middle.x - (window.getWidth() / 2) + knimeWindowBounds.x,
+                                          middle.y - (window.getHeight() / 2) + knimeWindowBounds.y);
+            window.setLocation(newLocation);
+        } else {
+        	window.setLocationRelativeTo(null);
+        }
+    }
 
     private static Runnable getNodeContextWrapper(final Runnable orig) {
         if (NodeContext.getContext() == null) {

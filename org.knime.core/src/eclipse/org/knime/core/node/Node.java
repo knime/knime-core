@@ -66,6 +66,7 @@ import javax.swing.UIManager;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
+import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ContainerTable;
@@ -2232,7 +2233,22 @@ public final class Node implements NodeModelWarningListener {
      */
     public static void invokeOpenView(final AbstractNodeView<?> view,
             final String title) {
-        view.openView(title);
+        invokeOpenView(view, title, null);
+    }
+
+    /** Widens scope of {@link AbstractNodeView#openView(String)} method so it
+     * can be called from UI framework components. This method is not meant for
+     * public use and may change in future versions.
+     * @param view The view to call the method on.
+     * @param title The title for the view (method argument).
+     * @param knimeWindowBounds Bounds of the KNIME window, used to calculate
+     * the center which will also be the center of the opened view. If null the
+     * center of the primary monitor is used.
+     * @since 2.12
+     */
+    public static void invokeOpenView(final AbstractNodeView<?> view,
+            final String title, final Rectangle knimeWindowBounds) {
+        view.openView(title, knimeWindowBounds);
     }
 
     /** Widens scope of internalLoadSettingsFrom method in

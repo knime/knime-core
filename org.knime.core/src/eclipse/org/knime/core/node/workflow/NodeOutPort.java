@@ -44,6 +44,7 @@
  */
 package org.knime.core.node.workflow;
 
+import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -118,6 +119,18 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener, NodeCont
      */
     // TODO: return component with convenience method for Frame construction.
     public void openPortView(final String name);
+
+    /**
+     * Opens the port view for this port with the given name.
+     *
+     * @param name The name of the port view.
+     * @param knimeWindowBounds Bounds of the KNIME window, used to calculate
+     * the center which will also be the center of the opened view. If null the
+     * center of the primary monitor is used.
+     * @since 2.12
+     */
+    // TODO: return component with convenience method for Frame construction.
+    public void openPortView(final String name, final Rectangle knimeWindowBounds);
 
     /** Dispose the view (if any) associated with this port. */
     public void disposePortView();
