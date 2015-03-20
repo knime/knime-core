@@ -137,12 +137,12 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
         boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
 
-//        if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
+        if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
             IntroPage.INSTANCE.show(false);
             if (IntroPage.INSTANCE.isFreshWorkspace()) {
                 PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setMaximized(true);
             }
-//        }
+        }
 
         if (!EclipseUtil.isRunFromSDK() && IntroPage.INSTANCE.isFreshWorkspace()) {
             for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
