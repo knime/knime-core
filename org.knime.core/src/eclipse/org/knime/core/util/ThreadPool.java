@@ -73,8 +73,6 @@ import org.knime.core.node.NodeLogger;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ThreadPool {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(ThreadPool.class);
 
     private class MyFuture<T> extends FutureTask<T> {
         private final CountDownLatch m_startWaiter = new CountDownLatch(1);
@@ -248,17 +246,18 @@ public class ThreadPool {
                         m_runnable.run();
                         m_runnable.checkException();
                     } catch (InterruptedException ex) {
-                        LOGGER.debug("Thread was interrupted");
+                        NodeLogger.getLogger(ThreadPool.class).debug("Thread was interrupted");
                     } catch (CancellationException ex) {
-                        LOGGER.debug("Future was canceled");
+                        NodeLogger.getLogger(ThreadPool.class).debug("Future was canceled");
                     } catch (ExecutionException ex) {
                         if (!(ex.getCause() instanceof CanceledExecutionException)) {
                             // canceled execution exception is fine and will not be reported
-                            LOGGER.error("An exception occurred while executing " + "a runnable.", ex.getCause());
+                            NodeLogger.getLogger(ThreadPool.class).error(
+                                "An exception occurred while executing a runnable.", ex.getCause());
                         }
                     } catch (Exception ex) {
                         // prevent the worker from being terminated
-                        LOGGER.error("An exception occurred while executing "
+                        NodeLogger.getLogger(ThreadPool.class).error("An exception occurred while executing "
                                 + "a runnable.", ex);
                     } finally {
                         setContextClassLoader(m_contextClassLoaderAtInit);
