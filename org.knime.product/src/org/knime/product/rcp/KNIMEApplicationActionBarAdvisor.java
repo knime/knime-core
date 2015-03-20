@@ -354,6 +354,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         editMenu.add(new Separator());
         editMenu.add(m_deleteAction);
         editMenu.add(m_selectAllAction);
+        editMenu.add(new GroupMarker(IWorkbenchActionConstants.FIND_EXT));
 
         // View menu
         addMultiViewsToMenu(viewMenu);
