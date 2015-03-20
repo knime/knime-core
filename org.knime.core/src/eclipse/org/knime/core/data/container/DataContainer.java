@@ -299,9 +299,6 @@ public class DataContainer implements RowAppender {
     /** Put into write queue to signal end of writing process. */
     private static final Object CONTAINER_CLOSE = new Object();
 
-    /** Put into read queue to signal failure while writing a row. */
-    private static final Object CONTAINER_WRITE_FAILED = new Object();
-
     private static final Object FLUSH_CACHE = new Object();
 
     /**
@@ -367,7 +364,7 @@ public class DataContainer implements RowAppender {
 
     private int m_maxExchangeQueueSize = 100;
 
-    private final Lock m_exchangeQueueLock;
+    private final ReentrantLock m_exchangeQueueLock;
 
     private final Condition m_exchangeQueueCondition;
 
@@ -656,20 +653,12 @@ public class DataContainer implements RowAppender {
     private void offerToAsynchronousQueue(final Object object) {
         m_exchangeQueueLock.lock();
         try {
-            while (m_exchangeQueue.size() >= m_maxExchangeQueueSize) {
-                if (!m_exchangeQueueCondition.await(30, TimeUnit.SECONDS)) {
-                    throw new DataContainerException("Buffer write thread seems to be dead");
-                }
-            }
+            waitForWriterThread(m_maxExchangeQueueSize);
 
             if (MemoryAlertSystem.getInstance().isMemoryLow()) {
                 m_exchangeQueue.addLast(FLUSH_CACHE);
-                do {
-                    m_exchangeQueueCondition.signalAll();
-                    if (!m_exchangeQueueCondition.await(30, TimeUnit.SECONDS)) {
-                        throw new DataContainerException("Buffer write thread seems to be dead");
-                    }
-                } while (m_exchangeQueue.size() > 0);
+                m_exchangeQueueCondition.signalAll();
+                waitForWriterThread(0);
             }
 
             m_exchangeQueue.addLast(object);
@@ -680,6 +669,27 @@ public class DataContainer implements RowAppender {
             throw new DataContainerException("Adding rows to buffer was interrupted", e);
         } finally {
             m_exchangeQueueLock.unlock();
+        }
+    }
+
+    /**
+     * @param maxExchangeQueueSize The maximum number of elements allowed in the queue, either
+     * {@link #m_maxExchangeQueueSize} or 0.
+     * @throws InterruptedException Canceled while waiting
+     * @throws DataContainerException If writer thread appears to be dead
+     */
+    private void waitForWriterThread(final int maxExchangeQueueSize) throws InterruptedException {
+        assert m_exchangeQueueLock.isHeldByCurrentThread();
+        while (m_exchangeQueue.size() >= maxExchangeQueueSize) {
+            if (!m_exchangeQueueCondition.await(5, TimeUnit.SECONDS) && m_asyncAddFuture.isDone()) {
+                Throwable throwable = m_writeThrowable.get();
+                String msg = "Table write thread is dead -- " + m_exchangeQueue.size() + " row(s) to be written";
+                if (throwable == null) {
+                    throw new DataContainerException(msg);
+                } else {
+                    throw new DataContainerException(msg + ": " + throwable.getMessage(), throwable);
+                }
+            }
         }
     }
 
@@ -1222,13 +1232,15 @@ public class DataContainer implements RowAppender {
                 lock.lock();
                 try {
                     while (queue.size() == 0) {
-                        if (!condition.await(30, TimeUnit.SECONDS)) {
-                            throwable.set(new DataContainerException("Write end seems to be dead"));
-                            return null;
+                        // there is no timeout really - data can be added with arbitrary delay
+                        // heuristically determine whether the data container has been abandoned
+                        if (!condition.await(30, TimeUnit.SECONDS) && m_containerRef.get() == null) {
+                            throw new DataContainerException(
+                                "Corresponding data container has been abandoned - ending write thread");
                         }
                     }
 
-                    o = queue.pollFirst();
+                    o = queue.removeFirst();
                     condition.signalAll();
                 } catch (final Throwable t) {
                     throwable.compareAndSet(null, t);
