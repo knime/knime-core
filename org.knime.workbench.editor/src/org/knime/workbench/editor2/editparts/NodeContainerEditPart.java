@@ -675,7 +675,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
 
         for (Object part : getChildren()) {
 
-            if (part instanceof NodeOutPortEditPart) {
+            if (part instanceof AbstractPortEditPart) {
                 result.addAll(((AbstractPortEditPart)part).getSourceConnections());
             }
         }

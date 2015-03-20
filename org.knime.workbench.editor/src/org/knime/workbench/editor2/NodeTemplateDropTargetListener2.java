@@ -59,18 +59,23 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Color;
-import org.knime.core.node.NodeFactory.NodeType;
+import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.workbench.editor2.actions.CreateSpaceAction;
 import org.knime.workbench.editor2.commands.CreateMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
+import org.knime.workbench.editor2.commands.CreateSpaceCommand.CreateSpaceDirection;
+import org.knime.workbench.editor2.commands.InsertMetaNodeCommand;
 import org.knime.workbench.editor2.commands.InsertNewNodeCommand;
+import org.knime.workbench.editor2.commands.ReplaceMetaNodeCommand;
 import org.knime.workbench.editor2.commands.ReplaceNodeCommand;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
 import org.knime.workbench.repository.NodeUsageRegistry;
@@ -84,6 +89,11 @@ import org.knime.workbench.repository.model.NodeTemplate;
  * @author Fabian Dill, University of Konstanz
  */
 public class NodeTemplateDropTargetListener2 implements TransferDropTargetListener {
+
+    /**
+     *
+     */
+    private static final int MINIMUM_NODE_DISTANCE = 200;
 
     /**
      *
@@ -110,6 +120,8 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
     private NodeContainerEditPart node;
 
     private ConnectionContainerEditPart edge;
+
+    private Color m_edgeColor;
 
     public NodeTemplateDropTargetListener2(final EditPartViewer viewer) {
         m_viewer = viewer;
@@ -226,6 +238,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
             // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
             WindowsDNDHelper.hideDragImage();
         } else if (edge != null) {
+            m_edgeColor = edge.getFigure().getForegroundColor();
             m_markedEdge = edge;
             ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(3);
             m_markedEdge.getFigure().setForegroundColor(RED);
@@ -237,6 +250,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
 
     /**
      * Unmark node and edge.
+     *
      * @param wfm the workflow manager
      */
     private void unmark(final WorkflowManager wfm) {
@@ -249,14 +263,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
         }
 
         if (m_markedEdge != null) {
-            if (wfm.getNodeContainer(m_markedEdge.getModel().getSource()).getType().compareTo(NodeType.Meta) != 0
-                && m_markedEdge.getModel().getSourcePort() > 0) {
-                // connection from a normal node which is not flow variable port
-                m_markedEdge.getFigure().setForegroundColor(BLACK);
-            } else if (wfm.getNodeContainer(m_markedEdge.getModel().getSource()).getType().compareTo(NodeType.Meta) == 0) {
-                // connection from a meta node
-                m_markedEdge.getFigure().setForegroundColor(BLACK);
-            }
+            m_markedEdge.getFigure().setForegroundColor(m_edgeColor);
             ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(1);
             m_markedEdge = null;
 
@@ -286,20 +293,32 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
             request.setFactory(factory);
 
             if (node != null && nodeCount >= edgeCount) {
+
                 // more node pixels than edge pixels found in hit-box
-                m_viewer
-                    .getEditDomain()
-                    .getCommandStack()
-                    .execute(
-                        new ReplaceNodeCommand(wfm, factory.getNewObject(), node));
+                m_viewer.getEditDomain().getCommandStack()
+                    .execute(new ReplaceNodeCommand(wfm, factory.getNewObject(), node));
+
             } else if (edge != null) {
+                Point insertLocation = getInsertLocation();
+
+                CreateSpaceAction m_spaceAction =
+                    new CreateSpaceAction((WorkflowEditor)Workbench.getInstance().getActiveWorkbenchWindow()
+                        .getActivePage().getActiveEditor(), CreateSpaceDirection.RIGHT, (MINIMUM_NODE_DISTANCE / 2));
+
                 // more edge pixels found
                 m_viewer
                     .getEditDomain()
                     .getCommandStack()
                     .execute(
-                        new InsertNewNodeCommand(wfm, factory.getNewObject(), edge, WorkflowEditor
-                            .getActiveEditorSnapToGrid()));
+                        new InsertNewNodeCommand(wfm, factory.getNewObject(), edge, insertLocation.x, insertLocation.y,
+                            WorkflowEditor.getActiveEditorSnapToGrid()));
+
+                if (!m_viewer.getSelection().isEmpty()) {
+                    m_spaceAction.runInSWT();
+                }
+
+                m_viewer.getSelectionManager().deselectAll();
+
             } else {
                 // normal insert
                 m_viewer
@@ -319,15 +338,117 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
             WorkflowCopyContent content = new WorkflowCopyContent();
             content.setNodeIDs(id);
             WorkflowPersistor copy = sourceManager.copy(content);
-            m_viewer
-                .getEditDomain()
-                .getCommandStack()
-                .execute(
-                    new CreateMetaNodeCommand(wfm, copy, getDropLocation(event), WorkflowEditor
-                        .getActiveEditorSnapToGrid()));
+
+            if (node != null && nodeCount >= edgeCount) {
+
+                // more node pixels than edge pixels found in hit-box
+                m_viewer.getEditDomain().getCommandStack()
+                    .execute(new ReplaceMetaNodeCommand(wfm, copy, node, WorkflowEditor.getActiveEditorSnapToGrid()));
+            } else if (edge != null) {
+                Point insertLocation = getInsertLocation();
+
+                CreateSpaceAction m_spaceAction =
+                    new CreateSpaceAction((WorkflowEditor)Workbench.getInstance().getActiveWorkbenchWindow()
+                        .getActivePage().getActiveEditor(), CreateSpaceDirection.RIGHT, (MINIMUM_NODE_DISTANCE / 2));
+
+                // more edge pixels found
+                m_viewer
+                    .getEditDomain()
+                    .getCommandStack()
+                    .execute(
+                        new InsertMetaNodeCommand(wfm, copy, edge, insertLocation.x, insertLocation.y, WorkflowEditor
+                            .getActiveEditorSnapToGrid()));
+
+                if (!m_viewer.getSelection().isEmpty()) {
+                    m_spaceAction.runInSWT();
+                }
+
+                m_viewer.getSelectionManager().deselectAll();
+            } else {
+                m_viewer
+                    .getEditDomain()
+                    .getCommandStack()
+                    .execute(
+                        new CreateMetaNodeCommand(wfm, copy, getDropLocation(event), WorkflowEditor
+                            .getActiveEditorSnapToGrid()));
+            }
         }
 
         unmark(wfm);
+    }
+
+    /**
+     * @return
+     */
+    private Point getInsertLocation() {
+        Point insertLocation = null;
+        EditPart source = edge.getSource().getParent();
+        EditPart target = edge.getTarget().getParent();
+        if (source instanceof WorkflowInPortBarEditPart) {
+            source = target;
+        }
+        if (source instanceof NodeContainerEditPart && target instanceof NodeContainerEditPart) {
+            NodeContainerEditPart sourceNode = (NodeContainerEditPart)source;
+            NodeContainerEditPart targetNode = (NodeContainerEditPart)target;
+            m_viewer.getSelectionManager().deselectAll();
+
+            int[] sourceBounds = sourceNode.getNodeContainer().getUIInformation().getBounds();
+            int[] targetBounds = targetNode.getNodeContainer().getUIInformation().getBounds();
+
+            int sourceYTop = sourceBounds[1];
+            int sourceYBot = sourceYTop + sourceBounds[3] + sourceNode.getNodeAnnotationEditPart().getModel().getHeight();
+            int targetYTop = targetBounds[1];
+            int targetYBot = targetYTop + targetBounds[3] + targetNode.getNodeAnnotationEditPart().getModel().getHeight();
+
+            insertLocation =
+                new Point(((sourceBounds[0] + targetBounds[0]) / 2) + 1,
+                    (sourceBounds[1] + targetBounds[1]) / 2);
+
+            if (0 <= targetBounds[0] - sourceBounds[0]
+                && targetBounds[0] - sourceBounds[0] < MINIMUM_NODE_DISTANCE
+                && ((targetYTop <= sourceYTop && sourceYTop <= targetYBot) || (targetYTop <= sourceYBot && sourceYBot <= targetYBot) ||
+                        targetYBot + 100 > sourceYTop)) {
+                selectNodes(targetNode);
+            }
+        }
+        if (insertLocation == null && source instanceof NodeContainerEditPart) {
+            int[] bounds = ((NodeContainerEditPart)source).getNodeContainer().getUIInformation().getBounds();
+            insertLocation = new Point(bounds[0] + (MINIMUM_NODE_DISTANCE / 2), bounds[1]);
+        }
+        if (insertLocation == null) {
+            int[] bounds =
+                ((WorkflowInPortBarEditPart)source).getNodeContainer().getUIInformation().getBounds();
+            insertLocation = new Point(bounds[0] + (MINIMUM_NODE_DISTANCE / 2), bounds[1]);
+        }
+        return insertLocation;
+    }
+
+    /**
+     * @param n
+     */
+    private void selectNodes(final NodeContainerEditPart n) {
+        m_viewer.getSelectionManager().appendSelection(n);
+        for (ConnectionContainerEditPart c : n.getOutgoingConnections()) {
+            EditPart source = c.getSource().getParent();
+            EditPart target = c.getTarget().getParent();
+            if (source instanceof NodeContainerEditPart && target instanceof NodeContainerEditPart) {
+                NodeContainerEditPart sourceNode = (NodeContainerEditPart)source;
+                NodeContainerEditPart targetNode = (NodeContainerEditPart)target;
+
+                int[] sourceBounds = sourceNode.getNodeContainer().getUIInformation().getBounds();
+                int[] targetBounds = targetNode.getNodeContainer().getUIInformation().getBounds();
+                int sourceYTop = sourceBounds[1];
+                int sourceYBot = sourceYTop + sourceBounds[3] + sourceNode.getNodeAnnotationEditPart().getModel().getHeight();
+                int targetYTop = targetBounds[1];
+                int targetYBot = targetYTop + targetBounds[3] + targetNode.getNodeAnnotationEditPart().getModel().getHeight();
+
+                if (0 < targetBounds[0] - sourceBounds[0]
+                    && targetBounds[0] - sourceBounds[0] < MINIMUM_NODE_DISTANCE
+                    && ((targetYTop <= sourceYTop && sourceYTop <= targetYBot) || (targetYTop <= sourceYBot && sourceYBot <= targetYBot))) {
+                    selectNodes(targetNode);
+                }
+            }
+        }
     }
 
     private AbstractNodeTemplate getSelectionNodeTemplate() {

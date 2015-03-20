@@ -42,11 +42,15 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   29.05.2005 (Florian Georg): created
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Set;
+
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
@@ -54,70 +58,74 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- * GEF command for adding a <code>Node</code> to the
- * <code>WorkflowManager</code>.
+ * GEF command for adding a meta node from the repository to the workflow.
  *
- * @author Florian Georg, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class InsertNewNodeCommand extends AbstractKNIMECommand {
+public class ReplaceMetaNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(InsertNewNodeCommand.class);
+            .getLogger(ReplaceMetaNodeCommand.class);
 
-    private final NodeFactory<? extends NodeModel> m_factory;
+    private final WorkflowPersistor m_persistor;
+
+    private final Point m_location;
 
     private final boolean m_snapToGrid;
 
+    // for undo
+    private WorkflowCopyContent m_copyContent;
+
+    private DeleteCommand m_deleteCommand;
+
+    private NodeContainerEditPart m_oldMetaNode;
+
     private NodeContainer m_container;
-
-    private ConnectionContainer m_edge;
-
-    private int m_X;
-
-    private int m_Y;
 
     /**
      * Creates a new command.
      *
      * @param manager The workflow manager that should host the new node
-     * @param factory The factory of the Node that should be added
-     * @param edge The edge on which a node should be inserted
-     * @param snapToGrid enabled
+     * @param persistor the paste content
+     * @param location Initial visual location in the
+     * @param snapToGrid if node location should be rounded to closest grid location.
      */
-    public InsertNewNodeCommand(final WorkflowManager manager,
-            final NodeFactory<? extends NodeModel> factory, final ConnectionContainerEditPart edge, final int x, final int y,final boolean snapToGrid) {
+    public ReplaceMetaNodeCommand(final WorkflowManager manager,
+            final WorkflowPersistor persistor, final NodeContainerEditPart node, final boolean snapToGrid) {
         super(manager);
-        m_factory = factory;
-        m_edge = edge.getModel();
-        m_X = x;
-        m_Y = y;
+        m_persistor = persistor;
+        int[] bounds = node.getNodeContainer().getUIInformation().getBounds();
+        m_location = new Point(bounds[0], bounds[1]);
         m_snapToGrid = snapToGrid;
+        m_oldMetaNode = node;
+        m_deleteCommand = new DeleteCommand(Collections.singleton(m_oldMetaNode), manager);
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.
      * {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        // TODO: check porttypes
-        return true;
+        return super.canExecute() && m_persistor != null && m_location != null && m_deleteCommand.canExecute();
     }
 
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        // the following code has mainly been copied from
+
+     // the following code has mainly been copied from
         // IDEWorkbenchWindowAdvisor#preWindowShellClose
         IPreferenceStore store =
             KNIMEUIPlugin.getDefault().getPreferenceStore();
@@ -139,59 +147,84 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         }
 
         WorkflowManager hostWFM = getHostWFM();
+        Set<ConnectionContainer> incomingConnectionsForOldNode = hostWFM.getIncomingConnectionsFor(m_oldMetaNode.getNodeContainer().getID());
+        Set<ConnectionContainer> outgoingConnectionsForOldNode = hostWFM.getOutgoingConnectionsFor(m_oldMetaNode.getNodeContainer().getID());
 
-        LOGGER.debug("Insert new node between " + m_edge.getSource().toString() + " and " + m_edge.getDest().toString() + ".");
+        m_deleteCommand.execute();
+
         // Add node to workflow and get the container
         try {
-            NodeID id = hostWFM.createAndAddNode(m_factory);
-            m_container = hostWFM.getNodeContainer(id);
+            WorkflowManager wfm = getHostWFM();
+            m_copyContent = wfm.paste(m_persistor);
+            NodeID[] nodeIDs = m_copyContent.getNodeIDs();
+            if (nodeIDs.length > 0) {
+                NodeID first = nodeIDs[0];
+                m_container = wfm.getNodeContainer(first);
+                // create extra info and set it
+                NodeUIInformation info = new NodeUIInformation(
+                        m_location.x, m_location.y, -1, -1, false);
+                info.setSnapToGrid(m_snapToGrid);
+                info.setIsDropLocation(true);
+                m_container.setUIInformation(info);
+            }
         } catch (Throwable t) {
             // if fails notify the user
-            LOGGER.debug("Node cannot be inserted.", t);
+            String error = "Meta node cannot be created";
+            LOGGER.debug(error + ": " + t.getMessage(), t);
             MessageBox mb = new MessageBox(Display.getDefault().
                     getActiveShell(), SWT.ICON_WARNING | SWT.OK);
-            mb.setText("Node cannot be inserted.");
-            mb.setMessage("The selected node could not be inserted "
+            mb.setText(error);
+            mb.setMessage("The meta node could not be created "
                     + "due to the following reason:\n" + t.getMessage());
             mb.open();
             return;
         }
 
-        // create extra info and set it
-        NodeUIInformation info = new NodeUIInformation(m_X, m_Y, -1, -1, true);
-        info.setSnapToGrid(m_snapToGrid);
-        info.setIsDropLocation(false);
-        m_container.setUIInformation(info);
-
+        // set incoming connections
+        Iterator<ConnectionContainer> itr = incomingConnectionsForOldNode.iterator();
         int p = 0;
-        while (!hostWFM.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), m_container.getID(), p)) {
-            // search for a valid connection of the source node to this node
-            p++;
+        while (itr.hasNext()) {
+            ConnectionContainer cc = itr.next();
+
+            while (!hostWFM.canAddConnection(cc.getSource(), cc.getSourcePort(), m_container.getID(), p)) {
+                p++;
+                if (p > m_container.getNrInPorts()) {
+                    break;
+                }
+            }
+
             if (p > m_container.getNrInPorts()) {
                 break;
+            } else {
+                hostWFM.addConnection(cc.getSource(), cc.getSourcePort(), m_container.getID(), p);
             }
-        }
-        if (p < m_container.getNrInPorts()) {
-            hostWFM.addConnection(m_edge.getSource(), m_edge.getSourcePort(), m_container.getID(), p);
         }
 
-        int pout = 0;
-        while (!hostWFM.canAddConnection(m_container.getID(), pout, m_edge.getDest(), m_edge.getDestPort())) {
-            // search for a valid connection of this node to the destination node of the edge
-            pout++;
-            if (pout > m_container.getNrOutPorts()) {
-                break;
+        // set outgoing connections
+        itr = outgoingConnectionsForOldNode.iterator();
+        p = 0;
+        while (itr.hasNext()) {
+            ConnectionContainer cc = itr.next();
+
+            while (!hostWFM.canAddConnection(m_container.getID(), p, cc.getDest(), cc.getDestPort())) {
+                p++;
+                if (p > m_container.getNrOutPorts()) {
+                    break;
+                }
             }
-        }
-        if (pout < m_container.getNrOutPorts()) {
-            hostWFM.addConnection(m_container.getID(), pout, m_edge.getDest(), m_edge.getDestPort());
+
+            if (p > m_container.getNrOutPorts()) {
+                break;
+            } else {
+                hostWFM.addConnection(m_container.getID(), p, cc.getDest(), cc.getDestPort());
+            }
         }
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        return m_edge != null;
+        return m_deleteCommand.canUndo();
     }
 
     /**
@@ -199,16 +232,29 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        LOGGER.debug("Undo: Removing node #" + m_container.getID());
+        NodeID[] ids = m_copyContent.getNodeIDs();
+        if (LOGGER.isDebugEnabled()) {
+            String debug = "Removing node";
+            if (ids.length == 1) {
+                debug = debug + " " + ids[0];
+            } else {
+                debug = debug + "s " + Arrays.asList(ids);
+            }
+            LOGGER.debug(debug);
+        }
+        WorkflowManager wm = getHostWFM();
         if (canUndo()) {
-            getHostWFM().removeNode(m_container.getID());
-            getHostWFM().addConnection(m_edge.getSource(), m_edge.getSourcePort(), m_edge.getDest(), m_edge.getDestPort());
-
+            for (NodeID id : ids) {
+                wm.removeNode(id);
+            }
+            for (WorkflowAnnotation anno : m_copyContent.getAnnotations()) {
+                wm.removeAnnotation(anno);
+            }
+            m_deleteCommand.undo();
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),
-                    "Operation no allowed", "The node "
-                    + m_container.getNameWithID()
-                    + " can currently not be removed");
+                    "Operation no allowed", "The node(s) "
+                    + Arrays.asList(ids) + " can currently not be removed");
         }
     }
 

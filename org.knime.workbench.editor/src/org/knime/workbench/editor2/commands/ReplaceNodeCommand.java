@@ -101,6 +101,7 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
         super(manager);
         m_factory = factory;
         m_oldNodeID = nodeToReplace;
+
         m_deleteCommand = new DeleteCommand(Collections.singleton(m_oldNodeID), manager);
     }
 
@@ -172,23 +173,41 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
 
         // set incoming connections
         Iterator<ConnectionContainer> itr = incomingConnectionsForOldNode.iterator();
+        int p = 0;
         while (itr.hasNext()) {
             ConnectionContainer cc = itr.next();
-            if (m_container.getNrInPorts() > cc.getDestPort()) {
-                if (hostWFM.canAddConnection(cc.getSource(), cc.getSourcePort(), m_container.getID(), cc.getDestPort())) {
-                    hostWFM.addConnection(cc.getSource(), cc.getSourcePort(), m_container.getID(), cc.getDestPort());
+
+            while (!hostWFM.canAddConnection(cc.getSource(), cc.getSourcePort(), m_container.getID(), p)) {
+                p++;
+                if (p > m_container.getNrInPorts()) {
+                    break;
                 }
+            }
+
+            if (p > m_container.getNrInPorts()) {
+                break;
+            } else {
+                hostWFM.addConnection(cc.getSource(), cc.getSourcePort(), m_container.getID(), p);
             }
         }
 
         // set outgoing connections
         itr = outgoingConnectionsForOldNode.iterator();
+        p = 0;
         while (itr.hasNext()) {
             ConnectionContainer cc = itr.next();
-            if (m_container.getNrOutPorts() > cc.getSourcePort()) {
-                if (hostWFM.canAddConnection(m_container.getID(), cc.getSourcePort(), cc.getDest(), cc.getDestPort())) {
-                    hostWFM.addConnection(m_container.getID(), cc.getSourcePort(), cc.getDest(), cc.getDestPort());
+
+            while (!hostWFM.canAddConnection(m_container.getID(), p, cc.getDest(), cc.getDestPort())) {
+                p++;
+                if (p > m_container.getNrOutPorts()) {
+                    break;
                 }
+            }
+
+            if (p > m_container.getNrOutPorts()) {
+                break;
+            } else {
+                hostWFM.addConnection(m_container.getID(), p, cc.getDest(), cc.getDestPort());
             }
         }
     }
