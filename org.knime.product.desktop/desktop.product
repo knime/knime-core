@@ -27,8 +27,7 @@ All other trademarks are the property of their respective owners.
    </configIni>
 
    <launcherArgs>
-      <vmArgs>-XX:MaxPermSize=256m
--server
+      <vmArgs>-server
 -Dsun.java2d.d3d=false
 -Dosgi.classloader.lock=classname
 -XX:+UnlockDiagnosticVMOptions
