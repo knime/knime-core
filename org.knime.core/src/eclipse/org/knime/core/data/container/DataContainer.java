@@ -680,7 +680,7 @@ public class DataContainer implements RowAppender {
      */
     private void waitForWriterThread(final int maxExchangeQueueSize) throws InterruptedException {
         assert m_exchangeQueueLock.isHeldByCurrentThread();
-        while (m_exchangeQueue.size() >= maxExchangeQueueSize) {
+        while (m_exchangeQueue.size() > maxExchangeQueueSize) {
             if (!m_exchangeQueueCondition.await(5, TimeUnit.SECONDS) && m_asyncAddFuture.isDone()) {
                 Throwable throwable = m_writeThrowable.get();
                 String msg = "Table write thread is dead -- " + m_exchangeQueue.size() + " row(s) to be written";
