@@ -949,13 +949,26 @@ class Buffer implements KNIMEStreamConstants {
         m_memoryAlertListener = new MemoryAlertListener() {
             @Override
             protected boolean memoryAlert(final MemoryAlert alert) {
-                if ((m_list != null) && !m_list.isEmpty()) {
-                    new Thread(() -> flushBuffer(), "KNIME Buffer flusher").start();
+                if (m_list != null) {
+                    // TODO Node context?
+                    new Thread(() -> onMemoryAlert(), "KNIME Buffer flusher").start();
                 }
                 return true;
             }
         };
         MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
+    }
+
+    private synchronized void onMemoryAlert() {
+        assert m_spec != null : "Memory alert only for closed (read-only) buffers";
+        if (m_list == null) {
+            // concurrent close or addRow() caused this to be flushed (this method may stall long on Buffer.this)
+        } else {
+            final int nrRowsWritten = m_list.size();
+            flushBuffer();
+            closeInternal();
+            LOGGER.debug("Wrote " + nrRowsWritten + " rows in order to free memory");
+        }
     }
 
     private void unregisterMemoryAlertListener() {
