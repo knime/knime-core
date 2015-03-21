@@ -362,7 +362,7 @@ public class DataContainer implements RowAppender {
 
     private final Deque<Object> m_exchangeQueue;
 
-    private int m_maxExchangeQueueSize = 100;
+    private final int m_maxExchangeQueueSize = 100;
 
     private final ReentrantLock m_exchangeQueueLock;
 
@@ -442,7 +442,8 @@ public class DataContainer implements RowAppender {
             m_writeThrowable = null;
             m_asyncAddFuture = null;
         } else {
-            m_exchangeQueue = new ArrayDeque<>(100);
+            // one extra for signal object
+            m_exchangeQueue = new ArrayDeque<>(m_maxExchangeQueueSize + 1);
             m_exchangeQueueLock = new ReentrantLock();
             m_exchangeQueueCondition = m_exchangeQueueLock.newCondition();
             m_writeThrowable = new AtomicReference<Throwable>();
