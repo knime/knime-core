@@ -44,82 +44,60 @@
  */
 package org.knime.core.node.workflow.execresult;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
- * Specialized execution result for {@link SubNodeContainer}. Offers access
- * to all contained node's execution result.
+ * Specialized execution result for {@link SubNodeContainer}. Wraps a {@link WorkflowExecutionResult}.
  *
  * @author Bernd Wiswedel, University of Konstanz
  * @since 2.12
  */
-public class SubnodeContainerExecutionResult extends NodeContainerExecutionResult {
-
-    private Map<NodeID, NodeContainerExecutionResult> m_execResultMap =
-        new LinkedHashMap<NodeID, NodeContainerExecutionResult>();
+public final class SubnodeContainerExecutionResult extends NodeContainerExecutionResult {
 
     private final NodeID m_baseID;
 
+    private WorkflowExecutionResult m_workflowExecutionResult;
+
     /**
      * Creates new workflow execution result with no particular settings.
-     * @param baseID The node id of the workflow (the loading procedure in
-     * the target workflow will correct the prefix).
+     * @param baseID The node id of the sub node container.
      * @throws NullPointerException If the argument is null.
      */
     public SubnodeContainerExecutionResult(final NodeID baseID) {
-        if (baseID == null) {
-            throw new NullPointerException();
-        }
-        m_baseID = baseID;
+        m_baseID = CheckUtils.checkArgumentNotNull(baseID, "ID must not be null");
     }
 
     /**@return The base id of the subnode. Used to amend the node ids in
-     * {@link #getExecutionResultMap()}. */
+     * {@link #getWorkflowExecutionResult()}. */
     public NodeID getBaseID() {
         return m_baseID;
     }
 
-    /** @return The map containing node id to their execution result,
-     * never null. */
-    public Map<NodeID, NodeContainerExecutionResult> getExecutionResultMap() {
-        return m_execResultMap;
+    /** @return Inner workflow execution result set vi. */
+    public WorkflowExecutionResult getWorkflowExecutionResult() {
+        return m_workflowExecutionResult;
     }
 
     /**
-     * Adds the execution result for a child node.
-     * @param id The node id of the child, it must have the "correct" prefix.
-     * @param execResult The execution result for the child
-     * @return <code>true</code> if this map did not contain an entry for
-     *         this child before.
-     * @throws IllegalArgumentException If the id prefix is invalid
-     * @throws NullPointerException If either argument is null
+     * Sets inner execution result.
+     * @param workflowExecutionResult To be set, must have correct baseID.
+     * @throws IllegalArgumentException If the id prefix is invalid or argument is null
      */
-    public boolean addNodeExecutionResult(final NodeID id,
-            final NodeContainerExecutionResult execResult) {
-        if (execResult == null || id == null) {
-            throw new NullPointerException();
-        }
-        if (!id.hasPrefix(m_baseID)) {
-            throw new IllegalArgumentException("Invalid prefix: " + id
-                    + ", expected " + m_baseID);
-        }
-        return m_execResultMap.put(id, execResult) == null;
+    public void setWorkflowExecutionResult(final WorkflowExecutionResult workflowExecutionResult) {
+        m_workflowExecutionResult = CheckUtils.checkArgumentNotNull(workflowExecutionResult, "Arg must not be null");
+        CheckUtils.checkArgument(new NodeID(m_baseID, 0).equals(m_workflowExecutionResult.getBaseID()),
+            "Unexpected ID of inner wfm result, expected %s but got %s", new NodeID(m_baseID, 0),
+            m_workflowExecutionResult.getBaseID());
+        m_workflowExecutionResult = workflowExecutionResult;
     }
 
     /** {@inheritDoc} */
     @Override
     public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
-        NodeID id = new NodeID(new NodeID(m_baseID, 0), idSuffix);
-        NodeContainerExecutionStatus status = m_execResultMap.get(id);
-        if (status == null) {
-            getLogger().debug("No execution status for node with suffix "
-                    + idSuffix + "; return FAILURE");
-            status = NodeContainerExecutionStatus.FAILURE;
-        }
-        return status;
+        CheckUtils.checkArgument(idSuffix == 0, "Exec result of subnode has only one child ('0'), got %d", idSuffix);
+        CheckUtils.checkState(m_workflowExecutionResult != null, "No inner workflow result set");
+        return m_workflowExecutionResult;
     }
 }

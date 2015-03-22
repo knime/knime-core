@@ -1652,7 +1652,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (nc instanceof SingleNodeContainer) {
                     configureNodeAndSuccessors(id, true);
                 } else {
-                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM();
+                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM(false);
                     configureNodeAndSuccessors(id, false);
                 }
             } else {
@@ -1726,7 +1726,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (nc instanceof SingleNodeContainer) {
                     configureNodeAndSuccessors(id, true);
                 } else {
-                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM();
+                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM(false);
                     configureNodeAndSuccessors(id, false);
                 }
             }
@@ -2083,27 +2083,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * to make sure that new workflow variables are spread accordingly.
      * Note that this does NOT affect any successors of this workflow
      * manager but touches all nodes inside this wfm and its kids.
+     * @param keepNodeMessages if existing messages are to be kept (possibly merged).
      */
-    void reconfigureAllNodesOnlyInThisWFM() {
+    void reconfigureAllNodesOnlyInThisWFM(final boolean keepNodeMessages) {
         synchronized (m_workflowMutex) {
             // do not worry about pipelines, just process all nodes "left
             // to right" and make sure we touch all of them (also yellow
             // nodes in a metanode that is connected to red nodes only)...
-            for (NodeID sortedID : m_workflow.createBreadthFirstSortedList(
-                     m_workflow.getNodeIDs(), true).keySet()) {
+            for (NodeID sortedID : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
                 NodeContainer nc = getNodeContainer(sortedID);
                 if (nc instanceof SingleNodeContainer) {
                     // reconfigure yellow AND red nodes - it could be that
                     // the reason for the red state were the variables!
                     if (nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)
                             || nc.getInternalState().equals(InternalNodeContainerState.IDLE)) {
-                        configureSingleNodeContainer(
-                            (SingleNodeContainer)nc,
-                            /* keepNodemessage=*/ false);
+                        configureSingleNodeContainer((SingleNodeContainer)nc, keepNodeMessages);
                     }
                 } else {
-                    assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM();
+                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM(keepNodeMessages);
                 }
             }
             checkForNodeStateChanges(true);
@@ -4916,8 +4913,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If the node is unknown
      * @see #canSetJobManager(NodeID)
      */
-    public void setJobManager(
-            final NodeID nodeID, final NodeExecutionJobManager jobMgr) {
+    public void setJobManager(final NodeID nodeID, final NodeExecutionJobManager jobMgr) {
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(nodeID);
             nc.setJobManager(jobMgr);
@@ -5255,7 +5251,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (true always except for loading)
      */
     void checkForNodeStateChanges(final boolean propagateChanges) {
-//        assert Thread.holdsLock(m_workflowMutex);
+        assert Thread.holdsLock(m_workflowMutex);
         int[] nrNodesInState = new int[InternalNodeContainerState.values().length];
         int nrNodes = 0;
         boolean internalNodeHasError = false;
@@ -5517,7 +5513,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param keepNodeMessage Whether to retain the previously set node message.
      */
     private void configureAllNodesInWFM(final boolean keepNodeMessage) {
-//        assert Thread.holdsLock(m_workflowMutex);
+        assert Thread.holdsLock(m_workflowMutex);
         Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(
                 m_workflow.getNodeIDs(), true).keySet();
         for (NodeID id : bfsSortedSet) {
@@ -5547,7 +5543,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private boolean configureSingleNodeContainer(final SingleNodeContainer snc, final boolean keepNodeMessage) {
         boolean configurationChanged = false;
         synchronized (m_workflowMutex) {
-            NodeMessage oldMessage = snc.getNodeMessage();
+            NodeMessage oldMessage = keepNodeMessage ? snc.getNodeMessage() : NodeMessage.NONE;
             final int inCount = snc.getNrInPorts();
             NodeID sncID = snc.getID();
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(sncID);
@@ -5575,10 +5571,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return false;
             }
             if (!canConfigureNodes()) {
-                if (!keepNodeMessage) {
-                    snc.setNodeMessage(new NodeMessage(NodeMessage.Type.WARNING,
-                        "Outer workflow does not have input data, execute it first"));
-                }
+                snc.setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newWarning(
+                    "Outer workflow does not have input data, execute it first")));
                 return false;
             }
 
@@ -5666,12 +5660,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         invokeResetOnSingleNodeContainer(snc);
                     }
                     // report the problem
-                    snc.setNodeMessage(new NodeMessage(Type.ERROR,
-                            "Can't merge FlowVariable Stacks! (likely a loop problem.)"));
+                    snc.setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newError(
+                            "Can't merge FlowVariable Stacks! (likely a loop problem.)")));
                     // different outputs - empty ports!
                     outputSpecsChanged = true;
                 } else {
-                    outputSpecsChanged = snc.configure(inSpecs);
+                    outputSpecsChanged = snc.configure(inSpecs, keepNodeMessage);
                 }
                 // NOTE:
                 // no need to clean stacks of LoopEnd nodes - done automagically
@@ -5717,13 +5711,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 break;
             default:
                 LOGGER.error("configure found weird state (" + snc.getInternalState() + "): " + snc.getNameWithID());
-            }
-            if (keepNodeMessage) {
-                NodeMessage newMessage = snc.getNodeMessage();
-                if (!oldMessage.equals(newMessage))  {
-                    newMessage = NodeMessage.merge(oldMessage, newMessage);
-                    snc.setNodeMessage(newMessage);
-                }
             }
         }
         return configurationChanged;
@@ -6883,7 +6870,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         });
     }
 
-    // bug fix 1810, nofify children about possible job manager changes
+    // bug fix 1810, notify children about possible job manager changes
     /** {@inheritDoc} */
     @Override
     protected void notifyNodePropertyChangedListener(
@@ -8552,7 +8539,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // otherwise only configure already configured nodes. This
                 // is required to make sure they rebuild their
                 // FlowObjectStack!
-                reconfigureAllNodesOnlyInThisWFM();
+                reconfigureAllNodesOnlyInThisWFM(false);
             }
             setDirty();
         }

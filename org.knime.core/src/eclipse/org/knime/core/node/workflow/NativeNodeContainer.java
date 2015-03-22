@@ -520,7 +520,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    boolean performConfigure(final PortObjectSpec[] inSpecs, final NodeConfigureHelper nch) {
+    boolean performConfigure(final PortObjectSpec[] inSpecs, final NodeConfigureHelper nch,
+        final boolean keepNodeMessage) {
         return m_node.configure(inSpecs, nch);
     }
 
