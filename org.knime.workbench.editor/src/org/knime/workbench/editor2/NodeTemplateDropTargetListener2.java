@@ -98,11 +98,6 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
     /**
      *
      */
-    private static final Color BLACK = new Color(null, 0, 0, 0);
-
-    /**
-     *
-     */
     private static final Color RED = new Color(null, 255, 0, 0);
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeTemplateDropTargetListener2.class);
@@ -193,7 +188,6 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("restriction")
     @Override
     public void dragOver(final DropTargetEvent event) {
         WorkflowManager wfm = ((WorkflowRootEditPart)m_viewer.getRootEditPart().getContents()).getWorkflowManager();
@@ -283,6 +277,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
         LOGGER.debug("drop: " + event);
         AbstractNodeTemplate ant = getSelectionNodeTemplate();
         WorkflowManager wfm = ((WorkflowRootEditPart)m_viewer.getRootEditPart().getContents()).getWorkflowManager();
+        Point dropLocation = getDropLocation(event);
         if (ant instanceof NodeTemplate) {
             NodeTemplate template = (NodeTemplate)ant;
             CreateRequest request = new CreateRequest();
@@ -299,7 +294,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
                     .execute(new ReplaceNodeCommand(wfm, factory.getNewObject(), node));
 
             } else if (edge != null) {
-                Point insertLocation = getInsertLocation();
+                Point insertLocation = getInsertLocation(dropLocation.x, dropLocation.y);
 
                 CreateSpaceAction m_spaceAction =
                     new CreateSpaceAction((WorkflowEditor)Workbench.getInstance().getActiveWorkbenchWindow()
@@ -325,7 +320,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
                     .getEditDomain()
                     .getCommandStack()
                     .execute(
-                        new CreateNodeCommand(wfm, factory.getNewObject(), getDropLocation(event), WorkflowEditor
+                        new CreateNodeCommand(wfm, factory.getNewObject(), dropLocation, WorkflowEditor
                             .getActiveEditorSnapToGrid()));
             }
             NodeUsageRegistry.addNode(template);
@@ -345,7 +340,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
                 m_viewer.getEditDomain().getCommandStack()
                     .execute(new ReplaceMetaNodeCommand(wfm, copy, node, WorkflowEditor.getActiveEditorSnapToGrid()));
             } else if (edge != null) {
-                Point insertLocation = getInsertLocation();
+                Point insertLocation = getInsertLocation(dropLocation.x, dropLocation.y);
 
                 CreateSpaceAction m_spaceAction =
                     new CreateSpaceAction((WorkflowEditor)Workbench.getInstance().getActiveWorkbenchWindow()
@@ -369,7 +364,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
                     .getEditDomain()
                     .getCommandStack()
                     .execute(
-                        new CreateMetaNodeCommand(wfm, copy, getDropLocation(event), WorkflowEditor
+                        new CreateMetaNodeCommand(wfm, copy, dropLocation, WorkflowEditor
                             .getActiveEditorSnapToGrid()));
             }
         }
@@ -380,7 +375,7 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
     /**
      * @return
      */
-    private Point getInsertLocation() {
+    private Point getInsertLocation(final int x, final int y) {
         Point insertLocation = null;
         EditPart source = edge.getSource().getParent();
         EditPart target = edge.getTarget().getParent();
@@ -400,9 +395,21 @@ public class NodeTemplateDropTargetListener2 implements TransferDropTargetListen
             int targetYTop = targetBounds[1];
             int targetYBot = targetYTop + targetBounds[3] + targetNode.getNodeAnnotationEditPart().getModel().getHeight();
 
+            int xLoc, yLoc;
+            if (sourceBounds[0] + 100 > x) {
+                xLoc = sourceBounds[0] + 100;
+            } else {
+                xLoc = x;
+            }
+
+            if (Math.abs(sourceBounds[1] - targetBounds[1]) < 20) {
+                yLoc = sourceBounds[1];
+            } else {
+                yLoc = y;
+            }
+
             insertLocation =
-                new Point(((sourceBounds[0] + targetBounds[0]) / 2) + 1,
-                    (sourceBounds[1] + targetBounds[1]) / 2);
+                new Point(xLoc, yLoc);
 
             if (0 <= targetBounds[0] - sourceBounds[0]
                 && targetBounds[0] - sourceBounds[0] < MINIMUM_NODE_DISTANCE

@@ -46,6 +46,7 @@
 package org.knime.workbench.editor2.commands;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -89,6 +90,8 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
 
     private int m_Y;
 
+    private DeleteCommand m_delete;
+
     /**
      * Creates a new command.
      *
@@ -105,13 +108,14 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
         m_X = x;
         m_Y = y;
         m_snapToGrid = snapToGrid;
+        m_delete = new DeleteCommand(Collections.singleton(edge), manager);
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.
      * {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        return super.canExecute() && m_persistor != null;
+        return super.canExecute() && m_persistor != null && m_delete.canExecute();
     }
 
     /** {@inheritDoc} */
@@ -137,6 +141,8 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
                 KNIMEUIPlugin.getDefault().savePluginPreferences();
             }
         }
+
+        m_delete.execute();
 
         // Add node to workflow and get the container
         try {
@@ -194,6 +200,9 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
+        if (!m_delete.canUndo()) {
+            return false;
+        }
         if (m_copyContent == null) {
             return false;
         }
@@ -229,6 +238,7 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
             for (WorkflowAnnotation anno : m_copyContent.getAnnotations()) {
                 wm.removeAnnotation(anno);
             }
+            m_delete.undo();
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),
                     "Operation no allowed", "The node(s) "

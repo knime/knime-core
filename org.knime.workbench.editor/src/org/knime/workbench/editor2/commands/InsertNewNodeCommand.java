@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.Collections;
+
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
@@ -88,6 +90,8 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
 
     private int m_Y;
 
+    private DeleteCommand m_delete;
+
     /**
      * Creates a new command.
      *
@@ -104,14 +108,14 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         m_X = x;
         m_Y = y;
         m_snapToGrid = snapToGrid;
+        m_delete = new DeleteCommand(Collections.singleton(edge), manager);
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.
      * {@inheritDoc} */
     @Override
     public boolean canExecute() {
-        // TODO: check porttypes
-        return true;
+        return m_delete.canExecute();
     }
 
     /** {@inheritDoc} */
@@ -163,6 +167,8 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         info.setIsDropLocation(false);
         m_container.setUIInformation(info);
 
+        m_delete.execute();
+
         int p = 0;
         while (!hostWFM.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), m_container.getID(), p)) {
             // search for a valid connection of the source node to this node
@@ -191,7 +197,7 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        return m_edge != null;
+        return m_delete.canUndo();
     }
 
     /**
@@ -202,7 +208,7 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         LOGGER.debug("Undo: Removing node #" + m_container.getID());
         if (canUndo()) {
             getHostWFM().removeNode(m_container.getID());
-            getHostWFM().addConnection(m_edge.getSource(), m_edge.getSourcePort(), m_edge.getDest(), m_edge.getDestPort());
+            m_delete.undo();
 
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),
