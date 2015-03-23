@@ -117,6 +117,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.ThreadUtils;
 
 /**
  * A buffer writes the rows from a {@link DataContainer} to a file. This class serves as connector between the
@@ -949,9 +950,8 @@ class Buffer implements KNIMEStreamConstants {
         m_memoryAlertListener = new MemoryAlertListener() {
             @Override
             protected boolean memoryAlert(final MemoryAlert alert) {
-                if (m_list != null) {
-                    // TODO Node context?
-                    new Thread(() -> onMemoryAlert(), "KNIME Buffer flusher").start();
+                if (m_list != null && !m_list.isEmpty()) {
+                    ThreadUtils.threadWithContext(() -> onMemoryAlert(), "KNIME Buffer flusher").start();
                 }
                 return true;
             }
