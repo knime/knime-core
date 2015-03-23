@@ -71,10 +71,10 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- * GEF command for adding a <code>Node</code> to the
+ * GEF command for replacing a <code>Node</code> in the
  * <code>WorkflowManager</code>.
  *
- * @author Florian Georg, University of Konstanz
+ * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
 public class ReplaceNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
@@ -102,6 +102,7 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
         m_factory = factory;
         m_oldNodeID = nodeToReplace;
 
+        // delete command handles undo action (restoring connections and positions)
         m_deleteCommand = new DeleteCommand(Collections.singleton(m_oldNodeID), manager);
     }
 
@@ -144,6 +145,7 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
         Set<ConnectionContainer> incomingConnectionsForOldNode = hostWFM.getIncomingConnectionsFor(nodeContainer.getID());
         Set<ConnectionContainer> outgoingConnectionsForOldNode = hostWFM.getOutgoingConnectionsFor(nodeContainer.getID());
 
+        // delete old node
         m_deleteCommand.execute();
 
         LOGGER.debug("Replacing " + m_oldNodeID + ".");
@@ -162,6 +164,7 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
             mb.open();
             return;
         }
+
         int[] bounds = uiInformation.getBounds();
 
         // replace info of the new node with info of the old one

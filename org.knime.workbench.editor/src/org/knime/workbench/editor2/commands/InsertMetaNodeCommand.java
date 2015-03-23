@@ -69,9 +69,11 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- * GEF command for adding a meta node from the repository to the workflow.
+ * GEF command for adding a <code>meta node</code> to a connection. The new
+ * meta node will be connected to the source and target node of the passed
+ * connection.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
  */
 public class InsertMetaNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
@@ -97,7 +99,9 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
      *
      * @param manager The workflow manager that should host the new node
      * @param persistor the paste content
-     * @param location Initial visual location in the
+     * @param edge the edge on which the meta node gets dropped
+     * @param x the x position of the drop
+     * @param y the y position of the drop
      * @param snapToGrid if node location should be rounded to closest grid location.
      */
     public InsertMetaNodeCommand(final WorkflowManager manager,
@@ -108,6 +112,8 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
         m_X = x;
         m_Y = y;
         m_snapToGrid = snapToGrid;
+
+        // delete command handles undo and restores all connections and node correctly
         m_delete = new DeleteCommand(Collections.singleton(edge), manager);
     }
 
@@ -142,6 +148,7 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
             }
         }
 
+        // delete connection
         m_delete.execute();
 
         // Add node to workflow and get the container
@@ -152,12 +159,14 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
             if (nodeIDs.length > 0) {
                 NodeID first = nodeIDs[0];
                 NodeContainer container = wfm.getNodeContainer(first);
+
                 // create extra info and set it
                 NodeUIInformation info = new NodeUIInformation(
                         m_X, m_Y, -1, -1, false);
                 info.setSnapToGrid(m_snapToGrid);
                 info.setIsDropLocation(true);
                 container.setUIInformation(info);
+
                 int p = 0;
                 while (!wfm.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), p)) {
                     // search for a valid connection of the source node to this node

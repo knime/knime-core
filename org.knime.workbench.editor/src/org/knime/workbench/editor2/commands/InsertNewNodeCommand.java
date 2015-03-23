@@ -69,10 +69,11 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- * GEF command for adding a <code>Node</code> to the
- * <code>WorkflowManager</code>.
+ * GEF command for adding a <code>Node</code> to a connection. The new
+ * node will be connected to the source and target node of the passed
+ * connection.
  *
- * @author Florian Georg, University of Konstanz
+ * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
 public class InsertNewNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
@@ -98,6 +99,8 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
      * @param manager The workflow manager that should host the new node
      * @param factory The factory of the Node that should be added
      * @param edge The edge on which a node should be inserted
+     * @param x The x position of the new node
+     * @param y The y position of the new node
      * @param snapToGrid enabled
      */
     public InsertNewNodeCommand(final WorkflowManager manager,
@@ -108,6 +111,9 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         m_X = x;
         m_Y = y;
         m_snapToGrid = snapToGrid;
+
+        // use delete command to delete a connection
+        // delete command handles undo action (connection with bend points)
         m_delete = new DeleteCommand(Collections.singleton(edge), manager);
     }
 
@@ -142,6 +148,9 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
             }
         }
 
+        // delete connection
+        m_delete.execute();
+
         WorkflowManager hostWFM = getHostWFM();
 
         LOGGER.debug("Insert new node between " + m_edge.getSource().toString() + " and " + m_edge.getDest().toString() + ".");
@@ -166,8 +175,6 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         info.setSnapToGrid(m_snapToGrid);
         info.setIsDropLocation(false);
         m_container.setUIInformation(info);
-
-        m_delete.execute();
 
         int p = 0;
         while (!hostWFM.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), m_container.getID(), p)) {
@@ -209,7 +216,6 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
         if (canUndo()) {
             getHostWFM().removeNode(m_container.getID());
             m_delete.undo();
-
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),
                     "Operation no allowed", "The node "
@@ -217,5 +223,4 @@ public class InsertNewNodeCommand extends AbstractKNIMECommand {
                     + " can currently not be removed");
         }
     }
-
 }

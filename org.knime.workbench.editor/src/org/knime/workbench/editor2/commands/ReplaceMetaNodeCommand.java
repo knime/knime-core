@@ -72,9 +72,10 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- * GEF command for adding a meta node from the repository to the workflow.
+ * GEF command for replacing a <code>Node</code> in the
+ * <code>WorkflowManager</code>.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
  */
 public class ReplaceMetaNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger
@@ -100,7 +101,7 @@ public class ReplaceMetaNodeCommand extends AbstractKNIMECommand {
      *
      * @param manager The workflow manager that should host the new node
      * @param persistor the paste content
-     * @param location Initial visual location in the
+     * @param node the node to replace
      * @param snapToGrid if node location should be rounded to closest grid location.
      */
     public ReplaceMetaNodeCommand(final WorkflowManager manager,
@@ -111,6 +112,8 @@ public class ReplaceMetaNodeCommand extends AbstractKNIMECommand {
         m_location = new Point(bounds[0], bounds[1]);
         m_snapToGrid = snapToGrid;
         m_oldMetaNode = node;
+
+        // delete command handles undo with all connections and positions
         m_deleteCommand = new DeleteCommand(Collections.singleton(m_oldMetaNode), manager);
     }
 
@@ -150,6 +153,7 @@ public class ReplaceMetaNodeCommand extends AbstractKNIMECommand {
         Set<ConnectionContainer> incomingConnectionsForOldNode = hostWFM.getIncomingConnectionsFor(m_oldMetaNode.getNodeContainer().getID());
         Set<ConnectionContainer> outgoingConnectionsForOldNode = hostWFM.getOutgoingConnectionsFor(m_oldMetaNode.getNodeContainer().getID());
 
+        // delete old node
         m_deleteCommand.execute();
 
         // Add node to workflow and get the container
@@ -257,5 +261,4 @@ public class ReplaceMetaNodeCommand extends AbstractKNIMECommand {
                     + Arrays.asList(ids) + " can currently not be removed");
         }
     }
-
 }

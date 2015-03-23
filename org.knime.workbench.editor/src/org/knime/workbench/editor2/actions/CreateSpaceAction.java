@@ -50,42 +50,70 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.commands.CreateSpaceCommand.CreateSpaceDirection;
 
 /**
+ * This action moves all selected nodes in a workbench a certain distance in a certain direction.
  *
- * @author tibuch
+ * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
 public class CreateSpaceAction extends MoveNodeAbstractAction {
 
+    /**
+     * The move directions for the @link{CreateSapceAction}
+     * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+     */
+    public enum CreateSpaceDirection {
+        /**
+         * Move up.
+         */
+        UP,
+        /**
+         * Move right.
+         */
+        RIGHT,
+        /**
+         * Move down.
+         */
+        DOWN,
+        /**
+         * Move left
+         */
+        LEFT
+    }
+
     private Point m_point;
 
+    /**
+     * The ID of this action.
+     */
     public static final String ID = "knime.action.node.createspace";
 
     /**
-     * @param editor
+     * @param editor the active workflow editor
+     * @param m_direction the direction
+     * @param distance the distance in pixels
      */
-    public CreateSpaceAction(final WorkflowEditor editor, final CreateSpaceDirection direction, final int distance) {
+    public CreateSpaceAction(final WorkflowEditor editor, final CreateSpaceDirection m_direction, final int distance) {
         super(editor);
 
-        int multiX = 0;
-        int multiY = 0;
+        int factorX = 0;
+        int factorY = 0;
 
-        if (direction.equals(CreateSpaceDirection.TOP)) {
-            multiX = 0;
-            multiY = -1;
-        } else if (direction.equals(CreateSpaceDirection.RIGHT)) {
-            multiX = 1;
-            multiY = 0;
-        } else if (direction.equals(CreateSpaceDirection.BOTTOM)) {
-            multiX = 0;
-            multiY = 1;
-        } else if (direction.equals(CreateSpaceDirection.LEFT)) {
-            multiX = -1;
-            multiY = 0;
+        if (m_direction.equals(CreateSpaceDirection.UP)) {
+            factorX = 0;
+            factorY = -1;
+        } else if (m_direction.equals(CreateSpaceDirection.RIGHT)) {
+            factorX = 1;
+            factorY = 0;
+        } else if (m_direction.equals(CreateSpaceDirection.DOWN)) {
+            factorX = 0;
+            factorY = 1;
+        } else if (m_direction.equals(CreateSpaceDirection.LEFT)) {
+            factorX = -1;
+            factorY = 0;
         }
 
-        m_point = new Point(multiX * distance, multiY * distance);
+        m_point = new Point(factorX * distance, factorY * distance);
     }
 
     /**
@@ -101,7 +129,7 @@ public class CreateSpaceAction extends MoveNodeAbstractAction {
      */
     @Override
     public String getText() {
-        return "Move node";
+        return "Move selected node(s)";
     }
 
     /**
@@ -109,8 +137,7 @@ public class CreateSpaceAction extends MoveNodeAbstractAction {
      */
     @Override
     public String getToolTipText() {
-        // TODO Auto-generated method stub
-        return null;
+        return "Move selected node(s)";
     }
 
     /**
