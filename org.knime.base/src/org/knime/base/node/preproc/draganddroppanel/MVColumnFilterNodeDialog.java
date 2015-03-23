@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,94 +40,58 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   16.02.2015 (tibuch): created
+ *   Aug 7, 2010 (wiswedel): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
-
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-
-import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+package org.knime.base.node.preproc.draganddroppanel;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
+ * <code>NodeDialog</code> for the "CellReplacer" Node. Replaces cells in a column according to dictionary table (2nd
+ * input)
  *
- * @author tibuch
+ * @author Bernd Wiswedel
  */
-public class DNDSelectionPanel extends JPanel {
+public class MVColumnFilterNodeDialog extends NodeDialogPane {
 
-    private JPanel m_mainPanel = new JPanel(new GridBagLayout());
+    private DNDSelectionPanel selectionPanel = null;
 
+    /**
+     *
+     */
+    public MVColumnFilterNodeDialog() {
 
+        selectionPanel =
+            new DNDSelectionPanel(new ConfigurationDialogFactory());
 
-    private DNDSelectionConfiguration config;
-
-
-
-
-
-    public DNDSelectionPanel(final ConfigurationDialogFactory fac) {
-
-
-        setLayout(new GridBagLayout());
-
-        config = new DNDSelectionConfiguration(fac);
-
-
-
-
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 1;
-        c.gridheight = 1;
-        c.weightx = 1;
-        c.weighty = 0;
-        add(config.getRadioButtons().getComponentPanel(), c);
-
-
-        c.weighty = 1;
-        c.fill = GridBagConstraints.BOTH;
-        c.gridy++;
-        add(config.getManual(), c);
-        add(config.getType(), c);
-
-        config.getRadioButtons().getModel().addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (((SettingsModelString)config.getRadioButtons().getModel()).getStringValue().equals("Manual Selection")) {
-                    config.getManual().setVisible(true);
-                    config.getType().setVisible(false);
-                } else {
-                    config.getManual().setVisible(false);
-                    config.getType().setVisible(true);
-                }
-            }
-        });
+        addTab("Configuration", selectionPanel);
     }
 
-    public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
-        config.loadSettingsFrom(settings, specs);
+
+        selectionPanel.loadSettingsFrom(settings, specs);
     }
 
-    public void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-
-        config.saveSettingsTo(settings);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        selectionPanel.saveSettingsTo(settings);
 
     }
+
 }

@@ -44,88 +44,87 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   11.02.2015 (tibuch): created
+ *   13.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter.transferhandler;
+package org.knime.base.node.preproc.draganddroppanel.droppanes;
 
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.swing.JComponent;
-import javax.swing.TransferHandler;
+import org.knime.base.node.preproc.draganddroppanel.PaneConfigurationDialog;
 
 /**
- * A transfer handler which transfers strings from one component to another.
- * This handler can be used to transfer list items from one list to another.
  *
  * @author tibuch
  */
-public abstract class StringTransferHandler extends TransferHandler {
+public class DropPaneConfig implements Comparable<DropPaneConfig> {
+
+    private int m_position = -1;
+
+    private ArrayList<String> m_columnNames = new ArrayList<String>();
+
+    private PaneConfigurationDialog m_dialog = null;
 
     /**
-     * Exports a string from a component.
-     *
-     * @param c the transfer start component
-     * @return the string to export
+     * @return
      */
-    protected abstract String exportString(JComponent c);
-
-    /**
-     * Gets a string and adds this string to the component.
-     *
-     * @param c the transfer target component
-     * @param str string to import
-     */
-    protected abstract void importString(JComponent c, String str);
-
-    /**
-     * If a move operation took place, the source item has to be removed from the source list.
-     * If a copy operation took place, nothing has to be cleaned up.
-     *
-     * @param c the transfer start component
-     * @param remove the exported string
-     */
-    protected abstract void cleanup(JComponent c, boolean remove);
-
-    @Override
-    protected Transferable createTransferable(final JComponent c) {
-        return new StringSelection(exportString(c));
-    }
-
-    @Override
-    public int getSourceActions(final JComponent c) {
-        return MOVE;
-    }
-
-    @Override
-    public boolean importData(final JComponent c, final Transferable t) {
-        if (canImport(c, t.getTransferDataFlavors())) {
-            try {
-                String str = (String)t.getTransferData(DataFlavor.stringFlavor);
-                importString(c, str);
-                return true;
-            } catch (UnsupportedFlavorException | IOException e) {
-                // nothing
+    public String getSelectionAsString() {
+        String r = "";
+        for (int i = 0; i < m_columnNames.size(); i++) {
+            r += m_columnNames.get(i).trim();
+            if (i != m_columnNames.size() - 1) {
+                r += "\n";
             }
         }
-        return false;
+        return r;
     }
 
-    @Override
-    protected void exportDone(final JComponent c, final Transferable data, final int action) {
-        cleanup(c, action == MOVE);
+    /**
+     * @return the position
+     */
+    public int getPosition() {
+        return m_position;
     }
 
+    /**
+     * @param position the position to set
+     */
+    public void setPosition(final int position) {
+        m_position = position;
+    }
+
+    /**
+     * @return the columnNames
+     */
+    public List<String> getSelection() {
+        return m_columnNames;
+    }
+
+    /**
+     * @return the dialog
+     */
+    public PaneConfigurationDialog getDialog() {
+        return m_dialog;
+    }
+
+    /**
+     * @param dialog the dialog to set
+     */
+    public void setDialog(final PaneConfigurationDialog dialog) {
+        m_dialog = dialog;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public boolean canImport(final JComponent c, final DataFlavor[] flavors) {
-        for (DataFlavor dataFlavor : flavors) {
-            if (dataFlavor.equals(DataFlavor.stringFlavor)) {
-                return true;
-            }
+    public int compareTo(final DropPaneConfig o) {
+        if (m_position < o.getPosition()) {
+            return -1;
+        } else if (m_position == o.getPosition()) {
+            return 0;
+        } else {
+            return 1;
         }
-        return false;
     }
 }

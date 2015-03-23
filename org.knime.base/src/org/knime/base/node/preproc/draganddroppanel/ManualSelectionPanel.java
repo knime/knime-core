@@ -44,28 +44,33 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   16.02.2015 (tibuch): created
+ *   10.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
 
 import javax.swing.JPanel;
 
-import org.knime.base.node.preproc.missingvaluecolfilter.droppanes.Pane;
-import org.knime.base.node.preproc.missingvaluecolfilter.droppanes.TypePane;
+import org.knime.base.node.preproc.draganddroppanel.droppanes.DropPane;
+import org.knime.base.node.preproc.draganddroppanel.droppanes.Pane;
 
 /**
  *
  * @author tibuch
  */
-public class TypeSelectionPanel extends SelectionPanel {
+/**
+ *
+ * @author tibuch
+ */
+public class ManualSelectionPanel extends SelectionPanel {
 
     /**
-     * @param config
+     * @param filter
      */
-    public TypeSelectionPanel(final TypeSelectionConfiguration config) {
+    public ManualSelectionPanel(final ManualSelectionConfiguration config) {
         super(config);
-        // TODO Auto-generated constructor stub
+
     }
+
 
     /**
      * {@inheritDoc}
@@ -73,7 +78,7 @@ public class TypeSelectionPanel extends SelectionPanel {
     @Override
     protected Pane getNewPane(final JPanel includePanel, final SelectionConfiguration config, final int i) {
         // TODO Auto-generated method stub
-        return new TypePane(includePanel, config, i);
+        return new DropPane(includePanel, config, i);
     }
 
 

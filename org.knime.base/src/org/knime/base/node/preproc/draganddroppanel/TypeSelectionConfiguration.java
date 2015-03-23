@@ -46,14 +46,14 @@
  * History
  *   16.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.knime.base.node.preproc.missingvaluecolfilter.droppanes.DropPaneConfig;
+import org.knime.base.node.preproc.draganddroppanel.droppanes.DropPaneConfig;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -258,6 +258,7 @@ public class TypeSelectionConfiguration extends SelectionConfiguration {
     }
 
 
+    @Override
     public List<Pair<String, PaneConfigurationDialog>> configure(final DataTableSpec spec) {
 
         List<Pair<String, PaneConfigurationDialog>> r = new ArrayList<Pair<String, PaneConfigurationDialog>>();

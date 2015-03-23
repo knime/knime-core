@@ -45,7 +45,7 @@
  * History
  *   Aug 7, 2010 (wiswedel): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
 
 import java.io.File;
 import java.io.IOException;

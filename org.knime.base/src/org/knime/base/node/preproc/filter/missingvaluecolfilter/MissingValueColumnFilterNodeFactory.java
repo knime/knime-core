@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,36 +40,51 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   12.02.2015 (tibuch): created
+ * ------------------------------------------------------------------------
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.filter.missingvaluecolfilter;
 
-import javax.swing.JPanel;
-
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
+ * The factory for the missing value column filter node.
  *
- * @author tibuch
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
+ * @since 2.6
  */
-public interface PaneConfigurationDialog {
+public class MissingValueColumnFilterNodeFactory
+        extends NodeFactory<MissingValueColumnFilterNodeModel> {
 
-    public abstract void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs) throws NotConfigurableException;
+    /** {@inheritDoc} */
+    @Override
+    public MissingValueColumnFilterNodeModel createNodeModel() {
+        return new MissingValueColumnFilterNodeModel();
+    }
 
-    public abstract void saveSettings(final NodeSettingsWO settings);
+    /** {@inheritDoc} */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
 
-    public abstract void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException;
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<MissingValueColumnFilterNodeModel> createNodeView(final int i,
+            final MissingValueColumnFilterNodeModel nodeModel) {
+        return null;
+    }
 
-    public abstract void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
+    /** {@inheritDoc} */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
 
-    public abstract void loadValidatedSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
-
-    public JPanel getComponentPanel();
+    /** {@inheritDoc} */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new MissingValueColumnFilterNodeDialogPane();
+    }
 }

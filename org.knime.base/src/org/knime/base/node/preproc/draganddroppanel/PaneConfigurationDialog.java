@@ -44,42 +44,33 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   10.02.2015 (tibuch): created
+ *   12.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
 
 import javax.swing.JPanel;
 
-import org.knime.base.node.preproc.missingvaluecolfilter.droppanes.DropPane;
-import org.knime.base.node.preproc.missingvaluecolfilter.droppanes.Pane;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 
 /**
  *
  * @author tibuch
  */
-/**
- *
- * @author tibuch
- */
-public class ManualSelectionPanel extends SelectionPanel {
+public interface PaneConfigurationDialog {
 
-    /**
-     * @param filter
-     */
-    public ManualSelectionPanel(final ManualSelectionConfiguration config) {
-        super(config);
+    public abstract void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs) throws NotConfigurableException;
 
-    }
+    public abstract void saveSettings(final NodeSettingsWO settings);
 
+    public abstract void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Pane getNewPane(final JPanel includePanel, final SelectionConfiguration config, final int i) {
-        // TODO Auto-generated method stub
-        return new DropPane(includePanel, config, i);
-    }
+    public abstract void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
 
+    public abstract void loadValidatedSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
 
+    public JPanel getComponentPanel();
 }

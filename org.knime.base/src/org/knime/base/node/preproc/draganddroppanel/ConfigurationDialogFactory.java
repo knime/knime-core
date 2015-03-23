@@ -44,78 +44,22 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   13.02.2015 (tibuch): created
+ *   12.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
-
-import java.awt.dnd.DragGestureEvent;
-import java.awt.dnd.DragGestureListener;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetListener;
-
-import javax.swing.JPanel;
+package org.knime.base.node.preproc.draganddroppanel;
 
 /**
  *
  * @author tibuch
  */
-public class IncludePanel extends JPanel implements DropTargetListener, DragGestureListener {
+public class ConfigurationDialogFactory {
 
     /**
-     * {@inheritDoc}
+     * @return
      */
-    @Override
-    public void dragEnter(final DropTargetDragEvent dtde) {
+    public PaneConfigurationDialog getNewInstance() {
         // TODO Auto-generated method stub
-
+        return new PercentageDialog();
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dragOver(final DropTargetDragEvent dtde) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dropActionChanged(final DropTargetDragEvent dtde) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dragExit(final DropTargetEvent dte) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void drop(final DropTargetDropEvent dtde) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dragGestureRecognized(final DragGestureEvent dge) {
-        // TODO Auto-generated method stub
-
-    }
-
 
 }

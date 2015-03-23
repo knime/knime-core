@@ -46,7 +46,7 @@
  * History
  *   11.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter.transferhandler;
+package org.knime.base.node.preproc.draganddroppanel.transferhandler;
 
 import java.util.List;
 

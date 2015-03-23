@@ -46,7 +46,7 @@
  * History
  *   16.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -79,9 +79,9 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EtchedBorder;
 
-import org.knime.base.node.preproc.missingvaluecolfilter.droppanes.DropPaneConfig;
-import org.knime.base.node.preproc.missingvaluecolfilter.droppanes.Pane;
-import org.knime.base.node.preproc.missingvaluecolfilter.transferhandler.ListTransferHandler;
+import org.knime.base.node.preproc.draganddroppanel.droppanes.DropPaneConfig;
+import org.knime.base.node.preproc.draganddroppanel.droppanes.Pane;
+import org.knime.base.node.preproc.draganddroppanel.transferhandler.ListTransferHandler;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -131,7 +131,6 @@ public abstract class SelectionPanel extends JPanel implements DropTargetListene
         GridBagConstraints c =
                 new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets(4,
                     4, 4, 4), 0, 0);
-        setLayout(new GridBagLayout());
         add(m_mainPanel, c);
     }
 

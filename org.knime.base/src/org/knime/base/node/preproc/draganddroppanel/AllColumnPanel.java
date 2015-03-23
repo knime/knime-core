@@ -44,22 +44,38 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   12.02.2015 (tibuch): created
+ *   10.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
+
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
+
+import javax.swing.JPanel;
 
 /**
  *
  * @author tibuch
  */
-public class ConfigurationDialogFactory {
+/**
+ *
+ * @author tibuch
+ */
+public class AllColumnPanel extends JPanel  {
+
+    private AllColumnConfiguration m_config;
+    private JPanel m_mainPanel;
 
     /**
-     * @return
+     * @param filter
      */
-    public PaneConfigurationDialog getNewInstance() {
-        // TODO Auto-generated method stub
-        return new PercentageDialog();
+    public AllColumnPanel(final AllColumnConfiguration config) {
+        setLayout(new GridBagLayout());
+        m_config = config;
+        m_mainPanel = new JPanel();
+        m_mainPanel.add(config.m_fac.getNewInstance().getComponentPanel());
+        m_mainPanel.setPreferredSize(new Dimension(500, 220));
+        add(m_mainPanel);
     }
 
 }

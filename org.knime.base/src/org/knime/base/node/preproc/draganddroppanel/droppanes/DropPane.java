@@ -46,7 +46,7 @@
  * History
  *   10.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter.droppanes;
+package org.knime.base.node.preproc.draganddroppanel.droppanes;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -72,8 +72,8 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
-import org.knime.base.node.preproc.missingvaluecolfilter.SelectionConfiguration;
-import org.knime.base.node.preproc.missingvaluecolfilter.transferhandler.ListTransferHandler;
+import org.knime.base.node.preproc.draganddroppanel.SelectionConfiguration;
+import org.knime.base.node.preproc.draganddroppanel.transferhandler.ListTransferHandler;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;

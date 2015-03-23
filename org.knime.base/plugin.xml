@@ -1083,9 +1083,9 @@
             id="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory">
       </node>
       <node
-            factory-class="org.knime.base.node.preproc.missingvaluecolfilter.MVColumnFilterNodeFactory"
+            factory-class="org.knime.base.node.preproc.filter.missingvaluecolfilter.MissingValueColumnFilterNodeFactory"
             category-path="/manipulation/column/column-filter"
-            id="org.knime.base.node.preproc.missingvaluecolfilter.MVColumnFilterNodeFactory"/>
+            id="org.knime.base.node.preproc.filter.MissingValueColumnFilterNodeFactory"/>
       <node
             category-path="/manipulation/row/row-filter"
             factory-class="org.knime.base.node.preproc.filter.rowref.RowFilterRefNodeFactory"

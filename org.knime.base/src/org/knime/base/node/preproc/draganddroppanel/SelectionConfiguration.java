@@ -46,7 +46,7 @@
  * History
  *   16.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
 
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +54,7 @@ import java.util.List;
 import javax.swing.DefaultListModel;
 import javax.swing.ListModel;
 
-import org.knime.base.node.preproc.missingvaluecolfilter.droppanes.DropPaneConfig;
+import org.knime.base.node.preproc.draganddroppanel.droppanes.DropPaneConfig;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;

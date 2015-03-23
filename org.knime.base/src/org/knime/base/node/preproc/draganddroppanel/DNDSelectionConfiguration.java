@@ -46,7 +46,7 @@
  * History
  *   16.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
 
 import java.util.List;
 
@@ -68,27 +68,38 @@ public class DNDSelectionConfiguration {
 
     private DialogComponentButtonGroup m_radioButtons;
 
+    private AllColumnConfiguration m_allConfig;
+
     private ManualSelectionConfiguration m_manualConfig;
 
     private TypeSelectionConfiguration m_typeConfig;
 
-    private SettingsModelString m_radioButtonModel = new SettingsModelString("selectionType", "Manual Selection");
+    private SettingsModelString m_radioButtonModel = new SettingsModelString("selectionType", "All Columns");
+
+    private AllColumnPanel m_allColumn;
+
     private ManualSelectionPanel m_manual;
 
     private TypeSelectionPanel m_type;
 
 
+
+
     public DNDSelectionConfiguration(final ConfigurationDialogFactory fac) {
         m_manualConfig = new ManualSelectionConfiguration(fac);
         m_typeConfig = new TypeSelectionConfiguration(fac);
-        m_manual = new ManualSelectionPanel(getManualConfig());
+        m_allConfig = new AllColumnConfiguration(fac);
 
+
+        m_allColumn = new AllColumnPanel(getAllConifg());
+
+        m_manual = new ManualSelectionPanel(getManualConfig());
 
         m_type = new TypeSelectionPanel(getTypeConfig());
 
 
         m_radioButtons = new DialogComponentButtonGroup(m_radioButtonModel, false, null,
-            "Manual Selection", "Type Selection");
+            "All Columns", "Manual Selection", "Type Selection");
     }
 
     public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
@@ -173,8 +184,12 @@ public class DNDSelectionConfiguration {
     public List<Pair<String, PaneConfigurationDialog>> configure(final DataTableSpec spec) {
         if (m_radioButtonModel.getStringValue().equals("Manual Selection")) {
             return m_manualConfig.configure(spec);
+          // TODO: implement allconfig configuration
+//        } else if (m_radioButtonModel.getStringValue().equals("All Columns")) {
+//            return m_allConfig.configure(spec);
+        } else {
+            return m_typeConfig.configure(spec);
         }
-        return m_typeConfig.configure(spec);
     }
 
     /**
@@ -196,6 +211,41 @@ public class DNDSelectionConfiguration {
      */
     public TypeSelectionPanel getType() {
         return m_type;
+    }
+
+    /**
+     * @return the allConifg
+     */
+    public AllColumnConfiguration getAllConifg() {
+        return m_allConfig;
+    }
+
+    /**
+     * @param allConifg the allConifg to set
+     */
+    public void setAllConifg(final AllColumnConfiguration allConifg) {
+        m_allConfig = allConifg;
+    }
+
+    /**
+     * @param manual the manual to set
+     */
+    public void setManual(final ManualSelectionPanel manual) {
+        m_manual = manual;
+    }
+
+    /**
+     * @return the allColumn
+     */
+    public AllColumnPanel getAllColumn() {
+        return m_allColumn;
+    }
+
+    /**
+     * @param allColumn the allColumn to set
+     */
+    public void setAllColumn(final AllColumnPanel allColumn) {
+        m_allColumn = allColumn;
     }
 
 

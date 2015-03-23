@@ -46,7 +46,7 @@
  * History
  *   16.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter.droppanes;
+package org.knime.base.node.preproc.draganddroppanel.droppanes;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -60,8 +60,8 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
-import org.knime.base.node.preproc.missingvaluecolfilter.PaneConfigurationDialog;
-import org.knime.base.node.preproc.missingvaluecolfilter.SelectionConfiguration;
+import org.knime.base.node.preproc.draganddroppanel.PaneConfigurationDialog;
+import org.knime.base.node.preproc.draganddroppanel.SelectionConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;

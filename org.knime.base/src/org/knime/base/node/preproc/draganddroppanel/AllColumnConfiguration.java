@@ -44,50 +44,76 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   12.02.2015 (tibuch): created
+ *   18.03.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-
-import javax.swing.JPanel;
+import java.util.List;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.util.Pair;
 
 /**
  *
  * @author tibuch
  */
-public class PercentageDialog implements PaneConfigurationDialog {
+public class AllColumnConfiguration extends SelectionConfiguration {
 
-    private JPanel m_panel;
-    private DialogComponentNumber m_percentage;
-    private SettingsModelIntegerBounded numberModel;
-
-    public PercentageDialog() {
-        m_panel = new JPanel(new GridBagLayout());
-        numberModel = new SettingsModelIntegerBounded("percentage", 90, 1, 100);
-        m_percentage = new DialogComponentNumber(numberModel, "Percentage: ", 1);
-        GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.NORTH, GridBagConstraints.HORIZONTAL, new Insets(4,
-            4, 4, 4), 0, 0);
-        m_panel.add(m_percentage.getComponentPanel(), c);
+    /**
+     * @param fac
+     */
+    public AllColumnConfiguration(final ConfigurationDialogFactory fac) {
+        super(fac);
+        // TODO Auto-generated constructor stub
     }
 
     /**
      * {@inheritDoc}
-     * @throws NotConfigurableException
+     */
+    @Override
+    public int drop(final String columnName) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs) throws NotConfigurableException {
-        m_percentage.loadSettingsFrom(settings, specs);
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        // TODO Auto-generated method stub
+
     }
 
     /**
@@ -95,50 +121,17 @@ public class PercentageDialog implements PaneConfigurationDialog {
      */
     @Override
     public void saveSettings(final NodeSettingsWO settings) {
-        numberModel.saveSettingsTo(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws InvalidSettingsException
-     */
-    @Override
-    public void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_percentage.saveSettingsTo(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws InvalidSettingsException
-     */
-    @Override
-    public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        numberModel.validateSettings(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @throws InvalidSettingsException
-     */
-    @Override
-    public void loadValidatedSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        numberModel.loadSettingsFrom(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public JPanel getComponentPanel() {
-        return m_panel;
-    }
-
-    /**
-     * @return
-     */
-    public Integer getPercentage() {
         // TODO Auto-generated method stub
-        return numberModel.getIntValue();
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Pair<String, PaneConfigurationDialog>> configure(final DataTableSpec spec) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,58 +41,40 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Aug 7, 2010 (wiswedel): created
+ *   16.02.2015 (tibuch): created
  */
-package org.knime.base.node.preproc.missingvaluecolfilter;
+package org.knime.base.node.preproc.draganddroppanel;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
+import javax.swing.JPanel;
+
+import org.knime.base.node.preproc.draganddroppanel.droppanes.Pane;
+import org.knime.base.node.preproc.draganddroppanel.droppanes.TypePane;
 
 /**
- * <code>NodeDialog</code> for the "CellReplacer" Node. Replaces cells in a column according to dictionary table (2nd
- * input)
  *
- * @author Bernd Wiswedel
+ * @author tibuch
  */
-public class MVColumnFilterNodeDialog extends NodeDialogPane {
-
-    private DNDSelectionPanel selectionPanel = null;
+public class TypeSelectionPanel extends SelectionPanel {
 
     /**
-     *
+     * @param config
      */
-    public MVColumnFilterNodeDialog() {
-
-        selectionPanel =
-            new DNDSelectionPanel(new ConfigurationDialogFactory());
-
-        addTab("Configuration", selectionPanel);
+    public TypeSelectionPanel(final TypeSelectionConfiguration config) {
+        super(config);
+        // TODO Auto-generated constructor stub
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
-        throws NotConfigurableException {
-
-        selectionPanel.loadSettingsFrom(settings, specs);
+    protected Pane getNewPane(final JPanel includePanel, final SelectionConfiguration config, final int i) {
+        // TODO Auto-generated method stub
+        return new TypePane(includePanel, config, i);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        selectionPanel.saveSettingsTo(settings);
-
-    }
 
 }
