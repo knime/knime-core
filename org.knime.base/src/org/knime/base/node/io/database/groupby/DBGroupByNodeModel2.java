@@ -278,7 +278,7 @@ final class DBGroupByNodeModel2 extends DBNodeModel {
                 if (!usedColNames.contains(spec.getName())) {
                     final DataType dataType = spec.getType();
                     for (final DBDataTypeAggregationFunctionRow typeAggregator : typeFunctions) {
-                        if (typeAggregator.getFunction().isCompatible(dataType)) {
+                        if (typeAggregator.isCompatibleType(dataType)) {
                             final DBColumnAggregationFunctionRow row =
                                     new DBColumnAggregationFunctionRow(spec, typeAggregator.getFunction());
                             m_aggregationFunction2Use.add(row);
