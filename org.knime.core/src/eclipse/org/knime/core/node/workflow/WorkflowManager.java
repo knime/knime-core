@@ -5138,10 +5138,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // and finally move the current node to the other list
                     executedNodes.add(thisID);
                 }
+                // bug 6026: need one additional check in case the workflow only consists of meta nodes
+                // TODO: improve this: each and every node in the workflow performs a check!
+                checkForNodeStateChanges(true);
             }
-            // bug 6026: need one additional check in case the workflow only consists of meta nodes
-            // TODO: improve this: each and every node in the workflow performs a check!
-            checkForNodeStateChanges(true);
         } else {
             // unsynchronized as parent may be ROOT (different mutex), see
             // bug 5722: Potential deadlock when a workflow is run with 3rd party executor
