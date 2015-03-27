@@ -47,8 +47,8 @@ package org.knime.base.node.util.createtempdir;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.knime.base.node.util.createtempdir.CreateTempDirectoryConfiguration.VarNameFileNamePair;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
@@ -79,7 +79,7 @@ final class CreateTempDirectoryNodeModel extends NodeModel {
         NodeLogger.getLogger(CreateTempDirectoryNodeModel.class);
 
     private CreateTempDirectoryConfiguration m_configuration;
-    private UUID m_id;
+    private String m_id;
 
     /**
      *
@@ -97,7 +97,7 @@ final class CreateTempDirectoryNodeModel extends NodeModel {
         }
         File f;
         do {
-            m_id = UUID.randomUUID();
+            m_id = RandomStringUtils.randomAlphanumeric(12).toLowerCase();
             f = computeFileName(m_id);
         } while (f.exists());
         pushVariables(f);
@@ -128,7 +128,7 @@ final class CreateTempDirectoryNodeModel extends NodeModel {
         }
     }
 
-    private File computeFileName(final UUID id) {
+    private File computeFileName(final String id) {
         File rootDir = null;
         // get the flow's tmp dir from its context
         NodeContext nodeContext = NodeContext.getContext();
@@ -143,7 +143,7 @@ final class CreateTempDirectoryNodeModel extends NodeModel {
             rootDir = new File(KNIMEConstants.getKNIMETempDir());
         }
         String baseName = m_configuration.getBaseName();
-        return new File(rootDir, baseName + id.toString());
+        return new File(rootDir, baseName + id);
     }
 
     /** {@inheritDoc} */

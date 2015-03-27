@@ -119,7 +119,7 @@ final class CreateTempDirectoryConfiguration {
     }
 
     void loadInDialog(final NodeSettingsRO settings) {
-        m_baseName = settings.getString("baseName", "knime_tempcreator_");
+        m_baseName = settings.getString("baseName", "knime_tc_");
         m_variableName = settings.getString("variableName", "temp_path");
         m_deleteOnReset = settings.getBoolean("deleteOnReset", true);
         NodeSettingsRO pairs;
