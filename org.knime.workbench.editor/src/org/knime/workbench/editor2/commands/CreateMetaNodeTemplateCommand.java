@@ -145,7 +145,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             }
             // create extra info and set it
             NodeUIInformation info = new NodeUIInformation(
-                    m_location.x, m_location.y, -1, -1, true);
+                    m_location.x, m_location.y, -1, -1, false);
             info.setSnapToGrid(m_snapToGrid);
             info.setIsDropLocation(true);
             m_container.setUIInformation(info);

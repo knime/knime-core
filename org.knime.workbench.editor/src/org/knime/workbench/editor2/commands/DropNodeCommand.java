@@ -117,7 +117,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
             m_container = hostWFM.getNodeContainer(id);
             // create extra info and set it
             NodeUIInformation info =
-                new NodeUIInformation(m_location.x, m_location.y, -1, -1, true);
+                new NodeUIInformation(m_location.x, m_location.y, -1, -1, false);
             info.setSnapToGrid(m_snapToGrid);
             info.setIsDropLocation(true);
             m_container.setUIInformation(info);
