@@ -185,7 +185,12 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
         return request;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * Based on the cursor location a different drop request is generated.
+     * If the cursor is over a node a replace request is generated, if
+     * the cursor is over an edge an insert request is generated or a
+     * simple create node request if nothing is under the cursor.
+     * */
     @Override
     protected void updateTargetRequest() {
         CreateDropRequest request = (CreateDropRequest)getTargetRequest();
@@ -213,6 +218,9 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
 
     /**
      * Computes the location of the new node and also determines if some node should be moved.
+     *
+     * A successor node is selected for the move action if the distance between this node and the successor is
+     * smaller than the {@link WorkflowEditorDropTargetListener#MINIMUM_NODE_DISTANCE} and if they overlap vertically.
      *
      * @return point where the new node should be inserted and sets
      *         {@link WorkflowEditorDropTargetListener#m_distanceToMoveTarget}
@@ -368,7 +376,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
     }
 
     /**
-     * A successor should be moved if the successor is to close and they overlap.
+     * A successor should be moved if the successor is to close and their y coordinates overlap.
      *
      * @param sourceX x coordinate of the source node
      * @param targetX x coordinate of the target node
@@ -381,6 +389,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
     private boolean selectSuccessor(final int sourceX, final int targetX, final int sourceTop, final int sourceBot,
         final int targetTop, final int targetBot, final double zoom) {
         if (WorkflowEditor.getActiveEditorSnapToGrid()) {
+            // transform coordinates to grid coordinates
             int snappedSourceX = WorkflowEditor.getActiveEditorClosestGridLocation(new Point(sourceX, 0)).x;
             int snappedTargetX = WorkflowEditor.getActiveEditorClosestGridLocation(new Point(targetX, 0)).x;
             int snappedSourceTop = WorkflowEditor.getActiveEditorClosestGridLocation(new Point(0, sourceTop)).y;
@@ -401,6 +410,8 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
 
     /**
      * {@inheritDoc}
+     *
+     * Marks nodes or edges if a new node should replace an old node or should be inserted on an edge.
      */
     @Override
     public void dragOver(final DropTargetEvent event) {
@@ -458,6 +469,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
     }
 
     /**
+     * Converts the event mouse location to editor relative coordinates.
      * @param event drop target event containing the position (relative to whole display)
      * @return point converted to the editor coordinates
      */
