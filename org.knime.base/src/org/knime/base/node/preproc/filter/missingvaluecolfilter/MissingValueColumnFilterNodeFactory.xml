@@ -54,14 +54,16 @@
             inclusion list.)
         </option>
 
+		<option name="Minimum percentage of missing values">All selected columns with at least this percentage of 
+		missing values are filtered out.</option>
 	</fullDescription>
 	
 	<ports>
 		<inPort index="0" name="Table to be filtered">
-			Table from which columns are to be filtered.
+			Table from which columns are filtered.
 		</inPort>
 		<outPort index="0" name="Filtered table">
-			Table without selected columns containing more than a certain percentage of missing values.
+			Table without selected columns containing more or as many of missing values than the set percentage.
 		</outPort>
 	</ports>	
 </knimeNode>

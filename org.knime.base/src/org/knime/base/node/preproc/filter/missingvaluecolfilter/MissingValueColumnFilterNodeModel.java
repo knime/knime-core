@@ -46,6 +46,7 @@ package org.knime.base.node.preproc.filter.missingvaluecolfilter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -92,6 +93,7 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
         BufferedDataTable inputTable = inData[0];
         DataTableSpec dataTableSpec = inputTable.getDataTableSpec();
         double[] percentages = new double[dataTableSpec.getNumColumns()];
+        Arrays.fill(percentages, -1);
 
         String[] included = m_conf.applyTo(dataTableSpec).getIncludes();
         for (String column : included) {
@@ -99,7 +101,6 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
         }
 
         double[] missingCount = new double[dataTableSpec.getNumColumns()];
-        boolean stop = true;
         double rowCount = inputTable.getRowCount();
         double processedRows = 0;
         for (DataRow row : inputTable) {
@@ -115,14 +116,18 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
         ColumnRearranger r = new ColumnRearranger(dataTableSpec);
         int alreadyRemoved = 0;
         for (int i = 0; i < percentages.length; i++) {
-            if (percentages[i] > 0) {
+            if (percentages[i] > -1) {
                 if ((missingCount[i] / inputTable.getRowCount()) * 100 >= percentages[i]) {
                     r.remove(i - alreadyRemoved++);
                 }
             }
         }
 
-        return new BufferedDataTable[]{exec.createColumnRearrangeTable(inputTable, r, exec)};
+        BufferedDataTable[] bufferedDataTables = new BufferedDataTable[]{exec.createColumnRearrangeTable(inputTable, r, exec)};
+        if (bufferedDataTables[0].getDataTableSpec().getNumColumns() == 0) {
+
+        }
+        return bufferedDataTables;
     }
 
     /** {@inheritDoc} */
@@ -146,6 +151,9 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        if (inSpecs[0].getNumColumns() == 0) {
+            throw new InvalidSettingsException("No input table available.");
+        }
         // we have to take a look at the whole table
         return null;
     }
