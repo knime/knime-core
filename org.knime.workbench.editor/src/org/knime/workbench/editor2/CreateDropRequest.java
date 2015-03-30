@@ -44,116 +44,131 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.03.2015 (tibuch): created
+ *   24.03.2015 (Tim-Oliver Buchholz): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2;
 
-import org.eclipse.draw2d.geometry.Point;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.eclipse.gef.editparts.AbstractEditPart;
+import org.eclipse.gef.requests.CreateRequest;
+import org.knime.workbench.editor2.actions.CreateSpaceAction.CreateSpaceDirection;
 
 /**
- * This action moves all selected nodes in a workbench a certain distance in a certain direction.
+ * The drop request with all information about the drop action. This request is used for the node replace/insert/create
+ * drop action.
  *
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
-public class CreateSpaceAction extends MoveNodeAbstractAction {
+public class CreateDropRequest extends CreateRequest {
 
     /**
-     * The move directions for the @link{CreateSapceAction}
+     * The type of the drop action.
+     *
      * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
      */
-    public enum CreateSpaceDirection {
+    public enum RequestType {
         /**
-         * Move up.
+         * Insert a new node in a connection.
          */
-        UP,
+        INSERT,
         /**
-         * Move right.
+         * Replace an old node with a new one.
          */
-        RIGHT,
+        REPLACE,
         /**
-         * Move down.
+         * Just create a new node. Normal drop on workbench.
          */
-        DOWN,
-        /**
-         * Move left
-         */
-        LEFT
+        CREATE
     }
 
-    private Point m_point;
+    private RequestType m_type;
+
+    private AbstractEditPart m_editPart;
+
+    private boolean m_createSpace;
+
+    private int m_distance;
+
+    private CreateSpaceDirection m_direction;
 
     /**
-     * The ID of this action.
+     * A new CreateDropRequest. Default RequestType is CREATE and nothing will be moved.
      */
-    public static final String ID = "knime.action.node.createspace";
-
-    /**
-     * @param editor the active workflow editor
-     * @param m_direction the direction
-     * @param distance the distance in pixels
-     */
-    public CreateSpaceAction(final WorkflowEditor editor, final CreateSpaceDirection m_direction, final int distance) {
-        super(editor);
-
-        int factorX = 0;
-        int factorY = 0;
-
-        if (m_direction.equals(CreateSpaceDirection.UP)) {
-            factorX = 0;
-            factorY = -1;
-        } else if (m_direction.equals(CreateSpaceDirection.RIGHT)) {
-            factorX = 1;
-            factorY = 0;
-        } else if (m_direction.equals(CreateSpaceDirection.DOWN)) {
-            factorX = 0;
-            factorY = 1;
-        } else if (m_direction.equals(CreateSpaceDirection.LEFT)) {
-            factorX = -1;
-            factorY = 0;
-        }
-
-        m_point = new Point(factorX * distance, factorY * distance);
+    public CreateDropRequest() {
+        super();
+        m_type = RequestType.CREATE;
+        m_editPart = null;
+        m_createSpace = false;
+        m_distance = 0;
+        m_direction = null;
     }
 
     /**
-     * @return all selected editor parts
+     * @return the m_type
      */
-    public NodeContainerEditPart[] selectedParts() {
-        return getSelectedParts(NodeContainerEditPart.class);
+    public RequestType getRequestType() {
+        return m_type;
     }
 
     /**
-     * {@inheritDoc}
+     * @param type the {@link RequestType} of the drop request
      */
-    @Override
-    public String getId() {
-        return ID;
+    public void setRequestType(final RequestType type) {
+        m_type = type;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the m_editpart
      */
-    @Override
-    public String getText() {
-        return "Move selected node(s)";
+    public AbstractEditPart getEditPart() {
+        return m_editPart;
     }
 
     /**
-     * {@inheritDoc}
+     * @param editpart which will be replaced or inserted into NOTE: not used if {@link RequestType#CREATE} is set
      */
-    @Override
-    public String getToolTipText() {
-        return "Move selected node(s)";
+    public void setEditPart(final AbstractEditPart editpart) {
+        m_editPart = editpart;
     }
 
     /**
-     * {@inheritDoc}
+     * @return createSpace
      */
-    @Override
-    public Point getMoveDirection() {
-        return m_point;
+    public boolean createSpace() {
+        return m_createSpace;
     }
 
+    /**
+     * @param createSpace create space between the nodes of the insertion edge
+     */
+    public void setCreateSpace(final boolean createSpace) {
+        m_createSpace = createSpace;
+    }
+
+    /**
+     * @return the distance
+     */
+    public int getDistance() {
+        return m_distance;
+    }
+
+    /**
+     * @param distance the distance added to the insertion edge length
+     */
+    public void setDistance(final int distance) {
+        this.m_distance = distance;
+    }
+
+    /**
+     * @return the direction
+     */
+    public CreateSpaceDirection getDirection() {
+        return m_direction;
+    }
+
+    /**
+     * @param direction the {@link CreateSpaceDirection} in which the space should be generated
+     */
+    public void setDirection(final CreateSpaceDirection direction) {
+        m_direction = direction;
+    }
 }

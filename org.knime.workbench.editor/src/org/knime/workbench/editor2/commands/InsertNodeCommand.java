@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,119 +40,77 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
- *   19.03.2015 (tibuch): created
+ *   29.05.2005 (Florian Georg): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2.commands;
+
+import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.Point;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
 /**
- * This action moves all selected nodes in a workbench a certain distance in a certain direction.
+ * GEF command for adding a <code>Node</code> to a connection. The new node will be connected to the source and target
+ * node of the passed connection.
  *
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
-public class CreateSpaceAction extends MoveNodeAbstractAction {
+public class InsertNodeCommand extends CreateNodeCommand {
+
+    private ConnectionContainer m_edge;
+
+    private DeleteCommand m_delete;
+
+    private InsertHelper m_ih;
 
     /**
-     * The move directions for the @link{CreateSapceAction}
-     * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+     * @param manager the workflow manager
+     * @param factory the node factory
+     * @param location the insert location of the new meta node
+     * @param snapToGrid should meta node snap to grid
+     * @param edge on which the meta node should be inserted
      */
-    public enum CreateSpaceDirection {
-        /**
-         * Move up.
-         */
-        UP,
-        /**
-         * Move right.
-         */
-        RIGHT,
-        /**
-         * Move down.
-         */
-        DOWN,
-        /**
-         * Move left
-         */
-        LEFT
-    }
+    public InsertNodeCommand(final WorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
+        final Point location, final boolean snapToGrid, final ConnectionContainerEditPart edge) {
+        super(manager, factory, location, snapToGrid);
+        m_edge = edge.getModel();
+        m_ih = new InsertHelper(getHostWFM(), m_edge);
 
-    private Point m_point;
-
-    /**
-     * The ID of this action.
-     */
-    public static final String ID = "knime.action.node.createspace";
-
-    /**
-     * @param editor the active workflow editor
-     * @param m_direction the direction
-     * @param distance the distance in pixels
-     */
-    public CreateSpaceAction(final WorkflowEditor editor, final CreateSpaceDirection m_direction, final int distance) {
-        super(editor);
-
-        int factorX = 0;
-        int factorY = 0;
-
-        if (m_direction.equals(CreateSpaceDirection.UP)) {
-            factorX = 0;
-            factorY = -1;
-        } else if (m_direction.equals(CreateSpaceDirection.RIGHT)) {
-            factorX = 1;
-            factorY = 0;
-        } else if (m_direction.equals(CreateSpaceDirection.DOWN)) {
-            factorX = 0;
-            factorY = 1;
-        } else if (m_direction.equals(CreateSpaceDirection.LEFT)) {
-            factorX = -1;
-            factorY = 0;
-        }
-
-        m_point = new Point(factorX * distance, factorY * distance);
-    }
-
-    /**
-     * @return all selected editor parts
-     */
-    public NodeContainerEditPart[] selectedParts() {
-        return getSelectedParts(NodeContainerEditPart.class);
+        // delete command handles undo and restores all connections and node correctly
+        m_delete = new DeleteCommand(Collections.singleton(edge), manager);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getId() {
-        return ID;
+    public boolean canExecute() {
+        return super.canExecute() && m_delete.canExecute() && m_ih.insertNode();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getText() {
-        return "Move selected node(s)";
+    public void execute() {
+        m_delete.execute();
+        super.execute();
+        m_ih.reconnect(m_container, m_snapToGrid, m_location.x, m_location.y);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getToolTipText() {
-        return "Move selected node(s)";
+    public void undo() {
+        super.undo();
+        m_delete.undo();
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Point getMoveDirection() {
-        return m_point;
-    }
-
 }

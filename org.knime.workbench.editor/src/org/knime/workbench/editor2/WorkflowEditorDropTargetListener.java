@@ -46,56 +46,107 @@
 package org.knime.workbench.editor2;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.Request;
+import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.gef.dnd.AbstractTransferDropTargetListener;
-import org.eclipse.gef.requests.CreateRequest;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.requests.CreationFactory;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.graphics.Color;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.CreateDropRequest.RequestType;
+import org.knime.workbench.editor2.actions.CreateSpaceAction.CreateSpaceDirection;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowOutPortBarEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
 import org.knime.workbench.explorer.view.ContentObject;
 import org.knime.workbench.repository.util.ContextAwareNodeFactoryMapper;
 
 /**
  *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
- *
+ * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
+ * @param <T> a creation factory for the item which will be dropped
  */
-public abstract class WorkflowEditorDropTargetListener
-        <T extends CreationFactory> extends AbstractTransferDropTargetListener {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(WorkflowEditorFileDropTargetListener.class);
+public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory> extends
+    AbstractTransferDropTargetListener {
+    /**
+     *
+     */
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowEditorFileDropTargetListener.class);
+
+    /**
+     * The minimum distance between two nodes which is need to insert a new one. If the distance between two nodes is
+     * smaller some space will be created.
+     */
+    private static final int MINIMUM_NODE_DISTANCE_BEFORE_INSERTION = 200;
+
+    /**
+     * Standard distance between two nodes.
+     */
+    private static final int MINIMUM_NODE_DISTANCE = MINIMUM_NODE_DISTANCE_BEFORE_INSERTION / 2;
+
+    /**
+     * The color of dragged over edges.
+     */
+    private static final Color RED = new Color(null, 255, 0, 0);
+
+    private NodeContainerEditPart m_markedNode;
+
+    private ConnectionContainerEditPart m_markedEdge;
+
+    private int m_nodeCount;
+
+    private int m_edgeCount;
+
+    private NodeContainerEditPart m_node;
+
+    private ConnectionContainerEditPart m_edge;
+
+    private Color m_edgeColor;
 
     private final T m_factory;
 
+    private int m_distanceToMoveTarget = 0;
+
+    private int m_edgeWidth;
+
     /**
-     * @param viewer the edit part viewer this drop target listener is attached
-     *            to
+     * @param viewer the edit part viewer this drop target listener is attached to
      */
-    protected WorkflowEditorDropTargetListener(final EditPartViewer viewer,
-            final T factory) {
+    protected WorkflowEditorDropTargetListener(final EditPartViewer viewer, final T factory) {
         super(viewer);
         m_factory = factory;
     }
 
     /**
      * @param url the URL of the file
-     * @return a node factory creating a node that is registered for handling
-     *      this type of file
+     * @return a node factory creating a node that is registered for handling this type of file
      */
     protected ContextAwareNodeFactory<NodeModel> getNodeFactory(final URL url) {
         String path = url.getPath();
         Class<? extends ContextAwareNodeFactory> clazz = ContextAwareNodeFactoryMapper.getNodeFactory(path);
         if (clazz == null) {
-            LOGGER.warn("No node factory is registered for handling "
-                    + " \"" + path + "\"");
+            LOGGER.warn("No node factory is registered for handling " + " \"" + path + "\"");
             return null;
         }
         try {
@@ -110,8 +161,8 @@ public abstract class WorkflowEditorDropTargetListener
 
     /**
      * @param event the drop target event
-     * @return the first dragged resource or null if the event contains a
-     *      resource that is not of type {@link ContentObject}
+     * @return the first dragged resource or null if the event contains a resource that is not of type
+     *         {@link ContentObject}
      */
     protected ContentObject getDragResources(final DropTargetEvent event) {
         LocalSelectionTransfer transfer = (LocalSelectionTransfer)getTransfer();
@@ -129,7 +180,7 @@ public abstract class WorkflowEditorDropTargetListener
     /** {@inheritDoc} */
     @Override
     protected Request createTargetRequest() {
-        CreateRequest request = new CreateRequest();
+        CreateDropRequest request = new CreateDropRequest();
         request.setFactory(m_factory);
         return request;
     }
@@ -137,7 +188,311 @@ public abstract class WorkflowEditorDropTargetListener
     /** {@inheritDoc} */
     @Override
     protected void updateTargetRequest() {
-        ((CreateRequest)getTargetRequest()).setLocation(getDropLocation());
+        CreateDropRequest request = (CreateDropRequest)getTargetRequest();
+        if (m_node != null && m_nodeCount >= m_edgeCount) {
+            request.setRequestType(RequestType.REPLACE);
+            request.setLocation(getDropLocation());
+            request.setEditPart(m_node);
+            request.setCreateSpace(m_distanceToMoveTarget > 0);
+        } else if (m_edge != null) {
+            request.setRequestType(RequestType.INSERT);
+            request.setLocation(getInsertLocation());
+            request.setEditPart(m_edge);
+            request.setCreateSpace(m_distanceToMoveTarget > 0);
+            request.setDirection(CreateSpaceDirection.RIGHT);
+            request.setDistance(m_distanceToMoveTarget);
+        } else {
+            request.setRequestType(RequestType.CREATE);
+            request.setLocation(getDropLocation());
+            request.setEditPart(null);
+            request.setCreateSpace(m_distanceToMoveTarget > 0);
+        }
+
+        unmark(((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getWorkflowManager());
+    }
+
+    /**
+     * Computes the location of the new node and also determines if some node should be moved.
+     *
+     * @return point where the new node should be inserted and sets
+     *         {@link WorkflowEditorDropTargetListener#m_distanceToMoveTarget}
+     */
+    private Point getInsertLocation() {
+        ZoomManager zoomManager = (ZoomManager)getViewer().getProperty(ZoomManager.class.toString());
+        double zoom = zoomManager.getZoom();
+        int adjustedMinimumNodeDistance = (int)(MINIMUM_NODE_DISTANCE * zoom);
+        double adjustedMinimumNodeDistanceBeforeInsertion = MINIMUM_NODE_DISTANCE_BEFORE_INSERTION * zoom;
+        Point dropLocation = getDropLocation();
+        Point insertLocation = dropLocation;
+        int[] sourceBounds = null;
+        int[] targetBounds = null;
+        int sourceAnnotationHeight = 0;
+        int targetAnnotationHeight = 0;
+        EditPart source = m_edge.getSource().getParent();
+        EditPart target = m_edge.getTarget().getParent();
+
+        NodeContainerEditPart nextNode = null;
+
+        if (source instanceof WorkflowInPortBarEditPart && target instanceof NodeContainerEditPart) {
+            // meta node start --> first node in meta node
+            WorkflowInPortBarEditPart sourceBar = ((WorkflowInPortBarEditPart)source);
+            NodeContainerEditPart targetNode = (NodeContainerEditPart)target;
+            Rectangle bounds = sourceBar.getFigure().getBounds();
+            org.eclipse.swt.graphics.Point p = getViewer().getControl().toControl(bounds.x, bounds.y);
+            sourceBounds = new int[]{p.x, p.y, bounds.width, bounds.height};
+            targetBounds = targetNode.getNodeContainer().getUIInformation().getBounds();
+            targetAnnotationHeight = targetNode.getNodeAnnotationEditPart().getModel().getHeight();
+            nextNode = targetNode;
+        } else if (source instanceof NodeContainerEditPart && target instanceof WorkflowOutPortBarEditPart) {
+            // last node in meta node --> meta node end
+            NodeContainerEditPart sourceNode = (NodeContainerEditPart)source;
+            WorkflowOutPortBarEditPart targetBar = (WorkflowOutPortBarEditPart)target;
+            sourceBounds = sourceNode.getNodeContainer().getUIInformation().getBounds();
+            Rectangle bounds = targetBar.getFigure().getBounds();
+            targetBounds = new int[]{bounds.x, bounds.y, bounds.width, bounds.height};
+            sourceAnnotationHeight = sourceNode.getNodeAnnotationEditPart().getModel().getHeight();
+        } else if (source instanceof WorkflowInPortBarEditPart && target instanceof WorkflowOutPortBarEditPart) {
+            // meta node start --> meta node end
+            WorkflowInPortBarEditPart sourceBar = (WorkflowInPortBarEditPart)source;
+            WorkflowOutPortBarEditPart targetBar = (WorkflowOutPortBarEditPart)target;
+            sourceBounds = sourceBar.getNodeContainer().getUIInformation().getBounds();
+            targetBounds = targetBar.getNodeContainer().getUIInformation().getBounds();
+        } else if (source instanceof NodeContainerEditPart && target instanceof NodeContainerEditPart) {
+            // node --> node
+            NodeContainerEditPart sourceNode = (NodeContainerEditPart)source;
+            NodeContainerEditPart targetNode = (NodeContainerEditPart)target;
+            sourceBounds = sourceNode.getNodeContainer().getUIInformation().getBounds();
+            targetBounds = targetNode.getNodeContainer().getUIInformation().getBounds();
+            sourceAnnotationHeight = sourceNode.getNodeAnnotationEditPart().getModel().getHeight();
+            targetAnnotationHeight = targetNode.getNodeAnnotationEditPart().getModel().getHeight();
+            nextNode = targetNode;
+        }
+        if (sourceBounds != null && targetBounds != null) {
+            sourceBounds = recomputeBounds(sourceBounds);
+            targetBounds = recomputeBounds(targetBounds);
+            if (0 <= targetBounds[0] - sourceBounds[0]
+                && targetBounds[0] - sourceBounds[0] >= adjustedMinimumNodeDistanceBeforeInsertion) {
+                m_distanceToMoveTarget = 0;
+            } else {
+                m_distanceToMoveTarget =
+                    adjustedMinimumNodeDistance + (sourceBounds[0] + adjustedMinimumNodeDistance - targetBounds[0]);
+                m_distanceToMoveTarget = (int)(m_distanceToMoveTarget / zoom);
+            }
+
+            insertLocation =
+                new Point(getXLocation(dropLocation.x, sourceBounds[0], zoom), getYLocation(dropLocation.y,
+                    sourceBounds[1], targetBounds[1], zoom));
+            if (WorkflowEditor.getActiveEditorSnapToGrid()) {
+                insertLocation = WorkflowEditor.getActiveEditorClosestGridLocation(insertLocation);
+            }
+
+            getViewer().getSelectionManager().deselectAll();
+            if (nextNode != null
+                && selectSuccessor(sourceBounds[0], targetBounds[0], sourceBounds[1], sourceBounds[1] + sourceBounds[3]
+                    + sourceAnnotationHeight, targetBounds[1], targetBounds[1] + targetBounds[3]
+                    + targetAnnotationHeight, zoom)) {
+                selectNodes(nextNode, zoom);
+            }
+        }
+        return insertLocation;
+    }
+
+    /**
+     * If the y coordinate of source and target difference is less than 20 pixel the source y coordinate is returned.
+     * Also the y coordinate is recomputed if snap to grid is enabled.
+     *
+     * @param dropLocationY y coordinate of the drop event
+     * @param sourceY y coordinate of the source node
+     * @param targetY y coordinate of the target node
+     * @return y location for the new node
+     */
+    private int getYLocation(final int dropLocationY, final int sourceY, final int targetY, final double zoom) {
+        if (Math.abs(sourceY - targetY) < 20 * zoom) {
+            return sourceY;
+        } else {
+            return dropLocationY;
+
+        }
+    }
+
+    /**
+     * The x coordinate is recomputed if snap to gird is enabled.
+     *
+     * @param dropLocationX x coordinate of the drop event
+     * @param sourceX x coordinate of the source node
+     * @return source node x coordinate plus the {@link WorkflowEditorDropTargetListener#MINIMUM_NODE_DISTANCE}
+     */
+    private int getXLocation(final int dropLocationX, final int sourceX, final double zoom) {
+        if (sourceX < dropLocationX && sourceX + MINIMUM_NODE_DISTANCE * zoom > dropLocationX) {
+            return (int)(sourceX + MINIMUM_NODE_DISTANCE * zoom);
+        } else {
+            return dropLocationX;
+        }
+    }
+
+    /**
+     * Selects all nodes after this node which are around the same y coordinate and closer than
+     * {@link WorkflowEditorDropTargetListener#m_distanceToMoveTarget} +
+     * {@link WorkflowEditorDropTargetListener#MINIMUM_NODE_DISTANCE}
+     *
+     * All selected elements will be moved by the move action.
+     *
+     * @param node from which on the selection starts
+     */
+    private void selectNodes(final NodeContainerEditPart node, final double zoom) {
+        getViewer().getSelectionManager().appendSelection(node);
+        for (ConnectionContainerEditPart c : node.getOutgoingConnections()) {
+            EditPart source = c.getSource().getParent();
+            EditPart target = c.getTarget().getParent();
+            if (source instanceof NodeContainerEditPart && target instanceof NodeContainerEditPart) {
+                NodeContainerEditPart sourceNode = (NodeContainerEditPart)source;
+                NodeContainerEditPart targetNode = (NodeContainerEditPart)target;
+
+                int[] sourceBounds = sourceNode.getNodeContainer().getUIInformation().getBounds();
+                int[] targetBounds = targetNode.getNodeContainer().getUIInformation().getBounds();
+                sourceBounds = recomputeBounds(sourceBounds);
+                targetBounds = recomputeBounds(targetBounds);
+                int sourceYTop = sourceBounds[1];
+                int sourceYBot =
+                    sourceYTop + sourceBounds[3] + sourceNode.getNodeAnnotationEditPart().getModel().getHeight();
+                int targetYTop = targetBounds[1];
+                int targetYBot =
+                    targetYTop + targetBounds[3] + targetNode.getNodeAnnotationEditPart().getModel().getHeight();
+
+                if (selectSuccessor(sourceBounds[0], targetBounds[0], sourceYTop, sourceYBot, targetYTop, targetYBot,
+                    zoom)) {
+                    selectNodes(targetNode, zoom);
+                }
+            }
+        }
+    }
+
+    /**
+     * A successor should be moved if the successor is to close and they overlap.
+     *
+     * @param sourceX x coordinate of the source node
+     * @param targetX x coordinate of the target node
+     * @param sourceTop y coordinate of the source node
+     * @param sourceBot y coordinate plus height of the source node
+     * @param targetTop y coordinate of the target node
+     * @param targetBot y coordinate plus height of the target node
+     * @return if successor should be moved
+     */
+    private boolean selectSuccessor(final int sourceX, final int targetX, final int sourceTop, final int sourceBot,
+        final int targetTop, final int targetBot, final double zoom) {
+        if (WorkflowEditor.getActiveEditorSnapToGrid()) {
+            int snappedSourceX = WorkflowEditor.getActiveEditorClosestGridLocation(new Point(sourceX, 0)).x;
+            int snappedTargetX = WorkflowEditor.getActiveEditorClosestGridLocation(new Point(targetX, 0)).x;
+            int snappedSourceTop = WorkflowEditor.getActiveEditorClosestGridLocation(new Point(0, sourceTop)).y;
+            int snappedsourceBot = WorkflowEditor.getActiveEditorClosestGridLocation(new Point(0, sourceBot)).y;
+            int snappedTargetTop = WorkflowEditor.getActiveEditorClosestGridLocation(new Point(0, targetTop)).y;
+            int snappedTargetBot = WorkflowEditor.getActiveEditorClosestGridLocation(new Point(0, targetBot)).y;
+
+            return 0 < snappedTargetX - snappedSourceX
+                && snappedTargetX - snappedSourceX <= (m_distanceToMoveTarget + MINIMUM_NODE_DISTANCE) * zoom
+                && ((snappedTargetTop <= snappedSourceTop && snappedSourceTop <= snappedTargetBot) ||
+                        (snappedTargetTop <= snappedsourceBot && snappedsourceBot <= snappedTargetBot));
+        } else {
+            return 0 < targetX - sourceX
+                && targetX - sourceX <= (m_distanceToMoveTarget + MINIMUM_NODE_DISTANCE) * zoom
+                && ((targetTop <= sourceTop && sourceTop <= targetBot) || (targetTop <= sourceBot && sourceBot <= targetBot));
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dragOver(final DropTargetEvent event) {
+        WorkflowManager wfm = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getWorkflowManager();
+        m_node = null;
+        m_edge = null;
+        m_nodeCount = 0;
+        m_edgeCount = 0;
+
+        // edge-/nodedist
+        double edgedist = Integer.MAX_VALUE;
+        double nodedist = Integer.MAX_VALUE;
+        // hitbox size: (-8 to 8 = 16) * (-8 to 8 = 16)
+        for (int i = -8; i < 9; i++) {
+            for (int j = -8; j < 9; j++) {
+                Point dropLocation = getDropLocation(event);
+                EditPart ep = getViewer().findObjectAt(dropLocation.getTranslated(i, j));
+                if (ep instanceof NodeContainerEditPart) {
+                    double temp = dropLocation.getDistance(dropLocation.getTranslated(i, j));
+                    // choose nearest node to mouse position
+                    if (nodedist >= temp) {
+                        m_node = (NodeContainerEditPart)ep;
+                        nodedist = temp;
+                    }
+                    m_nodeCount++;
+                } else if (ep instanceof ConnectionContainerEditPart) {
+                    double temp = dropLocation.getDistance(dropLocation.getTranslated(i, j));
+                    // choose nearest edge to mouse-position
+                    if (edgedist >= temp) {
+                        m_edge = (ConnectionContainerEditPart)ep;
+                        edgedist = temp;
+                    }
+                    m_edgeCount++;
+                }
+            }
+        }
+
+        unmark(wfm);
+
+        if (m_node != null && m_nodeCount >= m_edgeCount) {
+            m_markedNode = m_node;
+            m_markedNode.mark();
+            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+            WindowsDNDHelper.hideDragImage();
+        } else if (m_edge != null) {
+            m_edgeColor = m_edge.getFigure().getForegroundColor();
+            m_edgeWidth = ((ProgressPolylineConnection)m_edge.getFigure()).getLineWidth();
+            m_markedEdge = m_edge;
+            ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(m_edgeWidth + 3);
+            m_markedEdge.getFigure().setForegroundColor(RED);
+
+            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+            WindowsDNDHelper.hideDragImage();
+        }
+    }
+
+    /**
+     * @param event drop target event containing the position (relative to whole display)
+     * @return point converted to the editor coordinates
+     */
+    protected Point getDropLocation(final DropTargetEvent event) {
+        /* NB: don't break in this method - it ruins the cursor location! */
+        event.x = event.display.getCursorLocation().x;
+        event.y = event.display.getCursorLocation().y;
+        Point p =
+            new Point(getViewer().getControl().toControl(event.x, event.y).x, getViewer().getControl().toControl(
+                event.x, event.y).y);
+        return p;
+    }
+
+    /**
+     * Unmark node and edge.
+     *
+     * @param wfm the workflow manager
+     */
+    private void unmark(final WorkflowManager wfm) {
+        if (m_markedNode != null) {
+            m_markedNode.unmark();
+            m_markedNode = null;
+
+            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+            WindowsDNDHelper.showDragImage();
+        }
+
+        if (m_markedEdge != null) {
+            m_markedEdge.getFigure().setForegroundColor(m_edgeColor);
+            ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(m_edgeWidth);
+            m_markedEdge = null;
+
+            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
+            WindowsDNDHelper.showDragImage();
+        }
     }
 
     /**
@@ -147,7 +502,6 @@ public abstract class WorkflowEditorDropTargetListener
         return m_factory;
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -156,5 +510,60 @@ public abstract class WorkflowEditorDropTargetListener
         return getDragResources(event) != null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void handleDrop() {
+        updateTargetRequest();
+        updateTargetEditPart();
 
+        if (getTargetEditPart() != null) {
+            Command command = getCommand();
+            if (command instanceof CompoundCommand) {
+                // If the command is a compound command the drop request also needs to
+                // create space for the new node and therefore moves other nodes.
+                // The commands are executed one after another so the user can undo
+                // the move if wanted but still has the new node inserted.
+                List commands = ((CompoundCommand)command).getCommands();
+                if (commands instanceof ArrayList<?>) {
+                    for (Command c : (ArrayList<Command>)commands) {
+
+                        Command p = getViewer().getEditDomain().getCommandStack().getUndoCommand();
+                        getViewer().getEditDomain().getCommandStack().execute(c);
+                        Command a = getViewer().getEditDomain().getCommandStack().getUndoCommand();
+                        if (p == null && a == null) {
+                            break;
+                        } else if (p != null && p.equals(a)) {
+                            break;
+                        }
+                    }
+                    getViewer().getSelectionManager().deselectAll();
+                }
+            } else {
+                getViewer().getEditDomain().getCommandStack().execute(command);
+            }
+        } else {
+            getCurrentEvent().detail = DND.DROP_NONE;
+        }
+    }
+
+    /**
+     * Recompute bounds based on the zoom and viewport position.
+     *
+     * @param bounds the absolute bounds with zoom 100%
+     * @return recomputed bounds relative to the viewport and zoom level
+     */
+    private int[] recomputeBounds(final int[] bounds) {
+        int[] result = new int[4];
+        ZoomManager zoomManager = (ZoomManager)getViewer().getProperty(ZoomManager.class.toString());
+        double zoom = zoomManager.getZoom();
+        int x = zoomManager.getViewport().getHorizontalRangeModel().getValue();
+        int y = zoomManager.getViewport().getVerticalRangeModel().getValue();
+        result[0] = (int)(zoom * bounds[0] + (-1) * x);
+        result[1] = (int)(zoom * bounds[1] + (-1) * y);
+        result[2] = (int)(zoom * bounds[2]);
+        result[3] = (int)(zoom * bounds[3]);
+        return result;
+    }
 }

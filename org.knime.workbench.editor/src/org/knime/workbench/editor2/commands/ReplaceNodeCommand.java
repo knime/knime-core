@@ -48,177 +48,58 @@
 package org.knime.workbench.editor2.commands;
 
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.Set;
 
-import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.dialogs.MessageDialogWithToggle;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.draw2d.geometry.Point;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- * GEF command for replacing a <code>Node</code> in the
- * <code>WorkflowManager</code>.
+ * GEF command for replacing a <code>Node</code> in the <code>WorkflowManager</code>.
  *
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
-public class ReplaceNodeCommand extends AbstractKNIMECommand {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(ReplaceNodeCommand.class);
+public class ReplaceNodeCommand extends CreateNodeCommand {
+    private NodeContainerEditPart m_node;
 
-    private final NodeFactory<? extends NodeModel> m_factory;
+    private DeleteCommand m_delete;
 
-    private NodeContainer m_container;
-
-    private NodeContainerEditPart m_oldNodeID;
-
-    private DeleteCommand m_deleteCommand;
+    private ReplaceHelper m_rh;
 
     /**
-     * Replaces a node with a new node.
-     *
-     *
-     * @param manager The workflow manager that should host the new node
-     * @param factory The factory of the Node that should be added
-     * @param nodeToReplace the node which should be replaced.
+     * @param manager the workflow manager
+     * @param factory the node factory
+     * @param location the insert location of the new meta node
+     * @param snapToGrid should meta node snap to grid
+     * @param node which will be replaced by this node
      */
-    public ReplaceNodeCommand(final WorkflowManager manager,
-            final NodeFactory<? extends NodeModel> factory, final NodeContainerEditPart nodeToReplace) {
-        super(manager);
-        m_factory = factory;
-        m_oldNodeID = nodeToReplace;
+    public ReplaceNodeCommand(final WorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
+        final Point location, final boolean snapToGrid, final NodeContainerEditPart nodeToReplace) {
+        super(manager, factory, location, snapToGrid);
+        m_node = nodeToReplace;
+        m_rh = new ReplaceHelper(manager, m_node.getNodeContainer());
 
         // delete command handles undo action (restoring connections and positions)
-        m_deleteCommand = new DeleteCommand(Collections.singleton(m_oldNodeID), manager);
+        m_delete = new DeleteCommand(Collections.singleton(m_node), manager);
     }
 
-    /** We can execute, if all components were 'non-null' in the constructor.
-     * {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean canExecute() {
-        return m_deleteCommand.canExecute();
+        return super.canExecute() && m_delete.canExecute() && m_rh.replaceNode();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void execute() {
-
-     // the following code has mainly been copied from
-        // IDEWorkbenchWindowAdvisor#preWindowShellClose
-        IPreferenceStore store =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
-        if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
-                || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
-            MessageDialogWithToggle dialog =
-                MessageDialogWithToggle.openOkCancelConfirm(
-                    Display.getDefault().getActiveShell(),
-                    "Confirm reset...",
-                    "Do you really want to reset all downstream node(s) ?",
-                    "Do not ask again", false, null, null);
-            if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
-                return;
-            }
-            if (dialog.getToggleState()) {
-                store.setValue(PreferenceConstants.P_CONFIRM_RESET, false);
-                KNIMEUIPlugin.getDefault().savePluginPreferences();
-            }
-        }
-
-        WorkflowManager hostWFM = getHostWFM();
-
-        NodeContainer nodeContainer = m_oldNodeID.getNodeContainer();
-        NodeUIInformation uiInformation = nodeContainer.getUIInformation();
-        Set<ConnectionContainer> incomingConnectionsForOldNode = hostWFM.getIncomingConnectionsFor(nodeContainer.getID());
-        Set<ConnectionContainer> outgoingConnectionsForOldNode = hostWFM.getOutgoingConnectionsFor(nodeContainer.getID());
-
-        // delete old node
-        m_deleteCommand.execute();
-
-        LOGGER.debug("Replacing " + m_oldNodeID + ".");
-        // Add node to workflow and get the container
-        try {
-            NodeID id = hostWFM.createAndAddNode(m_factory);
-            m_container = hostWFM.getNodeContainer(id);
-        } catch (Throwable t) {
-            // if fails notify the user
-            LOGGER.debug("Node cannot be replaced.", t);
-            MessageBox mb = new MessageBox(Display.getDefault().
-                    getActiveShell(), SWT.ICON_WARNING | SWT.OK);
-            mb.setText("Node cannot be replaced.");
-            mb.setMessage("The selected node could not be replaced "
-                    + "due to the following reason:\n" + t.getMessage());
-            mb.open();
-            return;
-        }
-
-        int[] bounds = uiInformation.getBounds();
-
-        // replace info of the new node with info of the old one
-        NodeUIInformation info = new NodeUIInformation(
-                bounds[0], bounds[1], -1, -1, true);
-        info.setSnapToGrid(uiInformation.getSnapToGrid());
-        info.setIsDropLocation(false);
-        m_container.setUIInformation(info);
-
-        // set incoming connections
-        Iterator<ConnectionContainer> itr = incomingConnectionsForOldNode.iterator();
-        int p = 0;
-        while (itr.hasNext()) {
-            ConnectionContainer cc = itr.next();
-
-            while (!hostWFM.canAddConnection(cc.getSource(), cc.getSourcePort(), m_container.getID(), p)) {
-                p++;
-                if (p > m_container.getNrInPorts()) {
-                    break;
-                }
-            }
-
-            if (p > m_container.getNrInPorts()) {
-                break;
-            } else {
-                hostWFM.addConnection(cc.getSource(), cc.getSourcePort(), m_container.getID(), p);
-            }
-        }
-
-        // set outgoing connections
-        itr = outgoingConnectionsForOldNode.iterator();
-        p = 0;
-        while (itr.hasNext()) {
-            ConnectionContainer cc = itr.next();
-
-            while (!hostWFM.canAddConnection(m_container.getID(), p, cc.getDest(), cc.getDestPort())) {
-                p++;
-                if (p > m_container.getNrOutPorts()) {
-                    break;
-                }
-            }
-
-            if (p > m_container.getNrOutPorts()) {
-                break;
-            } else {
-                hostWFM.addConnection(m_container.getID(), p, cc.getDest(), cc.getDestPort());
-            }
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean canUndo() {
-        return m_deleteCommand.canUndo();
+        m_delete.execute();
+        super.execute();
+        m_rh.reconnect(m_container);
     }
 
     /**
@@ -226,16 +107,7 @@ public class ReplaceNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        LOGGER.debug("Undo: Replace node #" + m_container.getID());
-        if (canUndo()) {
-            getHostWFM().removeNode(m_container.getID());
-            m_deleteCommand.undo();
-        } else {
-            MessageDialog.openInformation(Display.getDefault().getActiveShell(),
-                    "Operation no allowed", "The node "
-                    + m_container.getNameWithID()
-                    + " can currently not be removed");
-        }
+        super.undo();
+        m_delete.undo();
     }
-
 }

@@ -44,116 +44,58 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.03.2015 (tibuch): created
+ *   24.03.2015 (tibuch): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2;
 
-import org.eclipse.draw2d.geometry.Point;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.eclipse.gef.requests.CreationFactory;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowCopyContent;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.workbench.repository.RepositoryFactory;
+import org.knime.workbench.repository.model.MetaNodeTemplate;
 
 /**
- * This action moves all selected nodes in a workbench a certain distance in a certain direction.
- *
+ * A Factory to create meta nodes.
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
-public class CreateSpaceAction extends MoveNodeAbstractAction {
+public class MetaNodeCreationFactory implements CreationFactory {
+
+    private MetaNodeTemplate m_template = null;
 
     /**
-     * The move directions for the @link{CreateSapceAction}
-     * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+     * {@inheritDoc}
      */
-    public enum CreateSpaceDirection {
-        /**
-         * Move up.
-         */
-        UP,
-        /**
-         * Move right.
-         */
-        RIGHT,
-        /**
-         * Move down.
-         */
-        DOWN,
-        /**
-         * Move left
-         */
-        LEFT
-    }
-
-    private Point m_point;
-
-    /**
-     * The ID of this action.
-     */
-    public static final String ID = "knime.action.node.createspace";
-
-    /**
-     * @param editor the active workflow editor
-     * @param m_direction the direction
-     * @param distance the distance in pixels
-     */
-    public CreateSpaceAction(final WorkflowEditor editor, final CreateSpaceDirection m_direction, final int distance) {
-        super(editor);
-
-        int factorX = 0;
-        int factorY = 0;
-
-        if (m_direction.equals(CreateSpaceDirection.UP)) {
-            factorX = 0;
-            factorY = -1;
-        } else if (m_direction.equals(CreateSpaceDirection.RIGHT)) {
-            factorX = 1;
-            factorY = 0;
-        } else if (m_direction.equals(CreateSpaceDirection.DOWN)) {
-            factorX = 0;
-            factorY = 1;
-        } else if (m_direction.equals(CreateSpaceDirection.LEFT)) {
-            factorX = -1;
-            factorY = 0;
-        }
-
-        m_point = new Point(factorX * distance, factorY * distance);
-    }
-
-    /**
-     * @return all selected editor parts
-     */
-    public NodeContainerEditPart[] selectedParts() {
-        return getSelectedParts(NodeContainerEditPart.class);
+    @Override
+    public Object getNewObject() {
+        NodeID id = m_template.getManager().getID();
+        WorkflowManager sourceManager = RepositoryFactory.META_NODE_ROOT;
+        WorkflowCopyContent content = new WorkflowCopyContent();
+        content.setNodeIDs(id);
+        return sourceManager.copy(content);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getId() {
-        return ID;
+    public Object getObjectType() {
+        return WorkflowPersistor.class;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the meta node template
      */
-    @Override
-    public String getText() {
-        return "Move selected node(s)";
+    public MetaNodeTemplate getMetaNodeTemplate() {
+        return m_template;
     }
 
     /**
-     * {@inheritDoc}
+     * @param template the meta node template to set
      */
-    @Override
-    public String getToolTipText() {
-        return "Move selected node(s)";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Point getMoveDirection() {
-        return m_point;
+    public void setMetaNodeTemplate(final MetaNodeTemplate template) {
+        m_template = template;
     }
 
 }

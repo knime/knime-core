@@ -44,116 +44,72 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.03.2015 (tibuch): created
+ *   25.03.2015 (tibuch): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2.commands;
+
+import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.Point;
-import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
 /**
- * This action moves all selected nodes in a workbench a certain distance in a certain direction.
+ * GEF command for replacing a <code>Meta Node Template</code> in the <code>WorkflowManager</code>.
  *
- * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+ * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
  */
-public class CreateSpaceAction extends MoveNodeAbstractAction {
+public class ReplaceMetaNodeTemplateCommand extends CreateMetaNodeTemplateCommand {
+
+    private NodeContainerEditPart m_node;
+
+    private DeleteCommand m_delete;
+
+    private ReplaceHelper m_rh;
 
     /**
-     * The move directions for the @link{CreateSapceAction}
-     * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+     * @param manager the workflow manager
+     * @param templateFolder the folder of the meta node template
+     * @param location the insert location of the new meta node template
+     * @param snapToGrid should meta node snap to grid
+     * @param node which will be replaced by this meta node template
      */
-    public enum CreateSpaceDirection {
-        /**
-         * Move up.
-         */
-        UP,
-        /**
-         * Move right.
-         */
-        RIGHT,
-        /**
-         * Move down.
-         */
-        DOWN,
-        /**
-         * Move left
-         */
-        LEFT
-    }
+    public ReplaceMetaNodeTemplateCommand(final WorkflowManager manager,
+        final AbstractExplorerFileStore templateFolder, final Point location, final boolean snapToGrid,
+        final NodeContainerEditPart node) {
+        super(manager, templateFolder, location, snapToGrid);
+        m_node = node;
+        m_rh = new ReplaceHelper(manager, m_node.getNodeContainer());
 
-    private Point m_point;
-
-    /**
-     * The ID of this action.
-     */
-    public static final String ID = "knime.action.node.createspace";
-
-    /**
-     * @param editor the active workflow editor
-     * @param m_direction the direction
-     * @param distance the distance in pixels
-     */
-    public CreateSpaceAction(final WorkflowEditor editor, final CreateSpaceDirection m_direction, final int distance) {
-        super(editor);
-
-        int factorX = 0;
-        int factorY = 0;
-
-        if (m_direction.equals(CreateSpaceDirection.UP)) {
-            factorX = 0;
-            factorY = -1;
-        } else if (m_direction.equals(CreateSpaceDirection.RIGHT)) {
-            factorX = 1;
-            factorY = 0;
-        } else if (m_direction.equals(CreateSpaceDirection.DOWN)) {
-            factorX = 0;
-            factorY = 1;
-        } else if (m_direction.equals(CreateSpaceDirection.LEFT)) {
-            factorX = -1;
-            factorY = 0;
-        }
-
-        m_point = new Point(factorX * distance, factorY * distance);
-    }
-
-    /**
-     * @return all selected editor parts
-     */
-    public NodeContainerEditPart[] selectedParts() {
-        return getSelectedParts(NodeContainerEditPart.class);
+        m_delete = new DeleteCommand(Collections.singleton(m_node), getHostWFM());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getId() {
-        return ID;
+    public boolean canExecute() {
+        return super.canExecute() && m_delete.canExecute() && m_rh.replaceNode();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getText() {
-        return "Move selected node(s)";
+    public void execute() {
+        m_delete.execute();
+        super.execute();
+        m_rh.reconnect(m_container);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getToolTipText() {
-        return "Move selected node(s)";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Point getMoveDirection() {
-        return m_point;
+    public void undo() {
+        super.undo();
+        m_delete.undo();
     }
 
 }

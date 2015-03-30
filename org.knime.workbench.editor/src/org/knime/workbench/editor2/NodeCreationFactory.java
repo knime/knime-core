@@ -44,116 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.03.2015 (tibuch): created
+ *   24.03.2015 (tibuch): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2;
 
-import org.eclipse.draw2d.geometry.Point;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.eclipse.gef.requests.CreationFactory;
+import org.knime.core.node.NodeFactory;
+import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
- * This action moves all selected nodes in a workbench a certain distance in a certain direction.
- *
+ * Factory for normal nodes from the node repository.
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
-public class CreateSpaceAction extends MoveNodeAbstractAction {
+public class NodeCreationFactory implements CreationFactory {
+
+    private NodeTemplate m_template = null;
 
     /**
-     * The move directions for the @link{CreateSapceAction}
-     * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+     * Creates a new <code>NodeFactory</code> instance.
+     *
+     * {@inheritDoc}
      */
-    public enum CreateSpaceDirection {
-        /**
-         * Move up.
-         */
-        UP,
-        /**
-         * Move right.
-         */
-        RIGHT,
-        /**
-         * Move down.
-         */
-        DOWN,
-        /**
-         * Move left
-         */
-        LEFT
-    }
-
-    private Point m_point;
-
-    /**
-     * The ID of this action.
-     */
-    public static final String ID = "knime.action.node.createspace";
-
-    /**
-     * @param editor the active workflow editor
-     * @param m_direction the direction
-     * @param distance the distance in pixels
-     */
-    public CreateSpaceAction(final WorkflowEditor editor, final CreateSpaceDirection m_direction, final int distance) {
-        super(editor);
-
-        int factorX = 0;
-        int factorY = 0;
-
-        if (m_direction.equals(CreateSpaceDirection.UP)) {
-            factorX = 0;
-            factorY = -1;
-        } else if (m_direction.equals(CreateSpaceDirection.RIGHT)) {
-            factorX = 1;
-            factorY = 0;
-        } else if (m_direction.equals(CreateSpaceDirection.DOWN)) {
-            factorX = 0;
-            factorY = 1;
-        } else if (m_direction.equals(CreateSpaceDirection.LEFT)) {
-            factorX = -1;
-            factorY = 0;
+    @Override
+    public NodeFactory<?> getNewObject() {
+        try {
+            return m_template.createFactoryInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Can't instantiate NodeFactory "
+                    + "from NodeTemplate", e);
         }
-
-        m_point = new Point(factorX * distance, factorY * distance);
-    }
-
-    /**
-     * @return all selected editor parts
-     */
-    public NodeContainerEditPart[] selectedParts() {
-        return getSelectedParts(NodeContainerEditPart.class);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getId() {
-        return ID;
+    public Object getObjectType() {
+        return NodeFactory.class;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the node template
      */
-    @Override
-    public String getText() {
-        return "Move selected node(s)";
+    public NodeTemplate getNodeTemplate() {
+        return m_template;
     }
 
     /**
-     * {@inheritDoc}
+     * @param template the node template to set
      */
-    @Override
-    public String getToolTipText() {
-        return "Move selected node(s)";
+    public void setNodeTemplate(final NodeTemplate template) {
+        m_template = template;
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Point getMoveDirection() {
-        return m_point;
-    }
-
 }

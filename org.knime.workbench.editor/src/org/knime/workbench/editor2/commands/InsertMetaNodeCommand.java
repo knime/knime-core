@@ -45,183 +45,60 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import java.util.Arrays;
 import java.util.Collections;
 
-import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.dialogs.MessageDialogWithToggle;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.node.NodeLogger;
+import org.eclipse.draw2d.geometry.Point;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.WorkflowAnnotation;
-import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- * GEF command for adding a <code>meta node</code> to a connection. The new
- * meta node will be connected to the source and target node of the passed
- * connection.
+ * GEF command for adding a <code>meta node</code> to a connection. The new meta node will be connected to the source
+ * and target node of the passed connection.
  *
  * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
  */
-public class InsertMetaNodeCommand extends AbstractKNIMECommand {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(InsertMetaNodeCommand.class);
-
-    private final WorkflowPersistor m_persistor;
-
-    private final boolean m_snapToGrid;
-
-    // for undo
-    private WorkflowCopyContent m_copyContent;
-
+public class InsertMetaNodeCommand extends CreateMetaNodeCommand {
     private ConnectionContainer m_edge;
-
-    private int m_X;
-
-    private int m_Y;
 
     private DeleteCommand m_delete;
 
+    private InsertHelper m_ih;
+
     /**
-     * Creates a new command.
-     *
-     * @param manager The workflow manager that should host the new node
-     * @param persistor the paste content
-     * @param edge the edge on which the meta node gets dropped
-     * @param x the x position of the drop
-     * @param y the y position of the drop
-     * @param snapToGrid if node location should be rounded to closest grid location.
+     * @param manager the workflow manager
+     * @param persistor the workflow persistor
+     * @param location the insert location of the new meta node
+     * @param snapToGrid should meta node snap to grid
+     * @param edge on which the meta node should be inserted
      */
-    public InsertMetaNodeCommand(final WorkflowManager manager,
-            final WorkflowPersistor persistor, final ConnectionContainerEditPart edge, final int x, final int y, final boolean snapToGrid) {
-        super(manager);
-        m_persistor = persistor;
+    public InsertMetaNodeCommand(final WorkflowManager manager, final WorkflowPersistor persistor,
+        final Point location, final boolean snapToGrid, final ConnectionContainerEditPart edge) {
+        super(manager, persistor, location, snapToGrid);
         m_edge = edge.getModel();
-        m_X = x;
-        m_Y = y;
-        m_snapToGrid = snapToGrid;
+        m_ih = new InsertHelper(getHostWFM(), m_edge);
 
         // delete command handles undo and restores all connections and node correctly
         m_delete = new DeleteCommand(Collections.singleton(edge), manager);
     }
 
-    /** We can execute, if all components were 'non-null' in the constructor.
-     * {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean canExecute() {
-        return super.canExecute() && m_persistor != null && m_delete.canExecute();
+        return super.canExecute() && m_delete.canExecute() && m_ih.insertNode();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void execute() {
-        // the following code has mainly been copied from
-        // IDEWorkbenchWindowAdvisor#preWindowShellClose
-        IPreferenceStore store =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
-        if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
-                || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
-            MessageDialogWithToggle dialog =
-                MessageDialogWithToggle.openOkCancelConfirm(
-                    Display.getDefault().getActiveShell(),
-                    "Confirm reset...",
-                    "Do you really want to reset all downstream node(s) ?",
-                    "Do not ask again", false, null, null);
-            if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
-                return;
-            }
-            if (dialog.getToggleState()) {
-                store.setValue(PreferenceConstants.P_CONFIRM_RESET, false);
-                KNIMEUIPlugin.getDefault().savePluginPreferences();
-            }
-        }
-
-        // delete connection
         m_delete.execute();
-
-        // Add node to workflow and get the container
-        try {
-            WorkflowManager wfm = getHostWFM();
-            m_copyContent = wfm.paste(m_persistor);
-            NodeID[] nodeIDs = m_copyContent.getNodeIDs();
-            if (nodeIDs.length > 0) {
-                NodeID first = nodeIDs[0];
-                NodeContainer container = wfm.getNodeContainer(first);
-
-                // create extra info and set it
-                NodeUIInformation info = new NodeUIInformation(
-                        m_X, m_Y, -1, -1, false);
-                info.setSnapToGrid(m_snapToGrid);
-                info.setIsDropLocation(true);
-                container.setUIInformation(info);
-
-                int p = 0;
-                while (!wfm.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), p)) {
-                    // search for a valid connection of the source node to this node
-                    p++;
-                    if (p > container.getNrInPorts()) {
-                        break;
-                    }
-                }
-                if (p < container.getNrInPorts()) {
-                    wfm.addConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), p);
-                }
-
-                p = 0;
-                while (!wfm.canAddConnection(container.getID(), p, m_edge.getDest(), m_edge.getDestPort())) {
-                    // search for a valid connection of this node to the destination node of the edge
-                    p++;
-                    if (p > container.getNrOutPorts()) {
-                        break;
-                    }
-                }
-                if (p < container.getNrOutPorts()) {
-                    wfm.addConnection(container.getID(), p, m_edge.getDest(), m_edge.getDestPort());
-                }
-            }
-        } catch (Throwable t) {
-            // if fails notify the user
-            String error = "Meta node cannot be created";
-            LOGGER.debug(error + ": " + t.getMessage(), t);
-            MessageBox mb = new MessageBox(Display.getDefault().
-                    getActiveShell(), SWT.ICON_WARNING | SWT.OK);
-            mb.setText(error);
-            mb.setMessage("The meta node could not be created "
-                    + "due to the following reason:\n" + t.getMessage());
-            mb.open();
-            return;
-        }
-
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean canUndo() {
-        if (!m_delete.canUndo()) {
-            return false;
-        }
-        if (m_copyContent == null) {
-            return false;
-        }
-        NodeID[] ids = m_copyContent.getNodeIDs();
-        for (NodeID id : ids) {
-            if (!getHostWFM().canRemoveNode(id)) {
-                return false;
-            }
-        }
-        return true;
+        super.execute();
+        m_ih.reconnect(m_container, m_snapToGrid, m_location.x, m_location.y);
     }
 
     /**
@@ -229,30 +106,7 @@ public class InsertMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        NodeID[] ids = m_copyContent.getNodeIDs();
-        if (LOGGER.isDebugEnabled()) {
-            String debug = "Removing node";
-            if (ids.length == 1) {
-                debug = debug + " " + ids[0];
-            } else {
-                debug = debug + "s " + Arrays.asList(ids);
-            }
-            LOGGER.debug(debug);
-        }
-        WorkflowManager wm = getHostWFM();
-        if (canUndo()) {
-            for (NodeID id : ids) {
-                wm.removeNode(id);
-            }
-            for (WorkflowAnnotation anno : m_copyContent.getAnnotations()) {
-                wm.removeAnnotation(anno);
-            }
-            m_delete.undo();
-        } else {
-            MessageDialog.openInformation(Display.getDefault().getActiveShell(),
-                    "Operation no allowed", "The node(s) "
-                    + Arrays.asList(ids) + " can currently not be removed");
-        }
+        super.undo();
+        m_delete.undo();
     }
-
 }

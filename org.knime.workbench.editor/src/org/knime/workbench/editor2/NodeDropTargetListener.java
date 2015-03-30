@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,119 +40,87 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
- *   19.03.2015 (tibuch): created
+ *   04.02.2008 (Fabian Dill): created
  */
-package org.knime.workbench.editor2.actions;
+package org.knime.workbench.editor2;
 
-import org.eclipse.draw2d.geometry.Point;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.gef.EditPartViewer;
+import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.Transfer;
+import org.knime.workbench.repository.model.AbstractNodeTemplate;
+import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
- * This action moves all selected nodes in a workbench a certain distance in a certain direction.
- *
+ * A drop target listener for normal node drops from the node repository to the workbench.
+ * 
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
-public class CreateSpaceAction extends MoveNodeAbstractAction {
+public class NodeDropTargetListener extends WorkflowEditorDropTargetListener<NodeCreationFactory> {
 
     /**
-     * The move directions for the @link{CreateSapceAction}
-     * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+     * @param viewer the viewer
      */
-    public enum CreateSpaceDirection {
-        /**
-         * Move up.
-         */
-        UP,
-        /**
-         * Move right.
-         */
-        RIGHT,
-        /**
-         * Move down.
-         */
-        DOWN,
-        /**
-         * Move left
-         */
-        LEFT
+    protected NodeDropTargetListener(final EditPartViewer viewer) {
+        super(viewer, new NodeCreationFactory());
     }
 
-    private Point m_point;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isEnabled(final DropTargetEvent event) {
+        AbstractNodeTemplate snt = getSelectionNodeTemplate();
+        if (snt != null) {
+            event.feedback = DND.FEEDBACK_SELECT;
+            event.operations = DND.DROP_COPY;
+            event.detail = DND.DROP_COPY;
+            return true;
+        }
+        return false;
+    }
 
     /**
-     * The ID of this action.
+     * {@inheritDoc}
      */
-    public static final String ID = "knime.action.node.createspace";
+    @Override
+    protected void handleDrop() {
+        NodeTemplate template = getSelectionNodeTemplate();
+        getFactory().setNodeTemplate(template);
+        super.handleDrop();
+    }
 
-    /**
-     * @param editor the active workflow editor
-     * @param m_direction the direction
-     * @param distance the distance in pixels
-     */
-    public CreateSpaceAction(final WorkflowEditor editor, final CreateSpaceDirection m_direction, final int distance) {
-        super(editor);
-
-        int factorX = 0;
-        int factorY = 0;
-
-        if (m_direction.equals(CreateSpaceDirection.UP)) {
-            factorX = 0;
-            factorY = -1;
-        } else if (m_direction.equals(CreateSpaceDirection.RIGHT)) {
-            factorX = 1;
-            factorY = 0;
-        } else if (m_direction.equals(CreateSpaceDirection.DOWN)) {
-            factorX = 0;
-            factorY = 1;
-        } else if (m_direction.equals(CreateSpaceDirection.LEFT)) {
-            factorX = -1;
-            factorY = 0;
+    private NodeTemplate getSelectionNodeTemplate() {
+        if (LocalSelectionTransfer.getTransfer().getSelection() == null) {
+            return null;
+        }
+        if (((IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection()).size() > 1) {
+            // allow dropping a single node only
+            return null;
         }
 
-        m_point = new Point(factorX * distance, factorY * distance);
-    }
-
-    /**
-     * @return all selected editor parts
-     */
-    public NodeContainerEditPart[] selectedParts() {
-        return getSelectedParts(NodeContainerEditPart.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getId() {
-        return ID;
+        Object template = ((IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection()).getFirstElement();
+        if (template instanceof NodeTemplate) {
+            return (NodeTemplate)template;
+        }
+        // Last change: Ask adaptables for an adapter object
+        if (template instanceof IAdaptable) {
+            return (NodeTemplate)((IAdaptable)template).getAdapter(NodeTemplate.class);
+        }
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getText() {
-        return "Move selected node(s)";
+    public Transfer getTransfer() {
+        return LocalSelectionTransfer.getTransfer();
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Move selected node(s)";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Point getMoveDirection() {
-        return m_point;
-    }
-
 }

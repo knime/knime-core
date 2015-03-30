@@ -51,38 +51,49 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
-import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ContainerEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.workbench.editor2.CreateDropRequest;
+import org.knime.workbench.editor2.CreateDropRequest.RequestType;
 import org.knime.workbench.editor2.ReaderNodeSettings;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.actions.CreateSpaceAction;
+import org.knime.workbench.editor2.actions.CreateSpaceAction.CreateSpaceDirection;
+import org.knime.workbench.editor2.commands.CreateMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateMetaNodeTemplateCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.commands.DropNodeCommand;
+import org.knime.workbench.editor2.commands.InsertMetaNodeCommand;
+import org.knime.workbench.editor2.commands.InsertMetaNodeTempalteCommand;
+import org.knime.workbench.editor2.commands.InsertNodeCommand;
+import org.knime.workbench.editor2.commands.ReplaceMetaNodeCommand;
+import org.knime.workbench.editor2.commands.ReplaceMetaNodeTemplateCommand;
+import org.knime.workbench.editor2.commands.ReplaceNodeCommand;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
 /**
- * Container policy, handles the creation of new nodes that are inserted into
- * the workflow. The request contains the
+ * Container policy, handles the creation of new nodes that are inserted into the workflow. The request contains the
  *
  * @author Florian Georg, University of Konstanz
+ * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
 public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NewWorkflowContainerEditPolicy.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NewWorkflowContainerEditPolicy.class);
 
-    public static final String REQ_LINK_METANODE_TEMPLATE =
-        "link meta node template";
+    public static final String REQ_LINK_METANODE_TEMPLATE = "link meta node template";
 
-    public static final String REQ_COPY_METANODE_TEMPLATE =
-        "copy meta node template";
+    public static final String REQ_COPY_METANODE_TEMPLATE = "copy meta node template";
 
     /**
      * {@inheritDoc}
@@ -93,39 +104,106 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         // The node/description should be initially located here
         Point location = request.getLocation();
 
-        // adapt the location according to the viewport location and the zoom
-        // factor
-        // this seems to be a workaround for a bug in the framework
-        ZoomManager zoomManager = (ZoomManager)getTargetEditPart(request)
-                .getRoot().getViewer()
-                .getProperty(ZoomManager.class.toString());
 
-        // adjust the location according to the viewport position
-        // seems to be a workaround for a bug in the framework
-        // (should immediately deliver the correct view position and not
-        // the position of the viewport)
-        WorkflowEditor.adaptZoom(zoomManager, location, true);
-
-        WorkflowRootEditPart workflowPart =
-            (WorkflowRootEditPart)this.getHost();
+        WorkflowRootEditPart workflowPart = (WorkflowRootEditPart)this.getHost();
         WorkflowManager manager = workflowPart.getWorkflowManager();
+
+        RequestType requestType = null;
+        EditPart editPart = null;
+        boolean createSpace = false;
+        CreateSpaceDirection direction = null;
+        int distance = 0;
+        if (request instanceof CreateDropRequest) {
+            CreateDropRequest cdr = (CreateDropRequest)request;
+            requestType = cdr.getRequestType();
+            editPart = cdr.getEditPart();
+            createSpace = cdr.createSpace();
+            direction = cdr.getDirection();
+            distance = cdr.getDistance();
+        }
 
         Object obj = request.getNewObject();
         boolean snapToGrid = WorkflowEditor.getActiveEditorSnapToGrid();
-        // create a new node
         if (obj instanceof NodeFactory) {
-            NodeFactory<? extends NodeModel> factory
-                = (NodeFactory<? extends NodeModel>)obj;
-            return new CreateNodeCommand(manager, factory, location, snapToGrid);
+            NodeFactory<? extends NodeModel> factory = (NodeFactory<? extends NodeModel>)obj;
+            if (requestType.equals(RequestType.CREATE)) {
+                // create a new node
+                return new CreateNodeCommand(manager, factory, location, snapToGrid);
+            } else if (requestType.equals(RequestType.INSERT)) {
+                // insert new node into connection
+                InsertNodeCommand insertCommand =
+                    new InsertNodeCommand(manager, factory, location, WorkflowEditor.getActiveEditorSnapToGrid(),
+                        (ConnectionContainerEditPart)editPart);
+
+                if (createSpace) {
+                    CreateSpaceAction csa =
+                        new CreateSpaceAction((WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                            .getActivePage().getActiveEditor(), direction, distance);
+                    return insertCommand.chain(csa.createCompoundCommand(csa.selectedParts()));
+                } else {
+                    return insertCommand;
+                }
+            } else if (requestType.equals(RequestType.REPLACE)) {
+                // replace node with a node
+                return new ReplaceNodeCommand(manager, factory, location, WorkflowEditor.getActiveEditorSnapToGrid(),
+                    (NodeContainerEditPart)editPart);
+            }
         } else if (obj instanceof AbstractExplorerFileStore) {
+            // i
             AbstractExplorerFileStore fs = (AbstractExplorerFileStore)obj;
             if (AbstractExplorerFileStore.isWorkflowTemplate(fs)) {
-                return new CreateMetaNodeTemplateCommand(manager, fs, location, snapToGrid);
+                if (requestType.equals(RequestType.CREATE)) {
+                    // create meta node from template
+                    return new CreateMetaNodeTemplateCommand(manager, fs, location, snapToGrid);
+                } else if (requestType.equals(RequestType.INSERT)) {
+                    // insert meta node from template into connection
+                    InsertMetaNodeTempalteCommand insertCommand =
+                            new InsertMetaNodeTempalteCommand(manager, fs, location, WorkflowEditor.getActiveEditorSnapToGrid(),
+                                (ConnectionContainerEditPart)editPart);
+
+                        if (createSpace) {
+                            CreateSpaceAction csa =
+                                new CreateSpaceAction((WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                                    .getActivePage().getActiveEditor(), direction, distance);
+                            return insertCommand.chain(csa.createCompoundCommand(csa.selectedParts()));
+                        } else {
+                            return insertCommand;
+                        }
+                }else if (requestType.equals(RequestType.REPLACE)) {
+                    // replace node with meta node from template
+                    return new ReplaceMetaNodeTemplateCommand(manager, fs, location, snapToGrid,
+                        (NodeContainerEditPart)editPart);
+                }
             }
         } else if (obj instanceof ReaderNodeSettings) {
             ReaderNodeSettings settings = (ReaderNodeSettings)obj;
-            return new DropNodeCommand(manager, settings.getFactory(),
-                    new NodeCreationContext(settings.getUrl()), location, snapToGrid);
+            return new DropNodeCommand(manager, settings.getFactory(), new NodeCreationContext(settings.getUrl()),
+                location, snapToGrid);
+        } else if (obj instanceof WorkflowPersistor) {
+            WorkflowPersistor copy = (WorkflowPersistor)obj;
+
+            if (requestType.equals(RequestType.CREATE)) {
+                // create meta node from node repository
+                return new CreateMetaNodeCommand(manager, copy, location, WorkflowEditor.getActiveEditorSnapToGrid());
+            } else if (requestType.equals(RequestType.INSERT)) {
+                // insert meta node from node repository into connection
+                InsertMetaNodeCommand insertCommand =
+                    new InsertMetaNodeCommand(manager, copy, location, WorkflowEditor.getActiveEditorSnapToGrid(),
+                        (ConnectionContainerEditPart)editPart);
+
+                if (createSpace) {
+                    CreateSpaceAction csa =
+                        new CreateSpaceAction((WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                            .getActivePage().getActiveEditor(), direction, distance);
+                    return insertCommand.chain(csa.createCompoundCommand(csa.selectedParts()));
+                } else {
+                    return insertCommand;
+                }
+            } else if (requestType.equals(RequestType.REPLACE)) {
+                // replace node with meta node from repository
+                return new ReplaceMetaNodeCommand(manager, copy, location, WorkflowEditor.getActiveEditorSnapToGrid(),
+                    (NodeContainerEditPart)editPart);
+            }
         } else {
             LOGGER.error("Illegal drop object: " + obj);
         }
