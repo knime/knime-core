@@ -167,7 +167,8 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                         try {
                             final String title = cont.getViewName(0) + " - "
                                 + cont.getDisplayLabel();
-                            Node.invokeOpenView(cont.getView(0), title, knimeWindowBounds);
+                            java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
+                            Node.invokeOpenView(cont.getView(0), title, bounds);
                         } catch (Throwable t) {
                             MessageBox mb = new MessageBox(
                                     Display.getDefault().getActiveShell(),

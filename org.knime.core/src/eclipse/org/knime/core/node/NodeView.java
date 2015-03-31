@@ -50,6 +50,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -69,7 +70,6 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
-import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContext;
 

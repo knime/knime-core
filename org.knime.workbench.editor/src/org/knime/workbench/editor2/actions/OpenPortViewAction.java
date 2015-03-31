@@ -143,6 +143,7 @@ public class OpenPortViewAction extends Action {
                 + m_index + ")");
         NodePort port = m_nodeContainer.getOutPort(m_index);
         final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
-        m_nodeContainer.getOutPort(m_index).openPortView(port.getPortName(), knimeWindowBounds);
+        java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
+        m_nodeContainer.getOutPort(m_index).openPortView(port.getPortName(), bounds);
     }
 }

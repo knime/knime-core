@@ -105,8 +105,9 @@ public class WFShowJobMgrViewAction extends AbstractWorkflowAction {
         Runnable runner = new Runnable() {
             @Override
             public void run() {
+                java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
                 Node.invokeOpenView(workflow.getJobManager().getView(workflow),
-                        workflow.getNameWithID(), knimeWindowBounds);
+                        workflow.getNameWithID(), bounds);
             }
         };
         SwingUtilities.invokeLater(runner);

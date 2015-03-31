@@ -47,10 +47,9 @@
  */
 package org.knime.core.node.util;
 
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Point;
-import java.awt.Toolkit;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -63,7 +62,6 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.NodeLogger;
@@ -323,7 +321,7 @@ public final class ViewUtils {
      * @param knimeWindowBounds Bounds of the KNIME window
      * @since 2.12
      */
-    public static void centerLocation(final Window window, Rectangle knimeWindowBounds) {
+    public static void centerLocation(final Window window, final Rectangle knimeWindowBounds) {
         if (knimeWindowBounds!=null) {
             // Middle point of rectangle
             Point middle = new Point(knimeWindowBounds.width / 2, knimeWindowBounds.height / 2);

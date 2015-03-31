@@ -498,7 +498,8 @@ public class WrappedNodeDialog extends Dialog {
                         if (m_nodeContainer.getNrOutPorts() > pIndex) {
                             NodeOutPort port =
                                     m_nodeContainer.getOutPort(pIndex);
-                            port.openPortView(port.getPortName(), knimeWindowBounds);
+                            java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
+                            port.openPortView(port.getPortName(), bounds);
                         }
                     }
                 });

@@ -44,6 +44,7 @@
  */
 package org.knime.core.node;
 
+import java.awt.Rectangle;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -66,7 +67,6 @@ import javax.swing.UIManager;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
-import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ContainerTable;

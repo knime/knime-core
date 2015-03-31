@@ -158,7 +158,8 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
                         NodeOutPort port = cont.getOutPort(1);
                         LOGGER.debug("Open First Out-Port View "
                            + cont.getName() + " on port " + port.getPortName());
-                        port.openPortView(port.getPortName(), knimeWindowBounds);
+                        java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
+                        port.openPortView(port.getPortName(), bounds);
                     }
                 });
             }

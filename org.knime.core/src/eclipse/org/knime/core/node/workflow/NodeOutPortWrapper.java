@@ -47,10 +47,10 @@
  */
 package org.knime.core.node.workflow;
 
+import java.awt.Rectangle;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;

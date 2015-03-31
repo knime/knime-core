@@ -145,7 +145,8 @@ public class OpenInteractiveViewAction extends Action {
             }
             final String title = m_nodeContainer.getInteractiveViewName();
             final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
-            Node.invokeOpenView(view, title, knimeWindowBounds);
+            java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
+            Node.invokeOpenView(view, title, bounds);
         } catch (Throwable t) {
             final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("Interactive View cannot be opened");

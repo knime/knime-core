@@ -47,7 +47,8 @@
  */
 package org.knime.core.node;
 
-import org.eclipse.swt.graphics.Rectangle;
+import java.awt.Rectangle;
+
 
 /**
  * Node view which opens an external application. Opening, closing and

@@ -125,7 +125,8 @@ public class OpenViewAction extends Action {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    Node.invokeOpenView(m_nodeContainer.getView(m_index), title, knimeWindowBounds);
+                    java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
+                    Node.invokeOpenView(m_nodeContainer.getView(m_index), title, bounds);
                 }
             });
         } catch (Throwable t) {

@@ -47,12 +47,12 @@
  */
 package org.knime.core.node.workflow;
 
+import java.awt.Rectangle;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
-import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;

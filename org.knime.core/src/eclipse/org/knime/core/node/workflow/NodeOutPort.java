@@ -44,7 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.eclipse.swt.graphics.Rectangle;
+import java.awt.Rectangle;
+
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;

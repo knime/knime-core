@@ -46,6 +46,7 @@ package org.knime.core.node.workflow;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.LinkedHashMap;
@@ -67,7 +68,6 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
 
-import org.eclipse.swt.graphics.Rectangle;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObject;

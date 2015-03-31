@@ -116,7 +116,8 @@ public class OpenWorkflowPortViewAction extends OpenPortViewAction {
         LOGGER.debug("Open Workflow Port View " + getNodeContainer().getName()
                 + " (#" + getPortIndex() + ")");
         final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
-        m_port.openPortView(m_port.getPortName(), knimeWindowBounds);
+        java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
+        m_port.openPortView(m_port.getPortName(), bounds);
     }
 
 }

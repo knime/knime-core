@@ -44,7 +44,8 @@
  */
 package org.knime.core.node;
 
-import org.eclipse.swt.graphics.Rectangle;
+import java.awt.Rectangle;
+
 import org.knime.core.node.workflow.NodeContext;
 
 
