@@ -117,6 +117,8 @@ public class InsertHelper {
     }
 
     /**
+     * Guesses the incoming/outgoing connections of the new node based on the connections of the old node.
+     * The connections are added from port 0 to port n. If no port type matches no connection is added.
      * @param container of the new created node
      * @param snapToGrid should new node snap to grid
      * @param x coordinate of the new node
