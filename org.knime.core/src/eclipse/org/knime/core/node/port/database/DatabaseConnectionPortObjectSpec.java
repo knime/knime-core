@@ -155,7 +155,7 @@ public class DatabaseConnectionPortObjectSpec implements PortObjectSpec {
     }
 
     /**
-     * @return the database identifier or <code>null</code> if it can not retrieved
+     * @return the database identifier
      * @since 2.11
      */
     public String getDatabaseIdentifier() {
