@@ -38,9 +38,10 @@
             that have not been selected as aggregation column on the "Manual Aggregation" tab are considered.
            </p>
            <p>
-            The "Type Based Aggregation" tab allows to select an aggregation method for all columns of a certain 
-            data type e.g. to compute the mean for all numerical columns (DoubleCell). Only columns that have not 
-            been handled by the other tabs e.g. group, column based and pattern based are considered.
+            The "Type Based Aggregation" tab allows to select an aggregation method for all columns that are compatible 
+            with the selected data type. For example to apply an operation on all numeric columns simply select DoubleCell.
+            This will include all numeric cells that are compatible with DoubleCell such as IntCell and LongCell.
+            Only columns that have not been handled by the other tabs e.g. group, column based and pattern based are considered.
             The data type list to choose from contains basic types e.g String, Double, etc. and all data types 
             the current input table contains.
            </p>
