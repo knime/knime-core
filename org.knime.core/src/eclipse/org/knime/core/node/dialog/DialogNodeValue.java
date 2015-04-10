@@ -48,7 +48,6 @@ package org.knime.core.node.dialog;
 
 import javax.json.JsonException;
 import javax.json.JsonObject;
-import javax.naming.OperationNotSupportedException;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -81,10 +80,10 @@ public interface DialogNodeValue {
      * filter can not be parameterized via commandline. Simple nodes (integer & string input, ...) will just parse
      * the value.
      * @param fromCmdLine Argument as per commandline.
-     * @throws OperationNotSupportedException ... as per above.
+     * @throws UnsupportedOperationException ... as per above.
      * @since 2.12
      */
-    public abstract void loadFromString(final String fromCmdLine) throws OperationNotSupportedException;
+    public abstract void loadFromString(final String fromCmdLine) throws UnsupportedOperationException;
 
     /**
      * Called when parameterized via web service invocation. Each implementation should support reading its value from
