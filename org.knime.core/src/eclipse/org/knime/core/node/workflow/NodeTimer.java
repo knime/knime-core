@@ -56,20 +56,33 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import javax.json.Json;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.json.JsonWriter;
 import javax.json.stream.JsonGenerator;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
+import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-
-import com.google.common.util.concurrent.AtomicLongMap;
 
 /**
  * Holds execution timing information about a specific node.
@@ -86,13 +99,19 @@ public final class NodeTimer {
     private int m_numberOfExecutionsSinceReset;
     private int m_numberOfExecutionsOverall;
 
-    public static final class GlobalNodeTimer {
+    public static final class GlobalNodeStats {
+
+        private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalNodeStats.class);
+
+        private class NodeStats {
+            long executionTime = 0;
+            int executionCount = 0;
+            int creationCount = 0;
+            String likelySuccessor = "n/a";
+        }
+        private LinkedHashMap<String, NodeStats> m_globalNodeStats = new LinkedHashMap<String, NodeStats>();
 
         private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-
-        private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalNodeTimer.class);
-        private AtomicLongMap<String> m_exectimes = AtomicLongMap.create();
-        private AtomicLongMap<String> m_execcounts = AtomicLongMap.create();
         private String m_created = DATE_FORMAT.format(new Date());
         private long m_avgUpTime = 0;
         private long m_currentInstanceLaunchTime = System.currentTimeMillis();
@@ -100,11 +119,11 @@ public final class NodeTimer {
         private int m_crashes = 0;
         private long m_timeOfLastSave = System.currentTimeMillis() - SAVEINTERVAL + 1000*60;
         private static final long SAVEINTERVAL = 15*60*1000;  // save no more than every 15mins
-        private static final String FILENAME = "nodeusage.log";
+        private static final String FILENAME = "nodeusage.json";
 
         private static final boolean DISABLE_GLOBAL_TIMER = Boolean.getBoolean("knime.globaltimer.disable");
 
-        GlobalNodeTimer() {
+        GlobalNodeStats() {
             if (DISABLE_GLOBAL_TIMER) {
                 LOGGER.debug("Global Timer disabled due to system property");
                 return;
@@ -123,24 +142,106 @@ public final class NodeTimer {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
-            // synchronized to avoid two nodes to write the file
+            // synchronized to avoid conflicts and parallel file writes
             synchronized (this) {
-                m_exectimes.addAndGet(cname, exectime);
-                m_execcounts.incrementAndGet(cname);
+                NodeStats ns = m_globalNodeStats.get(cname);
+                if (ns == null) {
+                    ns = new NodeStats();
+                    m_globalNodeStats.put(cname, ns);
+                }
+                ns.executionTime += exectime;
+                ns.executionCount++;
                 if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
                     asyncWriteToFile();
                     m_timeOfLastSave = System.currentTimeMillis();
                 }
             }
         }
-        public Set<String> getNodeNames() {
-            return m_exectimes.asMap().keySet();
+        public void addNodeCreation(final NodeContainer nc) {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            // synchronized to avoid conflicts and parallel file writes
+            synchronized (this) {
+                NodeStats ns = m_globalNodeStats.get(NodeTimer.getCanonicalName(nc));
+                if (ns == null) {
+                    ns = new NodeStats();
+                    m_globalNodeStats.put(NodeTimer.getCanonicalName(nc), ns);
+                }
+                ns.creationCount++;
+                if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
+                    asyncWriteToFile();
+                    m_timeOfLastSave = System.currentTimeMillis();
+                }
+            }
         }
-        public long getExecutionCount(final String cname) {
-            return m_execcounts.get(cname);
+        public void addConnectionCreation(final NodeContainer source, final NodeContainer dest) {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            // synchronized to avoid conflicts and parallel file writes
+            synchronized (this) {
+                NodeStats ns = m_globalNodeStats.get(NodeTimer.getCanonicalName(source));
+                if (ns == null) {
+                    ns = new NodeStats();
+                    m_globalNodeStats.put(NodeTimer.getCanonicalName(source), ns);
+                }
+                // remember the newly connected successor with a 50:50 chance
+                // (statistics over many thousands of users will provide real info)
+                if ((ns.likelySuccessor.equals("n/a")) | (Math.random() >= .5)) {
+                    ns.likelySuccessor = NodeTimer.getCanonicalName(dest);
+                }
+                if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
+                    asyncWriteToFile();
+                    m_timeOfLastSave = System.currentTimeMillis();
+                }
+            }
         }
-        public long getExecutionTime(final String cname) {
-            return m_exectimes.get(cname);
+        public DataTableSpec getGlobalStatsSpecs() {
+            DataTableSpecCreator dtsc = new DataTableSpecCreator();
+            DataColumnSpec[] colSpecs = new DataColumnSpec[] {
+                new DataColumnSpecCreator("Name", StringCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("Aggregate Execution Time", LongCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("Overall Nr of Executions", IntCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("Overall Nr of Creations", IntCell.TYPE).createSpec(),
+                new DataColumnSpecCreator("Likely Successor", StringCell.TYPE).createSpec()
+            };
+            dtsc.addColumns(colSpecs);
+            return dtsc.createSpec();
+        }
+        public BufferedDataTable getGlobalStatsTable(final ExecutionContext exec) {
+            synchronized (this) {
+                // TODO: double check that we can not possibly run into a deadlock via the ExecutionContext?!
+                //  (if so: copy data first...)
+                BufferedDataContainer result = exec.createDataContainer(getGlobalStatsSpecs());
+                int rowcount = 0;
+                for (String cname : m_globalNodeStats.keySet()) {
+                    NodeStats ns = m_globalNodeStats.get(cname);
+                    if (ns != null) {
+                        DataRow row = new DefaultRow(
+                            new RowKey("Row " + rowcount++),
+                            new StringCell(cname),
+                            new LongCell(ns.executionTime),
+                            new IntCell(ns.executionCount),
+                            new IntCell(ns.creationCount),
+                            new StringCell(ns.likelySuccessor)
+                        );
+                        result.addRowToTable(row);
+                    } else {
+                        DataRow row = new DefaultRow(
+                            new RowKey("Row " + rowcount++),
+                            DataType.getMissingCell(),
+                            DataType.getMissingCell(),
+                            DataType.getMissingCell(),
+                            DataType.getMissingCell(),
+                            DataType.getMissingCell()
+                        );
+                        result.addRowToTable(row);
+                    }
+                }
+                result.close();
+                return result.getTable();
+            }
         }
         public long getAvgUpTime() {
             return (m_avgUpTime * m_launches + (System.currentTimeMillis() - m_currentInstanceLaunchTime)) / (m_launches + 1);
@@ -158,11 +259,16 @@ public final class NodeTimer {
                 job.add("version", KNIMEConstants.VERSION);
                 job.add("created", m_created);
                 JsonObjectBuilder job2 = Json.createObjectBuilder();
-                for (String cname : getNodeNames()) {
+                for (String cname : m_globalNodeStats.keySet()) {
                     JsonObjectBuilder job3 = Json.createObjectBuilder();
-                    job3.add("count", getExecutionCount(cname));
-                    job3.add("time", getExecutionTime(cname));
-                    job2.add(cname, job3);
+                    NodeStats ns = m_globalNodeStats.get(cname);
+                    if (ns != null) {
+                        job3.add("nrexecs", ns.executionCount);
+                        job3.add("exectime", ns.executionTime);
+                        job3.add("nrcreated", ns.creationCount);
+                        job3.add("successor", ns.likelySuccessor);
+                        job2.add(cname, job3);
+                    }
                 }
                 job.add("nodestats", job2);
                 job.add("uptime", getAvgUpTime());
@@ -193,6 +299,10 @@ public final class NodeTimer {
         private void readFromFile() {
             try {
                 File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
+                if (!propfile.exists()) {
+                    LOGGER.warn("Node usage file does not exist. Starting counts from scratch.");
+                    return;
+                }
                 JsonObject jo;
                 try (JsonReader jr = Json.createReader(new FileInputStream(propfile))) {
                     jo = jr.readObject();
@@ -210,10 +320,17 @@ public final class NodeTimer {
                             for (String key2 : jo2.keySet()) {
                                 // key represents name of NodeModel
                                 JsonObject job3 = jo2.getJsonObject(key2);
-                                Long count = job3.getJsonNumber("count").longValue();
-                                Long time = job3.getJsonNumber("time").longValue();
-                                m_execcounts.put(key2, count);
-                                m_exectimes.put(key2, time);
+                                int execCount = job3.getInt("nrexecs", 0);
+                                JsonNumber num = job3.getJsonNumber("exectime");
+                                Long time = num == null ? 0 : num.longValue();
+                                int creationCount = job3.getInt("nrcreated", 0);
+                                String successor = job3.getString("successor", "");
+                                NodeStats ns = new NodeStats();
+                                ns.creationCount = execCount;
+                                ns.executionTime = time;
+                                ns.creationCount = creationCount;
+                                ns.likelySuccessor = successor;
+                                m_globalNodeStats.put(key2, ns);
                             }
                             break;
                         case "uptime":
@@ -239,7 +356,17 @@ public final class NodeTimer {
             }
         }
     }
-    public static final GlobalNodeTimer GLOBAL_TIMER = new GlobalNodeTimer();
+    public static final GlobalNodeStats GLOBAL_TIMER = new GlobalNodeStats();
+
+    private static String getCanonicalName(final NodeContainer nc) {
+        String cname = "NodeContainer";
+        if (nc instanceof NativeNodeContainer) {
+            cname = ((NativeNodeContainer)nc).getNodeModel().getClass().getName();
+        } else if (nc instanceof SubNodeContainer) {
+            cname = nc.getClass().getName();
+        }
+        return cname;
+    }
 
     NodeTimer(final NodeContainer parent) {
         m_parent = parent;
@@ -293,12 +420,7 @@ public final class NodeTimer {
             m_executionDurationOverall += m_lastExecutionDuration;
             m_numberOfExecutionsOverall++;
             m_numberOfExecutionsSinceReset++;
-            String cname = "NodeContainer";
-            if (m_parent instanceof NativeNodeContainer) {
-                cname = ((NativeNodeContainer)m_parent).getNodeModel().getClass().getName();
-            } else if (m_parent instanceof SubNodeContainer) {
-                cname = m_parent.getClass().getName();
-            }
+            String cname = getCanonicalName(m_parent);
             GLOBAL_TIMER.addExecutionTime(cname, m_lastExecutionDuration);
         }
         m_startTime = -1;

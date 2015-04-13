@@ -57,6 +57,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -121,6 +122,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
         try {
             NodeID id = hostWFM.createAndAddNode(m_factory);
             m_container = hostWFM.getNodeContainer(id);
+            NodeTimer.GLOBAL_TIMER.addNodeCreation(m_container);
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);

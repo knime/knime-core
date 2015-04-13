@@ -54,6 +54,7 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -232,16 +233,13 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
         if (m_targetPortID < 0) {
             ConnectableEditPart target = getTargetNode();
             if (target instanceof NodeContainerEditPart) {
-                m_targetPortID =
-                        ((NodeContainerEditPart)target).getFreeInPort(
-                                getSourceNode(), getSourcePortID());
+                m_targetPortID = ((NodeContainerEditPart)target).getFreeInPort(getSourceNode(), getSourcePortID());
             }
         }
 
         // check whether an existing connection can be removed
         ConnectionContainer conn = wm.getIncomingConnectionFor(
-                m_targetNode.getNodeContainer().getID(),
-                m_targetPortID);
+                m_targetNode.getNodeContainer().getID(), m_targetPortID);
         boolean canRemove = conn == null || wm.canRemoveConnection(conn);
         // let the workflow manager check if the connection can be created
         // or removed
@@ -313,6 +311,8 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
             m_connection = wm.addConnection(
                     m_sourceNode.getNodeContainer().getID(), m_sourcePortID,
                     m_targetNode.getNodeContainer().getID(), m_targetPortID);
+            NodeTimer.GLOBAL_TIMER.addConnectionCreation(m_sourceNode.getNodeContainer(),
+                                                         m_targetNode.getNodeContainer());
             if (m_newConnectionUIInfo != null) {
                 m_connection.setUIInfo(m_newConnectionUIInfo);
             }

@@ -60,7 +60,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -104,14 +103,7 @@ public class GlobalTimerinfoNodeModel extends NodeModel implements InactiveBranc
     }
 
     private DataTableSpec createSpecOut0() {
-        DataTableSpecCreator dtsc = new DataTableSpecCreator();
-        DataColumnSpec[] colSpecs = new DataColumnSpec[] {
-            new DataColumnSpecCreator("Name", StringCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Aggregate Execution Time", LongCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("Overall Nr of Executions", LongCell.TYPE).createSpec(),
-        };
-        dtsc.addColumns(colSpecs);
-        return dtsc.createSpec();
+        return NodeTimer.GLOBAL_TIMER.getGlobalStatsSpecs();
     }
 
     private DataTableSpec createSpecOut1() {
@@ -129,21 +121,9 @@ public class GlobalTimerinfoNodeModel extends NodeModel implements InactiveBranc
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
-        BufferedDataContainer result0 = exec.createDataContainer(createSpecOut0());
-        NodeTimer.GlobalNodeTimer gnt = NodeTimer.GLOBAL_TIMER;
-        assert gnt != null;
-        int rowcount = 0;
-        for (String cname : gnt.getNodeNames()) {
-            DataRow row = new DefaultRow(
-                new RowKey("Row " + rowcount++),
-                new StringCell(cname),
-                new LongCell(gnt.getExecutionTime(cname)),
-                new LongCell(gnt.getExecutionCount(cname))
-            );
-            result0.addRowToTable(row);
-        }
-        result0.close();
+        BufferedDataTable result0 = NodeTimer.GLOBAL_TIMER.getGlobalStatsTable(exec);
         BufferedDataContainer result1 = exec.createDataContainer(createSpecOut1());
+        int rowcount = 0;
         for (IBundleGroupProvider provider : Platform.getBundleGroupProviders()) {
             for (IBundleGroup feature : provider.getBundleGroups()) {
                DataRow row = new DefaultRow(
@@ -155,7 +135,7 @@ public class GlobalTimerinfoNodeModel extends NodeModel implements InactiveBranc
             }
          }
         result1.close();
-        return new PortObject[] { result0.getTable(), result1.getTable() };
+        return new PortObject[] { result0, result1.getTable() };
     }
 
     /**
