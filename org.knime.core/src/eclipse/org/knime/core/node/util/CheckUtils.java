@@ -332,7 +332,8 @@ public final class CheckUtils {
                 if (Files.exists(localPath)) {
                     if (Files.isDirectory(localPath)) {
                         throw new InvalidSettingsException("Output location '" + localPath + "' is a directory");
-                    } else if (!Files.isWritable(localPath) && !FileUtil.looksLikeUNC(localPath)) {
+                    } else if (!Files.isWritable(localPath)
+                        && !(FileUtil.looksLikeUNC(localPath) || FileUtil.isWindowsNetworkMount(localPath))) {
                         throw new InvalidSettingsException("Output file '" + localPath + "' is not writable");
                     } else if (mustExistForAppend) {
                         return null; // everything OK
@@ -349,7 +350,8 @@ public final class CheckUtils {
                     Path parent = localPath.getParent();
                     if (!Files.exists(parent)) {
                         throw new InvalidSettingsException("Directory '" + parent + "' of output file does not exist");
-                    } else if (!Files.isWritable(localPath.getParent())) {
+                    } else if (!Files.isWritable(localPath.getParent())
+                        && !(FileUtil.looksLikeUNC(localPath.getParent()) || FileUtil.isWindowsNetworkMount(localPath))) {
                         throw new InvalidSettingsException("Directory '" + parent + "' is not writable");
                     }
                 }

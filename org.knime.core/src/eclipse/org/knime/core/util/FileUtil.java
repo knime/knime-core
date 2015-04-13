@@ -79,6 +79,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import javax.swing.filechooser.FileSystemView;
+
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.Platform;
@@ -1095,6 +1097,45 @@ public final class FileUtil {
             && !StringUtils.isEmpty(url.getHost());
     }
 
+
+    /**
+     * Returns whether the given path is within a mounted network drive on Windows.
+     *
+     * @param path any path
+     * @return <code>true</code> if the path is on a network drive, <code>false</code> otherwise or if the current OS is
+     *         not Windows
+     * @since 2.11
+     */
+    public static boolean isWindowsNetworkMount(final Path path) {
+        if (!Platform.OS_WIN32.equals(Platform.getOS())) {
+            return false;
+        }
+
+        Path root = path.getRoot();
+        FileSystemView fsv = FileSystemView.getFileSystemView();
+        return fsv.getSystemDisplayName(root.toFile()).contains("\\\\");
+    }
+
+    /**
+     * Returns whether the given file-URL is within a mounted network drive on Windows.
+     *
+     * @param url any file-URL
+     * @return <code>true</code> if the path is on a network drive, <code>false</code> otherwise or if the current OS is
+     *         not Windows
+     * @since 2.11
+     */
+    public static boolean isWindowsNetworkMount(final URL url) {
+        if (!Platform.OS_WIN32.equals(Platform.getOS()) || !"file".equals(url.getProtocol())) {
+            return false;
+        }
+
+        Path path = getFileFromURL(url).toPath();
+        Path root = path.getRoot();
+        FileSystemView fsv = FileSystemView.getFileSystemView();
+        return fsv.getSystemDisplayName(root.toFile()).contains("\\\\");
+    }
+
+
     /**
      * Returns whether the given path is very likely a UNC path. UNCs are only supported by Windows, so on all other
      * OS this will always return <code>false</code>.
@@ -1107,7 +1148,6 @@ public final class FileUtil {
         // Java does not handle UNC URLs correctly, see bug #5864
         return Platform.OS_WIN32.equals(Platform.getOS()) && path.toString().startsWith("\\\\");
     }
-
 
     /**
      * Tries to convert the given path into a URL. Either the path is already a valid URL or it denotes a local file

@@ -158,12 +158,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         PortObjectSpec[] spec = null;
         try {
             final String newQuery;
-            if (tableSpec.getColumnSpec(colIdx).getType().isCompatible(DoubleValue.class)) {
-                //this is a numeric column use 0 instead of empty string
-                newQuery = oQuery.replace(IN_PLACE_HOLDER, "0");
-            } else {
-                newQuery = oQuery.replace(IN_PLACE_HOLDER, "");
-            }
+            newQuery = createDummyValueQuery(tableSpec, colIdx, oQuery);
             setQuery(newQuery);
             final DatabaseReaderConnection load = new DatabaseReaderConnection(null);
             spec = new DataTableSpec[] {getResultSpec(inSpecs, load)};
@@ -187,6 +182,15 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
             final DataTableSpec resultSpec = createSpec((DataTableSpec)spec[0], tableSpec.getColumnSpec(column));
             setLastSpec(resultSpec);
             return new DataTableSpec[]{resultSpec};
+        }
+    }
+
+    private static String createDummyValueQuery(final DataTableSpec tableSpec, final int colIdx, final String oQuery) {
+        if (tableSpec.getColumnSpec(colIdx).getType().isCompatible(DoubleValue.class)) {
+            //this is a numeric column use 0 instead of empty string
+            return oQuery.replace(IN_PLACE_HOLDER, "0");
+        } else {
+            return oQuery.replace(IN_PLACE_HOLDER, "");
         }
     }
 
@@ -261,6 +265,8 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                 } else {
                     inSpec = new PortObjectSpec[]{inputTable.getSpec()};
                 }
+                final String newQuery = createDummyValueQuery(spec, colIdx, oQuery);
+                setQuery(newQuery);
                 final DataTableSpec resultSpec = getResultSpec(inSpec, load);
                 final DataTableSpec outSpec = createSpec(resultSpec, spec.getColumnSpec(column));
                 buf = exec.createDataContainer(outSpec);
