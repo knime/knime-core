@@ -1104,7 +1104,7 @@ public final class FileUtil {
      * @param path any path
      * @return <code>true</code> if the path is on a network drive, <code>false</code> otherwise or if the current OS is
      *         not Windows
-     * @since 2.11
+     * @since 2.12
      */
     public static boolean isWindowsNetworkMount(final Path path) {
         if (!Platform.OS_WIN32.equals(Platform.getOS())) {
@@ -1122,7 +1122,7 @@ public final class FileUtil {
      * @param url any file-URL
      * @return <code>true</code> if the path is on a network drive, <code>false</code> otherwise or if the current OS is
      *         not Windows
-     * @since 2.11
+     * @since 2.12
      */
     public static boolean isWindowsNetworkMount(final URL url) {
         if (!Platform.OS_WIN32.equals(Platform.getOS()) || !"file".equals(url.getProtocol())) {
