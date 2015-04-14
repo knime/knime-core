@@ -146,23 +146,28 @@ public class AbstractColumnTableSorterTest {
             new ColumnBufferedDataTableSorter(bt.getDataTableSpec(), bt.getRowCount(), bt.getDataTableSpec()
                 .getColumnNames());
 
-        dataTableSorter.setMemService(new MemoryAlertSystem(0.02));
-        dataTableSorter.setMaxOpenContainers(60);
+        MemoryAlertSystem.getInstance().setFractionUsageThreshold(0.02);
+        try {
+            dataTableSorter.setMemService(MemoryAlertSystem.getInstance());
+            dataTableSorter.setMaxOpenContainers(60);
 
-        final Comparator<DataRow> ascendingOrderAssertion =
-            createAscendingOrderAssertingComparator(bt, bt.getDataTableSpec().getColumnNames());
+            final Comparator<DataRow> ascendingOrderAssertion =
+                createAscendingOrderAssertingComparator(bt, bt.getDataTableSpec().getColumnNames());
 
-        dataTableSorter.sort(bt, m_exec, new SortingConsumer() {
-            final AtomicReference<DataRow> lastRow = new AtomicReference<>();
+            dataTableSorter.sort(bt, m_exec, new SortingConsumer() {
+                final AtomicReference<DataRow> lastRow = new AtomicReference<>();
 
-            @Override
-            public void consume(final DataRow defaultRow) {
-                if (lastRow.get() != null) {
-                    ascendingOrderAssertion.compare(defaultRow, lastRow.get());
+                @Override
+                public void consume(final DataRow defaultRow) {
+                    if (lastRow.get() != null) {
+                        ascendingOrderAssertion.compare(defaultRow, lastRow.get());
+                    }
+                    lastRow.set(defaultRow);
                 }
-                lastRow.set(defaultRow);
-            }
-        });
+            });
+        } finally {
+            MemoryAlertSystem.getInstance().setFractionUsageThreshold(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD);
+        }
     }
 
     private BufferedDataTable createRandomTable(final int cols, final int rows) {

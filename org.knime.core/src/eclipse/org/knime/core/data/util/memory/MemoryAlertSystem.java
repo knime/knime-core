@@ -117,7 +117,7 @@ public final class MemoryAlertSystem {
      * @param usageThreshold the threshold above which a low memory condition will be reported; a value between 0 and 1
      * @noreference This constructor is not intended to be referenced by clients. Only used in test cases.
      */
-    public MemoryAlertSystem(final double usageThreshold) {
+    private MemoryAlertSystem(final double usageThreshold) {
         setFractionUsageThreshold(usageThreshold);
 
         for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
@@ -201,11 +201,11 @@ public final class MemoryAlertSystem {
 
     /**
      * Set percentage level of the amount of memory in tenured space which may be set before a memory warning event is
-     * thrown. Note that this changes a global value, therefore use with care!
+     * thrown. <b>Note that this changes a global value, therefore use with care!</b>
      *
      * @param percentage the fraction of used memory after garbage collection, a value between 0 and 1
      */
-    private void setFractionUsageThreshold(final double percentage) {
+    public void setFractionUsageThreshold(final double percentage) {
         if (percentage <= 0.0 || percentage > 1.0) {
             throw new IllegalArgumentException("Percentage not in range");
         }

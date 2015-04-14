@@ -159,35 +159,40 @@ public class TableSorterTest {
         sorter.setMaxRows(maxNumRowsPerContainer);
         // 10MB free memory
         long currentlyUsed = MemoryAlertSystem.getUsedMemory();
-        double fraction = Math.max(1, currentlyUsed + (10 << 20) / MemoryAlertSystem.getInstance().getMaximumMemory());
+        double fraction = Math.max(1, currentlyUsed + (10 << 20) / MemoryAlertSystem.getMaximumMemory());
 
-        sorter.setMemService(new MemoryAlertSystem(fraction));
+        MemoryAlertSystem.getInstance().setFractionUsageThreshold(fraction);
+        try {
+            sorter.setMemService(MemoryAlertSystem.getInstance());
 
-        // run again with change settings
-        BufferedDataTable result = sorter.sort(m_exec);
+            // run again with change settings
+            BufferedDataTable result = sorter.sort(m_exec);
 
-        // Check if column is sorted in ascending order
-        int prevValue = Integer.MIN_VALUE;
-        for (DataRow row : result) {
-            int thisValue = ((IntValue)row.getCell(0)).getIntValue();
-            Assert.assertTrue(thisValue >= prevValue);
-        }
-        // Check if it has the same results as defaultResult
-        Assert.assertTrue(defaultResult.getRowCount() == result.getRowCount());
-        RowIterator defaultIter = defaultResult.iterator();
-        RowIterator iter = result.iterator();
-        while (defaultIter.hasNext()) {
-            DataRow defaultRow = defaultIter.next();
-            DataRow row = iter.next();
-            Assert.assertTrue(defaultRow.getKey().getString().equals(
-                    row.getKey().getString()));
-            Iterator<DataCell> defaultCellIter = defaultRow.iterator();
-            Iterator<DataCell> cellIter = row.iterator();
-            while (defaultCellIter.hasNext()) {
-                Assert.assertTrue(
-                        defaultCellIter.next().equals(cellIter.next()));
+            // Check if column is sorted in ascending order
+            int prevValue = Integer.MIN_VALUE;
+            for (DataRow row : result) {
+                int thisValue = ((IntValue)row.getCell(0)).getIntValue();
+                Assert.assertTrue(thisValue >= prevValue);
             }
+            // Check if it has the same results as defaultResult
+            Assert.assertTrue(defaultResult.getRowCount() == result.getRowCount());
+            RowIterator defaultIter = defaultResult.iterator();
+            RowIterator iter = result.iterator();
+            while (defaultIter.hasNext()) {
+                DataRow defaultRow = defaultIter.next();
+                DataRow row = iter.next();
+                Assert.assertTrue(defaultRow.getKey().getString().equals(
+                        row.getKey().getString()));
+                Iterator<DataCell> defaultCellIter = defaultRow.iterator();
+                Iterator<DataCell> cellIter = row.iterator();
+                while (defaultCellIter.hasNext()) {
+                    Assert.assertTrue(
+                            defaultCellIter.next().equals(cellIter.next()));
+                }
 
+            }
+        } finally {
+            MemoryAlertSystem.getInstance().setFractionUsageThreshold(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD);
         }
     }
 
