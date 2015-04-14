@@ -78,6 +78,14 @@ public abstract class ExternalApplicationNodeView<T extends NodeModel>
 
     /**
      * {@inheritDoc}
+     */
+    @Override
+    protected void callOpenView(final String title) {
+        onOpen(title);
+    }
+
+    /**
+     * {@inheritDoc}
      * @since 2.12
      */
     @Override
