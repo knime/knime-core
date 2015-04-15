@@ -300,7 +300,7 @@ public final class NodeTimer {
             try {
                 File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
                 if (!propfile.exists()) {
-                    LOGGER.warn("Node usage file does not exist. Starting counts from scratch.");
+                    LOGGER.debug("Node usage file does not exist. Starting counts from scratch.");
                     return;
                 }
                 JsonObject jo;
