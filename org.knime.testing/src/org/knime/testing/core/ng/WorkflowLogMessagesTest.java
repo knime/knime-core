@@ -63,6 +63,8 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.util.EclipseUtil;
 
 /**
  * Testcase that checks for expected log messages and reported unexpected ERRORs and FATALs. An appender to the root
@@ -149,7 +151,11 @@ class WorkflowLogMessagesTest extends WorkflowTest {
         Map<Level, Map<String, Pattern>> leftOverMap = new HashMap<Level, Map<String, Pattern>>();
         Map<String, Pattern> m = new HashMap<>();
         for (Pattern p : flowConfiguration.getRequiredErrors()) {
-            m.put(p.toString(), p);
+            if (!p.pattern().startsWith("\\QCODING PROBLEM") || KNIMEConstants.ASSERTIONS_ENABLED
+                || EclipseUtil.isRunFromSDK()) {
+                // don't add expected CODING PROBLEMs is they are not reported
+                m.put(p.toString(), p);
+            }
         }
         leftOverMap.put(Level.ERROR, m);
 
