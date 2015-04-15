@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>KNIME</string>
+	<key>CFBundleExecutable</key>
+	<string>Knime</string>
+	<key>CFBundleIconFile</key>
+	<string>Knime.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.knime.product</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>KNIME</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>2.11.3</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>2.11.3</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright by KNIME GmbH, Konstanz, Germany. All rights reserved.</string>
+	<key>Eclipse</key>
+	<array>
+		<string>-keyring</string>
+		<string>~/.eclipse_keyring</string>
+		<string>-showlocation</string>
+	</array>
+</dict>
+</plist>
