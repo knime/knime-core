@@ -658,12 +658,12 @@ public class DataContainer implements RowAppender {
 
             if (MemoryAlertSystem.getInstance().isMemoryLow()) {
                 m_exchangeQueue.addLast(FLUSH_CACHE);
-                m_exchangeQueueCondition.signalAll();
+                m_exchangeQueueCondition.signal();
                 waitForWriterThread(0);
             }
 
             m_exchangeQueue.addLast(object);
-            m_exchangeQueueCondition.signalAll();
+            m_exchangeQueueCondition.signal();
             checkAsyncWriteThrowable();
         } catch (InterruptedException e) {
             m_asyncAddFuture.cancel(true);
@@ -1242,7 +1242,7 @@ public class DataContainer implements RowAppender {
                     }
 
                     o = queue.removeFirst();
-                    condition.signalAll();
+                    condition.signal();
                 } catch (final Throwable t) {
                     throwable.compareAndSet(null, t);
                     return null;
