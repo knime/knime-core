@@ -53,24 +53,23 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Exchanger;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -135,7 +134,7 @@ public class DataContainer implements RowAppender {
     public static final String PROPERTY_CELLS_IN_MEMORY = KNIMEConstants.PROPERTY_CELLS_IN_MEMORY;
 
     /** The default number of cells to be held in memory. */
-    public static final int DEF_MAX_CELLS_IN_MEMORY = Integer.MAX_VALUE;
+    public static final int DEF_MAX_CELLS_IN_MEMORY = 100000;
 
     /**
      * Default minimum disc space requirement, see {@link KNIMEConstants#PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB}.
@@ -301,6 +300,9 @@ public class DataContainer implements RowAppender {
 
     private static final Object FLUSH_CACHE = new Object();
 
+    /** Put into read queue to signal failure while writing a row. */
+    private static final Object CONTAINER_WRITE_FAILED = new Object();
+
     /**
      * The object that instantiates the buffer, may be set right after constructor call before any rows are added.
      */
@@ -329,6 +331,13 @@ public class DataContainer implements RowAppender {
      * {@value #MAX_ASYNC_WRITE_THREADS}).
      */
     private final boolean m_isSynchronousWrite;
+
+    /** The asynchronous queue holding the most recently added rows. */
+    private Exchanger<List<Object>> m_rowBufferExchanger;
+
+    private List<Object> m_fillingRowBuffer;
+
+    private List<Object> m_emptyingRowBuffer;
 
     private int m_maxRowsInMemory;
 
@@ -359,14 +368,6 @@ public class DataContainer implements RowAppender {
      * Whether to force a copy of any added blob. See {@link #setForceCopyOfBlobs(boolean)} for details.
      */
     private boolean m_forceCopyOfBlobs;
-
-    private final Deque<Object> m_exchangeQueue;
-
-    private final int m_maxExchangeQueueSize = 100;
-
-    private final ReentrantLock m_exchangeQueueLock;
-
-    private final Condition m_exchangeQueueCondition;
 
     /**
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>. The table spec of the
@@ -436,16 +437,15 @@ public class DataContainer implements RowAppender {
         }
         m_isSynchronousWrite = isSynchronousWrite;
         if (m_isSynchronousWrite) {
-            m_exchangeQueue = null;
-            m_exchangeQueueLock = null;
-            m_exchangeQueueCondition = null;
-            m_writeThrowable = null;
+            m_fillingRowBuffer = null;
+            m_emptyingRowBuffer = null;
             m_asyncAddFuture = null;
+            m_rowBufferExchanger = null;
+            m_writeThrowable = null;
         } else {
-            // one extra for signal object
-            m_exchangeQueue = new ArrayDeque<>(m_maxExchangeQueueSize + 1);
-            m_exchangeQueueLock = new ReentrantLock();
-            m_exchangeQueueCondition = m_exchangeQueueLock.newCondition();
+            m_fillingRowBuffer = new ArrayList<Object>(ASYNC_CACHE_SIZE);
+            m_emptyingRowBuffer = new ArrayList<Object>(ASYNC_CACHE_SIZE);
+            m_rowBufferExchanger = new Exchanger<List<Object>>();
             m_writeThrowable = new AtomicReference<Throwable>();
             m_asyncAddFuture = ASYNC_EXECUTORS.submit(new ASyncWriteCallable(this, NodeContext.getContext()));
         }
@@ -652,43 +652,30 @@ public class DataContainer implements RowAppender {
      * @param object the object to add.
      */
     private void offerToAsynchronousQueue(final Object object) {
-        m_exchangeQueueLock.lock();
-        try {
-            waitForWriterThread(m_maxExchangeQueueSize);
-
-            if (MemoryAlertSystem.getInstance().isMemoryLow()) {
-                m_exchangeQueue.addLast(FLUSH_CACHE);
-                m_exchangeQueueCondition.signal();
-                waitForWriterThread(0);
-            }
-
-            m_exchangeQueue.addLast(object);
-            m_exchangeQueueCondition.signal();
-            checkAsyncWriteThrowable();
-        } catch (InterruptedException e) {
-            m_asyncAddFuture.cancel(true);
-            throw new DataContainerException("Adding rows to buffer was interrupted", e);
-        } finally {
-            m_exchangeQueueLock.unlock();
-        }
-    }
-
-    /**
-     * @param maxExchangeQueueSize The maximum number of elements allowed in the queue, either
-     * {@link #m_maxExchangeQueueSize} or 0.
-     * @throws InterruptedException Canceled while waiting
-     * @throws DataContainerException If writer thread appears to be dead
-     */
-    private void waitForWriterThread(final int maxExchangeQueueSize) throws InterruptedException {
-        assert m_exchangeQueueLock.isHeldByCurrentThread();
-        while (m_exchangeQueue.size() > maxExchangeQueueSize) {
-            if (!m_exchangeQueueCondition.await(5, TimeUnit.SECONDS) && m_asyncAddFuture.isDone()) {
-                Throwable throwable = m_writeThrowable.get();
-                String msg = "Table write thread is dead -- " + m_exchangeQueue.size() + " row(s) to be written";
-                if (throwable == null) {
-                    throw new DataContainerException(msg);
-                } else {
-                    throw new DataContainerException(msg + ": " + throwable.getMessage(), throwable);
+        m_fillingRowBuffer.add(object);
+        if (m_fillingRowBuffer.size() >= ASYNC_CACHE_SIZE || object == CONTAINER_CLOSE || object == FLUSH_CACHE) {
+            while (true) {
+                try {
+                    m_fillingRowBuffer = m_rowBufferExchanger.exchange(m_fillingRowBuffer, 30, TimeUnit.SECONDS);
+                    if (!m_fillingRowBuffer.isEmpty()) {
+                        Object ob = m_fillingRowBuffer.get(0);
+                        assert ob == CONTAINER_WRITE_FAILED : "Not expected element in write queue: " + ob;
+                        m_fillingRowBuffer.clear();
+                        checkAsyncWriteThrowable();
+                    }
+                    return;
+                } catch (TimeoutException e) {
+                    if (m_asyncAddFuture.isDone()) {
+                        checkAsyncWriteThrowable();
+                        // if we reach this code, the write process has not
+                        // thrown an exception (the above line will likely
+                        // throw an exc.)
+                        throw new DataContainerException("Writing to table has unexpectedly stopped");
+                    }
+                    continue;
+                } catch (InterruptedException e) {
+                    m_asyncAddFuture.cancel(true);
+                    throw new DataContainerException("Adding rows to buffer was interrupted", e);
                 }
             }
         }
@@ -759,7 +746,7 @@ public class DataContainer implements RowAppender {
     @Override
     public void addRowToTable(final DataRow row) {
         if (!isOpen()) {
-            throw new IllegalStateException("Cannot add row: container has not been initialized (opened).");
+            throw new IllegalStateException("Cannot add row: container has" + " not been initialized (opened).");
         }
         if (row == null) {
             throw new NullPointerException("Can't add null rows to container");
@@ -782,6 +769,9 @@ public class DataContainer implements RowAppender {
             addRowToTableWrite(row);
         } else {
             checkAsyncWriteThrowable();
+            if (MemoryAlertSystem.getInstance().isMemoryLow()) {
+                offerToAsynchronousQueue(FLUSH_CACHE);
+            }
             offerToAsynchronousQueue(row);
         }
         m_size += 1;
@@ -1223,58 +1213,56 @@ public class DataContainer implements RowAppender {
                 // data container was already discarded (no rows added)
                 return null;
             }
+            List<Object> queue = d.m_emptyingRowBuffer;
             final AtomicReference<Throwable> throwable = d.m_writeThrowable;
-            final Lock lock = d.m_exchangeQueueLock;
-            final Condition condition = d.m_exchangeQueueCondition;
-            final Deque<Object> queue = d.m_exchangeQueue;
-
-            do {
-                Object o;
-                lock.lock();
-                try {
-                    while (queue.size() == 0) {
-                        // there is no timeout really - data can be added with arbitrary delay
-                        // heuristically determine whether the data container has been abandoned
-                        if (!condition.await(30, TimeUnit.SECONDS) && m_containerRef.get() == null) {
-                            throw new DataContainerException(
-                                "Corresponding data container has been abandoned - ending write thread");
+            final Exchanger<List<Object>> exchanger = d.m_rowBufferExchanger;
+            try {
+                do {
+                    final int size = queue.size();
+                    for (int i = 0; i < size; i++) {
+                        Object obj = queue.set(i, null);
+                        if (obj == CONTAINER_CLOSE) {
+                            assert i == size - 1;
+                            // table has been closed
+                            // (some non-DataRow was queued)
+                            return null;
+                        } else if (obj == FLUSH_CACHE) {
+                            assert i == size - 1;
+                            d.m_buffer.flushBuffer();
+                        } else {
+                            DataRow row = (DataRow)obj;
+                            d.addRowToTableWrite(row);
                         }
                     }
-
-                    o = queue.removeFirst();
-                    condition.signal();
-                } catch (final Throwable t) {
-                    throwable.compareAndSet(null, t);
-                    return null;
-                } finally {
-                    lock.unlock();
-                }
-
-                try {
-                    if (o == CONTAINER_CLOSE) {
-                        // table has been closed
-                        // (some non-DataRow was queued)
-                        return null;
-                    } else if (o == FLUSH_CACHE) {
-                        d.m_buffer.flushBuffer();
-                    } else if (o instanceof DataRow) {
-                        d.addRowToTableWrite((DataRow) o);
-                    } else {
-                        throw new IllegalStateException("Unexpected event type: " + o.getClass());
+                    queue.clear();
+                    d = null;
+                    try {
+                        queue = exchanger.exchange(queue, 30, TimeUnit.SECONDS);
+                    } catch (TimeoutException te) {
+                        // can be safely ignored, do another loop on the same
+                        // (empty!) queue (or don't if container is gc'ed)
                     }
-                } catch (final Throwable t) {
-                    throwable.compareAndSet(null, t);
-                    return null;
+                    d = m_containerRef.get();
+                } while (d != null);
+                // m_containerRef.get() returned null -> close() was never
+                // called on the container (which was garbage collected
+                // already); we can end this thread
+                LOGGER.debug("Ending DataContainer write thread since container was garbage collected");
+                return null;
+            } catch (Throwable t) {
+                throwable.compareAndSet(null, t);
+                boolean callExchange = !queue.contains(CONTAINER_CLOSE);
+                queue.clear();
+                queue.add(CONTAINER_WRITE_FAILED);
+                if (callExchange) {
+                    try {
+                        exchanger.exchange(queue, 30, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        // ignore
+                    }
                 }
-
-                d = m_containerRef.get();
-            } while (d != null);
-
-            // m_containerRef.get() returned null -> close() was never
-            // called on the container (which was garbage collected
-            // already); we can end this thread
-            LOGGER.debug("Ending DataContainer write thread since container was garbage collected");
-            return null;
+                return null;
+            }
         }
     }
 
@@ -1318,5 +1306,7 @@ public class DataContainer implements RowAppender {
             final IWriteFileStoreHandler fileStoreHandler) {
             return new Buffer(rowsInMemory, bufferID, globalTableRep, localTableRep, fileStoreHandler);
         }
+
     }
+
 }
