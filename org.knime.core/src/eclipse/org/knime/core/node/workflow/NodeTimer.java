@@ -209,39 +209,37 @@ public final class NodeTimer {
             dtsc.addColumns(colSpecs);
             return dtsc.createSpec();
         }
-        public BufferedDataTable getGlobalStatsTable(final ExecutionContext exec) {
-            synchronized (this) {
-                // TODO: double check that we can not possibly run into a deadlock via the ExecutionContext?!
-                //  (if so: copy data first...)
-                BufferedDataContainer result = exec.createDataContainer(getGlobalStatsSpecs());
-                int rowcount = 0;
-                for (String cname : m_globalNodeStats.keySet()) {
-                    NodeStats ns = m_globalNodeStats.get(cname);
-                    if (ns != null) {
-                        DataRow row = new DefaultRow(
-                            new RowKey("Row " + rowcount++),
-                            new StringCell(cname),
-                            new LongCell(ns.executionTime),
-                            new IntCell(ns.executionCount),
-                            new IntCell(ns.creationCount),
-                            new StringCell(ns.likelySuccessor)
-                        );
-                        result.addRowToTable(row);
-                    } else {
-                        DataRow row = new DefaultRow(
-                            new RowKey("Row " + rowcount++),
-                            DataType.getMissingCell(),
-                            DataType.getMissingCell(),
-                            DataType.getMissingCell(),
-                            DataType.getMissingCell(),
-                            DataType.getMissingCell()
-                        );
-                        result.addRowToTable(row);
-                    }
+        public synchronized BufferedDataTable getGlobalStatsTable(final ExecutionContext exec) {
+            // TODO: double check that we can not possibly run into a deadlock via the ExecutionContext?!
+            //  (if so: copy data first...)
+            BufferedDataContainer result = exec.createDataContainer(getGlobalStatsSpecs());
+            int rowcount = 0;
+            for (String cname : m_globalNodeStats.keySet()) {
+                NodeStats ns = m_globalNodeStats.get(cname);
+                if (ns != null) {
+                    DataRow row = new DefaultRow(
+                        new RowKey("Row " + rowcount++),
+                        new StringCell(cname),
+                        new LongCell(ns.executionTime),
+                        new IntCell(ns.executionCount),
+                        new IntCell(ns.creationCount),
+                        new StringCell(ns.likelySuccessor)
+                            );
+                    result.addRowToTable(row);
+                } else {
+                    DataRow row = new DefaultRow(
+                        new RowKey("Row " + rowcount++),
+                        DataType.getMissingCell(),
+                        DataType.getMissingCell(),
+                        DataType.getMissingCell(),
+                        DataType.getMissingCell(),
+                        DataType.getMissingCell()
+                            );
+                    result.addRowToTable(row);
                 }
-                result.close();
-                return result.getTable();
             }
+            result.close();
+            return result.getTable();
         }
         public long getAvgUpTime() {
             return (m_avgUpTime * m_launches + (System.currentTimeMillis() - m_currentInstanceLaunchTime)) / (m_launches + 1);
@@ -259,15 +257,17 @@ public final class NodeTimer {
                 job.add("version", KNIMEConstants.VERSION);
                 job.add("created", m_created);
                 JsonObjectBuilder job2 = Json.createObjectBuilder();
-                for (String cname : m_globalNodeStats.keySet()) {
-                    JsonObjectBuilder job3 = Json.createObjectBuilder();
-                    NodeStats ns = m_globalNodeStats.get(cname);
-                    if (ns != null) {
-                        job3.add("nrexecs", ns.executionCount);
-                        job3.add("exectime", ns.executionTime);
-                        job3.add("nrcreated", ns.creationCount);
-                        job3.add("successor", ns.likelySuccessor);
-                        job2.add(cname, job3);
+                synchronized (this) {
+                    for (String cname : m_globalNodeStats.keySet()) {
+                        JsonObjectBuilder job3 = Json.createObjectBuilder();
+                        NodeStats ns = m_globalNodeStats.get(cname);
+                        if (ns != null) {
+                            job3.add("nrexecs", ns.executionCount);
+                            job3.add("exectime", ns.executionTime);
+                            job3.add("nrcreated", ns.creationCount);
+                            job3.add("successor", ns.likelySuccessor);
+                            job2.add(cname, job3);
+                        }
                     }
                 }
                 job.add("nodestats", job2);
