@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileManager;
@@ -92,6 +93,14 @@ final class InMemoryJavaFileManager
             return super.getJavaFileForOutput(
                     location, className, kind, sibling);
         }
+    }
+
+
+    /**
+     * @return a {@link Set} of all compiled class names
+     */
+    public Set<String> getClassNames() {
+        return m_classMap.keySet();
     }
 
     byte[] getClassByteCode(final String name) throws ClassNotFoundException {

@@ -58,8 +58,10 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
@@ -310,6 +312,20 @@ public final class JavaCodeCompiler {
                 return defineClass(name, byteCode, 0, byteCode.length);
             }
         };
+    }
+
+    /**
+     * Returns the bytecode for each compiled class.
+     * @return a map of all bytecodes
+     * @throws ClassNotFoundException when a class cannot be found
+     * @since 2.12
+     */
+    public Map<String, byte[]> getClassByteCode() throws ClassNotFoundException {
+        HashMap<String, byte[]> classes = new  HashMap<String, byte[]>();
+        for (String key : m_fileMgr.getClassNames()) {
+            classes.put(key, m_fileMgr.getClassByteCode(key));
+        }
+        return classes;
     }
 
     /** Get the source code in an array, each array element representing the
