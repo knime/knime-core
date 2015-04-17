@@ -8936,10 +8936,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Counterpart to {@link #getInputNodes()} - it sets new values into quickform nodes on the root level.
      * All nodes as per map argument will be reset as part of this call.
      * @param input a map from {@link org.knime.core.node.dialog.DialogNode#getParameterName() node's parameter name}
-     * to its (JSON object value). Invalid entries cause an exception.
+     * to its (JSON or string object value). Invalid entries cause an exception.
      * @since 2.12
      */
-    public void setInputNodes(final Map<String, JsonObject> input) {
+    public void setInputNodes(final Map<String, ?> input) {
         synchronized (getWorkflowMutex()) {
             CheckUtils.checkState(!getNodeContainerState().isExecutionInProgress(),
                 "Cannot apply new parameters - workflow still in execution");
@@ -8947,25 +8947,60 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             Pattern p = Pattern.compile("^(?:(.+)-)?(\\d+)$");
             Map<NodeID, DialogNode> nodeMap = findNodes(DialogNode.class, false);
             Map<NodeID, DialogNodeValue> valueMap = new LinkedHashMap<>();
-            for (Map.Entry<String, JsonObject> entry : input.entrySet()) {
+            for (Map.Entry<String, ?> entry : input.entrySet()) {
                 String parameterName = entry.getKey();
                 Matcher parameterNameMatcher = p.matcher(parameterName);
-                CheckUtils.checkArgument(parameterNameMatcher.matches(),
-                    "Invalid parameter name \"%s\" (invalid pattern)", parameterName);
-                String paramBase = StringUtils.defaultString(parameterNameMatcher.group(1));
-                Integer idSuffix = Integer.parseInt(parameterNameMatcher.group(2));
-                NodeID id = new NodeID(getID(), idSuffix);
-                DialogNode dialogNode = nodeMap.get(id);
+
+                String paramBase = null;
+                Integer idSuffix = null;
+                //id notation used?
+                if (parameterNameMatcher.matches()) {
+                    paramBase = StringUtils.defaultString(parameterNameMatcher.group(1));
+                    idSuffix = Integer.parseInt(parameterNameMatcher.group(2));
+                } else {
+                    paramBase = parameterName;
+                }
+
+                NodeID id = null;
+                if(idSuffix == null) {
+                    //try to find node without id, check for duplicates
+                    for (Map.Entry<NodeID, DialogNode> dNode : nodeMap.entrySet()) {
+                        if (paramBase.equals(dNode.getValue().getParameterName())) {
+                            CheckUtils.checkArgument(id == null,
+                                    "Duplicate parameter name \"%s\" in workflow. "
+                                    + "Cannot set parameter without ID notation.",
+                                    parameterName);
+                            id = dNode.getKey();
+                        }
+                    }
+                } else {
+                    id = new NodeID(getID(), idSuffix);
+                }
+                CheckUtils.checkArgumentNotNull(id, "Invalid parameter name \"%s\" - "
+                    + "could not locate corresponding node in workflow", parameterName);
+
+                DialogNode<?,DialogNodeValue> dialogNode = nodeMap.get(id);
                 CheckUtils.checkArgument(dialogNode != null && paramBase.equals(StringUtils.defaultString(
                     dialogNode.getParameterName())),
                     "Invalid parameter name \"%s\" - could not locate corresponding node in workflow", parameterName);
                 DialogNodeValue dialogValue = dialogNode.createEmptyDialogValue();
+                Object value = entry.getValue();
                 try {
-                    dialogValue.loadFromJson(entry.getValue());
+                    if (value instanceof JsonObject) {
+                        dialogValue.loadFromJson((JsonObject)value);
+                    } else if (value instanceof String) {
+                        dialogValue.loadFromString((String)value);
+                    } else {
+                        throw new IllegalArgumentException("Invalid type for node \"" + parameterName
+                            + "\" - only string or JSON allowed.");
+                    }
                     dialogNode.validateDialogValue(dialogValue);
                 } catch (JsonException e) {
                     throw new IllegalArgumentException("Invalid JSON parameter for node \"" + parameterName
                         + "\" - node doesn't understand JSON: " + e.getMessage(), e);
+                } catch (UnsupportedOperationException e) {
+                    throw new IllegalArgumentException(e.getMessage() + " - For node \"" + parameterName
+                        + "\".", e);
                 } catch (InvalidSettingsException se) {
                     throw new IllegalArgumentException("Invalid parameter for node \"" + parameterName
                         + "\" - didn't pass node's validation method: " + se.getMessage(), se);
