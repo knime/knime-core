@@ -14,5 +14,5 @@ http://update.knime.org/analytics-platform/2.12,add,enabled,KNIME Analytics Plat
 http://update.knime.org/store/2.12,add,enabled,KNIME Store Update Site
 http://update.knime.org/community-contributions/trusted/2.12,add,enabled,Trusted Community Contributions
 http://update.knime.org/community-contributions/2.12,add,disabled,Stable Community Contributions
-http://update.knime.org/server/4.0,add,disabled,KNIME Server Update Site
+http://update.knime.org/server/4.1,add,disabled,KNIME Server Update Site
 http://update.knime.org/teamspace/3.6,add,disabled,KNIME TeamSpace Update Site
