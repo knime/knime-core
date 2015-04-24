@@ -196,11 +196,13 @@ public final class WizardExecutionController {
 
     private static IConfigurationElement getConfigurationFromID(final String extensionPointId,
         final String configurationID, final String jsObjectID) {
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IConfigurationElement[] configurationElements = registry.getConfigurationElementsFor(extensionPointId);
-        for (IConfigurationElement element : configurationElements) {
-            if (jsObjectID.equals(element.getAttribute(configurationID))) {
-                return element;
+        if (jsObjectID != null) {
+            IExtensionRegistry registry = Platform.getExtensionRegistry();
+            IConfigurationElement[] configurationElements = registry.getConfigurationElementsFor(extensionPointId);
+            for (IConfigurationElement element : configurationElements) {
+                if (jsObjectID.equals(element.getAttribute(configurationID))) {
+                    return element;
+                }
             }
         }
         return null;
