@@ -58,6 +58,7 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceData;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.CLibrary;
 import org.knime.core.util.GUIDeadlockDetector;
 import org.knime.core.util.MutableBoolean;
@@ -113,6 +114,10 @@ public class KNIMEApplication implements IApplication {
             } finally {
                 shell.dispose();
             }
+
+            // initialize KNIMEConstants as early as possible in order to avoid deadlocks during startup
+            KNIMEConstants.BUILD.toString();
+
             parseApplicationArguments(appContext);
             RepositoryUpdater.INSTANCE.addDefaultRepositories();
             RepositoryUpdater.INSTANCE.updateArtifactRepositoryURLs();
