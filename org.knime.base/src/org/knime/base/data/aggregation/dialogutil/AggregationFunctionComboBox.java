@@ -82,6 +82,14 @@ public class AggregationFunctionComboBox extends JComboBox<AggregationFunction> 
     }
 
     /**
+     * Resets the type to force an update aggregation method options the user can select from.
+     * @since 2.12
+     */
+    public void resetType() {
+        m_type = null;
+    }
+
+    /**
      * @param type the {@link DataType} used to initialize this combobox
      * @param list {@link List} of {@link AggregationMethod}s the user can choose from
      * @param selected the current selected method

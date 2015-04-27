@@ -86,7 +86,12 @@ public abstract class AbstractAggregationFunctionTableCellEditor<F extends Aggre
      * @param provider {@link AggregationFunctionProvider}
      */
     public void setAggregationFunctionProvider(final AggregationFunctionProvider<F> provider) {
-        m_provider = provider;
+        if (!provider.equals(m_provider)) {
+        	//reset the provider if it has changed. This might happen when the user changes the db connector
+            m_provider = provider;
+            //also reset the type in the method combobox to force the method reloading
+            getBox().resetType();
+        }
     }
 
     /**
