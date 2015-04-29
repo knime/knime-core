@@ -8922,7 +8922,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 String parameterName = StringUtils.defaultString(dialogNode.getParameterName());
                 parameterName = (parameterName.isEmpty() ? "" : parameterName + "-")
                         + Integer.toString(e.getKey().getIndex());
-                DialogNodeValue dialogValue = dialogNode.getDefaultValue();
+                DialogNodeValue dialogValue = dialogNode.getDialogValue();
+                if (dialogValue == null) {
+                    // if not value have been set explicitly, use the default values
+                    dialogValue = dialogNode.getDefaultValue();
+                }
                 JsonObject jsonObject = dialogValue != null ? dialogValue.toJson() : null;
                 if (jsonObject == null) {
                     jsonObject = Json.createObjectBuilder().build();
