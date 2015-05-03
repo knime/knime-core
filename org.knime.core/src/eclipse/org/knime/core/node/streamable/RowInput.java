@@ -75,6 +75,7 @@ public abstract class RowInput extends PortInput {
      * while ((row = rowInput.poll()) != null) {
      *     // do something with row
      * }
+     * rowInput.close();
      * </pre>
      *
      * @return The next row or null if the end of the stream has been reached.
