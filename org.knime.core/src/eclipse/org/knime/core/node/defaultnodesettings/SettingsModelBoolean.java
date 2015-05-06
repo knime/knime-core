@@ -99,7 +99,7 @@ public class SettingsModelBoolean extends SettingsModel {
      * {@inheritDoc}
      */
     @Override
-    protected String getConfigName() {
+    public String getConfigName() {
         return m_configName;
     }
 
@@ -179,4 +179,5 @@ public class SettingsModelBoolean extends SettingsModel {
     public String toString() {
         return getClass().getSimpleName() + " ('" + m_configName + "')";
     }
+
 }

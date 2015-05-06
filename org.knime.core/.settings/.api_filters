@@ -28,6 +28,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/defaultnodesettings/SettingsModelBoolean.java" type="org.knime.core.node.defaultnodesettings.SettingsModelBoolean">
+        <filter id="1227882500">
+            <message_arguments>
+                <message_argument value="getConfigName()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/dialog/DialogNode.java" type="org.knime.core.node.dialog.DialogNode">
         <filter id="403767336">
             <message_arguments>
