@@ -85,7 +85,7 @@ public final class NodeFactoryHTMLCreator {
 
     private Map<String, Transformer> m_transformers = new HashMap<String, Transformer>();
 
-    private static final Pattern NAMESPACE_PATTERN = Pattern.compile("http://knime.org/node(?:2012|/v(\\d+\\.\\d+))");
+    private static final Pattern NAMESPACE_PATTERN = Pattern.compile("http://knime.org/(.*)node(?:2012|/v(\\d+\\.\\d+))");
 
     private final String m_css;
 
@@ -139,15 +139,22 @@ public final class NodeFactoryHTMLCreator {
                 throw new IllegalArgumentException("Unsupported namespace for knime node: " + namespaceUri);
             }
             final String version;
-            if (matcher.group(1) != null) {
-                version = matcher.group(1);
+            if (matcher.group(2) != null) {
+                version = matcher.group(2);
             } else {
                 version = "2.7";
             }
+            String nodeType = matcher.group(1);
+            if (nodeType != null && nodeType.length() > 0) {
+                nodeType = "_" + nodeType;
+            } else {
+                nodeType = "";
+            }
+            String styleFile = "FullNodeDescription" + nodeType + "_v" + version + ".xslt";
 
-            InputStream is = getClass().getResourceAsStream("FullNodeDescription_v" + version + ".xslt");
+            InputStream is = getClass().getResourceAsStream(styleFile);
             if (is == null) {
-                throw new FileNotFoundException("Could not find stylesheet 'FullNodeDescription_" + version + ".xslt");
+                throw new FileNotFoundException("Could not find stylesheet '" + styleFile + "'");
             }
             StreamSource stylesheet = new StreamSource(is);
             transformer = TransformerFactory.newInstance().newTemplates(stylesheet).newTransformer();

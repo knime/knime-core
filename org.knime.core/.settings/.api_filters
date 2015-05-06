@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF" type="schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605.TypeSystemHolder">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605.TypeSystemHolder"/>
+                <message_argument value="org.knime.core_2.12.0"/>
+            </message_arguments>
+        </filter>
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605.TypeSystemHolder"/>
@@ -87,6 +93,272 @@
                 <message_argument value="2.11"/>
                 <message_argument value="2.12"/>
                 <message_argument value="looksLikeUNC(URL)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/ADocument.java" type="org.knime.node.v212.ADocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.ADocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/AbstractView.java" type="org.knime.node.v212.AbstractView">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.AbstractView"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/BDocument.java" type="org.knime.node.v212.BDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.BDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/BrDocument.java" type="org.knime.node.v212.BrDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.BrDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/Description.java" type="org.knime.node.v212.Description">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Description"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/ExtendedDescription.java" type="org.knime.node.v212.ExtendedDescription">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.ExtendedDescription"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/FullDescription.java" type="org.knime.node.v212.FullDescription">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.FullDescription"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/H3Document.java" type="org.knime.node.v212.H3Document">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.H3Document"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/H4Document.java" type="org.knime.node.v212.H4Document">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.H4Document"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/HDocument.java" type="org.knime.node.v212.HDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.HDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/IDocument.java" type="org.knime.node.v212.IDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.IDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/InPort.java" type="org.knime.node.v212.InPort">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.InPort"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/Intro.java" type="org.knime.node.v212.Intro">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Intro"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/KnimeNode.java" type="org.knime.node.v212.KnimeNode">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.KnimeNode"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/KnimeNodeDocument.java" type="org.knime.node.v212.KnimeNodeDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.KnimeNodeDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/LiDocument.java" type="org.knime.node.v212.LiDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.LiDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/MinimalTags.java" type="org.knime.node.v212.MinimalTags">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.MinimalTags"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/NodeType.java" type="org.knime.node.v212.NodeType">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.NodeType"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/OlDocument.java" type="org.knime.node.v212.OlDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.OlDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/Option.java" type="org.knime.node.v212.Option">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Option"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/OutPort.java" type="org.knime.node.v212.OutPort">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.OutPort"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/PDocument.java" type="org.knime.node.v212.PDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.PDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/Port.java" type="org.knime.node.v212.Port">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Port"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/Ports.java" type="org.knime.node.v212.Ports">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Ports"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/PreDocument.java" type="org.knime.node.v212.PreDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.PreDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/SubDocument.java" type="org.knime.node.v212.SubDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.SubDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/SupDocument.java" type="org.knime.node.v212.SupDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.SupDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/Tab.java" type="org.knime.node.v212.Tab">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Tab"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/TableDocument.java" type="org.knime.node.v212.TableDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TableDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/TdDocument.java" type="org.knime.node.v212.TdDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TdDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/TextTags.java" type="org.knime.node.v212.TextTags">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TextTags"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/ThDocument.java" type="org.knime.node.v212.ThDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.ThDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/TrDocument.java" type="org.knime.node.v212.TrDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TrDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/TtDocument.java" type="org.knime.node.v212.TtDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.TtDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/UDocument.java" type="org.knime.node.v212.UDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.UDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/UlDocument.java" type="org.knime.node.v212.UlDocument">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.UlDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/View.java" type="org.knime.node.v212.View">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.View"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v212/Views.java" type="org.knime.node.v212.Views">
+        <filter comment="New extensible node description xsd" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v212.Views"/>
             </message_arguments>
         </filter>
     </resource>

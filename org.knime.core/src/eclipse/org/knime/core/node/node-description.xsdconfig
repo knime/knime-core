@@ -2,4 +2,7 @@
   <xb:namespace uri="http://knime.org/node/v2.10">
     <xb:package>org.knime.node.v210</xb:package>
   </xb:namespace>
+  <xb:namespace uri="http://knime.org/node/v2.12">
+    <xb:package>org.knime.node.v212</xb:package>
+  </xb:namespace>
 </xb:config>
