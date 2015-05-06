@@ -9,8 +9,8 @@
     
     <fullDescription>
         <intro>
-            This node waits for a certain time, to a certain time or for a file event. <br/><br/>
-	        <i>This node was kindly sponsored by the Vernalis.</i>
+            This node waits for a certain time, to a certain time or for a file event (such as file creation, modification or deletion). <br/><br/>
+	        This node is derived from the <a href="https://tech.knime.org/book/vernalis-nodes-for-knime-trusted-extension">Vernalis community extension</a>.
         </intro>
         <option name="Wait for time:">The node waits for the entered time (HH:mm:ss). </option>
         <option name="Wait to time:">The node waits until the entered daytime has passed. If the entered daytime
@@ -19,9 +19,6 @@
         
     </fullDescription>
         
-        
-
-    
     <ports>
         <inPort index="0" name="Input table">The input variables.</inPort>
         <outPort index="0" name="Output table">The input variables</outPort>
