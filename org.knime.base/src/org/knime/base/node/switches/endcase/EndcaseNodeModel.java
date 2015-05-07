@@ -63,7 +63,6 @@ import java.util.zip.GZIPOutputStream;
 import org.knime.base.data.append.row.AppendedRowsIterator;
 import org.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
 import org.knime.base.data.append.row.AppendedRowsTable;
-import org.knime.base.node.io.pmml.write.PMMLWriterNodeModel;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
@@ -73,7 +72,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -90,17 +88,12 @@ import org.knime.core.node.property.hilite.HiLiteManager;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 /**
- * End of an IF Statement. Takes the data from one or both input ports
- * (whereever it is available. If both input ports carry data the specs must
- * match and the two tables will be concatenated.
+ * End of an IF Statement. Takes the data from one or both input ports (whereever it is available. If both input ports
+ * carry data the specs must match and the two tables will be concatenated.
  *
  * @author M. Berthold, University of Konstanz
  */
-public class EndcaseNodeModel extends NodeModel
-implements InactiveBranchConsumer {
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(PMMLWriterNodeModel.class);
+public class EndcaseNodeModel extends NodeModel implements InactiveBranchConsumer {
 
     /** NodeSettings key if to append suffix. If false, skip the rows. */
     static final String CFG_APPEND_SUFFIX = "append_suffix";
@@ -112,13 +105,17 @@ implements InactiveBranchConsumer {
     static final String CFG_HILITING = "enable_hiliting";
 
     private boolean m_isAppendSuffix = true;
+
     private String m_suffix = "_dup";
+
     private boolean m_enableHiliting;
 
     /** Hilite manager that summarizes both input handlers into one. */
     private final HiLiteManager m_hiliteManager = new HiLiteManager();
+
     /** Hilite translator for duplicate row keys. */
     private final HiLiteTranslator m_hiliteTranslator = new HiLiteTranslator();
+
     /** Default hilite handler used if hilite translation is disabled. */
     private final HiLiteHandler m_dftHiliteHandler = new HiLiteHandler();
 
@@ -126,7 +123,7 @@ implements InactiveBranchConsumer {
      * Two inputs, one output.
      */
     protected EndcaseNodeModel() {
-        super(createInTypes(3), new PortType[] {BufferedDataTable.TYPE});
+        super(createInTypes(3), new PortType[]{BufferedDataTable.TYPE});
     }
 
     private static PortType[] createInTypes(final int nrIns) {
@@ -140,8 +137,7 @@ implements InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         Vector<DataTableSpec> specs = new Vector<DataTableSpec>();
         for (int i = 0; i < getNrInPorts(); i++) {
             if (inSpecs[i] != null) {
@@ -163,8 +159,7 @@ implements InactiveBranchConsumer {
         for (int i = 1; i < specs.size(); i++) {
             if (!(specs.get(0).equalStructure(specs.get(i)))) {
                 // incompatible - refuse to configure
-                throw new InvalidSettingsException("The table structures of"
-                        + " active ports are not compatible.");
+                throw new InvalidSettingsException("The table structures of" + " active ports are not compatible.");
             }
         }
         // all ok, return first spec:
@@ -175,8 +170,7 @@ implements InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws Exception {
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         Vector<BufferedDataTable> tables = new Vector<BufferedDataTable>();
         for (int i = 0; i < getNrInPorts(); i++) {
             if (inData[i] != null) {
@@ -194,8 +188,7 @@ implements InactiveBranchConsumer {
             if (m_enableHiliting) {
                 // create empty hilite translation map (so we correctly
                 // handle the internals).
-                Map<RowKey, Set<RowKey>> map =
-                        new HashMap<RowKey, Set<RowKey>>();
+                Map<RowKey, Set<RowKey>> map = new HashMap<RowKey, Set<RowKey>>();
                 m_hiliteTranslator.setMapper(new DefaultHiLiteMapper(map));
             }
             return new PortObject[]{inData[0]};
@@ -203,11 +196,9 @@ implements InactiveBranchConsumer {
         assert tables.size() > 0;
         // check compatibility of specs against first spec in list
         for (int i = 1; i < tables.size(); i++) {
-            if (!(tables.get(0).getSpec().equalStructure(
-                    tables.get(i).getSpec()))) {
+            if (!(tables.get(0).getSpec().equalStructure(tables.get(i).getSpec()))) {
                 // incompatible - refuse to execute
-                throw new Exception("The data table structures of the active "
-                        + "ports are not compatible.");
+                throw new Exception("The data table structures of the active " + "ports are not compatible.");
             }
         }
 
@@ -220,12 +211,10 @@ implements InactiveBranchConsumer {
             i++;
         }
 
-        AppendedRowsTable out = new AppendedRowsTable(
-                (m_isAppendSuffix ? m_suffix : null), dtables);
+        AppendedRowsTable out = new AppendedRowsTable((m_isAppendSuffix ? m_suffix : null), dtables);
         // note, this iterator throws runtime exceptions when canceled.
         AppendedRowsIterator it = out.iterator(exec, totalRowCount);
-        BufferedDataContainer c =
-            exec.createDataContainer(out.getDataTableSpec());
+        BufferedDataContainer c = exec.createDataContainer(out.getDataTableSpec());
         try {
             while (it.hasNext()) {
                 // may throw exception, also sets progress
@@ -237,8 +226,7 @@ implements InactiveBranchConsumer {
             c.close();
         }
         if (it.getNrRowsSkipped() > 0) {
-            setWarningMessage("Filtered out " + it.getNrRowsSkipped()
-                    + " duplicate row id(s).");
+            setWarningMessage("Filtered out " + it.getNrRowsSkipped() + " duplicate row id(s).");
         }
         if (m_enableHiliting) {
             // create hilite translation map
@@ -253,8 +241,7 @@ implements InactiveBranchConsumer {
                     map.put(e.getKey(), set);
                 } else {
                     // skip duplicate keys
-                    if (!dupMap.containsKey(new RowKey(e.getKey().getString()
-                            + m_suffix))) {
+                    if (!dupMap.containsKey(new RowKey(e.getKey().getString() + m_suffix))) {
                         Set<RowKey> set = Collections.singleton(e.getValue());
                         map.put(e.getKey(), set);
                     }
@@ -281,8 +268,7 @@ implements InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         boolean appendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
         if (appendSuffix) {
             String suffix = settings.getString(CFG_SUFFIX);
@@ -296,8 +282,7 @@ implements InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_isAppendSuffix = settings.getBoolean(CFG_APPEND_SUFFIX);
         if (m_isAppendSuffix) {
             m_suffix = settings.getString(CFG_SUFFIX);
@@ -314,8 +299,7 @@ implements InactiveBranchConsumer {
     @Override
     protected void reset() {
         m_hiliteManager.removeAllToHiliteHandlers();
-        m_hiliteManager.addToHiLiteHandler(
-                m_hiliteTranslator.getFromHiLiteHandler());
+        m_hiliteManager.addToHiLiteHandler(m_hiliteTranslator.getFromHiLiteHandler());
         m_hiliteManager.addToHiLiteHandler(getInHiLiteHandler(0));
         m_hiliteTranslator.removeAllToHiliteHandlers();
         m_hiliteTranslator.addToHiLiteHandler(getInHiLiteHandler(1));
@@ -325,13 +309,12 @@ implements InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         if (m_enableHiliting) {
-            final NodeSettingsRO config = NodeSettings.loadFromXML(
-                    new GZIPInputStream(new FileInputStream(
-                    new File(nodeInternDir, "hilite_mapping.xml.gz"))));
+            final NodeSettingsRO config =
+                NodeSettings.loadFromXML(new GZIPInputStream(new FileInputStream(new File(nodeInternDir,
+                    "hilite_mapping.xml.gz"))));
             try {
                 m_hiliteTranslator.setMapper(DefaultHiLiteMapper.load(config));
             } catch (final InvalidSettingsException ex) {
@@ -344,14 +327,13 @@ implements InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         if (m_enableHiliting) {
             final NodeSettings config = new NodeSettings("hilite_mapping");
-            ((DefaultHiLiteMapper) m_hiliteTranslator.getMapper()).save(config);
-            config.saveToXML(new GZIPOutputStream(new FileOutputStream(new File(
-                    nodeInternDir, "hilite_mapping.xml.gz"))));
+            ((DefaultHiLiteMapper)m_hiliteTranslator.getMapper()).save(config);
+            config.saveToXML(new GZIPOutputStream(
+                new FileOutputStream(new File(nodeInternDir, "hilite_mapping.xml.gz"))));
         }
     }
 
@@ -359,13 +341,11 @@ implements InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex,
-            final HiLiteHandler hiLiteHdl) {
+    protected void setInHiLiteHandler(final int inIndex, final HiLiteHandler hiLiteHdl) {
         super.setInHiLiteHandler(inIndex, hiLiteHdl);
         if (inIndex == 0) {
             m_hiliteManager.removeAllToHiliteHandlers();
-            m_hiliteManager.addToHiLiteHandler(
-                    m_hiliteTranslator.getFromHiLiteHandler());
+            m_hiliteManager.addToHiLiteHandler(m_hiliteTranslator.getFromHiLiteHandler());
             m_hiliteManager.addToHiLiteHandler(hiLiteHdl);
         } else if (inIndex == 1) {
             m_hiliteTranslator.removeAllToHiliteHandlers();
