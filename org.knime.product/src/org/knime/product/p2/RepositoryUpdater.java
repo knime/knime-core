@@ -153,7 +153,7 @@ public class RepositoryUpdater implements ProvisioningListener {
     }
 
     private void processDefaultRepositories(final IMetadataRepositoryManager repoManager, final URL usFileUrl) {
-        Set<URI> knowRepositories =
+        Set<URI> knownRepositories =
             new HashSet<>(Arrays.asList(repoManager.getKnownRepositories(IRepositoryManager.REPOSITORIES_NON_LOCAL
                 | IRepositoryManager.REPOSITORIES_DISABLED)));
 
@@ -179,9 +179,10 @@ public class RepositoryUpdater implements ProvisioningListener {
                     && !preferences.getBoolean(newPrefName + "-removed", false)) {
                     repoManager.removeRepository(uri);
                     preferences.putBoolean(newPrefName + "-removed", true);
-                } else if ("add".equals(parts[1]) && !knowRepositories.contains(uri)
-                    && !preferences.getBoolean(oldPrefName + "-added", false)
-                    && !preferences.getBoolean(newPrefName + "-added", false)) {
+                } else if ("add".equals(parts[1])
+                    && (knownRepositories.isEmpty() || (!knownRepositories.contains(uri)
+                        && !preferences.getBoolean(oldPrefName + "-added", false) && !preferences.getBoolean(
+                        newPrefName + "-added", false)))) {
                     repoManager.addRepository(uri);
                     repoManager.setEnabled(uri, (parts.length > 2) && "enabled".equals(parts[2]));
                     if (parts.length > 3) {
