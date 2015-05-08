@@ -46,7 +46,7 @@
  * History
  *   May 8, 2015 (wiswedel): created
  */
-package org.knime.base.node.switches.caseswitchvariable.start;
+package org.knime.base.node.switches.caseswitch.variable;
 
 import org.knime.base.node.switches.caseswitch.CaseStartNodeFactory;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
