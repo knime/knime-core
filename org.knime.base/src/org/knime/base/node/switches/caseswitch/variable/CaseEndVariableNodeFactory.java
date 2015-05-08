@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,71 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 28, 2008 (wiswedel): created
+ *   May 8, 2015 (wiswedel): created
  */
-package org.knime.base.node.switches.caseswitch;
+package org.knime.base.node.switches.caseswitch.variable;
 
-import java.io.IOException;
-
-import org.apache.xmlbeans.XmlException;
-import org.knime.core.node.NodeDescription;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.util.CheckUtils;
-import org.xml.sax.SAXException;
-
+import org.knime.base.node.switches.caseswitch.CaseEndNodeFactory;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 
 /**
  *
- * @author Tim-Oliver Buchholz, KNIME Zurich
+ * @author wiswedel
  */
-public class CaseStartNodeFactory extends NodeFactory<CaseStartNodeModel> {
-
-    private final PortType m_portType;
-
-    /** @param portType */
-    protected CaseStartNodeFactory(final PortType portType) {
-        m_portType = CheckUtils.checkArgumentNotNull(portType, "Arg must not be null");
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new CaseStartNodeDialogPane();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public CaseStartNodeModel createNodeModel() {
-        return new CaseStartNodeModel(m_portType);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<CaseStartNodeModel> createNodeView(final int index, final CaseStartNodeModel model) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
+public final class CaseEndVariableNodeFactory extends CaseEndNodeFactory {
 
     /**
-     * {@inheritDoc}
+     *
      */
-    @Override
-    protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
-        return super.createNodeDescription();
+    public CaseEndVariableNodeFactory() {
+        super(FlowVariablePortObject.TYPE, FlowVariablePortObject.TYPE_OPTIONAL);
     }
 
 }

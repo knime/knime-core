@@ -45,7 +45,7 @@
  * History
  *   Apr 28, 2008 (wiswedel): created
  */
-package org.knime.base.node.switches.caseswitchvariable.end;
+package org.knime.base.node.switches.caseswitch;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,14 +54,12 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
@@ -70,52 +68,36 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
  *
  * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
  */
-public class CaseSwitchVariableNodeModel extends NodeModel implements InactiveBranchConsumer {
+final class CaseEndNodeModel extends NodeModel implements InactiveBranchConsumer {
 
-    /** The logger instance. */
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(CaseSwitchVariableNodeModel.class);
-
-    /**
-     * The flow variable node model.
+    /** 3 ins, 1 out.
+     * @param mandatoryPortType Type of first in and first (and only) out.
+     * @param optionalPortType Type of 2nd and 3rd in. The optional counterpart to mandatoryPortType.
+     *
      */
-    protected CaseSwitchVariableNodeModel() {
-        super(new PortType[]{new PortType(FlowVariablePortObject.class),
-            new PortType(FlowVariablePortObject.class, true), new PortType(FlowVariablePortObject.class, true)},
-            new PortType[]{FlowVariablePortObject.TYPE});
+    CaseEndNodeModel(final PortType mandatoryPortType, final PortType optionalPortType) {
+        super(new PortType[]{mandatoryPortType, optionalPortType, optionalPortType}, new PortType[]{mandatoryPortType});
     }
 
     /** {@inheritDoc} */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-
         for (int i = 0, l = inSpecs.length; i < l; i++) {
             if (inSpecs[i] != null && !(inSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
-                if (i != 0) {
-                    LOGGER.warn("Flow variables present in both branches will take their "
-                        + "values from the top (inactive) branch");
-                }
                 return new PortObjectSpec[]{inSpecs[i]};
             }
         }
-
         return new PortObjectSpec[]{inSpecs[0]};
     }
 
     /** {@inheritDoc} */
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
-
         for (int i = 0, l = inData.length; i < l; i++) {
             if (inData[i] != null && !(inData[i] instanceof InactiveBranchPortObject)) {
-
-                if (i != 0) {
-                    LOGGER.warn("Flow variables present in both branches will take their "
-                        + "values from the top (inactive) branch");
-                }
                 return new PortObject[]{inData[i]};
             }
         }
-
         return new PortObject[]{inData[0]};
     }
 

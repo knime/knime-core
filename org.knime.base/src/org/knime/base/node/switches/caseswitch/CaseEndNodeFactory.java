@@ -45,19 +45,33 @@
  * History
  *   Apr 28, 2008 (wiswedel): created
  */
-package org.knime.base.node.switches.caseswitchvariable.end;
+package org.knime.base.node.switches.caseswitch;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
  * @author Tim-Oliver Buchholz, KNIME Zurich
  */
-public class CaseSwitchVariableNodeFactory
-    extends NodeFactory<CaseSwitchVariableNodeModel> {
+public class CaseEndNodeFactory extends NodeFactory<CaseEndNodeModel> {
+
+    private final PortType m_mandatoryPortType;
+    private final PortType m_optionalPortType;
+
+    /**
+     * @param mandatoryPortType First inport and first outport type.
+     * @param optionalPortType 2nd and 3rd inport type - type needs to match.
+     */
+    protected CaseEndNodeFactory(final PortType mandatoryPortType, final PortType optionalPortType) {
+        CheckUtils.checkArgument(mandatoryPortType.getPortObjectClass().equals(optionalPortType.getPortObjectClass()),
+            "incompatible types: %s vs. %s", mandatoryPortType, optionalPortType);
+        m_mandatoryPortType = mandatoryPortType;
+        m_optionalPortType = optionalPortType;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -67,14 +81,13 @@ public class CaseSwitchVariableNodeFactory
 
     /** {@inheritDoc} */
     @Override
-    public CaseSwitchVariableNodeModel createNodeModel() {
-        return new CaseSwitchVariableNodeModel();
+    public CaseEndNodeModel createNodeModel() {
+        return new CaseEndNodeModel(m_mandatoryPortType, m_optionalPortType);
     }
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<CaseSwitchVariableNodeModel> createNodeView(
-            final int index, final CaseSwitchVariableNodeModel model) {
+    public NodeView<CaseEndNodeModel> createNodeView(final int index, final CaseEndNodeModel model) {
         return null;
     }
 
