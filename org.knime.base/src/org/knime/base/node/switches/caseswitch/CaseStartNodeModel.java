@@ -50,6 +50,7 @@ package org.knime.base.node.switches.caseswitch;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -58,6 +59,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -73,7 +75,7 @@ public final class CaseStartNodeModel extends NodeModel {
 
     static final String CFGKEY_SELECTEDPORT = "selected output port";
 
-    private int m_selectedOutputPort = 0;
+    private final SettingsModelIntegerBounded m_selectedPortModel = createSelectedPortModel();
 
     /** One in, three out.
      * @param portType Type of ins and outs.
@@ -86,16 +88,10 @@ public final class CaseStartNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_selectedOutputPort < 0 || m_selectedOutputPort >= 3) {
-            // Nonsense settings
-            throw new InvalidSettingsException("Selected outputport does not exists. Select a port in the range 0 - 2");
-        }
-
+        int selectedOutputPort = m_selectedPortModel.getIntValue();
         PortObjectSpec[] outSpecs = new PortObjectSpec[3];
-        for (int port = 0; port < outSpecs.length; port++) {
-            outSpecs[port] = InactiveBranchPortObjectSpec.INSTANCE;
-        }
-        outSpecs[m_selectedOutputPort] = inSpecs[0];
+        Arrays.fill(outSpecs, InactiveBranchPortObjectSpec.INSTANCE);
+        outSpecs[selectedOutputPort] = inSpecs[0];
         return outSpecs;
     }
 
@@ -103,17 +99,12 @@ public final class CaseStartNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inSpecs,
             final ExecutionContext exec) throws Exception {
-        if (m_selectedOutputPort < 0 || m_selectedOutputPort >= 3) {
-            // Nonsense settings
-            throw new InvalidSettingsException("Selected outputport does not exists. Select a port in the range 0 - 2");
-        }
+        int selectedOutputPort = m_selectedPortModel.getIntValue();
 
-        PortObject[] outSpecs = new PortObject[3];
-        for (int port = 0; port < outSpecs.length; port++) {
-            outSpecs[port] = InactiveBranchPortObject.INSTANCE;
-        }
-        outSpecs[m_selectedOutputPort] = inSpecs[0];
-        return outSpecs;
+        PortObject[] outObjects = new PortObject[3];
+        Arrays.fill(outObjects, InactiveBranchPortObject.INSTANCE);
+        outObjects[selectedOutputPort] = inSpecs[0];
+        return outObjects;
     }
 
     /** {@inheritDoc} */
@@ -123,25 +114,21 @@ public final class CaseStartNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_selectedOutputPort = settings.getInt(CFGKEY_SELECTEDPORT);
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_selectedPortModel.loadSettingsFrom(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addInt(CFGKEY_SELECTEDPORT, m_selectedOutputPort);
+        m_selectedPortModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        int i = settings.getInt(CFGKEY_SELECTEDPORT);
-        if (!(0 <= i && i <= 2)) {
-            throw new InvalidSettingsException("Selected outputport does not exists. Select a port in the range 0 - 2");
-        }
+        m_selectedPortModel.validateSettings(settings);
     }
 
     /** {@inheritDoc} */
@@ -156,5 +143,9 @@ public final class CaseStartNodeModel extends NodeModel {
     protected void saveInternals(
             final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
+    }
+
+    static SettingsModelIntegerBounded createSelectedPortModel() {
+        return new SettingsModelIntegerBounded(CFGKEY_SELECTEDPORT, 0, 0, 2);
     }
 }

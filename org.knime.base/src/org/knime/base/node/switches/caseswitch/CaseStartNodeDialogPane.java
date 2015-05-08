@@ -60,8 +60,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 final class CaseStartNodeDialogPane extends DefaultNodeSettingsPane {
 
     CaseStartNodeDialogPane() {
-        SettingsModelIntegerBounded smib =
-            new SettingsModelIntegerBounded(CaseStartNodeModel.CFGKEY_SELECTEDPORT, 0, 0, 2);
+        SettingsModelIntegerBounded smib = CaseStartNodeModel.createSelectedPortModel();
         FlowVariableModel fvm = createFlowVariableModel(smib);
         addDialogComponent(new DialogComponentNumber(smib, "Select the active port", 1, fvm));
 
