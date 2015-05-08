@@ -18,6 +18,11 @@
                 <i>End CASE</i>
                 node.
             </p>
+            <p>
+                This node is derived from the
+                <a href="https://tech.knime.org/book/vernalis-nodes-for-knime-trusted-extension">
+                Vernalis community extension</a>.
+            </p>
         </intro>
         <option name="Select active port">Select the active output port</option>
     </fullDescription>
