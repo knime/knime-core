@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,51 +44,27 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 28, 2008 (wiswedel): created
+ *   07.01.2015 (tibuch): created
  */
-package org.knime.base.node.switches.caseswitchvariable.start;
+package org.knime.base.node.switches.caseswitch;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
  *
- * @author Tim-Oliver Buchholz, KNIME Zurich
+ * @author tibuch
  */
-public class CaseSwitchVariableNodeFactory
-    extends NodeFactory<CaseSwitchVariableNodeModel> {
+final class CaseStartNodeDialogPane extends DefaultNodeSettingsPane {
 
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new CaseSwitchVariableNodeDialog();
-    }
+    CaseStartNodeDialogPane() {
+        SettingsModelIntegerBounded smib =
+            new SettingsModelIntegerBounded(CaseStartNodeModel.CFGKEY_SELECTEDPORT, 0, 0, 2);
+        FlowVariableModel fvm = createFlowVariableModel(smib);
+        addDialogComponent(new DialogComponentNumber(smib, "Select the active port", 1, fvm));
 
-    /** {@inheritDoc} */
-    @Override
-    public CaseSwitchVariableNodeModel createNodeModel() {
-        return new CaseSwitchVariableNodeModel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<CaseSwitchVariableNodeModel> createNodeView(
-            final int index, final CaseSwitchVariableNodeModel model) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
     }
 
 }

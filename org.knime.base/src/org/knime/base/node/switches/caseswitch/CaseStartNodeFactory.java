@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -44,32 +43,71 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   07.01.2015 (tibuch): created
+ *   Apr 28, 2008 (wiswedel): created
  */
-package org.knime.base.node.switches.caseswitchvariable.start;
+package org.knime.base.node.switches.caseswitch;
 
-import org.knime.core.node.FlowVariableModel;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import java.io.IOException;
+
+import org.apache.xmlbeans.XmlException;
+import org.knime.core.node.NodeDescription;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
+import org.xml.sax.SAXException;
+
 
 /**
  *
- * @author tibuch
+ * @author Tim-Oliver Buchholz, KNIME Zurich
  */
-public class CaseSwitchVariableNodeDialog extends DefaultNodeSettingsPane {
+public class CaseStartNodeFactory extends NodeFactory<CaseStartNodeModel> {
+
+    private final PortType m_portType;
+
+    /** @param portType */
+    public CaseStartNodeFactory(final PortType portType) {
+        m_portType = CheckUtils.checkArgumentNotNull(portType, "Arg must not be null");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new CaseStartNodeDialogPane();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public CaseStartNodeModel createNodeModel() {
+        return new CaseStartNodeModel(m_portType);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<CaseStartNodeModel> createNodeView(final int index, final CaseStartNodeModel model) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
 
     /**
-     *
+     * {@inheritDoc}
      */
-    public CaseSwitchVariableNodeDialog() {
-
-        super();
-        SettingsModelIntegerBounded smib =
-            new SettingsModelIntegerBounded(CaseSwitchVariableNodeModel.CFGKEY_SELECTEDPORT, 0, 0, 2);
-        FlowVariableModel fvm = createFlowVariableModel(smib);
-        addDialogComponent(new DialogComponentNumber(smib, "Select the active port", 1, fvm));
-
+    @Override
+    protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
+        return super.createNodeDescription();
     }
 
 }
