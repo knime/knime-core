@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="switches_case.png" type="Manipulator">
+<knimeNode icon="../switches_case.png" type="Manipulator">
     <name>CASE Switch Model (Start)</name>
     <shortDescription> Model (or generic port) CASE Switch to alter active branch for arbitrary port types.. 
     </shortDescription>
