@@ -47,51 +47,21 @@
  */
 package org.knime.base.node.switches.endmodelcase;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.base.node.switches.caseswitch.CaseEndNodeFactory;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 
-/**
+/** End case node for arbitrary port types. Ideally this class should be moved to
+ * org.knime.base.node.switches.caseswitch.portobject but is kept here for backward compatible reasons.
  * @author M. Berthold, University of Konstanz
  */
-public class EndmodelcaseNodeFactory 
-        extends NodeFactory<EndmodelcaseNodeModel> {
+public class EndmodelcaseNodeFactory extends CaseEndNodeFactory {
 
     /**
      * Create factory, that instantiates nodes.
      */
     public EndmodelcaseNodeFactory() {
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public EndmodelcaseNodeModel createNodeModel() {
-        return new EndmodelcaseNodeModel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<EndmodelcaseNodeModel> createNodeView(final int index,
-            final EndmodelcaseNodeModel model) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return false;
+        super(new PortType(PortObject.class), new PortType(PortObject.class, true));
     }
 
 }

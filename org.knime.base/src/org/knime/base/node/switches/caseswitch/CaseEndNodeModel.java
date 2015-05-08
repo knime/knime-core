@@ -57,18 +57,22 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
  *
  * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
  */
 final class CaseEndNodeModel extends NodeModel implements InactiveBranchConsumer {
+
+    private final SettingsModelString m_multipleActiveHandlingSettingsModel;
 
     /** 3 ins, 1 out.
      * @param mandatoryPortType Type of first in and first (and only) out.
@@ -77,28 +81,45 @@ final class CaseEndNodeModel extends NodeModel implements InactiveBranchConsumer
      */
     CaseEndNodeModel(final PortType mandatoryPortType, final PortType optionalPortType) {
         super(new PortType[]{mandatoryPortType, optionalPortType, optionalPortType}, new PortType[]{mandatoryPortType});
+        m_multipleActiveHandlingSettingsModel = createMultipleActiveHandlingSettingsModel();
     }
 
     /** {@inheritDoc} */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        PortObjectSpec result = InactiveBranchPortObjectSpec.INSTANCE;
+        MultipleActiveHandling h = MultipleActiveHandling.valueOf(
+            m_multipleActiveHandlingSettingsModel.getStringValue());
         for (int i = 0, l = inSpecs.length; i < l; i++) {
             if (inSpecs[i] != null && !(inSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
-                return new PortObjectSpec[]{inSpecs[i]};
+                if (result instanceof InactiveBranchPortObjectSpec) {
+                    result = inSpecs[i]; // only assign the first, never any subsequent
+                } else if (h.equals(MultipleActiveHandling.Fail)) {
+                    throw new InvalidSettingsException("Multiple inputs are active - causing node to fail. "
+                            + "You can change this behavior in the node configuration dialog.");
+                }
             }
         }
-        return new PortObjectSpec[]{inSpecs[0]};
+        return new PortObjectSpec[]{result};
     }
 
     /** {@inheritDoc} */
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
+        PortObject result = InactiveBranchPortObject.INSTANCE;
+        MultipleActiveHandling h = MultipleActiveHandling.valueOf(
+            m_multipleActiveHandlingSettingsModel.getStringValue());
         for (int i = 0, l = inData.length; i < l; i++) {
             if (inData[i] != null && !(inData[i] instanceof InactiveBranchPortObject)) {
-                return new PortObject[]{inData[i]};
+                if (result instanceof InactiveBranchPortObject) {
+                    result = inData[i]; // only assign the first, never any subsequent
+                } else if (h.equals(MultipleActiveHandling.Fail)) {
+                    throw new InvalidSettingsException("Multiple inputs are active - causing node to fail. "
+                            + "You can change this behavior in the node configuration dialog.");
+                }
             }
         }
-        return new PortObject[]{inData[0]};
+        return new PortObject[]{result};
     }
 
     /** {@inheritDoc} */
@@ -109,16 +130,32 @@ final class CaseEndNodeModel extends NodeModel implements InactiveBranchConsumer
     /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (settings.containsKey(m_multipleActiveHandlingSettingsModel.getKey())) {
+            m_multipleActiveHandlingSettingsModel.loadSettingsFrom(settings);
+        } else { // some nodes prior 2.12 were always failing on multiple active inputs (generic port object type)
+            m_multipleActiveHandlingSettingsModel.setStringValue(MultipleActiveHandling.Fail.getActionCommand());
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_multipleActiveHandlingSettingsModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (settings.containsKey(m_multipleActiveHandlingSettingsModel.getKey())) {
+            SettingsModelString c = (SettingsModelString)m_multipleActiveHandlingSettingsModel
+                    .createCloneWithValidatedValue(settings);
+            String value = c.getStringValue();
+            try {
+                MultipleActiveHandling.valueOf(value);
+            } catch (Exception e) {
+                throw new InvalidSettingsException("invalid constant for multiple-active handling policy: " + value);
+            }
+        }
     }
 
     /** {@inheritDoc} */
@@ -131,6 +168,57 @@ final class CaseEndNodeModel extends NodeModel implements InactiveBranchConsumer
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
+    }
+
+    /**
+     * @return the multipleActiveHandlingSettingsModel
+     */
+    public static SettingsModelString createMultipleActiveHandlingSettingsModel() {
+        return new SettingsModelString("multipleActiveHandling", MultipleActiveHandling.Fail.getActionCommand());
+    }
+
+    /** What to do when two or more inputs are active. */
+    enum MultipleActiveHandling implements ButtonGroupEnumInterface {
+
+        /** Fail the execution. */
+        Fail("Fail", "Fails during node execution if multiple inputs are active", true),
+        /** Pass on the first active input. */
+        UseFirstActive("Use first non-inactive input", "Chooses the top-most active input object", false);
+
+        private final String m_text;
+        private final String m_tooltip;
+        private final boolean m_isDefault;
+
+        MultipleActiveHandling(final String text, final String tooltip, final boolean isDefault) {
+            m_text = text;
+            m_tooltip = tooltip;
+            m_isDefault = isDefault;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String getText() {
+            return m_text;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String getActionCommand() {
+            return name();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String getToolTip() {
+            return m_tooltip;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean isDefault() {
+            return m_isDefault;
+        }
+
     }
 
 }

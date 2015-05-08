@@ -1182,16 +1182,6 @@
             id="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory">
       </node>
       <node
-            category-path="/flowcontrol/switches"
-            factory-class="org.knime.base.node.switches.caseswitchvariable.start.CaseSwitchVariableNodeFactory"
-            id="org.knime.base.node.switches.caseswitchvariable.start.CaseSwitchVariableNodeFactory">
-      </node>
-      <node
-            category-path="/flowcontrol/switches"
-            factory-class="org.knime.base.node.switches.caseswitchvariable.end.CaseSwitchVariableNodeFactory"
-            id="org.knime.base.node.switches.caseswitchvariable.end.CaseSwitchVariableNodeFactory">
-      </node>
-      <node
             after="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
@@ -1370,11 +1360,29 @@
       <node
             after="org.knime.base.node.switches.endcase.EndcaseNodeFactory"
             category-path="/flowcontrol/switches"
+            factory-class="org.knime.base.node.switches.caseswitch.model.CaseStartModelNodeFactory"
+            id="org.knime.base.node.switches.caseswitch.model.CaseStartModelNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.switches.caseswitch.model.CaseStartModelNodeFactory"
+            category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"
             id="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory">
       </node>
       <node
             after="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"
+            category-path="/flowcontrol/switches"
+            factory-class="org.knime.base.node.switches.caseswitch.variable.CaseStartVariableNodeFactory"
+            id="org.knime.base.node.switches.caseswitch.variable.CaseStartVariableNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.switches.caseswitch.variable.CaseStartVariableNodeFactory"
+            category-path="/flowcontrol/switches"
+            factory-class="org.knime.base.node.switches.caseswitch.variable.CaseEndVariableNodeFactory"
+            id="org.knime.base.node.switches.caseswitch.variable.CaseEndVariableNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.switches.caseswitch.variable.CaseEndVariableNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.emptytableswitch.EmptyTableSwitchNodeFactory"
             id="org.knime.base.node.switches.emptytableswitch.EmptyTableSwitchNodeFactory">

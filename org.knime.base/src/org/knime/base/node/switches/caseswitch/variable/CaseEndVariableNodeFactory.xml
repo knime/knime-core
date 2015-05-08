@@ -28,6 +28,11 @@
 				node.
 			</p>
         </intro>
+        <option name="If multiple inputs are active">
+            Choose the expected behavior of the node if two or more inputs are active. The default behavior is to fail
+            during executing. Alternatively you can pass on the first active input (hence ignore any subsequent active
+            port). In case all inputs are inactive the node itself will pass on an inactive object as well.
+        </option>
     </fullDescription>
     
     <ports>

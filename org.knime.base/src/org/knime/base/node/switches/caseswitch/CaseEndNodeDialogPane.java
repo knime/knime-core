@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,64 +44,23 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 28, 2008 (wiswedel): created
+ *   May 8, 2015 (wiswedel): created
  */
 package org.knime.base.node.switches.caseswitch;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 
 /**
  *
- * @author Tim-Oliver Buchholz, KNIME Zurich
+ * @author wiswedel
  */
-public class CaseEndNodeFactory extends NodeFactory<CaseEndNodeModel> {
+final class CaseEndNodeDialogPane extends DefaultNodeSettingsPane {
 
-    private final PortType m_mandatoryPortType;
-    private final PortType m_optionalPortType;
-
-    /**
-     * @param mandatoryPortType First inport and first outport type.
-     * @param optionalPortType 2nd and 3rd inport type - type needs to match.
-     */
-    protected CaseEndNodeFactory(final PortType mandatoryPortType, final PortType optionalPortType) {
-        CheckUtils.checkArgument(mandatoryPortType.getPortObjectClass().equals(optionalPortType.getPortObjectClass()),
-            "incompatible types: %s vs. %s", mandatoryPortType, optionalPortType);
-        m_mandatoryPortType = mandatoryPortType;
-        m_optionalPortType = optionalPortType;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new CaseEndNodeDialogPane();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public CaseEndNodeModel createNodeModel() {
-        return new CaseEndNodeModel(m_mandatoryPortType, m_optionalPortType);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<CaseEndNodeModel> createNodeView(final int index, final CaseEndNodeModel model) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    CaseEndNodeDialogPane() {
+        addDialogComponent(new DialogComponentButtonGroup(
+            CaseEndNodeModel.createMultipleActiveHandlingSettingsModel(),
+            "If multiple inputs are active", true, CaseEndNodeModel.MultipleActiveHandling.values()));
     }
 
 }
