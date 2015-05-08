@@ -59,6 +59,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -73,9 +74,9 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
  */
 public final class CaseStartNodeModel extends NodeModel {
 
-    static final String CFGKEY_SELECTEDPORT = "selected output port";
-
     private final SettingsModelIntegerBounded m_selectedPortModel = createSelectedPortModel();
+    private final SettingsModelBoolean m_activateAllOutputsDuringConfigureModel =
+            createActivateAllOutputsDuringConfigureModel();
 
     /** One in, three out.
      * @param portType Type of ins and outs.
@@ -90,7 +91,9 @@ public final class CaseStartNodeModel extends NodeModel {
             throws InvalidSettingsException {
         int selectedOutputPort = m_selectedPortModel.getIntValue();
         PortObjectSpec[] outSpecs = new PortObjectSpec[3];
-        Arrays.fill(outSpecs, InactiveBranchPortObjectSpec.INSTANCE);
+        PortObjectSpec defOutput = m_activateAllOutputsDuringConfigureModel.getBooleanValue()
+                ? inSpecs[0] : InactiveBranchPortObjectSpec.INSTANCE;
+        Arrays.fill(outSpecs, defOutput);
         outSpecs[selectedOutputPort] = inSpecs[0];
         return outSpecs;
     }
@@ -116,12 +119,14 @@ public final class CaseStartNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_selectedPortModel.loadSettingsFrom(settings);
+        m_activateAllOutputsDuringConfigureModel.loadSettingsFrom(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_selectedPortModel.saveSettingsTo(settings);
+        m_activateAllOutputsDuringConfigureModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -129,6 +134,7 @@ public final class CaseStartNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_selectedPortModel.validateSettings(settings);
+        m_activateAllOutputsDuringConfigureModel.validateSettings(settings);
     }
 
     /** {@inheritDoc} */
@@ -146,6 +152,10 @@ public final class CaseStartNodeModel extends NodeModel {
     }
 
     static SettingsModelIntegerBounded createSelectedPortModel() {
-        return new SettingsModelIntegerBounded(CFGKEY_SELECTEDPORT, 0, 0, 2);
+        return new SettingsModelIntegerBounded("active_outport", 0, 0, 2);
+    }
+
+    static SettingsModelBoolean createActivateAllOutputsDuringConfigureModel() {
+        return new SettingsModelBoolean("activate_all_outputs_during_configure", true);
     }
 }

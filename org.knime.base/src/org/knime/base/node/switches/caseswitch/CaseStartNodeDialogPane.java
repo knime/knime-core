@@ -50,7 +50,9 @@ package org.knime.base.node.switches.caseswitch;
 
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
@@ -64,6 +66,12 @@ final class CaseStartNodeDialogPane extends DefaultNodeSettingsPane {
         FlowVariableModel fvm = createFlowVariableModel(smib);
         addDialogComponent(new DialogComponentNumber(smib, "Select the active port", 1, fvm));
 
+        SettingsModelBoolean activateAllOutputsDuringConfigureModel =
+                CaseStartNodeModel.createActivateAllOutputsDuringConfigureModel();
+        final DialogComponentBoolean diaC = new DialogComponentBoolean(activateAllOutputsDuringConfigureModel,
+            "Activate all outputs during configuration step");
+        diaC.setToolTipText("Enable during design time, disable for production workflows");
+        addDialogComponent(diaC);
     }
 
 }
