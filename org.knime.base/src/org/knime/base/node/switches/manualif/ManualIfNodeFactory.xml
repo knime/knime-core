@@ -12,6 +12,13 @@
 			This node passes the data either to the top, bottom, or both
 			output ports, depending on the configuration.
         </intro>
+        <option name="Activate all outputs during configuration step">
+            When set the node will keep all outputs active during workflow configuration (that is, while
+            the traffic light of the node is 'yellow'). This allows the configuration of connected downstream nodes and
+            simplifies the workflow design at the expense of additional configuration calls of nodes that are later on
+            inactive. It's recommended to switch this flag off for production workflows as this avoids unnecessary
+            configuration calls of the inactive branches.
+        </option>
     </fullDescription>
     
     <ports>

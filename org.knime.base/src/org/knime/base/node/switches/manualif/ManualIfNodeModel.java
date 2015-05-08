@@ -57,6 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -71,11 +72,12 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
  */
 public class ManualIfNodeModel extends NodeModel {
 
-//    private static final NodeLogger LOGGER = NodeLogger
-//            .getLogger(PMMLWriterNodeModel.class);
+    private static final String ACTIVATE_OUTPUT_CFG = "activate_all_outputs_during_configure";
 
-    private final SettingsModelString m_choice = ManualIfNodeDialog
-            .createChoiceModel();
+    private final SettingsModelString m_choice = createChoiceModel();
+
+    private final SettingsModelBoolean m_activateAllOutputsDuringConfigureModel =
+            createActivateAllOutputsDuringConfigureModel();
 
     /**
      * One input, two outputs.
@@ -93,10 +95,11 @@ public class ManualIfNodeModel extends NodeModel {
         PortObjectSpec[] outSpecs = new PortObjectSpec[2];
         outSpecs[0] = inSpecs[0];
         outSpecs[1] = inSpecs[0];
-        if (m_choice.getStringValue().equals(ManualIfNodeDialog.TOP)) {
+        boolean v = m_activateAllOutputsDuringConfigureModel.getBooleanValue();
+        if (!v && m_choice.getStringValue().equals(ManualIfNodeDialog.TOP)) {
             outSpecs[1] = InactiveBranchPortObjectSpec.INSTANCE;
         }
-        if (m_choice.getStringValue().equals(ManualIfNodeDialog.BOTTOM)) {
+        if (!v && m_choice.getStringValue().equals(ManualIfNodeDialog.BOTTOM)) {
             outSpecs[0] = InactiveBranchPortObjectSpec.INSTANCE;
         }
         return outSpecs;
@@ -137,6 +140,9 @@ public class ManualIfNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_choice.validateSettings(settings);
+        if (settings.containsKey(ACTIVATE_OUTPUT_CFG)) { // added in 2.12
+            m_activateAllOutputsDuringConfigureModel.validateSettings(settings);
+        }
     }
 
     /**
@@ -146,6 +152,11 @@ public class ManualIfNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_choice.loadSettingsFrom(settings);
+        if (settings.containsKey(ACTIVATE_OUTPUT_CFG)) { // added 2.12
+            m_activateAllOutputsDuringConfigureModel.loadSettingsFrom(settings);
+        } else {
+            m_activateAllOutputsDuringConfigureModel.setBooleanValue(false);
+        }
     }
 
     /**
@@ -172,6 +183,15 @@ public class ManualIfNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_choice.saveSettingsTo(settings);
+        m_activateAllOutputsDuringConfigureModel.saveSettingsTo(settings);
     }
+
+   static SettingsModelString createChoiceModel() {
+       return new SettingsModelString("PortChoice", "");
+   }
+
+   static SettingsModelBoolean createActivateAllOutputsDuringConfigureModel() {
+       return new SettingsModelBoolean(ACTIVATE_OUTPUT_CFG, true);
+   }
 
 }

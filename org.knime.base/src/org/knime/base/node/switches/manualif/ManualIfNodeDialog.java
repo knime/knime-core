@@ -45,8 +45,9 @@
 package org.knime.base.node.switches.manualif;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
  * @author M. Berthold, University of Konstanz
@@ -63,16 +64,17 @@ public class ManualIfNodeDialog extends DefaultNodeSettingsPane {
      *
      */
     public ManualIfNodeDialog() {
-        addDialogComponent(new DialogComponentButtonGroup(createChoiceModel(),
+        addDialogComponent(new DialogComponentButtonGroup(ManualIfNodeModel.createChoiceModel(),
                 false, "Choose Active Port:", BOTH, BOTTOM, TOP));
+
+        SettingsModelBoolean activateAllOutputsDuringConfigureModel =
+                ManualIfNodeModel.createActivateAllOutputsDuringConfigureModel();
+        final DialogComponentBoolean diaC = new DialogComponentBoolean(activateAllOutputsDuringConfigureModel,
+            "Activate all outputs during configuration step");
+        diaC.setToolTipText("Enable during design time, disable for production workflows");
+        addDialogComponent(diaC);
     }
 
-    /**
-     *
-     * @return name of PMML file model
-     */
-    static SettingsModelString createChoiceModel() {
-        return new SettingsModelString("PortChoice", "");
-    }
+
 
 }

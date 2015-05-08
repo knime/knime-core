@@ -12,8 +12,14 @@
         This nodes takes the table from the input port and moves it
         to exactly one active output branch.
         </intro>
+        <option name="Activate all outputs during configuration step">
+            When set the node will keep all outputs active during workflow configuration (that is, while
+            the traffic light of the node is 'yellow'). This allows the configuration of connected downstream nodes and
+            simplifies the workflow design at the expense of additional configuration calls of nodes that are later on
+            inactive. It's recommended to switch this flag off for production workflows as this avoids unnecessary
+            configuration calls of the inactive branches.
+        </option>
     </fullDescription>
-    
     <ports>
         <inPort index="0" name="Input">Input.</inPort>
         <outPort index="0" name="First Output">The first output (case 0).</outPort>

@@ -48,7 +48,9 @@ import java.util.Arrays;
 
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -62,20 +64,19 @@ public class StartcaseNodeDialog extends DefaultNodeSettingsPane {
      *
      */
     public StartcaseNodeDialog() {
-        SettingsModelString smfs = createChoiceModel();
+        SettingsModelString smfs = StartcaseNodeModel.createChoiceModel();
         FlowVariableModel fvm = createFlowVariableModel(smfs);
-        
+
         addDialogComponent(new DialogComponentStringSelection(
                 smfs, "Choose Active Port:",
                 Arrays.asList(options), false, fvm));
-    }
 
-    /**
-     *
-     * @return name of PMML file model
-     */
-    static SettingsModelString createChoiceModel() {
-        return new SettingsModelString("PortIndex", "0");
+        SettingsModelBoolean activateAllOutputsDuringConfigureModel =
+                StartcaseNodeModel.createActivateAllOutputsDuringConfigureModel();
+        final DialogComponentBoolean diaC = new DialogComponentBoolean(activateAllOutputsDuringConfigureModel,
+            "Activate all outputs during configuration step");
+        diaC.setToolTipText("Enable during design time, disable for production workflows");
+        addDialogComponent(diaC);
     }
 
 }
