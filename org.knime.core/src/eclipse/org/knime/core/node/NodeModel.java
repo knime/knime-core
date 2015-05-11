@@ -678,10 +678,21 @@ public abstract class NodeModel {
     }
 
     /**
-     * Execute method for general port types. The argument objects represent the input objects and are guaranteed to be
-     * subclasses of the {@link PortObject PortObject classes} that are defined through the {@link PortType PortTypes}
-     * given in the {@link NodeModel#NodeModel(PortType[], PortType[]) constructor}. Similarly, the returned output
-     * objects need to comply with their port types object class (otherwise an error is reported by the framework).
+     * Execute method for general port types. The argument <code>inObjects</code> represent the input objects and the
+     * returned array represents the output objects. The elements in the argument array are generally guaranteed to be
+     * not null and subclasses of the {@link PortObject PortObject classes} that are defined through the
+     * {@link PortType PortTypes} given in the {@link NodeModel#NodeModel(PortType[], PortType[]) constructor}.
+     * Similarly, the returned output objects need to comply with their port types object class (otherwise an error is
+     * reported by the framework) and must not be null. There are few exceptions to these rules:
+     * <ul>
+     * <li>Nodes with optional inputs (as specified in the constructor) may find null elements in the array.</li>
+     * <li>Node that implement {@link InactiveBranchConsumer} may find instances of {@link InactiveBranchPortObject} in
+     * case the corresponding input is inactive.</li>
+     * <li>All nodes are allowed to return {@link InactiveBranchPortObject} elements in case the output should be
+     * inactivated.</li>
+     * <li>Loop end nodes may return null in case they restart the loop by setting the {@link #continueLoop()
+     * corresponding flags}.</li>
+     * </ul>
      *
      * <p>
      * For a general description of the execute method refer to the description of the specialized
@@ -729,12 +740,13 @@ public abstract class NodeModel {
 
     /**
      * This function is invoked by the <code>Node#executeNode()</code> method of the node (through the
-     * <code>#executeModel(BufferedDataTable[],ExecutionMonitor)</code> method)only after all predecessor nodes have
+     * <code>#executeModel(BufferedDataTable[],ExecutionMonitor)</code> method) only after all predecessor nodes have
      * been successfully executed and all data is therefore available at the input ports. Implement this function with
      * your task in the derived model.
      * <p>
      * The input data is available in the given array argument <code>inData</code> and is ensured to be neither
-     * <code>null</code> nor contain <code>null</code> elements.
+     * <code>null</code> nor contain <code>null</code> elements (with few non-standard exception, which are described in
+     * more detail in {@link #execute(PortObject[], ExecutionContext)}).
      *
      * <p>
      * In order to create output data, you need to create objects of class <code>BufferedDataTable</code>. Use the
@@ -1034,9 +1046,12 @@ public abstract class NodeModel {
     /**
      * Configure method for general port types. The argument specs represent the input object specs and are guaranteed
      * to be subclasses of the {@link PortObjectSpec PortObjectSpecs} that are defined through the {@link PortType
-     * PortTypes} given in the {@link NodeModel#NodeModel(PortType[], PortType[]) constructor}. Similarly, the returned
-     * output specs need to comply with their port types spec class (otherwise an error is reported by the framework).
-     * They may also be null.
+     * PortTypes} given in the {@link NodeModel#NodeModel(PortType[], PortType[]) constructor} unless this model is an
+     * {@link InactiveBranchConsumer} (most nodes are not). Similarly, the returned output specs need to comply with
+     * their port types spec class (otherwise an error is reported by the framework). They may also be null (out spec
+     * not known at time of configuration) or
+     * {@linkplain org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec inactive} (output and downstream
+     * nodes are inactive).
      *
      * <p>
      * For a general description of the configure method refer to the description of the specialized
@@ -1045,7 +1060,8 @@ public abstract class NodeModel {
      * @param inSpecs The input data table specs. Items of the array could be null if no spec is available from the
      *            corresponding input port (i.e. not connected or upstream node does not produce an output spec). If a
      *            port is of type {@link BufferedDataTable#TYPE} and no spec is available the framework will replace
-     *            null by an empty {@link DataTableSpec} (no columns) unless the port is marked as optional.
+     *            null by an empty {@link DataTableSpec} (no columns) unless the port is marked as optional as per
+     *            constructor.
      * @return The output objects specs or null.
      * @throws InvalidSettingsException If this node can't be configured.
      */
@@ -1071,17 +1087,22 @@ public abstract class NodeModel {
     }
 
     /**
-     * This function is called whenever the derived model should re-configure its output DataTableSpecs. Based on the
-     * given input data table spec(s) and the current model's settings, the derived model has to calculate the output
-     * data table spec and return them.
+     * This function is called whenever the derived model should re-configure and generate the expected output specs.
+     * Based on the given input data table spec(s) and the current model's settings, the derived model has to calculate
+     * the output data table spec and return them.
      * <p>
-     * The passed DataTableSpec elements are never <code>null</code> but can be empty. The model may return
-     * <code>null</code> data table spec(s) for the outputs. But still, the model may be in an executable state. Note,
-     * after the model has been executed this function will not be called anymore, as the output DataTableSpecs are then
-     * being pulled from the output DataTables. A derived <code>NodeModel</code> that cannot provide any DataTableSpecs
-     * at its outputs before execution (because the table structure is unknown at this point) can return an array
-     * containing just <code>null</code> elements.
+     * For ordinary(*) nodes the passed DataTableSpec elements are never <code>null</code> but can be empty. The model
+     * may return <code>null</code> data table spec(s) for the outputs. Note, after the model has been executed this
+     * function will not be called anymore, as the output DataTableSpecs are then being pulled from the output
+     * DataTables. A derived <code>NodeModel</code> that cannot provide any DataTableSpecs at its outputs before
+     * execution (because the table structure is unknown at this point) can return an array containing just
+     * <code>null</code> elements. As an example consider a "Transpose" node that flips columns to rows -- there is no
+     * way to determine the table spec at time of configuration as the number of rows (which is the number of new
+     * columns at the output) is unknown though the node is still executable.
      *
+     * <p>
+     * (*)For nodes that support optional inputs or may have inactive outputs it's better to override
+     * {@link #configure(PortObjectSpec[])}.
      * <p>
      * Implementation note: This method is called from the {@link #configure(PortObjectSpec[])} method unless that
      * method is overwritten.
