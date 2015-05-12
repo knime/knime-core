@@ -83,8 +83,8 @@ public class UniqueConcatenateWithCountOperator
     public UniqueConcatenateWithCountOperator(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Unique concatenate with count", true, false,
-                DataValue.class, false), globalSettings, opColSettings);
+        this(new OperatorData("Unique concatenate with count", "Unique concatenate with count(deprecated)",
+            "Unique concatenate with count", true, false, DataValue.class, false), globalSettings, opColSettings);
     }
 
     /**Constructor for class UniqueConcatenateWithCountOperator.

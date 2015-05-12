@@ -70,6 +70,7 @@ public class AndElementOperator extends AggregationOperator {
 
     private final Set<DataCell> m_vals;
     private boolean m_first = true;
+    private boolean m_containsMissing = false;
 
     /**Constructor for class AndElementOperator.
      * @param operatorData the operator data
@@ -92,7 +93,7 @@ public class AndElementOperator extends AggregationOperator {
      */
     public AndElementOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Intersection", true, false,
+        this(new OperatorData("Intersection_2.12", "Intersection", "Intersection", true, false,
                 CollectionDataValue.class, true), globalSettings,
                 opColSettings);
     }
@@ -120,25 +121,31 @@ public class AndElementOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (cell instanceof CollectionDataValue) {
-            //missing cells are skipped
-            final CollectionDataValue collectionCell = (CollectionDataValue)cell;
-            final Set<DataCell> valCells = new HashSet<>(collectionCell.size());
-            for (final DataCell valCell : collectionCell) {
-                valCells.add(valCell);
-            }
-            if (m_first) {
-                //we have to check this only for the first set since the result
-                //can't get bigger
-                if (valCells.size() >= getMaxUniqueValues()) {
-                    setSkipMessage("Group contains too many unique values");
-                    return true;
+        if (cell.isMissing()) {
+            m_vals.clear();
+            m_containsMissing = true;
+            m_first = false;
+        } else if (m_first || !m_vals.isEmpty()) {
+            if (cell instanceof CollectionDataValue) {
+                //missing cells are skipped
+                final CollectionDataValue collectionCell = (CollectionDataValue)cell;
+                final Set<DataCell> valCells = new HashSet<>(collectionCell.size());
+                for (final DataCell valCell : collectionCell) {
+                    valCells.add(valCell);
                 }
-                m_vals.addAll(valCells);
-                m_first = false;
-            } else {
-                //keep only the matching ones
-                m_vals.retainAll(valCells);
+                if (m_first) {
+                    //we have to check this only for the first set since the result
+                    //can't get bigger
+                    if (valCells.size() >= getMaxUniqueValues()) {
+                        setSkipMessage("Group contains too many unique values");
+                        return true;
+                    }
+                    m_vals.addAll(valCells);
+                    m_first = false;
+                } else {
+                    //keep only the matching ones
+                    m_vals.retainAll(valCells);
+                }
             }
         }
         return false;
@@ -157,6 +164,9 @@ public class AndElementOperator extends AggregationOperator {
      */
     @Override
     protected DataCell getResultInternal() {
+        if (m_containsMissing) {
+            return DataType.getMissingCell();
+        }
         return CollectionCellFactory.createSetCell(m_vals);
     }
 
@@ -167,6 +177,7 @@ public class AndElementOperator extends AggregationOperator {
     protected void resetInternal() {
         m_vals.clear();
         m_first = true;
+        m_containsMissing = false;
     }
 
     /**

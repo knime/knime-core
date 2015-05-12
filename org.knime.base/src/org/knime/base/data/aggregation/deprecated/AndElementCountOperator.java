@@ -43,7 +43,7 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.collection;
+package org.knime.base.data.aggregation.deprecated;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
@@ -60,7 +60,9 @@ import org.knime.core.data.def.IntCell;
  * the intersection of all elements.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.12
  */
+@Deprecated
 public class AndElementCountOperator extends AndElementOperator {
 
     /**Constructor for class AndElementCountOperator.
@@ -69,7 +71,7 @@ public class AndElementCountOperator extends AndElementOperator {
      */
     public AndElementCountOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        super(new OperatorData("Intersection count_2.12", "Intersection count", "Intersection count", true, false,
+        super(new OperatorData("Intersection count", "Intersection count(deprecated)", "Intersection count", true, false,
                 CollectionDataValue.class, true), globalSettings,
                 opColSettings);
     }

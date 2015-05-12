@@ -359,6 +359,12 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
         //methods changed in KNIME version 2.5.2
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.SumOperator(GlobalSettings.DEFAULT,
                         OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+
+        //methods changed in KNIME version 2.12.0
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.AndElementOperator(GlobalSettings.DEFAULT,
+                        OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.AndElementCountOperator(
+            GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
     }
 
     /**

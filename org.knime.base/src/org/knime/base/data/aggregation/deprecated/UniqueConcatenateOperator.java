@@ -77,7 +77,7 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      */
     public UniqueConcatenateOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Unique concatenate", true, false,
+        this(new OperatorData("Unique concatenate", "Unique concatenate(deprecated)", "Unique concatenate", true, false,
                 DataValue.class, false), globalSettings, opColSettings);
     }
 

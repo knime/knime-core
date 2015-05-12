@@ -49,7 +49,6 @@ import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -88,7 +87,7 @@ public class SumOperator extends AggregationOperator {
      */
     public SumOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Sum", false, false, DoubleValue.class, false),
+        this(new OperatorData("Sum", "Sum(deprecated)", "Sum", false, false, DoubleValue.class, false),
                 globalSettings, opColSettings);
     }
 

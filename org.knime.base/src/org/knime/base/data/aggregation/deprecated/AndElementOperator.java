@@ -43,7 +43,13 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.collection;
+package org.knime.base.data.aggregation.deprecated;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
@@ -51,25 +57,44 @@ import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.def.IntCell;
+import org.knime.core.data.collection.SetCell;
 
 
 /**
- * Collection operator that counts the number of elements in
- * the intersection of all elements.
- *
+ * Collection operator that returns the intersection of all elements.
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.12
  */
-public class AndElementCountOperator extends AndElementOperator {
+@Deprecated
+public class AndElementOperator extends AggregationOperator {
 
-    /**Constructor for class AndElementCountOperator.
+    private final Set<DataCell> m_vals;
+    private boolean m_first = true;
+
+    /**Constructor for class AndElementOperator.
+     * @param operatorData the operator data
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    public AndElementCountOperator(final GlobalSettings globalSettings,
+    protected AndElementOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        super(new OperatorData("Intersection count_2.12", "Intersection count", "Intersection count", true, false,
+        super(operatorData, globalSettings, opColSettings);
+        try {
+            m_vals = new LinkedHashSet<>(getMaxUniqueValues());
+        } catch (final OutOfMemoryError e) {
+            throw new IllegalArgumentException("Maximum unique values number to big");
+        }
+    }
+
+    /**Constructor for class AndElementOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public AndElementOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Intersection", "Intersection(deprecated)", "Intersection", true, false,
                 CollectionDataValue.class, true), globalSettings,
                 opColSettings);
     }
@@ -81,7 +106,7 @@ public class AndElementCountOperator extends AndElementOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new AndElementCountOperator(globalSettings, opColSettings);
+        return new AndElementOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**
@@ -89,7 +114,44 @@ public class AndElementCountOperator extends AndElementOperator {
      */
     @Override
     protected DataType getDataType(final DataType origType) {
-        return IntCell.TYPE;
+        return SetCell.getCollectionType(origType.getCollectionElementType());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean computeInternal(final DataCell cell) {
+        if (cell instanceof CollectionDataValue) {
+            //missing cells are skipped
+            final CollectionDataValue collectionCell = (CollectionDataValue)cell;
+            final Set<DataCell> valCells = new HashSet<>(collectionCell.size());
+            for (final DataCell valCell : collectionCell) {
+                valCells.add(valCell);
+            }
+            if (m_first) {
+                //we have to check this only for the first set since the result
+                //can't get bigger
+                if (valCells.size() >= getMaxUniqueValues()) {
+                    setSkipMessage("Group contains too many unique values");
+                    return true;
+                }
+                m_vals.addAll(valCells);
+                m_first = false;
+            } else {
+                //keep only the matching ones
+                m_vals.retainAll(valCells);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return the values that have been collected so far as
+     * an unmodifiable collection
+     */
+    protected Collection<DataCell> getValues() {
+        return Collections.unmodifiableCollection(m_vals);
     }
 
     /**
@@ -97,7 +159,16 @@ public class AndElementCountOperator extends AndElementOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        return new IntCell(getValues().size());
+        return CollectionCellFactory.createSetCell(m_vals);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void resetInternal() {
+        m_vals.clear();
+        m_first = true;
     }
 
     /**
@@ -105,8 +176,7 @@ public class AndElementCountOperator extends AndElementOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates an IntCell that contains the size of the intersection of all collection elements per group. "
-        + "Only elements that are present in all collections count.";
+        return "Creates a SetCell that contains the intersection of all collection elements per group."
+                + " Only elements that are present in all collections are kept.";
     }
-
 }
