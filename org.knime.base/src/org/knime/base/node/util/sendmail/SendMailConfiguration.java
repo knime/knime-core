@@ -639,8 +639,6 @@ final class SendMailConfiguration {
 
         List<File> tempDirs = new ArrayList<File>();
         Transport t = null;
-        // read file type map before setting context class loader as mime.types is located in this plug-in
-        FileTypeMap defaultFileTypeMap = FileTypeMap.getDefaultFileTypeMap();
         ClassLoader oldContextClassLoader = Thread.currentThread().getContextClassLoader();
         // make sure to set class loader to javax.mail - this has caused problems in the past, see bug 5316
         Thread.currentThread().setContextClassLoader(Session.class.getClassLoader());
@@ -671,7 +669,7 @@ final class SendMailConfiguration {
                 // java 7u7 is missing mimemtypes.default file:
                 // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7096063
                 // find mime type in this bundle (META-INF folder contains mime.types) and set it
-                filePart.setHeader("Content-Type", defaultFileTypeMap.getContentType(file));
+                filePart.setHeader("Content-Type", FileTypeMap.getDefaultFileTypeMap().getContentType(file));
                 mp.addBodyPart(filePart);
             }
 

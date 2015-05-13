@@ -49,10 +49,17 @@ package org.knime.core.internal;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 
+import javax.activation.FileTypeMap;
+import javax.activation.MimetypesFileTypeMap;
+
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -104,6 +111,20 @@ public class CorePlugin implements BundleActivator {
             Class.forName("org.eclipse.ecf.filetransfer.IFileTransfer");
         } catch (ClassNotFoundException e) {
             // this may happen in a non-Eclipse OSGi environment
+        }
+
+        readMimeTypes();
+    }
+
+
+    private void readMimeTypes() throws IOException {
+        Bundle utilBundle = Platform.getBundle("org.knime.core.util");
+        URL mimeFile = utilBundle.getResource("META-INF/mime.types");
+        if (mimeFile != null) {
+            try (InputStream is = mimeFile.openStream()) {
+                MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap(is);
+                FileTypeMap.setDefaultFileTypeMap(mimeMap);
+            }
         }
     }
 
