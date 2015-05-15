@@ -57,10 +57,12 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceData;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.util.CLibrary;
 import org.knime.core.util.MutableBoolean;
 import org.knime.product.ProductPlugin;
 import org.knime.product.p2.RepositoryUpdater;
+import org.knime.workbench.core.util.ImageRepository;
 
 /**
  * This class controls all aspects of the application's execution.
@@ -112,6 +114,11 @@ public class KNIMEApplication implements IApplication {
                 shell.dispose();
             }
             parseApplicationArguments(appContext);
+
+            // initialize common classes early in order to avoid deadlocks
+            NodeLogger.class.getName();
+            ImageRepository.class.getName();
+
             RepositoryUpdater.INSTANCE.addDefaultRepositories();
             RepositoryUpdater.INSTANCE.updateArtifactRepositoryURLs();
 
