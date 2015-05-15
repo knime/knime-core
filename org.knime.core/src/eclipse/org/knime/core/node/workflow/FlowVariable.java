@@ -369,7 +369,7 @@ public final class FlowVariable extends FlowObject {
         boolean valueEqual;
         switch (getType()) {
         case DOUBLE:
-            valueEqual = v.getDoubleValue() == getDoubleValue();
+            valueEqual = Double.compare(v.getDoubleValue(), getDoubleValue()) == 0;
             break;
         case INTEGER:
             valueEqual = v.getIntValue() == getIntValue();
