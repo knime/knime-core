@@ -20,19 +20,19 @@
  */
 package org.knime.core.node.dialog;
 
-import javax.json.JsonObject;
 
-/** (Temporary) interface to mark nodes that produce JSON to be returned to a web service caller.
+/**
+ * Interface for nodes that produce results that can be queried externally, e.g. web services.
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.12
- * @noimplement This interface is not intended to be implemented by clients.
+ * @noimplement This interface is not intended to be implemented by clients, it may change without notice
  */
-public interface JSONOutputNode {
-
-    /** @return parameter name of node in result, see {@link DialogNode#getParameterName()}. */
-    public String getParameterName();
-    /** The JSON result. Method is only to be called after workflow completed execution (node is executed).
-     * @return JSON result, not null but possibly empty.*/
-    public JsonObject getJSONObject();
-
+public interface OutputNode {
+    /**
+     * Returns an object representing the node's external output.
+     * @return an external output, never <code>null</code>
+     */
+    public ExternalNodeOutput getExternalOutput();
 }

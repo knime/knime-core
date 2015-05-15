@@ -117,8 +117,9 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodeValue;
-import org.knime.core.node.dialog.JSONOutputNode;
+import org.knime.core.node.dialog.ExternalNodeOutput;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
+import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
@@ -9023,26 +9024,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Receive output from workflow by means of {@link org.knime.core.node.dialog.JSONOutputNode}. Calling
-     * this method on a non-fully executed workflow causes an exception to be thrown.
+    /**
+     * Receive output from workflow by means of {@link org.knime.core.node.dialog.OutputNode}. Calling this method on a
+     * non-fully executed workflow causes an exception to be thrown.
+     *
      * @return A map from node's parameter name to its JSON object result.
      * @since 2.12
      */
-    public Map<String, JsonObject> getOutputNodes() {
-        Map<String, JsonObject> result = new LinkedHashMap<>();
+    public Map<String, ExternalNodeOutput> getExternalOutputs() {
+        Map<String, ExternalNodeOutput> result = new LinkedHashMap<>();
         synchronized (getWorkflowMutex()) {
             CheckUtils.checkState(getNodeContainerState().isExecuted(), "Workflow not completely executed");
-            Map<NodeID, JSONOutputNode> nodeMap = findNodes(JSONOutputNode.class, false);
-            for (Map.Entry<NodeID, JSONOutputNode> e : nodeMap.entrySet()) {
-                JSONOutputNode jsonOutNode = e.getValue();
-                String parameterName = StringUtils.defaultString(jsonOutNode.getParameterName());
+            Map<NodeID, OutputNode> nodeMap = findNodes(OutputNode.class, false);
+            for (Map.Entry<NodeID, OutputNode> e : nodeMap.entrySet()) {
+                ExternalNodeOutput externalOutput = e.getValue().getExternalOutput();
+
+                String parameterName = StringUtils.defaultString(externalOutput.getID());
                 parameterName = (parameterName.isEmpty() ? "" : (parameterName + "-"))
                         + Integer.toString(e.getKey().getIndex());
-                JsonObject jsonObject = jsonOutNode.getJSONObject();
-                if (jsonObject == null) {
-                    jsonObject = Json.createObjectBuilder().build();
-                }
-                result.put(parameterName, jsonObject);
+                result.put(parameterName, externalOutput);
             }
             return result;
         }
