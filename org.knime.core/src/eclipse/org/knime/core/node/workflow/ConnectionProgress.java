@@ -45,6 +45,9 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.function.Supplier;
+
+
 /**
  * Contained in a {@link ConnectionProgressEvent} which is fired when the
  * progress information has changed.
@@ -53,7 +56,7 @@ public final class ConnectionProgress {
 
     private final boolean m_inProgress;
 
-    private final String m_message;
+    private final Supplier<String> m_messageSupplier;
 
     /**
      * Create a progress event based on progress value and message.
@@ -63,8 +66,20 @@ public final class ConnectionProgress {
      *            nothing)
      */
     public ConnectionProgress(final boolean inProgress, final String message) {
+        this(inProgress, () -> message);
+    }
+
+    /**
+     * Create a progress event based on progress value and message supplier. The supplier is only evaluated if
+     * the event is processed by the UI (avoids storm of string creation, possibly synced on number formats).
+     *
+     * @param inProgress true if currently in-progress.
+     * @param messageSupplier the message supplier to display (or <code>null</code> to display nothing)
+     * @since 2.12
+     */
+    public ConnectionProgress(final boolean inProgress, final Supplier<String> messageSupplier) {
         m_inProgress = inProgress;
-        m_message = message;
+        m_messageSupplier = messageSupplier;
     }
 
     /**
@@ -83,7 +98,7 @@ public final class ConnectionProgress {
      * @return current progress message or <code>null</code> to display nothing.
      */
     public String getMessage() {
-        return m_message;
+        return m_messageSupplier.get();
     }
 
     /**
@@ -92,7 +107,7 @@ public final class ConnectionProgress {
      * @return whether there is currently a message to display.
      */
     public boolean hasMessage() {
-        return m_message != null;
+        return m_messageSupplier != null && m_messageSupplier.get() != null;
     }
 
 }

@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="2.12.0"/>
+                <message_argument value="2.11.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605.TypeSystemHolder">
         <filter id="305365105">
             <message_arguments>
@@ -115,11 +123,34 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/streamable/PortInput.java" type="org.knime.core.node.streamable.PortInput">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.streamable.PortInput"/>
+                <message_argument value="getSpec()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ExecutionEnvironment.java" type="org.knime.core.node.workflow.ExecutionEnvironment">
+        <filter id="337768515">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ExecutionEnvironment"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
                 <message_argument value="findJobManager()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeContainerExecutionStatus.java" type="org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus"/>
+                <message_argument value="newFailure(String)"/>
             </message_arguments>
         </filter>
     </resource>

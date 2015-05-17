@@ -48,6 +48,7 @@
 package org.knime.core.node.streamable;
 
 import org.knime.core.data.DataRow;
+import org.knime.core.node.BufferedDataTable;
 
 /**
  * Output of a sequence of rows. See description of super class when the output
@@ -67,10 +68,25 @@ public abstract class RowOutput extends PortOutput {
      */
     public abstract void push(final DataRow row) throws InterruptedException;
 
+    /** Fully sets the table and closes the output. Only valid to call if no other rows were added previously through
+     * {@link #push(DataRow)}.
+     * @param table The non-null table to set.
+     * @throws InterruptedException If canceled while offering data to downstream nodes.
+     * @throws IllegalStateException If rows were added previously.
+     * @since 2.12
+     */
+    public void setFully(final BufferedDataTable table) throws InterruptedException {
+        for (DataRow r : table) {
+            push(r);
+        }
+        close();
+    }
+
     /**
      * To be called by the client to signal the end of the data stream. No more
      * rows will be added.
+     * @throws InterruptedException If canceled.
      */
-    public abstract void close();
+    public abstract void close() throws InterruptedException;
 
 }

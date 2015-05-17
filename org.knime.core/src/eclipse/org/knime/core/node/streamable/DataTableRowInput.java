@@ -60,14 +60,14 @@ import org.knime.core.node.BufferedDataTable;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.6
  */
-public final class DataTableRowInput extends RowInput {
+public class DataTableRowInput extends RowInput {
 
     private final DataTableSpec m_tableSpec;
     private final RowIterator m_iterator;
     private final long m_rowCount;
 
     /** Initialize with table.
-     * @param The table to read from.  */
+     * @param table The table to read from. */
     public DataTableRowInput(final DataTable table) {
         m_tableSpec = table.getDataTableSpec();
         m_iterator = table.iterator();

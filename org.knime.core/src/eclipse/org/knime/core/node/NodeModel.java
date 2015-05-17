@@ -1732,11 +1732,15 @@ public abstract class NodeModel {
                 }
                 // add flow variable port and remove it later from result - executeModel expects it
                 PortObject[] extendedInData = ArrayUtils.add(inObjects, 0, FlowVariablePortObject.INSTANCE);
-                PortObject[] extendedOutData = executeModel(extendedInData, null, ctx);
+                PortObject[] extendedOutData = executeModel(extendedInData, ExecutionEnvironment.DEFAULT, ctx);
                 PortObject[] outObjects = ArrayUtils.remove(extendedOutData, 0);
 
                 for (int i = 0; i < outputs.length; i++) {
-                    ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
+                    if (getOutPortType(i).equals(BufferedDataTable.TYPE)) {
+                        ((RowOutput)outputs[i]).setFully((BufferedDataTable)outObjects[i]);
+                    } else {
+                        ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
+                    }
                 }
             }
         };
