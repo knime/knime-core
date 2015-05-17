@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -63,7 +63,6 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -73,17 +72,24 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 
 /**
  * Model that generates one DataTable with randomly distributed patterns. So far
  * everything is somewhat hardcoded.
- * 
+ *
  * <p>
  * Hardcoded is now: 6 columns, 3 universes (3x2 columns) with 7 clusters ( u1:
  * 2, u2: 3, u3: 2. Cluster is defined as: In one universe, there is a cloud of
  * patterns (gaussian distributed), the other dimensions are noisy.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class SampleDataNodeModel extends NodeModel {
@@ -178,12 +184,20 @@ public class SampleDataNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
         DataTableSpec[] outSpecs = configure(new DataTableSpec[2]);
-        DataTableSpec spec = outSpecs[0];
+        DataTableSpec dataSpec = outSpecs[0];
+        DataTableSpec clusterSpec = outSpecs[1];
+        BufferedDataTableRowOutput dataOut = new BufferedDataTableRowOutput(exec.createDataContainer(dataSpec));
+        BufferedDataTableRowOutput clusterOut = new BufferedDataTableRowOutput(exec.createDataContainer(clusterSpec));
+        run(dataSpec, dataOut, clusterSpec, clusterOut, exec);
+        return new BufferedDataTable[] {dataOut.getDataTable(), clusterOut.getDataTable()};
+    }
 
+    private void run(final DataTableSpec spec, final RowOutput dataOutput, final DataTableSpec clusterSpec,
+        final RowOutput clusterOutput, final ExecutionContext exec) throws Exception {
         Random rand = new Random(m_randomSeed);
-        NodeLogger.getLogger(getClass()).info("Using '" 
+        NodeLogger.getLogger(getClass()).info("Using '"
                 + m_randomSeed + "' as seed for random data generation.");
-        
+
         int dimensions = spec.getNumColumns() - 1;
 
         SizeSequence uniSizes = new SizeSequence(m_uniSize);
@@ -197,7 +211,7 @@ public class SampleDataNodeModel extends NodeModel {
          * value is NaN
          */
         double[][] optimalClusters = new double[Math
-                .max(overallClusterCount, 1)][dimensions];
+                                                .max(overallClusterCount, 1)][dimensions];
         if (overallClusterCount == 0) {
             Arrays.fill(optimalClusters[0], Double.NaN);
         }
@@ -242,28 +256,14 @@ public class SampleDataNodeModel extends NodeModel {
         if (noiseFrac > 0.0) {
             colNames[overallClusterCount] = new StringCell("Noise");
         }
-        BufferedDataContainer out2Cont = exec.createDataContainer(outSpecs[1]);
         for (DataRow r : centerRows) {
-            out2Cont.addRowToTable(r);
+            clusterOutput.push(r);
         }
-        out2Cont.close();
-        BufferedDataTable out2 = out2Cont.getTable();
+        clusterOutput.close();
 
         /* first output (data) comes here */
-        DataColumnSpec[] colSpecs = new DataColumnSpec[spec.getNumColumns()];
-        for (int c = 0; c < colSpecs.length - 1; c++) {
-            colSpecs[c] = spec.getColumnSpec(c);
-        }
-        DataColumnSpec last = spec.getColumnSpec(colSpecs.length - 1);
-        DataColumnSpecCreator creator = new DataColumnSpecCreator(last);
-        colSpecs[colSpecs.length - 1] = creator.createSpec();
-        DataTableSpec newSpec = new DataTableSpec(colSpecs);
-        // now create the rows!
-        BufferedDataContainer container = exec.createDataContainer(newSpec);
 
-        /*
-         * assign attributes to patterns
-         */
+        // assign attributes to patterns
         int noise = (int)(m_patCount * noiseFrac);
         int patternsPerCluster = (m_patCount - noise) / optimalClusters.length;
         int patternCount = patternsPerCluster * optimalClusters.length;
@@ -276,10 +276,10 @@ public class SampleDataNodeModel extends NodeModel {
             // patterns in cluster
             for (int p = 0; p < patternsPerCluster; p++) {
                 double[] d = fill(rand, centers);
-                DataCell cl = (overallClusterCount > 0 
+                DataCell cl = (overallClusterCount > 0
                         ? colNames[c] : DataType.getMissingCell());
                 DataRow r = createRow(RowKey.createRowKey(pattern), d, cl);
-                container.addRowToTable(r);
+                dataOutput.push(r);
                 exec.setProgress(pattern / totalCount, "Added row " + pattern);
                 exec.checkCanceled();
                 pattern++;
@@ -294,15 +294,13 @@ public class SampleDataNodeModel extends NodeModel {
             double[] d = fill(rand, noiseCenter);
             DataCell cl = colNames[colNames.length - 1];
             DataRow r = createRow(RowKey.createRowKey(index), d, cl);
-            container.addRowToTable(r);
+            dataOutput.push(r);
             exec.setProgress(index / totalCount, "Added row " + index);
             exec.checkCanceled();
         }
-        container.close();
-        BufferedDataTable outTable = container.getTable();
-        return new BufferedDataTable[]{outTable, out2};
-    } // execute(DataTable[])
-    
+        dataOutput.close();
+    }
+
     private static DataRow createRow(final RowKey key, final double[] d,
             final DataCell cl) {
         DataCell[] cells = new DataCell[d.length + 1];
@@ -311,6 +309,24 @@ public class SampleDataNodeModel extends NodeModel {
         }
         cells[d.length] = cl;
         return new DefaultRow(key, cells);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
+                final ExecutionContext exec) throws Exception {
+                DataTableSpec[] outSpecs = configure(new DataTableSpec[2]);
+                DataTableSpec dataSpec = outSpecs[0];
+                DataTableSpec clusterSpec = outSpecs[1];
+                RowOutput dataOut = (RowOutput)outputs[0];
+                RowOutput clusterOut = (RowOutput)outputs[1];
+                run(dataSpec, dataOut, clusterSpec, clusterOut, exec);
+            }
+        };
     }
 
     /**
@@ -362,7 +378,7 @@ public class SampleDataNodeModel extends NodeModel {
         DataColumnSpecCreator creator = new DataColumnSpecCreator(n, t);
         colSpecs[currentDim] = creator.createSpec();
 
-        DataColumnSpec[] centerColSpec = 
+        DataColumnSpec[] centerColSpec =
             new DataColumnSpec[colSpecs.length - 1];
         System.arraycopy(colSpecs, 0, centerColSpec, 0, centerColSpec.length);
         return new DataTableSpec[]{new DataTableSpec(colSpecs),
