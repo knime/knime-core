@@ -62,6 +62,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  *
@@ -153,12 +154,8 @@ public class SmoteNodeModel extends NodeModel {
         } else {
             throw new InvalidSettingsException("Unknown method: " + method);
         }
-        if (kNN < 1) {
-            throw new InvalidSettingsException("Invalid #neighbors: " + kNN);
-        }
-        if (rate <= 0.0) {
-            throw new InvalidSettingsException("Rate illegal: " + rate);
-        }
+        CheckUtils.checkSetting(kNN >= 1, "Invalid #neighbors: %d", kNN);
+        CheckUtils.checkSetting(rate > 0.0, "Rate illegal: %f", rate);
         if (seedString != null) {
             try {
                 seed = Long.parseLong(seedString);
@@ -259,12 +256,9 @@ public class SmoteNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         DataTableSpec inSpec = inSpecs[0];
-        if (!inSpec.containsName(m_class)) {
-            throw new InvalidSettingsException("No such column: " + m_class);
-        }
-        if (!inSpec.containsCompatibleType(DoubleValue.class)) {
-            throw new InvalidSettingsException("No double column in data.");
-        }
+        CheckUtils.checkSettingNotNull(m_class, "No configuration available");
+        CheckUtils.checkSetting(inSpec.containsName(m_class), "No such column: %s", m_class);
+        CheckUtils.checkSetting(inSpec.containsCompatibleType(DoubleValue.class), "No numeric column in input data.");
         DataTableSpec outSpec = Smoter.createFinalSpec(inSpec);
         return new DataTableSpec[]{outSpec};
     }
