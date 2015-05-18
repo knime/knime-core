@@ -95,7 +95,8 @@ public final class FilterColumnRowInput extends RowInput {
     /** {@inheritDoc} */
     @Override
     public DataRow poll() throws InterruptedException {
-        return new FilterColumnRow(m_input.poll(), m_includes);
+        final DataRow reference = m_input.poll();
+        return reference == null ? null : new FilterColumnRow(reference, m_includes);
     }
 
     /** {@inheritDoc} */
