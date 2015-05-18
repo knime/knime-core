@@ -93,8 +93,7 @@ final class MacFileChooserFixer implements AWTEventListener {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        // if the focus is set to another window, the text field is suddenly editable
-                        openedWindow.getParent().requestFocus();
+                        // if the focus is explicitly requested, the text field is editable
                         openedWindow.requestFocus();
                     }
                 });
