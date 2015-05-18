@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.smote;
 
@@ -63,9 +63,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class SmoteNodeModel extends NodeModel {
@@ -83,7 +82,7 @@ public class SmoteNodeModel extends NodeModel {
 
     /** NodeSettings key for random seed string. */
     public static final String CFG_SEED = "seed";
-    
+
     /** Method: oversample all classes equally to a given rate. */
     public static final String METHOD_ALL = "oversample_all";
 
@@ -117,8 +116,7 @@ public class SmoteNodeModel extends NodeModel {
             settings.addDouble(CFG_RATE, m_rate);
             settings.addString(CFG_CLASS, m_class);
             settings.addInt(CFG_KNN, m_kNN);
-            settings.addString(CFG_SEED, 
-                    m_seed != null ? Long.toString(m_seed) : null);
+            settings.addString(CFG_SEED, m_seed != null ? Long.toString(m_seed) : null);
         }
     }
 
@@ -126,8 +124,7 @@ public class SmoteNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         loadSettings(settings, false);
     }
 
@@ -135,13 +132,11 @@ public class SmoteNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         loadSettings(settings, true);
     }
 
-    private void loadSettings(final NodeSettingsRO settings, 
-            final boolean write) throws InvalidSettingsException {
+    private void loadSettings(final NodeSettingsRO settings, final boolean write) throws InvalidSettingsException {
         String method = settings.getString(CFG_METHOD);
         double rate = 1.0;
         String clas = settings.getString(CFG_CLASS);
@@ -168,8 +163,7 @@ public class SmoteNodeModel extends NodeModel {
             try {
                 seed = Long.parseLong(seedString);
             } catch (NumberFormatException nfe) {
-                throw new InvalidSettingsException(
-                        "Invalid seed: " + seedString);
+                throw new InvalidSettingsException("Invalid seed: " + seedString);
             }
         } else {
             seed = null;
@@ -187,9 +181,8 @@ public class SmoteNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws CanceledExecutionException, Exception {
         BufferedDataTable in = inData[0];
         Random rand;
         if (m_seed != null) {
@@ -201,19 +194,16 @@ public class SmoteNodeModel extends NodeModel {
         if (m_method.equals(METHOD_ALL)) {
             // count number of rows to add
             int nrRowsToAdd = 0;
-            for (Iterator<DataCell> it = smoter.getClassValues(); 
-                it.hasNext();) {
+            for (Iterator<DataCell> it = smoter.getClassValues(); it.hasNext();) {
                 int count = smoter.getCount(it.next());
                 nrRowsToAdd += (int)(count * m_rate);
             }
-            for (Iterator<DataCell> it = smoter.getClassValues(); 
-                it.hasNext();) {
+            for (Iterator<DataCell> it = smoter.getClassValues(); it.hasNext();) {
                 DataCell cur = it.next();
                 int count = smoter.getCount(cur);
                 int newCount = (int)(count * m_rate);
                 exec.setMessage("Smoting '" + cur.toString() + "'");
-                ExecutionMonitor subExec = exec.createSubProgress(newCount
-                        / (double)nrRowsToAdd);
+                ExecutionMonitor subExec = exec.createSubProgress(newCount / (double)nrRowsToAdd);
                 smoter.smote(cur, newCount, m_kNN, subExec);
             }
         } else if (m_method.equals(METHOD_MAJORITY)) {
@@ -231,8 +221,7 @@ public class SmoteNodeModel extends NodeModel {
                 int count = smoter.getCount(cur);
                 int newCount = majorityCount - count;
                 exec.setMessage("Smoting '" + cur.toString() + "'");
-                ExecutionMonitor subExec = exec.createSubProgress(newCount
-                        / (double)nrRowsToAdd);
+                ExecutionMonitor subExec = exec.createSubProgress(newCount / (double)nrRowsToAdd);
                 smoter.smote(cur, newCount, m_kNN, subExec);
             }
         }
@@ -252,26 +241,23 @@ public class SmoteNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         DataTableSpec inSpec = inSpecs[0];
         if (!inSpec.containsName(m_class)) {
             throw new InvalidSettingsException("No such column: " + m_class);
