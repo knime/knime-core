@@ -717,12 +717,15 @@ public final class FilesHistoryPanel extends JPanel {
         String[] allVals = history.getHistory();
         LinkedHashSet<String> list = new LinkedHashSet<String>();
         for (int i = 0; i < allVals.length; i++) {
-            try {
-                String cur = allVals[i];
-                File file = textToFile(cur);
-                list.add(file.getAbsolutePath());
-            } catch (MalformedURLException mue) {
-                continue;
+            String cur = allVals[i];
+            if (!cur.isEmpty()) {
+                try {
+                    URL url = new URL(cur);
+                    list.add(url.toString());
+                } catch (MalformedURLException mue) {
+                    // ignore, it's probably not a URL
+                    list.add(new File(cur).getAbsolutePath());
+                }
             }
         }
         DefaultComboBoxModel<String> comboModel =
@@ -778,34 +781,6 @@ public final class FilesHistoryPanel extends JPanel {
      */
     public void setDialogType(final int type) {
         m_dialogType = type;
-    }
-
-    /**
-     * Tries to create a file from the passed string.
-     *
-     * @param url the string to transform into a file
-     * @return file if entered value could be properly transformed
-     * @throws MalformedURLException if the value passed was invalid
-     */
-    private static File textToFile(final String url)
-            throws MalformedURLException {
-        if ((url == null) || (url.equals(""))) {
-            throw new MalformedURLException("Specify a not empty valid URL");
-        }
-
-        String file;
-        try {
-            URL newURL = new URL(url);
-            file = newURL.getFile();
-        } catch (MalformedURLException e) {
-            // see if they specified a file without giving the protocol
-            return new File(url);
-        }
-        if (file == null || file.equals("")) {
-            throw new MalformedURLException("Can't get file from file '" + url
-                    + "'");
-        }
-        return new File(file);
     }
 
     /**
