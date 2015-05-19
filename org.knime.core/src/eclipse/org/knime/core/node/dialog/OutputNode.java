@@ -34,5 +34,5 @@ public interface OutputNode {
      * Returns an object representing the node's external output.
      * @return an external output, never <code>null</code>
      */
-    public ExternalNodeOutput getExternalOutput();
+    public ExternalNodeData getExternalOutput();
 }

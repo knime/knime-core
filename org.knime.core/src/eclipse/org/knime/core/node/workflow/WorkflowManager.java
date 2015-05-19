@@ -83,10 +83,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.json.Json;
-import javax.json.JsonException;
-import javax.json.JsonObject;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -116,8 +112,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.dialog.DialogNode;
-import org.knime.core.node.dialog.DialogNodeValue;
-import org.knime.core.node.dialog.ExternalNodeOutput;
+import org.knime.core.node.dialog.ExternalNodeData;
+import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
@@ -8914,25 +8910,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return A map from {@link DialogNode#getParameterName() node's parameter name} to its (JSON object value)
      * @since 2.12
      */
-    public Map<String, JsonObject> getInputNodes() {
-        Map<String, JsonObject> result = new LinkedHashMap<>();
+    public Map<String, ExternalNodeData> getInputNodes() {
+        Map<String, ExternalNodeData> result = new LinkedHashMap<>();
+
         synchronized (getWorkflowMutex()) {
-            Map<NodeID, DialogNode> nodeMap = findNodes(DialogNode.class, false);
-            for (Map.Entry<NodeID, DialogNode> e : nodeMap.entrySet()) {
-                DialogNode dialogNode = e.getValue();
-                String parameterName = StringUtils.defaultString(dialogNode.getParameterName());
-                parameterName = (parameterName.isEmpty() ? "" : parameterName + "-")
-                        + Integer.toString(e.getKey().getIndex());
-                DialogNodeValue dialogValue = dialogNode.getDialogValue();
-                if (dialogValue == null) {
-                    // if not value have been set explicitly, use the default values
-                    dialogValue = dialogNode.getDefaultValue();
-                }
-                JsonObject jsonObject = dialogValue != null ? dialogValue.toJson() : null;
-                if (jsonObject == null) {
-                    jsonObject = Json.createObjectBuilder().build();
-                }
-                result.put(parameterName, jsonObject);
+            Map<NodeID, InputNode> nodeMap = findNodes(InputNode.class, false);
+            for (Map.Entry<NodeID, InputNode> e : nodeMap.entrySet()) {
+                ExternalNodeData nodeData = e.getValue().getInputData();
+
+                String parameterName = StringUtils.defaultString(nodeData.getID());
+                parameterName =
+                    (parameterName.isEmpty() ? "" : parameterName + "-") + Integer.toString(e.getKey().getIndex());
+                result.put(parameterName, nodeData);
             }
             return result;
         }
@@ -8944,15 +8933,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * to its (JSON or string object value). Invalid entries cause an exception.
      * @since 2.12
      */
-    public void setInputNodes(final Map<String, ?> input) {
+    public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
         synchronized (getWorkflowMutex()) {
             CheckUtils.checkState(!getNodeContainerState().isExecutionInProgress(),
                 "Cannot apply new parameters - workflow still in execution");
             // splits "foobar-123-xy-2" into "foobar-123-xy" (parameter name) and 2 (node id suffix)
             Pattern p = Pattern.compile("^(?:(.+)-)?(\\d+)$");
-            Map<NodeID, DialogNode> nodeMap = findNodes(DialogNode.class, false);
-            Map<NodeID, DialogNodeValue> valueMap = new LinkedHashMap<>();
-            for (Map.Entry<String, ?> entry : input.entrySet()) {
+
+            Map<NodeID, InputNode> nodeMap = findNodes(InputNode.class, false);
+            for (Map.Entry<String, ExternalNodeData> entry : input.entrySet()) {
                 String parameterName = entry.getKey();
                 Matcher parameterNameMatcher = p.matcher(parameterName);
 
@@ -8967,59 +8956,32 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
 
                 NodeID id = null;
+                InputNode inputNode = null;
                 if(idSuffix == null) {
                     //try to find node without id, check for duplicates
-                    for (Map.Entry<NodeID, DialogNode> dNode : nodeMap.entrySet()) {
-                        if (paramBase.equals(dNode.getValue().getParameterName())) {
+                    for (Map.Entry<NodeID, InputNode> dNode : nodeMap.entrySet()) {
+                        if (paramBase.equals(dNode.getValue().getInputData().getID())) {
                             CheckUtils.checkArgument(id == null,
                                     "Duplicate parameter name \"%s\" in workflow. "
                                     + "Cannot set parameter without ID notation.",
                                     parameterName);
                             id = dNode.getKey();
+                            inputNode = dNode.getValue();
                         }
                     }
+                    CheckUtils.checkArgumentNotNull(id, "Invalid parameter name \"%s\" - "
+                            + "could not locate corresponding node in workflow", parameterName);
                 } else {
                     id = new NodeID(getID(), idSuffix);
+                    inputNode = nodeMap.get(id);
+                    CheckUtils.checkArgument(inputNode != null && paramBase.equals(StringUtils.defaultString(
+                        inputNode.getInputData().getID())),
+                        "Invalid parameter name \"%s\" - could not locate corresponding node in workflow", parameterName);
                 }
-                CheckUtils.checkArgumentNotNull(id, "Invalid parameter name \"%s\" - "
-                    + "could not locate corresponding node in workflow", parameterName);
 
-                DialogNode<?,DialogNodeValue> dialogNode = nodeMap.get(id);
-                CheckUtils.checkArgument(dialogNode != null && paramBase.equals(StringUtils.defaultString(
-                    dialogNode.getParameterName())),
-                    "Invalid parameter name \"%s\" - could not locate corresponding node in workflow", parameterName);
-                DialogNodeValue dialogValue = dialogNode.createEmptyDialogValue();
-                Object value = entry.getValue();
-                try {
-                    if (value instanceof JsonObject) {
-                        dialogValue.loadFromJson((JsonObject)value);
-                    } else if (value instanceof String) {
-                        dialogValue.loadFromString((String)value);
-                    } else {
-                        throw new IllegalArgumentException("Invalid type for node \"" + parameterName
-                            + "\" - only string or JSON allowed.");
-                    }
-                    dialogNode.validateDialogValue(dialogValue);
-                } catch (JsonException e) {
-                    throw new IllegalArgumentException("Invalid JSON parameter for node \"" + parameterName
-                        + "\" - node doesn't understand JSON: " + e.getMessage(), e);
-                } catch (UnsupportedOperationException e) {
-                    throw new IllegalArgumentException(e.getMessage() + " - For node \"" + parameterName
-                        + "\".", e);
-                } catch (InvalidSettingsException se) {
-                    throw new IllegalArgumentException("Invalid parameter for node \"" + parameterName
-                        + "\" - didn't pass node's validation method: " + se.getMessage(), se);
-                }
-                valueMap.put(id, dialogValue);
-            }
-
-            for (Map.Entry<NodeID, DialogNodeValue> entry : valueMap.entrySet()) {
-                NativeNodeContainer nnc = getNodeContainer(entry.getKey(), NativeNodeContainer.class, true);
-                final DialogNode dialogNode = (DialogNode)nnc.getNodeModel();
-                dialogNode.setDialogValue(entry.getValue());
-                LOGGER.debugWithFormat("Setting new parameter for node \"%s\" (%s)",
-                    nnc.getNameWithID(), dialogNode.getParameterName());
-                resetAndConfigureNode(entry.getKey());
+                LOGGER.debugWithFormat("Setting new parameter for node \"%s\" (%s)", id, entry.getValue().getID());
+                inputNode.setInputData(entry.getValue());
+                resetAndConfigureNode(id);
             }
         }
     }
@@ -9031,13 +8993,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return A map from node's parameter name to its JSON object result.
      * @since 2.12
      */
-    public Map<String, ExternalNodeOutput> getExternalOutputs() {
-        Map<String, ExternalNodeOutput> result = new LinkedHashMap<>();
+    public Map<String, ExternalNodeData> getExternalOutputs() {
+        Map<String, ExternalNodeData> result = new LinkedHashMap<>();
         synchronized (getWorkflowMutex()) {
             CheckUtils.checkState(getNodeContainerState().isExecuted(), "Workflow not completely executed");
             Map<NodeID, OutputNode> nodeMap = findNodes(OutputNode.class, false);
             for (Map.Entry<NodeID, OutputNode> e : nodeMap.entrySet()) {
-                ExternalNodeOutput externalOutput = e.getValue().getExternalOutput();
+                ExternalNodeData externalOutput = e.getValue().getExternalOutput();
 
                 String parameterName = StringUtils.defaultString(externalOutput.getID());
                 parameterName = (parameterName.isEmpty() ? "" : (parameterName + "-"))
