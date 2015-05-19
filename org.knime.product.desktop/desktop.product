@@ -33,6 +33,7 @@ All other trademarks are the property of their respective owners.
 -XX:+UnlockDiagnosticVMOptions
 -XX:+UnsyncloadClass 
 -Dknime.enable.fastload=true
+-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot
       </vmArgs>
       <vmArgsMac>-XstartOnFirstThread
 -Xdock:icon=../Resources/Knime.icns
