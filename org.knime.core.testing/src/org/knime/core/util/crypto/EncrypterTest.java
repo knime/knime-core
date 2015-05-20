@@ -20,6 +20,7 @@
 package org.knime.core.util.crypto;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
@@ -50,4 +51,34 @@ public class EncrypterTest {
         encryptedText = enc.encrypt(text);
         assertThat("Unexpected decrypted value", enc.decrypt(encryptedText), is(text));
     }
+
+    /**
+     * Test whether encryption with fixed salt produces the same encrypted string.
+     * @throws Exception
+     */
+    @Test
+    public void testFixSalt_Bug5813() throws Exception {
+        IEncrypter enc = new Encrypter("AKeyForTestingTheEncrypter");
+
+        String text = null;
+        String encryptedText = enc.encrypt(text, 27);
+        String encryptedText2 = enc.encrypt(text, 27);
+        assertThat("Expected same", encryptedText2, is(encryptedText));
+
+        text = "";
+        encryptedText = enc.encrypt(text, 27);
+        encryptedText2 = enc.encrypt(text, 27);
+        assertThat("Expected same", encryptedText2, is(encryptedText));
+
+        text = "äüößjjjhdshvoihgudfhgdfbv";
+        encryptedText = enc.encrypt(text, 27);
+        encryptedText2 = enc.encrypt(text, 27);
+        assertThat("Expected same", encryptedText2, is(encryptedText));
+
+        text = "äüößjjjhdshvoihgudfhgdfbv";
+        encryptedText = enc.encrypt(text);
+        encryptedText2 = enc.encrypt(text);
+        assertThat("Expected to be different", encryptedText2, not(encryptedText));
+    }
+
 }
