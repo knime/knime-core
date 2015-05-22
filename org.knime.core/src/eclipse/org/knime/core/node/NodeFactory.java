@@ -44,8 +44,10 @@
  */
 package org.knime.core.node;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -302,6 +304,14 @@ public abstract class NodeFactory<T extends NodeModel> {
         }
 
         URL iconURL = getClass().getClassLoader().getResource(imagePath);
+        if (iconURL == null) {
+            File iconFile = new File(imagePath);
+            if (iconFile.exists() && iconFile.isFile()) {
+                try {
+                    iconURL = iconFile.toURI().toURL();
+                } catch (MalformedURLException e) { /*do nothing */ }
+            }
+        }
 
         return iconURL;
     }
