@@ -47,6 +47,19 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
+import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_QUEUED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED_MARKEDFOREXEC;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED_QUEUED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTING;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTINGREMOTELY;
+import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
+import static org.knime.core.node.workflow.InternalNodeContainerState.POSTEXECUTE;
+import static org.knime.core.node.workflow.InternalNodeContainerState.PREEXECUTE;
+import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -2092,8 +2105,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (nc instanceof SingleNodeContainer) {
                     // reconfigure yellow AND red nodes - it could be that
                     // the reason for the red state were the variables!
-                    if (nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)
-                            || nc.getInternalState().equals(InternalNodeContainerState.IDLE)) {
+                    if (nc.getInternalState().equals(CONFIGURED)
+                            || nc.getInternalState().equals(IDLE)) {
                         configureSingleNodeContainer(
                             (SingleNodeContainer)nc,
                             /* keepNodemessage=*/ false);
@@ -2131,8 +2144,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (nc.isResetable()) {
                         ((SingleNodeContainer)nc).reset();
                     }
-                    if (nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)
-                            || nc.getInternalState().equals(InternalNodeContainerState.IDLE)) {
+                    if (nc.getInternalState().equals(CONFIGURED)
+                            || nc.getInternalState().equals(IDLE)) {
                         // re-configure if node was yellow or we just reset it.
                         // note that there still may be metanodes
                         // connected to this one which contain green
@@ -2192,7 +2205,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // don't let the WFM decide on the state himself - for example,
             // if there is only one WFMTHROUGH connection contained, it will
             // produce wrong states! Force it to be idle.
-            setInternalState(InternalNodeContainerState.IDLE);
+            setInternalState(IDLE);
         }
     }
 
@@ -2304,7 +2317,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (!(nm instanceof InteractiveNode)) {
                 throw new IllegalArgumentException("Can't reexecute non interactive nodes.");
             }
-            if (!(InternalNodeContainerState.EXECUTED.equals(snc.getInternalState()))) {
+            if (!(EXECUTED.equals(snc.getInternalState()))) {
                 return false;
             }
             if (!canResetNode(id)) {
@@ -2333,7 +2346,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             resetSuccessors(id);
             configureNodeAndPortSuccessors(id, null, false, true);
             snc.markForReExecution(new ExecutionEnvironment(true, vc, useAsNewDefault));
-            assert snc.getInternalState().equals(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
+            assert snc.getInternalState().equals(EXECUTED_MARKEDFOREXEC);
             queueIfQueuable(snc);
         }
     }
@@ -2427,7 +2440,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 } else {
                     InternalNodeContainerState state = incoming[i].getNodeState();
-                    if (!InternalNodeContainerState.EXECUTED.equals(state) && !state.isExecutionInProgress()) {
+                    if (!EXECUTED.equals(state) && !state.isExecutionInProgress()) {
                         return;  // stop here
                     }
                 }
@@ -2439,7 +2452,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }            // node has all required predecessors and they are all marked
             // or executing or executed....
             InternalNodeContainerState state = nc.getInternalState();
-            if (InternalNodeContainerState.EXECUTED.equals(state)) {
+            if (EXECUTED.equals(state)) {
                 // ignore executed nodes and push the step execution downstream
             } else if (state.isExecutionInProgress()) {
                 // node has started to execute in the same call to stepExecution -- downstram nodes are taken care of
@@ -2468,7 +2481,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // what to do!
 
             assert nc.isLocalWFM();
-            if (!InternalNodeContainerState.EXECUTED.equals(nc.getInternalState())) {
+            if (!EXECUTED.equals(nc.getInternalState())) {
                 // if not yet fully executed step inside
                 ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass, filter);
             }
@@ -2574,7 +2587,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeContainer nc = getNodeContainer(id);
             // first check some basic facts about this node:
             // 1) executed? - done (and happy)
-            if (nc.getInternalState().equals(InternalNodeContainerState.EXECUTED)) {
+            if (nc.getInternalState().equals(EXECUTED)) {
                 // everything fine: found "source" of chain executed
                 // Note that we can not assume that an executing metanode
                 // is also a good thing: the port this one is connected
@@ -2605,7 +2618,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     nc.markForExecution(true);
                     // no need to go through "official" route for SNC as the following queuing will update
                     // state and also state of encapsulating metanode!
-                    assert nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC)
+                    assert nc.getInternalState().equals(CONFIGURED_MARKEDFOREXEC)
                         : "NodeContainer " + nc + " in unexpected state:" + nc.getInternalState();
                     nc.queue(new PortObject[0]);
                     // we are now executing one of the sources of the chain
@@ -2633,7 +2646,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // connection coming from outside this WFM
                     assert cc.getType().equals(ConnectionContainer.ConnectionType.WFMIN);
                     NodeOutPort realPort = getInPort(cc.getSourcePort()).getUnderlyingPort();
-                    if (!realPort.getNodeState().equals(InternalNodeContainerState.EXECUTED)
+                    if (!realPort.getNodeState().equals(EXECUTED)
                             && !realPort.getNodeState().isExecutionInProgress()) {
                         // the real predecessor node is not already marked/done:
                         // we have to mark the predecessor in the parent flow
@@ -2897,7 +2910,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         if (m_workflow.getNode(slc.getHeadNode()) == null) {
                             // obviously not: origin of loop is not in this WFM!
                             // nothing else to do: NC stays configured
-                            assert nc.getInternalState() == InternalNodeContainerState.CONFIGURED;
+                            assert nc.getInternalState() == CONFIGURED;
                             // and choke
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                     "Loop nodes are not in the same workflow!");
@@ -3076,15 +3089,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // configure, so we have to check here if the node
             // is really configured before. (Failing configures in
             // loop body nodes do NOT affect the state of the tailNode.)
-            if (tailNode.getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC)) {
+            if (tailNode.getInternalState().equals(CONFIGURED_MARKEDFOREXEC)) {
                 // (6a) ... we enable the body to be queued again.
                 for (NodeAndInports nai : loopBodyNodes) {
                     NodeID id = nai.getID();
                     NodeContainer nc = m_workflow.getNode(id);
                     if (nc instanceof SingleNodeContainer) {
                         // make sure it's not already done...
-                        if (nc.getInternalState().equals(InternalNodeContainerState.IDLE)
-                                || nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)) {
+                        if (nc.getInternalState().equals(IDLE)
+                                || nc.getInternalState().equals(CONFIGURED)) {
                             ((SingleNodeContainer)nc).markForExecution(true);
                         }
                     } else {
@@ -3129,7 +3142,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = m_workflow.getNode(id);
                 if (nc instanceof SingleNodeContainer) {
                     // make sure it's not already done...
-                    if (nc.getInternalState().equals(InternalNodeContainerState.EXECUTED)) {
+                    if (nc.getInternalState().equals(EXECUTED)) {
                         ((SingleNodeContainer)nc).markForReExecution(new ExecutionEnvironment(false, null, false));
                     }
                 } else {
@@ -3142,12 +3155,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 //            assert tailNode.getState().equals(State.CONFIGURED);
 //            ((SingleNodeContainer)tailNode).markForExecution(true);
             // see above - state is ok
-            assert tailNode.getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+            assert tailNode.getInternalState().equals(CONFIGURED_MARKEDFOREXEC);
         }
         // (8) allow access to tail node
         ((NativeNodeContainer)headNode).getNode().setLoopEndNode(((NativeNodeContainer)tailNode).getNode());
         // (9) and finally try to queue the head of this loop!
-        assert headNode.getInternalState().equals(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
+        assert headNode.getInternalState().equals(EXECUTED_MARKEDFOREXEC);
         queueIfQueuable(headNode);
     }
 
@@ -3724,7 +3737,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // Check if any of those nodes are executed
             for (NodeID id : orgIDs) {
                 NodeContainer nc = getNodeContainer(id);
-                if (InternalNodeContainerState.EXECUTED.equals(nc.getInternalState())) {
+                if (EXECUTED.equals(nc.getInternalState())) {
                     // we can not - bail!
                     return "Cannot move executed nodes (reset first).";
                 }
@@ -4140,7 +4153,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     + "in progress, current state is " + getInternalState());
         }
         markForExecutionAllNodesInWorkflow(flag);
-        setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+        setInternalState(CONFIGURED_MARKEDFOREXEC);
     }
 
     /** {@inheritDoc} */
@@ -4210,10 +4223,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // also allow unconfigured-mark as there may be configured_marked nodes also
         case UNCONFIGURED_MARKEDFOREXEC:
         case CONFIGURED_MARKEDFOREXEC:
-            setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
+            setInternalState(CONFIGURED_QUEUED);
             break;
         case EXECUTED_MARKEDFOREXEC:
-            setInternalState(InternalNodeContainerState.EXECUTED_QUEUED);
+            setInternalState(EXECUTED_QUEUED);
             break;
         default:
             throwIllegalStateException();
@@ -4424,7 +4437,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert Thread.holdsLock(m_workflowMutex);
         NodeContainer nc = getNodeContainer(id);
         if (!nc.isResetable()) {
-            if (nc.getInternalState().equals(InternalNodeContainerState.IDLE)) {
+            if (nc.getInternalState().equals(IDLE)) {
                 // the node is IDLE: we don't need to reset it but we
                 // should remove its node message! (This for instance
                 // matters when we disconnect the inport of this node
@@ -4528,7 +4541,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         // End loop was executed at least once already - which
                         // also means it is set in the LoopContextObject):
                         NativeNodeContainer lsnc = (NativeNodeContainer)m_workflow.getNode(lsid);
-                        if (InternalNodeContainerState.EXECUTED.equals(lsnc.getInternalState())) {
+                        if (EXECUTED.equals(lsnc.getInternalState())) {
                             FlowLoopContext flc = lsnc.getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
                             if (flc.needsCompleteResetOnLoopBodyChanges()) {
                                 // this is ugly but necessary: we need to make
@@ -4691,7 +4704,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else if (nc instanceof SubNodeContainer) {
                 return ((SubNodeContainer)nc).getWorkflowManager().hasExecutableNode();
             }
-            return nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED);
+            return nc.getInternalState().equals(CONFIGURED);
         }
     }
 
@@ -4799,7 +4812,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private boolean hasExecutableNode() {
         for (NodeContainer nc : m_workflow.getNodeValues()) {
             if (nc instanceof SingleNodeContainer) {
-                if (nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)) {
+                if (nc.getInternalState().equals(CONFIGURED)) {
                     return true;
                 }
             } else {
@@ -4986,7 +4999,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         } catch (InterruptedException e) {
             LOGGER.warn("Thread interrupted while waiting for finishing execution");
         }
-        return this.getInternalState().equals(InternalNodeContainerState.EXECUTED);
+        return this.getInternalState().equals(EXECUTED);
     }
 
     /** Causes the current thread to wait until the the workflow has reached
@@ -5173,7 +5186,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 allDataAvailable = false;
             }
         }
-        if (allDataAvailable && nc.getInternalState().equals(InternalNodeContainerState.EXECUTINGREMOTELY)) {
+        if (allDataAvailable && nc.getInternalState().equals(EXECUTINGREMOTELY)) {
             nc.continueExecutionOnLoad(inData, execJobSettings);
             return true;
         }
@@ -5293,7 +5306,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         //
         assert nrNodes == m_workflow.getNrNodes();
-        InternalNodeContainerState newState = InternalNodeContainerState.IDLE;
+        InternalNodeContainerState newState = IDLE;
         // check if all outports are connected
         boolean allOutPortsConnected =
             getNrOutPorts() == m_workflow.getConnectionsByDest(
@@ -5303,23 +5316,23 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // ...and at the same time find the "smallest" common state of
         // all inports (useful when all internal nodes are green but we
         // have through connections)!
-        InternalNodeContainerState inportState = InternalNodeContainerState.EXECUTED;
+        InternalNodeContainerState inportState = EXECUTED;
         if (allOutPortsConnected) {
             allPopulated = true;
             for (int i = 0; i < getNrOutPorts(); i++) {
                 NodeOutPort nop = getOutPort(i).getUnderlyingPort();
                 if (nop == null) {
                     allPopulated = false;
-                    inportState = InternalNodeContainerState.IDLE;
+                    inportState = IDLE;
                 } else if (nop.getPortObject() == null) {
                     allPopulated = false;
                     switch (nop.getNodeState()) {
                     case IDLE:
                     case UNCONFIGURED_MARKEDFOREXEC:
-                        inportState = InternalNodeContainerState.IDLE;
+                        inportState = IDLE;
                         break;
                     default:
-                        inportState = InternalNodeContainerState.CONFIGURED;
+                        inportState = CONFIGURED;
                     }
                 }
             }
@@ -5327,57 +5340,57 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (nrNodes == 0) {
             // special case: zero nodes!
             if (allOutPortsConnected) {
-                newState = allPopulated ? InternalNodeContainerState.EXECUTED : InternalNodeContainerState.CONFIGURED;
+                newState = allPopulated ? EXECUTED : CONFIGURED;
             } else {
-                newState = InternalNodeContainerState.IDLE;
+                newState = IDLE;
             }
-        } else if (nrNodesInState[InternalNodeContainerState.EXECUTED.ordinal()] == nrNodes) {
+        } else if (nrNodesInState[EXECUTED.ordinal()] == nrNodes) {
             // WFM is executed only if all (>=1) nodes are executed and
             // all output ports are connected and contain their
             // portobjects.
             if (allPopulated) {
                 // all nodes in WFM done and all ports populated!
-                newState = InternalNodeContainerState.EXECUTED;
+                newState = EXECUTED;
             } else {
                 // all executed but some through connections!
                 newState = inportState;
             }
-        } else if (nrNodesInState[InternalNodeContainerState.CONFIGURED.ordinal()] == nrNodes) {
+        } else if (nrNodesInState[CONFIGURED.ordinal()] == nrNodes) {
             // all (>=1) configured
             if (allOutPortsConnected) {
-                newState = InternalNodeContainerState.CONFIGURED;
+                newState = CONFIGURED;
             } else {
-                newState = InternalNodeContainerState.IDLE;
+                newState = IDLE;
             }
-        } else if (nrNodesInState[InternalNodeContainerState.EXECUTED.ordinal()]
-                                  + nrNodesInState[InternalNodeContainerState.CONFIGURED.ordinal()]
+        } else if (nrNodesInState[EXECUTED.ordinal()]
+                                  + nrNodesInState[CONFIGURED.ordinal()]
                                                    == nrNodes) {
-            newState = InternalNodeContainerState.CONFIGURED;
-        } else if (nrNodesInState[InternalNodeContainerState.EXECUTING.ordinal()] >= 1) {
-            newState = InternalNodeContainerState.EXECUTING;
-        } else if (nrNodesInState[InternalNodeContainerState.EXECUTINGREMOTELY.ordinal()] >= 1) {
-            newState = InternalNodeContainerState.EXECUTINGREMOTELY;
-        } else if (nrNodesInState[InternalNodeContainerState.PREEXECUTE.ordinal()] >= 1) {
-            newState = InternalNodeContainerState.EXECUTING;
-        } else if (nrNodesInState[InternalNodeContainerState.POSTEXECUTE.ordinal()] >= 1) {
-            newState = InternalNodeContainerState.EXECUTING;
-        } else if (nrNodesInState[InternalNodeContainerState.CONFIGURED_QUEUED.ordinal()] >= 1) {
-            newState = InternalNodeContainerState.EXECUTING;
-        } else if (nrNodesInState[InternalNodeContainerState.EXECUTED_QUEUED.ordinal()] >= 1) {
-            newState = InternalNodeContainerState.EXECUTING;
-        } else if (nrNodesInState[InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC.ordinal()] >= 1) {
-            newState = InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC;
-        } else if (nrNodesInState[InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC.ordinal()]
-                   + nrNodesInState[InternalNodeContainerState.EXECUTED_MARKEDFOREXEC.ordinal()] >= 1) {
-            newState = InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
+            newState = CONFIGURED;
+        } else if (nrNodesInState[EXECUTING.ordinal()] >= 1) {
+            newState = EXECUTING;
+        } else if (nrNodesInState[EXECUTINGREMOTELY.ordinal()] >= 1) {
+            newState = EXECUTINGREMOTELY;
+        } else if (nrNodesInState[PREEXECUTE.ordinal()] >= 1) {
+            newState = EXECUTING;
+        } else if (nrNodesInState[POSTEXECUTE.ordinal()] >= 1) {
+            newState = EXECUTING;
+        } else if (nrNodesInState[CONFIGURED_QUEUED.ordinal()] >= 1) {
+            newState = EXECUTING;
+        } else if (nrNodesInState[EXECUTED_QUEUED.ordinal()] >= 1) {
+            newState = EXECUTING;
+        } else if (nrNodesInState[UNCONFIGURED_MARKEDFOREXEC.ordinal()] >= 1) {
+            newState = UNCONFIGURED_MARKEDFOREXEC;
+        } else if (nrNodesInState[CONFIGURED_MARKEDFOREXEC.ordinal()]
+                   + nrNodesInState[EXECUTED_MARKEDFOREXEC.ordinal()] >= 1) {
+            newState = CONFIGURED_MARKEDFOREXEC;
         }
         InternalNodeContainerState oldState = this.getInternalState();
         this.setInternalState(newState, propagateChanges);
-        boolean wasExecuting = oldState.equals(InternalNodeContainerState.EXECUTINGREMOTELY)
-            || oldState.equals(InternalNodeContainerState.EXECUTING);
+        boolean wasExecuting = oldState.equals(EXECUTINGREMOTELY)
+            || oldState.equals(EXECUTING);
         if (wasExecuting) {
             boolean isExecuting = newState.isExecutionInProgress();
-            if (newState.equals(InternalNodeContainerState.EXECUTED)) {
+            if (newState.equals(EXECUTED)) {
                 // we just successfully executed this WFM: check if any
                 // loops were waiting for this one in the parent workflow!
                 if (getWaitingLoops().size() >= 1) {
@@ -5405,13 +5418,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 clearWaitingLoopList();
             }
         }
-        if (inportState.equals(InternalNodeContainerState.IDLE)) {
-            newState = InternalNodeContainerState.IDLE;
+        if (inportState.equals(IDLE)) {
+            newState = IDLE;
         }
-        if (inportState.equals(InternalNodeContainerState.CONFIGURED)
-                && (!newState.equals(InternalNodeContainerState.IDLE))
-                && (!newState.equals(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC))) {
-            newState = InternalNodeContainerState.CONFIGURED;
+        if (inportState.equals(CONFIGURED)
+                && (!newState.equals(IDLE))
+                && (!newState.equals(UNCONFIGURED_MARKEDFOREXEC))) {
+            newState = CONFIGURED;
         }
         if ((!oldState.equals(newState)) && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes
@@ -5677,7 +5690,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     disableNodeForExecution(sncID);
                     // and reset node if it's not reset already
                     // (ought to be red with this type of error!)
-                    if (!snc.getInternalState().equals(InternalNodeContainerState.IDLE)) {
+                    if (!snc.getInternalState().equals(IDLE)) {
                         // if not already idle make sure it is!
                         snc.reset();
                     }
@@ -5706,8 +5719,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 configurationChanged = (outputSpecsChanged || stackChanged || hiLiteHdlsChanged);
                 // and finally check if we can queue this node!
-                if (snc.getInternalState().equals(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC)
-                        || snc.getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC)) {
+                if (snc.getInternalState().equals(UNCONFIGURED_MARKEDFOREXEC)
+                        || snc.getInternalState().equals(CONFIGURED_MARKEDFOREXEC)) {
                     queueIfQueuable(snc);
                 }
                 break;
@@ -6048,7 +6061,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (((WorkflowManager)nc).containsExecutedNode()) {
                         return true;
                     }
-                } else if (nc.getInternalState().equals(InternalNodeContainerState.EXECUTED)) {
+                } else if (nc.getInternalState().equals(EXECUTED)) {
                     return true;
                 }
             }
@@ -7555,7 +7568,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             needsReset |= persistor.needsResetAfterLoad();
             needsReset |= hasPredecessorFailed;
-            boolean isExecuted = cont.getInternalState().equals(InternalNodeContainerState.EXECUTED);
+            boolean isExecuted = cont.getInternalState().equals(EXECUTED);
             boolean remoteExec = persistor.getMetaPersistor().getExecutionJobSettings() != null;
 
             // if node is executed and some input data is missing we need
@@ -7598,7 +7611,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (inPortsContainNull) {
                     subResult.addError("Can't continue execution; no data in inport");
                 }
-                if (!cont.getInternalState().equals(InternalNodeContainerState.EXECUTINGREMOTELY)) {
+                if (!cont.getInternalState().equals(EXECUTINGREMOTELY)) {
                     subResult.addError("Can't continue execution; node is not " + "configured but "
                             + cont.getInternalState());
                 }
@@ -7952,24 +7965,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         if (predOutPort == null) { // unconnected
                             if (inport.getPortType().isOptional()) {
                                 // optional inport -- imitate executed predecessor
-                                predOutPortState = InternalNodeContainerState.EXECUTED;
+                                predOutPortState = EXECUTED;
                             } else {
-                                predOutPortState = InternalNodeContainerState.IDLE;
+                                predOutPortState = IDLE;
                             }
                         } else {
                             predOutPortState = predOutPort.getNodeState();
                         }
                         switch (predOutPortState) {
                             case IDLE:
-                                allowedStates.retainAll(Arrays.asList(InternalNodeContainerState.IDLE));
+                                allowedStates.retainAll(Arrays.asList(IDLE));
                                 break;
                             case CONFIGURED:
-                                allowedStates.retainAll(Arrays.asList(InternalNodeContainerState.CONFIGURED,
-                                    InternalNodeContainerState.IDLE));
+                                allowedStates.retainAll(Arrays.asList(CONFIGURED,
+                                    IDLE));
                                 break;
                             case UNCONFIGURED_MARKEDFOREXEC:
-                                allowedStates.retainAll(Arrays.asList(InternalNodeContainerState.IDLE,
-                                    InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC));
+                                allowedStates.retainAll(Arrays.asList(IDLE,
+                                    UNCONFIGURED_MARKEDFOREXEC));
                                 break;
                             case EXECUTED_MARKEDFOREXEC:
                             case EXECUTED_QUEUED:
@@ -7978,21 +7991,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             case PREEXECUTE:
                             case EXECUTING:
                             case POSTEXECUTE:
-                                allowedStates.retainAll(Arrays.asList(InternalNodeContainerState.IDLE,
-                                    InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC,
-                                    InternalNodeContainerState.CONFIGURED,
-                                    InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC));
+                                allowedStates.retainAll(Arrays.asList(IDLE,
+                                    UNCONFIGURED_MARKEDFOREXEC,
+                                    CONFIGURED,
+                                    CONFIGURED_MARKEDFOREXEC));
                                 break;
                             case EXECUTINGREMOTELY:
                                 // be more flexible than in the EXECUTING case
                                 // EXECUTINGREMOTELY is used in meta nodes,
                                 // which are executed elsewhere -- they set all nodes
                                 // of their internal flow to EXECUTINGREMOTELY
-                                allowedStates.retainAll(Arrays.asList(InternalNodeContainerState.IDLE,
-                                    InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC,
-                                    InternalNodeContainerState.CONFIGURED,
-                                    InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC,
-                                    InternalNodeContainerState.EXECUTINGREMOTELY));
+                                allowedStates.retainAll(Arrays.asList(IDLE,
+                                    UNCONFIGURED_MARKEDFOREXEC,
+                                    CONFIGURED,
+                                    CONFIGURED_MARKEDFOREXEC,
+                                    EXECUTINGREMOTELY));
                                 break;
                             case EXECUTED:
                         }
@@ -8018,8 +8031,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 break;
                             default:
                         }
-                        if (!allowedStates.contains(InternalNodeContainerState.CONFIGURED)) {
-                            nc.setInternalState(InternalNodeContainerState.IDLE);
+                        if (!allowedStates.contains(CONFIGURED)) {
+                            nc.setInternalState(IDLE);
                         }
                     }
                     boolean hasData = true;
@@ -8031,7 +8044,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             hasData &= p != null && p.getPortObject() != null && p.getPortObjectSpec() != null;
                         }
                     }
-                    if (!hasData && nc.getInternalState().equals(InternalNodeContainerState.EXECUTED)) {
+                    if (!hasData && nc.getInternalState().equals(EXECUTED)) {
                         wasClean = false;
                         resetSuccessors(nc.getID());
                         invokeResetOnNode(nc.getID());
@@ -8809,7 +8822,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 PortObject[] inData = new PortObject[nc.getNrInPorts()];
                 if (!filter.include(nodeModel)) {
                     it.remove();
-                } else if (InternalNodeContainerState.EXECUTED.equals(nc.getInternalState())
+                } else if (EXECUTED.equals(nc.getInternalState())
                     || (!assembleInputData(id, inData))) {
                     // only keep nodes that can be executed (= have all
                     // data available) but are not yet executed
@@ -8845,7 +8858,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 SingleNodeContainer nc = (SingleNodeContainer)getNodeContainer(id);
                 if (!filter.include(next.getValue())) {
                     it.remove();
-                } else if (!InternalNodeContainerState.EXECUTED.equals(nc.getInternalState())) {
+                } else if (!EXECUTED.equals(nc.getInternalState())) {
                     it.remove();
                 } else if (nc.isInactive()) {
                     it.remove();
