@@ -184,7 +184,7 @@ public class SotaPredictorNodeModel extends NodeModel {
         return new DataTableSpec(incomingSpec, new DataTableSpec(creator.createSpec()));
     }
 
-    private DataTableSpec createOutputTableSpec(final DataTableSpec incomingSpec, final SotaPortObjectSpec sotaSpec) {
+    private DataTableSpec createOutputTableSpec(final DataTableSpec incomingSpec, final SotaPortObjectSpec sotaSpec) throws InvalidSettingsException {
         final DataColumnSpec[] colSpecs = createOutColSpecs(sotaSpec);
         return new DataTableSpec(incomingSpec, new DataTableSpec(colSpecs));
     }
@@ -192,13 +192,14 @@ public class SotaPredictorNodeModel extends NodeModel {
     /**
      * @param sotaSpec
      * @return
+     * @throws InvalidSettingsException
      */
-    private DataColumnSpec[] createOutColSpecs(final SotaPortObjectSpec sotaSpec) {
+    private DataColumnSpec[] createOutColSpecs(final SotaPortObjectSpec sotaSpec) throws InvalidSettingsException {
         final PredictorHelper ph = PredictorHelper.getInstance();
         final DataColumnSpec classColumnSpec = sotaSpec.getClassColumnSpec();
         String trainingColumnName = classColumnSpec == null ? "No class" : classColumnSpec.getName();
         final String predColName =
-            ph.computePredictionColumnName(m_customPrediction.getStringValue(), m_changePrediction.getBooleanValue(),
+            ph.checkedComputePredictionColumnName(m_customPrediction.getStringValue(), m_changePrediction.getBooleanValue(),
                 trainingColumnName);
         final DataColumnSpec[] colSpecs;
         if (m_appendProbs.getBooleanValue() && sotaSpec.hasClassColumn()) {

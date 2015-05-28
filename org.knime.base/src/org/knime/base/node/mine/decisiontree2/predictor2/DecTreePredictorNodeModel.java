@@ -96,6 +96,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.pmml.PMMLModelType;
 import org.knime.core.util.Pair;
 import org.w3c.dom.Node;
@@ -397,6 +398,9 @@ public final class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        String predCol = m_predictionColumn.getStringValue();
+        CheckUtils.checkSetting(!m_overridePrediction.getBooleanValue()
+            || (predCol != null && !predCol.trim().isEmpty()), "Prediction column name cannot be empty");
 
         PMMLPortObjectSpec treeSpec = (PMMLPortObjectSpec)inSpecs[INMODELPORT];
         DataTableSpec inSpec = (DataTableSpec)inSpecs[1];

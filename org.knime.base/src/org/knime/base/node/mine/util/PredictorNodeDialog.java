@@ -309,6 +309,9 @@ public class PredictorNodeDialog extends NodeDialogPane {
         m_overridePredModel.saveSettingsTo(settings);
         m_predictionColModel.setEnabled(m_predColName.isEnabled());
         m_predictionColModel.setStringValue(m_predColName.getText());
+        if (m_predColName.isEnabled() && m_predColName.getText().isEmpty()) {
+            throw new InvalidSettingsException("Please specify a prediction column name.");
+        }
         m_predictionColModel.saveSettingsTo(settings);
         m_addProbsModel.setBooleanValue(m_addProbs.isSelected());
         m_addProbsModel.saveSettingsTo(settings);

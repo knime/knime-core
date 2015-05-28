@@ -180,7 +180,7 @@ public final class MLPPredictorNodeModel extends NodeModel {
         }
         m_columns = getLearningColumnIndices(testSpec, modelspec);
         final String prediction =
-            PredictorHelper.getInstance().computePredictionColumnName(m_predictionColumn.getStringValue(),
+            PredictorHelper.getInstance().checkedComputePredictionColumnName(m_predictionColumn.getStringValue(),
                 m_overridePrediction.getBooleanValue(), targetCol.getName());
         MLPClassificationFactory mymlp;
         // Regression

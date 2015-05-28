@@ -70,6 +70,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * The basis function predictor model performing a prediction on the data from
@@ -207,6 +208,9 @@ public abstract class BasisFunctionPredictor2NodeModel extends NodeModel {
         final DataTableSpec modelSpec = (DataTableSpec) portObjSpec[0];
         // get data spec
         final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[1];
+
+        String predCol = m_predictionColumn.getStringValue();
+        CheckUtils.checkSetting(!m_overridePrediction.getBooleanValue() || (predCol != null && !predCol.trim().isEmpty()), "Prediction column name cannot be empty");
         // sanity check for empty set of nominal values
         int modelClassIdx = modelSpec.getNumColumns() - 5;
         DataColumnSpec[] modelSpecs =

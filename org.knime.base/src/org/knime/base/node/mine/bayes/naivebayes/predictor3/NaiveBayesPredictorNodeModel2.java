@@ -175,7 +175,7 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         //check the input data
-         assert (inSpecs != null && inSpecs.length == 2 && inSpecs[DATA_IN_PORT] != null
+        assert (inSpecs != null && inSpecs.length == 2 && inSpecs[DATA_IN_PORT] != null
                 && inSpecs[MODEL_IN_PORT] != null);
         final PortObjectSpec modelObject = inSpecs[MODEL_IN_PORT];
         if (!(modelObject instanceof PMMLPortObjectSpec)) {
@@ -205,7 +205,7 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
         warningMessage("The following attributes are missing in the input data: ", missingInputCols);
         final PredictorHelper predictorHelper = PredictorHelper.getInstance();
         final DataColumnSpec resultColSpecs =
-            NaiveBayesCellFactory.createResultColSpecs(predictorHelper.computePredictionColumnName(
+            NaiveBayesCellFactory.createResultColSpecs(predictorHelper.checkedComputePredictionColumnName(
                 m_predictionColumnName.getStringValue(), m_overridePredicted.getBooleanValue(), classColumn.getName()),
                 classColumn.getType(), spec, m_inclProbVals.getBooleanValue());
         if (resultColSpecs != null) {

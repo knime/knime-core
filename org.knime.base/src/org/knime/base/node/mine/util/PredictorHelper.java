@@ -60,6 +60,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
@@ -67,6 +68,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Helper class to create predictor output table specification with a common naming scheme.
@@ -247,6 +249,26 @@ public class PredictorHelper {
         return shouldOverride ? predictionColumn : computePredictionDefault(trainingColumnName);
     }
 
+    /**
+     * Checks whether the prediction column name would be empty or not.
+     *
+     * @param predictionColumn The overridden value for the prediction column name.
+     * @param shouldOverride Use the overridden value ({@code true}), or the computed ({@code false})?
+     * @param trainingColumnName The name of the column used to train the model.
+     * @return The custom name if the model is enabled, else the pattern specified by
+     *         {@link #computePredictionDefault(String)}.
+     * @throws InvalidSettingsException Wrong prediction column name.
+     * @see #computePredictionDefault(String)
+     * @see #computePredictionColumnName(String, boolean, String)
+     * @since 2.12
+     */
+    public String checkedComputePredictionColumnName(final String predictionColumn, final boolean shouldOverride,
+        final String trainingColumnName) throws InvalidSettingsException {
+        CheckUtils.checkSetting(!shouldOverride || (predictionColumn != null && !predictionColumn.trim().isEmpty()),
+                "Prediction column name cannot be empty");
+        return computePredictionColumnName(predictionColumn, shouldOverride, trainingColumnName);
+    }
+
     private List<DataCell> getPredictionValues(final PMMLPortObjectSpec treeSpec) {
         String targetCol = treeSpec.getTargetFields().get(0);
         DataColumnSpec colSpec = treeSpec.getDataTableSpec().getColumnSpec(targetCol);
@@ -269,9 +291,12 @@ public class PredictorHelper {
      * @param shouldOverride Should we use that name?
      * @param suffix Suffix for probability columns.
      * @return The output table {@link DataTableSpec}.
+     * @throws InvalidSettingsException Invalid settings for the prediction column name.
      */
     public DataTableSpec createOutTableSpec(final PortObjectSpec dataSpec, final PortObjectSpec modelSpec,
-        final boolean addProbs, final String predictionCol, final boolean shouldOverride, final String suffix) {
+        final boolean addProbs, final String predictionCol, final boolean shouldOverride, final String suffix) throws InvalidSettingsException {
+        CheckUtils.checkSettingNotNull(predictionCol, "Prediction column name cannot be null");
+        CheckUtils.checkSetting(!predictionCol.trim().isEmpty(), "Prediction column name cannot be empty");
         List<DataCell> predValues = null;
         if (addProbs) {
             predValues = getPredictionValues((PMMLPortObjectSpec)modelSpec);
