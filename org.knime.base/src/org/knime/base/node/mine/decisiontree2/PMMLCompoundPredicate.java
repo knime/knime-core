@@ -258,8 +258,9 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
 
     /**
      * @return the boolean operator
+     * @since 2.12
      */
-    PMMLBooleanOperator getBooleanOperator() {
+    public final PMMLBooleanOperator getBooleanOperator() {
         return m_op;
     }
 

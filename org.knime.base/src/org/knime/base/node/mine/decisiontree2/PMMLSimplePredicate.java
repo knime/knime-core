@@ -183,8 +183,9 @@ public class PMMLSimplePredicate extends PMMLPredicate {
 
     /**
      * @return the threshold
+     * @since 2.12
      */
-    String getThreshold() {
+    public final String getThreshold() {
         return m_threshold;
     }
 
