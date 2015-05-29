@@ -55,7 +55,6 @@ import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
  * @author Gabor Bakos
  */
 public class PMMLRuleSimplePredicate extends PMMLSimplePredicate {
-    private String m_threshold;
 
     /**
      * Constructs {@link PMMLRuleSimplePredicate} from the {@link PMMLSimplePredicate}.
@@ -87,22 +86,5 @@ public class PMMLRuleSimplePredicate extends PMMLSimplePredicate {
      */
     public PMMLRuleSimplePredicate(final String field, final PMMLOperator operator, final String value) {
         super(field, operator, value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setThreshold(final String threshold) {
-        super.setThreshold(threshold);
-        this.m_threshold = threshold;
-    }
-
-    /**
-     * @return The threshold/value of the relation.
-     */
-    @SuppressWarnings("all")
-    public String getThreshold() {
-        return this.m_threshold;
     }
 }
