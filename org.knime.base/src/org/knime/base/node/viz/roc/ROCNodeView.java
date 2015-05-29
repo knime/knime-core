@@ -58,7 +58,6 @@ import java.util.List;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.base.node.viz.plotter.basic.BasicPlotterImpl;
-import org.knime.base.node.viz.roc.ROCNodeModel.ROCCurve;
 import org.knime.core.node.NodeView;
 
 /**

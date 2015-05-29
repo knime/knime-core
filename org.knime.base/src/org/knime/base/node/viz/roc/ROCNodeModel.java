@@ -57,21 +57,14 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.data.sort.SortedTable;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -96,93 +89,6 @@ public class ROCNodeModel extends NodeModel {
                 new DataColumnSpecCreator("Area Under Curve", DoubleCell.TYPE)
                         .createSpec();
         OUT_SPEC = new DataTableSpec(dcs);
-    }
-
-    /**
-     * Small container class for a single ROC curve.
-     *
-     * @author Thorsten Meinl, University of Konstanz
-     */
-    static class ROCCurve {
-        private final String m_name;
-
-        private final double m_area;
-
-        private final double[] m_x, m_y;
-
-        /**
-         * Creates a new ROC curve container. The data points may be downsampled by providing a maximum number
-         * of points. This should speed up the view for curves with many data points
-         *
-         * @param name the curve's name
-         * @param x the curve's x-values
-         * @param y the curve's y-values
-         * @param area the curve's area
-         * @param maxSamples the maximum number of points to store when downsampling the curve; -1 disabled downsampling
-         */
-        ROCCurve(final String name, final double[] x, final double[] y,
-                final double area, final int maxPoints) {
-            m_name = name;
-            m_x = sample(x, maxPoints);
-            m_y = sample(y, maxPoints);
-            m_area = area;
-        }
-
-        private static double[] sample(final double[] in, final int maxPoints) {
-            if ((maxPoints == -1) || (in.length <= maxPoints)) {
-                return in;
-            }
-
-            double[] out = new double[maxPoints];
-            out[0] = in[0];
-            out[out.length - 1] = in[in.length - 1];
-
-            final double factor = in.length / (double) maxPoints;
-            double x = factor;
-
-            for (int i = 1; i < out.length - 1; i++) {
-                out[i] = in[(int) Math.round(x)];
-                x += factor;
-            }
-
-            return out;
-        }
-
-        /**
-         * Returns the curve's name.
-         *
-         * @return the curve's name.
-         */
-        public String getName() {
-            return m_name;
-        }
-
-        /**
-         * Returns the curve's area.
-         *
-         * @return the curve's area.
-         */
-        public final double getArea() {
-            return m_area;
-        }
-
-        /**
-         * Returns the curve's x-values.
-         *
-         * @return the curve's x-values.
-         */
-        public final double[] getX() {
-            return m_x;
-        }
-
-        /**
-         * Returns the curve's y-values.
-         *
-         * @return the curve's y-values.
-         */
-        public final double[] getY() {
-            return m_y;
-        }
     }
 
     private final ROCSettings m_settings = new ROCSettings();
@@ -230,86 +136,17 @@ public class ROCNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final int curvesSize = m_settings.getCurves().size();
-        BufferedDataContainer outCont = exec.createDataContainer(OUT_SPEC);
 
-        int classIndex =
-                inData[0].getDataTableSpec().findColumnIndex(
-                        m_settings.getClassColumn());
-        int size = inData[0].getRowCount();
-        if (size == 0) {
-            setWarningMessage("Input table contains no rows");
-        }
 
-        List<ROCCurve> curves = new ArrayList<>();
-        for (int i = 0; i < curvesSize; i++) {
-            exec.checkCanceled();
-            String c = m_settings.getCurves().get(i);
+        ROCCalculator calc = new ROCCalculator(m_settings.getCurves(),
+                                                m_settings.getClassColumn(),
+                                                m_settings.getMaxPoints(),
+                                                m_settings.getPositiveClass().toString());
 
-            ExecutionContext subExec = exec.createSubExecutionContext(
-                    1.0 / curvesSize);
-            SortedTable sortedTable =
-                    new SortedTable(inData[0], Collections.singletonList(c),
-                            new boolean[]{false}, subExec);
-            subExec.setProgress(1.0);
+        calc.calculateCurveData(inData[0], exec);
 
-            int tp = 0, fp = 0;
-            // these contain the coordinates for the plot
-            double[] xValues = new double[size + 1];
-            double[] yValues = new double[size + 1];
-            int k = 0;
-            final int scoreColIndex =
-                    sortedTable.getDataTableSpec().findColumnIndex(c);
-            DataCell lastScore = null;
-            for (DataRow row : sortedTable) {
-                exec.checkCanceled();
-                DataCell realClass = row.getCell(classIndex);
-                if (realClass.equals(m_settings.getPositiveClass())) {
-                    tp++;
-                } else {
-                    fp++;
-                }
-
-                // Only add a new line point if probability values differ. If they are equal we can't prefer one
-                // value over the other as they are indifferent; for a sequence of equal probabilities, think of what
-                // would happen if we first encounter all TP and then the FP and the other way
-                // around ... the following lines circumvent this.
-                if (!row.getCell(scoreColIndex).equals(lastScore)) {
-                    k++;
-                    lastScore = row.getCell(scoreColIndex);
-                }
-                xValues[k] = fp;
-                yValues[k] = tp;
-            }
-
-            xValues = Arrays.copyOf(xValues, k + 1);
-            yValues = Arrays.copyOf(yValues, k + 1);
-
-            for (int j = 0; j <= k; j++) {
-                xValues[j] /= fp;
-                yValues[j] /= tp;
-            }
-            xValues[xValues.length - 1] = 1;
-            yValues[yValues.length - 1] = 1;
-
-            double area = 0;
-            for (k = 1; k < xValues.length; k++) {
-                if (xValues[k - 1] < xValues[k]) {
-                    // magical math: the rectangle + the triangle under
-                    // the segment xValues[k] to xValues[k - 1]
-                    area += 0.5 * (xValues[k] - xValues[k - 1])
-                        * (yValues[k] + yValues[k - 1]);
-                }
-            }
-
-            curves.add(new ROCCurve(c, xValues, yValues, area, m_settings.getMaxPoints()));
-            outCont.addRowToTable(new DefaultRow(new RowKey(c.toString()),
-                    new DoubleCell(area)));
-        }
-        m_curves = curves;
-
-        outCont.close();
-        return new BufferedDataTable[]{outCont.getTable()};
+        m_curves = calc.getOutputCurves();
+        return new BufferedDataTable[]{calc.getOutputTable()};
     }
 
     /**
