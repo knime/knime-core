@@ -152,6 +152,27 @@ public final class ImageRepository {
         /** Icon for a system flow. */
         SystemFlow("icons/system_flow.png"),
 
+
+        /** Icons for diff view. */
+        MetaNodeIcon("icons/metanode_icon.png"),
+        /** meta node with ports. */
+        MetaNodeDetailed("icons/metanode_detailed.png"),
+        /** Icons for diff view. */
+        NodeIcon("icons/node_icon.png"),
+        /** node with ports and status. */
+        NodeIconDetailed("icons/node_detailed.png"),
+        /** Icons for diff view. */
+        SubNodeIcon("icons/subnode_icon.png"),
+        /** subnode with ports. */
+        SubNodeDetailed("icons/subnode_detailed.png"),
+        /** cross/delete icon for the search bar. */
+        ButtonClear("icons/clear.png"),
+        /** filter icon. */
+        FunnelIcon("icons/filter.png"),
+        /** hide equal nodes button. */
+        ButtonHideEqualNodes("icons/hide_equals.png"),
+        /** show additional nodes only button. */
+        ButtonShowAdditionalNodesOnly("icons/show_add_only.png"),
         /** Icon for configured knime project. */
         WorkflowConfigured("icons/project_configured.png"),
         /** Icon for executing knime project. */
@@ -501,7 +522,7 @@ public final class ImageRepository {
     /**
      * Returns an image for an "external" image. The image is given by the plug-in an the path relative to the plug-in
      * root.
-     * 
+     *
      * @param pluginID the plug-in's id
      * @param path the path of the image
      * @param width the desired icon width
