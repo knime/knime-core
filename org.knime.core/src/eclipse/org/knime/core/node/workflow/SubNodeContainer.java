@@ -1320,10 +1320,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     public static final String getDialogNodeParameterNameDefault(final Class<?> cl) {
         CheckUtils.checkArgumentNotNull(cl, "Must not be null");
-        String[] segments = StringUtils.splitByCharacterTypeCamelCase(
-            StringUtils.removeEndIgnoreCase(
-                StringUtils.removeEndIgnoreCase(cl.getSimpleName(), "quickformnodemodel"),
-                "nodemodel"));
+        // from IntInputQuickFormNodeModel -> IntInput
+        final String[] hiddenSuffixes = new String[] {"quickformnodemodel", "nodemodel", "quickformconfig", "config"};
+        String truncated = cl.getSimpleName();
+        for (String suffix : hiddenSuffixes) {
+            truncated = StringUtils.removeEndIgnoreCase(truncated, suffix);
+        }
+        String[] segments = StringUtils.splitByCharacterTypeCamelCase(truncated);
         String result = StringUtils.lowerCase(StringUtils.join(segments, '-'));
         assert DialogNode.PARAMETER_NAME_PATTERN.matcher(result).matches() : "Doesn't match: " + cl.getName();
         return result;
