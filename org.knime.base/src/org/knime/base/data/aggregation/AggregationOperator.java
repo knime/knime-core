@@ -516,6 +516,15 @@ public abstract class AggregationOperator implements AggregationMethod {
     }
 
     /**
+     * @return a detailed operator description that can also contain html elements such as hyper-links but no
+     * html and body tag. The description can be opened in the operator settings dialog.
+     * @since 2.12
+     */
+    public String getDetailedDescription() {
+        return getDescription();
+    }
+
+    /**
      * Override this method and return <code>true</code> if the operator
      * requires additional settings.
      *

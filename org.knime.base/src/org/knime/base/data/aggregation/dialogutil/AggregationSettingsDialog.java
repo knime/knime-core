@@ -46,22 +46,39 @@
  */
 package org.knime.base.data.aggregation.dialogutil;
 
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 
+import javax.swing.Box;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 
+import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
@@ -78,10 +95,69 @@ import org.knime.core.node.port.database.aggregation.AggregationFunction;
  */
 public class AggregationSettingsDialog extends JDialog {
 
+    /**
+     *
+     */
+    private static final int DIALOG_HEIGHT = 135;
+    /**
+     *
+     */
+    private static final int DIALOG_WIDTH = 240;
     /**This is the first version of the dialog.*/
     private static final long serialVersionUID = 1L;
     private final AggregationFunction m_method;
 
+    private class HelpDialog extends JDialog {
+        private static final long serialVersionUID = 1L;
+
+        public HelpDialog(final JDialog parent, final String htmlText) {
+          super(parent, "Operator Help", false);
+          final JEditorPane htmlTextArea = new JEditorPane("text/html", htmlText);
+          htmlTextArea.setEditable(false);
+          htmlTextArea.addHyperlinkListener(new HyperlinkListener() {
+              @Override
+            public void hyperlinkUpdate(final HyperlinkEvent e) {
+                  if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                      if (Desktop.isDesktopSupported()) {
+                          final URL uri = e.getURL();
+                          if (uri != null) {
+                              SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        Desktop.getDesktop().browse(uri.toURI());
+                                    } catch (IOException | URISyntaxException e1) {
+                                        e1.printStackTrace();
+                                    }
+                                }
+                            }
+                            );
+                          }
+                      }
+                  }
+              }
+          });
+          Box b = Box.createVerticalBox();
+          b.add(Box.createGlue());
+          b.add(new JScrollPane(htmlTextArea));
+          b.add(Box.createGlue());
+          getContentPane().add(b, "Center");
+
+          JPanel p2 = new JPanel();
+          JButton ok = new JButton("Close");
+          p2.add(ok);
+          getContentPane().add(p2, "South");
+
+          ok.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent evt) {
+              setVisible(false);
+            }
+          });
+
+          setSize(250, 150);
+        }
+      }
 
     /**
      * @param owner the {@code Frame} from which the dialog is displayed
@@ -136,7 +212,7 @@ public class AggregationSettingsDialog extends JDialog {
         gc.anchor = GridBagConstraints.CENTER;
         gc.gridx = 0;
         gc.gridy = 0;
-        gc.gridwidth = 2;
+        gc.gridwidth = 3;
         gc.insets = new Insets(10, 10, 10, 10);
         gc.fill = GridBagConstraints.BOTH;
         gc.weightx = 1;
@@ -179,6 +255,41 @@ public class AggregationSettingsDialog extends JDialog {
         };
         cancelButton.addActionListener(cancelActionListener);
         rootPanel.add(cancelButton, gc);
+
+        gc.gridx++;
+        final Icon origIcon = UIManager.getIcon("OptionPane.questionIcon");
+        final JButton helpButton;
+        if (origIcon != null) {
+            final int buttonHeight = cancelButton.getPreferredSize().height;
+            Image img;
+            if(origIcon instanceof ImageIcon)
+            {
+                img = ((ImageIcon) origIcon).getImage();
+            }
+            else
+            {
+                BufferedImage image = new BufferedImage(origIcon.getIconWidth(), origIcon.getIconHeight(), BufferedImage.TYPE_INT_RGB);
+                origIcon.paintIcon(null, image.getGraphics(), 0, 0);
+                img = image;
+            }
+            Image newimg = img.getScaledInstance(16, 16,  java.awt.Image.SCALE_SMOOTH ) ;
+            Icon buttonIcon = new ImageIcon( newimg );
+            helpButton = new JButton(buttonIcon);
+            Dimension dim =
+                    new Dimension(buttonHeight, buttonHeight);
+            helpButton.setSize(dim);
+            helpButton.setMaximumSize(dim);
+            helpButton.setPreferredSize(dim);
+        } else {
+            helpButton = new JButton("Help");
+        }
+        helpButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                onHelp(method);
+            }
+        });
+        rootPanel.add(helpButton, gc);
         setContentPane(rootPanel);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -189,8 +300,28 @@ public class AggregationSettingsDialog extends JDialog {
                 onCancel(initialSettings);
             }
         });
-        setMinimumSize(new Dimension(240, 135));
+        setMinimumSize(new Dimension(DIALOG_WIDTH, DIALOG_HEIGHT));
         pack();
+    }
+
+    /**
+     * @param method
+     * @since 2.12
+     */
+    protected void onHelp(final AggregationFunction method) {
+        final String help;
+        if (method instanceof AggregationOperator) {
+            final AggregationOperator op = (AggregationOperator)method;
+            help = op.getDetailedDescription();
+        } else {
+            help = method.getDescription();
+        }
+        final HelpDialog helpDialog = new HelpDialog(this, help);
+        Point location = this.getLocation();
+        Dimension size = this.getSize();
+        helpDialog.setLocation((int)(location.getX() + size.getWidth() + 10), location.y);
+//        helpDialog.setLocationRelativeTo(this);
+        helpDialog.setVisible(true);
     }
 
     private boolean validateSettings() {
