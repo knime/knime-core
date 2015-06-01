@@ -101,13 +101,14 @@ public class LiftChartNodeDialog extends DefaultNodeSettingsPane {
 
         m_signDC =
                 new DialogComponentStringSelection(m_responseLabel,
-                        "Positive label (hits):", 
+                        "Positive label (hits):",
                         getPossibleLabels(m_responseColumn.getStringValue()));
 
         m_responseColumn.addChangeListener(new ChangeListener() {
             /**
              * {@inheritDoc}
              */
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 m_signDC.replaceListItems(getPossibleLabels(m_responseColumn
                         .getStringValue()), null);
@@ -118,12 +119,12 @@ public class LiftChartNodeDialog extends DefaultNodeSettingsPane {
         closeCurrentGroup();
         setHorizontalPlacement(false);
         addDialogComponent(new DialogComponentColumnNameSelection(
-                m_probabilityColumn, 
+                m_probabilityColumn,
                 "Column containing score (probabilities):", 0,
                 DoubleValue.class));
 
         addDialogComponent(new DialogComponentStringSelection(m_intervalWidth,
-                "Interval width in %:", 
+                "Interval width in %:",
                 "0.5", "1", "2", "2.5", "5", "10", "12.5", "20", "25"));
 
     }
