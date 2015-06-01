@@ -46,6 +46,8 @@ package org.knime.workbench.ui.preferences;
 
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -66,6 +68,19 @@ public class LabelField extends FieldEditor {
     LabelField(final Composite parent, final String text) {
         super("TXT_FIELD", "", parent);
         m_text.setText(text);
+    }
+
+    /**
+     * @param parent
+     * @param text to show
+     * @param swtFontStyleConstants additional style constants like SWT.BOLD.
+     */
+    LabelField(final Composite parent, final String text, final int swtFontStyleConstants) {
+        this(parent, text);
+        FontData fontData = m_text.getFont().getFontData()[0];
+        Font font = new Font(m_text.getDisplay(), new FontData(fontData.getName(), fontData
+            .getHeight(), swtFontStyleConstants));
+        m_text.setFont(font);
     }
 
     /**

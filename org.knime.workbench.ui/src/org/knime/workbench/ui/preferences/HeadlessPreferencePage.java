@@ -44,6 +44,7 @@
  */
 package org.knime.workbench.ui.preferences;
 
+import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -122,6 +123,14 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
         tempDirEditor.setEmptyStringAllowed(false);
 
         addField(tempDirEditor);
+
+        addField(new HorizontalLineField(parent));
+        addField(new LabelField(parent, "Improve KNIME", SWT.BOLD));
+        addField(new LabelField(parent, "Help us improve KNIME by sending us anonymous usage data. Absolutely no other information is sent."));
+        BooleanFieldEditor sendAnonymousStatisticsEditor =
+            new BooleanFieldEditor(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS,
+                "Yes, help improve KNIME.", parent);
+        addField(sendAnonymousStatisticsEditor);
 
     }
 

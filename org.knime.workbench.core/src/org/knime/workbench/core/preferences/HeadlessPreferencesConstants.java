@@ -60,6 +60,9 @@ public final class HeadlessPreferencesConstants {
     /** Preference constant: directory for temporary files. */
     public static final String P_TEMP_DIR = "knime.tempDir";
 
+    /** Preference constant: send anonymous usage statistics to KNIME, yes or no. */
+    public static final String P_SEND_ANONYMOUS_STATISTICS = "knime.sendAnonymousStatistics";
+
     /* --- Master Key constants --- */
 
     /** Preference constant if the master key dialog was opened. */

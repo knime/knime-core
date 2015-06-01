@@ -465,23 +465,10 @@ public class KNIMEApplication implements IApplication {
             return;
         }
 
-        OutputStream output = null;
-        try {
-            String versionLine =
-                    WORKSPACE_VERSION_KEY + '=' + WORKSPACE_VERSION_VALUE;
-
-            output = new FileOutputStream(versionFile);
+        try (OutputStream output = new FileOutputStream(versionFile)) {
+            String versionLine = WORKSPACE_VERSION_KEY + '=' + WORKSPACE_VERSION_VALUE;
             output.write(versionLine.getBytes("UTF-8")); //$NON-NLS-1$
-        } catch (IOException e) {
-        } finally {
-            try {
-                if (output != null) {
-                    output.close();
-                }
-            } catch (IOException e) {
-                // do nothing
-            }
-        }
+        } catch (IOException e) { /*do nothing*/ }
     }
 
     /**

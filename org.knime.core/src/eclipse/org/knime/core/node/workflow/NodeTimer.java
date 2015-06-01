@@ -48,10 +48,12 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -67,6 +69,15 @@ import javax.json.JsonReader;
 import javax.json.JsonWriter;
 import javax.json.stream.JsonGenerator;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -83,6 +94,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.osgi.service.prefs.Preferences;
 
 /**
  * Holds execution timing information about a specific node.
@@ -90,6 +102,9 @@ import org.knime.core.node.NodeLogger;
  * @author Michael Berthold
  */
 public final class NodeTimer {
+
+    /* For now we use the default store address always. */
+    private static final String SERVER_ADDRESS = "http://www.knime.org/store/rest" /*"http://localhost:8080/com.knime.store.server/rest"*/;
 
     private final NodeContainer m_parent;
     private long m_startTime;
@@ -118,7 +133,9 @@ public final class NodeTimer {
         private int m_launches = 0;
         private int m_crashes = 0;
         private long m_timeOfLastSave = System.currentTimeMillis() - SAVEINTERVAL + 1000*60;
+        private long m_timeOfLastSend = m_timeOfLastSave;
         private static final long SAVEINTERVAL = 15*60*1000;  // save no more than every 15mins
+        private static final long SENDINTERVAL = 24*60*60*1000; // only send every 24h
         private static final String FILENAME = "nodeusage.json";
 
         private static final boolean DISABLE_GLOBAL_TIMER = Boolean.getBoolean("knime.globaltimer.disable");
@@ -128,14 +145,8 @@ public final class NodeTimer {
                 LOGGER.debug("Global Timer disabled due to system property");
                 return;
             }
+
             readFromFile();
-            Thread hook = new Thread() {
-                @Override
-                public void run() {
-                    writeToFile(true);
-                }
-            };
-            Runtime.getRuntime().addShutdownHook(hook);
         }
 
         void addExecutionTime(final String cname, final long exectime) {
@@ -151,10 +162,7 @@ public final class NodeTimer {
                 }
                 ns.executionTime += exectime;
                 ns.executionCount++;
-                if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
-                    asyncWriteToFile();
-                    m_timeOfLastSave = System.currentTimeMillis();
-                }
+                processStatChanges();
             }
         }
         public void addNodeCreation(final NodeContainer nc) {
@@ -169,10 +177,7 @@ public final class NodeTimer {
                     m_globalNodeStats.put(NodeTimer.getCanonicalName(nc), ns);
                 }
                 ns.creationCount++;
-                if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
-                    asyncWriteToFile();
-                    m_timeOfLastSave = System.currentTimeMillis();
-                }
+                processStatChanges();
             }
         }
         public void addConnectionCreation(final NodeContainer source, final NodeContainer dest) {
@@ -191,12 +196,21 @@ public final class NodeTimer {
                 if ((ns.likelySuccessor.equals("n/a")) | (Math.random() >= .5)) {
                     ns.likelySuccessor = NodeTimer.getCanonicalName(dest);
                 }
-                if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
-                    asyncWriteToFile();
-                    m_timeOfLastSave = System.currentTimeMillis();
+                processStatChanges();
+            }
+        }
+
+        private void processStatChanges() {
+            if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
+                asyncWriteToFile();
+                m_timeOfLastSave = System.currentTimeMillis();
+                if (System.currentTimeMillis() > m_timeOfLastSend + SENDINTERVAL) {
+                    asyncSendToServer();
+                    m_timeOfLastSend = System.currentTimeMillis();
                 }
             }
         }
+
         public DataTableSpec getGlobalStatsSpecs() {
             DataTableSpecCreator dtsc = new DataTableSpecCreator();
             DataColumnSpec[] colSpecs = new DataColumnSpec[] {
@@ -251,31 +265,36 @@ public final class NodeTimer {
             return m_crashes;
         }
 
-        private void writeToFile(final boolean properShutdown) {
-            try {
-                JsonObjectBuilder job = Json.createObjectBuilder();
-                job.add("version", KNIMEConstants.VERSION);
-                job.add("created", m_created);
-                JsonObjectBuilder job2 = Json.createObjectBuilder();
-                synchronized (this) {
-                    for (String cname : m_globalNodeStats.keySet()) {
-                        JsonObjectBuilder job3 = Json.createObjectBuilder();
-                        NodeStats ns = m_globalNodeStats.get(cname);
-                        if (ns != null) {
-                            job3.add("nrexecs", ns.executionCount);
-                            job3.add("exectime", ns.executionTime);
-                            job3.add("nrcreated", ns.creationCount);
-                            job3.add("successor", ns.likelySuccessor);
-                            job2.add(cname, job3);
-                        }
+        private JsonObject constructJSONObject(final boolean properShutdown) {
+            JsonObjectBuilder job = Json.createObjectBuilder();
+            job.add("version", KNIMEConstants.VERSION);
+            job.add("created", m_created);
+            JsonObjectBuilder job2 = Json.createObjectBuilder();
+            synchronized (this) {
+                for (String cname : m_globalNodeStats.keySet()) {
+                    JsonObjectBuilder job3 = Json.createObjectBuilder();
+                    NodeStats ns = m_globalNodeStats.get(cname);
+                    if (ns != null) {
+                        job3.add("nrexecs", ns.executionCount);
+                        job3.add("exectime", ns.executionTime);
+                        job3.add("nrcreated", ns.creationCount);
+                        job3.add("successor", ns.likelySuccessor);
+                        job2.add(cname, job3);
                     }
                 }
-                job.add("nodestats", job2);
-                job.add("uptime", getAvgUpTime());
-                job.add("launches", getNrLaunches());
-                job.add("crashes", getNrCrashes());
-                job.add("properlyShutDown", properShutdown);
-                JsonObject jo = job.build();
+            }
+            job.add("nodestats", job2);
+            job.add("uptime", getAvgUpTime());
+            job.add("launches", getNrLaunches());
+            job.add("crashes", getNrCrashes());
+            job.add("properlyShutDown", properShutdown);
+            JsonObject jo = job.build();
+            return jo;
+        }
+
+        private void writeToFile(final boolean properShutdown) {
+            try {
+                JsonObject jo = constructJSONObject(properShutdown);
                 File propfile = new File(KNIMEConstants.getKNIMEHomeDir(), FILENAME);
                 Map<String, Boolean> cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
                 try (JsonWriter jw = Json.createWriterFactory(cfg).createWriter(new FileOutputStream(propfile))) {
@@ -287,13 +306,82 @@ public final class NodeTimer {
             }
         }
 
-        private void asyncWriteToFile() {
+
+
+        private void sendToServer(final boolean properShutdown) {
+            // Only send if user chose to do so
+            Preferences preferences = InstanceScope.INSTANCE.getNode("org.knime.workbench.core");
+            boolean sendStatistics = preferences.getBoolean("knime.sendAnonymousStatistics", false);
+            if (!sendStatistics) {
+                LOGGER.debug("Sending of usage stats disabled.");
+                return;
+            }
+
+            PostMethod method = null;
+            try {
+                JsonObject jo = constructJSONObject(properShutdown);
+                Map<String, Boolean> cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                try (JsonWriter jw = Json.createWriterFactory(cfg).createWriter(bos)) {
+                    jw.write(jo);
+                }
+
+                byte[] bytes = bos.toByteArray();
+                String knimeID = URLEncoder.encode(KNIMEConstants.getKNIMEInstanceID(), "UTF-8");
+                HttpClient requestClient = new HttpClient();
+                requestClient.getParams().setAuthenticationPreemptive(true);
+                org.apache.commons.httpclient.Credentials usageCredentials =
+                    new UsernamePasswordCredentials("knime-usage-user", "knime");
+                requestClient.getState().setCredentials(AuthScope.ANY, usageCredentials);
+                String uri = SERVER_ADDRESS + "/server/v1/post-usage/" + knimeID;
+                method = new PostMethod(uri);
+                RequestEntity entity = new ByteArrayRequestEntity(bytes);
+                method.setRequestEntity(entity);
+                int response = requestClient.executeMethod(method);
+                if (response != HttpStatus.SC_OK) {
+                    String responseReason = HttpStatus.getStatusText(response);
+                    String responseString = responseReason == null ?
+                        Integer.toString(response) : (response + " - " + responseReason);
+                    throw new HttpException("Server returned HTTP code " + responseString);
+                }
+                LOGGER.debug("Successfully sent node usage stats to server");
+            } catch (Exception ex) {
+                LOGGER.debug("Node usage file did not send: " + ex.getMessage());
+            } finally {
+                if (method != null) {
+                    method.releaseConnection();
+                }
+            }
+        }
+
+        private void asyncSendToServer() {
             new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    sendToServer(false);
+                }
+            }, "KNIME-Node-Usage-Sender").start();
+        }
+
+        private Thread asyncWriteToFile() {
+            Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     writeToFile(false);
                 }
-            }, "KNIME-Node-Usage-Writer").start();
+            }, "KNIME-Node-Usage-Writer");
+            t.start();
+            return t;
+        }
+
+        /**
+         * This method can be called when the application properly shuts down.
+         * It forces an out-of-interval write and send of the usage data with the
+         * shutdown flag set.
+         */
+        public void performShutdown() {
+            writeToFile(true);
+            sendToServer(true);
         }
 
         private void readFromFile() {
