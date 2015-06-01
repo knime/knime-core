@@ -253,7 +253,7 @@ public class IntroPage implements LocationListener {
                 MessageDialogWithToggle.openWarning(Display.getDefault().getActiveShell(),
                     "Missing browser integration",
                     "KNIME is unable to display web pages in an internal browser. This may be caused by missing "
-                        + "system libraries. Please visit http://www.knime.org/faq#q6 for details.\n"
+                        + "system libraries. Please visit http://tech.knime.org/faq#q6 for details.\n"
                         + "Some web pages may open in an external browser.", "Do not show again", false, prefStore,
                     PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
             if (dialog.getToggleState()) {
