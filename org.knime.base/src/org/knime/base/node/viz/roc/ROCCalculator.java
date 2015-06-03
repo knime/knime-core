@@ -98,6 +98,15 @@ public class ROCCalculator {
 
     private List<ROCCurve> m_outCurves;
 
+    private String m_warningMessage = null;
+
+    /**
+     * @return Warning messages that occurred during execution
+     */
+    public String getWarningMessage() {
+        return m_warningMessage;
+    }
+
     /**
      * Instantiates the ROCCalculator.
      * @param curves the score column of the curves
@@ -121,10 +130,14 @@ public class ROCCalculator {
      */
     public void calculateCurveData(final BufferedDataTable table, final ExecutionContext exec)
             throws CanceledExecutionException {
+        m_warningMessage = null;
         List<ROCCurve> curves = new ArrayList<ROCCurve>();
         int classIndex = table.getDataTableSpec().findColumnIndex(m_classCol);
         int curvesSize = m_curves.size();
         int size = table.getRowCount();
+        if (size == 0) {
+            m_warningMessage = "Input table contains no rows";
+        }
         BufferedDataContainer outCont = exec.createDataContainer(OUT_SPEC);
         for (int i = 0; i < curvesSize; i++) {
             exec.checkCanceled();

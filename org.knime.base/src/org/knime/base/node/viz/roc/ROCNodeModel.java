@@ -137,13 +137,16 @@ public class ROCNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
-
         ROCCalculator calc = new ROCCalculator(m_settings.getCurves(),
                                                 m_settings.getClassColumn(),
                                                 m_settings.getMaxPoints(),
                                                 m_settings.getPositiveClass().toString());
 
         calc.calculateCurveData(inData[0], exec);
+
+        if (calc.getWarningMessage() != null) {
+            setWarningMessage(calc.getWarningMessage());
+        }
 
         m_curves = calc.getOutputCurves();
         return new BufferedDataTable[]{calc.getOutputTable()};
