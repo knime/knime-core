@@ -114,7 +114,7 @@ public class GroupByNodeModel extends NodeModel {
     private static final String OLD_CFG_NOMINAL_COL_METHOD =
         "nominalColumnMethod";
     /**
-     * Old configuration key for the move the group by columns to front option.
+     * Old configuration key for the move the group by columns to front option
      * This key was used prior Knime 2.0.
      */
     private static final String OLD_CFG_MOVE_GROUP_BY_COLS_2_FRONT =
@@ -375,7 +375,7 @@ public class GroupByNodeModel extends NodeModel {
             final Set<String> uniqueAggregators = new HashSet<>(aggregators.size());
             for (final ColumnAggregator aggregator : aggregators) {
                 final String uniqueName = aggregator.getOriginalColName()
-                        + "@" + aggregator.getMethodTemplate().getId()
+                        + "@" + aggregator.getMethodTemplate().getColumnLabel()
                         + "@" + aggregator.inclMissingCells();
                 if (!uniqueAggregators.add(uniqueName)) {
                     throw new IllegalArgumentException("Duplicate settings: Column "

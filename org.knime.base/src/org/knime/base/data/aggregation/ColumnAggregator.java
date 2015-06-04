@@ -45,8 +45,10 @@
 
 package org.knime.base.data.aggregation;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -59,6 +61,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.Config;
+import org.knime.core.util.MutableInteger;
 
 
 /**
@@ -74,9 +77,11 @@ public class ColumnAggregator extends AggregationMethodDecorator {
     private static final String CNFG_AGGR_COL_SECTION = "aggregationColumn";
     private static final String CNFG_COL_NAMES = "columnNames";
     private static final String CNFG_COL_TYPES = "columnTypes";
+    private static final String CNFG_OPERATOR_SETTINGS = "aggregationOperatorSettings";
 
     private final DataColumnSpec m_origColSpec;
     private AggregationOperator m_operator;
+
 
 
     /**Constructor for class ColumnAggregator.
@@ -266,6 +271,13 @@ public class ColumnAggregator extends AggregationMethodDecorator {
             throw new InvalidSettingsException(
                 "Column name array and aggregation method array should be of equal size");
         }
+        final NodeSettingsRO operatorSettings;
+        if (settings.containsKey(CNFG_OPERATOR_SETTINGS)) {
+            operatorSettings = settings.getNodeSettings(CNFG_OPERATOR_SETTINGS);
+        } else {
+            operatorSettings = settings;
+        }
+        final Map<String, MutableInteger> idMap = new HashMap<>();
         for (int i = 0, length = aggrMethods.length; i < length; i++) {
             final AggregationMethod method = AggregationMethods.getMethod4Id(aggrMethods[i]);
             final boolean inclMissingVal;
@@ -279,14 +291,16 @@ public class ColumnAggregator extends AggregationMethodDecorator {
             final ColumnAggregator aggrCol = new ColumnAggregator(resultSpec, method, inclMissingVal);
             if (aggrCol.hasOptionalSettings()) {
                 try {
-                    NodeSettingsRO operatorSettings = settings.getNodeSettings(createSettingsKey(aggrCol));
+                    //TK_TODO: We should use a settings key but a running number to allow the user to change the columns
+                    //to aggregate via flow variables. However we can not do this now because of backward compatibility
+                    NodeSettingsRO operatorSetting = operatorSettings.getNodeSettings(createSettingsKey(idMap, aggrCol));
                     if (spec != null) {
                         //this method is called from the dialog
-                        aggrCol.loadSettingsFrom(operatorSettings, spec);
+                        aggrCol.loadSettingsFrom(operatorSetting, spec);
                     } else {
                         //this method is called from the node model where we do not
                         //have the DataTableSpec
-                        aggrCol.loadValidatedSettings(operatorSettings);
+                        aggrCol.loadValidatedSettings(operatorSetting);
                     }
                 } catch (Exception e) {
                     LOGGER.error("Exception while loading settings for aggreation operator '"
@@ -324,6 +338,14 @@ public class ColumnAggregator extends AggregationMethodDecorator {
         final String[] aggrMethods = new String[aggregators.size()];
         final boolean[] inclMissingVals = new boolean[aggregators.size()];
         final DataType[] types = new DataType[aggregators.size()];
+        final Config cnfg;
+        if (key == null || key.isEmpty()) {
+            cnfg = settings.addConfig(CNFG_AGGR_COL_SECTION);
+        } else {
+            cnfg = settings.addConfig(key);
+        }
+        final NodeSettingsWO operatorSettings = settings.addNodeSettings(CNFG_OPERATOR_SETTINGS);
+        final Map<String, MutableInteger> idMap = new HashMap<>();
         for (int i = 0, length = aggregators.size(); i < length; i++) {
             final ColumnAggregator colAggr = aggregators.get(i);
             colNames[i] = colAggr.getOriginalColName();
@@ -333,19 +355,13 @@ public class ColumnAggregator extends AggregationMethodDecorator {
             inclMissingVals[i] = colAggr.inclMissingCells();
             if (colAggr.hasOptionalSettings()) {
                 try {
-                    final NodeSettingsWO operatorSettings = settings.addNodeSettings(createSettingsKey(colAggr));
-                    method.saveSettingsTo(operatorSettings);
+                    final NodeSettingsWO operatorSetting = operatorSettings.addNodeSettings(createSettingsKey(idMap, colAggr));
+                    method.saveSettingsTo(operatorSetting);
                 } catch (Exception e) {
                     LOGGER.error("Exception while saving settings for aggreation operator '"
-                        + colAggr.getId() + "', reason: " + e.getMessage());
+                            + colAggr.getId() + "', reason: " + e.getMessage());
                 }
             }
-        }
-        final Config cnfg;
-        if (key == null || key.isEmpty()) {
-            cnfg = settings.addConfig(CNFG_AGGR_COL_SECTION);
-        } else {
-            cnfg = settings.addConfig(key);
         }
         cnfg.addStringArray(CNFG_COL_NAMES, colNames);
         cnfg.addDataTypeArray(CNFG_COL_TYPES, types);
@@ -395,14 +411,25 @@ public class ColumnAggregator extends AggregationMethodDecorator {
     }
 
     /**
+     * @param idMap
      * @param colAggr the {@link ColumnAggregator} to use
      * @return the unique settings key
      */
-    private static String createSettingsKey(final ColumnAggregator colAggr) {
+    private static String createSettingsKey(final Map<String, MutableInteger> idMap, final ColumnAggregator colAggr) {
         //the method id and the original column name are unique since
         //both are used to generate the new column name in the result table
         //which must be unique as well
-        return colAggr.getId() + "_" + colAggr.getOriginalColName();
+        final String id = colAggr.getId() + "_" + colAggr.getOriginalColName();
+        final MutableInteger counter = idMap.get(id);
+        final String uniqueId;
+        if (counter == null) {
+            idMap.put(id, new MutableInteger(0));
+            uniqueId = id;
+        } else {
+            counter.inc();
+            uniqueId = id + "_" + counter.intValue();
+        }
+        return uniqueId;
     }
 
     /**

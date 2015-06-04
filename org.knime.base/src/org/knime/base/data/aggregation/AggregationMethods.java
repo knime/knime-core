@@ -103,13 +103,21 @@ import org.knime.base.data.aggregation.general.SortedListCellOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateWithCountOperator;
 import org.knime.base.data.aggregation.general.UniqueCountOperator;
+import org.knime.base.data.aggregation.numerical.CorrelationOperator;
+import org.knime.base.data.aggregation.numerical.CovarianceOperator;
 import org.knime.base.data.aggregation.numerical.GeometricMeanOperator;
 import org.knime.base.data.aggregation.numerical.GeometricStdDeviationOperator;
+import org.knime.base.data.aggregation.numerical.KurtosisOperator;
 import org.knime.base.data.aggregation.numerical.MeanOperator;
 import org.knime.base.data.aggregation.numerical.MedianOperator;
+import org.knime.base.data.aggregation.numerical.PSquarePercentileOperator;
 import org.knime.base.data.aggregation.numerical.ProductOperator;
+import org.knime.base.data.aggregation.numerical.QuantileOperator;
 import org.knime.base.data.aggregation.numerical.RangeOperator;
+import org.knime.base.data.aggregation.numerical.SkewnessOperator;
 import org.knime.base.data.aggregation.numerical.StdDeviationOperator;
+import org.knime.base.data.aggregation.numerical.SumOfLogsOperator;
+import org.knime.base.data.aggregation.numerical.SumOfSquaresOperator;
 import org.knime.base.data.aggregation.numerical.SumOperator;
 import org.knime.base.data.aggregation.numerical.VarianceOperator;
 import org.knime.core.data.DataCell;
@@ -132,7 +140,7 @@ import org.knime.core.node.port.database.aggregation.AggregationFunctionProvider
 public final class AggregationMethods implements AggregationFunctionProvider<AggregationMethod> {
 
     private static final class DataValueClassComparator implements
-        Comparator<Class<? extends DataValue>> {
+    Comparator<Class<? extends DataValue>> {
 
         /**The only instance of this comparator.*/
         static final AggregationMethods.DataValueClassComparator COMPARATOR = new DataValueClassComparator();
@@ -142,7 +150,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
          */
         @Override
         public int compare(final Class<? extends DataValue> o1,
-                final Class<? extends DataValue> o2) {
+            final Class<? extends DataValue> o2) {
             if (o1 == null) {
                 if (o2 == null) {
                     return 0;
@@ -184,7 +192,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
     private AggregationMethods() {
         //add all default methods
         try {
-//The collection methods
+            //The collection methods
             /**And.*/
             addOperator(new AndElementOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**And count.*/
@@ -204,7 +212,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
             addOperator(new ElementCountOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Append.*/
             addOperator(new AppendElementOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
-//The date methods
+            //The date methods
             /**Date mean operator.*/
             addOperator(new DateMeanOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Median date operator.*/
@@ -214,10 +222,10 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
             /**Milliseconds range operator.*/
             addOperator(new MillisRangeOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
-//The numerical methods
+            //The numerical methods
             /**Mean.*/
             final AggregationOperator meanOperator = new MeanOperator(GlobalSettings.DEFAULT,
-                        OperatorColumnSettings.DEFAULT_EXCL_MISSING);
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING);
             addOperator(meanOperator);
             m_defNumericalMeth = getOperator(meanOperator.getId());
             /**Standard deviation.*/
@@ -237,14 +245,30 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
             /**Geometric deviation.*/
             addOperator(new GeometricStdDeviationOperator(GlobalSettings.DEFAULT,
                 OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new QuantileOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new KurtosisOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new SkewnessOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new PSquarePercentileOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new SumOfSquaresOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new SumOfLogsOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new CorrelationOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new CovarianceOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
-//The boolean methods
+            //The boolean methods
             /**True count operator.*/
             addOperator(new TrueCountOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**False count operator.*/
             addOperator(new FalseCountOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
-// Bit vector methods
+            // Bit vector methods
             /**Set count operator.*/
             addOperator(new BitVectorSetCountOperator(GlobalSettings.DEFAULT,
                 OperatorColumnSettings.DEFAULT_EXCL_MISSING));
@@ -261,10 +285,10 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
             addOperator(new BitVectorXOrOperator(GlobalSettings.DEFAULT,
                 OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
-//The general methods that work with all DataCells
+            //The general methods that work with all DataCells
             /**Takes the first cell per group.*/
             final AggregationOperator firstOperator = new FirstOperator(GlobalSettings.DEFAULT,
-                        OperatorColumnSettings.DEFAULT_INCL_MISSING);
+                OperatorColumnSettings.DEFAULT_INCL_MISSING);
             addOperator(firstOperator);
             m_defNotNumericalMeth = getOperator(firstOperator.getId());
             m_rowOrderMethod = new FirstOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING);
@@ -280,10 +304,10 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
             addOperator(new ConcatenateOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Concatenates all distinct cell values.*/
             addOperator(new UniqueConcatenateOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Concatenates all distinct cell values and counts the members.*/
             addOperator(new UniqueConcatenateWithCountOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Counts the number of unique group members.*/
             addOperator(new UniqueCountOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Counts the number of group members.*/
@@ -339,16 +363,16 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
         addDeprecatedOperator(new OrElementCountOperator(new OperatorData("Unique element count", true, false,
             CollectionDataValue.class, false), GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
         addDeprecatedOperator(new FirstOperator(new OperatorData("First value", false, true, DataValue.class, false),
-                    GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
         addDeprecatedOperator(new LastOperator(new OperatorData("Last value", false, true, DataValue.class, false),
-                    GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
         addDeprecatedOperator(new CountOperator(new OperatorData("Value count", false, true, DataValue.class, false),
-                    GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
         //methods changed in KNIME version 2.4
         /** Concatenates all cell values. */
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.ConcatenateOperator(GlobalSettings.DEFAULT,
-                        OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            OperatorColumnSettings.DEFAULT_INCL_MISSING));
         /** Concatenates all distinct cell values. */
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.UniqueConcatenateOperator(
             GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
@@ -358,7 +382,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
 
         //methods changed in KNIME version 2.5.2
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.SumOperator(GlobalSettings.DEFAULT,
-                        OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
         //methods changed in KNIME version 2.12.0
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.AndElementOperator(GlobalSettings.DEFAULT,
@@ -429,7 +453,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
     }
 
     private void addOperator(final AggregationOperator operator)
-        throws DuplicateOperatorException {
+            throws DuplicateOperatorException {
         if (operator == null) {
             throw new NullPointerException("operator must not be null");
         }
@@ -460,7 +484,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
      * registered
      */
     public static boolean operatorExists(final String id) {
-            return getInstance().getOperator(id) != null;
+        return getInstance().getOperator(id) != null;
     }
 
     /**
@@ -480,7 +504,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
      * @return the {@link AggregationMethod} to use
      */
     public static AggregationMethod getAggregationMethod(final DataColumnSpec colSpec,
-            final AggregationMethod numericColMethod, final AggregationMethod nominalColMethod) {
+        final AggregationMethod numericColMethod, final AggregationMethod nominalColMethod) {
         if (colSpec.getType().isCompatible(DoubleValue.class)) {
             return numericColMethod;
         }
@@ -553,7 +577,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
         final List<String> labels = new ArrayList<>(methodSet.size());
         final Map<String, List<AggregationMethod>> labelSet = new HashMap<>(methodSet.size());
         for (final Entry<Class<? extends DataValue>, List<AggregationMethod>>
-            entry : methodSet) {
+        entry : methodSet) {
             final String label = getUserTypeLabel(entry.getKey());
             labels.add(label);
             labelSet.put(label, entry.getValue());
@@ -563,19 +587,19 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
         for (final String label : labels) {
             final List<AggregationMethod> methods = labelSet.get(label);
             final Entry<String, List<AggregationMethod>> entry =
-                new Map.Entry<String, List<AggregationMethod>>() {
-                    @Override
-                    public String getKey() {
-                        return label;
-                    }
-                    @Override
-                    public List<AggregationMethod> getValue() {
-                        return methods;
-                    }
-                    @Override
-                    public List<AggregationMethod> setValue(final List<AggregationMethod> value) {
-                        return methods;
-                    }
+                    new Map.Entry<String, List<AggregationMethod>>() {
+                @Override
+                public String getKey() {
+                    return label;
+                }
+                @Override
+                public List<AggregationMethod> getValue() {
+                    return methods;
+                }
+                @Override
+                public List<AggregationMethod> setValue(final List<AggregationMethod> value) {
+                    return methods;
+                }
             };
             list.add(entry);
         }
@@ -609,7 +633,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
             return "General";
         }
         if (type == DoubleValue.class) {
-             return "Numerical";
+            return "Numerical";
         }
         final String typeName = type.getName();
         final int idx = typeName.lastIndexOf('.');
@@ -677,7 +701,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
      * @since 2.6
      */
     public static AggregationMethod getDefaultMethod(
-            final Class<? extends DataValue> dataValueClass) {
+        final Class<? extends DataValue> dataValueClass) {
         final Map<Class<? extends DataValue>, List<AggregationMethod>> methods =
                 groupMethodsByType(getAvailableMethods());
         final List<AggregationMethod> compatibleMethods = methods.get(dataValueClass);
@@ -760,7 +784,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
         final JEditorPane editorPane = new JEditorPane("text/html", buf.toString());
         editorPane.setEditable(false);
         final JScrollPane scrollPane = new JScrollPane(editorPane, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         return scrollPane;
     }
 
@@ -775,7 +799,7 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
         final Set<Entry<Class<? extends DataValue>, List<AggregationMethod>>> groups = methodGroups.entrySet();
         boolean first = true;
         for (final Entry<Class<? extends DataValue>, List<AggregationMethod>>
-            group : groups) {
+        group : groups) {
             if (first) {
                 first = false;
             } else {
