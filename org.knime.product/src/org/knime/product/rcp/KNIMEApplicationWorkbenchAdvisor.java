@@ -50,6 +50,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.equinox.internal.p2.ui.sdk.scheduler.AutomaticUpdateMessages;
+import org.eclipse.equinox.internal.p2.ui.sdk.scheduler.AutomaticUpdatePlugin;
+import org.eclipse.equinox.internal.p2.ui.sdk.scheduler.AutomaticUpdateScheduler;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
@@ -66,6 +70,7 @@ import org.knime.workbench.explorer.view.ExplorerView;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.Bundle;
+import org.osgi.service.prefs.Preferences;
 
 /**
  * Provides the initial workbench perspective ID (KNIME perspective).
@@ -116,12 +121,27 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
         boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
 
-        if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
-            IntroPage.INSTANCE.modifyWorkbenchState();
+        if (!EclipseUtil.isRunFromSDK()) {
+            if (showTipsAndTricks) {
+                IntroPage.INSTANCE.modifyWorkbenchState();
+            }
+            if (IntroPage.INSTANCE.isFreshWorkspace()) {
+                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new ExampleWorkflowExtractor());
+            }
+            changeDefaultPreferences();
         }
-        if (!EclipseUtil.isRunFromSDK() && IntroPage.INSTANCE.isFreshWorkspace()) {
-            KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new ExampleWorkflowExtractor());
-        }
+    }
+
+    @SuppressWarnings("restriction")
+    private void changeDefaultPreferences() {
+        // enable automatic check for updates every day at 11:00
+        Preferences node = DefaultScope.INSTANCE.getNode(AutomaticUpdatePlugin.PLUGIN_ID);
+        node.putBoolean(org.eclipse.equinox.internal.p2.ui.sdk.scheduler.PreferenceConstants.PREF_AUTO_UPDATE_ENABLED,
+            true);
+        node.put(org.eclipse.equinox.internal.p2.ui.sdk.scheduler.PreferenceConstants.PREF_AUTO_UPDATE_SCHEDULE,
+            org.eclipse.equinox.internal.p2.ui.sdk.scheduler.PreferenceConstants.PREF_UPDATE_ON_SCHEDULE);
+        node.put(AutomaticUpdateScheduler.P_DAY, AutomaticUpdateMessages.SchedulerStartup_day);
+        node.put(AutomaticUpdateScheduler.P_HOUR, AutomaticUpdateMessages.SchedulerStartup_11AM);
     }
 
     /**
@@ -134,7 +154,6 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         // for the Update Manager is set and it asks the user for a password
         // if the Update Site is password protected
         IProxyService.class.getName();
-
 
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
         boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
