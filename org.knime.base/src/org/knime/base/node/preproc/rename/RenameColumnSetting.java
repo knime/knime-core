@@ -67,8 +67,9 @@ import org.knime.core.node.NodeSettingsWO;
  * responsible for only one column!
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 2.12
  */
-final class RenameColumnSetting {
+public final class RenameColumnSetting {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RenameColumnSetting.class);
 
@@ -132,7 +133,7 @@ final class RenameColumnSetting {
      *
      * @return the newColumnName
      */
-    String getNewColumnName() {
+    public String getNewColumnName() {
         return m_newColumnName;
     }
 
@@ -166,7 +167,7 @@ final class RenameColumnSetting {
     /**
      * @return the old name
      */
-    String getName() {
+    public String getName() {
         return m_name;
     }
 
@@ -214,7 +215,7 @@ final class RenameColumnSetting {
      *
      * @param settings to save to
      */
-    void saveSettingsTo(final NodeSettingsWO settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString(CFG_OLD_COLNAME, m_name);
         settings.addString(CFG_NEW_COLNAME, m_newColumnName);
         settings.addInt(CFG_NEW_COLTYPE, m_newValueClassIndex);
@@ -227,7 +228,7 @@ final class RenameColumnSetting {
      * @return the new column spec
      * @throws InvalidSettingsException if that fails
      */
-    DataColumnSpec configure(final DataColumnSpec inSpec) throws InvalidSettingsException {
+    public DataColumnSpec configure(final DataColumnSpec inSpec) throws InvalidSettingsException {
         String name = inSpec.getName();
         DataType oldType = inSpec.getType();
         if (!name.equals(m_name)) {
@@ -274,7 +275,7 @@ final class RenameColumnSetting {
      * @return a new object of this class with the settings
      * @throws InvalidSettingsException if that fails
      */
-    static RenameColumnSetting createFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public static RenameColumnSetting createFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         String name = settings.getString(CFG_OLD_COLNAME);
         String newName = settings.getString(CFG_NEW_COLNAME);
         int newType = settings.getInt(CFG_NEW_COLTYPE, 0);

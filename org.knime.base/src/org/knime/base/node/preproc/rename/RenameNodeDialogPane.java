@@ -93,7 +93,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 public class RenameNodeDialogPane extends NodeDialogPane {
 
     private static final RenameColumnPanel DUMMY_PANEL = new RenameColumnPanel(new RenameColumnSetting("DUMMY"),
-        DataColumnSpecListCellRenderer.createInvalidSpec("DUMMY"));
+        DataColumnSpecListCellRenderer.createInvalidSpec("DUMMY"), false);
 
     private final Map<DataColumnSpec, RenameColumnSetting> m_columnToSettings;
 
@@ -109,11 +109,22 @@ public class RenameNodeDialogPane extends NodeDialogPane {
 
     private ListModifier m_searchableListModifier;
 
+    private boolean m_hideColumnType;
+    
     /**
      * Constructs new dialog, inits members.
      */
     public RenameNodeDialogPane() {
+        this(false);
+    }
+    /**
+     * Constructs new dialog, inits members.
+     * @param hideTypeBox <code>true</code> if the column type select box should be hidden
+     * @since 2.12
+     */
+    public RenameNodeDialogPane(final boolean hideTypeBox) {
         super();
+        m_hideColumnType = hideTypeBox;
 
         m_columnToSettings = new LinkedHashMap<DataColumnSpec, RenameColumnSetting>();
         m_errornousColNames = new HashSet<String>();
@@ -224,7 +235,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
 
         //add for each setting a panel in the individual panel
         for (Map.Entry<DataColumnSpec, RenameColumnSetting> entries : m_columnToSettings.entrySet()) {
-            addToIndividualPanel(new RenameColumnPanel(entries.getValue(), entries.getKey()));
+            addToIndividualPanel(new RenameColumnPanel(entries.getValue(), entries.getKey(), m_hideColumnType));
         }
 
     }
@@ -311,7 +322,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
         if (selected != null && !m_columnToSettings.containsKey(selected)) {
             RenameColumnSetting renameColumnSetting = new RenameColumnSetting(selected);
             m_columnToSettings.put(selected, renameColumnSetting);
-            addToIndividualPanel(new RenameColumnPanel(renameColumnSetting, selected));
+            addToIndividualPanel(new RenameColumnPanel(renameColumnSetting, selected, m_hideColumnType));
         }
     }
 

@@ -1757,6 +1757,10 @@
             factory-class="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory"
             id="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory">
       </node>
+      <node 
+      		category-path="/database/database-manipulation" 
+      		factory-class="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory" 
+      		id="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory"/>
    </extension>
    
       

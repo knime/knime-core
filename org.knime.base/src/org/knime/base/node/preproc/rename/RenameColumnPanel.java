@@ -97,9 +97,10 @@ final class RenameColumnPanel extends JPanel {
     /**
      * @param colSet the column settings
      * @param spec the column spec
+     * @param hideTypeBox <code>true</code> if the column type select box should be hidden
      */
     @SuppressWarnings("unchecked")
-    RenameColumnPanel(final RenameColumnSetting colSet, final DataColumnSpec spec) {
+    RenameColumnPanel(final RenameColumnSetting colSet, final DataColumnSpec spec, final boolean hideTypeBox) {
 
         m_settings = colSet;
         m_columnSpec = spec;
@@ -179,21 +180,6 @@ final class RenameColumnPanel extends JPanel {
         });
         checker.setSelected(hasNewName);
         newNameField.setEnabled(hasNewName);
-        final JComboBox typeChooser = new JComboBox(possibleTypes);
-        // no need to make it enabled when there is only one choice.
-        typeChooser.setEnabled(possibleTypes.length != 1);
-        typeChooser.setRenderer(new DataTypeNameRenderer());
-
-        if (possibleTypes.length > 0) {
-            typeChooser.setSelectedIndex(selectedType);
-        }
-
-        typeChooser.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                colSet.setNewValueClassIndex(typeChooser.getSelectedIndex());
-            }
-        });
 
         setBorder(isInvalid(spec) ? BorderFactory.createLineBorder(Color.RED, 2) : BorderFactory.createLineBorder(
             Color.BLACK, 1));
@@ -205,7 +191,24 @@ final class RenameColumnPanel extends JPanel {
         JPanel southLayout = new JPanel(new BorderLayout(0, 10));
         southLayout.add(checker, BorderLayout.WEST);
         southLayout.add(newNameField, BorderLayout.CENTER);
-        southLayout.add(typeChooser, BorderLayout.EAST);
+        if (!hideTypeBox) {
+            final JComboBox typeChooser = new JComboBox(possibleTypes);
+            // no need to make it enabled when there is only one choice.
+            typeChooser.setEnabled(possibleTypes.length != 1);
+            typeChooser.setRenderer(new DataTypeNameRenderer());
+
+            if (possibleTypes.length > 0) {
+                typeChooser.setSelectedIndex(selectedType);
+            }
+
+            typeChooser.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    colSet.setNewValueClassIndex(typeChooser.getSelectedIndex());
+                }
+            });
+            southLayout.add(typeChooser, BorderLayout.EAST);
+        }
 
         setLayout(new FlowLayout());
 
