@@ -43,6 +43,7 @@ Require-Bundle: org.apache.xerces;bundle-version="[2.9.0,2.10.0)",
  org.eclipse.equinox.p2.metadata;bundle-version="2.1.0",
  org.apache.httpcomponents.httpclient;bundle-version="[4.1.2,5.0.0)",
  org.apache.httpcomponents.httpcore;bundle-version="[4.1.4,5.0.0)",
- com.sun.jna;bundle-version="[3.5.2,4.0.0)"
+ com.sun.jna;bundle-version="[3.5.2,4.0.0)",
+ org.eclipse.equinox.p2.ui.sdk.scheduler;bundle-version="[1.0.100,2.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
