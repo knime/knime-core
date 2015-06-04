@@ -582,8 +582,8 @@ public class Spreadsheet extends JComponent {
      */
     public boolean hasParseErrors() {
         SpreadsheetTableModel model = m_table.getSpreadsheetModel();
-        int colCount = model.getColumnCount();
-        int rowCount = model.getRowCount();
+        int colCount = model.getMaxColumn();
+        int rowCount = model.getMaxRow();
         for (int k = 0; k < colCount; k++) {
             ColProperty colProperty =
                 model.getColumnProperties().get(k);
