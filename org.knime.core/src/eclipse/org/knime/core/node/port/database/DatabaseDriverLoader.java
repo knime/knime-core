@@ -144,8 +144,8 @@ public final class DatabaseDriverLoader {
                 try {
                     System.loadLibrary("libJdbcOdbc.so");
                 } catch (Error e) {
-                    LOGGER.info("Could not load \"libJdbcOdbc.so\" library which is known to be a problem under Linux"
-                        + " when using the \"" + JDBC_ODBC_DRIVER + "\"; that is, the driver is not loaded.");
+                    LOGGER.info("Could not load 'libJdbcOdbc.so' library which is known to be a problem under Linux"
+                        + " when using the '" + JDBC_ODBC_DRIVER + "'; that is, the driver is not loaded.");
                     // don't load driver
                     return;
                 }
@@ -153,11 +153,11 @@ public final class DatabaseDriverLoader {
             Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
             DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver)driverClass.newInstance());
             String driverName = d.toString();
-            LOGGER.debug("Database driver " + driverName + " loaded successful. Driver info: " + d.getInfo());
+            LOGGER.debug("Database driver " + driverName + " loaded successfully. Driver info: " + d.getInfo());
             // DriverManager.registerDriver(d);
             DRIVER_MAP.put(driverName, d);
         } catch (Throwable t) {
-            LOGGER.warn("Could not load driver class \"" + JDBC_ODBC_DRIVER + "\"");
+            LOGGER.warn("Could not load driver class '" + JDBC_ODBC_DRIVER + "'");
         }
     }
 
@@ -232,7 +232,7 @@ public final class DatabaseDriverLoader {
                             DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver)driverClass.newInstance());
                             String driverName = d.toString();
                             LOGGER.debug("Database driver " + driverName +
-                                " loaded successful from file: " + file.toString() +
+                                " loaded successful from file " + file.toString() +
                                 ". Driver info: " + d.getInfo());
                             DRIVER_MAP.put(driverName, d);
                             DRIVERFILE_TO_DRIVERCLASS.put(driverName, file);
@@ -265,16 +265,16 @@ public final class DatabaseDriverLoader {
             final String driverName) throws Exception {
         DatabaseWrappedDriver wdriver = DRIVER_MAP.get(driverName);
         if (wdriver != null) {
-            LOGGER.debug("Database driver: " + driverName + " retrieved from driver map");
+            LOGGER.debug("Database driver " + driverName + " retrieved from driver map");
             return wdriver;
         }
-        LOGGER.debug("Loading database driver: " + driverName);
+        LOGGER.debug("Loading database driver " + driverName);
         // otherwise try to load new driver from registered classes
         Class<?> c = Class.forName(driverName, true,
                 ClassLoader.getSystemClassLoader());
         DatabaseWrappedDriver d = new DatabaseWrappedDriver(
                 (Driver) c.newInstance());
-        LOGGER.debug("Database driver " + driverName + " loaded successful. Driver info: " + d.getInfo());
+        LOGGER.debug("Database driver " + driverName + " loaded successfully. Driver info: " + d.getInfo());
         DRIVER_MAP.put(driverName, d);
         return d;
     }
