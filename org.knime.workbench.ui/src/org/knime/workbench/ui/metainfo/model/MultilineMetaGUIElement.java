@@ -49,9 +49,13 @@ import javax.xml.transform.sax.TransformerHandler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.xml.sax.SAXException;
@@ -63,9 +67,7 @@ import org.xml.sax.helpers.AttributesImpl;
  */
 public class MultilineMetaGUIElement extends MetaGUIElement {
 
-
-    public MultilineMetaGUIElement(final String label, final String value,
-            final boolean isReadOnly) {
+    public MultilineMetaGUIElement(final String label, final String value, final boolean isReadOnly) {
         super(label, value, isReadOnly);
     }
 
@@ -74,8 +76,11 @@ public class MultilineMetaGUIElement extends MetaGUIElement {
      */
     @Override
     public Control createGUIElement(final FormToolkit toolkit, final Composite parent) {
-        int style = SWT.BORDER | SWT.MULTI | SWT.SCROLL_LINE;
+        int style = SWT.BORDER | SWT.MULTI | SWT.SCROLL_LINE | SWT.V_SCROLL | SWT.H_SCROLL;
         Text text = toolkit.createText(parent, getValue().trim(), style);
+
+        attachScrollbarListener(text);
+
         GridData layout = new GridData(GridData.FILL_HORIZONTAL);
         layout.heightHint = 350;
         text.setLayoutData(layout);
@@ -90,6 +95,28 @@ public class MultilineMetaGUIElement extends MetaGUIElement {
         return text;
     }
 
+    /**
+     * @param text
+     */
+    private void attachScrollbarListener(Text text) {
+        Listener scrollBarListener = new Listener() {
+            @Override
+            public void handleEvent(final Event event) {
+                Text t = (Text)event.widget;
+                Rectangle r1 = t.getClientArea();
+                Rectangle r2 = t.computeTrim(r1.x, r1.y, r1.width, r1.height);
+                Point p = t.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+                t.getHorizontalBar().setVisible(r2.width <= p.x);
+                t.getVerticalBar().setVisible(r2.height <= p.y);
+                if (event.type == SWT.Modify) {
+                    t.getParent().layout(true);
+                    t.showSelection();
+                }
+            }
+        };
+        text.addListener(SWT.Resize, scrollBarListener);
+        text.addListener(SWT.Modify, scrollBarListener);
+    }
 
     private Text getTextControl() {
         return (Text)getControl();
@@ -99,19 +126,15 @@ public class MultilineMetaGUIElement extends MetaGUIElement {
      * {@inheritDoc}
      */
     @Override
-    public void saveTo(final TransformerHandler parentElement)
-        throws SAXException {
+    public void saveTo(final TransformerHandler parentElement) throws SAXException {
         AttributesImpl atts = new AttributesImpl();
-        atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA",
-                "multiline");
+        atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", "multiline");
         atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA", getLabel());
-        atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA",
-                "" + isReadOnly());
+        atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA", "" + isReadOnly());
         parentElement.startElement(null, null, MetaGUIElement.ELEMENT, atts);
         char[] value = getTextControl().getText().trim().toCharArray();
         parentElement.characters(value, 0, value.length);
         parentElement.endElement(null, null, MetaGUIElement.ELEMENT);
     }
-
 
 }
