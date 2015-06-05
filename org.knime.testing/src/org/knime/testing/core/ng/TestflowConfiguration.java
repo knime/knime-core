@@ -82,7 +82,7 @@ import org.knime.testing.node.config.TestConfigSettings;
  */
 class TestflowConfiguration {
     /**
-     * The default maximum number of rows (currently {@value}) that are hilited during a workflow test.
+     * The default maximum number of rows (currently {@value} ) that are hilited during a workflow test.
      */
     public static final int DEFAULT_MAX_HILITE_ROWS = 2500;
 
@@ -92,7 +92,7 @@ class TestflowConfiguration {
 
     private final WorkflowManager m_manager;
 
-    private int m_timeout = TestrunConfiguration.DEFAULT_TIMEOUT;
+    private int m_timeout;
 
     private final List<String> m_owners = new ArrayList<String>();
 
@@ -118,16 +118,19 @@ class TestflowConfiguration {
      * used.
      *
      * @param workflowManager the manager of the test workflow
+     * @param globalConfiguration the global test run configuration which is used for some default values
      * @throws InvalidSettingsException if the testflow configuration node's settings cannot be read
      * @throws IOException if the configuration files cannot be read
      */
-    public TestflowConfiguration(final WorkflowManager workflowManager) throws InvalidSettingsException, IOException {
+    public TestflowConfiguration(final WorkflowManager workflowManager, final TestrunConfiguration globalConfiguration)
+        throws InvalidSettingsException, IOException {
         m_manager = workflowManager;
+        m_timeout = globalConfiguration.getTimeout();
 
         boolean loaded = false;
         for (NodeContainer cont : m_manager.getNodeContainers()) {
             if ((cont instanceof NativeNodeContainer)
-                    && (((NativeNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel)) {
+                && (((NativeNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel)) {
                 load((NativeNodeContainer)cont);
                 loaded = true;
             }
@@ -182,7 +185,7 @@ class TestflowConfiguration {
                 }
             } catch (IllegalArgumentException ex) {
                 LOGGER.warn("No node with id '" + e.getKey() + "' found in "
-                        + "workflow, but we have a configuration for it. Ignoring the configuration.");
+                    + "workflow, but we have a configuration for it. Ignoring the configuration.");
             }
         }
 
@@ -199,7 +202,7 @@ class TestflowConfiguration {
                 }
             } catch (IllegalArgumentException ex) {
                 LOGGER.warn("No node with id '" + e.getKey() + "' found in "
-                        + "workflow, but we have a configuration for it. Ignoring the configuration.");
+                    + "workflow, but we have a configuration for it. Ignoring the configuration.");
             }
         }
 
@@ -233,7 +236,7 @@ class TestflowConfiguration {
         }
 
         BufferedReader statusReader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(statusFile), Charset.forName("UTF-8")));
+            new BufferedReader(new InputStreamReader(new FileInputStream(statusFile), Charset.forName("UTF-8")));
 
         LOGGER.debug("Reading configuration file '" + statusFile + "' for node status / messages");
         String line;
@@ -244,7 +247,7 @@ class TestflowConfiguration {
             }
             String uppercaseLine = line.toUpperCase();
             if (uppercaseLine.startsWith("ERROR") || uppercaseLine.startsWith("WARN")
-                    || uppercaseLine.startsWith("INFO") || uppercaseLine.startsWith("DEBUG")) {
+                || uppercaseLine.startsWith("INFO") || uppercaseLine.startsWith("DEBUG")) {
                 // line specifies certain message that should appear in the log
                 parseMessageLine(line);
             } else {
@@ -355,7 +358,7 @@ class TestflowConfiguration {
                 m_requiredWarnings.add(pattern);
             } else {
                 throw new InvalidSettingsException("Invalid line in status file " + "(invalid err/warn status): "
-                        + line);
+                    + line);
             }
         }
 
@@ -388,7 +391,7 @@ class TestflowConfiguration {
     private void readOwnersFromFile(final File ownerFile) throws IOException {
         if (ownerFile.exists()) {
             BufferedReader r =
-                    new BufferedReader(new InputStreamReader(new FileInputStream(ownerFile), Charset.forName("UTF-8")));
+                new BufferedReader(new InputStreamReader(new FileInputStream(ownerFile), Charset.forName("UTF-8")));
             String line = null;
             while ((line = r.readLine()) != null) {
                 if (line.trim().length() > 0) {
@@ -497,7 +500,6 @@ class TestflowConfiguration {
     public int getMaxHiliteRows() {
         return m_maxHiliteRows;
     }
-
 
     private static Pattern createPatternFromMessage(String message) {
         int index = message.indexOf(REGEX_PATTERN);

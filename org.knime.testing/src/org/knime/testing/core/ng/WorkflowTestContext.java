@@ -66,6 +66,7 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
+import org.knime.testing.core.TestrunConfiguration;
 
 /**
  * Shared context for all testcases. It is used to exchange information that is needed by several testcases, such as the
@@ -86,6 +87,17 @@ public class WorkflowTestContext {
     private TestflowConfiguration m_flowConfiguration;
 
     private WorkflowManager m_manager;
+
+    private final TestrunConfiguration m_globalConfiguration;
+
+    /**
+     * Creates a new test context.
+     *
+     * @param globalConfiguration the global test run configuration which is used for some default values
+     */
+    public WorkflowTestContext(final TestrunConfiguration globalConfiguration) {
+        m_globalConfiguration = globalConfiguration;
+    }
 
     /**
      * Returns a map with the node views for each node (if there are any). This map is intended to be modified by
@@ -118,7 +130,7 @@ public class WorkflowTestContext {
         if (manager != null) {
             recordNodes(manager);
         }
-        m_flowConfiguration = new TestflowConfiguration(manager);
+        m_flowConfiguration = new TestflowConfiguration(manager, m_globalConfiguration);
         m_manager = manager;
     }
 

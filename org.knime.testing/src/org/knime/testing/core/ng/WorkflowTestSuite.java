@@ -86,7 +86,7 @@ public class WorkflowTestSuite extends WorkflowTest {
      */
     public WorkflowTestSuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig,
                              final IProgressMonitor monitor) throws IOException {
-        this(workflowDir, testcaseRoot, runConfig, monitor, new WorkflowTestContext());
+        this(workflowDir, testcaseRoot, runConfig, monitor, new WorkflowTestContext(runConfig));
     }
 
     /**
