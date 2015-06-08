@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,49 +41,45 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Mar 13, 2015 (wiswedel): created
  */
 package org.knime.testing.node.failing;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- *
- * @author wiswedel, University of Konstanz
+ * Config to node.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class FailingNodeFactory extends NodeFactory<FailingNodeModel> {
+final class FailingNodeConfiguration {
 
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new FailingNodeDialogPane();
+    private int m_failAtIndex = -1;
+
+    /** @return the failAfterNumber */
+    int getFailAtIndex() {
+        return m_failAtIndex;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public FailingNodeModel createNodeModel() {
-        return new FailingNodeModel();
+    /** @param value the failAtIndex to set */
+    void setFailAtIndex(final int value) {
+        m_failAtIndex = value;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<FailingNodeModel> createNodeView(
-            final int viewIndex, final FailingNodeModel nodeModel) {
-        return null;
+    void saveSettings(final NodeSettingsWO s) {
+        s.addInt("failAtIndex", m_failAtIndex);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
+    FailingNodeConfiguration loadSettingsInModel(final NodeSettingsRO s) throws InvalidSettingsException {
+        m_failAtIndex = s.getInt("failAtIndex", -1); // added in 2.12
+        return this;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    void loadSettingsInDialog(final NodeSettingsRO s) {
+        m_failAtIndex = s.getInt("failAtIndex", -1);
     }
-
 }

@@ -47,6 +47,7 @@ package org.knime.testing.node.failing;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -56,6 +57,17 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  *
@@ -63,6 +75,7 @@ import org.knime.core.node.NodeSettingsWO;
  */
 class FailingNodeModel extends NodeModel {
 
+    private FailingNodeConfiguration m_configuration;
 
     /** One data input, one data output.
      */
@@ -72,16 +85,49 @@ class FailingNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
+    public InputPortRole[] getInputPortRoles() {
+        // not sure if this should better be STREAMABLE
+        return new InputPortRole[] {InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[] {OutputPortRole.DISTRIBUTED};
+    }
+
+    /** {@inheritDoc} */
+    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        throw new Exception("This node fails on each execution");
+        BufferedDataTableRowOutput tableOutput =
+                new BufferedDataTableRowOutput(exec.createDataContainer(inData[0].getDataTableSpec()));
+        processInput(new DataTableRowInput(inData[0]), tableOutput);
+        return new BufferedDataTable[] {tableOutput.getDataTable()};
     }
 
     /** {@inheritDoc} */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (m_configuration == null) { // auto config
+            m_configuration = new FailingNodeConfiguration();
+        }
         return inSpecs;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                final RowInput rowInput = (RowInput)inputs[0];
+                final RowOutput rowOutput = (RowOutput)outputs[0];
+                processInput(rowInput, rowOutput);
+            }
+        };
     }
 
     /** {@inheritDoc} */
@@ -93,17 +139,22 @@ class FailingNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        m_configuration = new FailingNodeConfiguration().loadSettingsInModel(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        new FailingNodeConfiguration().loadSettingsInModel(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        if (m_configuration != null) {
+            m_configuration.saveSettings(settings);
+        }
     }
 
     /** {@inheritDoc} */
@@ -116,6 +167,29 @@ class FailingNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
+    }
+
+    /**
+     * @param rowInput
+     * @param rowOutput
+     * @throws Exception
+     * @throws InterruptedException
+     */
+    private void processInput(final RowInput rowInput, final RowOutput rowOutput) throws Exception,
+        InterruptedException {
+        final int failAtIndex = m_configuration.getFailAtIndex();
+        if (failAtIndex < 0) {
+            throw new Exception("This node fails on each execution.");
+        }
+        int index = 0;
+        DataRow r;
+        while ((r = rowInput.poll()) != null) {
+            if (index++ == failAtIndex) {
+                throw new Exception("This node fails on each execution - row index " + failAtIndex);
+            }
+            rowOutput.push(r);
+        }
+        rowOutput.close();
     }
 
 }

@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,49 +41,65 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Mar 13, 2015 (wiswedel): created
  */
 package org.knime.testing.node.failing;
 
+import javax.swing.JCheckBox;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.ViewUtils;
+
+
 
 /**
  *
- * @author wiswedel, University of Konstanz
+ * @author wiswedel
  */
-public final class FailingNodeFactory extends NodeFactory<FailingNodeModel> {
+final class FailingNodeDialogPane extends NodeDialogPane {
 
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new FailingNodeDialogPane();
+    private final JSpinner m_failAtRowIndexSpinner;
+    private final JCheckBox m_failAtRowIndexChecker;
+
+    FailingNodeDialogPane() {
+        m_failAtRowIndexSpinner = new JSpinner(new SpinnerNumberModel(100, 0, Integer.MAX_VALUE, 1));
+        m_failAtRowIndexChecker = new JCheckBox("Fail at row index: ");
+        m_failAtRowIndexChecker.addActionListener((ae) ->
+            {m_failAtRowIndexSpinner.setEnabled(m_failAtRowIndexChecker.isSelected());});
+        m_failAtRowIndexChecker.doClick();
+        addTab("Main", ViewUtils.getInFlowLayout(m_failAtRowIndexChecker, m_failAtRowIndexSpinner));
     }
 
     /** {@inheritDoc} */
     @Override
-    public FailingNodeModel createNodeModel() {
-        return new FailingNodeModel();
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        int count = m_failAtRowIndexChecker.isSelected() ? (Integer)m_failAtRowIndexSpinner.getValue() : -1;
+        FailingNodeConfiguration configuration = new FailingNodeConfiguration();
+        configuration.setFailAtIndex(count);
+        configuration.saveSettings(settings);
     }
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<FailingNodeModel> createNodeView(
-            final int viewIndex, final FailingNodeModel nodeModel) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+                throws NotConfigurableException {
+        FailingNodeConfiguration configuration = new FailingNodeConfiguration();
+        configuration.loadSettingsInDialog(settings);
+        int count = configuration.getFailAtIndex();
+        if (count >= 0 != m_failAtRowIndexChecker.isSelected()) {
+            m_failAtRowIndexChecker.doClick();
+        }
+        m_failAtRowIndexSpinner.setValue(count >= 0 ? count : 100);
     }
 
 }

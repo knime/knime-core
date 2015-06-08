@@ -4,20 +4,24 @@
 	<name>Fail in execution</name>
 	
 	<shortDescription>
-	   Node that always fails upon execution.
+	   Node that fails upon execution.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
 			<p>
-			 This node is part of the workflow manager test framework. It's
-			 used to simulate failing nodes 
+			 Node that fails upon execution. This node is part of the workflow manager test framework. It's
+			 used to simulate failing nodes.
 			</p>
 		</intro>
+		<option name="Fail at index">
+		If enabled the node will pass through rows with an index lower as specified at fail at the row with the given
+		index (first row has index 0).
+		</option>
 	</fullDescription>
 	
 	<ports>
 		<inPort index="0" name="Any input table">Any input data.</inPort>
-		<outPort index="0" name="Copy of input">Copy of input data.</outPort>
+		<outPort index="0" name="Copy of input">Copy of input data (unless failed)</outPort>
 	</ports>	
 </knimeNode>
