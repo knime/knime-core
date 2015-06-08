@@ -48,6 +48,9 @@
  */
 package org.knime.testing.node.failing;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import javax.swing.JCheckBox;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
@@ -74,8 +77,13 @@ final class FailingNodeDialogPane extends NodeDialogPane {
     FailingNodeDialogPane() {
         m_failAtRowIndexSpinner = new JSpinner(new SpinnerNumberModel(100, 0, Integer.MAX_VALUE, 1));
         m_failAtRowIndexChecker = new JCheckBox("Fail at row index: ");
-        m_failAtRowIndexChecker.addActionListener((ae) ->
-            {m_failAtRowIndexSpinner.setEnabled(m_failAtRowIndexChecker.isSelected());});
+        m_failAtRowIndexChecker.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_failAtRowIndexSpinner.setEnabled(m_failAtRowIndexChecker.isSelected());
+            }
+        });
+
         m_failAtRowIndexChecker.doClick();
         addTab("Main", ViewUtils.getInFlowLayout(m_failAtRowIndexChecker, m_failAtRowIndexSpinner));
     }
