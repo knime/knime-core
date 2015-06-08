@@ -274,7 +274,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
                 }
                 if (dist < mindistance) {
                     mindistance = dist;
-                    if (mindistance > 0) {
+                    if (mindistance >= 0.0) {
                         winnercell = proto.getLabel();
                     }
                 }
