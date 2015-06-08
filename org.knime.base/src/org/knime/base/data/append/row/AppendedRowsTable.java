@@ -49,8 +49,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
+import org.knime.base.data.append.row.AppendedRowsIterator.PairSupplier;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -202,10 +202,10 @@ public class AppendedRowsTable implements DataTable {
      */
     public AppendedRowsIterator iterator(final ExecutionMonitor exec,
             final int totalRowCount) {
-        Supplier<Pair<RowIterator, DataTableSpec>>[] iteratorSuppliers = new Supplier[m_tables.length];
+        PairSupplier[] iteratorSuppliers = new PairSupplier[m_tables.length];
         for (int i = 0; i < iteratorSuppliers.length; i++) {
-            final int j = i;
-            iteratorSuppliers[i] = () -> Pair.create(m_tables[j].iterator(), m_tables[j].getDataTableSpec());
+            iteratorSuppliers[i] = new PairSupplier(new Pair<RowIterator, DataTableSpec>(
+                    m_tables[i].iterator(), m_tables[i].getDataTableSpec()));
         }
         return new AppendedRowsIterator(iteratorSuppliers, m_duplPolicy, m_suffix, m_spec, exec, totalRowCount);
     }

@@ -50,7 +50,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.base.data.append.row.AppendedRowsTable.DuplicatePolicy;
@@ -86,7 +85,7 @@ public class AppendedRowsIterator extends CloseableRowIterator {
     private final DataTableSpec m_spec;
 
     /** The to be concatenated inputs. */
-    private final Supplier<Pair<RowIterator, DataTableSpec>>[] m_iteratorSuppliers;
+    private final PairSupplier[] m_iteratorSuppliers;
 
     /** Suffix to append or null if to skip rows. */
     private final String m_suffix;
@@ -139,7 +138,7 @@ public class AppendedRowsIterator extends CloseableRowIterator {
      * @param exec for progress/cancel, may be <code>null</code>
      * @param totalRowCount the total row count or negative if unknown
      */
-    AppendedRowsIterator(final Supplier<Pair<RowIterator, DataTableSpec>>[] tables, final DuplicatePolicy duplPolicy,
+    AppendedRowsIterator(final PairSupplier[] tables, final DuplicatePolicy duplPolicy,
         final String suffix, final DataTableSpec spec, final ExecutionMonitor exec, final long totalRowCount) {
         m_iteratorSuppliers = CheckUtils.checkArgumentNotNull(tables);
         m_suffix = suffix;
@@ -385,6 +384,21 @@ public class AppendedRowsIterator extends CloseableRowIterator {
         m_nextRow = null;
         m_curIterator = null;
         m_curItIndex = m_iteratorSuppliers.length - 1;
+    }
+
+    /** To be replaced by java 8 java.util.Supplier.
+     * @deprecated ... */
+    @Deprecated
+    static final class PairSupplier {
+        private final Pair<RowIterator, DataTableSpec> m_pair;
+
+        PairSupplier(final Pair<RowIterator, DataTableSpec> pair) {
+            m_pair = CheckUtils.checkArgumentNotNull(pair);
+        }
+
+        public Pair<RowIterator, DataTableSpec> get() {
+            return m_pair;
+        }
     }
 
     /**

@@ -45,11 +45,10 @@
  */
 package org.knime.base.data.append.row;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
+import org.knime.base.data.append.row.AppendedRowsIterator.PairSupplier;
 import org.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
 import org.knime.base.data.append.row.AppendedRowsTable.DuplicatePolicy;
 import org.knime.core.data.DataRow;
@@ -145,17 +144,20 @@ public final class AppendedRowsRowInput extends RowInput {
      */
     public static AppendedRowsRowInput create(final RowInput[] ins, final DuplicatePolicy duplPolicy,
         final String suffix, final ExecutionMonitor exec, final long totalRowCount) {
-        DataTableSpec[] specs = Arrays.stream(ins).map(i -> i.getDataTableSpec()).toArray(DataTableSpec[]::new);
+        DataTableSpec[] specs = new DataTableSpec[ins.length];
+        for (int i = 0; i < specs.length; i++) {
+            specs[i] = ins[i].getDataTableSpec();
+        }
         DataTableSpec spec = AppendedRowsTable.generateDataTableSpec(specs);
         CheckUtils.checkArgumentNotNull(duplPolicy, "Arg must not be null");
         if (DuplicatePolicy.AppendSuffix.equals(duplPolicy)) {
             CheckUtils.checkArgument(StringUtils.isNotEmpty(suffix), "Suffix must not be an empty string.");
         }
 
-        Supplier<Pair<RowIterator, DataTableSpec>>[] suppliers = new Supplier[ins.length];
+        PairSupplier[] suppliers = new PairSupplier[ins.length];
         for (int i = 0; i < suppliers.length; i++) {
-            final int j = i;
-            suppliers[i] = () -> Pair.create(new RowInputIterator(ins[j]), ins[j].getDataTableSpec());
+            suppliers[i] = new PairSupplier(new Pair<RowIterator, DataTableSpec>(
+                    new RowInputIterator(ins[i]), ins[i].getDataTableSpec()));
         }
         AppendedRowsIterator it = new AppendedRowsIterator(suppliers, duplPolicy, suffix, spec, exec, totalRowCount);
         return new AppendedRowsRowInput(spec, it);

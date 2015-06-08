@@ -49,13 +49,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -172,27 +173,51 @@ public class AppendedRowsNodeModel extends NodeModel {
         final ExecutionContext exec) throws Exception {
 
         // remove all null tables first (optional input data)
-        long totalRowCount = noNullStream(rawInData).mapToLong(t -> t.getRowCount()).sum();
-        RowInput[] inputs = noNullStream(rawInData).map(t -> new DataTableRowInput(t)).toArray(RowInput[]::new);
-        DataTableSpec outputSpec = getOutputSpec(noNullStream(rawInData)
-            .map(t -> t.getDataTableSpec()).toArray(DataTableSpec[]::new));
+        BufferedDataTable[] noNullArray = noNullArray(rawInData);
+        long totalRowCount = 0L;
+        RowInput[] inputs = new RowInput[noNullArray.length];
+        DataTableSpec[] noNullSpecs = new DataTableSpec[noNullArray.length];
+        for (int i = 0; i < noNullArray.length; i++) {
+            totalRowCount += noNullArray[i].getRowCount();
+            inputs[i] = new DataTableRowInput(noNullArray[i]);
+            noNullSpecs[i] = noNullArray[i].getDataTableSpec();
+        }
+        DataTableSpec outputSpec = getOutputSpec(noNullSpecs);
         BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(exec.createDataContainer(outputSpec));
         run(inputs, output, exec, totalRowCount);
         return new BufferedDataTable[]{output.getDataTable()};
     }
 
-    private static Stream<BufferedDataTable> noNullStream(final BufferedDataTable[] rawInData) {
-        return Arrays.stream(rawInData).filter(t -> t != null);
+    private static BufferedDataTable[] noNullArray(final BufferedDataTable[] rawInData) {
+        List<BufferedDataTable> nonNullList = new ArrayList<BufferedDataTable>();
+        for (BufferedDataTable t : rawInData) {
+            nonNullList.add(t);
+        }
+        return nonNullList.toArray(new BufferedDataTable[nonNullList.size()]);
+    }
+
+    private static RowInput[] noNullArray(final RowInput[] rawInData) {
+        List<RowInput> nonNullList = new ArrayList<RowInput>();
+        for (RowInput t : rawInData) {
+            nonNullList.add(t);
+        }
+        return nonNullList.toArray(new RowInput[nonNullList.size()]);
     }
 
     void run(final RowInput[] inputs, final RowOutput output,
         final ExecutionMonitor exec, final long totalRowCount) throws Exception {
         RowInput[] corrected;
         if (m_isIntersection) {
-            DataTableSpec[] inSpecs = Arrays.stream(inputs).map(i -> i.getDataTableSpec()).toArray(DataTableSpec[]::new);
+            final RowInput[] noNullArray = noNullArray(inputs);
+            corrected = new RowInput[noNullArray.length];
+            DataTableSpec[] inSpecs = new DataTableSpec[noNullArray.length];
+            for (int i = 0; i < noNullArray.length; i++) {
+                inSpecs[i] = noNullArray[i].getDataTableSpec();
+            }
             String[] intersection = getIntersection(inSpecs);
-            corrected = Arrays.stream(inputs)
-                    .map(i -> new FilterColumnRowInput(i, intersection)).toArray(RowInput[]::new);
+            for (int i = 0; i < noNullArray.length; i++) {
+                corrected[i] = new FilterColumnRowInput(noNullArray[i], intersection);
+            }
         } else {
             corrected = inputs;
         }
@@ -264,8 +289,14 @@ public class AppendedRowsNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] rawInSpecs) throws InvalidSettingsException {
-        DataTableSpec outputSpec = getOutputSpec(
-            Arrays.stream(rawInSpecs).filter(s -> s != null).toArray(DataTableSpec[]::new));
+        List<DataTableSpec> noNullSpecList = new ArrayList<>();
+        for (DataTableSpec s : rawInSpecs) {
+            if (s != null) {
+                noNullSpecList.add(s);
+            }
+        }
+        DataTableSpec[] noNullSpecs = noNullSpecList.toArray(new DataTableSpec[noNullSpecList.size()]);
+        DataTableSpec outputSpec = getOutputSpec(noNullSpecs);
         return new DataTableSpec[] {outputSpec};
     }
 
@@ -303,7 +334,13 @@ public class AppendedRowsNodeModel extends NodeModel {
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
                 final ExecutionContext exec) throws Exception {
-                RowInput[] rowInputs = Arrays.stream(inputs).filter(i -> i != null).map(i -> (RowInput)i).toArray(RowInput[]::new);
+                List<RowInput> noNullList = new ArrayList<RowInput>();
+                for (PortInput p : inputs) {
+                    if (p != null) {
+                        noNullList.add((RowInput)p);
+                    }
+                }
+                RowInput[] rowInputs = noNullList.toArray(new RowInput[noNullList.size()]);
                 run(rowInputs, (RowOutput)outputs[0], exec, -1);
             }
         };
