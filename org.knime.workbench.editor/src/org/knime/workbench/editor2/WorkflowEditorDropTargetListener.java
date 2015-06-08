@@ -454,17 +454,12 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
         if (m_node != null && m_nodeCount >= m_edgeCount) {
             m_markedNode = m_node;
             m_markedNode.mark();
-            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-            WindowsDNDHelper.hideDragImage();
         } else if (m_edge != null) {
             m_edgeColor = m_edge.getFigure().getForegroundColor();
             m_edgeWidth = ((ProgressPolylineConnection)m_edge.getFigure()).getLineWidth();
             m_markedEdge = m_edge;
             ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(m_edgeWidth + 3);
             m_markedEdge.getFigure().setForegroundColor(RED);
-
-            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-            WindowsDNDHelper.hideDragImage();
         }
     }
 
@@ -492,18 +487,12 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
         if (m_markedNode != null) {
             m_markedNode.unmark();
             m_markedNode = null;
-
-            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-            WindowsDNDHelper.showDragImage();
         }
 
         if (m_markedEdge != null) {
             m_markedEdge.getFigure().setForegroundColor(m_edgeColor);
             ((ProgressPolylineConnection)m_markedEdge.getFigure()).setLineWidth(m_edgeWidth);
             m_markedEdge = null;
-
-            // workaround for eclipse bug 393868 (https://bugs.eclipse.org/bugs/show_bug.cgi?id=393868)
-            WindowsDNDHelper.showDragImage();
         }
     }
 

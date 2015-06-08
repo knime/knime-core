@@ -51,9 +51,10 @@ package org.knime.core.data.util.memory;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.xml.datatype.Duration;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -89,32 +90,36 @@ public class MemoryAlertSystemTest {
 
         // we should return immediately because enough memory is available
         boolean memoryAvailable =
-            m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, Duration.ofSeconds(1));
+            m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 1000);
         assertThat("Was sleeping although memory is below threshold: " + MemoryAlertSystem.getUsage(), memoryAvailable,
             is(true));
 
         // allocate memory
-        AtomicReference<byte[]> buffer = new AtomicReference<byte[]>(new byte[reserveSize]);
+        final AtomicReference<byte[]> buffer = new AtomicReference<byte[]>(new byte[reserveSize]);
         // force buffer into tenured space
         System.gc();
         System.gc();
 
         Thread.sleep(1000);
         // we should return after 1 seconds
-        memoryAvailable = m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, Duration.ofSeconds(1));
+        memoryAvailable = m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 1000);
         assertThat("Was not sleeping although memory usage is above threshold: " + MemoryAlertSystem.getUsage(),
             memoryAvailable, is(false));
 
-        new Thread(() -> {
-            try {
-                Thread.sleep(1000);
-                buffer.set(null);
-                System.gc();
-            } catch (Exception ex) {
-                // ignore
-        }
-    }   ).start();
-        m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, Duration.ofSeconds(15));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                    buffer.set(null);
+                    System.gc();
+                } catch (Exception ex) {
+                    // ignore
+                }
+            }
+        }).start();
+
+        m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 15000);
         // should return quite fast and not time out the test method
     }
 
@@ -127,7 +132,7 @@ public class MemoryAlertSystemTest {
     public void testListener() throws Exception {
         int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
-        AtomicBoolean listenerCalled = new AtomicBoolean();
+        final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
             @Override
             protected boolean memoryAlert(final MemoryAlert alert) {
@@ -162,7 +167,7 @@ public class MemoryAlertSystemTest {
     public void testAutoRemoveListener() throws Exception {
         int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
-        AtomicBoolean listenerCalled = new AtomicBoolean();
+        final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
             @Override
             protected boolean memoryAlert(final MemoryAlert alert) {

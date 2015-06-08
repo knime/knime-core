@@ -47,13 +47,9 @@
  */
 package org.knime.product.rcp;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.stream.Stream;
-
 import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.action.ICoolBarManager;
+import org.eclipse.jface.action.CoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;

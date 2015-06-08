@@ -951,7 +951,12 @@ class Buffer implements KNIMEStreamConstants {
             @Override
             protected boolean memoryAlert(final MemoryAlert alert) {
                 if (m_list != null && !m_list.isEmpty()) {
-                    ThreadUtils.threadWithContext(() -> onMemoryAlert(), "KNIME Buffer flusher").start();
+                    ThreadUtils.threadWithContext(new Runnable() {
+                        @Override
+                        public void run() {
+                            onMemoryAlert();
+                        }
+                    }, "KNIME Buffer flusher").start();
                 }
                 return true;
             }

@@ -53,7 +53,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryNotificationInfo;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,10 +63,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Stream;
 
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
+import javax.management.NotificationListener;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
@@ -121,18 +120,26 @@ public final class MemoryAlertSystem {
         setFractionUsageThreshold(usageThreshold);
 
         for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
-            if (Stream.of(gcBean.getMemoryPoolNames()).filter(x -> m_memPool.getName().equals(x)).findAny().isPresent()) {
-                ((NotificationEmitter)gcBean).addNotificationListener((not, obj) -> {
-                    gcEvent(usageThreshold, not);
-                }, null, null);
-                break;
+            for (String memPoolName : gcBean.getMemoryPoolNames()) {
+                if (memPoolName.equals(m_memPool.getName())) {
+                    ((NotificationEmitter)gcBean).addNotificationListener(new NotificationListener() {
+                        @Override
+                        public void handleNotification(final Notification notification, final Object handback) {
+                            gcEvent(usageThreshold, notification);
+                        }
+                    }, null, null);
+                    break;
+                }
             }
         }
 
         NotificationEmitter memoryBean = (NotificationEmitter)ManagementFactory.getMemoryMXBean();
-        memoryBean.addNotificationListener((not, obj) -> {
-            if (not.getType().equals(MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED)) {
-                usageThresholdEvent(usageThreshold, not);
+        memoryBean.addNotificationListener(new NotificationListener() {
+            @Override
+            public void handleNotification(final Notification notification, final Object handback) {
+                if (notification.getType().equals(MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED)) {
+                    usageThresholdEvent(usageThreshold, notification);
+                }
             }
         }, null, null);
 
@@ -141,7 +148,14 @@ public final class MemoryAlertSystem {
 
     private void usageThresholdEvent(final double usageThreshold, final Notification not) {
         LOGGER.debug("Memory collection threshold of " + usageThreshold + " exceeded after GC");
-        if (m_lastEventTimestamp.getAndAccumulate(not.getTimeStamp(), (a, b) -> Math.max(a, b)) < not.getTimeStamp()) {
+
+        long prev, next;
+        do {
+            prev = m_lastEventTimestamp.get();
+            next = Math.max(prev, not.getTimeStamp());
+        } while (!m_lastEventTimestamp.compareAndSet(prev, next));
+
+        if (prev < not.getTimeStamp()) {
             m_lowMemory = true;
             sendMemoryAlert();
         }
@@ -150,7 +164,14 @@ public final class MemoryAlertSystem {
     private void gcEvent(final double usageThreshold, final Notification not) {
         // Only reset the low memory flag if the last (memory) event was earlier than this event.
         // the GC event and the Mem event have the same timestamp in case the threshold is exceeded.
-        if (m_lastEventTimestamp.getAndAccumulate(not.getTimeStamp(), (a, b) -> Math.max(a, b)) < not.getTimeStamp()) {
+
+        long prev, next;
+        do {
+            prev = m_lastEventTimestamp.get();
+            next = Math.max(prev, not.getTimeStamp());
+        } while (!m_lastEventTimestamp.compareAndSet(prev, next));
+
+        if (prev < not.getTimeStamp()) {
             LOGGER.debug("Memory usage below threshold of " + usageThreshold + " after GC run");
             m_lowMemory = false;
         }
@@ -327,27 +348,27 @@ public final class MemoryAlertSystem {
      * still low.
      *
      * @param threshold a usage threshold which must be greater or equal to the threshold of the memory alert system
-     * @param timeout the maximum waiting time
+     * @param timeout the maximum waiting time in milliseconds
      * @return <code>true</code> if memory is available again, <code>false</code> if the timeout has elapsed and memory
      *         is still low
      * @throws InterruptedException if the thread is interrupted while waiting
      */
-    public boolean sleepWhileLow(final double threshold, final Duration timeout) throws InterruptedException {
+    public boolean sleepWhileLow(final double threshold, final long timeout) throws InterruptedException {
         if (threshold < (m_memPool.getCollectionUsageThreshold() / (double)getMaximumMemory())) {
             throw new IllegalArgumentException("Threshold must be above configured threshold for this system: "
                 + threshold + " vs. " + (m_memPool.getCollectionUsageThreshold() / (double)getMaximumMemory()));
         }
 
         if (m_lowMemory) {
-            Duration remainingTime = timeout;
+            long remainingTime = timeout;
             m_gcEventLock.lock();
             try {
                 while (getUsage() > threshold) {
                     long diff = System.currentTimeMillis();
-                    if (!m_gcEvent.await(remainingTime.toNanos(), TimeUnit.NANOSECONDS)) {
+                    if (!m_gcEvent.await(remainingTime, TimeUnit.MILLISECONDS)) {
                         return false;
                     } else {
-                        remainingTime = remainingTime.minusMillis(System.currentTimeMillis() - diff);
+                        remainingTime -= System.currentTimeMillis() - diff;
                     }
                 }
                 return true;
