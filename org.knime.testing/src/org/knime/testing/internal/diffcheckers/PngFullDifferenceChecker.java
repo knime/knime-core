@@ -129,7 +129,7 @@ public class PngFullDifferenceChecker extends AbstractDifferenceChecker<PNGImage
 
                 diff += Math.abs(expectedRed - ImageUtil.getRed(actualImage, x, y));
                 diff += Math.abs(expectedGreen - ImageUtil.getGreen(actualImage, x, y));
-                diff += Math.abs(expectedGreen - ImageUtil.getBlue(actualImage, x, y));
+                diff += Math.abs(expectedBlue - ImageUtil.getBlue(actualImage, x, y));
 
                 maxPossibleDiff += Math.max(0xff - expectedRed, expectedRed);
                 maxPossibleDiff += Math.max(0xff - expectedGreen, expectedGreen);
