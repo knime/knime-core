@@ -45,7 +45,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.util.function.Supplier;
 
 
 /**
@@ -56,7 +55,7 @@ public final class ConnectionProgress {
 
     private final boolean m_inProgress;
 
-    private final Supplier<String> m_messageSupplier;
+    private final StringSupplier m_messageSupplier;
 
     /**
      * Create a progress event based on progress value and message.
@@ -66,7 +65,12 @@ public final class ConnectionProgress {
      *            nothing)
      */
     public ConnectionProgress(final boolean inProgress, final String message) {
-        this(inProgress, () -> message);
+        this(inProgress, new StringSupplier() {
+            @Override
+            public String get() {
+                return message;
+            }
+        });
     }
 
     /**
@@ -76,8 +80,11 @@ public final class ConnectionProgress {
      * @param inProgress true if currently in-progress.
      * @param messageSupplier the message supplier to display (or <code>null</code> to display nothing)
      * @since 2.12
+     * @noreference Do not use as it will be removed in 3.0
+     * @deprecated Temp workaround until java.util.Supplier is available in java 8.
      */
-    public ConnectionProgress(final boolean inProgress, final Supplier<String> messageSupplier) {
+    @Deprecated
+    public ConnectionProgress(final boolean inProgress, final StringSupplier messageSupplier) {
         m_inProgress = inProgress;
         m_messageSupplier = messageSupplier;
     }
@@ -108,6 +115,19 @@ public final class ConnectionProgress {
      */
     public boolean hasMessage() {
         return m_messageSupplier != null && m_messageSupplier.get() != null;
+    }
+
+    /** Temporary workaround until java 8 w/ java.util.Supplier is available.
+     * @noinstantiate This class is not intended to be instantiated by clients.
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 2.12
+     * @deprecated
+     */
+    @Deprecated
+    public interface StringSupplier {
+
+        /** @return The string. */
+        public String get();
     }
 
 }
