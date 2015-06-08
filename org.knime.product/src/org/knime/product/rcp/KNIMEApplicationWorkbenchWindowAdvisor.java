@@ -212,13 +212,14 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         IPreferenceStore pStore = KNIMECorePlugin.getDefault().getPreferenceStore();
         boolean showMessageBox = !pStore.contains(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS);
         pStore.setDefault(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, false);
-        if (!showMessageBox) {
-            return;
-        }
+//        if (!showMessageBox) {
+//            return;
+//        }
         MessageBox checkBox = new MessageBox(shell, SWT.YES | SWT.NO | SWT.ICON_QUESTION);
         checkBox.setText("Help improve KNIME");
-        checkBox.setMessage("Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data.\n"
-            + "No other information will be transmitted.\nYou can also change this setting in preferences later.");
+        checkBox.setMessage("Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data. "
+            + "No other information will be transmitted. You can also change this setting in preferences later.\n"
+            + "Do you allow KNIME to collect and send anonymized usage data?");
         int status = checkBox.open();
         if (status == SWT.YES) {
             pStore.setValue(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, true);
