@@ -1335,6 +1335,7 @@ class Buffer implements KNIMEStreamConstants {
                 // (this buffer is restored from disc - and then a memory alert forces the data back onto disc)
                 fileStoreKey = FileStoreUtil.getFileStoreKey(fileStore);
             }
+            FileStoreUtil.invokeFlush(fsCell);
         }
         final boolean isJavaSerializationOrBlob = ser == null && !isBlob;
         if (isJavaSerializationOrBlob) {

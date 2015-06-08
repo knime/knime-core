@@ -54,7 +54,6 @@ import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.ConvenienceMethods;
 
@@ -67,9 +66,8 @@ import org.knime.core.node.util.ConvenienceMethods;
  */
 public abstract class FileStorePortObject implements PortObject, FlushCallback {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileStorePortObject.class);
-
     private ArrayList<FileStoreProxy> m_fileStoreProxies;
+    private boolean m_isFlushedToFileStore;
 
     /** Standard client constructor.
      * @param fileStores Non null list of file store objects to wrap. */
@@ -91,6 +89,7 @@ public abstract class FileStorePortObject implements PortObject, FlushCallback {
     /** Used when read from persisted stream. */
     protected FileStorePortObject() {
         m_fileStoreProxies = new ArrayList<FileStoreProxy>();
+        m_isFlushedToFileStore = true;
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
@@ -113,6 +112,13 @@ public abstract class FileStorePortObject implements PortObject, FlushCallback {
      * an error will be reported to the log.  */
     protected void postConstruct() throws IOException {
         // no op.
+    }
+
+    void callFlushIfNeeded() throws IOException {
+        if (!m_isFlushedToFileStore) {
+            m_isFlushedToFileStore = true;
+            flushToFileStore();
+        }
     }
 
     /** Called before the cell about to be serialized. Subclasses may override it to make sure the content

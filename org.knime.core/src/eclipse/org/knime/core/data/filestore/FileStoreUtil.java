@@ -99,9 +99,9 @@ public final class FileStoreUtil {
     /** @noreference This method is not intended to be referenced by clients. */
     public static void invokeFlush(final FlushCallback flushCallback) throws IOException {
         if (flushCallback instanceof FileStoreCell) {
-            ((FileStoreCell)flushCallback).flushToFileStore();
+            ((FileStoreCell)flushCallback).callFlushIfNeeded();
         } else if (flushCallback instanceof FileStorePortObject) {
-            ((FileStorePortObject)flushCallback).flushToFileStore();
+            ((FileStorePortObject)flushCallback).callFlushIfNeeded();
         } else {
             NodeLogger.getLogger(FileStoreUtil.class).coding("Unknown implementation of a "
                     + FlushCallback.class.getSimpleName() + ": "

@@ -54,7 +54,6 @@ import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
-import org.knime.core.node.NodeLogger;
 
 /**
  *
@@ -63,10 +62,8 @@ import org.knime.core.node.NodeLogger;
  */
 public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileStoreCell.class);
-
     private FileStoreProxy m_fileStoreProxy;
-
+    private boolean m_isFlushedToFileStore;
 
     /**
      *  */
@@ -78,6 +75,7 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
      *  */
     protected FileStoreCell() {
         m_fileStoreProxy = new FileStoreProxy();
+        m_isFlushedToFileStore = true;
     }
 
     /** @return the fileStoreKey */
@@ -104,7 +102,14 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
         // no op.
     }
 
-    /** Called before the cell about to be serialized. Subclasses may override it to make sure the content
+    void callFlushIfNeeded() throws IOException {
+        if (!m_isFlushedToFileStore) {
+            m_isFlushedToFileStore = true;
+            flushToFileStore();
+        }
+    }
+
+    /** Called before the cell is about to be serialized. Subclasses may override it to make sure the content
      * is sync'ed with the file (e.g. in-memory content is written to the FileStore).
      *
      * <p>This method is also called when the file underlying the cell is copied into a another context (from
@@ -114,6 +119,11 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
      * @since 2.8 */
     protected void flushToFileStore() throws IOException {
         // no op.
+    }
+
+    /** @return the isFlushedToFileStore */
+    boolean isFlushedToFileStore() {
+        return m_isFlushedToFileStore;
     }
 
     /** {@inheritDoc} */
