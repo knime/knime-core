@@ -63,7 +63,9 @@ import org.knime.core.node.NodeLogger;
  * No public API yet.
  *
  * @author dietzc
+ * @deprecated used {@link MemoryAlertSystem} instead
  */
+@Deprecated
 public final class MemoryWarningSystem {
 
     private static MemoryWarningSystem m_instance = null;
@@ -99,7 +101,7 @@ public final class MemoryWarningSystem {
         emitter.addNotificationListener(new NotificationListener() {
             @Override
             public void handleNotification(final Notification n, final Object hb) {
-                if (n.getType().equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED)) {
+                if (n.getType().equals(MemoryNotificationInfo.MEMORY_COLLECTION_THRESHOLD_EXCEEDED)) {
                     long computeUsedMem = computeUsedMem();
                     synchronized (m_instance) {
                         for (MemoryWarningListener listener : listeners) {
@@ -144,7 +146,7 @@ public final class MemoryWarningSystem {
 
         long warningThreshold = (long)(computeMaxMem() * percentage);
 
-        m_memPool.setUsageThreshold(warningThreshold);
+        m_memPool.setCollectionUsageThreshold(warningThreshold);
     }
 
     private long computeUsedMem() {
@@ -155,40 +157,6 @@ public final class MemoryWarningSystem {
     private long computeMaxMem() {
         // Compute the threshold in bytes
         long maxMem = null != m_memPool ? m_memPool.getUsage().getMax() : Runtime.getRuntime().maxMemory();
-
-        // Workaround for a bug in G1 garbage collector:
-        // http://bugs.sun.com/view_bug.do?bug_id=6880903
-        List<String> jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
-        if (jvmArgs.contains("-XX:+UseG1GC")) {
-            boolean xmxArgSet = false;
-            for (String arg : jvmArgs) {
-                if (arg.startsWith("-Xmx")) {
-                    xmxArgSet = true;
-                    boolean factorPresent = false;
-                    int factor = -1;
-                    if (arg.toLowerCase().endsWith("k")) {
-                        factorPresent = true;
-                        factor = 1000;
-                    } else if (arg.toLowerCase().endsWith("m")) {
-                        factorPresent = true;
-                        factor = 1000000;
-                    } else if (arg.toLowerCase().endsWith("g")) {
-                        factorPresent = true;
-                        factor = 1000000000;
-                    }
-                    if (factorPresent) {
-                        maxMem = Integer.parseInt(arg.substring(4, arg.length() - 1)) * factor;
-                    } else {
-                        maxMem = Integer.parseInt(arg.substring(4));
-                    }
-                    break;
-                }
-            }
-            if (!xmxArgSet) {
-                LOGGER.error("Please, set -Xmx jvm argument " + "due to a bug in G1GC. Otherwise, memory "
-                        + "intensive nodes might not work correctly.");
-            }
-        }
 
         return maxMem;
     }

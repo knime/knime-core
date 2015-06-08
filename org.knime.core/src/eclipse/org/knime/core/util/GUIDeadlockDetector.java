@@ -73,11 +73,12 @@ import org.knime.core.node.NodeLogger;
 public abstract class GUIDeadlockDetector {
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
+    // The threshold must be at least twice the check interval!
     /** The threshold for detecting slow-downs. **/
-    private static final Integer THRESHOLD = Integer.getInteger("knime.deadlockdetector.threshold", 10000);
+    private static final Integer THRESHOLD = Integer.getInteger("knime.deadlockdetector.threshold", 21000);
 
     /** The interval for thread dumps. **/
-    private static final Integer CHECK_INTERVAL = Integer.getInteger("knime.deadlockdetector.dump.interval", 30000);
+    private static final Integer CHECK_INTERVAL = Integer.getInteger("knime.deadlockdetector.check.interval", 10000);
 
     private static final Boolean DONT_WATCH = Boolean.getBoolean("knime.deadlockdetector.off");
 
@@ -95,10 +96,15 @@ public abstract class GUIDeadlockDetector {
      * Creates a new deadlock detector.
      */
     protected GUIDeadlockDetector() {
-        if (!DONT_WATCH) {
+        if (!DONT_WATCH && !isInDebug()) {
             m_executor.scheduleAtFixedRate(new SubmitTask(), 0, CHECK_INTERVAL, TimeUnit.MILLISECONDS);
-            m_executor.scheduleAtFixedRate(new CheckTask(), 500, CHECK_INTERVAL, TimeUnit.MILLISECONDS);
+            m_executor.scheduleAtFixedRate(new CheckTask(), 1000, CHECK_INTERVAL, TimeUnit.MILLISECONDS);
         }
+    }
+
+    /** @return true if the VM runs in debug mode -- don't enable deadlock detector then. */
+    private static final boolean isInDebug() {
+        return ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp");
     }
 
     /**
@@ -156,6 +162,16 @@ public abstract class GUIDeadlockDetector {
         for (ThreadInfo ti : bean.dumpAllThreads(true, true)) {
             fillStackFromThread(ti, buf);
         }
+
+        long[] deadlockedThreads = bean.findDeadlockedThreads();
+        if ((deadlockedThreads != null) && (deadlockedThreads.length > 0)) {
+            buf.append("\nDEADLOCKED THREADS\n");
+            for (ThreadInfo ti : bean.getThreadInfo(deadlockedThreads)) {
+                buf.append('\t').append(ti.getThreadId()).append('\t').append(ti.getThreadName()).append("\t(")
+                    .append(ti.getThreadState().name()).append(")\n");
+            }
+        }
+
         return buf.toString();
     }
 

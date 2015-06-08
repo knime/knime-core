@@ -51,8 +51,9 @@ package org.knime.core.data.util.memory;
  * Marks an object that is able to free memory on demand.
  *
  * @author Martin Horn, Christian Dietz University of Konstanz
- *
+ * @deprecated use {@link MemoryWarningSystem} and register a listener instead
  */
+@Deprecated
 public interface MemoryReleasable {
         /**
          * @return true, if object may be removed from ObjectTracker

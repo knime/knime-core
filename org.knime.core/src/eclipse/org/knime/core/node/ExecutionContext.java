@@ -71,6 +71,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.KNIMEJob;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
 import org.knime.core.util.DuplicateKeyException;
 
 /**
@@ -342,7 +343,8 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataContainer createDataContainer(final DataTableSpec spec,
             final boolean initDomain, final int maxCellsInMemory) {
-        boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class);
+        boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
+                || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
                 m_globalTableRepository, m_localTableRepository, m_fileStoreHandler);

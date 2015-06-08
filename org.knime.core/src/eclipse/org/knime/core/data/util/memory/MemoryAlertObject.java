@@ -50,7 +50,9 @@ package org.knime.core.data.util.memory;
  * Unstable API
  *
  * @author dietzc
+ * @deprecated use {@link MemoryAlert} instead
  */
+@Deprecated
 public final class MemoryAlertObject {
     // class for future purposes
 }

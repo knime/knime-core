@@ -234,7 +234,8 @@ public abstract class NodeExecutionJob implements Runnable {
 
     /** Called to finalize the execution. For instance, remote executors will
      * copy the result data onto the local machine. This method is called no
-     * matter if the main execution was successful or not.*/
+     * matter if the main execution was successful or not.
+     */
     protected void afterExecute() {
         // possibly overwritten by sub-classes
     }

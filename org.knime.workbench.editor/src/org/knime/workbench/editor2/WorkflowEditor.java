@@ -234,7 +234,6 @@ import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
-import org.knime.workbench.editor2.pervasive.PervasiveJobExecutorHelper;
 import org.knime.workbench.editor2.svgexport.WorkflowSVGExport;
 import org.knime.workbench.explorer.ExplorerMountTable;
 import org.knime.workbench.explorer.RemoteWorkflowInput;
@@ -1181,8 +1180,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         URL url;
         if (jobManager instanceof AbstractNodeExecutionJobManager) {
             url = ((AbstractNodeExecutionJobManager)jobManager).getIconForWorkflow();
-        } else if (PervasiveJobExecutorHelper.isPervasiveJobManager(jobManager)) {
-            url = PervasiveJobExecutorHelper.getIconForWorkflow();
         } else {
             url = null;
         }

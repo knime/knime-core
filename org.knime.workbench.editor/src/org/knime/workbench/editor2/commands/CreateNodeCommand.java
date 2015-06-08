@@ -57,6 +57,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -72,11 +73,23 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
 
     private final NodeFactory<? extends NodeModel> m_factory;
 
-    private final Point m_location;
+    /**
+     * Location of the new node.
+     * @since 2.12
+     */
+    protected final Point m_location;
 
-    private final boolean m_snapToGrid;
+    /**
+     * Snap node to grid.
+     * @since 2.12
+     */
+    protected final boolean m_snapToGrid;
 
-    private NodeContainer m_container;
+    /**
+     * Container of the new node.
+     * @since 2.12
+     */
+    protected NodeContainer m_container;
 
     /**
      * Creates a new command.
@@ -84,6 +97,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
      * @param manager The workflow manager that should host the new node
      * @param factory The factory of the Node that should be added
      * @param location Initial visual location in the
+     * @param snapToGrid snap new node to grid
      */
     public CreateNodeCommand(final WorkflowManager manager,
             final NodeFactory<? extends NodeModel> factory, final Point location, final boolean snapToGrid) {
@@ -108,6 +122,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
         try {
             NodeID id = hostWFM.createAndAddNode(m_factory);
             m_container = hostWFM.getNodeContainer(id);
+            NodeTimer.GLOBAL_TIMER.addNodeCreation(m_container);
         } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);

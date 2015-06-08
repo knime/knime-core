@@ -93,7 +93,7 @@ public class SetNodeDescriptionAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Edit Node Description...";
+        return "Edit Node Description...\t" + getHotkey("knime.commands.setNameAndDescription");
     }
 
     /**

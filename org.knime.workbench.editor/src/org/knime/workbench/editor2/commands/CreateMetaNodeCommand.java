@@ -72,12 +72,26 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
 
     private final WorkflowPersistor m_persistor;
 
-    private final Point m_location;
+    /**
+     * Location of the new meta node.
+     * @since 2.12
+     */
+    protected final Point m_location;
 
-    private final boolean m_snapToGrid;
+    /**
+     * Snap meta node to grid.
+     * @since 2.12
+     */
+    protected final boolean m_snapToGrid;
 
     // for undo
     private WorkflowCopyContent m_copyContent;
+
+    /**
+     * Container of the new meta node.
+     * @since 2.12
+     */
+    protected NodeContainer m_container;
 
     /**
      * Creates a new command.
@@ -112,13 +126,13 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
             NodeID[] nodeIDs = m_copyContent.getNodeIDs();
             if (nodeIDs.length > 0) {
                 NodeID first = nodeIDs[0];
-                NodeContainer container = wfm.getNodeContainer(first);
+                m_container = wfm.getNodeContainer(first);
                 // create extra info and set it
                 NodeUIInformation info = new NodeUIInformation(
                         m_location.x, m_location.y, -1, -1, false);
                 info.setSnapToGrid(m_snapToGrid);
                 info.setIsDropLocation(true);
-                container.setUIInformation(info);
+                m_container.setUIInformation(info);
             }
         } catch (Throwable t) {
             // if fails notify the user
@@ -179,5 +193,4 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
                     + Arrays.asList(ids) + " can currently not be removed");
         }
     }
-
 }

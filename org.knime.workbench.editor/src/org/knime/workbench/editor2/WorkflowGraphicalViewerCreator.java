@@ -57,11 +57,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorSite;
 
 /**
- * Helper class that creates the <code>GraphicalViewer</code> that is hosted
- * inside the editor. This creates the root edit part and the
- * <code>NodeTemplateDropTargetListener</code> that is responsible for
- * dropping <code>NodeTemplates</code> into the viewer. (which get converted
- * into <code>NodeContainer</code> objects.)
+ * Helper class that creates the <code>GraphicalViewer</code> that is hosted inside the editor. This creates the root
+ * edit part and the <code>NodeTemplateDropTargetListener</code> that is responsible for dropping
+ * <code>NodeTemplates</code> into the viewer. (which get converted into <code>NodeContainer</code> objects.)
  *
  *
  * @author Florian Georg, University of Konstanz
@@ -80,8 +78,7 @@ public class WorkflowGraphicalViewerCreator {
      * @param editorSite Current editor site
      * @param actionRegistry The action registry to use
      */
-    public WorkflowGraphicalViewerCreator(final IEditorSite editorSite,
-            final ActionRegistry actionRegistry) {
+    public WorkflowGraphicalViewerCreator(final IEditorSite editorSite, final ActionRegistry actionRegistry) {
 
         assert editorSite != null;
         this.m_editorSite = editorSite;
@@ -89,8 +86,7 @@ public class WorkflowGraphicalViewerCreator {
     }
 
     /**
-     * Creates a new <code>Viewer</code>, configures, registers and
-     * initializes it.
+     * Creates a new <code>Viewer</code>, configures, registers and initializes it.
      *
      * @param parent the parent composite
      */
@@ -99,8 +95,8 @@ public class WorkflowGraphicalViewerCreator {
     }
 
     /**
-     * Creates the viewer control, and connect it to a root edit part
-     * Additionally the viewer gets the edit part factory and a drop-listener.
+     * Creates the viewer control, and connect it to a root edit part Additionally the viewer gets the edit part factory
+     * and a drop-listener.
      *
      * @param parent Parent composite
      * @return The viewer
@@ -111,19 +107,15 @@ public class WorkflowGraphicalViewerCreator {
 
         // configure the m_viewer
         viewer.getControl().setBackground(ColorConstants.white);
-        ScalableFreeformRootEditPart part =
-            new ConnectionSelectingScalableFreeformRootEditPart();
+        ScalableFreeformRootEditPart part = new ConnectionSelectingScalableFreeformRootEditPart();
         viewer.setRootEditPart(part);
         viewer.setKeyHandler(new GraphicalViewerKeyHandler(viewer));
 
-        // Add a drop listener
-        NodeTemplateDropTargetListener2 listener
-            = new NodeTemplateDropTargetListener2(viewer);
-        viewer.addDropTargetListener(listener);
-        viewer.addDropTargetListener(
-                new WorkflowEditorFileDropTargetListener(viewer));
-        viewer.addDropTargetListener(
-                new WorkflowEditorSelectionDropListener(viewer));
+        // Add drop listeners
+        viewer.addDropTargetListener(new NodeDropTargetListener(viewer));
+        viewer.addDropTargetListener(new MetaNodeDropTargetListener(viewer));
+        viewer.addDropTargetListener(new WorkflowEditorFileDropTargetListener(viewer));
+        viewer.addDropTargetListener(new WorkflowEditorSelectionDropListener(viewer));
 
         // DO NOT Add drag listener
         /* Don't add any drag listener here. Processing of drag events seems
@@ -133,8 +125,7 @@ public class WorkflowGraphicalViewerCreator {
             new MetaNodeTemplateDropTargetListener(viewer);
         viewer.addDropTargetListener(metaNodeTemplateDropListener);
         // configure context menu
-        viewer.setContextMenu(
-                new WorkflowContextMenuProvider(m_actionRegistry, viewer));
+        viewer.setContextMenu(new WorkflowContextMenuProvider(m_actionRegistry, viewer));
 
         m_editorSite.registerContextMenu(viewer.getContextMenu(), viewer, false);
         // set the factory that is able to create the edit parts to be

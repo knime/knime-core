@@ -62,6 +62,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.NodeOutPort;
+import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -173,6 +174,7 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
             try {
                 hostWFM.addConnection(m_connectTo, leftPort, m_newNode,
                         rightPort).getID();
+                NodeTimer.GLOBAL_TIMER.addConnectionCreation(sourceNode, nc);
             } catch (Exception e) {
                 String from = sourceNode.getNameWithID();
                 String to = nc.getNameWithID();

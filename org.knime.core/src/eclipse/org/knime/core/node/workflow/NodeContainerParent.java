@@ -68,6 +68,12 @@ public interface NodeContainerParent {
      */
     public NodeContainerParent getDirectNCParent();
 
+    /**
+     * Pulls {@link NodeContainer#findJobManager()} into parent interface.
+     * @since 2.12
+     */
+    public NodeExecutionJobManager findJobManager();
+
     /** If a contained node contained (independent of its connections). Generally true but subnodes disallow
      * node reset if there are downstream executing nodes.
      * @return that property.

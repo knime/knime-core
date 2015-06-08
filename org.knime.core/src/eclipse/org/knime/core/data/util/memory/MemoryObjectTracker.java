@@ -47,13 +47,13 @@
 package org.knime.core.data.util.memory;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.WeakHashMap;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.io.FileUtils;
 import org.knime.core.node.NodeLogger;
@@ -63,7 +63,9 @@ import org.knime.core.node.workflow.NodeContext;
  * API not public yet.
  *
  * @author dietzc
+ * @deprecated use {@link MemoryAlertSystem} instead
  */
+@Deprecated
 public final class MemoryObjectTracker {
 
     private static final MemoryAlertObject MEMORY_ALERT = new MemoryAlertObject();
@@ -87,7 +89,7 @@ public final class MemoryObjectTracker {
     * memory runs out.
     */
     private final WeakHashMap<MemoryReleasable, TimestampAndContext> m_trackedObjectHash =
-            new WeakHashMap<MemoryReleasable, TimestampAndContext>();
+        new WeakHashMap<MemoryReleasable, TimestampAndContext>();
 
     private long m_lastAccess;
 
@@ -96,6 +98,10 @@ public final class MemoryObjectTracker {
 
     /** Memory Warning System. */
     private final MemoryWarningSystem m_memoryWarningSystem = MemoryWarningSystem.getInstance();
+
+    private final Lock m_lock = new ReentrantLock();
+
+    private final Condition m_cond = m_lock.newCondition();
 
     /*
      * Private constructor, singleton
@@ -107,43 +113,42 @@ public final class MemoryObjectTracker {
             @Override
             public void memoryUsageLow(final long usedMemory, final long maxMemory) {
                 LOGGER.debug("Low memory encountered. Used memory: " + FileUtils.byteCountToDisplaySize(usedMemory)
-                             + "; maximum memory: " + FileUtils.byteCountToDisplaySize(maxMemory) + ".");
-                fireMemoryAlert();
+                    + "; maximum memory: " + FileUtils.byteCountToDisplaySize(maxMemory) + ".");
+                m_lock.lock();
+                try {
+                    m_cond.signalAll();
+                } finally {
+                    m_lock.unlock();
+                }
             }
         });
 
-    }
-
-    private void fireMemoryAlert() {
-        final double percentageToFree;
-        switch (m_strategy) {
-            case FREE_ONE:
-                percentageToFree = 0.0;
-                break;
-            case FREE_ALL:
-                percentageToFree = 1.0;
-                break;
-            case FREE_PERCENTAGE:
-                percentageToFree = 0.5;
-                break;
-            default:
-                percentageToFree = 1.0;
-                LOGGER.warn("Unknown MemoryObjectTracker.Strategy, using default");
-                break;
-        }
         // run in separate thread so that it can be debugged and we don't mess around with system threads
-        new Thread(new Runnable() {
+      final Thread t = new Thread() {
             @Override
             public void run() {
-                freeAllMemory(percentageToFree);
+                while (!isInterrupted()) {
+                    m_lock.lock();
+                    try {
+                        m_cond.await();
+                    } catch (InterruptedException ex) {
+                        break;
+                    } finally {
+                        m_lock.unlock();
+                    }
+                    LOGGER.debug("Handling memory alert");
+                    freeAllMemory(1.0);
+                }
             }
-        }, "KNIME-Memory-Cleaner").start();
+        };
+        t.setDaemon(true);
+        t.start();
     }
 
     /**
      * Track memory releasable objects. If the memory gets low, on all tracked objects the
-     * {@link MemoryReleasable#memoryAlert(MemoryAlertObject)} method will be called and
-     * the objects itself will be removed from the cache.
+     * {@link MemoryReleasable#memoryAlert(MemoryAlertObject)} method will be called and the objects itself will be
+     * removed from the cache.
      *
      * @param obj
      */
@@ -193,29 +198,12 @@ public final class MemoryObjectTracker {
         int initSize = m_trackedObjectHash.size();
 
         List<Map.Entry<MemoryReleasable, TimestampAndContext>> entryValues =
-                new ArrayList<Map.Entry<MemoryReleasable, TimestampAndContext>>(initSize);
+            new ArrayList<Map.Entry<MemoryReleasable, TimestampAndContext>>(initSize);
 
         int count = 0;
         synchronized (m_trackedObjectHash) {
             entryValues.addAll(m_trackedObjectHash.entrySet());
         }
-
-        Collections.sort(entryValues, new Comparator<Map.Entry<MemoryReleasable, TimestampAndContext>>() {
-            @Override
-            public int compare(final Entry<MemoryReleasable, TimestampAndContext> o1,
-                final Entry<MemoryReleasable, TimestampAndContext> o2) {
-                long o1LastAccess = o1.getValue().m_lastAccessStamp;
-                long o2LastAccess = o2.getValue().m_lastAccessStamp;
-                if (o1LastAccess < o2LastAccess) {
-                    return -1;
-                } else if (o1LastAccess > o2LastAccess) {
-                    return +1;
-                } else {
-                    assert false : "Equal update time stamp";
-                    return 0;
-                }
-            }
-        });
 
         LOGGER.debug("Trying to release " + entryValues.size() + " memory objects");
         for (Iterator<Map.Entry<MemoryReleasable, TimestampAndContext>> it = entryValues.iterator(); it.hasNext();) {
@@ -240,10 +228,6 @@ public final class MemoryObjectTracker {
                     count++;
                 }
             }
-
-            if (count / (double)initSize >= percentage) {
-                break;
-            }
         }
         int remaining;
         synchronized (m_trackedObjectHash) {
@@ -262,15 +246,18 @@ public final class MemoryObjectTracker {
         return instance;
     }
 
-    /** Executes the code path that is executed in low memory events. Currently only used in the test
-     * environment (no API). */
+    /**
+     * Executes the code path that is executed in low memory events. Currently only used in the test environment (no
+     * API).
+     */
     public void simulateMemoryAlert() {
-        fireMemoryAlert();
+
     }
 
     /** Value class of the tracked object. Keeps last access time stamp and the node context. */
     private static final class TimestampAndContext {
         private long m_lastAccessStamp;
+
         private final NodeContext m_context;
 
         /**

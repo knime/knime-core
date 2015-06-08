@@ -57,6 +57,8 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.keys.IBindingService;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -73,6 +75,17 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  */
 public abstract class AbstractNodeAction extends SelectionAction {
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void update() {
+        super.update();
+        // update hotkey text after the hotkey was changed in the
+        // preferences
+        setText(getText());
+    }
+
     private final WorkflowEditor m_editor;
 
     /**
@@ -82,9 +95,21 @@ public abstract class AbstractNodeAction extends SelectionAction {
     public AbstractNodeAction(final WorkflowEditor editor) {
         super(editor);
         setLazyEnablementCalculation(true);
-
         m_editor = editor;
 
+    }
+
+    /**
+     * @param commandID from the org.knime.workbench.editor/plugin.xml which links the action to the the label/shortcut sequence
+     * @return shortcut sequence or empty string if no shortcut sequence is available
+     */
+    public String getHotkey(final String commandID) {
+        IBindingService bindingService = (IBindingService) PlatformUI.getWorkbench().getAdapter(IBindingService.class);
+        String hotkey = bindingService.getBestActiveBindingFormattedFor(commandID);
+        if (hotkey == null) {
+            hotkey = "";
+        }
+        return hotkey;
     }
 
     /**

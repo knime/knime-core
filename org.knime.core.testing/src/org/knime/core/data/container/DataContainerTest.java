@@ -45,7 +45,6 @@
  */
 package org.knime.core.data.container;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,7 +52,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -72,6 +70,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.ObjectToDataCellConverter;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.DuplicateKeyException;
 
@@ -138,9 +137,7 @@ public class DataContainerTest extends TestCase {
         }
         container.close();
         Buffer buffer = container.getBufferedTable().getBuffer();
-        synchronized (buffer) {
-            buffer.writeAllRowsFromListToFile(false);
-        }
+        MemoryAlertSystem.getInstance().sendMemoryAlert();
         RowIterator tableIterator = container.getTable().iterator();
         for (RowIterator it = generateRows(100000); it.hasNext();) {
             assertEquals(it.next(), tableIterator.next());
@@ -163,7 +160,7 @@ public class DataContainerTest extends TestCase {
         }
         Buffer buffer = container.getBufferedTable().getBuffer();
         synchronized (buffer) {
-            buffer.writeAllRowsFromListToFile(false);
+            buffer.writeAllRowsFromListToFile();
         }
 
         for (; i < count; i++) {
@@ -181,7 +178,7 @@ public class DataContainerTest extends TestCase {
         }
         Buffer buffer = cont.getBuffer();
         synchronized (buffer) {
-            buffer.writeAllRowsFromListToFile(true);
+            buffer.writeAllRowsFromListToFile();
         }
         for (; i < nrRows; i++) {
             cont.addRowToTable(it.next());
@@ -213,7 +210,7 @@ public class DataContainerTest extends TestCase {
             if (i == count / 2) {
                 synchronized (buffer) {
                     // currently it does nothing as memory alerts while restoring is not supported
-                    buffer.writeAllRowsFromListToFile(false);
+                    MemoryAlertSystem.getInstance().sendMemoryAlert();
                 }
             }
             RowIterator pushIterator, otherIterator;
@@ -234,16 +231,10 @@ public class DataContainerTest extends TestCase {
         assertFalse(tableIterator1.hasNext());
         assertFalse(tableIterator2.hasNext());
 
-        final AtomicReference<Exception> ioReference = new AtomicReference<Exception>();
         Thread restoreThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    buffer.writeAllRowsFromListToFile(false);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    ioReference.set(e);
-                }
+                MemoryAlertSystem.getInstance().sendMemoryAlert();
             }
         }, "Buffer restore");
 
@@ -259,9 +250,6 @@ public class DataContainerTest extends TestCase {
         }
         restoreThread.join();
         assertFalse(buffer.usesOutFile());
-        if (ioReference.get() != null) {
-            fail(ioReference.get().getMessage());
-        }
     }
 
     private static RowIterator generateRows(final int count) {

@@ -99,6 +99,7 @@ import org.knime.core.node.workflow.NodeGraphAnnotation;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
@@ -123,21 +124,18 @@ public class NodeMonitorView extends ViewPart
     private NodeContainer m_lastNode;
     private boolean m_pinned = false;
 
-    private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE, GRAPHANNOTATIONS };
+    private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE, TIMER, GRAPHANNOTATIONS };
     private DISPLAYOPTIONS m_choice = DISPLAYOPTIONS.VARS;
 
     /** {@inheritDoc} */
     @Override
     public void createPartControl(final Composite parent) {
         // Toolbar
-        IToolBarManager toolbarMGR
-                    = getViewSite().getActionBars().getToolBarManager();
+        IToolBarManager toolbarMGR = getViewSite().getActionBars().getToolBarManager();
         // create button which allows to "pin" selection:
         final RetargetAction pinButton
-             = new RetargetAction("PinView", "Pin view to selected node",
-                                      IAction.AS_CHECK_BOX);
-        pinButton.setImageDescriptor(ImageDescriptor.createFromFile(
-                this.getClass(), "icons/pin.png"));
+             = new RetargetAction("PinView", "Pin view to selected node", IAction.AS_CHECK_BOX);
+        pinButton.setImageDescriptor(ImageDescriptor.createFromFile(this.getClass(), "icons/pin.png"));
         pinButton.setChecked(m_pinned);
         pinButton.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -155,8 +153,7 @@ public class NodeMonitorView extends ViewPart
         toolbarMGR.add(pinButton);
         toolbarMGR.add(new Separator());
         // configure drop down menu
-        IMenuManager dropDownMenu
-                          = getViewSite().getActionBars().getMenuManager();
+        IMenuManager dropDownMenu = getViewSite().getActionBars().getMenuManager();
         // drop down menu entry for outport table:
         final RetargetAction menuentrytable
                 = new RetargetAction("OutputTable", "Show Output Table", IAction.AS_RADIO_BUTTON);
@@ -220,6 +217,22 @@ public class NodeMonitorView extends ViewPart
         });
         menuentryallsettings.setEnabled(true);
         dropDownMenu.add(menuentryallsettings);
+        // drop down menu entry for node timer
+        final RetargetAction menuentrynodetimer
+                = new RetargetAction("NodeTimer", "Show Node Timing Information",
+                            IAction.AS_RADIO_BUTTON);
+        menuentrynodetimer.setChecked(DISPLAYOPTIONS.TIMER.equals(m_choice));
+        menuentrynodetimer.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                if (menuentrynodetimer.isChecked()) {
+                    m_choice = DISPLAYOPTIONS.TIMER;
+                    updateNodeContainerInfo(m_lastNode);
+                }
+            }
+        });
+        menuentrynodetimer.setEnabled(true);
+        dropDownMenu.add(menuentrynodetimer);
         // drop down menu entry for node graph annotations
         final RetargetAction menuentrygraphannotations
                 = new RetargetAction("NodeGraphAnno", "Show Graph Annotations",
@@ -240,23 +253,19 @@ public class NodeMonitorView extends ViewPart
         GridLayoutFactory.swtDefaults().numColumns(2).applyTo(parent);
         // Node Title:
         Label titlelabel = new Label(parent, SWT.NONE);
-        titlelabel.setLayoutData(
-                           new GridData(SWT.LEFT, SWT.CENTER, false, false));
+        titlelabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
         titlelabel.setText("Node: ");
         m_title = new Text(parent, SWT.BORDER);
         m_title.setEditable(false);
-        m_title.setLayoutData(
-                new GridData(SWT.FILL, SWT.CENTER, false, false));
+        m_title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
         m_title.setText("n/a.");
         // Node State:
         Label statelabel = new Label(parent, SWT.NONE);
-        statelabel.setLayoutData(
-                new GridData(SWT.LEFT, SWT.CENTER, false, false));
+        statelabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
         statelabel.setText("State: ");
         m_state = new Text(parent, SWT.BORDER);
         m_state.setEditable(false);
-        m_state.setLayoutData(
-                new GridData(SWT.FILL, SWT.CENTER, false, false));
+        m_state.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
         m_state.setText("n/a.");
         // Panel for currently displayed information (some information
         // providers will add more elements to this):
@@ -266,8 +275,7 @@ public class NodeMonitorView extends ViewPart
         infoPanel.setLayoutData(infoGrid);
         GridLayoutFactory.swtDefaults().numColumns(3).applyTo(infoPanel);
         m_info = new Label(infoPanel, SWT.NONE);
-        m_info.setLayoutData(
-                new GridData(SWT.LEFT, SWT.CENTER, false, false));
+        m_info.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
         m_info.setText("n/a.                        ");
         m_portIndex = new ComboViewer(infoPanel);
         m_portIndex.add(new String[] {"port 0", "port 1", "port 2"});
@@ -318,8 +326,7 @@ public class NodeMonitorView extends ViewPart
      * {@inheritDoc}
      */
     @Override
-    public void selectionChanged(final IWorkbenchPart part,
-            final ISelection selection) {
+    public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
         if (!(selection instanceof IStructuredSelection)) {
             return;
         }
@@ -358,8 +365,7 @@ public class NodeMonitorView extends ViewPart
         } else {
             // unsupported selection
             m_title.setText("");
-            m_state.setText("no info for '"
-                            + sel.getClass().getSimpleName() + "'.");
+            m_state.setText("no info for '" + sel.getClass().getSimpleName() + "'.");
             m_table.removeAll();
         }
     }
@@ -406,6 +412,9 @@ public class NodeMonitorView extends ViewPart
             m_portIndex.getCombo().setItems(vals);
             m_portIndex.getCombo().select(0);
             updateDataTable(nc, 0);
+            break;
+        case TIMER:
+            updateTimerTable(nc);
             break;
         case GRAPHANNOTATIONS:
             updateGraphAnnotationTable(nc);
@@ -463,6 +472,51 @@ public class NodeMonitorView extends ViewPart
             item.setText(1, status == null ? "ok" : status);
         }
         m_info.setText("Node Annotation");
+        for (int i = 0; i < m_table.getColumnCount(); i++) {
+            m_table.getColumn(i).pack();
+        }
+    }
+
+    /*
+     *  Put info from node timer into table.
+     */
+    private void updateTimerTable(final NodeContainer nc) {
+        assert Display.getCurrent().getThread() == Thread.currentThread();
+        // Initialize table
+        m_table.removeAll();
+        for (TableColumn tc : m_table.getColumns()) {
+            tc.dispose();
+        }
+        String[] titles = {"Timer", "Value [ms]"};
+        for (int i = 0; i < titles.length; i++) {
+            TableColumn column = new TableColumn(m_table, SWT.NONE);
+            column.setText(titles[i]);
+        }
+        // retrieve time
+        NodeTimer nt = nc.getNodeTimer();
+        // update content
+        TableItem item = new TableItem(m_table, SWT.NONE);
+        item.setText(0, "Last Exec Time");
+        item.setText(1, nt.getLastExecutionDuration() < 0 ? "n/a" : "" + nt.getLastExecutionDuration());
+        if (nt.getLastExecutionDuration() < nt.getExecutionDurationSinceReset()) {
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "Total Execution Time since Reset");
+            item.setText(1, "" + nt.getExecutionDurationSinceReset());
+        }
+        if (nt.getLastExecutionDuration() < nt.getExecutionDurationSinceStart()) {
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "Total Execution Time");
+            item.setText(1, "" + nt.getExecutionDurationSinceStart());
+        }
+        if (nt.getNrExecsSinceReset() != 1) {
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "#Executions since Reset");
+            item.setText(1, "" + nt.getNrExecsSinceReset());
+        }
+        item = new TableItem(m_table, SWT.NONE);
+        item.setText(0, "Total #Executions");
+        item.setText(1, "" + nt.getNrExecsSinceStart());
+        // finalize table
         for (int i = 0; i < m_table.getColumnCount(); i++) {
             m_table.getColumn(i).pack();
         }

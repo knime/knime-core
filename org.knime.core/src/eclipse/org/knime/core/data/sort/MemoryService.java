@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -63,7 +64,9 @@ import org.knime.core.node.NodeLogger;
  * "PS Old Gen" for the server vm.
  *
  * @author Heiko Hofer
+ * @deprecated use {@link MemoryAlertSystem} instead
  */
+@Deprecated
 public final class MemoryService {
 
     private static final NodeLogger LOGGER =

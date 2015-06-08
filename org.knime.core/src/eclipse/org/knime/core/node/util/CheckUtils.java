@@ -88,6 +88,20 @@ public final class CheckUtils {
     }
 
     /**
+     * Checks the given object to be not <code>null</code>. The exception message in case of null is
+     * 'Argument must not be null'.
+     *
+     * @param toCheck the object which may not be <code>null</code>
+     * @return the argument itself
+     * @throws IllegalArgumentException if argument is <code>null</code>
+     * @param <T> the type of the object
+     * @since 2.12
+     */
+    public static <T> T checkArgumentNotNull(final T toCheck) throws IllegalArgumentException {
+        return checkArgumentNotNull(toCheck, stringSupplier("Argument must not be null"));
+    }
+
+    /**
      * Checks the given predicate to be <code>true</code>.
      *
      * @param predicate is checked to be <code>true</code>

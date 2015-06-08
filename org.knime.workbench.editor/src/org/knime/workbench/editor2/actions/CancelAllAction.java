@@ -90,7 +90,7 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Cancel All";
+        return "Cancel All\t" + getHotkey("knime.commands.cancelall");
     }
 
     /**

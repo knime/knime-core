@@ -60,8 +60,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.xerces.parsers.XMLGrammarCachingConfiguration;
-import org.knime.core.data.util.memory.MemoryWarningSystem;
-import org.knime.core.data.util.memory.MemoryWarningSystem.MemoryWarningListener;
+import org.knime.core.data.util.memory.MemoryAlert;
+import org.knime.core.data.util.memory.MemoryAlertListener;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
 import org.knime.core.node.NodeLogger;
@@ -107,16 +108,17 @@ class XMLDOMCellReader implements XMLCellReader {
                     + ex.getMessage(), ex);
         }
 
-        MemoryWarningSystem.getInstance().registerListener(new MemoryWarningListener() {
+        MemoryAlertSystem.getInstance().addListener(new MemoryAlertListener() {
             private final XMLGrammarCachingConfiguration m_conf = new XMLGrammarCachingConfiguration();
 
             @Override
-            public void memoryUsageLow(final long usedMemory, final long maxMemory) {
+            protected boolean memoryAlert(final MemoryAlert alert) {
                 // all XMLGrammarCachingConfigurations use a shared static pool, therefore
                 // freeing this pool also frees the pool used by the parsers
                 NodeLogger.getLogger(XMLDOMCellReader.class)
                     .debug("Clearing XML grammar cache due to low memory event");
                 m_conf.clearGrammarPool();
+                return false;
             }
         });
     }

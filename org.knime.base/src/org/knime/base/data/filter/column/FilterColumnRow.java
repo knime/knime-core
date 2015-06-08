@@ -50,12 +50,13 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultCellIterator;
+import org.knime.core.node.util.CheckUtils;
 
 
 /**
  * Filter {@link DataRow} which extracts particular cells (columns) from an
  * underlying row.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class FilterColumnRow implements DataRow {
@@ -73,18 +74,19 @@ public final class FilterColumnRow implements DataRow {
     /**
      * Inits a new filter column {@link DataRow} with the underling row and an
      * array of indices into this row.
-     * 
+     *
      * @param row the underlying {@link DataRow}
      * @param columns the array of column indices to keep
      */
     public FilterColumnRow(final DataRow row, final int[] columns) {
-        m_row = row;
-        m_columns = columns;
+        m_row = CheckUtils.checkArgumentNotNull(row);
+        m_columns = CheckUtils.checkArgumentNotNull(columns);
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getNumCells() {
         return m_columns.length;
     }
@@ -92,18 +94,20 @@ public final class FilterColumnRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowKey getKey() {
         return m_row.getKey();
     }
 
     /**
      * Returns the data cell at the given <code>index</code>.
-     * 
+     *
      * @param index the column index inside the row
      * @return the data cell for index
      * @throws ArrayIndexOutOfBoundsException if the <code>index</code> is out
      *             of range
      */
+    @Override
     public DataCell getCell(final int index) {
         return m_row.getCell(m_columns[index]);
     }
@@ -111,6 +115,7 @@ public final class FilterColumnRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);
     }

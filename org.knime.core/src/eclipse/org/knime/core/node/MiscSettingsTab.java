@@ -58,7 +58,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
 /**
@@ -88,7 +87,7 @@ class MiscSettingsTab extends JPanel {
         cacheSmall.setActionCommand(MemoryPolicy.CacheSmallInMemory.toString());
         m_group.add(cacheSmall);
         cacheSmall.setToolTipText("Tables with less than "
-                + DataContainer.MAX_CELLS_IN_MEMORY + " cells are kept in "
+                + 0 + " cells are kept in "
                 + "main memory, otherwise swapped to disc.");
         JRadioButton cacheOnDisc = new JRadioButton(
                 "Write tables to disc.");

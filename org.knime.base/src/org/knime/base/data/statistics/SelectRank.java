@@ -72,7 +72,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.sort.MemoryService;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -104,16 +104,9 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SelectRank.class);
 
     /**
-     * Default memory threshold. If this relative amount of memory is filled, the chunk is sorted and flushed to disk.
-     */
-    public static final double DEF_MEM_THRESHOLD = 0.8;
-
-    /**
      * The maximum number of open containers. See {@link #setMaxOpenContainers(int)} for details.
      */
     public static final int DEF_MAX_OPENCONTAINER = 40;
-
-    private MemoryService m_memService = new MemoryService(DEF_MEM_THRESHOLD);
 
     private final T m_inputTable;
 
@@ -262,15 +255,6 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
             throw new IllegalArgumentException("Invalid open container count: " + value);
         }
         m_maxOpenContainers = value;
-    }
-
-    /**
-     * Set memory service. Used in unit test.
-     *
-     * @param memService the memService to set
-     */
-    void setMemService(final MemoryService memService) {
-        m_memService = memService;
     }
 
     /**
@@ -627,7 +611,8 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                     for (Entry<Integer, Integer> entry : map.entrySet()) {
                         newKs[i++] = entry.getValue().intValue();
                     }
-                    if (!m_memService.isMemoryLow() && addedRows[col][chunk] < MAX_CELLS_SORTED_IN_MEMORY) {
+                    if (!MemoryAlertSystem.getInstance().isMemoryLow()
+                        && addedRows[col][chunk] < MAX_CELLS_SORTED_IN_MEMORY) {
                         double[] values = new double[addedRows[col][chunk]];
                         int r = 0;
                         for (final DataRow row : container.getTable()) {

@@ -206,14 +206,14 @@ public final class FilterColumnTable implements DataTable {
 
     /**
      * This function constructs a spec for this filter table. From the given
-     * table spec it extracts the specified indicies and arranges them
+     * table spec it extracts the specified indices and arranges them
      * accordingly. It stores references in the new table spec pointing to
      * objects referenced to by the passed table spec.
      *
      * @param spec the input spec
-     * @param columns The output column indices to extract from the input spect
+     * @param columns The output column indices to extract from the input spec
      * @return a new spec with extracted columns
-     * @throws IndexOutOfBoundsException if columns are not availablea
+     * @throws IndexOutOfBoundsException if columns are not available
      * @throws NullPointerException if either argument is null or contains null
      *             values
      */
@@ -267,8 +267,7 @@ public final class FilterColumnTable implements DataTable {
      * @param columns The column indices.
      * @return A sorted array of indices.
      */
-    private static int[] findColumnIndices(final DataTableSpec spec,
-            final String... columns) {
+    static int[] findColumnIndices(final DataTableSpec spec, final String... columns) {
         if (columns == null) {
             throw new IllegalArgumentException("Columns must not be null.");
         }
@@ -373,6 +372,7 @@ public final class FilterColumnTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_tableSpec;
     }
@@ -380,6 +380,7 @@ public final class FilterColumnTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
         RowIterator it = m_data.iterator();
         if (it instanceof CloseableRowIterator) {

@@ -45,6 +45,13 @@
  */
 package org.knime.workbench.editor2.figures;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.eclipse.draw2d.ConnectionLocator;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Label;
@@ -52,7 +59,6 @@ import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.ConnectionProgress;
 
 /**
@@ -60,6 +66,16 @@ import org.knime.core.node.workflow.ConnectionProgress;
  * produce a flowing effect.
  */
 public final class ProgressPolylineConnection extends PolylineConnection {
+
+    /** Service to make the marching ants go slow ... not updating with each event. */
+    private static ScheduledExecutorService UI_PROGESS_UPDATE_SERVICE = Executors.newSingleThreadScheduledExecutor(
+        new ThreadFactory() {
+            private final AtomicInteger m_threadCreateCounter = new AtomicInteger();
+            @Override
+            public Thread newThread(final Runnable r) {
+                return new Thread(r, "Delayed Progress Updater-" + m_threadCreateCounter.getAndIncrement());
+            }
+        });
 
     /** display label for showing connection statistics. */
     private final Label m_label;
@@ -99,6 +115,9 @@ public final class ProgressPolylineConnection extends PolylineConnection {
         super.outlineShape(g);
     }
 
+    /** Next to process update event or null ... used to avoid intermediate updates. */
+    private final AtomicReference<ConnectionProgress> m_atomicConnectionProgressReference = new AtomicReference<>();
+
     /**
      * Update the progress. Calling this method serves two purposes. First, it
      * updates the label. Second it updates the animation.
@@ -106,21 +125,26 @@ public final class ProgressPolylineConnection extends PolylineConnection {
      * @param e the connection progress
      */
     public void progressChanged(final ConnectionProgress e) {
-        // not being called from the ui thread, need to invoke in the ui
-        Display workbenchDisplay = PlatformUI.getWorkbench().getDisplay();
-        if (Display.getCurrent() != workbenchDisplay) {
-            workbenchDisplay.syncExec(new Runnable() {
+        if (m_atomicConnectionProgressReference.getAndSet(e) == null) {
+            UI_PROGESS_UPDATE_SERVICE.schedule(new Runnable() {
                 @Override
                 public void run() {
-                    progressChanged(e);
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!Display.getDefault().isDisposed()) {
+                                progressChangedInternal(m_atomicConnectionProgressReference.getAndSet(null));
+                            }
+                        }
+                    });
                 }
-            });
-            return;
+            }, 250, TimeUnit.MILLISECONDS);
         }
+    }
 
+    private void progressChangedInternal(final ConnectionProgress e) {
         if (e.inProgress()) {
-            // currently in-progress--advance to the next position in the
-            // animation
+            // currently in-progress--advance to the next position in the animation
             step();
         } else {
             // not in-progress--set to solid

@@ -50,32 +50,33 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.base.data.append.row.AppendedRowsTable.DuplicatePolicy;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.Pair;
 
 /**
- * Iterator over an
- * {@link AppendedRowsTable}.
+ * Iterator over an {@link AppendedRowsTable}.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class AppendedRowsIterator extends RowIterator {
+public class AppendedRowsIterator extends CloseableRowIterator {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(AppendedRowsIterator.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AppendedRowsIterator.class);
 
     /**
      * The spec of the underlying table.
@@ -84,22 +85,19 @@ public class AppendedRowsIterator extends RowIterator {
      */
     private final DataTableSpec m_spec;
 
-    /** The concatenated tables. */
-    private final DataTable[] m_tables;
+    /** The to be concatenated inputs. */
+    private final Supplier<Pair<RowIterator, DataTableSpec>>[] m_iteratorSuppliers;
 
     /** Suffix to append or null if to skip rows. */
     private final String m_suffix;
 
-    /** The table over which is currently iterated. */
-    private int m_curTable;
+    /** Index of iterator over which is currently iterated. */
+    private int m_curItIndex;
 
-    /** The internal iterator over m_tables[m_curTable]. */
+    /** The iterator from m_iteratorSuppliers[m_curItIndex]. */
     private RowIterator m_curIterator;
 
-    /**
-     * Missing cells to be appended to rows of the current iterator (preferably
-     * always of length 0).
-     */
+    /** Missing cells to be appended to rows of the current iterator (preferably always of length 0). */
     private DataCell[] m_curMissingCells;
 
     /**
@@ -123,8 +121,8 @@ public class AppendedRowsIterator extends RowIterator {
     /** The current row being processed. (starting with 0 at the first table) */
     private int m_curRowIndex = 0;
 
-    /** The total number of rows, double for floating point operation. */
-    private final double m_totalRowCount;
+    /** The total number of rows (negative if unknown). */
+    private final long m_totalRowCount;
 
     /** The number of rows skipped so far, just for user statistics. */
     private int m_nrRowsSkipped;
@@ -141,18 +139,18 @@ public class AppendedRowsIterator extends RowIterator {
      * @param exec for progress/cancel, may be <code>null</code>
      * @param totalRowCount the total row count or negative if unknown
      */
-    AppendedRowsIterator(final AppendedRowsTable table,
-            final ExecutionMonitor exec, final int totalRowCount) {
-        m_tables = table.getTables();
-        m_suffix = table.getSuffix();
-        m_spec = table.getDataTableSpec();
-        m_duplPolicy = table.getDuplPolicy();
-        m_curTable = -1;
+    AppendedRowsIterator(final Supplier<Pair<RowIterator, DataTableSpec>>[] tables, final DuplicatePolicy duplPolicy,
+        final String suffix, final DataTableSpec spec, final ExecutionMonitor exec, final long totalRowCount) {
+        m_iteratorSuppliers = CheckUtils.checkArgumentNotNull(tables);
+        m_suffix = suffix;
+        m_spec = CheckUtils.checkArgumentNotNull(spec);
+        m_duplPolicy = CheckUtils.checkArgumentNotNull(duplPolicy);
+        m_curItIndex = -1;
         m_duplicateMap = new HashMap<RowKey, RowKey>();
         m_curMapping = new int[m_spec.getNumColumns()];
         m_exec = exec;
         m_totalRowCount = totalRowCount;
-        if (m_tables.length > 0) {
+        if (m_iteratorSuppliers.length > 0) {
             initNextTable();
             initNextRow();
         }
@@ -195,7 +193,7 @@ public class AppendedRowsIterator extends RowIterator {
         // reached end of table's iterator - take next
         if (!m_curIterator.hasNext()) {
             do {
-                if (m_curTable < m_tables.length - 1) {
+                if (m_curItIndex < m_iteratorSuppliers.length - 1) {
                     initNextTable();
                 } else { // final end
                     m_nextRow = null;
@@ -237,8 +235,8 @@ public class AppendedRowsIterator extends RowIterator {
                     m_nrRowsSkipped++;
                     String message = "Skipping row " + m_curRowIndex + " (\""
                             + key.toString() + "\")";
-                    if (m_totalRowCount > 0) {
-                        m_exec.setProgress(m_curRowIndex / m_totalRowCount,
+                    if (m_totalRowCount > 0L) {
+                        m_exec.setProgress(m_curRowIndex / (double)m_totalRowCount,
                                 message);
                     } else {
                         m_exec.setMessage(message);
@@ -255,8 +253,8 @@ public class AppendedRowsIterator extends RowIterator {
                 if (!keyHasChanged && m_exec != null) {
                     String message = "Unifying row " + m_curRowIndex + " (\""
                             + key.toString() + "\")";
-                    if (m_totalRowCount > 0) {
-                        m_exec.setProgress(m_curRowIndex / m_totalRowCount,
+                    if (m_totalRowCount > 0L) {
+                        m_exec.setProgress(m_curRowIndex / (double)m_totalRowCount,
                                 message);
                     } else {
                         m_exec.setMessage(message);
@@ -289,8 +287,8 @@ public class AppendedRowsIterator extends RowIterator {
             String message = "Adding row " + m_curRowIndex + " (\""
                     + key.toString() + "\""
                     + (keyHasChanged ? " uniquified)" : ")");
-            if (m_totalRowCount > 0) {
-                m_exec.setProgress(m_curRowIndex / m_totalRowCount, message);
+            if (m_totalRowCount > 0L) {
+                m_exec.setProgress(m_curRowIndex / (double)m_totalRowCount, message);
             } else {
                 m_exec.setMessage(message);
             }
@@ -321,10 +319,11 @@ public class AppendedRowsIterator extends RowIterator {
      * Start iterator on next table.
      */
     private void initNextTable() {
-        assert (m_curTable < m_tables.length - 1);
-        m_curTable++;
-        m_curIterator = m_tables[m_curTable].iterator();
-        DataTableSpec spec = m_tables[m_curTable].getDataTableSpec();
+        assert (m_curItIndex < m_iteratorSuppliers.length - 1);
+        m_curItIndex++;
+        Pair<RowIterator, DataTableSpec> pair = m_iteratorSuppliers[m_curItIndex].get();
+        m_curIterator = pair.getFirst();
+        DataTableSpec spec = pair.getSecond();
         int missingNumber = m_spec.getNumColumns() - spec.getNumColumns();
         m_curMissingCells = new DataCell[missingNumber];
         int missingCounter = 0;
@@ -375,6 +374,17 @@ public class AppendedRowsIterator extends RowIterator {
      */
     public Map<RowKey, RowKey> getDuplicateNameMap() {
         return Collections.unmodifiableMap(m_duplicateMap);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void close() {
+        if (m_curIterator instanceof CloseableRowIterator) {
+            ((CloseableRowIterator)m_curIterator).close();
+        }
+        m_nextRow = null;
+        m_curIterator = null;
+        m_curItIndex = m_iteratorSuppliers.length - 1;
     }
 
     /**

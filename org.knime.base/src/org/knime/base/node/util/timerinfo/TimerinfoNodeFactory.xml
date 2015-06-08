@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="timerinfo.png" type="Sink">
+    <name>Timer Info</name>
+    
+    <shortDescription>Collects all timer information from nodes in this workflow.</shortDescription>
+    
+    <fullDescription>
+        <intro>This node reports individual and aggreate timing/execution information for all nodes of the workflow (at the node's level).</intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Variable Input">Input Port - allows to make sure node is executed after others.</inPort>
+        <outPort index="0" name="Output table">The collected timer information.</outPort>
+    </ports>
+</knimeNode>

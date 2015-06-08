@@ -118,6 +118,8 @@ import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkU
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeExchange;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
@@ -255,7 +257,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         WorkflowPersistor workflowPersistor = persistor.getWorkflowPersistor();
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), workflowPersistor,
             parent.getGlobalTableRepository(), parent.getFileStoreHandlerRepository());
-
+        m_wfm.setJobManager(null);
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         WorkflowPortTemplate[] outPortTemplates = persistor.getOutPortTemplates();
         m_outports = new NodeContainerOutPort[outPortTemplates.length];
@@ -292,6 +294,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
                 parent.getContext(), name, parent.getGlobalTableRepository(), parent.getFileStoreHandlerRepository());
+        m_wfm.setJobManager(null);
         m_subnodeScopeContext = new FlowSubnodeScopeContext();
         m_subnodeScopeContext.setOwner(id);
         // and copy content
@@ -447,7 +450,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @return the subnode data input (incl. mandatory flow var port object).
      * @throws ExecutionException any exception thrown while waiting for upstream nodes to finish execution. */
     public PortObject[] fetchInputDataFromParent() throws ExecutionException {
-        return ThreadPool.currentPool().runInvisible(new Callable<PortObject[]>() {
+        Callable<PortObject[]> c = new Callable<PortObject[]>() {
             @Override
             public PortObject[] call() throws Exception {
                 final WorkflowManager parent = getParent();
@@ -461,7 +464,17 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 }
                 return null;
             }
-        });
+        };
+        ThreadPool currentPool = ThreadPool.currentPool();
+        if (currentPool != null) {
+            return currentPool.runInvisible(c);
+        } else {
+            try {
+                return c.call();
+            } catch (Exception e) {
+                throw new ExecutionException(e);
+            }
+        }
     }
 
     /** Fetches input specs of subnode, including mandatory flow var port. Used by virtual sub node input during
@@ -849,35 +862,37 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     @Override
     void performReset() {
         setNodeMessage(NodeMessage.NONE);
-        m_isPerformingActionCalledFromParent = true;
-        try {
+        runParentAction(() -> {
             m_wfm.resetAllNodesInWFM();
             setVirtualOutputIntoOutport(m_wfm.getInternalState());
-        } finally {
-            m_isPerformingActionCalledFromParent = false;
-        }
+        });
     }
 
     /** {@inheritDoc} */
     @Override
-    boolean performConfigure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper nch) {
+    boolean performConfigure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper nch,
+        final boolean keepNodeMessage) {
         assert rawInSpecs.length == m_inports.length;
         m_subnodeScopeContext.inactiveScope(Node.containsInactiveSpecs(rawInSpecs));
+        NodeMessage oldMessage = getNodeMessage();
+        if (!keepNodeMessage) {
+            setNodeMessage(null);
+            oldMessage = NodeMessage.NONE;
+        }
         m_isPerformingActionCalledFromParent = true;
-        setNodeMessage(null);
         try {
             if (nch != null) {
                 try {
                     nch.preConfigure();
                 } catch (InvalidSettingsException ise) {
                     LOGGER.warn(ise.getMessage(), ise);
-                    setNodeMessage(new NodeMessage(NodeMessage.Type.WARNING, ise.getMessage()));
+                    setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newWarning(ise.getMessage())));
                     return false;
                 }
             }
             // and launch a configure on entire sub workflow
             InternalNodeContainerState oldState = getInternalState();
-            m_wfm.reconfigureAllNodesOnlyInThisWFM();
+            m_wfm.reconfigureAllNodesOnlyInThisWFM(keepNodeMessage);
             final InternalNodeContainerState internalState = m_wfm.getInternalState();
             InternalNodeContainerState newState;
             switch (internalState) {
@@ -899,7 +914,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                     nch.postConfigure(rawInSpecs, null);
                 } catch (InvalidSettingsException ise) {
                     LOGGER.warn(ise.getMessage(), ise);
-                    setNodeMessage(new NodeMessage(NodeMessage.Type.WARNING, ise.getMessage()));
+                    setNodeMessage(NodeMessage.merge(oldMessage, NodeMessage.newWarning(ise.getMessage())));
                     return false;
                 }
             }
@@ -915,8 +930,15 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         // theoretically we can come from any state into queued state, e.g. this node can be marked for
         // execution (which is the most likely state when run from the outer workflow) and then something is done
         // internally that causes an internal checkForNodeStateChanges.
+        runIfInExternalExecutor(() -> m_wfm.markForExecution(true));
         setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
         return true;
+    }
+
+    private void runIfInExternalExecutor(final Runnable r) {
+        if (!m_wfm.isLocalWFM()) {
+            runParentAction(r);
+        }
     }
 
     /** {@inheritDoc} */
@@ -927,6 +949,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             switch (getInternalState()) {
             case EXECUTED_QUEUED:
             case CONFIGURED_QUEUED:
+                runIfInExternalExecutor(() -> m_wfm.mimicRemotePreExecute());
                 setInternalState(InternalNodeContainerState.PREEXECUTE);
                 return true;
             default:
@@ -954,6 +977,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
                     setInternalState(InternalNodeContainerState.EXECUTING);
                 } else {
+                    runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuting());
                     setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
                 }
                 break;
@@ -972,6 +996,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                              // encountered during doBeforeExecution
             case EXECUTING:
             case EXECUTINGREMOTELY:
+                runIfInExternalExecutor(() -> m_wfm.mimicRemotePostExecute());
                 setInternalState(InternalNodeContainerState.POSTEXECUTE);
                 break;
             default:
@@ -987,12 +1012,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
             case POSTEXECUTE:
-                if (status.isSuccess()) {
-                    setInternalState(InternalNodeContainerState.EXECUTED);
-                } else {
-                    // don't reset and configure (like a NativeNodeContainer) for easier error inspection
-                    setInternalState(m_wfm.getInternalState());
-                }
+                runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuted(
+                    ((SubnodeContainerExecutionResult)status).getWorkflowExecutionResult()));
+                InternalNodeContainerState newState = status.isSuccess() ?
+                    InternalNodeContainerState.EXECUTED : m_wfm.getInternalState();
+                setVirtualOutputIntoOutport(newState);
+                setInternalState(newState);
+                // don't reset and configure (like a NativeNodeContainer) for easier error inspection in case of failure
                 setExecutionJob(null);
                 break;
             default:
@@ -1131,14 +1157,45 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public NodeContainerExecutionResult createExecutionResult(final ExecutionMonitor exec)
+    public SubnodeContainerExecutionResult createExecutionResult(final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        // TODO Auto-generated method stub
-        return null;
+        synchronized (m_nodeMutex) {
+            SubnodeContainerExecutionResult result = new SubnodeContainerExecutionResult(getID());
+            super.saveExecutionResult(result);
+            WorkflowExecutionResult innerResult = m_wfm.createExecutionResult(exec);
+            if (innerResult.needsResetAfterLoad()) {
+                result.setNeedsResetAfterLoad();
+            }
+            result.setSuccess(innerResult.isSuccess());
+            result.setWorkflowExecutionResult(innerResult);
+            return result;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void loadExecutionResult(final NodeContainerExecutionResult result, final ExecutionMonitor exec, final LoadResult loadResult) {
+        CheckUtils.checkArgument(result instanceof SubnodeContainerExecutionResult,
+            "Argument must be instance of \"%s\": %s", SubnodeContainerExecutionResult.class.getSimpleName(),
+            result == null ? "null" : result.getClass().getSimpleName());
+        SubnodeContainerExecutionResult r = (SubnodeContainerExecutionResult)result;
+        synchronized (getWorkflowMutex()) {
+            super.loadExecutionResult(result, exec, loadResult);
+            WorkflowExecutionResult innerExecResult = r.getWorkflowExecutionResult();
+            runParentAction(() -> getWorkflowManager().loadExecutionResult(innerExecResult, exec, loadResult));
+        }
+    }
+
+    private void runParentAction(final Runnable r) {
+        boolean wasFlagSet = m_isPerformingActionCalledFromParent;
+        m_isPerformingActionCalledFromParent = true;
+        try {
+            r.run();
+        } finally {
+            m_isPerformingActionCalledFromParent = wasFlagSet;
+        }
     }
 
     /* ------------- Ports and related stuff --------------- */
@@ -1939,6 +1996,20 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     @Override
     public void notifyTemplateConnectionChangedListener() {
         notifyNodePropertyChangedListener(NodeProperty.TemplateConnection);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void notifyNodePropertyChangedListener(final NodeProperty property) {
+        super.notifyNodePropertyChangedListener(property);
+        switch (property) {
+            case JobManager:
+            case TemplateConnection:
+                m_wfm.notifyNodePropertyChangedListener(property);
+                break;
+            default:
+                // ignore children notification
+        }
     }
 
     /**

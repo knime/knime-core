@@ -85,7 +85,7 @@ public class BringAnnotationToFrontAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Annotation to Front";
+        return "Annotation to Front\t" + getHotkey("knime.commands.editor.bringToFront");
     }
 
     /**

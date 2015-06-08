@@ -54,6 +54,8 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.knime.core.data.DataRow;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -65,6 +67,12 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectOutput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
@@ -74,7 +82,7 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
- * NodeModel of the subnode virtual end node.
+ * NodeModel of the subnode virtual source node.
  * <p>No API.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.10
@@ -95,6 +103,31 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
         m_numberOfPorts = outPortTypes.length;
         m_subNodeContainer = subnodeContainer;
         m_configuration = VirtualSubNodeInputConfiguration.newDefault(m_numberOfPorts);
+    }
+
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+            final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                assert inputs.length == 0;
+                PortObject[] dataFromParent = ArrayUtils.remove(m_subNodeContainer.fetchInputDataFromParent(), 0);
+                for (int i = 0; i < outputs.length; i++) {
+                    if (BufferedDataTable.TYPE.equals(getOutPortType(i))) {
+                        // stream port content if it's data
+                        BufferedDataTable bdt = (BufferedDataTable)(dataFromParent[i]);
+                        RowOutput rowOutput = (RowOutput)outputs[i];
+                        for (DataRow dr : bdt) {
+                            rowOutput.push(dr);
+                        }
+                        rowOutput.close();
+                    } else {
+                        ((PortObjectOutput)outputs[i]).setPortObject(dataFromParent[i]);
+                    }
+                }
+            }
+        };
     }
 
     /**

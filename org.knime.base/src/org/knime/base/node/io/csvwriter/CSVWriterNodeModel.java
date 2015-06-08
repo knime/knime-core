@@ -66,7 +66,6 @@ import java.util.Date;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.io.csvwriter.FileWriterNodeSettings.FileOverwritePolicy;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -81,6 +80,12 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.FileUtil;
@@ -214,15 +219,40 @@ public class CSVWriterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+
+        return new StreamableOperator() {
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                    throws Exception {
+                assert outputs.length == 0;
+                RowInput input = (RowInput)inputs[0];
+                doIt(null, input, exec);
+                return;
+            }
+        };
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
+        return doIt(data[0], null, exec);
+    }
+
+    private BufferedDataTable[] doIt(final BufferedDataTable data, final RowInput input, final ExecutionContext exec)
+            throws Exception {
+
         CheckUtils.checkDestinationFile(m_settings.getFileName(),
             m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Abort);
 
         URL url = FileUtil.toURL(m_settings.getFileName());
         Path localPath = FileUtil.resolveToPath(url);
 
-        DataTable in = data[0];
         boolean writeColHeader = m_settings.writeColumnHeader();
         OutputStream tempOut;
         URLConnection urlConnection = null;
@@ -258,20 +288,33 @@ public class CSVWriterNodeModel extends NodeModel {
         }
         tempOut = new BufferedOutputStream(tempOut);
         CSVWriter tableWriter = new CSVWriter(new OutputStreamWriter(tempOut, Charset.defaultCharset()), writerSettings);
-
         // write the comment header, if we are supposed to
-        writeCommentHeader(m_settings, tableWriter, data[0], appendToFile);
+        String tableName;
+        if (input == null) {
+            tableName = data.getDataTableSpec().getName();
+        } else {
+            tableName = input.getDataTableSpec().getName();
+        }
+        writeCommentHeader(m_settings, tableWriter, tableName, appendToFile);
 
         try {
-            tableWriter.write(in, exec);
+            if (input == null) {
+                tableWriter.write(data, exec);
+            } else {
+                tableWriter.write(input, exec);
+            }
             tableWriter.close();
 
             if (tableWriter.hasWarningMessage()) {
                 setWarningMessage(tableWriter.getLastWarningMessage());
             }
 
-            // execution successful return empty array
-            return new BufferedDataTable[0];
+            // execution successful
+            if (input == null) {
+                return new BufferedDataTable[0];
+            } else {
+                return null;
+            }
         } catch (CanceledExecutionException cee) {
             try {
                 tableWriter.close();
@@ -290,8 +333,8 @@ public class CSVWriterNodeModel extends NodeModel {
             }
             throw cee;
         }
-    }
 
+    }
     /**
      * Writes a comment header to the file, if specified so in the settings.
      *
@@ -303,7 +346,7 @@ public class CSVWriterNodeModel extends NodeModel {
      * @throws IOException if something went wrong during writing.
      */
     private void writeCommentHeader(final FileWriterNodeSettings settings,
-            final BufferedWriter file, final DataTable inData,
+            final BufferedWriter file, final String tableName,
             final boolean append) throws IOException {
         if ((file == null) || (settings == null)) {
             return;
@@ -357,7 +400,7 @@ public class CSVWriterNodeModel extends NodeModel {
                 file.write(settings.getCommentBegin());
             }
             file.write("   The data was read from the \""
-                    + inData.getDataTableSpec().getName() + "\" data table.");
+                    + tableName + "\" data table.");
             file.newLine();
         }
 

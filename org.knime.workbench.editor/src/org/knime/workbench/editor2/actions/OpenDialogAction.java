@@ -81,7 +81,7 @@ public class OpenDialogAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Configure...";
+        return "Configure...\t" + getHotkey("knime.commands.openDialog");
     }
 
     /**

@@ -55,11 +55,14 @@ import org.knime.core.node.interactive.ViewContent;
  * @author M. Berthold
  * @since 2.8
  */
-public class ExecutionEnvironment {
+public final class ExecutionEnvironment {
 
-    private boolean m_reExecute;
-    private ViewContent m_viewContent;
-    private boolean m_useAsNewDefault;
+    /** @since 2.12 */
+    public static final ExecutionEnvironment DEFAULT = new ExecutionEnvironment();
+
+    private final boolean m_reExecute;
+    private final ViewContent m_viewContent;
+    private final boolean m_useAsNewDefault;
 
     /** Default constructor: no re-execution, don't preload ViewContent.
      */

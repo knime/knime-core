@@ -1761,6 +1761,18 @@
       		category-path="/database/database-manipulation" 
       		factory-class="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory" 
       		id="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory"/>
+      <node
+            category-path="/misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory"
+            id="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory"
+            id="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory">
+      </node>
    </extension>
    
       

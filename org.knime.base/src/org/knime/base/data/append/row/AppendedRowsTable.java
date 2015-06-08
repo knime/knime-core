@@ -49,6 +49,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -62,6 +63,7 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.Pair;
 
 
 /**
@@ -200,22 +202,12 @@ public class AppendedRowsTable implements DataTable {
      */
     public AppendedRowsIterator iterator(final ExecutionMonitor exec,
             final int totalRowCount) {
-        return new AppendedRowsIterator(this, exec, totalRowCount);
-    }
-
-    /** @return the tables */
-    DataTable[] getTables() {
-        return m_tables;
-    }
-
-    /** @return the suffix */
-    String getSuffix() {
-        return m_suffix;
-    }
-
-    /** @return the duplPolicy */
-    DuplicatePolicy getDuplPolicy() {
-        return m_duplPolicy;
+        Supplier<Pair<RowIterator, DataTableSpec>>[] iteratorSuppliers = new Supplier[m_tables.length];
+        for (int i = 0; i < iteratorSuppliers.length; i++) {
+            final int j = i;
+            iteratorSuppliers[i] = () -> Pair.create(m_tables[j].iterator(), m_tables[j].getDataTableSpec());
+        }
+        return new AppendedRowsIterator(iteratorSuppliers, m_duplPolicy, m_suffix, m_spec, exec, totalRowCount);
     }
 
     /**

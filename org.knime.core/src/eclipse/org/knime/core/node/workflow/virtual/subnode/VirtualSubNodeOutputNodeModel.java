@@ -57,6 +57,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -69,6 +73,13 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowVariable;
@@ -129,6 +140,49 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel 
             throws Exception {
         setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
         return new PortObject[0];
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        InputPortRole[] result = new InputPortRole[getNrInPorts()];
+        for (int i = 0; i < result.length; i++) {
+            PortType inPortType = getInPortType(i);
+            if (BufferedDataTable.TYPE.equals(inPortType)) {
+                result[i] = InputPortRole.NONDISTRIBUTED_STREAMABLE;
+            } else {
+                result[i] = InputPortRole.NONDISTRIBUTED_NONSTREAMABLE;
+            }
+        }
+        return result;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public StreamableOperator createStreamableOperator(
+        final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                    throws Exception {
+                PortObject[] inObjects = new PortObject[getNrInPorts()];
+                for (int i = 0; i < inObjects.length; i++) {
+                    PortType inPortType = getInPortType(i);
+                    if (BufferedDataTable.TYPE.equals(inPortType)) {
+                        BufferedDataContainer container = exec.createDataContainer((DataTableSpec)inSpecs[i]);
+                        DataRow r;
+                        while ((r = ((RowInput)inputs[i]).poll()) != null) {
+                            container.addRowToTable(r);
+                        }
+                        container.close();
+                        inObjects[i] = container.getTable();
+                    } else {
+                        inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
+                    }
+                }
+                setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
+            }
+        };
     }
 
     /**

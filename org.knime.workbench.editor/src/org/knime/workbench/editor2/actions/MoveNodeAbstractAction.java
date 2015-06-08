@@ -68,6 +68,7 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
@@ -76,6 +77,7 @@ import org.knime.workbench.editor2.figures.NodeContainerFigure;
  * of the move.
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @since 2.12 
  */
 public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
 
@@ -136,6 +138,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
     /**
      * Provide a point containing the move instructions: Non-null coordinates moves the node along that axis - negative
      * coordinates move it towards the origin. E.g. (-1, 0) moves causes items to move to the left; (0, 1) moves down.
+     *
      * @return point with move instructions.
      */
     public abstract Point getMoveDirection();
@@ -145,20 +148,29 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        getCommandStack().execute(createCompoundCommand(nodeParts));
+    }
+
+    /**
+     * @param nodeParts selected nodes and connections
+     * @return compound command of all move commands or null if no edit part is selected
+     */
+    public CompoundCommand createCompoundCommand(final NodeContainerEditPart[] nodeParts) {
         List<EditPart> selParts = getMoveableSelectedEditParts();
         if (selParts.size() < 1) {
-            return;
+            return null;
         }
         // should be initialized from the pref page
         Point offset = getMoveDirection(); // (0, 1) moves down, (-1, 0) moves left
         int signX = (int)Math.signum(offset.x);
         int signY = (int)Math.signum(offset.y);
-        CompoundCommand cc = new CompoundCommand();
+        CompoundCommand compoundCommand = new CompoundCommand();
 
         if (getEditor().getEditorSnapToGrid()) {
             // adjust offset to grid size (note: arguments must be not-negative numbers)
-            offset = new Point(signX * getEditor().getEditorGridXOffset(signX * offset.x),
-                    signY * getEditor().getEditorGridYOffset(signY * offset.y));
+            offset =
+                new Point(signX * getEditor().getEditorGridXOffset(signX * offset.x), signY
+                    * getEditor().getEditorGridYOffset(signY * offset.y));
             if (selParts.size() == 1) {
                 // with one element we move the element onto the grid if it is off
                 Point refLoc = null;
@@ -199,7 +211,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
         }
         int noNodes = 0;
         // apply the offset to all selected elements
-        for (EditPart epart: selParts) {
+        for (EditPart epart : selParts) {
             // apply to selected nodes
             if (epart instanceof NodeContainerEditPart) {
                 NodeContainerEditPart node = (NodeContainerEditPart)epart;
@@ -209,7 +221,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
                 Rectangle bounds = figure.getBounds().getCopy();
                 bounds.translate(offset);
                 ChangeNodeBoundsCommand cmd = new ChangeNodeBoundsCommand(nc, figure, bounds);
-                cc.add(cmd);
+                compoundCommand.add(cmd);
             }
             // apply to all selected workflow annotations
             if ((epart instanceof AnnotationEditPart) && !(epart instanceof NodeAnnotationEditPart)) {
@@ -217,20 +229,20 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
                 Rectangle bounds = anno.getFigure().getBounds().getCopy();
                 bounds.translate(offset);
                 ChangeAnnotationBoundsCommand cmd = new ChangeAnnotationBoundsCommand(getManager(), anno, bounds);
-                cc.add(cmd);
+                compoundCommand.add(cmd);
             }
         }
         if (noNodes > 1) {
             // if multiple nodes are selected/moved we need to move fully contained connections as well
             ConnectionContainerEditPart[] conns =
-                    WorkflowSelectionDragEditPartsTracker.getEmbracedConnections(selParts);
+                WorkflowSelectionDragEditPartsTracker.getEmbracedConnections(selParts);
             for (ConnectionContainerEditPart conn : conns) {
                 ChangeBendPointLocationCommand connCmd =
                     new ChangeBendPointLocationCommand(conn, offset.getCopy(), null);
-                cc.add(connCmd);
+                compoundCommand.add(connCmd);
             }
         }
-        getCommandStack().execute(cc);
+        return compoundCommand;
     }
 
     private List<EditPart> getMoveableSelectedEditParts() {
@@ -249,5 +261,4 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
         }
         return result;
     }
-
 }

@@ -47,10 +47,22 @@
  */
 package org.knime.product.rcp;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Stream;
+
 import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.action.CoolBarManager;
+import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IViewReference;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchListener;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -62,6 +74,14 @@ import org.eclipse.ui.internal.WorkbenchWindow;
 import org.eclipse.ui.internal.ide.IDEInternalPreferences;
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeTimer;
+import org.knime.core.util.EclipseUtil;
+import org.knime.product.rcp.intro.IntroPage;
+import org.knime.workbench.core.KNIMECorePlugin;
+import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
+import org.knime.workbench.explorer.view.ExplorerView;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.knime.workbench.ui.startup.StartupMessage;
 
 /**
@@ -103,7 +123,6 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
     @Override
     public void preWindowOpen() {
         IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-
         // configurer.setInitialSize(new Point(1024, 768));
 
         configurer.setShowCoolBar(true);
@@ -116,6 +135,39 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         // dependency to org.eclipse.ui.ide (otherwise we don't see our
         // Resources)
         org.eclipse.ui.ide.IDE.registerAdapters();
+    }
+
+    /**
+     *
+     */
+    private void showIntroPage() {
+        IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
+
+        if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
+            IntroPage.INSTANCE.show(false);
+            if (IntroPage.INSTANCE.isFreshWorkspace()) {
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setMaximized(true);
+            }
+        }
+
+        if (!EclipseUtil.isRunFromSDK() && IntroPage.INSTANCE.isFreshWorkspace()) {
+            for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+                for (IWorkbenchPage page : window.getPages()) {
+                    for (IViewReference ref : page.getViewReferences()) {
+                        if (ExplorerView.ID.equals(ref.getId())) {
+                            final ExplorerView explorer = (ExplorerView)ref.getView(true);
+                            explorer.getViewer().getControl().getDisplay().asyncExec(new Runnable() {
+                                @Override
+                                public void run() {
+                                    explorer.getViewer().expandAll();
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -139,7 +191,10 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         toolbarManager.remove("org.eclipse.ui.edit.text.actionSet.navigation");
         toolbarManager.update(true);
 
+        showIntroPage();
         showStartupMessages();
+        checkAnonymousUsageStatistcs(workbenchWindow.getShell());
+        addGlobalNodeTimerShutdownHook();
     }
 
     private void showStartupMessages() {
@@ -152,6 +207,44 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
                 NodeLogger.getLogger(getClass()).error("Could not open startup messages view: " + ex.getMessage(), ex);
             }
         }
+    }
+
+    /**
+     * Asks the user to send anonymous usage statistics to KNIME on a new workspace instance.
+     */
+    private void checkAnonymousUsageStatistcs(final Shell shell) {
+        IPreferenceStore pStore = KNIMECorePlugin.getDefault().getPreferenceStore();
+        boolean showMessageBox = !pStore.contains(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS);
+        pStore.setDefault(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, false);
+        if (!showMessageBox) {
+            return;
+        }
+        MessageBox checkBox = new MessageBox(shell, SWT.YES | SWT.NO | SWT.ICON_QUESTION);
+        checkBox.setText("Help improve KNIME");
+        checkBox.setMessage("Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data.\n"
+            + "No other information will be transmitted.\nYou can also change this setting in preferences later.");
+        int status = checkBox.open();
+        if (status == SWT.YES) {
+            pStore.setValue(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, true);
+        }
+    }
+
+    /**
+     * Adds a workbench shutdown listener to write and send usage data.
+     */
+    private void addGlobalNodeTimerShutdownHook() {
+        IWorkbench wb = PlatformUI.getWorkbench();
+        wb.addWorkbenchListener(new IWorkbenchListener() {
+            @Override
+            public boolean preShutdown(final IWorkbench workbench, final boolean forced) {
+                // Write and send usage data.
+                NodeTimer.GLOBAL_TIMER.performShutdown();
+                // Don't interrupt regular shutdown!
+                return true;
+            }
+            @Override
+            public void postShutdown(final IWorkbench workbench) { /*nothing to do*/ }
+        });
     }
 
     @SuppressWarnings("restriction")

@@ -139,7 +139,6 @@ import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
-import org.knime.workbench.editor2.pervasive.PervasiveJobExecutorHelper;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
@@ -677,7 +676,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         for (Object part : getChildren()) {
 
             if (part instanceof NodeOutPortEditPart) {
-                result.addAll(((AbstractPortEditPart)part).getSourceConnections());
+                result.addAll(((NodeOutPortEditPart)part).getSourceConnections());
+            } else if (part instanceof MetaNodeOutPortEditPart) {
+                result.addAll(((MetaNodeOutPortEditPart)part).getSourceConnections());
             }
         }
 
@@ -938,8 +939,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             NodeExecutionJobManager parentJobManager = nc.findJobManager();
             if (parentJobManager instanceof AbstractNodeExecutionJobManager) {
                 iconURL = ((AbstractNodeExecutionJobManager)parentJobManager).getIconForChild(nc);
-            } else if (PervasiveJobExecutorHelper.isPervasiveJobManager(parentJobManager)) {
-                iconURL = PervasiveJobExecutorHelper.getIconForChild(nc);
             } else {
                 iconURL = null;
             }

@@ -92,7 +92,7 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Open First Out-Port View";
+        return "Open First Out-Port View\t" + getHotkey("knime.commands.openFirstOutPortView");
     }
 
     /**

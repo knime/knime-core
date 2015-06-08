@@ -414,20 +414,24 @@ public abstract class NodeModel {
         return m_outPortTypes.length;
     }
 
-    /**
+    /** Port type as specified in constructor.
      * @param index Index of inport
      * @return Type of port as specified in constructor.
      * @throws IndexOutOfBoundsException If index is invalid.
+     * @since 2.12
+     * @throws IndexOutOfBoundsException ...
      * @since 2.12
      */
     protected final PortType getInPortType(final int index) {
         return m_inPortTypes[index];
     }
 
-    /**
+    /** Port type as specified in constructor.
      * @param index Index of outport
      * @return Type of port as specified in constructor.
      * @throws IndexOutOfBoundsException If index is invalid.
+     * @since 2.12
+     * @throws IndexOutOfBoundsException ...
      * @since 2.12
      */
     protected final PortType getOutPortType(final int index) {
@@ -1712,11 +1716,15 @@ public abstract class NodeModel {
                 }
                 // add flow variable port and remove it later from result - executeModel expects it
                 PortObject[] extendedInData = ArrayUtils.add(inObjects, 0, FlowVariablePortObject.INSTANCE);
-                PortObject[] extendedOutData = executeModel(extendedInData, null, ctx);
+                PortObject[] extendedOutData = executeModel(extendedInData, ExecutionEnvironment.DEFAULT, ctx);
                 PortObject[] outObjects = ArrayUtils.remove(extendedOutData, 0);
 
                 for (int i = 0; i < outputs.length; i++) {
-                    ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
+                    if (getOutPortType(i).equals(BufferedDataTable.TYPE)) {
+                        ((RowOutput)outputs[i]).setFully((BufferedDataTable)outObjects[i]);
+                    } else {
+                        ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
+                    }
                 }
             }
         };

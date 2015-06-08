@@ -159,11 +159,13 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * Configure underlying node and update state accordingly.
      *
      * @param inObjectSpecs input table specifications
+     * @param keepNodeMessage If true the previous message is kept (unless an error needs to be shown)
      * @return true if output specs have changed.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    final boolean configure(final PortObjectSpec[] inObjectSpecs) {
+    final boolean configure(final PortObjectSpec[] inObjectSpecs, final boolean keepNodeMessage) {
         synchronized (m_nodeMutex) {
+            final NodeMessage oldMessage = getNodeMessage();
             // remember old specs
             PortObjectSpec[] prevSpecs = new PortObjectSpec[getNrOutPorts()];
             for (int i = 0; i < prevSpecs.length; i++) {
@@ -173,14 +175,14 @@ public abstract class SingleNodeContainer extends NodeContainer {
             // perform action
             switch (getInternalState()) {
             case IDLE:
-                if (callNodeConfigure(inObjectSpecs)) {
+                if (callNodeConfigure(inObjectSpecs, keepNodeMessage)) {
                     setInternalState(InternalNodeContainerState.CONFIGURED);
                 } else {
                     setInternalState(InternalNodeContainerState.IDLE);
                 }
                 break;
             case UNCONFIGURED_MARKEDFOREXEC:
-                if (callNodeConfigure(inObjectSpecs)) {
+                if (callNodeConfigure(inObjectSpecs, keepNodeMessage)) {
                     setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
                 } else {
                     setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
@@ -188,7 +190,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 break;
             case CONFIGURED:
                 // m_node.reset();
-                boolean success = callNodeConfigure(inObjectSpecs);
+                boolean success = callNodeConfigure(inObjectSpecs, keepNodeMessage);
                 if (success) {
                     setInternalState(InternalNodeContainerState.CONFIGURED);
                 } else {
@@ -200,7 +202,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 // these are dangerous - otherwise re-queued loop-ends are
                 // reset!
                 // m_node.reset();
-                success = callNodeConfigure(inObjectSpecs);
+                success = callNodeConfigure(inObjectSpecs, keepNodeMessage);
                 if (success) {
                     setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
                 } else {
@@ -209,13 +211,16 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 }
                 break;
             case EXECUTINGREMOTELY: // this should only happen during load
-                success = callNodeConfigure(inObjectSpecs);
+                success = callNodeConfigure(inObjectSpecs, keepNodeMessage);
                 if (!success) {
                     setInternalState(InternalNodeContainerState.IDLE);
                 }
                 break;
             default:
                 throwIllegalStateException();
+            }
+            if (keepNodeMessage) {
+                setNodeMessage(NodeMessage.merge(oldMessage, getNodeMessage()));
             }
             // if state stayed the same but inactivity of node changed
             // fake a state change to make sure it's displayed properly
@@ -247,9 +252,10 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * node's output).
      *
      * @param inSpecs the input specs to node configure
+     * @param keepNodeMessage see {@link SingleNodeContainer#configure(PortObjectSpec[], boolean)}
      * @return true of configure succeeded.
      */
-    private boolean callNodeConfigure(final PortObjectSpec[] inSpecs) {
+    private boolean callNodeConfigure(final PortObjectSpec[] inSpecs, final boolean keepNodeMessage) {
         final NodeExecutionJobManager jobMgr = findJobManager();
         NodeConfigureHelper nch = new NodeConfigureHelper() {
 
@@ -279,7 +285,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
         };
         NodeContext.pushContext(this);
         try {
-            return performConfigure(inSpecs, nch);
+            return performConfigure(inSpecs, nch, keepNodeMessage);
         } finally {
             NodeContext.removeLastContext();
         }
@@ -289,9 +295,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
      *
      * @param inSpecs ...
      * @param nch ...
+     * @param keepNodeMessage as per {@link SingleNodeContainer#configure(PortObjectSpec[], boolean)}
+     *        (sub nodes need this to forward the property to the contained wfm).
      * @return true if configure succeeded.
      */
-    abstract boolean performConfigure(final PortObjectSpec[] inSpecs, final NodeConfigureHelper nch);
+    abstract boolean performConfigure(final PortObjectSpec[] inSpecs, final NodeConfigureHelper nch,
+        final boolean keepNodeMessage);
 
     /** Used before configure, to apply the variable mask to the nodesettings,
      * that is to change individual node settings to reflect the current values
@@ -382,7 +391,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
     /** Reset underlying node and update state accordingly.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    void reset() {
+    void rawReset() {
         // TODO move copies into Native/SubNodecontainer?
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
