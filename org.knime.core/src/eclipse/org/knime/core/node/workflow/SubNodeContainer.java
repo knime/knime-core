@@ -862,9 +862,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     @Override
     void performReset() {
         setNodeMessage(NodeMessage.NONE);
-        runParentAction(() -> {
-            m_wfm.resetAllNodesInWFM();
-            setVirtualOutputIntoOutport(m_wfm.getInternalState());
+        runParentAction(new Runnable() {
+            @Override
+            public void run() {
+                m_wfm.resetAllNodesInWFM();
+                setVirtualOutputIntoOutport(m_wfm.getInternalState());
+            }
         });
     }
 
@@ -930,7 +933,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         // theoretically we can come from any state into queued state, e.g. this node can be marked for
         // execution (which is the most likely state when run from the outer workflow) and then something is done
         // internally that causes an internal checkForNodeStateChanges.
-        runIfInExternalExecutor(() -> m_wfm.markForExecution(true));
+        runIfInExternalExecutor(new Runnable() {
+            @Override
+            public void run() {
+                m_wfm.markForExecution(true);
+            }
+        });
         setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
         return true;
     }
@@ -949,7 +957,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             switch (getInternalState()) {
             case EXECUTED_QUEUED:
             case CONFIGURED_QUEUED:
-                runIfInExternalExecutor(() -> m_wfm.mimicRemotePreExecute());
+                runIfInExternalExecutor(new Runnable() {
+                    @Override
+                    public void run() {
+                        m_wfm.mimicRemotePreExecute();
+                    }
+                });
                 setInternalState(InternalNodeContainerState.PREEXECUTE);
                 return true;
             default:
@@ -977,7 +990,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
                     setInternalState(InternalNodeContainerState.EXECUTING);
                 } else {
-                    runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuting());
+                    runIfInExternalExecutor(new Runnable() {
+                        @Override
+                        public void run() {
+                            m_wfm.mimicRemoteExecuting();
+                        }
+                    });
                     setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
                 }
                 break;
@@ -996,7 +1014,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                              // encountered during doBeforeExecution
             case EXECUTING:
             case EXECUTINGREMOTELY:
-                runIfInExternalExecutor(() -> m_wfm.mimicRemotePostExecute());
+                runIfInExternalExecutor(new Runnable() {
+                    @Override
+                    public void run() {
+                        m_wfm.mimicRemotePostExecute();
+                    }
+                });
                 setInternalState(InternalNodeContainerState.POSTEXECUTE);
                 break;
             default:
@@ -1012,8 +1035,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
             case POSTEXECUTE:
-                runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuted(
-                    ((SubnodeContainerExecutionResult)status).getWorkflowExecutionResult()));
+                runIfInExternalExecutor(new Runnable() {
+                    @Override
+                    public void run() {
+                        final SubnodeContainerExecutionResult subnodeStatus = (SubnodeContainerExecutionResult)status;
+                        m_wfm.mimicRemoteExecuted(subnodeStatus.getWorkflowExecutionResult());
+                    }
+                });
                 InternalNodeContainerState newState = status.isSuccess() ?
                     InternalNodeContainerState.EXECUTED : m_wfm.getInternalState();
                 setVirtualOutputIntoOutport(newState);
@@ -1183,8 +1211,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         SubnodeContainerExecutionResult r = (SubnodeContainerExecutionResult)result;
         synchronized (getWorkflowMutex()) {
             super.loadExecutionResult(result, exec, loadResult);
-            WorkflowExecutionResult innerExecResult = r.getWorkflowExecutionResult();
-            runParentAction(() -> getWorkflowManager().loadExecutionResult(innerExecResult, exec, loadResult));
+            final WorkflowExecutionResult innerExecResult = r.getWorkflowExecutionResult();
+            runParentAction(new Runnable() {
+                @Override
+                public void run() {
+                    getWorkflowManager().loadExecutionResult(innerExecResult, exec, loadResult);
+                }
+            });
         }
     }
 
