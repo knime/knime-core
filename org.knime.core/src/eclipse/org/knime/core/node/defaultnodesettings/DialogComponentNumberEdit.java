@@ -153,6 +153,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
         getComponentPanel().add(m_valueField);
 
         m_valueField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
@@ -161,6 +162,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
                 }
             }
 
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
@@ -169,6 +171,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
                 }
             }
 
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
@@ -180,6 +183,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
 
         // update the editField, whenever the model changed
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -232,7 +236,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
         // update component only if its out of sync with model
         final SettingsModelNumber model = (SettingsModelNumber)getModel();
         final String compString = m_valueField.getText();
-        if (!model.getNumberValueStr().equals(compString)) {
+        if (!model.getNumberValueStr().startsWith(compString)) {
             m_valueField.setText(model.getNumberValueStr());
         }
 
