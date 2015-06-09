@@ -57,10 +57,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
 
+import org.apache.commons.codec.binary.Base64;
 import org.knime.core.node.NodeLogger;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 /**
  * This class handles the encryption and decryption with the static stored key.
@@ -136,7 +134,7 @@ public final class KnimeEncryption {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] ciphertext = cipher.doFinal(
                 new String(password).getBytes("UTF-8"));
-        return new BASE64Encoder().encode(ciphertext);
+        return Base64.encodeBase64String(ciphertext);
     }
 
     /**
@@ -180,7 +178,7 @@ public final class KnimeEncryption {
             return password;
         }
         // perform the decryption
-        byte[] pw = new BASE64Decoder().decodeBuffer(password);
+        byte[] pw = Base64.decodeBase64(password);
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] decryptedText = cipher.doFinal(pw);
         return new String(decryptedText, "UTF-8");
