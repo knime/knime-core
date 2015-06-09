@@ -59,8 +59,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
@@ -73,7 +73,7 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
 
     private DataColumnSpecFilterConfiguration m_conf;
 
-    private SettingsModelInteger m_percentage;
+    private SettingsModelDouble m_percentage;
 
     /** Creates a new filter model with one and in- and output. */
     public MissingValueColumnFilterNodeModel() {
@@ -97,7 +97,7 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
 
         String[] included = m_conf.applyTo(dataTableSpec).getIncludes();
         for (String column : included) {
-            percentages[dataTableSpec.findColumnIndex(column)] = m_percentage.getIntValue();
+            percentages[dataTableSpec.findColumnIndex(column)] = m_percentage.getDoubleValue();
         }
 
         double[] missingCount = new double[dataTableSpec.getNumColumns()];
@@ -195,7 +195,7 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
         DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
         conf.loadConfigurationInModel(settings);
 
-        SettingsModelInteger percentage = createSettingsModelNumber();
+        SettingsModelDouble percentage = createSettingsModelNumber();
         percentage.validateSettings(settings);
     }
 
@@ -212,7 +212,7 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
      * Configuration to save the percentage
      * @return a settings model to store an integer
      */
-    static final SettingsModelInteger createSettingsModelNumber() {
-        return new SettingsModelIntegerBounded("missing_value_percentage", 90, 0, 100);
+    static final SettingsModelDouble createSettingsModelNumber() {
+        return new SettingsModelDoubleBounded("missing_value_percentage", 90, 0, 100);
     }
 }

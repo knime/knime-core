@@ -54,7 +54,7 @@
             inclusion list.)
         </option>
 
-		<option name="Minimum percentage of missing values">All selected columns with at least this percentage of 
+		<option name="Missing value threshold">All selected columns with at least this percentage of 
 		missing values are filtered out.</option>
 	</fullDescription>
 	

@@ -85,7 +85,7 @@ public class MissingValueColumnFilterNodeDialogPane extends NodeDialogPane {
 
         m_percentageSettings = MissingValueColumnFilterNodeModel.createSettingsModelNumber();
 
-        m_percentage = new DialogComponentNumberEdit(m_percentageSettings, "Minimum percentage of missing values: ", 3);
+        m_percentage = new DialogComponentNumberEdit(m_percentageSettings, "Missing value threshold (in %): ", 3);
 
         m_panel = new JPanel(new GridBagLayout());
 
