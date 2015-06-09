@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -71,16 +71,16 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * Model of the transpose node which swaps rows and columns. In addition, a new 
+ * Model of the transpose node which swaps rows and columns. In addition, a new
  * <code>HiLiteHandler</code> is provided at the output.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class TransposeTableNodeModel extends NodeModel {
-    
+
     /** Output hilite handler for new data generated during execute. */
     private final HiLiteHandler m_outHiLite;
-    
+
     /** Chunk size model. */
     private final SettingsModelIntegerBounded m_chunkSize
         = TransposeTableNodeDialogPane.createChunkSizeModel();
@@ -158,7 +158,7 @@ final class TransposeTableNodeModel extends NodeModel {
         // if the input table does not contain any column, create empty rows
         // only using the column header as row IDs
         if (inData[0].getRowCount() == 0) {
-            BufferedDataContainer cont = 
+            BufferedDataContainer cont =
                 exec.createDataContainer(new DataTableSpec());
             for (int i = 0; i < spec.getNumColumns(); i++) {
                 String colName = spec.getColumnSpec(i).getName();
@@ -166,7 +166,7 @@ final class TransposeTableNodeModel extends NodeModel {
             }
             cont.close();
             return new BufferedDataTable[]{cont.getTable()};
-            
+
         }
         // new number of columns = number of rows
         final int newNrCols = inData[0].getRowCount();
@@ -175,6 +175,10 @@ final class TransposeTableNodeModel extends NodeModel {
         // new column types
         final ArrayList<DataType> colTypes = new ArrayList<DataType>();
         // over entire table
+
+        // index for unique colNames if row id only contains whitespace
+        int idx = 0;
+
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
             exec.setMessage("Determine most-general column type for row: "
@@ -192,7 +196,12 @@ final class TransposeTableNodeModel extends NodeModel {
             if (type == null) {
                 type = DataType.getType(DataCell.class);
             }
-            colNames.add(row.getKey().getString().toString());
+            String colName = row.getKey().getString().trim();
+            if (colName.isEmpty()) {
+                colName = "<empty_" + idx + ">";
+                idx++;
+            }
+            colNames.add(colName);
             colTypes.add(type);
         }
         // new number of rows
@@ -210,22 +219,22 @@ final class TransposeTableNodeModel extends NodeModel {
         // total number of chunks
         final double nrChunks = Math.ceil((double) newNrRows / chunkSize);
         for (int chunkIdx = 0; chunkIdx < nrChunks; chunkIdx++) {
-            // map of new row keys to cell arrays 
-            Map<String, DataCell[]> map = 
+            // map of new row keys to cell arrays
+            Map<String, DataCell[]> map =
                 new LinkedHashMap<String, DataCell[]>(newNrRows);
             int rowIdx = 0;
             for (DataRow row : inData[0]) {
-                exec.setProgress(((rowIdx + 1) * (chunkIdx + 1)) 
-                        / (nrChunks * newNrCols), "Transpose row \"" 
+                exec.setProgress(((rowIdx + 1) * (chunkIdx + 1))
+                        / (nrChunks * newNrCols), "Transpose row \""
                         + row.getKey().getString() + "\" to column.");
                 int colIdx = chunkIdx * chunkSize;
                 // iterate chunk of columns
-                for (int r = colIdx; 
-                        r < Math.min(newNrRows, colIdx + chunkSize); r++) { 
+                for (int r = colIdx;
+                        r < Math.min(newNrRows, colIdx + chunkSize); r++) {
                     String newRowKey = spec.getColumnSpec(r).getName();
                     DataCell[] cellArray = map.get(newRowKey);
                     if (cellArray == null) {
-                        cellArray = new DataCell[newNrCols]; 
+                        cellArray = new DataCell[newNrCols];
                         map.put(newRowKey, cellArray);
                     }
                     cellArray[rowIdx] = row.getCell(r);
