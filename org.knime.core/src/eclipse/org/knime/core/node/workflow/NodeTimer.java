@@ -334,7 +334,7 @@ public final class NodeTimer {
                 org.apache.commons.httpclient.Credentials usageCredentials =
                     new UsernamePasswordCredentials("knime-usage-user", "knime");
                 requestClient.getState().setCredentials(AuthScope.ANY, usageCredentials);
-                String uri = SERVER_ADDRESS + "/server/v1/post-usage/" + knimeID;
+                String uri = SERVER_ADDRESS + "/usage/v1/" + knimeID;
                 method = new PostMethod(uri);
                 RequestEntity entity = new ByteArrayRequestEntity(bytes);
                 method.setRequestEntity(entity);
