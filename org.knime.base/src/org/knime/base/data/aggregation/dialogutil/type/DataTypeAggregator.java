@@ -62,8 +62,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-import com.sun.org.apache.xml.internal.security.encryption.AgreementMethod;
-
 /**
  * {@link AggregationMethodDecorator} that stores a {@link DataType} in addition to the {@link AggregationMethod}
  * information.
@@ -79,7 +77,7 @@ public class DataTypeAggregator extends AggregationMethodDecorator {
 
     /**
      * @param type {@link DataType}
-     * @param method {@link AgreementMethod}
+     * @param method {@link AggregationMethod}
      * @param inclMissing <code>true</code> if missing values should be considered
      */
     public DataTypeAggregator(final DataType type, final AggregationMethod method, final boolean inclMissing) {

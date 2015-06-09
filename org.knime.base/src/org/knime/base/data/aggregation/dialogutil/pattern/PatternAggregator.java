@@ -65,8 +65,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-import com.sun.org.apache.xml.internal.security.encryption.AgreementMethod;
-
 /**
  * {@link AggregationMethodDecorator} that stores a {@link DataType} in addition to the {@link AggregationMethod}
  * information.
@@ -88,7 +86,7 @@ public class PatternAggregator extends AggregationMethodDecorator {
     /**
      * @param pattern the search pattern
      * @param isRegex <code>true</code> if the pattern is a regular expression
-     * @param method {@link AgreementMethod}
+     * @param method {@link AggregationMethod}
      */
     public PatternAggregator(final String pattern, final boolean isRegex, final AggregationMethod method) {
         this(pattern, isRegex, method, method.supportsMissingValueOption());
