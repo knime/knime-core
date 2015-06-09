@@ -1185,7 +1185,10 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     * @since 2.12
+     */
     @Override
     public SubnodeContainerExecutionResult createExecutionResult(final ExecutionMonitor exec)
             throws CanceledExecutionException {

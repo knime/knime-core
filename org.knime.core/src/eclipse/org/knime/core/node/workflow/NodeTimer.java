@@ -100,6 +100,7 @@ import org.osgi.service.prefs.Preferences;
  * Holds execution timing information about a specific node.
  * @noreference This class is not intended to be referenced by clients.
  * @author Michael Berthold
+ * @since 2.12
  */
 public final class NodeTimer {
 
