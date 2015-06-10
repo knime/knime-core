@@ -70,10 +70,9 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
 public class MissingValueColumnFilterNodeModel extends NodeModel {
+    private final DataColumnSpecFilterConfiguration m_conf = createDCSFilterConfiguration();
 
-    private DataColumnSpecFilterConfiguration m_conf;
-
-    private SettingsModelDouble m_percentage;
+    private final SettingsModelDouble m_percentage = createSettingsModelNumber();
 
     /** Creates a new filter model with one and in- and output. */
     public MissingValueColumnFilterNodeModel() {
@@ -165,12 +164,8 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_conf != null) {
-            m_conf.saveConfiguration(settings);
-        }
-        if (m_percentage != null) {
-            m_percentage.saveSettingsTo(settings);
-        }
+        m_conf.saveConfiguration(settings);
+        m_percentage.saveSettingsTo(settings);
     }
 
     /**
@@ -181,11 +176,7 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
-        conf.loadConfigurationInModel(settings);
-        m_conf = conf;
-
-        m_percentage = createSettingsModelNumber();
+        m_conf.loadConfigurationInModel(settings);
         m_percentage.loadSettingsFrom(settings);
     }
 

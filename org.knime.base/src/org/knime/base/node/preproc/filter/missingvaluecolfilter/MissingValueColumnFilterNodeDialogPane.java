@@ -55,7 +55,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelNumber;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
@@ -70,7 +70,7 @@ public class MissingValueColumnFilterNodeDialogPane extends NodeDialogPane {
 
     private final DataColumnSpecFilterPanel m_filterPanel;
 
-    private final DialogComponentNumberEdit m_percentage;
+    private final DialogComponentNumber m_percentage;
 
     private final SettingsModelNumber m_percentageSettings;
 
@@ -85,7 +85,7 @@ public class MissingValueColumnFilterNodeDialogPane extends NodeDialogPane {
 
         m_percentageSettings = MissingValueColumnFilterNodeModel.createSettingsModelNumber();
 
-        m_percentage = new DialogComponentNumberEdit(m_percentageSettings, "Missing value threshold (in %): ", 3);
+        m_percentage = new DialogComponentNumber(m_percentageSettings, "Missing value threshold (in %): ", 1, 3);
 
         m_panel = new JPanel(new GridBagLayout());
 
