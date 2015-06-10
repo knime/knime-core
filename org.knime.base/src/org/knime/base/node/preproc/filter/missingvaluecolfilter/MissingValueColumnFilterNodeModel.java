@@ -122,11 +122,7 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
             }
         }
 
-        BufferedDataTable[] bufferedDataTables = new BufferedDataTable[]{exec.createColumnRearrangeTable(inputTable, r, exec)};
-        if (bufferedDataTables[0].getDataTableSpec().getNumColumns() == 0) {
-
-        }
-        return bufferedDataTables;
+        return new BufferedDataTable[]{exec.createColumnRearrangeTable(inputTable, r, exec)};
     }
 
     /** {@inheritDoc} */
