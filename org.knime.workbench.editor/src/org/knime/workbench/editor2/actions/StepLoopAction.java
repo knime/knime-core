@@ -142,7 +142,7 @@ public class StepLoopAction extends AbstractNodeAction {
             }
             WorkflowManager wm = getEditor().getWorkflowManager();
             if (wm.canExecuteNodeDirectly(nc.getID())) {
-                // ...or we can execute it (than this will be the first step)
+                // ...or we can execute it (then this will be the first step)
                 return true;
             }
         }
