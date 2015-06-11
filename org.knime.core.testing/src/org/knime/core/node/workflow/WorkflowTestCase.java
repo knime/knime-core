@@ -54,8 +54,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -80,13 +78,11 @@ public abstract class WorkflowTestCase extends TestCase {
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private WorkflowManager m_manager;
-    private final ReentrantLock m_lock;
 
     /**
      *
      */
     public WorkflowTestCase() {
-        m_lock = new ReentrantLock();
     }
 
     /**
@@ -416,44 +412,35 @@ public abstract class WorkflowTestCase extends TestCase {
 
     protected void waitWhile(final NodeContainer nc,
             final Hold hold) throws Exception {
+        final Object mutex = nc instanceof WorkflowManager
+                ? ((WorkflowManager)nc).getWorkflowMutex() : nc.getParent().getWorkflowMutex();
         if (!hold.shouldHold()) {
             return;
         }
-        final Condition condition = m_lock.newCondition();
+
         NodeStateChangeListener l = new NodeStateChangeListener() {
             /** {@inheritDoc} */
             @Override
             public void stateChanged(final NodeStateEvent state) {
-                m_lock.lock();
-                try {
+                synchronized (mutex) {
                     m_logger.info("Received " + state);
-                    condition.signalAll();
-                } finally {
-                    m_lock.unlock();
+                    mutex.notifyAll();
                 }
             }
         };
         nc.addNodeStateChangeListener(l);
-        m_lock.lock();
-        try {
+        synchronized (mutex) {
             while (hold.shouldHold()) {
                 int secToWait = hold.getSecondsToWaitAtMost();
                 if (secToWait > 0) {
-                    if (!condition.await(secToWait, TimeUnit.SECONDS)) {
-                        m_logger.warn(
-                                "Timeout elapsed before condition was true");
-                        break;
-                    }
+                    mutex.wait(TimeUnit.SECONDS.toMillis(secToWait));
+                    break;
                 } else {
-                    condition.await(5, TimeUnit.SECONDS);
+                    mutex.wait(TimeUnit.SECONDS.toMillis(5));
                 }
             }
-        } finally {
-            m_lock.unlock();
-            nc.removeNodeStateChangeListener(l);
         }
-        assertFalse("Lock not to be held by current thread as workflow mutex will be aquired",
-                m_lock.isHeldByCurrentThread()) ;
+        nc.removeNodeStateChangeListener(l);
         // ugly workaround: The state changes happen in the wfm which does it synchronized on
         // m_workflowMutex. The conditions above only check for "executionInProgress", it does
         // not wait until the WFM has released the mutex (state change events from idle -> configured
@@ -528,7 +515,7 @@ public abstract class WorkflowTestCase extends TestCase {
         return m_logger;
     }
 
-    protected abstract class Hold {
+    protected static abstract class Hold {
         protected abstract boolean shouldHold();
         protected int getSecondsToWaitAtMost() {
             return -1;

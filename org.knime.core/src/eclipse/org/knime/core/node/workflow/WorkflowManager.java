@@ -303,6 +303,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     private final WorkflowContext m_workflowContext;
 
+    /** Non-null object to check if successor execution is allowed - usually it is except for wizard execution. */
+    private ExecutionController m_executionController = new ExecutionController();
+
     /** The root of everything, a workflow with no in- or outputs.
      * This workflow holds the top level projects. */
     public static final WorkflowManager ROOT = new WorkflowManager(
@@ -2364,8 +2367,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    private WizardExecutionController m_wizardExecutionController;
-
     /** Creates lazy and returns an instance that controls the wizard execution of this workflow. These controller
      * are not meant to be used by multiple clients (only one steps back/forth in the workflow), though this is not
      * asserted by the returned controller object.
@@ -2376,10 +2377,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public WizardExecutionController getWizardExecutionController() {
         CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
         synchronized (m_workflowMutex) {
-            if (m_wizardExecutionController == null) {
-                m_wizardExecutionController = new WizardExecutionController(this);
+            if (!(m_executionController instanceof WizardExecutionController)) {
+                m_executionController = new WizardExecutionController(this);
             }
-            return m_wizardExecutionController;
+            return (WizardExecutionController)m_executionController;
         }
     }
 
@@ -2714,7 +2715,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         PortObject[] inData = new PortObject[nc.getNrInPorts()];
         boolean allDataAvailable = assembleInputData(nc.getID(), inData);
         if (allDataAvailable) {
-            if (nc.queue(inData)) {
+            NodeID[] predecessors = assemblePredecessors(nc.getID());
+            boolean mustHalt = false;
+            for (NodeID p : predecessors) {
+                if (p != null && m_executionController.isHalted(p)) {
+                    mustHalt = true;
+                }
+            }
+            if (mustHalt) {
+                return false;
+            } else if (nc.queue(inData)) {
                 return true;
             } else {
                 // coming from UNCONFIGURED_MARKEDFOREXEC and can't be queued
@@ -2980,6 +2990,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (canConfigureSuccessors) {
                 // may be SingleNodeContainer or WFM contained within this
                 // one but then it can be treated like a SNC
+                m_executionController.checkHaltingCriteria(nc.getID());
                 configureNodeAndSuccessors(nc.getID(), false);
             }
             checkForNodeStateChanges(true);
@@ -2992,8 +3003,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param slc FlowLoopContext of the actual loop
      */
-    private void restartLoop(final FlowLoopContext slc)
-    throws IllegalLoopException {
+    private void restartLoop(final FlowLoopContext slc) throws IllegalLoopException {
+        assert Thread.holdsLock(m_workflowMutex);
         NodeContainer tailNode = m_workflow.getNode(slc.getTailNode());
         NodeContainer headNode = m_workflow.getNode(slc.getOwner());
         if ((tailNode == null) || (headNode == null)) {
@@ -5441,6 +5452,34 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Assemble array of all predeccessor NodeIDs connected to the input
+     * ports of a given node.
+     *
+     * @param id of node
+     * @return array of NodeIDs connected to argument node
+     */
+    private NodeID[] assemblePredecessors(final NodeID id) {
+        NodeContainer nc = getNodeContainer(id);
+        int nrIns = nc.getNrInPorts();
+        NodeID[] result = new NodeID[nrIns];
+        Set<ConnectionContainer> incoming = m_workflow.getConnectionsByDest(id);
+        for (ConnectionContainer conn : incoming) {
+            assert conn.getDest().equals(id);
+            // get info about destination
+            int destPortIndex = conn.getDestPort();
+            if (conn.getSource() != this.getID()) {
+                // connected to another node inside this WFM
+                assert conn.getType() == ConnectionType.STD;
+                result[destPortIndex] = m_workflow.getNode(conn.getSource()).getID();
+            } else {
+                // connected to a WorkflowInport
+                assert conn.getType() == ConnectionType.WFMIN;
+                result[destPortIndex] = getID();
+            }
+        }
+        return result;
+    }
+
     /** Assemble array of all NodeOutPorts connected to the input
      * ports of a given node. This routine will make sure to skip intermediate
      * metanode "bridges".
@@ -7401,7 +7440,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeSettingsRO wizardState = persistor.getWizardExecutionControllerState();
         if (wizardState != null) {
             try {
-                m_wizardExecutionController = new WizardExecutionController(this, wizardState);
+                m_executionController = new WizardExecutionController(this, wizardState);
             } catch (InvalidSettingsException e1) {
                 String msg = "Failed to restore wizard controller from file: " + e1.getMessage();
                 LOGGER.debug(msg, e1);

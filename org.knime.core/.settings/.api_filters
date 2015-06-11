@@ -159,6 +159,26 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerState.java" type="org.knime.core.node.workflow.NodeContainerState">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerState"/>
+                <message_argument value="isHalted()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="isHalted()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WizardExecutionController.java" type="org.knime.core.node.workflow.WizardExecutionController">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="stepFirst()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeContainerExecutionStatus.java" type="org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus">
         <filter id="403804204">
             <message_arguments>

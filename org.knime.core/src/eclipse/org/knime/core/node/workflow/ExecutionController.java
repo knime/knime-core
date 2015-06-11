@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,51 +43,23 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 24, 2013 by wiswedel
+ * History
+ *   Jun 11, 2015 (wiswedel): created
  */
 package org.knime.core.node.workflow;
 
+
 /**
- * Possible status values of a NodeContainer. The actual implementation is an enum but is hidden to client
- * (e.g. GUI) code so that new states can be added as needed.
  *
  * @author Bernd Wiswedel, Michael Berthold, KNIME.com, Zurich, Switzerland
- * @since 2.8
  */
-public interface NodeContainerState {
+class ExecutionController {
 
-    /**
-     * @return true if node is idle (unconfigured, not queued, not marked).
-     */
-    public boolean isIdle();
+    boolean isHalted(final NodeID source) {
+        return false;
+    }
 
-    /**
-     * @return true if node is configured (not queued, not marked).
-     */
-    public boolean isConfigured();
-
-    /**
-     * @return true if node is executed and not marked for re-execution.
-     */
-    public boolean isExecuted();
-
-    /**
-     * @return true if node is executing or waiting to be executed (marked, queued, executing)
-     */
-    public boolean isExecutionInProgress();
-
-    /** @return true if node is currently executing (not queued, not marked but executing) and it's using a
-     * non-default job manager. If so (SGE executor), the workflow can be saved without setting it dirty (SGE executor
-     * can restore running jobs)
-     */
-    public boolean isExecutingRemotely();
-
-    /**
-     * @return true if node is waiting to be executed (marked or queued).
-     */
-    public boolean isWaitingToBeExecuted();
-
-    /** @return false if node is executing or queued */
-    public boolean isHalted();
+    void checkHaltingCriteria(final NodeID source) {
+    }
 
 }

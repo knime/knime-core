@@ -114,6 +114,22 @@ enum InternalNodeContainerState implements NodeContainerState {
 
     /** {@inheritDoc} */
     @Override
+    public boolean isHalted() {
+        switch (this) {
+            case CONFIGURED_QUEUED:
+            case EXECUTED_QUEUED:
+            case EXECUTING:
+            case EXECUTINGREMOTELY:
+            case POSTEXECUTE:
+            case PREEXECUTE:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public boolean isExecutingRemotely() {
         return EXECUTINGREMOTELY.equals(this);
     }
