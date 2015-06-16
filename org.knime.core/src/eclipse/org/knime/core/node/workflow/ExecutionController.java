@@ -49,16 +49,31 @@
 package org.knime.core.node.workflow;
 
 
-/**
+/** Base class that controls execution beyond dedicated nodes. Derived classes can
+ * be used to stop execution at a particular type of node, e.g. SubNodes that are
+ * to be displayed in the WebPortal.
  *
  * @author Bernd Wiswedel, Michael Berthold, KNIME.com, Zurich, Switzerland
  */
 class ExecutionController {
 
+    /**
+     * Check if execution was halted at this node previously. If so, no successors
+     * should be queued.
+     *
+     * @param source node to be checked.
+     * @return derived classes can return true if the execution was stopped at this node.
+     */
     boolean isHalted(final NodeID source) {
         return false;
     }
 
+    /**
+     * Call when a certain nodes was executed to determine if it should be added to the
+     * list of halted nodes.
+     *
+     * @param source node to be checked.
+     */
     void checkHaltingCriteria(final NodeID source) {
     }
 

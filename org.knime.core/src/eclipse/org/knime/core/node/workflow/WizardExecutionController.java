@@ -351,6 +351,10 @@ public final class WizardExecutionController extends ExecutionController {
     void checkHaltingCriteria(final NodeID source) {
         assert Thread.holdsLock(m_manager.getWorkflowMutex());
         if (m_waitingSubnodes.remove(source)) {
+            // trick to avoid repeated re-execution of SubNodes: when the node appears
+            // a second time, we don't add it to the stopping list but removed it instead.
+            // It was just re-executed this time. If we see it again (e.g. when it is
+            // part of a loop, we will add it again).
             return;
         }
         NodeContainer sourceNC = m_manager.getNodeContainer(source);
@@ -361,6 +365,7 @@ public final class WizardExecutionController extends ExecutionController {
         if (subnodeSource.isInactive()) {
             return;
         }
+        // only consider active SubNodes...
         WorkflowManager subNodeWFM = subnodeSource.getWorkflowManager();
         Map<NodeID, WizardNode> wizardNodeSet = subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
         boolean allInactive = true;
@@ -369,7 +374,9 @@ public final class WizardExecutionController extends ExecutionController {
                 allInactive = false;
             }
         }
+        // ... the contain at least one active QuickForm node to be display.
         if (!allInactive) {
+            // add to the list so we can later avoid queuing of successors!
             m_waitingSubnodes.add(source);
         }
     }
