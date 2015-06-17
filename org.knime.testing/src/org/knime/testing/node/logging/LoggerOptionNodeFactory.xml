@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other" icon="logger.png">
+	<name>Logger Option</name>
+	
+	<shortDescription>
+        Allows to change the logger options during runtime.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+        Allows to change the logger options during runtime.
+		</intro>
+
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Variable input">Variable input</inPort>
+		<outPort index="0" name="Variable output">Variable output</outPort>
+	</ports>	
+</knimeNode>

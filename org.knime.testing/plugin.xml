@@ -114,6 +114,12 @@
             expert-flag="false"
             factory-class="org.knime.testing.node.filestore.fsobject2cell.FileStoreObjectToCellNodeFactory"
             id="org.knime.testing.node.filestore.fsobject2cell.FileStoreObjectToCellNodeFactory">
+      </node>
+      <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.node.logging.LoggerOptionNodeFactory"
+            id="org.knime.testing.node.logging.LoggerOptionNodeFactory">
       </node>     
    </extension>
    <extension
