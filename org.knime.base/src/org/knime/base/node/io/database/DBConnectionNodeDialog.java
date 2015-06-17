@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,61 +41,27 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   17.06.2015 (koetter): created
  */
 package org.knime.base.node.io.database;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 
 /**
- *
- * @author Thomas Gabriel, University of Konstanz
+ * Dialog of the database connection reader node.
+ * @author Tobias Koetter, KNIME.com
  */
-public final class DBConnectionNodeFactory
-        extends NodeFactory<DBConnectionNodeModel> {
+class DBConnectionNodeDialog extends DefaultNodeSettingsPane {
 
     /**
-     * {@inheritDoc}
+     * Constructor.
      */
-    @Override
-    public DBConnectionNodeModel createNodeModel() {
-        return new DBConnectionNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<DBConnectionNodeModel> createNodeView(
-            final int viewIndex,
-            final DBConnectionNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DBConnectionNodeDialog();
+    public DBConnectionNodeDialog() {
+        addDialogComponent(new DialogComponentBoolean(DBConnectionNodeModel.createUseRowIdModel(),
+            "Use database row id"));
     }
 }

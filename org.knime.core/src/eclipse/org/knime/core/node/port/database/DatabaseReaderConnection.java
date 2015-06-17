@@ -252,6 +252,22 @@ public final class DatabaseReaderConnection {
     public BufferedDataTable createTable(final ExecutionContext exec,
             final CredentialsProvider cp)
             throws CanceledExecutionException, SQLException {
+        return createTable(exec, cp, true);
+    }
+    /**
+     * Read data from database.
+     * @param exec used for progress info
+     * @param cp {@link CredentialsProvider} providing user/password
+     * @param useDbRowId <code>true</code> if the row id returned by the database should be used to generate the
+     * KNIME row id
+     * @return buffered data table read from database
+     * @throws CanceledExecutionException if canceled in between
+     * @throws SQLException if the connection could not be opened
+     * @since 2.12
+     */
+    public BufferedDataTable createTable(final ExecutionContext exec,
+            final CredentialsProvider cp, final boolean useDbRowId)
+            throws CanceledExecutionException, SQLException {
         if (m_blobFactory == null) {
             m_blobFactory = new BinaryObjectCellFactory(exec);
         }
@@ -288,7 +304,7 @@ public final class DatabaseReaderConnection {
                     /** {@inheritDoc} */
                     @Override
                     public RowIterator iterator() {
-                        return new DBRowIterator(result);
+                        return new DBRowIterator(result, useDbRowId);
                     }
 
                 }, exec);
@@ -354,7 +370,7 @@ public final class DatabaseReaderConnection {
                 LOGGER.debug("Reading meta data from database ResultSet...");
                 m_spec = createTableSpec(result.getMetaData());
                 LOGGER.debug("Parsing database ResultSet...");
-                DBRowIterator it = new DBRowIterator(result);
+                DBRowIterator it = new DBRowIterator(result, true);
                 DataContainer buf = new DataContainer(m_spec);
                 while (it.hasNext()) {
                     buf.addRowToTable(it.next());
@@ -459,16 +475,20 @@ public final class DatabaseReaderConnection {
         private final boolean[] m_streamException;
 
         // fix for bug #4066
-        private final boolean m_rowIdsStartWithZero;
+        final boolean m_rowIdsStartWithZero;
+        // fix for bug #5991
+        private boolean m_useDbRowId = true;
 
         /**
          * Creates new iterator.
          * @param result result set to iterate
+         * @param useDbRowId <code>true</code> if the KNIME row id should based on the db row id
          */
-        DBRowIterator(final ResultSet result) {
+        DBRowIterator(final ResultSet result, final boolean useDbRowId) {
             m_result = result;
             m_streamException = new boolean[m_spec.getNumColumns()];
             m_rowIdsStartWithZero = m_conn.getRowIdsStartWithZero();
+            m_useDbRowId = useDbRowId;
         }
 
         /**
@@ -628,7 +648,7 @@ public final class DatabaseReaderConnection {
             try {
                 rowId = m_result.getRow();
                 // Bug 2729: ResultSet#getRow return 0 if there is no row id
-                if (rowId <= 0) {
+                if (rowId <= 0 || !m_useDbRowId ) {
                     // use row counter
                     rowId = m_rowCounter;
                 } else if (m_rowIdsStartWithZero) {

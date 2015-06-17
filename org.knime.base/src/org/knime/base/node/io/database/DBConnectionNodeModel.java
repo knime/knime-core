@@ -56,6 +56,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -71,9 +72,18 @@ import org.knime.core.node.workflow.CredentialsProvider;
  */
 final class DBConnectionNodeModel extends NodeModel {
 
+    private final SettingsModelBoolean m_useDbRowId = createUseRowIdModel();
+
     /** Creates a new database connection reader. */
     DBConnectionNodeModel() {
         super(new PortType[]{DatabasePortObject.TYPE}, new PortType[]{BufferedDataTable.TYPE});
+    }
+
+    /**
+     * @return
+     */
+    static SettingsModelBoolean createUseRowIdModel() {
+        return new SettingsModelBoolean("useDbRowId", true);
     }
 
     /**
@@ -88,7 +98,7 @@ final class DBConnectionNodeModel extends NodeModel {
         final DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
         exec.setProgress("Reading data from database...");
         CredentialsProvider cp = getCredentialsProvider();
-        return new BufferedDataTable[]{load.createTable(exec, cp)};
+        return new BufferedDataTable[]{load.createTable(exec, cp, m_useDbRowId.getBooleanValue())};
     }
 
     /**
@@ -133,8 +143,7 @@ final class DBConnectionNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // empty
-
+        //nothing to validate
     }
 
     /**
@@ -143,7 +152,12 @@ final class DBConnectionNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // empty
+        try {
+            m_useDbRowId.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            //this option was introduced in KNIME 2.12
+            m_useDbRowId.setBooleanValue(true);
+        }
     }
 
     /**
@@ -151,7 +165,7 @@ final class DBConnectionNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // empty
+        m_useDbRowId.saveSettingsTo(settings);
     }
 
 }

@@ -12,6 +12,10 @@
 	     Opens a database connection based on the input settings and reads
 	     the entire data table from the database into KNIME. 
 		</intro>
+		<option name="Use database row id">If enabled the KNIME row id is based on the row id returned from the database.
+		An internal counter is used to generate the row id if the option is disabled.
+		<b>If you encounter a duplicate key exception disable this option.</b> This is caused by a faulty implementation 
+		of the used jdbc driver.</option>
 	</fullDescription>
 	
 	<ports>
