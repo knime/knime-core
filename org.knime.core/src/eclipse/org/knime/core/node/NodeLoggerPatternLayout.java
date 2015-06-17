@@ -63,8 +63,9 @@ import org.knime.core.node.workflow.NodeID;
  * W for the workflow directory.
  *
  * @author Tobias Koetter, KNIME.com
+ * @since 2.12
  */
-class NodeLoggerPatternLayout extends PatternLayout {
+public class NodeLoggerPatternLayout extends PatternLayout {
     /**Node id pattern.*/
     static final char NODE_ID = 'I';
     /**Node name pattern.*/
