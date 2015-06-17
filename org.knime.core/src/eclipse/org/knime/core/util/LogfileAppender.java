@@ -51,12 +51,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 
 /**
  * This is a special appender for KNIME that writes into the
@@ -76,6 +78,14 @@ public class LogfileAppender extends FileAppender {
      * Creates a new LogfileAppender.
      */
     public LogfileAppender() {
+        this(new File(KNIMEConstants.getKNIMEHomeDir() + File.separator));
+    }
+
+    /**
+     * @param logFileDir the directory in which the log file should be created
+     * @since 2.12
+     */
+    public LogfileAppender(final File logFileDir) {
         String maxSizeString = System.getProperty(PROPERTY_MAX_LOGFILESIZE);
         if (maxSizeString == null) {
             m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
@@ -85,11 +95,11 @@ public class LogfileAppender extends FileAppender {
             if (maxSizeString.endsWith("m")) {
                 multiplier = 1024 * 1024;
                 maxSizeString = maxSizeString.substring(
-                            0, maxSizeString.length() - 1).trim();
+                    0, maxSizeString.length() - 1).trim();
             } else if (maxSizeString.endsWith("k")) {
                 multiplier = 1024;
                 maxSizeString = maxSizeString.substring(
-                        0, maxSizeString.length() - 1).trim();
+                    0, maxSizeString.length() - 1).trim();
             } else {
                 multiplier = 1;
             }
@@ -103,15 +113,11 @@ public class LogfileAppender extends FileAppender {
                 m_maxLogSize = MAX_LOG_SIZE_DEFAULT;
             }
         }
-        // get user home
-        final String tmpDir = KNIMEConstants.getKNIMEHomeDir() + File.separator;
-        // check if home/.knime exists
-        File tempDir = new File(tmpDir);
-        if (!tempDir.exists()) {
-            tempDir.mkdirs();
+        // check if log file directory exists
+        if (!logFileDir.exists()) {
+            logFileDir.mkdirs();
         }
-
-        m_logFile = new File(tmpDir + "knime.log");
+        m_logFile = new File(logFileDir, NodeLogger.LOG_FILE);
         setFile(m_logFile.getAbsolutePath());
         setImmediateFlush(true);
         setEncoding("UTF-8");
@@ -137,34 +143,30 @@ public class LogfileAppender extends FileAppender {
             LogLog.debug("Compressing log file '" + m_logFile + "'");
             final File tmpFile = new File(m_logFile.getAbsolutePath() + ".old");
             closeFile();
-            m_logFile.renameTo(tmpFile);
+            try {
+                Files.move(m_logFile.toPath(), tmpFile.toPath());
+            } catch (IOException e) {
+                LogLog.warn("Can not move log file: " + e.getMessage());
+            }
             setFile(m_logFile.getAbsolutePath());
-
-            Thread t = new Thread() {
+            final Thread t = new Thread() {
                 @Override
                 public void run() {
                     synchronized (m_logFile) {
                         if (tmpFile.exists()) {
-                            BufferedInputStream in;
-                            try {
-                                in = new BufferedInputStream(
-                                        new FileInputStream(tmpFile));
-                                GZIPOutputStream out = new GZIPOutputStream(
-                                        new FileOutputStream(new File(tmpFile
-                                                .getAbsolutePath()
-                                                + ".gz")));
-
+                            try (final BufferedInputStream in = new BufferedInputStream(new FileInputStream(tmpFile));
+                                    final GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(
+                                        new File(tmpFile.getAbsolutePath() + ".gz")));) {
                                 byte[] buf = new byte[4096];
                                 int count;
                                 while ((count = in.read(buf)) > 0) {
                                     out.write(buf, 0, count);
                                 }
-
-                                in.close();
-                                out.close();
-                                tmpFile.delete();
                             } catch (IOException ex) {
                                 ex.printStackTrace();
+                            }
+                            if (!tmpFile.delete()) {
+                                LogLog.warn("Failed to delete temporary log file");
                             }
                         }
                     }
@@ -194,5 +196,37 @@ public class LogfileAppender extends FileAppender {
                                 e);
             }
         }
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        if (name != null) {
+            return name.hashCode();
+        }
+        return super.hashCode();
+    }
+    /**
+     * {@inheritDoc}
+     * We have to compare the name of the logger in the equals method to prevent duplicate log file registration
+     * in the NodeLogger#addWorkflowDirAppender() method !!!
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        //We have to compare the name of the logger in the equals method to prevent duplicate log file registration
+        //in the NodeLogger#addWorkflowDirAppender() method !!!
+        if (name != null && (obj instanceof FileAppender)) {
+            return name.equals(((FileAppender)obj).getName());
+        }
+        return super.equals(obj);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return m_logFile.toString();
     }
 }

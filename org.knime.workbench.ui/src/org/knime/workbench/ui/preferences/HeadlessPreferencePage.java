@@ -72,6 +72,8 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
 
     private String m_tempPath;
 
+    private BooleanFieldEditor m_logDirGLobal;
+
     /**
      *
      */
@@ -105,6 +107,12 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
                         {"&ERROR", LEVEL.ERROR.name()} },
                 parent));
 
+        addField(new BooleanFieldEditor(HeadlessPreferencesConstants.P_LOG_FILE_LOCATION,
+            "Enable per workflow logs", parent));
+        m_logDirGLobal = new BooleanFieldEditor(HeadlessPreferencesConstants.P_LOG_GLOBAL_IN_WF_DIR,
+            "Log global messages also to workflow log", parent);
+        addField(m_logDirGLobal);
+
         // number threads
         IntegerFieldEditor maxThreadEditor = new IntegerFieldEditor(
                 HeadlessPreferencesConstants.P_MAXIMUM_THREADS,
@@ -133,6 +141,19 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
         addField(sendAnonymousStatisticsEditor);
 
     }
+    //TK_TODO: Enable disable the global messages in wf dir option depending on the wf option
+//
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public void propertyChange(final PropertyChangeEvent event) {
+//        if (HeadlessPreferencesConstants.P_LOG_FILE_LOCATION.equals(event.getProperty())) {
+//            final Boolean enabled = (Boolean)event.getNewValue();
+//            m_logDirGLobal.setEnabled(enabled, getFieldEditorParent());
+//        }
+//        super.propertyChange(event);
+//    }
 
     /**
      *

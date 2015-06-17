@@ -137,13 +137,17 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                 pStore.getString(HeadlessPreferencesConstants
                         .P_LOGLEVEL_LOG_FILE);
             NodeLogger.setAppenderLevelRange(NodeLogger.LOGFILE_APPENDER, LEVEL.valueOf(logLevelFile), LEVEL.FATAL);
-
+            final boolean enableWorkflowRelativeLogging =
+                    pStore.getBoolean(HeadlessPreferencesConstants.P_LOG_FILE_LOCATION);
+            NodeLogger.logInWorkflowDir(enableWorkflowRelativeLogging);
+            final boolean enableGlobalInWfLogging =
+                    pStore.getBoolean(HeadlessPreferencesConstants.P_LOG_GLOBAL_IN_WF_DIR);
+            NodeLogger.logGlobalMsgsInWfDir(enableGlobalInWfLogging);
             pStore.addPropertyChangeListener(new IPropertyChangeListener() {
 
                 @Override
                 public void propertyChange(final PropertyChangeEvent event) {
-                    if (event.getProperty().equals(
-                            HeadlessPreferencesConstants.P_MAXIMUM_THREADS)) {
+                    if (event.getProperty().equals(HeadlessPreferencesConstants.P_MAXIMUM_THREADS)) {
                         if (!(event.getNewValue() instanceof Integer)) {
                             // when preferences are imported and this value is
                             // not set, they send an empty string
@@ -152,14 +156,11 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                         int count;
                         try {
                             count = (Integer)event.getNewValue();
-                            KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(
-                                    count);
+                            KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(count);
                         } catch (Exception e) {
-                            LOGGER.error("Unable to get maximum thread count "
-                                    + " from preference page.", e);
+                            LOGGER.error("Unable to get maximum thread count " + " from preference page.", e);
                         }
-                    } else if (event.getProperty().equals(
-                            HeadlessPreferencesConstants.P_TEMP_DIR)) {
+                    } else if (event.getProperty().equals(HeadlessPreferencesConstants.P_TEMP_DIR)) {
                         if (!(event.getNewValue() instanceof String)) {
                             // when preferences are imported and this value is
                             // not set, they send an empty string
@@ -170,16 +171,13 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                             return;
                         }
                         File f = new File(dirName);
-                        LOGGER.debug("Setting temp dir to "
-                                + f.getAbsolutePath());
+                        LOGGER.debug("Setting temp dir to " + f.getAbsolutePath());
                         try {
                             KNIMEConstants.setKNIMETempDir(f);
                         } catch (Exception e) {
-                            LOGGER.error("Setting temp dir failed: "
-                                    + e.getMessage(), e);
+                            LOGGER.error("Setting temp dir failed: " + e.getMessage(), e);
                         }
-                    } else if (event.getProperty().equals(
-                            HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE)) {
+                    } else if (event.getProperty().equals(HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE)) {
                         if (!(event.getNewValue() instanceof String)) {
                             // when preferences are imported and this value is
                             // not set, they send an empty string
@@ -193,12 +191,24 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                         try {
                             level = LEVEL.valueOf(newName);
                         } catch (IllegalArgumentException iae) {
-                            LOGGER.error("Invalid log level " + newName
-                                    + ", using WARN");
+                            LOGGER.error("Invalid log level " + newName + ", using WARN");
                         }
                         NodeLogger.setAppenderLevelRange(NodeLogger.LOGFILE_APPENDER, level, LEVEL.FATAL);
-                    } else if (P_LOGLEVEL_CONSOLE.equals(
-                            event.getProperty())) {
+                    } else if (event.getProperty().equals(HeadlessPreferencesConstants.P_LOG_FILE_LOCATION)) {
+                        if (!(event.getNewValue() instanceof Boolean)) {
+                            // when preferences are imported and this value is not set, they send an empty string
+                            return;
+                        }
+                        Boolean enable = (Boolean)event.getNewValue();
+                        NodeLogger.logInWorkflowDir(enable);
+                    } else if (event.getProperty().equals(HeadlessPreferencesConstants.P_LOG_GLOBAL_IN_WF_DIR)) {
+                        if (!(event.getNewValue() instanceof Boolean)) {
+                            // when preferences are imported and this value is not set, they send an empty string
+                            return;
+                        }
+                        Boolean enable = (Boolean)event.getNewValue();
+                        NodeLogger.logGlobalMsgsInWfDir(enable);
+                    } else if (P_LOGLEVEL_CONSOLE.equals(event.getProperty())) {
                         if (!(event.getNewValue() instanceof String)) {
                             // when preferences are imported and this value is
                             // not set, they send an empty string
@@ -209,9 +219,8 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                             return;
                         }
                         setLogLevel(newName);
-                    } else if (HeadlessPreferencesConstants.P_DATABASE_DRIVERS.
-                            equals(event.getProperty())) {
-                        String dbDrivers = (String) event.getNewValue();
+                    } else if (HeadlessPreferencesConstants.P_DATABASE_DRIVERS.equals(event.getProperty())) {
+                        String dbDrivers = (String)event.getNewValue();
                         initDatabaseDriver(dbDrivers);
                     } else if (HeadlessPreferencesConstants.P_DATABASE_TIMEOUT.equals(event.getProperty())) {
                         DatabaseConnectionSettings.setDatabaseTimeout(Integer.parseInt(event.getNewValue().toString()));
@@ -400,7 +409,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
      */
     static boolean addAppender(final ConsoleViewAppender app) {
         if (!APPENDERS.contains(app)) {
-            NodeLogger.addWriter(app, app.getLevel(), app.getLevel());
+            NodeLogger.addKNIMEConsoleWriter(app, app.getLevel(), app.getLevel());
             APPENDERS.add(app);
             return true;
         }

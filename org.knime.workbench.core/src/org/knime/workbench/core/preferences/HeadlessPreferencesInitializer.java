@@ -73,6 +73,10 @@ public class HeadlessPreferencesInitializer extends
         store.setDefault(HeadlessPreferencesConstants.P_LOGLEVEL_LOG_FILE,
                 LEVEL.DEBUG.name());
 
+        store.setDefault(HeadlessPreferencesConstants.P_LOG_FILE_LOCATION, false);
+
+        store.setDefault(HeadlessPreferencesConstants.P_LOG_GLOBAL_IN_WF_DIR, false);
+
         // set default values
         store.setDefault(KNIMECorePlugin.P_LOGLEVEL_CONSOLE,
                 LEVEL.WARN.name());

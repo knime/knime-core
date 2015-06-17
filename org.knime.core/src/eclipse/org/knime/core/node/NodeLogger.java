@@ -53,21 +53,37 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.log4j.Appender;
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.WriterAppender;
+import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.Filter;
+import org.apache.log4j.spi.LoggerRepository;
+import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.RendererSupport;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.knime.core.eclipseUtil.OSGIHelper;
+import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowEvent.Type;
+import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LogfileAppender;
@@ -84,9 +100,10 @@ import org.knime.core.util.User;
  * the minimum logging level of the default loggers. All other writers' levels
  * have to be set before hand.
  *
- * @author Thomas Gabriel, University of Konstanz
+ * @author Thomas Gabriel, Tobias Koetter, KNIME.com
  */
 public final class NodeLogger {
+
     /** The logging levels. */
     public static enum LEVEL {
         /** includes debug and more critical messages. */
@@ -101,6 +118,106 @@ public final class NodeLogger {
         FATAL,
         /** includes all messages. */
         ALL
+    }
+
+    /**
+     * Class that encapsulates all information of a log message in KNIME such as the {@link NodeID} and
+     * workflow directory if the message can be assigned to them.
+     * @author Tobias Koetter, KNIME.com
+     */
+    class KNIMELogMessage {
+
+        private final File m_workflowDir;
+        private Object m_msg;
+        private NodeID m_nodeID;
+        private String m_nodeName;
+
+        /**
+         * @param nodeID the NodeID if available (can be <code>null</code>)
+         * @param nodeName the name of the node if available (can be <code>null</code>)
+         * @param workflowDir the workflow location if available (can be <code>null</code>)
+         * @param msg the logging message
+         */
+        private KNIMELogMessage(final NodeID nodeID, final String nodeName, final File workflowDir,
+            final Object msg) {
+            m_nodeID = nodeID;
+            m_nodeName = nodeName;
+            m_workflowDir = workflowDir;
+            m_msg = msg;
+        }
+
+        /**
+         * @return the workflowDir
+         */
+        File getWorkflowDir() {
+            return m_workflowDir;
+        }
+
+        /**
+         * @return the nodeID
+         */
+        NodeID getNodeID() {
+            return m_nodeID;
+        }
+
+        /**
+         * @return the nodeName
+         */
+        String getNodeName() {
+            return m_nodeName;
+        }
+
+        /**
+         * @return the msg
+         */
+        Object getMsg() {
+            return m_msg;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            if (m_msg == null) {
+                return "";
+            }
+            String renderedMessage;
+            if (m_msg instanceof String) {
+                renderedMessage = (String)m_msg;
+            } else {
+                LoggerRepository repository = m_logger.getLoggerRepository();
+                if (repository instanceof RendererSupport) {
+                    RendererSupport rs = (RendererSupport)repository;
+                    renderedMessage = rs.getRendererMap().findAndRender(m_msg);
+                } else {
+                    renderedMessage = m_msg.toString();
+                }
+            }
+            return renderedMessage;
+        }
+    }
+
+    /**
+     * Listener that calls {@link NodeLogger#removeWorkflowDirAppender(File)} on workflow closing to
+     * remove all workflow relative log file appender.
+     * @author Tobias Koetter, KNIME.com
+     */
+    private class MyWorkflowListener implements WorkflowListener {
+        /**{@inheritDoc}*/
+        @Override
+        public void workflowChanged(final WorkflowEvent event) {
+            if (event != null && Type.NODE_REMOVED.equals(event.getType())) {
+                final Object val = event.getOldValue();
+                if (val instanceof WorkflowManager) {
+                    final WorkflowManager wm = (WorkflowManager)val;
+                    final ReferencedFile workflowWorkingDir = wm.getWorkingDir();
+                    if (workflowWorkingDir != null) {
+                        removeWorkflowDirAppender(workflowWorkingDir.getFile());
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -124,6 +241,13 @@ public final class NodeLogger {
      */
     public static final String LOGFILE_APPENDER = "logfile";
 
+    /**
+     * Name of the default appender to the KNIME console.
+     *
+     * @since 2.12
+     */
+    public static final String KNIME_CONSOLE_APPENDER = "knimeConsole";
+
     /** The default log file name, <i>knime.log</i>. */
     public static final String LOG_FILE = "knime.log";
 
@@ -135,6 +259,8 @@ public final class NodeLogger {
     private static final Map<Writer, WriterAppender> WRITER =
             new HashMap<Writer, WriterAppender>();
 
+    private static final Map<String, Appender> WF_APPENDER = new HashMap<>();
+
     /**
      * Maximum number of chars (10000) printed on <code>System.out</code> and
      * <code>System.err</code>.
@@ -142,7 +268,17 @@ public final class NodeLogger {
     private static final int MAX_CHARS = 10000;
 
     /** Default log file appender. */
-    private static final Appender FILE_APPENDER;
+    private static final Appender LOG_FILE_APPENDER;
+
+    private static boolean LOG_IN_WF_DIR = false;
+
+    private static boolean LOG_GLOBAL_IN_WF_DIR = false;
+
+    private static boolean LOG_NODE_ID = false;
+
+    private static boolean LOG_WF_DIR = false;
+
+    private static Layout WF_DIR_LOG_FILE_LAYOUT = new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n");
 
     /**
      * Inits Log4J logger and appends <code>System.out</code>,
@@ -157,17 +293,18 @@ public final class NodeLogger {
             }
             // init root logger
             Logger root = Logger.getRootLogger();
-            Appender a = root.getAppender("logfile");
+            Appender a = root.getAppender(LOGFILE_APPENDER);
             if (a != null) {
-                FILE_APPENDER = a;
+                LOG_FILE_APPENDER = a;
+                WF_DIR_LOG_FILE_LAYOUT = a.getLayout();
+                checkLayoutFlags(WF_DIR_LOG_FILE_LAYOUT);
             } else {
-                root.warn("Could not find 'logfile' appender");
-                FILE_APPENDER = new NullAppender();
+                root.warn("Could not find '" + LOGFILE_APPENDER + "' appender");
+                LOG_FILE_APPENDER = new NullAppender();
             }
         } else {
-            FILE_APPENDER = new NullAppender();
+            LOG_FILE_APPENDER = new NullAppender();
         }
-
         startMessage();
     }
 
@@ -207,17 +344,14 @@ public final class NodeLogger {
     }
 
     private static void copyCurrentLog4j(final File dest, final String latestLog4jConfig) throws IOException {
-        InputStream in =
-                NodeLogger.class.getClassLoader().getResourceAsStream(
-                        latestLog4jConfig);
+        try (final InputStream in = NodeLogger.class.getClassLoader().getResourceAsStream(latestLog4jConfig);
+                final FileOutputStream out = new FileOutputStream(dest);){
         if (in == null) {
             throw new IOException("Latest log4j-config '"
                     + latestLog4jConfig + "' not found");
         }
-        FileOutputStream out = new FileOutputStream(dest);
         FileUtil.copy(in, out);
-        in.close();
-        out.close();
+        }
     }
 
     private static String getLatestLog4jConfig() throws IOException {
@@ -225,11 +359,11 @@ public final class NodeLogger {
 
         for (int i = 1; i < Integer.MAX_VALUE; i++) {
             String file = "log4j/log4j-" + i + ".xml";
-            InputStream in = cl.getResourceAsStream(file);
-            if (in == null) {
-                return "log4j/log4j-" + (i - 1) + ".xml";
+            try (final InputStream in = cl.getResourceAsStream(file);) {
+                if (in == null) {
+                    return "log4j/log4j-" + (i - 1) + ".xml";
+                }
             }
-            in.close();
         }
         // should not happen since log4j-0.xml must exist
         return null;
@@ -246,51 +380,50 @@ public final class NodeLogger {
      */
     private static boolean checkPreviousLog4j(final File current, final String latestLog4jConfig)
             throws IOException {
-        FileInputStream reader = new FileInputStream(current);
-        byte[] currentContents = new byte[(int)current.length()];
-        reader.read(currentContents);
-        reader.close();
+        try (FileInputStream reader = new FileInputStream(current);) {
+            byte[] currentContents = new byte[(int)current.length()];
+            reader.read(currentContents);
+            ClassLoader cl = NodeLogger.class.getClassLoader();
 
-        ClassLoader cl = NodeLogger.class.getClassLoader();
+            for (int k = 0; k < Integer.MAX_VALUE; k++) {
+                String file = "log4j/log4j-" + k + ".xml";
+                if (latestLog4jConfig.equals(file)) {
+                    break;
+                }
 
-        for (int k = 0; k < Integer.MAX_VALUE; k++) {
-            String file = "log4j/log4j-" + k + ".xml";
-            if (latestLog4jConfig.equals(file)) {
-                break;
+                // compare the two files
+                try (InputStream in = new BufferedInputStream(cl.getResourceAsStream(file));) {
+                    int i = 0;
+                    boolean match = true;
+                    while (true) {
+                        byte b = (byte) in.read();
+                        if ((i >= currentContents.length) && (b == -1)) {
+                            break;
+                        }
+
+                        if (i >= currentContents.length) {
+                            match = false;
+                            break;
+                        }
+
+                        if (b == -1) {
+                            match = false;
+                            break;
+                        }
+
+                        if (currentContents[i] != b) {
+                            match = false;
+                            break;
+                        }
+                        i++;
+                    }
+                    if (match) {
+                        return true;
+                    }
+                }
             }
-
-            // compare the two files
-            InputStream in = new BufferedInputStream(cl.getResourceAsStream(file));
-            int i = 0;
-            boolean match = true;
-            while (true) {
-                byte b = (byte) in.read();
-                if ((i >= currentContents.length) && (b == -1)) {
-                    break;
-                }
-
-                if (i >= currentContents.length) {
-                    match = false;
-                    break;
-                }
-
-                if (b == -1) {
-                    match = false;
-                    break;
-                }
-
-                if (currentContents[i] != b) {
-                    match = false;
-                    break;
-                }
-                i++;
-            }
-            in.close();
-            if (match) {
-                return true;
-            }
+            return false;
         }
-        return false;
     }
 
     /** Write start logging message to info logger of this class. */
@@ -309,10 +442,10 @@ public final class NodeLogger {
         copyrightMessage();
         l.info("#                                                           #");
         l.info("#############################################################");
-        if (FILE_APPENDER instanceof LogfileAppender) {
+        if (LOG_FILE_APPENDER instanceof LogfileAppender) {
             l.info("# For more details see the KNIME log file:"
                     + "                  #");
-            l.info("# " + ((LogfileAppender)FILE_APPENDER).getFile());
+            l.info("# " + ((LogfileAppender)LOG_FILE_APPENDER).getFile());
             l.info("#-----------------------------------------------"
                     + "------------#");
         }
@@ -348,8 +481,12 @@ public final class NodeLogger {
         l.info("# E-mail: contact@knime.org                                #");
     }
 
-    /** The Log4J logger to which all messages are logged. */
+    /** The Log4J logger to which all messages are logged. Do not access it directly if you want to log a message
+     * but use the {@link #getLoggerInternal()} method instead.*/
     private final Logger m_logger;
+
+    /**Listens to workflow changes e.g. when a workflow is closed to unregister all related workflow directory logger.*/
+    private MyWorkflowListener m_listener;
 
     /**
      * Hidden default constructor, logger created by
@@ -358,7 +495,7 @@ public final class NodeLogger {
      * @param c The logger created by Class name.
      */
     private NodeLogger(final Class<?> c) {
-        m_logger = Logger.getLogger(c);
+        this(Logger.getLogger(c));
     }
 
     /**
@@ -367,7 +504,15 @@ public final class NodeLogger {
      * @param s The name of the logger.
      */
     private NodeLogger(final String s) {
-        m_logger = Logger.getLogger(s);
+        this(Logger.getLogger(s));
+    }
+
+    /**
+     * Hidden constructor that should be used by all other constructors to assign the logger
+     * @param logger
+     */
+    private NodeLogger(final Logger logger) {
+        m_logger = logger;
     }
 
     /**
@@ -404,7 +549,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void warn(final Object o) {
-        m_logger.warn(o);
+        getLoggerInternal().warn(getLogObject(o));
     }
 
     /**
@@ -413,7 +558,193 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void debug(final Object o) {
-        m_logger.debug(o);
+        getLoggerInternal().debug(getLogObject(o));
+    }
+
+    /**
+     * @param layout checks if any of the KNIME specific flags e.g. node id is set in the layout pattern and ensures
+     * that the corresponding boolean flag is enabled.
+     */
+    private static void checkLayoutFlags(final Layout layout) {
+        if (layout instanceof PatternLayout) {
+            final PatternLayout pl = (PatternLayout)layout;
+            final String conversionPattern = pl.getConversionPattern();
+            //enable the node id logging if one of the appender contains the node id or node name pattern
+            LOG_NODE_ID |= conversionPattern.contains("%" + NodeLoggerPatternLayout.NODE_ID);
+            LOG_NODE_ID |= conversionPattern.contains("%" + NodeLoggerPatternLayout.NODE_NAME);
+            if (LOG_NODE_ID) {
+                LogLog.debug("Node id logging enabled due to pattern layout");
+            }
+            //enable the workflow logging if one of the appender contains the workflow pattern
+            LOG_WF_DIR |= conversionPattern.contains("%" + NodeLoggerPatternLayout.WORKFLOW_DIR);
+            if (LOG_WF_DIR) {
+                LogLog.debug("Workflow directory logging enabled due to pattern layout");
+            }
+        }
+    }
+
+    /**
+     * @param message the logging message
+     * @return a KNIMELogMessage that not only contains the log message but also the information about the workflow
+     * and node that belong to the log message if applicable
+     */
+    private Object getLogObject(final Object message) {
+        if (!LOG_NODE_ID && !LOG_IN_WF_DIR && !LOG_WF_DIR) {
+            return message;
+        }
+        final NodeContext context = NodeContext.getContext();
+        NodeID nodeID = null;
+        String nodeName = null;
+        File workflowDir = null;
+        if (context != null) {
+            if (LOG_NODE_ID) {
+                //retrieve and store the node id only if the user has requested to log it
+                final NodeContainer nodeContainer = context.getNodeContainer();
+                if (nodeContainer != null) {
+                    nodeID = nodeContainer.getID();
+                    nodeName = nodeContainer.getName();
+                }
+            }
+            if (LOG_IN_WF_DIR || LOG_WF_DIR) {
+                final WorkflowManager workflowManager = context.getWorkflowManager();
+                if (workflowManager != null) {
+                    final WorkflowContext workflowContext = workflowManager.getContext();
+                    if (workflowContext != null) {
+                        //Location where the workflow is defined (null on the client only for server execution)
+                        File originalLocation = workflowContext.getOriginalLocation();
+                        if (originalLocation == null) {//we are in the client and need to get the current location
+                            //Location where the workflow is executed (e.g. directory of the workflow job on the server)
+                            workflowDir = workflowContext.getCurrentLocation(); //Location on the client
+                        } else {
+                            workflowDir = originalLocation;
+                        }
+                    }
+                }
+            }
+        }
+        return new KNIMELogMessage(nodeID, nodeName, workflowDir, message);
+    }
+
+    /**
+     * Use this method whenever you want to log a message. It ensures that the right logger is used and that all
+     * required appenders are added to it e.g. workflow directory appender.
+     * @return the correct logger to use and ensures that any workflow relative log file appenders are registered
+     * properly
+     */
+    private Logger getLoggerInternal() {
+        if (LOG_IN_WF_DIR) {
+            final NodeContext context = NodeContext.getContext();
+            if (context != null) {
+                final WorkflowManager workflowManager = context.getWorkflowManager();
+                if (workflowManager != null) {
+                    final WorkflowContext workflowContext = workflowManager.getContext();
+                    if (workflowContext != null) {
+                        //Location where the workflow is defined (null on the client only for server execution)
+                        File originalLocation = workflowContext.getOriginalLocation();
+                        //Location where the workflow is executed (e.g. directory of the workflow job on the server)
+                        final File currentLocation;
+                        if (originalLocation == null) {//we are in the client and need to get the current location
+                            currentLocation = workflowContext.getCurrentLocation(); //Location on the client
+                            originalLocation = currentLocation;
+                        } else {
+                            currentLocation = originalLocation;
+                        }
+                        addWorkflowDirAppender(currentLocation);
+                    }
+                }
+            }
+        }
+        return m_logger;
+    }
+
+    /**
+     * Adds a new workflow directory logger for the given workflow directory if it doesn't exists yet.
+     * @param workflowDir the directory of the workflow that should be logged to
+     */
+    private void addWorkflowDirAppender(final File workflowDir) {
+        if (workflowDir == null) {
+            //if the workflowDir is null we do not need to append an extra log appender
+            return;
+        }
+        //in this method we have to use the logger directly to prevent a deadlock!!!
+        final Logger logger = m_logger;
+        final String workflowDirPath = workflowDir.getPath();
+        if (workflowDirPath == null) {
+            return;
+        }
+        Appender wfAppender = WF_APPENDER.get(workflowDirPath);
+        if (wfAppender != null) {
+            logger.addAppender(wfAppender);
+        } else {
+            //we do the getAppender twice to prevent the synchronize block on subsequent calls!!!
+            synchronized (WF_APPENDER) {
+                //we need a synchronize block otherwise we might create a second appender that opens a file handle
+                //which never get closed and thus the copying of a full log file to the zip file fails
+                wfAppender = WF_APPENDER.get(workflowDirPath);
+                if (wfAppender == null) {
+                    //use the KNIME specific LogfielAppender that moves larger log files into a separate zip file
+                    //and that implements equals and hash code to ensure that two LogfileAppender
+                    //with the same name are considered equal to prevent duplicate appender registration
+                    final FileAppender fileAppender = new LogfileAppender(workflowDir);
+                    fileAppender.setLayout(WF_DIR_LOG_FILE_LAYOUT);
+                    fileAppender.setName(workflowDirPath);
+                    final Filter mainFilter = LOG_FILE_APPENDER.getFilter();
+                    fileAppender.addFilter(new Filter() {
+                        @Override
+                        public int decide(final LoggingEvent event) {
+                            final Object msg = event.getMessage();
+                            if (msg instanceof KNIMELogMessage) {
+                                final KNIMELogMessage kmsg = (KNIMELogMessage)msg;
+                                final File msgDir = kmsg.getWorkflowDir(); //can be null
+                                if ((LOG_GLOBAL_IN_WF_DIR && msgDir == null)
+                                        || LOG_IN_WF_DIR && workflowDir.equals(msgDir)) {
+                                    //return only neutral to let the log level based filters decide if we log this event
+                                    if (mainFilter != null) {
+                                        return mainFilter.decide(event);
+                                    }
+                                    return Filter.NEUTRAL;
+                                }
+                            }
+                            return Filter.DENY;
+                        }
+                    });
+                    //we have to call this function to activate the writer!!!
+                    fileAppender.activateOptions();
+                    logger.addAppender(fileAppender);
+                    WF_APPENDER.put(workflowDirPath, fileAppender);
+                    if (m_listener == null) {
+                        m_listener = new MyWorkflowListener();
+                        WorkflowManager.ROOT.addListener(m_listener);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes any extra workflow directory appender if it exists.
+     * @param workflowDir the directory of the workflow that should no longer be logged
+     */
+    private void removeWorkflowDirAppender(final File workflowDir) {
+        if (workflowDir == null) {
+            //if the workflowDir is null we do not need to remove the extra log appender
+            return;
+        }
+        final String workflowDirPath = workflowDir.getPath();
+        if (workflowDirPath != null) {
+            synchronized (WF_APPENDER) {
+                final Appender appender = WF_APPENDER.remove(workflowDirPath);
+                if (appender != null) {
+                    appender.close();
+                    //Remove the appender from all open node loggers
+                    @SuppressWarnings("unchecked")
+                    final Enumeration<Logger> allLoggers = Logger.getRootLogger().getLoggerRepository().getCurrentLoggers();
+                    while (allLoggers.hasMoreElements()) {
+                        allLoggers.nextElement().removeAppender(appender);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -422,7 +753,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void info(final Object o) {
-        m_logger.info(o);
+        getLoggerInternal().info(getLogObject(o));
     }
 
     /**
@@ -431,7 +762,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void error(final Object o) {
-        m_logger.error(o);
+        getLoggerInternal().error(getLogObject(o));
     }
 
     /**
@@ -440,7 +771,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void fatal(final Object o) {
-        m_logger.fatal(o);
+        getLoggerInternal().fatal(getLogObject(o));
     }
 
     /**
@@ -463,7 +794,7 @@ public final class NodeLogger {
      * @param t The exception to log, including its stack trace.
      */
     public void debug(final Object o, final Throwable t) {
-        m_logger.debug(o, t);
+        getLoggerInternal().debug(getLogObject(o), t);
     }
 
     /**
@@ -500,7 +831,7 @@ public final class NodeLogger {
      */
     public void assertLog(final boolean b, final String m) {
         if (KNIMEConstants.ASSERTIONS_ENABLED && !b) {
-            m_logger.error("ASSERT " + m, new AssertionError(m));
+            getLoggerInternal().error("ASSERT " + m, new AssertionError(m));
         }
     }
 
@@ -514,10 +845,10 @@ public final class NodeLogger {
     public void assertLog(final boolean b, final String m,
             final AssertionError e) {
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
-            m_logger.assertLog(b, "ASSERT " + m);
+            getLoggerInternal().assertLog(b, "ASSERT " + m);
             // for stacktrace
             if (!b & e != null) {
-                m_logger.debug("ASSERT\t " + m, e);
+                getLoggerInternal().debug("ASSERT\t " + m, e);
             }
         }
     }
@@ -530,7 +861,7 @@ public final class NodeLogger {
      */
     public void coding(final Object o) {
         if (KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK()) {
-            m_logger.error("CODING PROBLEM\t" + o);
+            getLoggerInternal().error("CODING PROBLEM\t" + o);
         }
     }
 
@@ -574,7 +905,7 @@ public final class NodeLogger {
      */
     public void warnWithFormat(final String format, final Object... args) {
         if (isEnabledFor(LEVEL.WARN)) {
-            m_logger.warn(String.format(format, args));
+            this.warn(String.format(format, args));
         }
     }
 
@@ -589,7 +920,7 @@ public final class NodeLogger {
      */
     public void debugWithFormat(final String format, final Object... args) {
         if (isEnabledFor(LEVEL.DEBUG)) {
-            m_logger.debug(String.format(format, args));
+            this.debug(String.format(format, args));
         }
     }
 
@@ -604,7 +935,7 @@ public final class NodeLogger {
      */
     public void infoWithFormat(final String format, final Object... args) {
         if (isEnabledFor(LEVEL.INFO)) {
-            m_logger.info(String.format(format, args));
+            this.info(String.format(format, args));
         }
     }
 
@@ -619,7 +950,7 @@ public final class NodeLogger {
      */
     public void errorWithFormat(final String format, final Object... args) {
         if (isEnabledFor(LEVEL.ERROR)) {
-            m_logger.error(String.format(format, args));
+            this.error(String.format(format, args));
         }
     }
 
@@ -634,7 +965,7 @@ public final class NodeLogger {
      */
     public void fatalWithFormat(final String format, final Object... args) {
         if (isEnabledFor(LEVEL.FATAL)) {
-            m_logger.fatal(String.format(format, args));
+            this.fatal(String.format(format, args));
         }
     }
 
@@ -662,7 +993,42 @@ public final class NodeLogger {
      */
     public static void addWriter(final Writer writer,
             final LEVEL minLevel, final LEVEL maxLevel) {
-        WriterAppender app = new WriterAppender(new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n"), writer);
+        addWriter(writer, WF_DIR_LOG_FILE_LAYOUT, minLevel, maxLevel);
+    }
+
+
+    /**
+     * Adds a new {@link java.io.Writer} with the given level to this logger.
+     *
+     * @param writer The writer to add.
+     * @param minLevel The minimum level to output.
+     * @param maxLevel The maximum level to output.
+     * @since 2.12
+     */
+    public static void addKNIMEConsoleWriter(final Writer writer, final LEVEL minLevel, final LEVEL maxLevel) {
+        final Appender a = Logger.getRootLogger().getAppender(KNIME_CONSOLE_APPENDER);
+        final Layout layout;
+        if (a != null) {
+            layout = a.getLayout();
+            checkLayoutFlags(layout);
+        } else {
+            layout = WF_DIR_LOG_FILE_LAYOUT;
+        }
+        addWriter(writer, layout, minLevel, maxLevel);
+    }
+
+    /**
+     * Adds a new {@link java.io.Writer} with the given level to this logger.
+     *
+     * @param writer The writer to add.
+     * @param layout the log file layout to use
+     * @param minLevel The minimum level to output.
+     * @param maxLevel The maximum level to output.
+     * @since 2.12
+     */
+    public static void addWriter(final Writer writer, final Layout layout,
+            final LEVEL minLevel, final LEVEL maxLevel) {
+        WriterAppender app = new WriterAppender(layout, writer);
         app.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(transLEVEL(minLevel));
@@ -680,6 +1046,7 @@ public final class NodeLogger {
             WRITER.put(writer, app);
         }
         Logger.getRootLogger().addAppender(app);
+        checkLayoutFlags(layout);
     }
 
     /**
@@ -691,7 +1058,7 @@ public final class NodeLogger {
         synchronized (WRITER) {
             Appender o = WRITER.get(writer);
             if (o != null) {
-                if (o != FILE_APPENDER) {
+                if (o != LOG_FILE_APPENDER) {
                     Logger.getRootLogger().removeAppender(o);
                     WRITER.remove(writer);
                 }
@@ -744,7 +1111,7 @@ public final class NodeLogger {
      * @return minimum logging level
      */
     public LEVEL getLevel() {
-        return transLevel(m_logger.getLevel());
+        return transLevel(getLoggerInternal().getLevel());
     }
 
     /**
@@ -754,7 +1121,7 @@ public final class NodeLogger {
      *         <code>false</code>
      */
     public boolean isDebugEnabled() {
-        return m_logger.isDebugEnabled();
+        return getLoggerInternal().isDebugEnabled();
     }
 
     /**
@@ -764,7 +1131,7 @@ public final class NodeLogger {
      *         <code>false</code>
      */
     public boolean isInfoEnabled() {
-        return m_logger.isInfoEnabled();
+        return getLoggerInternal().isInfoEnabled();
     }
 
     /**
@@ -776,7 +1143,7 @@ public final class NodeLogger {
      *         <code>false</code>
      */
     public boolean isEnabledFor(final LEVEL level) {
-        return m_logger.isEnabledFor(transLEVEL(level));
+        return getLoggerInternal().isEnabledFor(transLEVEL(level));
     }
 
     /**
@@ -865,5 +1232,42 @@ public final class NodeLogger {
             ((LevelRangeFilter) filter).setLevelMin(transLEVEL(min));
             ((LevelRangeFilter) filter).setLevelMax(transLEVEL(max));
         }
+    }
+
+    /**
+     * Allows to enable/disable logging in the workflow directory. If enabled log messages that belong to workflow
+     * are logged into a log file within the workflow directory itself in addition to the global KNIME log file.
+     *
+     * @param enable <code>true</code> if workflow relative logging should be enabled
+     * @since 2.12
+     */
+    public static void logInWorkflowDir(final boolean enable) {
+        LOG_IN_WF_DIR = enable;
+        LogLog.debug("Workflow directory logging set to: " + enable);
+    }
+
+    /**
+     * Allows to enable/disable logging of global messages e.g. message that are not related to a workflow into the
+     * workflow directory log file.
+     *
+     * @param enable <code>true</code> if workflow relative logging should be enabled
+     * @since 2.12
+     */
+    public static void logGlobalMsgsInWfDir(final boolean enable) {
+        LOG_GLOBAL_IN_WF_DIR = enable;
+        LogLog.debug("Workflow directory global message logging set to: " + enable);
+    }
+
+    /**
+     * Allows to enable/disable node id logging. If enabled the node id information is added to the log events.
+     * This method should only be called to globally disable the node id logging since the flag is enabled
+     * automatically if one of the log file appender has a log layout that contains the node id pattern.
+     *
+     * @param enable <code>false</code> if workflow relative logging should be globally disabled
+     * @since 2.12
+     */
+    public static void logNodeId(final boolean enable) {
+        LOG_NODE_ID  = enable;
+        LogLog.debug("Node ID logging set to: " + enable);
     }
 }

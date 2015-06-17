@@ -54,6 +54,12 @@ public final class HeadlessPreferencesConstants {
     /** Preference constant: log level for console appender. */
     public static final String P_LOGLEVEL_LOG_FILE = "logging.loglevel.logfile";
 
+    /** Preference constant: log file location. */
+    public static final String P_LOG_FILE_LOCATION = "logging.logfile.location";
+
+    /** Preference constant: if the node id should be logged. */
+    public static final String P_LOG_GLOBAL_IN_WF_DIR = "logging.logfile.logGlobalInWfDir";
+
     /** Preference constant: maximum threads to use. */
     public static final String P_MAXIMUM_THREADS = "knime.maxThreads";
 
