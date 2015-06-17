@@ -83,8 +83,8 @@ import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.util.Pair;
 
 /**
- * A utility class received from the workflow manager that allows stepping back and forth in a wizard execution. It's
- * the "new" wizard execution based on SubNodes.
+ * A utility class received from the workflow manager that allows stepping back and forth in a wizard execution.
+ * USed for the 2nd generation wizard execution based on SubNodes.
  *
  * <p>Do not use, no public API.
  *
@@ -130,7 +130,7 @@ public final class WizardExecutionController extends ExecutionController {
 
     private static final String ATTR_RELATIVE_PATH_TARGET = "relativePathTarget";
 
-    /** Filter passt to WFM seach methods to find only QF nodes that are to be displayed. */
+    /** Filter passed to WFM serach methods to find only QF nodes that are to be displayed. */
     @SuppressWarnings("rawtypes")
     public static final NodeModelFilter<WizardNode> NOT_HIDDEN_FILTER = new NodeModelFilter<WizardNode>() {
         @Override
@@ -146,6 +146,15 @@ public final class WizardExecutionController extends ExecutionController {
     /** Host WFM. */
     private final WorkflowManager m_manager;
 
+    /** This is the central data structure - it holds all nodes that were halted during
+     * execution = nodes that were executed and none of their successors was queued. Those
+     * will be active SubNodes with at least one active QF element that can be displayed.
+     * After the user got a chance to interact with the Wizard page, those nodes will be
+     * re-executed but this time they will not be added/halted again (which is why the status
+     * is toggled if they are already in the list - see checkHaltingCriteria()). However, if
+     * it is part of a loop it will be executed a second time (after the re-execute) and then
+     * execution will be halted again.
+     */
     private final List<NodeID> m_waitingSubnodes;
 
     /**
@@ -351,21 +360,24 @@ public final class WizardExecutionController extends ExecutionController {
     void checkHaltingCriteria(final NodeID source) {
         assert Thread.holdsLock(m_manager.getWorkflowMutex());
         if (m_waitingSubnodes.remove(source)) {
-            // trick to avoid repeated re-execution of SubNodes: when the node appears
-            // a second time, we don't add it to the stopping list but removed it instead.
-            // It was just re-executed this time. If we see it again (e.g. when it is
-            // part of a loop, we will add it again).
+            // trick to handle re-execution of SubNodes properly: when the node is already
+            // in the list it was just re-executed and we don't add it to the list of halted
+            // nodes but removed it instead. If we see it again then it is part of a loop and
+            // we will add it again).
             return;
         }
+        // only consider nodes that are...
         NodeContainer sourceNC = m_manager.getNodeContainer(source);
+        // ...SubNodes and...
         if (!(sourceNC instanceof SubNodeContainer)) {
             return;
         }
         SubNodeContainer subnodeSource = (SubNodeContainer)sourceNC;
+        // ...active.
         if (subnodeSource.isInactive()) {
             return;
         }
-        // only consider active SubNodes...
+        // Now check if the active SubNode contains active QuickForm nodes:
         WorkflowManager subNodeWFM = subnodeSource.getWorkflowManager();
         Map<NodeID, WizardNode> wizardNodeSet = subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
         boolean allInactive = true;
@@ -374,7 +386,6 @@ public final class WizardExecutionController extends ExecutionController {
                 allInactive = false;
             }
         }
-        // ... the contain at least one active QuickForm node to be display.
         if (!allInactive) {
             // add to the list so we can later avoid queuing of successors!
             m_waitingSubnodes.add(source);
