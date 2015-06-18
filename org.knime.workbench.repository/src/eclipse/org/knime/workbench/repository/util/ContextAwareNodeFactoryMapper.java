@@ -97,10 +97,9 @@ public final class ContextAwareNodeFactoryMapper {
                                                new Pair<Class<? extends ContextAwareNodeFactory>, Image>(clazz, icon));
                     } // else already registered -> first come first serve
                 }
-            } catch (InvalidRegistryObjectException e) {
-                throw new IllegalArgumentException(e);
-            } catch (CoreException e) {
-                throw new IllegalArgumentException(e);
+            } catch (InvalidRegistryObjectException | CoreException e) {
+                LOGGER.error("File extension handler from contributor \"" + element.getContributor().getName()
+                    + "\" doesn't properly load -- ignoring it.", e);
             }
         }
         for (String key : EXTENSION_REGISTRY.keySet()) {
