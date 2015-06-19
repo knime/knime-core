@@ -46,6 +46,9 @@
  */
 package org.knime.base.node.preproc.rowkey2;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -59,9 +62,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 
 /**
@@ -105,7 +105,7 @@ public class RowKeyNodeDialog2 extends DefaultNodeSettingsPane {
         "Enable hiliting";
     /**The tool tip of the enable hilite value check box.*/
     private static final String ENABLE_HILITE_TOOLTIP =
-        "Enabling leads to more memory consumtion.";
+        "Enabling leads to more memory consumption.";
 
     /**The label of the uniqueness check box.*/
     protected static final String ENSURE_UNIQUENESS_LABEL =

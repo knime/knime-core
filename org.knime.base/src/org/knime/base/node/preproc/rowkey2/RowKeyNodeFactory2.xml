@@ -22,7 +22,7 @@
 		with the values of the current RowID to the table and replaces the 
 		current RowID with the values of the selected column or the 
 		generated row id.</p>
-		<p><b>Note: Highlighting does not work across this node.</b></p>
+		<p><b>Note: Highlighting does not work across this node if the "Enable hiliting" option is disabled.</b></p>
 		</intro>
 		<option name="Replace RowID with selected column values">
 		    If selected the node replaces each RowID with the corresponding
