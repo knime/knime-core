@@ -6,7 +6,20 @@
     <shortDescription>Collects all timer information from nodes in this workflow.</shortDescription>
     
     <fullDescription>
-        <intro>This node reports individual and aggreate timing/execution information for all nodes of the workflow (at the node's level).</intro>
+        <intro>
+        <p>This node reports individual and aggregate timing/execution information for all nodes
+        of the workflow (at this level).
+        </p>
+        <p>
+        The output table lists all nodes in the workflow that were executed since the last reset.
+        Additional columns show aggregate execution times (e.g. over multiple loop iterations),
+        execution time since the last reset (e.g. in the last iteration), and the corresponding
+        counts. The last two columns contain the node ID and full package name.
+        </p>
+        <p>
+        All times are reported in milliseconds.
+        </p>
+        </intro>
     </fullDescription>
     
     <ports>
