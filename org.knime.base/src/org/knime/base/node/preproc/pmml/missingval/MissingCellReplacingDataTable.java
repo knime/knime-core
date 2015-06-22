@@ -315,8 +315,11 @@ public class MissingCellReplacingDataTable implements DataTable {
 
         private DataTableSpec m_spec;
 
+        private boolean[] m_generatedMissing;
+
         private MissingValueReplacingIterator() {
             m_spec = m_table.getDataTableSpec();
+            m_generatedMissing = new boolean[m_spec.getNumColumns()];
             m_iter = new WindowedDataTableIterator(m_table, m_lookaheads, m_lookbehinds);
         }
 
@@ -347,6 +350,10 @@ public class MissingCellReplacingDataTable implements DataTable {
                             // Other handlers might rely on the correct order and no skipped rows (eg NextValue),
                             // so we cannot break here. Instead from now on the rowRemoved method
                             // is called instead of getCell() to avoid unnecessary computations
+                        } else if (cells[i].isMissing() && !m_generatedMissing[i]) {
+                            addWarningMessage("Column \"" + m_spec.getColumnNames()[i] +
+                                "\" still contains missing values.");
+                            m_generatedMissing[i] = true;
                         }
                     }
                 } else {
