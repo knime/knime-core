@@ -586,8 +586,10 @@ public final class PMMLPortObject implements PortObject {
             TreeModel model = pmml.getTreeModelArray(0);
             model.setLocalTransformations(localTrans);
         } else {
-            LOGGER.error("Could not move TransformationDictionary to "
+            if (type != null) {
+                LOGGER.error("Could not move TransformationDictionary to "
                     + "unsupported model of type \"" + type + "\".");
+            }
             known = false;
         }
         if (known) {
