@@ -32,6 +32,10 @@ public class MissingValueHandlerNodeModel extends NodeModel {
 
     private static final double STAT_MAX_PROGRESS = 0.5;
 
+    private static final double REPLACE_MAX_PROGRESS = 0.2;
+
+    private static final double PMML_MAX_PROGRESS = 0.3;
+
     /**
      * Constructor for the node model.
      */
@@ -53,14 +57,16 @@ public class MissingValueHandlerNodeModel extends NodeModel {
         MissingCellReplacingDataTable mvTable = new MissingCellReplacingDataTable(inSpec, m_settings);
 
         // Calculate the statistics
+        exec.setMessage("Calculating statistics");
         mvTable.init(inTable, exec.createSubExecutionContext(STAT_MAX_PROGRESS));
 
         int rowCounter = 0;
         DataContainer container = exec.createDataContainer(mvTable.getDataTableSpec());
-
+        ExecutionContext tableSubExec = exec.createSubExecutionContext(REPLACE_MAX_PROGRESS);
+        exec.setMessage("Replacing missing values");
         for (DataRow row : mvTable) {
-            exec.checkCanceled();
-            exec.setProgress(STAT_MAX_PROGRESS + (double)(rowCounter++) / inTable.getRowCount());
+            tableSubExec.checkCanceled();
+            tableSubExec.setProgress((double)(++rowCounter) / inTable.getRowCount());
             if (row != null) {
                 container.addRowToTable(row);
             }
@@ -75,6 +81,7 @@ public class MissingValueHandlerNodeModel extends NodeModel {
             setWarningMessage(warnings);
         }
 
+        exec.setMessage("Generating PMML");
         // Init PMML output port
         PMMLPortObject pmmlPort = new PMMLPortObject(new PMMLPortObjectSpecCreator(inSpec).createSpec());
         pmmlPort.addModelTranslater(mvTable.getPMMLTranslator());
