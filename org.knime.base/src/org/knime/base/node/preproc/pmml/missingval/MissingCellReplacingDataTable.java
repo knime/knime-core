@@ -162,7 +162,7 @@ public class MissingCellReplacingDataTable implements DataTable {
         if (statistics.size() > 0) {
             StatisticCalculator calc = new StatisticCalculator(m_table.getDataTableSpec(),
                                                                 statistics.toArray(new Statistic[0]));
-            String res = calc.evaluate(m_table, exec.createSubExecutionContext(0.5));
+            String res = calc.evaluate(m_table, exec);
             if (res != null) {
                 addWarningMessage(res);
             }
