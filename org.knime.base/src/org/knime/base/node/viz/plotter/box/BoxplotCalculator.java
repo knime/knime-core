@@ -103,8 +103,6 @@ public class BoxplotCalculator {
             numColIdxs[i] = spec.findColumnIndex(numCol[i]);
         }
 
-        // TODO: Report progress
-
         ArrayList<DataCell> vals = new ArrayList<>(spec.getColumnSpec(catColIdx).getDomain().getValues());
         Collections.sort(vals, new Comparator<DataCell>() {
             @Override
@@ -118,25 +116,39 @@ public class BoxplotCalculator {
         for (int i = 0; i < numCol.length; i++) {
             LinkedHashMap<String, DataContainer> map = new LinkedHashMap<>();
             for (DataCell c : vals) {
-                map.put(c.toString(), exec.createDataContainer(new DataTableSpec(new String[] {"col"},
-                new DataType[] {DoubleCell.TYPE})));
-
+                if (!c.isMissing()) {
+                    map.put(c.toString(), exec.createDataContainer(new DataTableSpec(new String[] {"col"},
+                        new DataType[] {DoubleCell.TYPE})));
+                }
             }
             containers.put(numCol[i], map);
         }
-
+        ExecutionContext subExec = exec.createSubExecutionContext(0.7);
+        int count = 0;
         for (DataRow row : table) {
-            String cat = row.getCell(catColIdx).toString();
-            for (int i = 0; i < numCol.length; i++) {
-                containers.get(numCol[i]).get(cat).addRowToTable(
-                    new DefaultRow(row.getKey(), row.getCell(numColIdxs[i])));
+            exec.checkCanceled();
+            subExec.setProgress((double)count++ / table.getRowCount());
+            DataCell catCell = row.getCell(catColIdx);
+            if (!catCell.isMissing()) {
+                String cat = catCell.toString();
+                for (int i = 0; i < numCol.length; i++) {
+                    DataCell cell = row.getCell(numColIdxs[i]);
+                    if (!cell.isMissing()) {
+                        containers.get(numCol[i]).get(cat).addRowToTable(
+                            new DefaultRow(row.getKey(), cell));
+                    }
+                }
             }
         }
 
         LinkedHashMap<String, LinkedHashMap<String, BoxplotStatistics>> statsMap
         = new LinkedHashMap<>();
 
+        ExecutionContext subExec2 = exec.createSubExecutionContext(1.0);
+        count = 0;
         for (Entry<String, LinkedHashMap<String, DataContainer>> entry : containers.entrySet()) {
+            exec.checkCanceled();
+            subExec2.setProgress((double)count++ / containers.size());
             LinkedHashMap<String, DataContainer> containers2 = entry.getValue();
             LinkedHashMap<String, BoxplotStatistics> colStats = new LinkedHashMap<String, BoxplotStatistics>();
 
@@ -228,7 +240,6 @@ public class BoxplotCalculator {
     /**
      * Calculates the necessary statistics for a non-conditional boxplot.
      * @param table the input data
-     * @param catCol the column containing the category
      * @param numCol array of names of numeric columns to plot
      * @param exec Execution context to report progress to
      * @return LinkedHashMap with the column name as key and statistics as value
@@ -249,7 +260,11 @@ public class BoxplotCalculator {
                 new DataType[] {DoubleCell.TYPE})));
         }
 
+        ExecutionContext subExec = exec.createSilentSubExecutionContext(0.7);
+        int count = 0;
         for (DataRow row : table) {
+            exec.checkCanceled();
+            subExec.setProgress((double)count++ / table.getRowCount());
             for (int i = 0; i < numCol.length; i++) {
                 DataCell cell = row.getCell(numColIdxs[i]);
                 if (!cell.isMissing()) {
@@ -262,7 +277,12 @@ public class BoxplotCalculator {
         LinkedHashMap<String, BoxplotStatistics> statsMap
         = new LinkedHashMap<>();
 
+        ExecutionContext subExec2 = exec.createSilentSubExecutionContext(1.0);
+        count = 0;
+
         for (Entry<String, DataContainer> entry : containers.entrySet()) {
+            exec.checkCanceled();
+            subExec2.setProgress((double)count++ / containers.size());
             Set<Outlier> extremeOutliers = new HashSet<Outlier>();
             Set<Outlier> mildOutliers = new HashSet<Outlier>();
             entry.getValue().close();
@@ -274,11 +294,6 @@ public class BoxplotCalculator {
                 public int compare(final DataRow o1, final DataRow o2) {
                     DataCell c1 = o1.getCell(0);
                     DataCell c2 = o2.getCell(0);
-                    if (c1.isMissing()) {
-                        return 1;
-                    } else if (c2.isMissing()) {
-                        return -1;
-                    }
                     double d1 = ((DoubleValue)c1).getDoubleValue();
                     double d2 = ((DoubleValue)c2).getDoubleValue();
                     if (d1 == d2) {
