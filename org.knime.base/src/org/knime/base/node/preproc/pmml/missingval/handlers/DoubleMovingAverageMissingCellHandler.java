@@ -64,7 +64,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
  * A handler that replaces missing values in a cell with the average of cells before and after it.
@@ -79,19 +79,19 @@ public class DoubleMovingAverageMissingCellHandler extends MissingCellHandler {
     /**
      * @return a SettingsModel for setting the lookbehind
      */
-    public static SettingsModelInteger createLookbehindSettingsModel() {
-        return new SettingsModelInteger(LOOKBEHIND_SIZE_CFG, 1);
+    public static SettingsModelIntegerBounded createLookbehindSettingsModel() {
+        return new SettingsModelIntegerBounded(LOOKBEHIND_SIZE_CFG, 1, 1, Integer.MAX_VALUE);
     }
 
     /**
      * @return a SettingsModel for setting the lookahead
      */
-    public static SettingsModelInteger createLookaheadSettingsModel() {
-        return new SettingsModelInteger(LOOKAHEAD_SIZE_CFG, 1);
+    public static SettingsModelIntegerBounded createLookaheadSettingsModel() {
+        return new SettingsModelIntegerBounded(LOOKAHEAD_SIZE_CFG, 1, 1, Integer.MAX_VALUE);
     }
 
-    private SettingsModelInteger m_lookbehindSize = createLookbehindSettingsModel();
-    private SettingsModelInteger m_lookaheadSize = createLookaheadSettingsModel();
+    private SettingsModelIntegerBounded m_lookbehindSize = createLookbehindSettingsModel();
+    private SettingsModelIntegerBounded m_lookaheadSize = createLookaheadSettingsModel();
 
     /**
      * @param col the column this handler is configured for
