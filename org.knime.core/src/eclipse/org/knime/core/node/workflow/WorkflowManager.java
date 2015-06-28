@@ -4569,6 +4569,28 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         resetAndConfigureNodeAndSuccessors(id, true);
     }
 
+    /** Called by the wizard execution prior setting new values into an executed subnode. It will reset the node but not
+     * propagate any new configuration.
+     * @param id The subnode id
+     * @throws IllegalArgumentException If subnode does not exist
+     * @throws IllegalStateException If subnode is not executed (new values in wizard are set on executed subnodes)
+     * @throws IllegalStateException If downstream nodes are actively executing or already executed.
+     */
+    void resetHaltedSubnode(final NodeID id) {
+        synchronized (m_workflowMutex) {
+            SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
+            CheckUtils.checkState(snc.getInternalState().isExecuted(), "Subnode %s not executed", snc.getNameWithID());
+            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+                NodeID dest = cc.getDest();
+                NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
+                final InternalNodeContainerState destNCState = destNC.getInternalState();
+                CheckUtils.checkState(destNCState.isHalted() && !destNCState.isExecuted(), "Downstream nodes of "
+                    + "subnode %s must not be in execution/executed (node %s)", snc.getNameWithID(), destNC);
+            }
+            invokeResetOnSingleNodeContainer(snc);
+        }
+    }
+
     /** Reset node and all executed successors of a specific node and
      * launch configure storm.
      *

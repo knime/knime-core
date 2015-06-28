@@ -573,7 +573,8 @@ public final class WizardExecutionController extends ExecutionController {
             return resultMap;
         }
         // validation succeeded, reset subnode and apply
-        manager.resetAndConfigureNode(currentID);
+        manager.resetHaltedSubnode(currentID);
+//        manager.resetAndConfigureNode(currentID);
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
             NodeIDSuffix suffix = NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
@@ -590,6 +591,7 @@ public final class WizardExecutionController extends ExecutionController {
                 LOGGER.error("Failed to load view value into node \"" + id + "\" although validation succeeded", e);
             }
         }
+        manager.configureNodeAndSuccessors(currentID, true);
         return Collections.emptyMap();
     }
 
