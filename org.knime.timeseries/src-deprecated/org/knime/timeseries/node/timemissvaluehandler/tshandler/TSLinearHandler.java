@@ -61,8 +61,11 @@ import org.knime.core.data.def.LongCell;
  *
  * @author Iris Adae, University of Konstanz
  * @author Marcel Hanser, University of Konstanz
+ * @deprecated See new missing node that incorporates time series handling in package
+ * org.knime.base.node.preproc.pmml.missingval
  *
  */
+@Deprecated
 public class TSLinearHandler extends TSMissVHandler {
 
     private DataCell m_previous;

@@ -57,8 +57,11 @@ import org.knime.core.data.RowKey;
  *
  * @author Iris Adae, University of Konstanz
  * @author Marcel Hanser, University of Konstanz
+ * @deprecated See new missing node that incorporates time series handling in package
+ * org.knime.base.node.preproc.pmml.missingval
  *
  */
+@Deprecated
 public abstract class TSMissVHandler {
 
     // this list contains the row keys of the data cells which are missing in the original

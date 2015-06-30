@@ -66,12 +66,11 @@
             id="org.knime.timeseries.node.converter.DateShiftNodeFactory">
       </node>
       
-      <node
+      <!--node deprecated
             category-path="/timeseries"
             expert-flag="false"
             factory-class="org.knime.timeseries.node.timemissvaluehandler.TimeMissValueNodeFactory"
-            id="org.knime.timeseries.node.timemissvaluehandler.TimeMissValueNodeFactory">
-      </node>
+            id="org.knime.timeseries.node.timemissvaluehandler.TimeMissValueNodeFactory"/-->
    </extension>
 
    <extension

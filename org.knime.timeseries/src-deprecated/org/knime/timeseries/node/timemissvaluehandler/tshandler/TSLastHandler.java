@@ -53,8 +53,10 @@ import org.knime.core.data.RowKey;
  *
  * @author Iris Adae, University of Konstanz
  * @author Marcel Hanser, University of Konstanz
- *
+ * @deprecated See new missing node that incorporates time series handling in package
+ * org.knime.base.node.preproc.pmml.missingval
  */
+@Deprecated
 public class TSLastHandler extends TSMissVHandler {
 
     /**

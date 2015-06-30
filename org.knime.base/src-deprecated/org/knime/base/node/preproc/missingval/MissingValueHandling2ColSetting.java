@@ -80,7 +80,10 @@ import org.knime.core.node.NodeSettingsWO;
  * where name and type are read only.
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated See new Missing node that incorporates a PMML outport in package
+ * org.knime.base.node.preproc.pmml.missingval
  */
+@Deprecated
 final class MissingValueHandling2ColSetting {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(MissingValueHandling3NodeModel.class);

@@ -64,7 +64,10 @@ import org.knime.core.node.ExecutionMonitor;
 /**
  * Iterator to MissingValueHandlingTable.
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated See new Missing node that incorporates a PMML outport in package
+ * org.knime.base.node.preproc.pmml.missingval
  */
+@Deprecated
 class MissingValueHandling3TableIterator extends RowIterator {
     private static final ExecutionMonitor EMPTY_EXEC =
         new ExecutionMonitor();

@@ -40,46 +40,67 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
+ *
  */
-package org.knime.timeseries.node.timemissvaluehandler.tshandler;
+package org.knime.base.node.preproc.missingval;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.RowKey;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * Handler uses the next value for the missing.
+ * Factory to create all node classes for a node that handles missing values in
+ * a table and replaces it by some meaningful values.
  *
- * @author Iris Adae, University of Konstanz
- * @author Marcel Hanser, University of Konstanz
- *
+ * @author Bernd Wiswedel, University of Konstanz
+ * @author Gabor Bakos
+ * @since 2.8
+ * @deprecated See new Missing node that incorporates a PMML outport in package
+ * org.knime.base.node.preproc.pmml.missingval
  */
-public class TSNextHandler extends TSMissVHandler {
+@Deprecated
+public class MissingValueHandling3NodeFactory
+        extends NodeFactory<MissingValueHandling3NodeModel> {
 
     /**
-     * Constructor.
+     * {@inheritDoc}
      */
-    public TSNextHandler() {
-        super();
-        // nothing to instantiate
+    @Override
+    public MissingValueHandling3NodeModel createNodeModel() {
+        return new MissingValueHandling3NodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void incomingValue(final RowKey key, final DataCell newCell) {
-        if (newCell.isMissing()) {
-            // the DC is missing, just put it to the waiting list.
-            addToWaiting(key, newCell);
-        } else if (!getWaitingList().isEmpty()) {
-            // there are values which wait for this entry.
-            for (RowKey k : getWaitingList()) {
-                addToDetected(k, newCell);
-            }
-            clearWaiting();
-        }
-        // otherwise, nothing todo.
+    public int getNrNodeViews() {
+        return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<MissingValueHandling3NodeModel> createNodeView(
+            final int viewIndex, final MissingValueHandling3NodeModel model) {
+        throw new IndexOutOfBoundsException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new MissingValueHandling2NodeDialogPane();
+    }
 }

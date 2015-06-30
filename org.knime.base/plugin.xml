@@ -636,10 +636,10 @@
             category-path="/mining/clustering"
             factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"
             id="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"/>
-      <node
+      <!--node deprecated
             factory-class="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"
             category-path="/manipulation/column/column-transform"
-            id="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"/>
+            id="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"/-->
       <node
             category-path="/mining/nn/mlp"
             factory-class="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"

@@ -86,7 +86,10 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @author Bernd Wiswedel, University of Konstanz
  * @author Gabor Bakos
  * @since 2.8
+ * @deprecated See new Missing node that incorporates a PMML outport in package
+ * org.knime.base.node.preproc.pmml.missingval
  */
+@Deprecated
 public final class MissingValueHandling3Table implements DataTable {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MissingValueHandling3Table.class);
 

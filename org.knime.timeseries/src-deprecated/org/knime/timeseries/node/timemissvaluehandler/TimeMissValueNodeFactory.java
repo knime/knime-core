@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,13 +40,64 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<HTML>
-<BODY>
-<P> 
-  Contains a set of utility classes for the missing value handling 
-  in time series.
-</P>
-</BODY>
-</HTML>
+ * ------------------------------------------------------------------------
+ */
+package org.knime.timeseries.node.timemissvaluehandler;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+
+/**
+ * The factory for the time miss value handler.
+ *
+ * @author Iris Adae, University of Konstanz
+ * @deprecated See new missing node that incorporates time series handling in package
+ * org.knime.base.node.preproc.pmml.missingval
+ */
+@Deprecated
+public class TimeMissValueNodeFactory extends NodeFactory<TimeMissValueNodeModel> {
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new TimeMissingValueHandlingNodeDialogPane();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TimeMissValueNodeModel createNodeModel() {
+        return new TimeMissValueNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<TimeMissValueNodeModel> createNodeView(final int viewIndex,
+            final TimeMissValueNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+
+}

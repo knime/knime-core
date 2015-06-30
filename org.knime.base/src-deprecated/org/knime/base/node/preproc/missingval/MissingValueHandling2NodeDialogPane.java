@@ -100,7 +100,10 @@ import org.knime.core.node.util.ColumnSelectionSearchableListPanel.SearchedItems
  * Dialog to the missing value handling node.
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated See new Missing node that incorporates a PMML outport in package
+ * org.knime.base.node.preproc.pmml.missingval
  */
+@Deprecated
 public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
     /**
      *

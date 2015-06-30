@@ -63,7 +63,10 @@ import org.knime.core.node.NodeSettingsWO;
  * NodeModel for missing value node.
  * @author wiswedel, University of Konstanz
  * @since 2.8
+ * @deprecated See new Missing node that incorporates a PMML outport in package
+ * org.knime.base.node.preproc.pmml.missingval
  */
+@Deprecated
 public class MissingValueHandling3NodeModel extends NodeModel {
     private MissingValueHandling2ColSetting[] m_colSettings;
 

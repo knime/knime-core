@@ -104,7 +104,10 @@ import org.knime.timeseries.node.timemissvaluehandler.TimeMissingValueHandlingCo
  *
  * @author Bernd Wiswedel, University of Konstanz
  * @author Marcel Hanser, University of Konstanz
+ * @deprecated See new missing node that incorporates time series handling in package
+ * org.knime.base.node.preproc.pmml.missingval
  */
+@Deprecated
 public class TimeMissingValueHandlingNodeDialogPane extends NodeDialogPane {
     /**
      *

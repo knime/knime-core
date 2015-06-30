@@ -99,8 +99,11 @@ import org.knime.core.node.util.ViewUtils;
  * type.
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated See new Missing node that incorporates a PMML outport in package
+ * org.knime.base.node.preproc.pmml.missingval
  */
 @SuppressWarnings("serial")
+@Deprecated
 final class MissingValueHandling2Panel extends JPanel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MissingValueHandling2Panel.class);

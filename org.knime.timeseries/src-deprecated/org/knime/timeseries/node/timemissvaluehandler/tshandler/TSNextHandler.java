@@ -42,59 +42,47 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.timeseries.node.timemissvaluehandler;
+package org.knime.timeseries.node.timemissvaluehandler.tshandler;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
 
 /**
- * The factory for the time miss value handler.
+ * Handler uses the next value for the missing.
  *
  * @author Iris Adae, University of Konstanz
+ * @author Marcel Hanser, University of Konstanz
+ * @deprecated See new missing node that incorporates time series handling in package
+ * org.knime.base.node.preproc.pmml.missingval
+ *
  */
-public class TimeMissValueNodeFactory extends NodeFactory<TimeMissValueNodeModel> {
+@Deprecated
+public class TSNextHandler extends TSMissVHandler {
 
     /**
-     * {@inheritDoc}
+     * Constructor.
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new TimeMissingValueHandlingNodeDialogPane();
+    public TSNextHandler() {
+        super();
+        // nothing to instantiate
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public TimeMissValueNodeModel createNodeModel() {
-        return new TimeMissValueNodeModel();
+    public void incomingValue(final RowKey key, final DataCell newCell) {
+        if (newCell.isMissing()) {
+            // the DC is missing, just put it to the waiting list.
+            addToWaiting(key, newCell);
+        } else if (!getWaitingList().isEmpty()) {
+            // there are values which wait for this entry.
+            for (RowKey k : getWaitingList()) {
+                addToDetected(k, newCell);
+            }
+            clearWaiting();
+        }
+        // otherwise, nothing todo.
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<TimeMissValueNodeModel> createNodeView(final int viewIndex,
-            final TimeMissValueNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
 
 }
