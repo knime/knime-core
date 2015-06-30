@@ -231,7 +231,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
 
             String logLevelConsole =
                 pStore.getString(P_LOGLEVEL_CONSOLE);
-            if (!Boolean.getBoolean("java.awt.headless") && PlatformUI.isWorkbenchRunning()) {
+            if (!Boolean.getBoolean("java.awt.headless")) {
                 try {
                     ConsoleViewAppender.WARN_APPENDER.write(
                             KNIMEConstants.WELCOME_MESSAGE);
