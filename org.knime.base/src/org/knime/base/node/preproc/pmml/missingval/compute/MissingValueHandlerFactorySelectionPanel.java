@@ -146,6 +146,8 @@ public class MissingValueHandlerFactorySelectionPanel extends JPanel implements 
         gbc.gridy = 0;
         gbc.ipadx = 10;
         gbc.ipady = 5;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         add(m_comboBox, gbc);
         gbc.gridx = 0;
         gbc.gridy++;

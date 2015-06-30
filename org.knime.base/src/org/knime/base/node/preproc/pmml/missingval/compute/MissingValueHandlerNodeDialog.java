@@ -26,6 +26,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
 
 import org.knime.base.node.preproc.pmml.missingval.MVColumnSettings;
 import org.knime.base.node.preproc.pmml.missingval.MVIndividualSettings;
@@ -98,6 +99,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         m_defaultsPanel.setPreferredSize(new Dimension(500, 300));
         m_typeSettingsPanel = new JPanel(new GridBagLayout());
         m_defaultsPanel.add(m_typeSettingsPanel, BorderLayout.CENTER);
+        m_defaultsPanel.setBorder(new EmptyBorder(10, 10, 10, 10) );
         m_pmmlLabel1 = new JLabel(PMML_WARNING);
         m_pmmlLabel2 = new JLabel(PMML_WARNING);
         m_pmmlLabel1.setHorizontalAlignment(SwingConstants.CENTER);
@@ -332,10 +334,9 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridy = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
+        gbc.weightx = 1.0;
         m_typeSettingsPanel.removeAll();
-        //gbc.anchor = GridBagConstraints.LINE_START;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+
         for (DataType type : m_types.keySet()) {
             gbc.gridx = 0;
             gbc.ipadx = 10;
