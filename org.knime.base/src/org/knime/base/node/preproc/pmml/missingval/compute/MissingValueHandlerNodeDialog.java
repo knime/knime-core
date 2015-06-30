@@ -88,6 +88,8 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
 
     private JLabel m_warnings;
 
+    private JScrollPane m_scrollPane;
+
     private LinkedHashMap<DataType, MissingValueHandlerFactorySelectionPanel> m_types;
 
     /**
@@ -96,7 +98,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
     protected MissingValueHandlerNodeDialog() {
         // Create panels for the default tab
         m_defaultsPanel = new JPanel(new BorderLayout());
-        m_defaultsPanel.setPreferredSize(new Dimension(500, 300));
+        //m_defaultsPanel.setPreferredSize(new Dimension(500, 300));
         m_typeSettingsPanel = new JPanel(new GridBagLayout());
         m_defaultsPanel.add(m_typeSettingsPanel, BorderLayout.CENTER);
         m_defaultsPanel.setBorder(new EmptyBorder(10, 10, 10, 10) );
@@ -120,7 +122,8 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
 
         m_defaultsPanel.add(messagePanel, BorderLayout.SOUTH);
 
-        addTab("Default", new JScrollPane(m_defaultsPanel));
+        m_scrollPane = new JScrollPane(m_defaultsPanel);
+        addTab("Default", m_scrollPane);
 
         // Panel for the tab where the user selects column specific missing cell handlers
         m_columnsPanel = new JPanel(new BorderLayout());
@@ -361,6 +364,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
             m_types.put(type, p);
             gbc.gridy++;
         }
+        m_scrollPane.setPreferredSize(new Dimension(m_defaultsPanel.getPreferredSize().width + 20, 500));
         updatePMMLLabelColor();
     }
 
