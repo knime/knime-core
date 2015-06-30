@@ -188,11 +188,11 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
             }
         });
 
-        m_columnsPanel.add(m_searchableListPanel, BorderLayout.WEST);
+        m_columnsPanel.add(m_searchableListPanel, BorderLayout.CENTER);
 
         JScrollPane scroller = new JScrollPane(m_individualsPanel);
-        scroller.setPreferredSize(new Dimension(0, 0));
-        m_columnsPanel.add(scroller, BorderLayout.CENTER);
+        //scroller.setPreferredSize(new Dimension(0, 0));
+        m_columnsPanel.add(scroller, BorderLayout.EAST);
         addTab("Column Settings", new JScrollPane(m_columnsPanel));
     }
 
