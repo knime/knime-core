@@ -62,7 +62,6 @@ import org.knime.core.util.CLibrary;
 import org.knime.core.util.MutableBoolean;
 import org.knime.product.ProductPlugin;
 import org.knime.product.p2.RepositoryUpdater;
-import org.knime.workbench.core.util.ImageRepository;
 
 /**
  * This class controls all aspects of the application's execution.
@@ -117,7 +116,6 @@ public class KNIMEApplication implements IApplication {
 
             // initialize common classes early in order to avoid deadlocks
             NodeLogger.class.getName();
-            ImageRepository.class.getName();
 
             RepositoryUpdater.INSTANCE.addDefaultRepositories();
             RepositoryUpdater.INSTANCE.updateArtifactRepositoryURLs();
