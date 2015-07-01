@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,83 +41,80 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   07.05.2011 (mb): created
+ *   Jun 21, 2015 (wiswedel): created
  */
-package org.knime.workbench.editor2.commands;
+package org.knime.core.node.workflow.action;
 
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.action.ExpandSubnodeResult;
+import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
- * Command that expands the selected sub node.
+ * Represents the result of an expansion of a subnode. It contains the actual result (node ID after expansions) plus
+ * everything needed to undo the expansion.
  *
- * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * <br>
+ * Content of this class was historically just in the UI plug-ins, which made testing too hard. Isolated into this
+ * separate class that is then used in the UI and the unit test. Other similar actions on the workflow will also be
+ * represented by similar actions on a as-needed basis.
+ *
+ * @noreference This class is not intended to be referenced by clients.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.12
  */
-public class ExpandSubNodeCommand extends AbstractKNIMECommand {
+public final class ExpandSubnodeResult {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ExpandSubNodeCommand.class);
+    private final WorkflowManager m_hostWFM;
 
-    private final NodeID m_id;
+    private final WorkflowCopyContent m_expandedCopyContent;
 
-    private ExpandSubnodeResult m_expandResult;
+    private final WorkflowPersistor m_undoCopyPersistor;
 
-    /**
-     * @param wfm the workflow manager holding the new metanode
-     * @param id of node to be expanded.
+    /** Used by workflow manager to fill content.
+     * @param hostWFM
+     * @param copyContent
+     * @param undoCopyPersistor
      */
-    public ExpandSubNodeCommand(final WorkflowManager wfm, final NodeID id) {
-        super(wfm);
-        m_id = id;
+    public ExpandSubnodeResult(final WorkflowManager hostWFM, final WorkflowCopyContent copyContent,
+        final WorkflowPersistor undoCopyPersistor) {
+        m_hostWFM = hostWFM;
+        m_expandedCopyContent = copyContent;
+        m_undoCopyPersistor = undoCopyPersistor;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean canExecute() {
-        if (!super.canExecute()) {
-            return false;
-        }
-        return getHostWFM().canExpandSubNode(m_id) == null;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void execute() {
-        try {
-            WorkflowManager hostWFM = getHostWFM();
-            m_expandResult = hostWFM.expandSubWorkflow(m_id);
-        } catch (Exception e) {
-            String error = "Expanding Sub Node failed: " + e.getMessage();
-            LOGGER.error(error, e);
-            MessageDialog.openError(Display.getCurrent().getActiveShell(), "Expand failed", error);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public boolean canUndo() {
-        return m_expandResult != null && m_expandResult.canUndo();
+        WorkflowManager hostWFM = m_hostWFM;
+        for (NodeID id : m_expandedCopyContent.getNodeIDs()) {
+            if (hostWFM.containsNodeContainer(id) && !hostWFM.canRemoveNode(id)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void undo() {
+        WorkflowManager hostWFM = m_hostWFM;
+        for (NodeID id : m_expandedCopyContent.getNodeIDs()) {
+            hostWFM.removeNode(id);
+        }
+        for (WorkflowAnnotation anno : m_expandedCopyContent.getAnnotations()) {
+            hostWFM.removeAnnotation(anno);
+        }
+        hostWFM.paste(m_undoCopyPersistor);
     }
 
     /**
-     * {@inheritDoc}
+     * @return the expandedCopyContent
      */
-    @Override
-    public void undo() {
-        m_expandResult.undo();
-        m_expandResult = null;
+    public WorkflowCopyContent getExpandedCopyContent() {
+        return m_expandedCopyContent;
     }
+
 
 }

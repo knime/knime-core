@@ -53,6 +53,7 @@ import java.util.EventObject;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.draw2d.ConnectionLayer;
 import org.eclipse.draw2d.LayoutManager;
@@ -91,7 +92,6 @@ import org.knime.workbench.editor2.figures.ProgressToolTipHelper;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowLayout;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
-import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * Root controller for the <code>WorkflowManager</code> model object. Consider
@@ -351,6 +351,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
 
     }
 
+    private final AtomicBoolean m_workflowChangedOngoingBoolean = new AtomicBoolean();
+
     /**
      * Controller is getting notified about model changes. This invokes
      * <code>refreshChildren</code> keep in sync with the model.
@@ -360,38 +362,40 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void workflowChanged(final WorkflowEvent event) {
 
-        LOGGER.debug("WorkflowRoot: workflow changed, refreshing "
-                + "children/connections..");
+        if (m_workflowChangedOngoingBoolean.compareAndSet(false, true)) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    m_workflowChangedOngoingBoolean.set(false);
 
-        SyncExecQueueDispatcher.asyncExec(new Runnable() {
-            @Override
-            public void run() {
+                    // refreshing the children
+                    refreshChildren();
 
-                // refreshing the children
-                refreshChildren();
+                    // refresing connections
+                    refreshSourceConnections();
+                    refreshTargetConnections();
 
-                // refresing connections
-                refreshSourceConnections();
-                refreshTargetConnections();
+                    // update out port (workflow in port) tooltips
 
-                // update out port (workflow in port) tooltips
+                    for (Object part : getChildren()) {
 
-                for (Object part : getChildren()) {
-
-                    if (part instanceof NodeOutPortEditPart
-                            || part instanceof WorkflowInPortEditPart) {
-                        AbstractPortEditPart outPortPart =
-                                (AbstractPortEditPart)part;
-                        outPortPart.rebuildTooltip();
+                        if (part instanceof NodeOutPortEditPart
+                                || part instanceof WorkflowInPortEditPart) {
+                            AbstractPortEditPart outPortPart =
+                                    (AbstractPortEditPart)part;
+                            outPortPart.rebuildTooltip();
+                        }
                     }
-                }
 
-                // always refresh visuals
-                getFigure().revalidate();
-                refreshVisuals();
-            }
-        });
+                    // always refresh visuals
+                    getFigure().revalidate();
+                    refreshVisuals();
+                }
+            });
+        }
     }
+
+    private final AtomicBoolean m_nodeUIChangedOngoingBoolean = new AtomicBoolean();
 
     /**
      * Called by the workflow manager after workflow annotations change.
@@ -399,19 +403,19 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
-        LOGGER.debug("WorkflowRoot: node UI changed (i.e. annotations changed)"
-                + " updating children...");
-
-        SyncExecQueueDispatcher.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                // annotations are children of the workflow
-                refreshChildren();
-                // always refresh visuals
-                getFigure().revalidate();
-                refreshVisuals();
-            }
-        });
+        if (m_nodeUIChangedOngoingBoolean.compareAndSet(false, true)) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    m_nodeUIChangedOngoingBoolean.set(false);
+                    // annotations are children of the workflow
+                    refreshChildren();
+                    // always refresh visuals
+                    getFigure().revalidate();
+                    refreshVisuals();
+                }
+            });
+        }
     }
 
     /**

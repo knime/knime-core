@@ -162,6 +162,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -3496,38 +3497,39 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException if expand can not be done
      */
     public WorkflowCopyContent expandMetaNode(final NodeID wfmID) throws IllegalArgumentException {
-        return expandSubWorkflow(wfmID, (WorkflowManager)getNodeContainer(wfmID));
+        // TODO: This should probably be the same as for subnode extraction ... proper return value/undo
+        return expandSubWorkflow(wfmID).getExpandedCopyContent();
     }
 
-    /** Expand the selected metanode into a set of nodes in
-     * this WFM and remove the old metanode.
+    /** Expand the selected subnode into a set of nodes in this WFM and remove the old metanode.
      *
      * @param nodeID ID of the node containing the sub workflow
-     * @param subWFM The sub workflow
      * @return copied content containing nodes and annotations
-     * @throws IllegalArgumentException if expand can not be done
-     * @since 2.10
+     * @throws IllegalStateException if expand can not be done
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public WorkflowCopyContent expandSubWorkflow(final NodeID nodeID, final WorkflowManager subWFM)
-            throws IllegalArgumentException {
+    public ExpandSubnodeResult expandSubWorkflow(final NodeID nodeID) throws IllegalStateException {
         synchronized (m_workflowMutex) {
-            NodeContainer node = getNodeContainer(nodeID);
+            WorkflowCopyContent cnt = new WorkflowCopyContent();
+            cnt.setNodeIDs(nodeID);
+            cnt.setIncludeInOutConnections(true);
+            WorkflowPersistor undoCopyPersistor = copy(true, cnt);
+
+            final NodeContainer node = getNodeContainer(nodeID);
+            final WorkflowManager subWFM;
             HashSet<NodeID> virtualNodes = new HashSet<NodeID>();
             if (node instanceof WorkflowManager) {
-                // check again, to be sure...
-                String res = canExpandMetaNode(nodeID);
-                if (res != null) {
-                    throw new IllegalArgumentException(res);
-                }
+                CheckUtils.checkState(canExpandMetaNode(nodeID) == null, canExpandMetaNode(nodeID));
+                subWFM = (WorkflowManager)node;
             } else if (node instanceof SubNodeContainer) {
-                // check again, to be sure...
-                String res = canExpandSubNode(nodeID);
-                if (res != null) {
-                    throw new IllegalArgumentException(res);
-                }
+                CheckUtils.checkState(canExpandSubNode(nodeID) == null, canExpandSubNode(nodeID));
                 SubNodeContainer snc = (SubNodeContainer)node;
                 virtualNodes.add(snc.getVirtualInNodeID());
                 virtualNodes.add(snc.getVirtualOutNodeID());
+                subWFM = snc.getWorkflowManager();
+            } else {
+                throw new IllegalStateException("Not a sub- or meta node: " + node);
             }
             // retrieve all nodes from metanode
             Collection<NodeContainer> ncs = subWFM.getNodeContainers();
@@ -3672,16 +3674,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // remove virtual nodes
             for (NodeID id : virtualNodes) {
-                List<ConnectionContainer> connections = new ArrayList<ConnectionContainer>();
-                connections.addAll(m_workflow.getConnectionsByDest(oldIDsHash.get(id)));
-                for (ConnectionContainer cc : connections) {
-                    m_workflow.removeConnection(cc);
-                }
-                m_workflow.removeNode(oldIDsHash.get(id));
+                removeNode(oldIDsHash.get(id));
             }
             // and finally remove old sub workflow
             this.removeNode(nodeID);
-            return newContent;
+
+            return new ExpandSubnodeResult(this, newContent, undoCopyPersistor);
         }
     }
 

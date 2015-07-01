@@ -51,7 +51,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -130,8 +129,7 @@ public class CollapseSubNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        WorkflowManager wfm = ((SubNodeContainer)getHostWFM().getNodeContainer(m_wrapper)).getWorkflowManager();
-        getHostWFM().expandSubWorkflow(m_wrapper, wfm);
+        getHostWFM().expandSubWorkflow(m_wrapper);
         m_wrapper = null;
     }
 

@@ -179,6 +179,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="expandSubWorkflow(NodeID, WorkflowManager)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeContainerExecutionStatus.java" type="org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus">
         <filter id="403804204">
             <message_arguments>
