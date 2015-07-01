@@ -108,12 +108,15 @@ import org.knime.base.data.aggregation.numerical.CovarianceOperator;
 import org.knime.base.data.aggregation.numerical.GeometricMeanOperator;
 import org.knime.base.data.aggregation.numerical.GeometricStdDeviationOperator;
 import org.knime.base.data.aggregation.numerical.KurtosisOperator;
+import org.knime.base.data.aggregation.numerical.MeanAbsoluteDeviationOperator;
 import org.knime.base.data.aggregation.numerical.MeanOperator;
+import org.knime.base.data.aggregation.numerical.MedianAbsoluteDeviationOperator;
 import org.knime.base.data.aggregation.numerical.MedianOperator;
 import org.knime.base.data.aggregation.numerical.PSquarePercentileOperator;
 import org.knime.base.data.aggregation.numerical.ProductOperator;
 import org.knime.base.data.aggregation.numerical.QuantileOperator;
 import org.knime.base.data.aggregation.numerical.RangeOperator;
+import org.knime.base.data.aggregation.numerical.SecondMomentOperator;
 import org.knime.base.data.aggregation.numerical.SkewnessOperator;
 import org.knime.base.data.aggregation.numerical.StdDeviationOperator;
 import org.knime.base.data.aggregation.numerical.SumOfLogsOperator;
@@ -245,22 +248,20 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
             /**Geometric deviation.*/
             addOperator(new GeometricStdDeviationOperator(GlobalSettings.DEFAULT,
                 OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-            addOperator(new QuantileOperator(GlobalSettings.DEFAULT,
-                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-            addOperator(new KurtosisOperator(GlobalSettings.DEFAULT,
-                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-            addOperator(new SkewnessOperator(GlobalSettings.DEFAULT,
-                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new QuantileOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new KurtosisOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new SkewnessOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             addOperator(new PSquarePercentileOperator(GlobalSettings.DEFAULT,
                 OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-            addOperator(new SumOfSquaresOperator(GlobalSettings.DEFAULT,
+            addOperator(new SumOfSquaresOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new SumOfLogsOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new CorrelationOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new CovarianceOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new MeanAbsoluteDeviationOperator(GlobalSettings.DEFAULT,
                 OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-            addOperator(new SumOfLogsOperator(GlobalSettings.DEFAULT,
+            addOperator(new MedianAbsoluteDeviationOperator(GlobalSettings.DEFAULT,
                 OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-            addOperator(new CorrelationOperator(GlobalSettings.DEFAULT,
-                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-            addOperator(new CovarianceOperator(GlobalSettings.DEFAULT,
-                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new SecondMomentOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
             //The boolean methods
             /**True count operator.*/
