@@ -191,7 +191,9 @@ public class AppendedRowsNodeModel extends NodeModel {
     private static BufferedDataTable[] noNullArray(final BufferedDataTable[] rawInData) {
         List<BufferedDataTable> nonNullList = new ArrayList<BufferedDataTable>();
         for (BufferedDataTable t : rawInData) {
-            nonNullList.add(t);
+            if (t != null) {
+                nonNullList.add(t);
+            }
         }
         return nonNullList.toArray(new BufferedDataTable[nonNullList.size()]);
     }
@@ -199,7 +201,9 @@ public class AppendedRowsNodeModel extends NodeModel {
     private static RowInput[] noNullArray(final RowInput[] rawInData) {
         List<RowInput> nonNullList = new ArrayList<RowInput>();
         for (RowInput t : rawInData) {
-            nonNullList.add(t);
+            if (t != null) {
+                nonNullList.add(t);
+            }
         }
         return nonNullList.toArray(new RowInput[nonNullList.size()]);
     }
