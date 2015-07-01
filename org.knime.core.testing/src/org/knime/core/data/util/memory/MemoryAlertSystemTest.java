@@ -51,13 +51,13 @@ package org.knime.core.data.util.memory;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
+import java.lang.ref.SoftReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.xml.datatype.Duration;
-
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Testcase for {@link MemoryAlertSystem}.
@@ -69,10 +69,12 @@ public class MemoryAlertSystemTest {
 
     /**
      * Checks that enough memory is available before each test.
+     *
+     * @throws Exception if an error occurs
      */
     @Before
     public void checkAvailableMemory() throws Exception {
-        System.gc();
+        forceGC();
         Thread.sleep(1000);
         assertThat("Cannot test because memory usage is already above threshold: " + MemoryAlertSystem.getUsage(),
             MemoryAlertSystem.getInstance().isMemoryLow(), is(false));
@@ -80,7 +82,7 @@ public class MemoryAlertSystemTest {
     }
 
     /**
-     * Checks whether {@link MemoryAlertSystem#sleepWhileLow(double, Duration)} works as expected.
+     * Checks whether {@link MemoryAlertSystem#sleepWhileLow(double, long)} works as expected.
      *
      * @throws Exception if an error occurs
      */
@@ -89,16 +91,15 @@ public class MemoryAlertSystemTest {
         int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
         // we should return immediately because enough memory is available
-        boolean memoryAvailable =
-            m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 1000);
+        boolean memoryAvailable = m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 1000);
         assertThat("Was sleeping although memory is below threshold: " + MemoryAlertSystem.getUsage(), memoryAvailable,
             is(true));
 
         // allocate memory
         final AtomicReference<byte[]> buffer = new AtomicReference<byte[]>(new byte[reserveSize]);
         // force buffer into tenured space
-        System.gc();
-        System.gc();
+        forceGC();
+        forceGC();
 
         Thread.sleep(1000);
         // we should return after 1 seconds
@@ -112,7 +113,9 @@ public class MemoryAlertSystemTest {
                 try {
                     Thread.sleep(1000);
                     buffer.set(null);
-                    System.gc();
+                    NodeLogger.getLogger(getClass()).debug("Cleared buffer, memory should be freed now");
+                    forceGC();
+                    NodeLogger.getLogger(getClass()).debug("Called System.gc");
                 } catch (Exception ex) {
                     // ignore
                 }
@@ -143,13 +146,14 @@ public class MemoryAlertSystemTest {
 
         m_memSystem.addListener(listener);
         try {
-            System.gc();
+            forceGC();
             Thread.sleep(1000);
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
+            @SuppressWarnings("unused")
             byte[] buf = new byte[reserveSize];
-            System.gc();
+            forceGC();
             Thread.sleep(1000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(true));
@@ -178,13 +182,14 @@ public class MemoryAlertSystemTest {
 
         m_memSystem.addListener(listener);
         try {
-            System.gc();
+            forceGC();
             Thread.sleep(1000);
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
+            @SuppressWarnings("unused")
             byte[] buf = new byte[reserveSize];
-            System.gc();
+            forceGC();
             Thread.sleep(1000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.getAndSet(false), is(true));
@@ -196,4 +201,14 @@ public class MemoryAlertSystemTest {
         }
     }
 
+    private static void forceGC() throws InterruptedException {
+        Object obj = new Object();
+        SoftReference<Object> ref = new SoftReference<>(obj);
+        obj = null;
+        int max = 10;
+        while ((ref.get() != null) && (max-- > 0)) {
+            System.gc();
+            Thread.sleep(50);
+        }
+    }
 }
