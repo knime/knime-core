@@ -74,8 +74,10 @@ public class MemoryAlertSystemTest {
      */
     @Before
     public void checkAvailableMemory() throws Exception {
-        forceGC();
-        Thread.sleep(1000);
+        for (int i = 0; i < 10 && MemoryAlertSystem.getInstance().isMemoryLow(); i++) {
+            forceGC();
+            Thread.sleep(1000);
+        }
         assertThat("Cannot test because memory usage is already above threshold: " + MemoryAlertSystem.getUsage(),
             MemoryAlertSystem.getInstance().isMemoryLow(), is(false));
         m_memSystem = MemoryAlertSystem.getInstance();
