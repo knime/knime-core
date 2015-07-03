@@ -52,8 +52,6 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.CoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
@@ -75,6 +73,7 @@ import org.knime.core.util.EclipseUtil;
 import org.knime.product.rcp.intro.IntroPage;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
+import org.knime.workbench.core.util.LinkMessageDialog;
 import org.knime.workbench.explorer.view.ExplorerView;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -210,19 +209,17 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
      */
     private void checkAnonymousUsageStatistcs(final Shell shell) {
         IPreferenceStore pStore = KNIMECorePlugin.getDefault().getPreferenceStore();
-        boolean showMessageBox = !pStore.contains(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS);
-        pStore.setDefault(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, false);
-        if (!showMessageBox) {
+        boolean alreadyAsked = pStore.getBoolean(HeadlessPreferencesConstants.P_ASKED_ABOUT_STATISTICS);
+        //pStore.setDefault(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, false);
+        if (alreadyAsked) {
             return;
         }
-        MessageBox checkBox = new MessageBox(shell, SWT.YES | SWT.NO | SWT.ICON_QUESTION);
-        checkBox.setText("Help improve KNIME");
-        checkBox.setMessage("Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data. "
-            + "No other information will be transmitted. You can also change this setting in preferences later.\n"
-            + "Do you allow KNIME to collect and send anonymized usage data?");
-
-        int status = checkBox.open();
-        boolean allow = (status == SWT.YES);
+        String message = "Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data.\n"
+                + "Click <a href=\"https://tech.knime.org/faq#usage_data\">here</a> to find out what is being transmitted.\n"
+                + "You can also change this setting in the KNIME preferences later.\n\n"
+                + "Do you allow KNIME to collect and send anonymous usage data?";
+        boolean allow = LinkMessageDialog.openQuestion(shell, "Help improve KNIME", message);
+        pStore.setValue(HeadlessPreferencesConstants.P_ASKED_ABOUT_STATISTICS, true);
         pStore.setValue(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, allow);
     }
 

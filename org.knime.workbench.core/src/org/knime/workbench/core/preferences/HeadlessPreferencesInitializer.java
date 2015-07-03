@@ -81,6 +81,8 @@ public class HeadlessPreferencesInitializer extends
         store.setDefault(KNIMECorePlugin.P_LOGLEVEL_CONSOLE,
                 LEVEL.WARN.name());
 
+        store.setDefault(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, false);
+
         int syspropTimeout = DatabaseConnectionSettings.getSystemPropertyDatabaseTimeout();
         store.setDefault(HeadlessPreferencesConstants.P_DATABASE_TIMEOUT, syspropTimeout >= 0 ? syspropTimeout : 15);
     }

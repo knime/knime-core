@@ -68,6 +68,8 @@ public final class HeadlessPreferencesConstants {
 
     /** Preference constant: send anonymous usage statistics to KNIME, yes or no. */
     public static final String P_SEND_ANONYMOUS_STATISTICS = "knime.sendAnonymousStatistics";
+    /** Preference constant: if KNIME already asked the user to transmit usage statistics, yes or no. */
+    public static final String P_ASKED_ABOUT_STATISTICS = "knime.askedToSendStatistics";
 
     /* --- Master Key constants --- */
 
