@@ -220,10 +220,10 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         checkBox.setMessage("Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data. "
             + "No other information will be transmitted. You can also change this setting in preferences later.\n"
             + "Do you allow KNIME to collect and send anonymized usage data?");
+
         int status = checkBox.open();
-        if (status == SWT.YES) {
-            pStore.setValue(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, true);
-        }
+        boolean allow = (status == SWT.YES);
+        pStore.setValue(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, allow);
     }
 
     /**
