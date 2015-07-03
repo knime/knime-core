@@ -134,7 +134,8 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
 
         addField(new HorizontalLineField(parent));
         addField(new LabelField(parent, "Improve KNIME", SWT.BOLD));
-        addField(new LabelField(parent, "Help us improve KNIME by sending us anonymous usage data. Absolutely no other information is sent."));
+        addField(new LabelField(parent, "Help us improve KNIME by sending anonymous usage data."));
+        addField(new LabelField(parent, "Click <a href=\"https://tech.knime.org/faq#usage_data\">here</a> to find out what is being transmitted."));
         BooleanFieldEditor sendAnonymousStatisticsEditor =
             new BooleanFieldEditor(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS,
                 "Yes, help improve KNIME.", parent);

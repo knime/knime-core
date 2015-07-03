@@ -44,13 +44,19 @@
  */
 package org.knime.workbench.ui.preferences;
 
+import java.net.URL;
+
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.browser.IWebBrowser;
 
 /**
  * Preference page field showing text.
@@ -59,7 +65,7 @@ import org.eclipse.swt.widgets.Label;
  */
 public class LabelField extends FieldEditor {
 
-    private Label m_text;
+    private Link m_link;
 
     /**
      * @param parent
@@ -67,7 +73,22 @@ public class LabelField extends FieldEditor {
      */
     LabelField(final Composite parent, final String text) {
         super("TXT_FIELD", "", parent);
-        m_text.setText(text);
+        m_link.setText(text);
+        m_link.addSelectionListener(new SelectionAdapter() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                try {
+                    //Open external browser
+                    IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser();
+                    browser.openURL(new URL(e.text));
+                  } catch (Exception ex) {
+                      /* do nothing */
+                  }
+            }
+        });
     }
 
     /**
@@ -77,10 +98,10 @@ public class LabelField extends FieldEditor {
      */
     LabelField(final Composite parent, final String text, final int swtFontStyleConstants) {
         this(parent, text);
-        FontData fontData = m_text.getFont().getFontData()[0];
-        Font font = new Font(m_text.getDisplay(), new FontData(fontData.getName(), fontData
+        FontData fontData = m_link.getFont().getFontData()[0];
+        Font font = new Font(m_link.getDisplay(), new FontData(fontData.getName(), fontData
             .getHeight(), swtFontStyleConstants));
-        m_text.setFont(font);
+        m_link.setFont(font);
     }
 
     /**
@@ -88,7 +109,7 @@ public class LabelField extends FieldEditor {
      */
     @Override
     protected void createControl(final Composite parent) {
-        m_text = new Label(parent, SWT.NONE);
+        m_link = new Link(parent, SWT.NONE);
         super.createControl(parent); // calls doFillIntoGrid!
     }
     /**
@@ -96,7 +117,7 @@ public class LabelField extends FieldEditor {
      */
     @Override
     protected void adjustForNumColumns(final int numColumns) {
-        Object o = m_text.getLayoutData();
+        Object o = m_link.getLayoutData();
         if (o instanceof GridData) {
             ((GridData)o).horizontalSpan = numColumns;
         }
@@ -107,7 +128,7 @@ public class LabelField extends FieldEditor {
      */
     @Override
     protected void doFillIntoGrid(final Composite parent, final int numColumns) {
-        m_text.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false, numColumns, 1));
+        m_link.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false, numColumns, 1));
     }
 
     /**
