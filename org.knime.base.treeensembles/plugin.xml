@@ -37,6 +37,13 @@
             factory-class="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory">
       </node>
+      <node
+            after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
+            category-path="/labs/treeensemble"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.shrinker.TreeEnsembleShrinkerNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.shrinker.TreeEnsembleShrinkerNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
