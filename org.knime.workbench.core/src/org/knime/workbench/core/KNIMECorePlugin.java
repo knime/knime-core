@@ -125,6 +125,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+        createImageRegistry();
         try {
             // get the preference store
             // with the preferences for nr threads and tempDir
