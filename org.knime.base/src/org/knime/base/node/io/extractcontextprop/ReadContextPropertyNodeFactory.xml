@@ -12,6 +12,7 @@
             <ul>
                 <li><i>context.workflow.name</i> The name of the workflow.</li>
                 <li><i>context.workflow.path</i> The mount-point-relative path to the workflow.</li>
+                <li><i>context.workflow.absolute-path</i> The absolute path in the filesystem to the workflow.</li>
                 <li><i>context.workflow.user</i> The authenticated user if executed on KNIME server, the system user otherwise.</li>
                 <li><i>context.workflow.temp.location</i> The location for temporary files of the workflow job.</li>
                 <li><i>context.workflow.author.name</i> Name of the workflow author (creator).</li>

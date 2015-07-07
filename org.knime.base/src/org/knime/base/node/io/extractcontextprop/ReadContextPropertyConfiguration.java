@@ -73,6 +73,8 @@ final class ReadContextPropertyConfiguration {
     public static final String CONTEXT_WORKFLOW_NAME = "context.workflow.name";
     /** Context variable name for mount-point-relative workflow path. */
     public static final String CONTEXT_WORKFLOW_PATH = "context.workflow.path";
+    /** Context variable name for absolute workflow path. */
+    public static final String CONTEXT_WORKFLOW_ABSOLUTE_PATH = "context.workflow.absolute-path";
     /** Context variable name for workflow user. */
     public static final String CONTEXT_SERVER_USER = "context.workflow.user";
     /** Context variable name for workflow temporary location. */
@@ -90,6 +92,7 @@ final class ReadContextPropertyConfiguration {
     static {
         contextProperties.add(CONTEXT_WORKFLOW_NAME);
         contextProperties.add(CONTEXT_WORKFLOW_PATH);
+        contextProperties.add(CONTEXT_WORKFLOW_ABSOLUTE_PATH);
         contextProperties.add(CONTEXT_SERVER_USER);
         contextProperties.add(CONTEXT_TEMP_LOCATION);
         contextProperties.add(CONTEXT_AUTHOR);
@@ -197,6 +200,14 @@ final class ReadContextPropertyConfiguration {
             assert wfPath.startsWith(mpPath);
             String resultPath = wfPath.substring(mpPath.length());
             return resultPath.replace("\\", "/");
+        }
+        if (CONTEXT_WORKFLOW_ABSOLUTE_PATH.equals(property)) {
+            WorkflowContext context = manager.getContext();
+            File wfLocation = context.getCurrentLocation();
+            if (wfLocation == null) {
+                return "";
+            }
+            return wfLocation.getAbsolutePath().replace("\\", "/");
         }
         if (CONTEXT_SERVER_USER.equals(property)) {
             return manager.getContext().getUserid();
