@@ -191,11 +191,14 @@ public final class MissingCellHandlerFactoryManager {
         factories.add(DoNothingMissingCellHandlerFactory.getInstance());
 
         for (MissingCellHandlerFactory fac : m_factories) {
+            boolean isApplicable = true;
             for (DataType type : types) {
-                if (fac.isApplicable(type)) {
-                    factories.add(fac);
-                    break;
+                if (!fac.isApplicable(type)) {
+                    isApplicable = false;
                 }
+            }
+            if (isApplicable) {
+                factories.add(fac);
             }
         }
         return factories;
