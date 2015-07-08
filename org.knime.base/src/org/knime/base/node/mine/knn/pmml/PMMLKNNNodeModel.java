@@ -145,7 +145,7 @@ public class PMMLKNNNodeModel extends NodeModel {
         DataTableSpecCreator dataDictCreator = new DataTableSpecCreator();
 
         String[] selectedColumns = m_learningColumns.applyTo(dataTableSpec).getIncludes();
-        if(selectedColumns.length == 0) {
+        if (selectedColumns.length == 0) {
             throw new InvalidSettingsException("No learning columns are selected.");
         }
 
@@ -155,7 +155,8 @@ public class PMMLKNNNodeModel extends NodeModel {
             learningColumns.add(cs);
         }
 
-        if (m_predColumnName.getStringValue() == null) {
+        if (m_predColumnName.getStringValue() == null
+                || !dataTableSpec.containsName(m_predColumnName.getStringValue())) {
             for (int i = 0; i < dataTableSpec.getNumColumns(); i++) {
                 DataColumnSpec cspec = dataTableSpec.getColumnSpec(i);
                 if (cspec.getType().isCompatible(StringValue.class)) {
