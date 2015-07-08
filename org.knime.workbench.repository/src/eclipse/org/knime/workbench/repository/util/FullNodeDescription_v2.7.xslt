@@ -16,10 +16,10 @@
                 <style type="text/css"><xsl:value-of select="$css" /></style>
             </head>
             <body>
-                <h1>
+                <div class="fix-header" id="fix-header"><h1>
                     <xsl:value-of select="t:name" />
                 </h1>
-                
+                </div>
                 <xsl:if test="@deprecated = 'true'">
                     <h4 class="deprecated">Deprecated</h4>
                 </xsl:if>
@@ -43,10 +43,10 @@
                 <xsl:apply-templates select="t:ports" />
                 <xsl:apply-templates select="t:views" />
 
-                <div id="origin-bundle">
-                    This node is contained in <em><xsl:value-of select="osgi-info/@bundle-name" /></em>
-                    provided by <em><xsl:value-of select="osgi-info/@bundle-vendor" /></em>.
-                </div>
+                <!--  div id="origin-bundle">
+                    <p>This node is contained in <span id="source_info"><xsl:value-of select="osgi-info/@bundle-name" /></span>
+                    provided by <span id="node_provider"><xsl:value-of select="osgi-info/@bundle-vendor" /></span></p>.
+                </div> -->
             </body>
         </html>
     </xsl:template>

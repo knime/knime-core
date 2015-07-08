@@ -1,32 +1,66 @@
+body.origin {
+     
+     font-family: "Roboto",sans-serif;
+	 font-size: 0.75em;
+	 color: #7D7D7D;
+	 margin: 0px;
+	 padding: 0px;
+	 height: 100%;
+	 width: 100%;
+	 background: #FFF none repeat scroll 0% 0%;
+	 border:0;
+	 overflow: visible;
+}
+
 body {
-	background-color: #fff;
-	font-family: Tahoma, Arial, Helvetica; 
-	font-size: 10pt;
-	padding: 0.1em 0.1em 1.5em 0.1em;
+     
+     font-family: "Roboto",sans-serif;
+	 font-size: 0.75em;
+	 color: #7D7D7D;
+	 margin: 0px;
+	 padding: 0px;
+	 height: 80%;
+	 width: 100%;
+	 background: #FFF none repeat scroll 0% 0%;
+	 border:0;
+	 overflow: visible;
+	 margin-top: 70px;
+}
+
+div.container {
+	width: 100%;
 }
 
 tt, pre {
-	font-family: Courier New, Courier, Arial, Helvetica; 
-	font-size: 110%;
+	font-family: "Roboto",sans-serif; 
+	font-size: 0.75em;
+	color: #7D7D7D;
+}
+
+.node-content-div p {
+	margin: 0 0 1em 0;
 }
 
 p {
 	text-align: justify;
-	/*padding: 0 10px;*/
+	font-size: 1.1em;
+	margin: 8px;
+	line-height: 1.6em;
 }
 
 
-
-h1{
-	font-size: 200%;
+h1 {  
+	font-size: 1.5em;
 	text-align: center;
-	border-bottom: thick solid #ffd600;
-}
+	color: #3e3a39;
+ }
 
 h2{
-	font-size: 140%;
-	/*padding-left: 5px;*/
-	border-bottom: thin dotted #ffd600;
+	font-size: 1.5em;
+	margin:8px;
+	border-bottom: 1px solid #e5e5e5;
+  	color: #ff9f00;
+	
 }
 
 .deprecated {
@@ -34,8 +68,8 @@ h2{
 }
 
 dl{
-	margin-left: 1px;
 	padding: 0;
+	margin: 8px;
 }
 
 dt {
@@ -45,7 +79,8 @@ dt {
 
 dd{
 	margin-bottom: 1em;
-	margin-left: 1.5em; 
+	margin-left: 1.5em;
+	line-height: 1.6em; 
 }
 
 table{
@@ -96,9 +131,10 @@ a:visited{
 }
 
 div.group {
-    border: 1px solid #ffd600;
+    border: 2px solid #ffd600;
     padding: 0.2em;
     margin-bottom: 0.5em;
+    border-radius: 5px;
 }
 
 div.groupname {
@@ -116,9 +152,261 @@ div.group-description {
 
 
 div#origin-bundle {
-    color: #cccccc;
-    font-size: 70%;
+	color: #7d7d7d;
+    font-size: 83.03%;
     margin-top: 2em;
     padding-top: 0.5em;
     border-top: 1px solid #bbbbbb;
+    text-align: right;
+}
+
+span#source_info {
+	font-style: italic;
+	color: #FFD900;
+}
+
+span#node_provider {
+	font-style: italic;
+	color: #7d7d7d;
+}
+
+/* Styles for Header Div*/
+
+.header_docu {
+	margin: 0 auto;
+	width: 64%;
+}
+
+#logo {
+	float:left;
+}
+
+#docu_version {
+	float: right;
+	margin-right: -400px;
+	margin-top:0px;
+}
+	
+
+/* Styles for Vertical Menu*/
+
+ul.tabs{
+    margin: 0px;
+    padding: 0px;
+    list-style: none;
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+ul.tabs li{
+    background: none;
+    color: #222;
+    display: table-cell;
+    width: auto;
+    text-align: center;
+    padding: 10px 15px;
+    /*cursor: pointer;*/
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+ul.tabs li.current{
+    background: #ededed;
+    color: #222;
+}
+
+
+}
+
+
+
+.tab-content{
+    display: none;
+    padding: 2px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.tab-content.current{
+    display: inherit;
+    border: 1px solid #000;
+    padding-left: 20px;
+}
+
+.node-container-div {
+	margin: 0 auto;
+	width: 1170px;
+	padding-right: 30px;
+	
+}
+
+.groupClass:before,
+.groupClass:after {
+	content: "";
+	display: table;
+}
+
+.groupClass:after{
+	clear:both;
+}
+
+.groupClass {
+	clear: both;
+	*zoom : 1;
+}
+
+#node-menu-div {
+	float: left;
+	width: 25%;
+	max-height: 80%;
+}
+
+.node-main-div {
+	float: left;
+	position: relative;
+	width: 75%;
+}
+
+/*************** Custom Style for Node Repository *********************/
+/* format of the menu tree */
+span.childs {
+	cursor: pointer;
+}
+  
+/* Klassen für das öffnen und schließen eines Knotens */
+
+li.treeMenu_opened ul {
+	display: block;
+}
+    
+li.treeMenu_closed ul {
+	display: none;
+}
+  
+ul {
+	padding: 0px;
+	padding-top: 0.4em;
+	padding-left: 0px;
+	list-style-type: none;
+}
+
+ul ul {
+	margin-left: 8px;
+}
+  
+li {
+	padding: 0em;
+	margin: 0em;
+	margin-bottom: 0.4em;
+	font-size: 16px;
+}
+
+li.knime-node {
+	margin-left: 4px;
+}
+
+a {
+	text-decoration: none;
+}
+a:visited {
+	color: black;
+}
+
+#menu_header{
+	border-top: 1px solid #000;
+	border-right: 1px solid #000;
+	border-left: 1px solid #000;
+	width: 50%;
+}
+
+.container first-half{
+	width:50%;
+}
+
+.container second-half{
+	width:50%;
+	border-top: 1px solid #000;
+}
+ 	
+/******************************* END *************************/
+
+/* Footer Style here */
+
+div.k-footer {
+	width: 1170px;
+	padding-bottom: 25px;
+	position: absolute;
+	bottom: 0;
+	background: white;
+	margin: 0 auto;
+	clear: both;
+}
+
+div.footer-inner {
+	height: auto;
+	width: 100%;
+	min-width:100%;
+	max-width: 100%;
+	margin: 0 auto;
+}
+
+#footer {
+	margin: 0px 10px;
+	border-top: #ccc 1px solid;
+	font-size: 82.33% !important;
+}
+
+.content {
+	margin:0.5em 0;
+}
+
+#ffoter > ul.m-footer {
+	
+}
+
+.col1 h3, .col2 h3, .col3 h3, .col4 h3, .col-adress h3 {
+	text-transform: uppercase;
+}
+
+
+.col1, .col2, .col3,.col4 {
+	float: left;
+	margin: 0 1.5em;
+	width: 15%;
+}
+
+.col-adress {
+	float: right;
+	margin: 0 1.5em;
+} 
+
+.m-footer li {
+	padding: 0 !important;
+	margin:0 !important;
+	font-size: 140% !important;
+}
+
+.m-footer li a {
+	color: #aaa;
+	text-decoration: none;
+	font-size: 75.33% !important;
+	line-height: 1.8em;
+} 
+/* End */
+/* Header */
+
+.fix-header {
+	  border: solid 1px #e5e5e5;
+  	  border-top-left-radius: 5px;
+  	  border-top-right-radius: 5px;
+  	  padding: 3px;
+  	  background-color: #f0f0f2;
+}
+
+#fix-header {
+	  position: fixed;
+  	  margin-top: -70px;
+  	  width: 100%;
+  	  z-index: 5;
 }
