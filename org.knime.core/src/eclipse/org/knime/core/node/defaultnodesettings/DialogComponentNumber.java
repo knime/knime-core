@@ -179,8 +179,20 @@ public class DialogComponentNumber extends DialogComponent {
             spinnerModel =
                     new SpinnerNumberModel(intModel.getIntValue(), min, max,
                             stepSize);
-        } else {
-            throw new IllegalArgumentException("Only Double and Integer are "
+        } else if (numberModel instanceof SettingsModelLong) {
+            final SettingsModelLong longModel =
+                    (SettingsModelLong)numberModel;
+                Long min = null;
+                Long max = null;
+                if (longModel instanceof SettingsModelLongBounded) {
+                    min = ((SettingsModelLongBounded)longModel).getLowerBound();
+                    max = ((SettingsModelLongBounded)longModel).getUpperBound();
+                }
+                spinnerModel =
+                        new SpinnerNumberModel(longModel.getLongValue(), min, max,
+                                stepSize);
+            } else {
+            throw new IllegalArgumentException("Only Double, Long and Integer are "
                     + "currently supported by the NumberComponent");
         }
         m_spinner = new JSpinner(spinnerModel);
@@ -194,6 +206,7 @@ public class DialogComponentNumber extends DialogComponent {
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
 
         m_spinner.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 try {
                     updateModel();
@@ -208,6 +221,7 @@ public class DialogComponentNumber extends DialogComponent {
 
         // update the spinner, whenever the model changed
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -291,13 +305,20 @@ public class DialogComponentNumber extends DialogComponent {
                 if (val != model.getDoubleValue()) {
                     m_spinner.setValue(new Double(model.getDoubleValue()));
                 }
-            } else {
+            } else if (getModel() instanceof SettingsModelInteger) {
                 final SettingsModelInteger model =
                     (SettingsModelInteger)getModel();
                 final int val = ((Integer)m_spinner.getValue()).intValue();
                 if (val != model.getIntValue()) {
                     m_spinner.setValue(Integer.valueOf(model.getIntValue()));
                 }
+            } else {
+                final SettingsModelLong model =
+                        (SettingsModelLong)getModel();
+                    final long val = ((Long)m_spinner.getValue()).longValue();
+                    if (val != model.getLongValue()) {
+                        m_spinner.setValue(Long.valueOf(model.getLongValue()));
+                    }
             }
         } catch (final ParseException e) {
             // spinner contains invalid value - update component!
@@ -305,10 +326,14 @@ public class DialogComponentNumber extends DialogComponent {
                 final SettingsModelDouble model =
                     (SettingsModelDouble)getModel();
                 m_spinner.setValue(new Double(model.getDoubleValue()));
-            } else {
+            } else if (getModel() instanceof SettingsModelInteger) {
                 final SettingsModelInteger model =
                     (SettingsModelInteger)getModel();
                 m_spinner.setValue(Integer.valueOf(model.getIntValue()));
+            } else {
+                final SettingsModelLong model =
+                        (SettingsModelLong)getModel();
+                    m_spinner.setValue(Long.valueOf(model.getLongValue()));
             }
         }
 
@@ -334,10 +359,14 @@ public class DialogComponentNumber extends DialogComponent {
                     (SettingsModelDouble)getModel();
                 model.setDoubleValue(((Double)m_spinner.getValue())
                         .doubleValue());
+            } else if (getModel() instanceof SettingsModelLong) {
+                final SettingsModelLong model =
+                    (SettingsModelLong)getModel();
+                model.setLongValue(((Long)m_spinner.getValue()).longValue());
             } else {
                 final SettingsModelInteger model =
-                    (SettingsModelInteger)getModel();
-                model.setIntValue(((Integer)m_spinner.getValue()).intValue());
+                        (SettingsModelInteger)getModel();
+                    model.setIntValue(((Integer)m_spinner.getValue()).intValue());
             }
         } catch (final ParseException e) {
             final JComponent editor = m_spinner.getEditor();
@@ -350,6 +379,9 @@ public class DialogComponentNumber extends DialogComponent {
             }
             if (getModel() instanceof SettingsModelInteger) {
                 errMsg += "Please enter a valid integer number.";
+            }
+            if (getModel() instanceof SettingsModelLong) {
+                errMsg += "Please enter a valid long number.";
             }
             throw new InvalidSettingsException(errMsg);
         }
