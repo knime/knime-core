@@ -1910,5 +1910,8 @@
         <MissingCellHandler
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.timeseries.AverageInterpolationMissingCellHandlerFactory">
         </MissingCellHandler>
+        <MissingCellHandler
+              MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.FixedLongValueMissingCellHandlerFactory">
+        </MissingCellHandler>
      </extension>   
 </plugin>
