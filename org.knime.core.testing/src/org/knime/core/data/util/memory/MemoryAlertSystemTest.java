@@ -117,7 +117,6 @@ public class MemoryAlertSystemTest {
                     buffer.set(null);
                     NodeLogger.getLogger(getClass()).debug("Cleared buffer, memory should be freed now");
                     forceGC();
-                    NodeLogger.getLogger(getClass()).debug("Called System.gc");
                 } catch (Exception ex) {
                     // ignore
                 }
@@ -212,5 +211,6 @@ public class MemoryAlertSystemTest {
             System.gc();
             Thread.sleep(50);
         }
+        NodeLogger.getLogger(MemoryAlertSystemTest.class).debug("Called System.gc");
     }
 }
