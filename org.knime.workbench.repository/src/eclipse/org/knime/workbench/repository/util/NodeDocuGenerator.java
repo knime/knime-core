@@ -112,7 +112,7 @@ public class NodeDocuGenerator implements IApplication {
     private static final String NODE_REPOSITORY_TEMPLATE = "node_repository_template.html";
 
     private static final String[] FILES_TO_COPY = new String[]{"index.html", "empty_node_description.html",
-        "plus-square-o.png", "knime_logo.png", "knime_default_icon.png"};
+            "triangle.png", "knime_logo.png", "knime_default_icon.png"};
 
     /* target directory */
     private File m_directory;
@@ -336,8 +336,7 @@ public class NodeDocuGenerator implements IApplication {
                 } else {
                     catIcon = "knime_default_icon.png";
                 }
-                //m_nodeRepository.append("<li style=\"list-style-image: url(triangle.png);\" class=\"knime-category\">");
-                m_nodeRepository.append("<li class=\"knime-category\">");
+                m_nodeRepository.append("<li style=\"list-style-image: url(triangle.png);\" class=\"knime-category\">");
                 m_nodeRepository.append("<img width=\"16px\" src=\"");
                 m_nodeRepository.append(catIcon);
                 m_nodeRepository.append("\"/>&nbsp;");
