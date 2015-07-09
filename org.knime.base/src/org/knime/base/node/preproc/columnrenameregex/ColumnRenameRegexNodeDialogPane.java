@@ -63,8 +63,9 @@ import org.knime.core.node.NotConfigurableException;
 
 /** Dialog to node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.12
  */
-final class ColumnRenameRegexNodeDialogPane extends NodeDialogPane {
+public class ColumnRenameRegexNodeDialogPane extends NodeDialogPane {
 
     private final JTextField m_searchField;
     private final JTextField m_replaceField;

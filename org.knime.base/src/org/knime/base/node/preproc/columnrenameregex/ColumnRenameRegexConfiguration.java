@@ -45,22 +45,31 @@
  */
 package org.knime.base.node.preproc.columnrenameregex;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /** Settings proxy for the node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.12
  */
-final class ColumnRenameRegexConfiguration {
+public final class ColumnRenameRegexConfiguration {
 
     private String m_searchString;
     private String m_replaceString;
     private boolean m_isCaseInsensitive;
     private boolean m_isLiteral;
+    private boolean m_hasChanged = false;
+    private boolean m_hasConflicts = false;
 
     /** @return the searchString */
     String getSearchString() {
@@ -71,7 +80,7 @@ final class ColumnRenameRegexConfiguration {
         m_searchString = searchString;
     }
     /** @return the replaceString */
-    String getReplaceString() {
+    public String getReplaceString() {
         return m_replaceString;
     }
     /** @param replaceString the replaceString to set */
@@ -97,7 +106,7 @@ final class ColumnRenameRegexConfiguration {
     }
     /** Save config to argument.
      * @param settings To save to. */
-    void saveConfiguration(final NodeSettingsWO settings) {
+    public void saveConfiguration(final NodeSettingsWO settings) {
         if (m_searchString != null) {
             settings.addString("searchString", m_searchString);
             settings.addString("replaceString", m_replaceString);
@@ -110,7 +119,7 @@ final class ColumnRenameRegexConfiguration {
      * @param settings To load from.
      * @throws InvalidSettingsException If that fails.
      */
-    void loadSettingsInModel(final NodeSettingsRO settings)
+    public void loadSettingsInModel(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         m_searchString = settings.getString("searchString");
         m_replaceString = settings.getString("replaceString");
@@ -134,7 +143,7 @@ final class ColumnRenameRegexConfiguration {
      * @return A new pattern.
      * @throws InvalidSettingsException
      *          If that fails due to a {@link PatternSyntaxException}. */
-    Pattern toSearchPattern() throws InvalidSettingsException {
+    public Pattern toSearchPattern() throws InvalidSettingsException {
         try {
             int flags = 0;
             if (m_isCaseInsensitive) {
@@ -150,5 +159,84 @@ final class ColumnRenameRegexConfiguration {
         }
 
     }
+
+    /**
+     * Call the method {@link #hasChanged()} or {@link #hasConflicts()} after executing this method to get additional
+     * information.
+     * @param in input DataTableSpec
+     * @return renamed input DataTableSpec
+     * @throws InvalidSettingsException if the settings are invalid
+     */
+    public DataTableSpec createNewSpec(final DataTableSpec in)
+            throws InvalidSettingsException {
+            Pattern searchPattern = toSearchPattern();
+            final String rawReplace = getReplaceString();
+            DataColumnSpec[] cols = new DataColumnSpec[in.getNumColumns()];
+            m_hasChanged = false;
+            m_hasConflicts = false;
+            Set<String> nameHash = new HashSet<>();
+            for (int i = 0; i < cols.length; i++) {
+                String replace = getReplaceStringWithIndex(rawReplace, i);
+                final DataColumnSpec oldCol = in.getColumnSpec(i);
+                final String oldName = oldCol.getName();
+                DataColumnSpecCreator creator = new DataColumnSpecCreator(oldCol);
+                Matcher m = searchPattern.matcher(oldName);
+                StringBuffer sb = new StringBuffer();
+                while (m.find()) {
+                    try {
+                        m.appendReplacement(sb, replace);
+                    } catch (IndexOutOfBoundsException ex) {
+                        throw new InvalidSettingsException(
+                                "Error in replacement string: " + ex.getMessage(),
+                                ex);
+                    }
+                }
+                m.appendTail(sb);
+                final String newName = sb.toString();
+
+                if (newName.length() == 0) {
+                    throw new InvalidSettingsException("Replacement in column '"
+                            + oldName + "' leads to an empty column name.");
+                }
+
+                if (!newName.equals(oldName)) {
+                    m_hasChanged = true;
+                }
+                String newNameUnique = newName;
+                int unifier = 1;
+                while (!nameHash.add(newNameUnique)) {
+                    m_hasConflicts = true;
+                    newNameUnique = newName + " (#" + (unifier++) + ")";
+                }
+                creator.setName(newNameUnique);
+                cols[i] = creator.createSpec();
+            }
+            return new DataTableSpec(in.getName(), cols);
+        }
+
+        private static String getReplaceStringWithIndex(
+                final String replace, final int index) {
+            if (!replace.contains("$i")) {
+                return replace;
+            }
+            /* replace every $i by index .. unless it is escaped */
+            // check starts with $i
+            String result = replace.replaceAll("^\\$i", Integer.toString(index));
+            // any subsequent occurrence, which is not escaped
+            return result.replaceAll("([^\\\\])\\$i", "$1" + index);
+        }
+        /**
+         * @return <code>true</code> if the last created DataTableSpec was different to the input spec that
+         * should be converted
+         */
+        public boolean hasChanged() {
+            return m_hasChanged;
+        }
+        /**
+         * @return <code>true</code> if the last created DataTableSpec had conflicts
+         */
+        public boolean hasConflicts() {
+            return m_hasConflicts;
+        }
 
 }

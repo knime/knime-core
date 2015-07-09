@@ -47,13 +47,7 @@ package org.knime.base.node.preproc.columnrenameregex;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -82,78 +76,29 @@ final class ColumnRenameRegexNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_config == null) {
-            throw new InvalidSettingsException("No configuration available");
-        }
         return new DataTableSpec[] {getNewSpec(inSpecs[0])};
     }
 
-    private DataTableSpec getNewSpec(final DataTableSpec in)
-        throws InvalidSettingsException {
-        Pattern searchPattern = m_config.toSearchPattern();
-        final String rawReplace = m_config.getReplaceString();
-        DataColumnSpec[] cols = new DataColumnSpec[in.getNumColumns()];
-        boolean hasChanged = false;
-        boolean hasConflicts = false;
-        Set<String> nameHash = new HashSet<String>();
-        for (int i = 0; i < cols.length; i++) {
-            String replace = getReplaceStringWithIndex(rawReplace, i);
-            final DataColumnSpec oldCol = in.getColumnSpec(i);
-            final String oldName = oldCol.getName();
-            DataColumnSpecCreator creator = new DataColumnSpecCreator(oldCol);
-            Matcher m = searchPattern.matcher(oldName);
-            StringBuffer sb = new StringBuffer();
-            while (m.find()) {
-                try {
-                    m.appendReplacement(sb, replace);
-                } catch (IndexOutOfBoundsException ex) {
-                    throw new InvalidSettingsException(
-                            "Error in replacement string: " + ex.getMessage(),
-                            ex);
-                }
-            }
-            m.appendTail(sb);
-            final String newName = sb.toString();
-
-            if (newName.length() == 0) {
-                throw new InvalidSettingsException("Replacement in column '"
-                        + oldName + "' leads to an empty column name.");
-            }
-
-            if (!newName.equals(oldName)) {
-                hasChanged = true;
-            }
-            String newNameUnique = newName;
-            int unifier = 1;
-            while (!nameHash.add(newNameUnique)) {
-                hasConflicts = true;
-                newNameUnique = newName + " (#" + (unifier++) + ")";
-            }
-            creator.setName(newNameUnique);
-            cols[i] = creator.createSpec();
+    /**
+     * @param inSpec the input DataTableSpec
+     * @return the renamed input DataTableSpec
+     * @throws InvalidSettingsException if the settings are invalid or not present
+     */
+    protected DataTableSpec getNewSpec(final DataTableSpec inSpec) throws InvalidSettingsException {
+        if (m_config == null) {
+            throw new InvalidSettingsException("No configuration available");
         }
-        if (cols.length == 0) {
+        final DataTableSpec outSpec = m_config.createNewSpec(inSpec);
+        if (inSpec.getNumColumns() == 0) {
             // don't bother if input is empty
-        } else if (!hasChanged) {
+        } else if (!m_config.hasChanged()) {
             setWarningMessage("Pattern did not match any column "
                     + "name, leaving input unchanged");
-        } else if (hasConflicts) {
+        } else if (m_config.hasConflicts()) {
             setWarningMessage("Pattern replace resulted in duplicate column "
                     + "names; resolved conflicts using \"(#index)\" suffix");
         }
-        return new DataTableSpec(in.getName(), cols);
-    }
-
-    private static String getReplaceStringWithIndex(
-            final String replace, final int index) {
-        if (!replace.contains("$i")) {
-            return replace;
-        }
-        /* replace every $i by index .. unless it is escaped */
-        // check starts with $i
-        String result = replace.replaceAll("^\\$i", Integer.toString(index));
-        // any subsequent occurrence, which is not escaped
-        return result.replaceAll("([^\\\\])\\$i", "$1" + index);
+        return outSpec;
     }
 
     /**
