@@ -50,14 +50,8 @@ package org.knime.base.node.preproc.rename;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
-import org.apache.commons.lang.StringUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -72,11 +66,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -90,10 +82,8 @@ public class RenameNodeModel extends NodeModel {
      */
     public static final String CFG_SUB_CONFIG = "all_columns";
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(RenameNodeModel.class);
-
     /** contains settings for each individual column. */
-    private Map<String, RenameColumnSetting> m_settings;
+    private RenameConfiguration m_config;
 
     /**
      * Create new model, does nothing fancy.
@@ -107,12 +97,9 @@ public class RenameNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        NodeSettingsWO subSettings = settings.addNodeSettings(CFG_SUB_CONFIG);
-        if (m_settings != null) {
-            for (Entry<String, RenameColumnSetting> entry : m_settings.entrySet()) {
-                NodeSettingsWO subSub = subSettings.addNodeSettings(entry.getKey());
-                entry.getValue().saveSettingsTo(subSub);
-            }
+        if (m_config != null) {
+            final NodeSettingsWO subSettings = settings.addNodeSettings(CFG_SUB_CONFIG);
+            m_config.save(subSettings);
         }
     }
 
@@ -121,7 +108,7 @@ public class RenameNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        load(settings);
+        new RenameConfiguration(settings.getNodeSettings(CFG_SUB_CONFIG));
     }
 
     /**
@@ -129,18 +116,7 @@ public class RenameNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings = load(settings);
-    }
-
-    /* Reads all settings from a settings object, used by validate and load. */
-    private Map<String, RenameColumnSetting> load(final NodeSettingsRO settings) throws InvalidSettingsException {
-        NodeSettingsRO subSettings = settings.getNodeSettings(CFG_SUB_CONFIG);
-        Map<String, RenameColumnSetting> result = new LinkedHashMap<String, RenameColumnSetting>();
-        for (String identifier : subSettings) {
-            NodeSettingsRO col = subSettings.getNodeSettings(identifier);
-            result.put(identifier, RenameColumnSetting.createFrom(col));
-        }
-        return result;
+        m_config = new RenameConfiguration(settings.getNodeSettings(CFG_SUB_CONFIG));
     }
 
     /**
@@ -215,70 +191,16 @@ public class RenameNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         DataTableSpec inSpec = inSpecs[0];
-        DataColumnSpec[] colSpecs = new DataColumnSpec[inSpec.getNumColumns()];
-
-        HashMap<String, Integer> duplicateHash = new HashMap<String, Integer>();
-
-        List<RenameColumnSetting> renameSettings =
-            m_settings == null ? new ArrayList<RenameColumnSetting>() : new ArrayList<RenameColumnSetting>(
-                m_settings.values());
-
-        for (int i = 0; i < colSpecs.length; i++) {
-            DataColumnSpec current = inSpec.getColumnSpec(i);
-            String name = current.getName();
-            RenameColumnSetting set = findAndRemoveSettings(name, renameSettings);
-            DataColumnSpec newColSpec;
-            if (set == null) {
-                LOGGER.debug("No rename settings for column \"" + name + "\", leaving it untouched.");
-                newColSpec = current;
-            } else {
-                newColSpec = set.configure(current);
-            }
-            String newName = newColSpec.getName();
-            CheckUtils.checkSetting(StringUtils.isNotEmpty(newName), "Column name at index '%d' is empty.", i);
-
-            Integer duplIndex = duplicateHash.put(newName, i);
-            CheckUtils.checkSetting(duplIndex == null, "Duplicate column name '%s' at index '%d' and '%d'", newName,
-                duplIndex, i);
-
-            colSpecs[i] = newColSpec;
+        if (m_config == null) {
+            throw new InvalidSettingsException("No configuration available");
         }
-
-        if (!renameSettings.isEmpty()) {
-            List<String> missingColumnNames = new ArrayList<String>();
-
-            for (RenameColumnSetting setting : renameSettings) {
-                String name = setting.getName();
-                if (StringUtils.isNotEmpty(name)) {
-                    missingColumnNames.add(name);
-                }
-            }
-
+        final DataTableSpec resultSpec = m_config.getNewSpec(inSpec);
+        final List<String> missingColumnNames = m_config.getMissingColumnNames();
+        if (missingColumnNames != null && !missingColumnNames.isEmpty()) {
             setWarningMessage("The following columns are configured but no longer exist: "
                 + ConvenienceMethods.getShortStringFrom(missingColumnNames, 5));
         }
-        return new DataTableSpec[]{new DataTableSpec(colSpecs)};
-    }
-
-    /**
-     * Traverses the array m_settings and finds the settings object for a given column.
-     *
-     * @param colName The column name.
-     * @param renameSettings
-     * @return The settings to the column (if any), otherwise null.
-     */
-    private RenameColumnSetting findAndRemoveSettings(final String colName,
-        final List<RenameColumnSetting> renameSettings) {
-
-        Iterator<RenameColumnSetting> listIterator = renameSettings.iterator();
-        while (listIterator.hasNext()) {
-            RenameColumnSetting set = listIterator.next();
-            if (set.getName().equals(colName)) {
-                listIterator.remove();
-                return set;
-            }
-        }
-        return null;
+        return new DataTableSpec[]{resultSpec};
     }
 
     /**
