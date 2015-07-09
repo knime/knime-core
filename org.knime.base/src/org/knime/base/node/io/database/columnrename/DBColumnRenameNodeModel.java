@@ -49,17 +49,13 @@
 package org.knime.base.node.io.database.columnrename;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
-import org.apache.commons.lang.StringUtils;
 import org.knime.base.node.io.database.DBNodeModel;
 import org.knime.base.node.preproc.rename.RenameColumnSetting;
-import org.knime.core.data.DataColumnSpec;
+import org.knime.base.node.preproc.rename.RenameConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
@@ -72,7 +68,6 @@ import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.StatementManipulator;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -84,10 +79,10 @@ public class DBColumnRenameNodeModel extends DBNodeModel{
     /**
      * Config identifier for the NodeSettings object contained in the NodeSettings which contains the settings.
      */
-    public static final String CFG_ALL_COLUMNS = "all_columns";
+    public static final String CFG_SUB_CONFIG = "all_columns";
 
     /** contains settings for each individual column. */
-    private Map<String, RenameColumnSetting> m_settings;
+    private RenameConfiguration m_config;
 
     /**
      * Constructor for the node model.
@@ -126,13 +121,9 @@ public class DBColumnRenameNodeModel extends DBNodeModel{
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        NodeSettingsWO allColumnsSettings = settings.addNodeSettings(CFG_ALL_COLUMNS);
-        if(m_settings != null){
-            for(Entry<String, RenameColumnSetting> entry : m_settings.entrySet()){
-                NodeSettingsWO colSettings = allColumnsSettings.addNodeSettings(
-                    entry.getKey());
-                entry.getValue().saveSettingsTo(colSettings);
-            }
+        if (m_config != null) {
+            final NodeSettingsWO subSettings = settings.addNodeSettings(CFG_SUB_CONFIG);
+            m_config.save(subSettings);
         }
     }
 
@@ -141,7 +132,7 @@ public class DBColumnRenameNodeModel extends DBNodeModel{
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        load(settings);
+        new RenameConfiguration(settings.getNodeSettings(CFG_SUB_CONFIG));
     }
 
     /**
@@ -149,24 +140,7 @@ public class DBColumnRenameNodeModel extends DBNodeModel{
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings = load(settings);
-    }
-
-    /**
-     * Reads all settings from a settings object,
-     * used by validateSettings and loadValidatedSettingsFrom.
-     * @param settings
-     * @return
-     */
-    private Map<String, RenameColumnSetting> load(final NodeSettingsRO settings) throws InvalidSettingsException{
-        Map<String, RenameColumnSetting> result = new LinkedHashMap<>();
-        NodeSettingsRO allColumnsSettings = settings.getNodeSettings(CFG_ALL_COLUMNS);
-        for(String configKey : allColumnsSettings){
-            NodeSettingsRO colSettings = allColumnsSettings.getNodeSettings(configKey);
-            result.put(configKey, RenameColumnSetting.createFrom(colSettings));
-        }
-
-        return result;
+        m_config = new RenameConfiguration(settings.getNodeSettings(CFG_SUB_CONFIG));
     }
 
     private String createQuery(final String selectQuery, final DataTableSpec inSpec,
@@ -175,12 +149,13 @@ public class DBColumnRenameNodeModel extends DBNodeModel{
         final String tableName = "table_" + System.identityHashCode(this);
 
         final StringBuilder columnBuf = new StringBuilder();
-        if (m_settings == null || m_settings.isEmpty()) {
+        Collection<RenameColumnSetting> columnSettings = m_config.getRenameColumnSettings();
+        if (columnSettings.isEmpty()) {
             setWarningMessage("No column is renamed.");
             columnBuf.append("*"); // selects all columns
         } else {
             final List<RenameColumnSetting> renameSettings =
-                        new ArrayList<>(m_settings.values());
+                        new ArrayList<>(columnSettings);
             final int totalColumns = inSpec.getNumColumns();
             for (int i = 0; i < totalColumns; i++) {
                 final String colName = inSpec.getColumnSpec(i).getName();
@@ -207,52 +182,6 @@ public class DBColumnRenameNodeModel extends DBNodeModel{
         return buf.toString();
     }
 
-    private DataTableSpec createNewSpec(final DataTableSpec inSpec) throws InvalidSettingsException{
-        DataColumnSpec[] colSpecs = new DataColumnSpec[inSpec.getNumColumns()];
-
-        HashMap<String, Integer> duplicateHash = new HashMap<>();
-
-        List<RenameColumnSetting> renameSettings =
-            m_settings == null ? new ArrayList<RenameColumnSetting>() : new ArrayList<>(
-                m_settings.values());
-
-        for (int i = 0; i < colSpecs.length; i++) {
-            DataColumnSpec current = inSpec.getColumnSpec(i);
-            String name = current.getName();
-            RenameColumnSetting colSettings = findAndRemoveSettings(name, renameSettings);
-            DataColumnSpec newColSpec;
-            if (colSettings == null) {
-                newColSpec = current;
-            } else {
-                newColSpec = colSettings.configure(current);
-            }
-            String newName = newColSpec.getName();
-            CheckUtils.checkSetting(StringUtils.isNotEmpty(newName), "Column name at index '%d' is empty.", i);
-
-            Integer duplIndex = duplicateHash.put(newName, i);
-            CheckUtils.checkSetting(duplIndex == null, "Duplicate column name '%s' at index '%d' and '%d'", newName,
-                duplIndex, i);
-
-            colSpecs[i] = newColSpec;
-        }
-
-        if (!renameSettings.isEmpty()) {
-            List<String> missingColumnNames = new ArrayList<>();
-
-            for (RenameColumnSetting setting : renameSettings) {
-                String name = setting.getName();
-                if (StringUtils.isNotEmpty(name)) {
-                    missingColumnNames.add(name);
-                }
-            }
-
-            setWarningMessage("The following columns are configured but no longer exist: "
-                + ConvenienceMethods.getShortStringFrom(missingColumnNames, 5));
-        }
-
-        return new DataTableSpec(colSpecs);
-    }
-
     /**
      * Traverses the array renameSettings and finds the settings object for a given column.
      *
@@ -262,7 +191,6 @@ public class DBColumnRenameNodeModel extends DBNodeModel{
      */
     private RenameColumnSetting findAndRemoveSettings(final String colName,
         final List<RenameColumnSetting> renameSettings) {
-
         Iterator<RenameColumnSetting> listIterator = renameSettings.iterator();
         while (listIterator.hasNext()) {
             RenameColumnSetting set = listIterator.next();
@@ -276,15 +204,22 @@ public class DBColumnRenameNodeModel extends DBNodeModel{
 
     private DatabasePortObjectSpec createDBOutSpec(final DatabasePortObjectSpec inSpec)
             throws InvalidSettingsException{
+        if (m_config == null) {
+            throw new InvalidSettingsException("No configuration available");
+        }
         final DataTableSpec tableSpec = inSpec.getDataTableSpec();
-        final DataTableSpec newTableSpec = createNewSpec(tableSpec);
-
+        final DataTableSpec outSpec = m_config.getNewSpec(tableSpec);
+        final List<String> missingColumnNames = m_config.getMissingColumnNames();
+        if (missingColumnNames != null && !missingColumnNames.isEmpty()) {
+            setWarningMessage("The following columns are configured but no longer exist: "
+                + ConvenienceMethods.getShortStringFrom(missingColumnNames, 5));
+        }
         DatabaseQueryConnectionSettings conn = inSpec.getConnectionSettings(getCredentialsProvider());
         final StatementManipulator statementManipulator = conn.getUtility().getStatementManipulator();
         String newQuery = createQuery(conn.getQuery(), tableSpec, statementManipulator);
         conn = createDBQueryConnection(inSpec, newQuery);
 
-        return new DatabasePortObjectSpec(newTableSpec, conn.createConnectionModel());
+        return new DatabasePortObjectSpec(outSpec, conn.createConnectionModel());
     }
 
 }
