@@ -52,13 +52,14 @@ package org.knime.base.node.preproc.pmml.missingval.handlers;
 
 import org.dmg.pmml.DATATYPE;
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.knime.base.data.statistics.CellMean;
 import org.knime.base.data.statistics.Statistic;
-import org.knime.base.data.statistics.calculation.Mean;
 import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
 import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.InvalidSettingsException;
@@ -71,7 +72,7 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class DoubleMeanMissingCellHandler extends DefaultMissingCellHandler {
 
-    private Mean m_mean;
+    private CellMean m_mean;
 
     /**
      * @param col the column this handler is configured for
@@ -93,7 +94,7 @@ public class DoubleMeanMissingCellHandler extends DefaultMissingCellHandler {
     @Override
     public Statistic getStatistic() {
         if (m_mean == null) {
-            m_mean = new Mean(getColumnSpec().getName());
+            m_mean = new CellMean(getColumnSpec().getName());
         }
         return m_mean;
     }
@@ -103,8 +104,7 @@ public class DoubleMeanMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        double result = m_mean.getResult(getColumnSpec().getName());
-        return new DoubleCell(result);
+        return m_mean.getResult(0);
     }
 
     /**
@@ -115,11 +115,12 @@ public class DoubleMeanMissingCellHandler extends DefaultMissingCellHandler {
         if (m_mean == null) {
             throw new IllegalStateException("The field can only be created after the statistic has been filled");
         }
-        if (Double.isNaN(m_mean.getResult(getColumnSpec().getName()))) {
+        DataCell result = m_mean.getResult(0);
+        if (result.isMissing()) {
             return null;
         }
         DATATYPE.Enum dt = DATATYPE.DOUBLE;
-        String val = Double.toString(m_mean.getResult(getColumnSpec().getName()));
+        String val = Double.toString(((DoubleValue)result).getDoubleValue());
         return createValueReplacingDerivedField(dt, val);
     }
 

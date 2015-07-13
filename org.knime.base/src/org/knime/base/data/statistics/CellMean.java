@@ -1,9 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,99 +44,74 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   13.01.2015 (Alexander): created
+ *   13.07.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.missingval.handlers;
+package org.knime.base.data.statistics;
 
-import org.dmg.pmml.DATATYPE;
-import org.dmg.pmml.DerivedFieldDocument.DerivedField;
-import org.knime.base.data.statistics.CellMean;
-import org.knime.base.data.statistics.Statistic;
-import org.knime.base.node.preproc.pmml.missingval.DataColumnWindow;
-import org.knime.base.node.preproc.pmml.missingval.DefaultMissingCellHandler;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.data.def.DoubleCell;
 
 /**
- * A handler that replaces missing values with the rounded mean of the column.
+ * Statistic for calculating the mean of columns. This statistic returns a DataCell
+ * as mean that can be a MissingCell if all cells in the column are missing or the table is empty.
  * @author Alexander Fillbrunn
+ * @since 2.12
  */
-public class IntegerMeanMissingCellHandler extends DefaultMissingCellHandler {
+public class CellMean extends Statistic {
 
-    private CellMean m_mean;
+    private double[] m_sums;
+    private int[] m_counts;
+    private int[] m_indices;
 
     /**
-     * @param col the column this handler is configured for
+     * @param columns the columns this statistic is for
      */
-    public IntegerMeanMissingCellHandler(final DataColumnSpec col) {
-        super(col);
+    public CellMean(final String... columns) {
+        super(DoubleValue.class, columns);
+        m_sums = new double[columns.length];
+        m_counts = new int[columns.length];
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void saveSettingsTo(final NodeSettingsWO settings) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Statistic getStatistic() {
-        if (m_mean == null) {
-            m_mean = new CellMean(getColumnSpec().getName());
+    protected void consumeRow(final DataRow dataRow) {
+        for (int i = 0; i < m_indices.length; i++) {
+            int idx = m_indices[i];
+            DataCell cell = dataRow.getCell(idx);
+            if (!cell.isMissing()) {
+                m_counts[i]++;
+                m_sums[i] += ((DoubleValue)cell).getDoubleValue();
+            }
         }
-        return m_mean;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        DataCell result = m_mean.getResult(0);
-        // NaN is not possible as integer or long, so we also return missing
-        if (result.isMissing() || Double.isNaN(((DoubleValue)result).getDoubleValue())) {
-            return result;
+    protected void init(final DataTableSpec spec, final int amountOfColumns) {
+        m_indices = new int[amountOfColumns];
+        for (int i = 0; i < m_indices.length; i++) {
+            m_indices[i] = spec.findColumnIndex(getColumns()[i]);
         }
-        if (getColumnSpec().getType().equals(IntCell.TYPE)) {
-            return new IntCell((int)Math.round(((DoubleValue)result).getDoubleValue()));
+    }
+
+    /**
+     * @param col the index of the column as it was given in the constructor of the statistic
+     * @return Returns a double cell that is missing if all values in the table are missing and the mean otherwise.
+     */
+    public DataCell getResult(final int col) {
+        if (m_counts[col] == 0) {
+            return DataType.getMissingCell();
         } else {
-            return new LongCell(Math.round(((DoubleValue)result).getDoubleValue()));
+            return new DoubleCell(m_sums[col] / m_sums[col]);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DerivedField getPMMLDerivedField() {
-        if (m_mean == null) {
-            throw new IllegalStateException("The field can only be created after the statistic has been filled");
-        }
-        DataCell result = m_mean.getResult(0);
-        if (result.isMissing()) {
-            return null;
-        }
-        DATATYPE.Enum dt = DATATYPE.INTEGER;
-        long value = Math.round(Math.round(((DoubleValue)result).getDoubleValue()));
-        String val = Long.toString(value);
-
-        return createValueReplacingDerivedField(dt, val);
-    }
 }
