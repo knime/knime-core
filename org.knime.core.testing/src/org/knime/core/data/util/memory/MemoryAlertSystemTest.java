@@ -74,6 +74,7 @@ public class MemoryAlertSystemTest {
      */
     @Before
     public void checkAvailableMemory() throws Exception {
+        forceGC();
         for (int i = 0; i < 10 && MemoryAlertSystem.getInstance().isMemoryLow(); i++) {
             forceGC();
             Thread.sleep(1000);
