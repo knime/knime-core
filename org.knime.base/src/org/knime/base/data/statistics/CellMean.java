@@ -110,7 +110,7 @@ public class CellMean extends Statistic {
         if (m_counts[col] == 0) {
             return DataType.getMissingCell();
         } else {
-            return new DoubleCell(m_sums[col] / m_sums[col]);
+            return new DoubleCell(m_sums[col] / m_counts[col]);
         }
     }
 

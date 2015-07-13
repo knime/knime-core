@@ -136,7 +136,7 @@ public class IntegerMeanMissingCellHandler extends DefaultMissingCellHandler {
             return null;
         }
         DATATYPE.Enum dt = DATATYPE.INTEGER;
-        long value = Math.round(Math.round(((DoubleValue)result).getDoubleValue()));
+        long value = Math.round(((DoubleValue)result).getDoubleValue());
         String val = Long.toString(value);
 
         return createValueReplacingDerivedField(dt, val);
