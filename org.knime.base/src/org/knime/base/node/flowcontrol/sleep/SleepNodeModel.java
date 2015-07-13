@@ -58,6 +58,8 @@ import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Calendar;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -172,19 +174,7 @@ public class SleepNodeModel extends NodeModel {
 
         if (m_selection == 0) {
             // wait for
-            Runnable r = new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(m_waittime);
-                    } catch (InterruptedException e) {
-                        // noting
-                    }
-                }
-            };
-            KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(r);
-            r.run();
+            waitFor(m_waittime);
         } else if (m_selection == 1) {
             // wait to
             Calendar c = Calendar.getInstance();
@@ -194,19 +184,7 @@ public class SleepNodeModel extends NodeModel {
             if (sleepTime <= 0) {
                 return inData;
             } else {
-                Runnable r = new Runnable() {
-
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(sleepTime);
-                        } catch (InterruptedException e) {
-                            // nothing
-                        }
-                    }
-                };
-                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(r);
-                r.run();
+                waitFor(sleepTime);
             }
         } else if (m_selection == 2) {
             WatchService w = FileSystems.getDefault().newWatchService();
@@ -253,6 +231,18 @@ public class SleepNodeModel extends NodeModel {
         } else {
             return inData;
         }
+    }
+
+    private static void waitFor(final long delay) throws ExecutionException {
+        Callable<Void> c = new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                Thread.sleep(delay);
+                return null;
+            }
+        };
+
+        KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(c);
     }
 
     /**
