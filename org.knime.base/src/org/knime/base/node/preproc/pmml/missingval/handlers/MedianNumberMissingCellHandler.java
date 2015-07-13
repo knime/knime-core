@@ -108,7 +108,12 @@ public class MedianNumberMissingCellHandler extends DefaultMissingCellHandler {
      */
     @Override
     public DataCell getCell(final RowKey key, final DataColumnWindow window) {
-        return new DoubleCell(((DoubleValue)m_median.getMedian(getColumnSpec().getName())).getDoubleValue());
+        DataCell cell = m_median.getMedian(getColumnSpec().getName());
+        if (cell.isMissing()) {
+            return cell;
+        } else {
+            return new DoubleCell(((DoubleValue)cell).getDoubleValue());
+        }
     }
 
     /**
