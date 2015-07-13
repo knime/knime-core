@@ -81,6 +81,9 @@ public class MemoryAlertSystemTest {
         assertThat("Cannot test because memory usage is already above threshold: " + MemoryAlertSystem.getUsage(),
             MemoryAlertSystem.getInstance().isMemoryLow(), is(false));
         m_memSystem = MemoryAlertSystem.getInstance();
+        NodeLogger.getLogger(MemoryAlertSystemTest.class).debug(
+            "Memory usage: " + MemoryAlertSystem.getUsedMemory() + "/" + MemoryAlertSystem.getMaximumMemory() + " => "
+                + MemoryAlertSystem.getUsage());
     }
 
     /**
