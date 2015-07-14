@@ -477,7 +477,7 @@ public final class DatabaseReaderConnection {
         // fix for bug #4066
         final boolean m_rowIdsStartWithZero;
         // fix for bug #5991
-        private boolean m_useDbRowId = true;
+        private final boolean m_useDbRowId;
 
         /**
          * Creates new iterator.
