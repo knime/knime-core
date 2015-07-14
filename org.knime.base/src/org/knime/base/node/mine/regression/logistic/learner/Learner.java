@@ -98,7 +98,7 @@ final class Learner {
     private RealMatrix b;
     private double m_penaltyTerm;
 
-    private static final String FAILING_MSG = "The logisitic regression model cannot be computed. "
+    private static final String FAILING_MSG = "The logistic regression model cannot be computed. "
             + "See section \"Potential Errors and Error Handling\" in the node description for possible error "
             + "causes and fixes";
 
