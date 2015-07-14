@@ -9,7 +9,8 @@
     
     <fullDescription>
         <intro>
-            This node waits for a certain time, to a certain time or for a file event (such as file creation, modification or deletion). <br/><br/>
+            This node waits for a certain time, to a certain time or for a file event (such as file creation, modification or deletion). 
+            Note that on some operating systems file events need a few seconds to be noticed by the application. <br/><br/>
 	        This node is derived from the <a href="https://tech.knime.org/book/vernalis-nodes-for-knime-trusted-extension">Vernalis community extension</a>.
         </intro>
         <option name="Wait for time:">The node waits for the entered time (HH:mm:ss). </option>
