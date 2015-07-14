@@ -310,6 +310,10 @@ public final class DatabaseWriterConnection {
                     }
                     LOGGER.info("Exception droping table \"" + table + "\": " + t.getMessage()
                         + ". Will create new table.");
+                } finally {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
                 }
                 // and create new table
                 final String query =

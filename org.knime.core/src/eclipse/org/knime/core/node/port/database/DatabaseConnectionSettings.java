@@ -692,6 +692,9 @@ public class DatabaseConnectionSettings {
                 stmt = null;
             }
             if (conn != null) {
+                if (!conn.getAutoCommit()) {
+                    conn.commit();
+                }
                 conn = null;
             }
         }
