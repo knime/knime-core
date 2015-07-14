@@ -415,7 +415,7 @@ public final class NodeTimer {
                                 int creationCount = job3.getInt("nrcreated", 0);
                                 String successor = job3.getString("successor", "");
                                 NodeStats ns = new NodeStats();
-                                ns.creationCount = execCount;
+                                ns.executionCount = execCount;
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
                                 ns.likelySuccessor = successor;
