@@ -92,7 +92,7 @@ public class MemoryAlertSystemTest {
      *
      * @throws Exception if an error occurs
      */
-    @Test(timeout = 10000)
+    @Test(timeout = 15000)
     public void testSleepWhileLow() throws Exception {
         int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
@@ -121,13 +121,14 @@ public class MemoryAlertSystemTest {
                     buffer.set(null);
                     NodeLogger.getLogger(getClass()).debug("Cleared buffer, memory should be freed now");
                     forceGC();
+                    forceGC();
                 } catch (Exception ex) {
                     // ignore
                 }
             }
         }).start();
 
-        m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 15000);
+        m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 20000);
         // should return quite fast and not time out the test method
     }
 
