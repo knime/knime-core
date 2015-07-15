@@ -177,7 +177,7 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
                 throw new IllegalArgumentException(res);
             }
             ExpandMetaNodeCommand emnc =
-                new ExpandMetaNodeCommand(manager, metaNode.getID());
+                new ExpandMetaNodeCommand(manager, metaNode.getID(), getEditor());
             execute(emnc);
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),

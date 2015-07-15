@@ -447,37 +447,57 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_afterOpenRunnables = null;
     }
 
+
+    /*
+     * Returns all sub editors (of sub nodes / meta nodes) of this editor.
+     */
     private List<IEditorPart> getSubEditors() {
+        List<IEditorPart> result = new ArrayList<IEditorPart>();
+        for (NodeContainer nc : m_manager.getNodeContainers()) {
+            result.addAll(getSubEditors(nc.getID()));
+        }
+        return result;
+    }
+
+    /**
+     * Collects the open editor(s) of the specified (sub-)workflow manager and all sub editor(s) of it. The provided id
+     * must be a child of the workflow displayed in this editor.
+     *
+     * @param id of a child of this editor. Must be a sub/meta node whose editor (and all sub-editors recursively) will
+     *            be returned.
+     * @return a list of open editors
+     */
+    public List<IEditorPart> getSubEditors(final NodeID id) {
         List<IEditorPart> editors = new ArrayList<IEditorPart>();
         if (m_manager == null) {
             // no workflow, no sub editors
             return editors;
         }
-        for (NodeContainer child : m_manager.getNodeContainers()) {
-            WorkflowManager manager;
-            if (child instanceof SubNodeContainer) {
-                SubNodeContainer subnode = (SubNodeContainer) child;
-                manager = subnode.getWorkflowManager();
-            } else if (child instanceof WorkflowManager) {
-                manager = (WorkflowManager) child;
-            } else {
-                continue;
-            }
-            WorkflowManagerInput in =
-                    new WorkflowManagerInput(manager, this);
-            if (PlatformUI.getWorkbench().getActiveWorkbenchWindow() != null) {
-                for (IWorkbenchPage p : PlatformUI.getWorkbench()
-                        .getActiveWorkbenchWindow().getPages()) {
-                    IEditorPart editor = p.findEditor(in);
-                    if (editor != null) {
-                        editors.add(editor);
-                        if (editor instanceof WorkflowEditor) {
-                            /*
-                             * Recursively get all subeditors. This is necessary
-                             * for meta nodes in meta nodes.
-                             */
-                            editors.addAll(((WorkflowEditor)editor)
-                                    .getSubEditors());
+        NodeContainer child = null;
+        WorkflowManager child_mgr = null;
+        try {
+            child = m_manager.getNodeContainer(id);
+        } catch (IllegalArgumentException iae) {
+            // if node doesn't exist - or just got deleted, then there are no sub editors
+            return editors;
+        }
+        if (child instanceof SubNodeContainer) {
+            child_mgr = ((SubNodeContainer)child).getWorkflowManager();
+        } else if (child instanceof WorkflowManager) {
+            child_mgr = (WorkflowManager)child;
+        } else {
+            return editors;
+        }
+        WorkflowManagerInput in = new WorkflowManagerInput(child_mgr, this);
+        if (PlatformUI.getWorkbench().getActiveWorkbenchWindow() != null) {
+            for (IWorkbenchPage p : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getPages()) {
+                IEditorPart child_editor = p.findEditor(in);
+                if (child_editor != null) {
+                    editors.add(child_editor);
+                    if (child_editor instanceof WorkflowEditor) {
+                        // recursively add sub editors (to get sub/meta nodes in sub/meta nodes)
+                        for (NodeContainer nc : child_mgr.getNodeContainers()) {
+                            editors.addAll(((WorkflowEditor)child_editor).getSubEditors(nc.getID()));
                         }
                     }
                 }

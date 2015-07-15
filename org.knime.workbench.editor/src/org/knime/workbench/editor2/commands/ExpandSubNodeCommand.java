@@ -47,12 +47,20 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.Arrays;
+
+import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorPart;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
  * Command that expands the selected sub node.
@@ -67,13 +75,17 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
 
     private ExpandSubnodeResult m_expandResult;
 
+    private final WorkflowEditor m_editor;
+
     /**
      * @param wfm the workflow manager holding the new metanode
      * @param id of node to be expanded.
+     * @param editor on which this command is executed
      */
-    public ExpandSubNodeCommand(final WorkflowManager wfm, final NodeID id) {
+    public ExpandSubNodeCommand(final WorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
         super(wfm);
         m_id = id;
+        m_editor = editor;
     }
 
     /**
@@ -94,7 +106,27 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
     public void execute() {
         try {
             WorkflowManager hostWFM = getHostWFM();
+
+            // close editor of subnode and children
+            NodeID wfmID = ((SubNodeContainer)hostWFM.getNodeContainer(m_id)).getWorkflowManager().getID();
+            for (IEditorPart child : m_editor.getSubEditors(m_id)) {
+                child.getEditorSite().getPage().closeEditor(child, false);
+            }
+
             m_expandResult = hostWFM.expandSubWorkflow(m_id);
+            WorkflowAnnotation[] annotations = m_expandResult.getExpandedCopyContent().getAnnotations();
+            NodeID[] nodeIDs = m_expandResult.getExpandedCopyContent().getNodeIDs();
+
+            EditPartViewer partViewer = m_editor.getViewer();
+            partViewer.deselectAll();
+            // select the new ones....
+            if (partViewer.getRootEditPart().getContents() != null
+                && partViewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
+                WorkflowRootEditPart rootEditPart = (WorkflowRootEditPart)partViewer.getRootEditPart().getContents();
+                rootEditPart.setFutureSelection(nodeIDs);
+                rootEditPart.setFutureAnnotationSelection(Arrays.asList(annotations));
+            }
+
         } catch (Exception e) {
             String error = "Expanding Sub Node failed: " + e.getMessage();
             LOGGER.error(error, e);

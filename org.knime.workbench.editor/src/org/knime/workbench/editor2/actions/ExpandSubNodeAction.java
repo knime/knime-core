@@ -170,7 +170,7 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
             if (res != null) {
                 throw new IllegalArgumentException(res);
             }
-            ExpandSubNodeCommand emnc = new ExpandSubNodeCommand(manager, subNode.getID());
+            ExpandSubNodeCommand emnc = new ExpandSubNodeCommand(manager, subNode.getID(), getEditor());
             execute(emnc);
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.ERROR);

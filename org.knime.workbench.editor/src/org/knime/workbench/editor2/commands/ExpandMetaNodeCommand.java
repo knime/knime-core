@@ -47,14 +47,20 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.util.Arrays;
+
+import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorPart;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
  *
@@ -69,13 +75,16 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
     private NodeID[] m_pastedNodes;
     private WorkflowAnnotation[] m_pastedAnnotations;
     private WorkflowPersistor m_undoCopyPersistor;
+    private final WorkflowEditor m_editor;
 
     /**
      * @param wfm the workflow manager holding the new metanode
      * @param id of node to be expanded.
+     * @param editor this command is called on.
      */
-    public ExpandMetaNodeCommand(final WorkflowManager wfm, final NodeID id) {
+    public ExpandMetaNodeCommand(final WorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
         super(wfm);
+        m_editor = editor;
         m_id = id;
     }
 
@@ -95,6 +104,10 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
     public void execute() {
         try {
             WorkflowManager hostWFM = getHostWFM();
+            // close editor of metanode and children
+            for (IEditorPart child : m_editor.getSubEditors(m_id)) {
+                child.getEditorSite().getPage().closeEditor(child, false);
+            }
             WorkflowCopyContent cnt = new WorkflowCopyContent();
             cnt.setNodeIDs(m_id);
             cnt.setIncludeInOutConnections(true);
@@ -102,6 +115,18 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
             WorkflowCopyContent wcc = hostWFM.expandMetaNode(m_id);
             m_pastedNodes = wcc.getNodeIDs();
             m_pastedAnnotations = wcc.getAnnotations();
+
+            EditPartViewer partViewer = m_editor.getViewer();
+            partViewer.deselectAll();
+            // select the new ones....
+            if (partViewer.getRootEditPart().getContents() != null
+                && partViewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
+                WorkflowRootEditPart rootEditPart = (WorkflowRootEditPart)partViewer.getRootEditPart().getContents();
+                rootEditPart.setFutureSelection(m_pastedNodes);
+                rootEditPart.setFutureAnnotationSelection(Arrays.asList(m_pastedAnnotations));
+            }
+
+
         } catch (Exception e) {
             String error = "Expanding Metanode failed: " + e.getMessage();
             LOGGER.error(error, e);
