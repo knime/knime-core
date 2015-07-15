@@ -625,10 +625,10 @@ final class SendMailConfiguration {
         String textType;
         switch (getFormat()) {
             case Html:
-                textType = "text/html";
+                textType = "text/html; charset=\"utf-8\"";
                 break;
             case Text:
-                textType = "text/plain";
+                textType = "text/plain; charset=\"utf-8\"";
                 break;
             default:
                 throw new RuntimeException("Unsupported format: " + getFormat());
