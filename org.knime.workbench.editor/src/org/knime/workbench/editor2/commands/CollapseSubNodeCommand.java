@@ -119,6 +119,9 @@ public class CollapseSubNodeCommand extends AbstractKNIMECommand {
     @Override
     public boolean canUndo() {
         if (m_wrapper != null) {
+            if (!getHostWFM().containsNodeContainer(m_wrapper)) {
+                return false;
+            }
             return null == getHostWFM().canExpandSubNode(m_wrapper);
         }
         return false;
