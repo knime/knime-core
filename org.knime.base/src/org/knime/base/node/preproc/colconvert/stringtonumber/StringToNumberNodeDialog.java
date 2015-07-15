@@ -52,6 +52,7 @@ import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -88,8 +89,10 @@ public class StringToNumberNodeDialog extends NodeDialogPane {
 
     private JTextField m_thousandsSeparator = new JTextField(",", 1);
 
-    private JComboBox m_typeChooser =
-            new JComboBox(StringToNumberNodeModel.POSSIBLETYPES);
+    private JComboBox<DataType> m_typeChooser =
+            new JComboBox<>(StringToNumberNodeModel.POSSIBLETYPES);
+
+    private JCheckBox m_genericParse = new JCheckBox("Accept type suffix, e.g. 'd', 'D', 'f', 'F'");
 
 
     /**
@@ -119,6 +122,8 @@ public class StringToNumberNodeDialog extends NodeDialogPane {
         separatorPanel.add(new JLabel("Thousands separator: "));
         m_thousandsSeparator.setMaximumSize(new Dimension(40, 20));
         separatorPanel.add(m_thousandsSeparator);
+        separatorPanel.add(Box.createHorizontalStrut(10));
+        separatorPanel.add(m_genericParse);
         contentpanel.add(separatorPanel);
         contentpanel.add(m_filtercomp.getComponentPanel());
         super.addTab("Settings", contentpanel);
@@ -139,6 +144,11 @@ public class StringToNumberNodeDialog extends NodeDialogPane {
                 settings.getString(StringToNumberNodeModel.CFG_THOUSANDSSEP,
                         StringToNumberNodeModel.DEFAULT_THOUSANDS_SEPARATOR);
         m_thousandsSeparator.setText(thousandssep);
+        // this was added in 2.12. No need for backward compatibility handling as this is done
+        // in the NodeModel class.
+        boolean genericParse = settings.getBoolean(StringToNumberNodeModel.CFG_GENERIC_PARSE,
+            StringToNumberNodeModel.DEFAULT_GENERIC_PARSE);
+        m_genericParse.setSelected(genericParse);
         if (settings.containsKey(StringToNumberNodeModel.CFG_PARSETYPE)) {
             m_typeChooser.setSelectedItem(settings.getDataType(
                     StringToNumberNodeModel.CFG_PARSETYPE, DoubleCell.TYPE));
@@ -158,5 +168,6 @@ public class StringToNumberNodeDialog extends NodeDialogPane {
                 m_thousandsSeparator.getText());
         settings.addDataType(StringToNumberNodeModel.CFG_PARSETYPE,
                 (DataType)m_typeChooser.getSelectedItem());
+        settings.addBoolean(StringToNumberNodeModel.CFG_GENERIC_PARSE, m_genericParse.isSelected());
     }
 }

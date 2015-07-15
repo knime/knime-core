@@ -115,6 +115,12 @@ public class StringToNumberNodeModel extends NodeModel {
     public static final String CFG_PARSETYPE = "parse_type";
 
     /**
+     * Key for parsing with optional trailing {@code d}, {@code f}, {@code l}.
+     * @since 2.12
+     */
+    public static final String CFG_GENERIC_PARSE = "generic_parse";
+
+    /**
      * The default decimal separator.
      */
     public static final String DEFAULT_DECIMAL_SEPARATOR = ".";
@@ -123,6 +129,14 @@ public class StringToNumberNodeModel extends NodeModel {
      * The default thousands separator.
      */
     public static final String DEFAULT_THOUSANDS_SEPARATOR = "";
+
+    /**
+     * By default do not accept type suffices.
+     * @since 2.12
+     */
+    public static final boolean DEFAULT_GENERIC_PARSE = false;
+    /** For compatibility reasons accept type suffices. */
+    static final boolean COMPAT_GENERIC_PARSE = true;
 
     /*
      * The included columns.
@@ -141,6 +155,8 @@ public class StringToNumberNodeModel extends NodeModel {
     private String m_thousandsSep = DEFAULT_THOUSANDS_SEPARATOR;
 
     private DataType m_parseType = POSSIBLETYPES[0];
+
+    private boolean m_genericParse = DEFAULT_GENERIC_PARSE;
 
     /**
      * Constructor with one inport and one outport.
@@ -264,6 +280,8 @@ public class StringToNumberNodeModel extends NodeModel {
                 settings.getString(CFG_THOUSANDSSEP,
                         DEFAULT_THOUSANDS_SEPARATOR);
         m_parseType = settings.getDataType(CFG_PARSETYPE, POSSIBLETYPES[0]);
+        // added in 2.12
+        m_genericParse = settings.getBoolean(CFG_GENERIC_PARSE, COMPAT_GENERIC_PARSE);
     }
 
     /**
@@ -275,6 +293,8 @@ public class StringToNumberNodeModel extends NodeModel {
         settings.addString(CFG_DECIMALSEP, m_decimalSep);
         settings.addString(CFG_THOUSANDSSEP, m_thousandsSep);
         settings.addDataType(CFG_PARSETYPE, m_parseType);
+        // added in 2.12
+        settings.addBoolean(CFG_GENERIC_PARSE, m_genericParse);
     }
 
     /**
@@ -312,6 +332,7 @@ public class StringToNumberNodeModel extends NodeModel {
             throw new InvalidSettingsException("Illegal parse type: " + myType);
         }
 
+        //No need to check generic parse.
     }
 
     /**
@@ -378,6 +399,7 @@ public class StringToNumberNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataCell[] getCells(final DataRow row) {
             DataCell[] newcells = new DataCell[m_colindices.length];
             for (int i = 0; i < newcells.length; i++) {
@@ -412,6 +434,9 @@ public class StringToNumberNodeModel extends NodeModel {
                             }
                         }
 
+                        if (!m_genericParse) {
+                            corrected = check(corrected);
+                        }
                         if (m_type.equals(DoubleCell.TYPE)) {
                             double parsedDouble = Double.parseDouble(corrected);
                             newcells[i] = new DoubleCell(parsedDouble);
@@ -446,6 +471,7 @@ public class StringToNumberNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataColumnSpec[] getColumnSpecs() {
             DataColumnSpec[] newcolspecs =
                     new DataColumnSpec[m_colindices.length];
@@ -480,6 +506,7 @@ public class StringToNumberNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void setProgress(final int curRowNr, final int rowCount,
                 final RowKey lastKey, final ExecutionMonitor exec) {
             exec.setProgress((double)curRowNr / (double)rowCount, "Converting");
@@ -504,4 +531,22 @@ public class StringToNumberNodeModel extends NodeModel {
         }
 
     } // end ConverterFactory
+
+    /**
+     * @param corrected A potential number as a (non-empty){@link String}.
+     * @return The original value.
+     * @throws NumberFormatException when the value ends in {@code d} or {@code f}.
+     * @since 2.12
+     */
+    public static String check(final String corrected) {
+        char c = Character.toLowerCase(corrected.charAt(corrected.length() - 1));
+        switch (c) {
+            //case 'l': //int/long do not parse with l suffix, nor double
+            case 'd': //intentional fall-through
+            case 'f':
+                throw new NumberFormatException(corrected + " is invalid because of its suffix.");
+            default:
+            return corrected;
+        }
+    }
 }

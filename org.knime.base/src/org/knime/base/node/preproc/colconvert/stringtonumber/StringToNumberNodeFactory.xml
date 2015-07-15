@@ -20,6 +20,10 @@
 		fractional parts of the decimal string.</option>
 		<option name="Thousands Separator">Choose a thousands separator 
 		used in the decimal string to group together three digits.</option>
+		<option name="Accept type suffix, e.g. 'd', 'D', 'f', 'F'">When checked, the type suffix will be
+		accepted, otherwise it fails to parse input like <tt>1d</tt>. These suffixes are typically used
+        in java-style programs to represent floating point numbers ('f' for float and 'd' for double). Default is 
+        not checked. </option>
 		<option name="Column Selection">
 		Move the columns of interest into the
 		&quot;Include&quot; list</option>
