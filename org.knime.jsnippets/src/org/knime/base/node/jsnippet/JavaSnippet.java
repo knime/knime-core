@@ -61,10 +61,12 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -124,6 +126,40 @@ import org.knime.core.util.FileUtil;
  */
 @SuppressWarnings("restriction")
 public final class JavaSnippet {
+    private static class SnippetCache {
+        private String m_snippetCode;
+        private Class<? extends AbstractJSnippet> m_snippetClass;
+
+        void invalidate() {
+            m_snippetCode = null;
+            m_snippetClass = null;
+        }
+
+        boolean isValid(final Document snippetDoc) {
+            try {
+                String currentCode = snippetDoc.getText(0, snippetDoc.getLength());
+                return Objects.equals(currentCode, m_snippetCode);
+            } catch (BadLocationException ex) {
+                return false;
+            }
+        }
+
+        void update(final Document snippetDoc, final Class<? extends AbstractJSnippet> snippetClass) {
+            try {
+                m_snippetCode = snippetDoc.getText(0, snippetDoc.getLength());
+                m_snippetClass = snippetClass;
+            } catch (BadLocationException ex) {
+                // ignore and clear cache
+                m_snippetCode = null;
+                m_snippetClass = null;
+            }
+        }
+
+        Class<? extends AbstractJSnippet> getSnippetClass() {
+            return m_snippetClass;
+        }
+    }
+
     /** Identifier for row index (starting with 0). */
     public static final String ROWINDEX = "ROWINDEX";
     /** Identifier for row ID. */
@@ -156,6 +192,7 @@ public final class JavaSnippet {
 
     private NodeLogger m_logger;
 
+    private final SnippetCache m_snippetCache = new SnippetCache();
 
     /**
      * Create a new snippet.
@@ -884,9 +921,12 @@ public final class JavaSnippet {
      * @param jarFiles the jar files
      */
     public void setJarFiles(final String[] jarFiles) {
-        m_jarFiles = jarFiles.clone();
-        // reset cache
-        m_jarFileCache = null;
+        if (!Arrays.equals(m_jarFiles, jarFiles)) {
+            m_jarFiles = jarFiles.clone();
+            // reset cache
+            m_jarFileCache = null;
+            m_snippetCache.invalidate();
+        }
     }
 
     /**
@@ -895,6 +935,12 @@ public final class JavaSnippet {
      */
     @SuppressWarnings("unchecked")
     private Class<? extends AbstractJSnippet> createSnippetClass() {
+        if (m_snippetCache.isValid(getDocument())) {
+            return m_snippetCache.getSnippetClass();
+        } else {
+            m_snippetCache.invalidate();
+        }
+
         JavaSnippetCompiler compiler = new JavaSnippetCompiler(this);
         StringWriter log = new StringWriter();
         DiagnosticCollector<JavaFileObject> digsCollector =
@@ -910,8 +956,11 @@ public final class JavaSnippet {
             try {
                 ClassLoader loader = compiler.createClassLoader(
                         this.getClass().getClassLoader());
-                return (Class<? extends AbstractJSnippet>)
-                    loader.loadClass("JSnippet");
+
+                Class<? extends AbstractJSnippet> snippetClass =
+                    (Class<? extends AbstractJSnippet>)loader.loadClass("JSnippet");
+                m_snippetCache.update(getDocument(), snippetClass);
+                return snippetClass;
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(
                         "Could not load class file.", e);
