@@ -93,13 +93,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleSetPredictorNodeModel.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeModel">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeModel"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleSimplePredicate.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleSimplePredicate">
         <filter id="1110441988">
             <message_arguments>

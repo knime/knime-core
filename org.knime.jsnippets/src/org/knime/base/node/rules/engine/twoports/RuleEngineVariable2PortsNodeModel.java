@@ -45,7 +45,7 @@
  * History
  *   11.04.2008 (thor): created
  */
-package org.knime.base.node.rules.engine;
+package org.knime.base.node.rules.engine.twoports;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,8 +55,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.base.node.rules.engine.Condition.MatchOutcome.MatchState;
+import org.knime.base.node.rules.engine.Rule;
 import org.knime.base.node.rules.engine.Rule.Outcome;
+import org.knime.base.node.rules.engine.RuleFactory;
+import org.knime.base.node.rules.engine.RuleNodeSettings;
+import org.knime.base.node.rules.engine.RuleSupport;
+import org.knime.base.node.rules.engine.Util;
+import org.knime.base.node.rules.engine.VariableProvider;
+import org.knime.base.node.rules.engine.totable.RuleSetToTable;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
@@ -66,6 +75,7 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -78,43 +88,49 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
 
 /**
- * This is the model for the business rule node. It takes the user-defined rules and assigns the outcome of the first
- * matching rule to the new cell.
+ * This is the model for the business rule node for variables. It takes the user-defined rules and assigns the outcome of the first
+ * matching rule to the new flow variable.
  *
  * @author Thorsten Meinl, University of Konstanz
- * @since 2.8
+ * @author Gabor Bakos
  */
-public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariableProvider {
-    private final RuleEngineSettings m_settings = new RuleEngineSettings();
+class RuleEngineVariable2PortsNodeModel extends NodeModel implements FlowVariableProvider {
+    private final RuleEngine2PortsSimpleSettings m_settings = new RuleEngine2PortsSimpleSettings();
+
+    static final String VARIABLE_NAME = "variable.name";
+
+    static final String DEFAULT_VARIABLE_NAME = "prediction";
+
+    private String m_newVariableName = DEFAULT_VARIABLE_NAME;
 
     /**
      * Creates a new model.
-     *
-     * @since 2.8
      */
-    protected RuleEngineVariableNodeModel() {
-        super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL}, new PortType[]{FlowVariablePortObject.TYPE});
+    protected RuleEngineVariable2PortsNodeModel() {
+        super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL, BufferedDataTable.TYPE}, new PortType[]{FlowVariablePortObject.TYPE});
     }
 
     /**
-     * Parses all rules in the settings object.
+     * Parses all rules from {@code rulesTable}.
      *
+     * @param rulesTable The input rules table.
      * @return a list of parsed rules
      * @throws ParseException if a rule cannot be parsed
-     * @since 2.8
+     * @throws InvalidSettingsException Missing values in outcomes are not supported.
      */
-    protected List<Rule> parseRules() throws ParseException {
+    protected List<Rule> parseRules(final BufferedDataTable rulesTable) throws ParseException, InvalidSettingsException {
         ArrayList<Rule> rules = new ArrayList<Rule>();
         final Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
         final RuleFactory factory = RuleFactory.getInstance(RuleNodeSettings.VariableRule).cloned();
         factory.disableNaNComparisons();
         final DataTableSpec spec = new DataTableSpec();
         int line = 0;
-        for (String s : m_settings.rules()) {
+        for (String s : rules(rulesTable, m_settings, RuleNodeSettings.VariableRule)) {
             ++line;
             try {
                 final Rule rule = factory.parse(s, spec, availableFlowVariables);
@@ -129,20 +145,68 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
     }
 
     /**
+     * Helper method to read the rules similarly in all (Dictionary) nodes from rule tables.
+     *
+     * @param rulesTable The rules table.
+     * @param settings The configuration settings.
+     * @param ruleType The kind of the node.
+     * @return The list of rules read.
+     * @throws InvalidSettingsException Missing values in outcomes are not supported.
+     */
+    static List<String> rules(final BufferedDataTable rulesTable, final RuleEngine2PortsSimpleSettings settings, final RuleNodeSettings ruleType) throws InvalidSettingsException {
+        List<String> ret = new ArrayList<>();
+        int ruleIdx = rulesTable.getSpec().findColumnIndex(settings.getRuleColumn()), outcomeIdx =
+            rulesTable.getSpec().findColumnIndex(settings.getOutcomeColumn());
+        assert ruleIdx >= 0 : ruleIdx;
+        for (DataRow dataRow : rulesTable) {
+            DataCell ruleCell = dataRow.getCell(ruleIdx);
+            CheckUtils.checkArgument(ruleCell instanceof StringValue, "The rule in the row: " + dataRow.getKey()
+                + " is not a String: " + ruleCell.getType() + " (" + ruleCell + ")");
+            StringValue ruleSv = (StringValue)ruleCell;
+            String rule = ruleSv.getStringValue().replaceAll("[\r\n]+", " ");
+            if (outcomeIdx >= 0) {
+                String outcomeString;
+                try {
+                    outcomeString = RuleSetToTable.toStringFailForMissing(dataRow.getCell(outcomeIdx));
+                } catch (InvalidSettingsException e) {
+                    if (RuleSupport.isComment(rule)) {
+                        outcomeString = "?";
+                    } else {
+                        throw e;
+                    }
+                }
+                if (ruleType.onlyBooleanOutcome()) {
+                    if ("\"TRUE\"".equalsIgnoreCase(outcomeString)) {
+                        outcomeString = "TRUE";
+                    } else if ("\"FALSE\"".equalsIgnoreCase(outcomeString)) {
+                        outcomeString = "FALSE";
+                    }
+                }
+                rule += " => " + outcomeString;
+            }
+            ret.add(rule);
+        }
+        return ret;
+    }
+
+    /**
      * Creates the flow variable according to the computed value.
      *
      * @param rules The rules to check for match.
      * @throws InvalidSettingsException When there is an error in the settings.
      */
-    private void performExecute(final List<Rule> rules) throws InvalidSettingsException {
-        String newFlowVar = m_settings.getNewColName();
+    private void performExecute(final List<Rule> rules, final DataType outcomeColumnType) throws InvalidSettingsException {
+        String newFlowVar = m_newVariableName;
+        if (newFlowVar == null || newFlowVar.isEmpty()) {
+            newFlowVar = DEFAULT_VARIABLE_NAME;
+        }
 
-        final DataType outType = computeOutputType(rules);
+        final DataType outType = computeOutputType(rules, outcomeColumnType);
 
         final VariableProvider provider = new VariableProvider() {
             @Override
             public Object readVariable(final String name, final Class<?> type) {
-                return RuleEngineVariableNodeModel.this.readVariable(name, type);
+                return RuleEngineVariable2PortsNodeModel.this.readVariable(name, type);
             }
 
             @Override
@@ -202,7 +266,7 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      * @param rules The rules.
      * @return The common base type of the outcomes.
      */
-    static DataType computeOutputType(final List<Rule> rules) {
+    static DataType computeOutputType(final List<Rule> rules, final DataType columnType) {
         // determine output type
         List<DataType> types = new ArrayList<DataType>();
         // add outcome column types
@@ -222,7 +286,7 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
             }
             outType = temp;
         } else {
-            outType = StringCell.TYPE;
+            outType = columnType;
         }
         return outType;
     }
@@ -254,13 +318,18 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        try {
-            List<Rule> rules = parseRules();
-            performExecute(rules);
-            return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
-        } catch (ParseException ex) {
-            throw new InvalidSettingsException(ex.getMessage(), ex);
+        String warning = RuleEngine2PortsNodeModel.autoGuessRuleColumnName(inSpecs, m_settings);
+        if (warning != null) {
+            setWarningMessage(warning);
         }
+        DataTableSpec ruleTableSpec = (DataTableSpec)inSpecs[RuleEngine2PortsNodeModel.RULE_PORT];
+        //unknown table structure
+        if (ruleTableSpec == null) {
+            return null;
+        }
+        CheckUtils.checkSettingNotNull(ruleTableSpec.getColumnSpec(m_settings.getRuleColumn()),
+            "No rule column in the rules table with name: " + m_settings.getRuleColumn());
+        return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
 
     /**
@@ -268,9 +337,19 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
-        List<Rule> rules = parseRules();
-        performExecute(rules);
+        BufferedDataTable ruleTable = (BufferedDataTable)inData[RuleEngine2PortsNodeModel.RULE_PORT];
+        List<Rule> rules = parseRules(ruleTable);
+        performExecute(rules, outcomeColumnType(ruleTable));
         return new PortObject[]{FlowVariablePortObject.INSTANCE};
+    }
+
+    /**
+     * @param ruleTable Table containing the rules.
+     * @return The outcome column's {@link DataType} if one was selected.
+     */
+    protected DataType outcomeColumnType(final BufferedDataTable ruleTable) {
+        DataColumnSpec columnSpec = ruleTable.getSpec().getColumnSpec(m_settings.getOutcomeColumn());
+        return m_settings.getOutcomeColumn() == null || columnSpec == null ? StringCell.TYPE : columnSpec.getType();
     }
 
     /**
@@ -286,7 +365,8 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings.loadSettings(settings);
+        m_settings.loadSettingsModel(settings);
+        m_newVariableName = settings.getString(VARIABLE_NAME);
     }
 
     /**
@@ -310,6 +390,7 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_settings.saveSettings(settings);
+        settings.addString(VARIABLE_NAME, m_newVariableName);
     }
 
     /**
@@ -317,9 +398,9 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        RuleEngineSettings s = new RuleEngineSettings();
-        s.loadSettings(settings);
-        validateRules(s.rules());
+        RuleEngine2PortsSimpleSettings s = new RuleEngine2PortsSimpleSettings();
+        s.loadSettingsModel(settings);
+        settings.getString(VARIABLE_NAME);
     }
 
     /**

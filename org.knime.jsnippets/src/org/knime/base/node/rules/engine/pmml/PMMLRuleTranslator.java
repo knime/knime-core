@@ -85,6 +85,7 @@ import org.knime.base.node.mine.decisiontree2.PMMLPredicateTranslator;
 import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimpleSetPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
+import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
@@ -112,6 +113,10 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
         private final Double m_weight;
 
         private final Double m_confidence;
+
+        private double m_recordCount;
+
+        private double m_nbCorrect;
 
         /**
          * Constructs {@link Rule} with its content. The nbCorrect, recordCount and id properties are not available in
@@ -160,6 +165,36 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
         }
 
         /**
+         * @return the recordCount
+         * @since 2.12
+         */
+        public final double getRecordCount() {
+            return m_recordCount;
+        }
+
+        /**
+         * @param recordCount the recordCount to set
+         */
+        final void setRecordCount(final double recordCount) {
+            this.m_recordCount = recordCount;
+        }
+
+        /**
+         * @return the nbCorrect
+         * @since 2.12
+         */
+        public final double getNbCorrect() {
+            return m_nbCorrect;
+        }
+
+        /**
+         * @param nbCorrect the nbCorrect to set
+         */
+        final void setNbCorrect(final double nbCorrect) {
+            this.m_nbCorrect = nbCorrect;
+        }
+
+        /**
          * {@inheritDoc} Auto-generated {@link #toString()} method.
          */
         @Override
@@ -181,6 +216,31 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
 
     private double m_defaultConfidence;
 
+    private double m_recordCount = Double.NaN, m_nbCorrect = Double.NaN;
+
+    private RuleSetModel m_originalRuleModel;
+
+    private boolean m_provideStatistics;
+
+    /**
+     * Constructs a rule translator without providing statistics.
+     */
+    public PMMLRuleTranslator() {
+        this(false);
+    }
+
+    /**
+     * Constructs a rule translator.
+     *
+     * @param provideStatistics Parameter specifying whether statistics ({@code recordCount}, {@code nbCorrect}) should
+     *            be provided or not.
+     * @since 2.12
+     */
+    public PMMLRuleTranslator(final boolean provideStatistics) {
+        super();
+        this.m_provideStatistics = provideStatistics;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -191,15 +251,18 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
         if (models.size() == 0) {
             throw new IllegalArgumentException("No treemodel provided.");
         }
-        RuleSetModel ruleModel = models.get(0);
+        m_originalRuleModel = models.get(0);
         initDataDictionary(pmmlDoc);
-        m_rules = parseRulesFromModel(ruleModel);
-        MININGFUNCTION.Enum functionName = ruleModel.getFunctionName();
+        m_rules = parseRulesFromModel(m_originalRuleModel);
+        MININGFUNCTION.Enum functionName = m_originalRuleModel.getFunctionName();
         assert functionName == MININGFUNCTION.CLASSIFICATION : functionName;
-        m_isScorable = ruleModel.getIsScorable();
-        m_selectionMethodList = ruleModel.getRuleSet().getRuleSelectionMethodList();
-        m_defaultScore = ruleModel.getRuleSet().getDefaultScore();
-        m_defaultConfidence = ruleModel.getRuleSet().getDefaultConfidence();
+        m_isScorable = m_originalRuleModel.getIsScorable();
+        RuleSet ruleSet = m_originalRuleModel.getRuleSet();
+        m_selectionMethodList = ruleSet.getRuleSelectionMethodList();
+        m_defaultScore = ruleSet.isSetDefaultScore() ? ruleSet.getDefaultScore() : null;
+        m_defaultConfidence = ruleSet.isSetDefaultConfidence() ? ruleSet.getDefaultConfidence() : Double.NaN;
+        m_recordCount = ruleSet.isSetRecordCount() ? ruleSet.getRecordCount() : Double.NaN;
+        m_nbCorrect = ruleSet.isSetNbCorrect() ? ruleSet.getNbCorrect() : Double.NaN;
     }
 
     /**
@@ -374,8 +437,16 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
         } else {
             throw new UnsupportedOperationException(r.toString());
         }
-        return new Rule(pred, r.getScore(), r.isSetWeight() ? r.getWeight() : null, r.isSetConfidence()
-            ? r.getConfidence() : null);
+        Rule ret =
+            new Rule(pred, r.getScore(), r.isSetWeight() ? r.getWeight() : null, r.isSetConfidence()
+                ? r.getConfidence() : null);
+        if (r.isSetNbCorrect()) {
+            ret.setNbCorrect(r.getNbCorrect());
+        }
+        if (r.isSetRecordCount()) {
+            ret.setRecordCount(r.getRecordCount());
+        }
+        return ret;
     }
 
     /**
@@ -385,6 +456,11 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
     public SchemaType exportTo(final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
         m_nameMapper = new DerivedFieldMapper(pmmlDoc);
         PMML pmml = pmmlDoc.getPMML();
+//        PMMLPortObjectSpec.writeHeader(pmml);
+//        pmml.setVersion("4.2");
+//        new PMMLDataDictionaryTranslator().exportTo(pmmlDoc, spec);
+//
+//        initDataDictionary(pmmlDoc);
         RuleSetModel ruleSetModel = pmml.addNewRuleSetModel();
 
         PMMLMiningSchemaTranslator.writeMiningSchema(spec, ruleSetModel);
@@ -393,8 +469,23 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
 
         RuleSet ruleSet = ruleSetModel.addNewRuleSet();
         RuleSelectionMethod ruleSelectionMethod = ruleSet.addNewRuleSelectionMethod();
-        ruleSelectionMethod.setCriterion(Criterion.FIRST_HIT);
+        RuleSet origRs = m_originalRuleModel == null ? null : m_originalRuleModel.getRuleSet();
+        List<RuleSelectionMethod> origMethods = origRs == null ? Collections.<RuleSelectionMethod>emptyList() : origRs.getRuleSelectionMethodList();
+        ruleSelectionMethod.setCriterion(origMethods.isEmpty() ? Criterion.FIRST_HIT : origMethods.get(0).getCriterion());
+        if (!Double.isNaN(m_recordCount)) {
+            ruleSet.setRecordCount(m_recordCount);
+        }
+        if (!Double.isNaN(m_nbCorrect)) {
+            ruleSet.setNbCorrect(m_nbCorrect);
+        }
+        if (!Double.isNaN(m_defaultConfidence)) {
+            ruleSet.setDefaultConfidence(m_defaultConfidence);
+        }
+        if (m_defaultScore != null) {
+            ruleSet.setDefaultScore(m_defaultScore);
+        }
         new DerivedFieldMapper(pmmlDoc);
+        //
         addRules(ruleSet, m_rules);
         return RuleSetModel.type;
     }
@@ -409,8 +500,19 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
         for (Rule rule : rules) {
             SimpleRule simpleRule = ruleSet.addNewSimpleRule();
             simpleRule.setScore(rule.getOutcome());
+            if (m_provideStatistics && !Double.isNaN(rule.getNbCorrect())) {
+                simpleRule.setNbCorrect(rule.getNbCorrect());
+            }
+            if (m_provideStatistics && !Double.isNaN(rule.getRecordCount())) {
+                simpleRule.setRecordCount(rule.getRecordCount());
+            }
             setPredicate(simpleRule, rule.getCondition());
-            simpleRule.setWeight(rule.getWeight());
+            if (rule.getWeight() != null) {
+                simpleRule.setWeight(rule.getWeight());
+            }
+            if (rule.getConfidence() != null) {
+                simpleRule.setConfidence(rule.getConfidence());
+            }
         }
     }
 
@@ -421,22 +523,23 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
      * @param simpleRule An xml {@link SimpleRule} (recently created).
      * @param predicate A {@link PMMLPredicate} with preferably from the Rule versions of
      *            {@link PMMLRuleSimplePredicate} and {@link PMMLRuleCompoundPredicate}.
+     * @since 2.12
      */
-    void setPredicate(final SimpleRule simpleRule, final PMMLPredicate predicate) {
+    public void setPredicate(final SimpleRule simpleRule, final PMMLPredicate predicate) {
         if (predicate instanceof PMMLFalsePredicate) {
             simpleRule.addNewFalse();
         } else if (predicate instanceof PMMLTruePredicate) {
             simpleRule.addNewTrue();
-        } else if (predicate instanceof PMMLRuleSimplePredicate) {
-            PMMLRuleSimplePredicate simple = (PMMLRuleSimplePredicate)predicate;
+        } else if (predicate instanceof PMMLSimplePredicate) {
+            PMMLSimplePredicate simple = (PMMLSimplePredicate)predicate;
             SimplePredicate pred = simpleRule.addNewSimplePredicate();
             pred.setField(simple.getSplitAttribute());
             setOperator(pred, simple);
             if (simple.getThreshold() != null) {
                 pred.setValue(simple.getThreshold());
             }
-        } else if (predicate instanceof PMMLRuleCompoundPredicate) {
-            PMMLRuleCompoundPredicate comp = (PMMLRuleCompoundPredicate)predicate;
+        } else if (predicate instanceof PMMLCompoundPredicate) {
+            PMMLCompoundPredicate comp = (PMMLCompoundPredicate)predicate;
             CompoundPredicate p = simpleRule.addNewCompoundPredicate();
             setCompound(p, comp);
         } else if (predicate instanceof PMMLSimpleSetPredicate) {
@@ -482,14 +585,14 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
             cp.addNewFalse();
         } else if (pred instanceof PMMLTruePredicate) {
             cp.addNewTrue();
-        } else if (pred instanceof PMMLRuleSimplePredicate) {
-            PMMLRuleSimplePredicate simple = (PMMLRuleSimplePredicate)pred;
+        } else if (pred instanceof PMMLSimplePredicate) {
+            PMMLSimplePredicate simple = (PMMLSimplePredicate)pred;
             SimplePredicate s = cp.addNewSimplePredicate();
             s.setField(simple.getSplitAttribute());
             setOperator(s, simple);
             s.setValue(simple.getThreshold());
-        } else if (pred instanceof PMMLRuleCompoundPredicate) {
-            PMMLRuleCompoundPredicate compound = (PMMLRuleCompoundPredicate)pred;
+        } else if (pred instanceof PMMLCompoundPredicate) {
+            PMMLCompoundPredicate compound = (PMMLCompoundPredicate)pred;
             CompoundPredicate c = cp.addNewCompoundPredicate();
             setCompound(c, compound);
         } else if (pred instanceof PMMLSimpleSetPredicate) {
@@ -503,11 +606,12 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
      * Sets {@code cp}s xml content based on {@code compound}'s properties.
      *
      * @param cp An xml {@link CompoundPredicate}.
-     * @param compound A {@link PMMLRuleCompoundPredicate}.
+     * @param compound A {@link PMMLCompoundPredicate}.
      */
-    private void setCompound(final CompoundPredicate cp, final PMMLRuleCompoundPredicate compound) {
-        PMMLBooleanOperator op = compound.getConnective();
-        org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate.BooleanOperator.Enum boolOp = PMMLPredicateTranslator.getOperator(op);
+    private void setCompound(final CompoundPredicate cp, final PMMLCompoundPredicate compound) {
+        PMMLBooleanOperator op = compound.getBooleanOperator();
+        org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate.BooleanOperator.Enum boolOp =
+            PMMLPredicateTranslator.getOperator(op);
         if (boolOp == null) {
             throw new UnsupportedOperationException("Not supported: " + op);
         }
@@ -525,7 +629,7 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
         try {
             PMMLBooleanOperator op;
             op = PMMLBooleanOperator.get(operator);
-            return new PMMLRuleCompoundPredicate(op);
+            return new PMMLCompoundPredicate(op);
         } catch (InstantiationException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
@@ -536,7 +640,7 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
      */
     @Override
     protected PMMLSimplePredicate newSimplePredicate(final String field, final String operator, final String value) {
-        return new PMMLRuleSimplePredicate(field, operator, value);
+        return new PMMLSimplePredicate(field, operator, value);
     }
 
     /**
@@ -586,5 +690,16 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
      */
     public double getDefaultConfidence() {
         return m_defaultConfidence;
+    }
+
+    /**
+     * @return A reference to the original {@link RuleSetModel}. Intended to be used only in prediction to add
+     *         statistics.
+     * @see PMMLRuleSetPredictorNodeModel#createRearranger(org.knime.core.node.port.pmml.PMMLPortObject,
+     *      org.knime.core.data.DataTableSpec, boolean, String, boolean, String, int)
+     * @see AbstractCellFactory#afterProcessing()
+     */
+    RuleSetModel getOriginalRuleSetModel() {
+        return m_originalRuleModel;
     }
 }

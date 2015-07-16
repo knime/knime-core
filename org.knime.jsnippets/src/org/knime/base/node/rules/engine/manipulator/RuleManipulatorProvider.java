@@ -188,7 +188,6 @@ public class RuleManipulatorProvider implements ManipulatorProvider {
      */
     protected RuleManipulatorProvider(final boolean includeRegEx, final boolean includeMissing) {
         super();
-        @SuppressWarnings("unchecked")
         final List<Pair<String, EnumSet<Operators>>> categs =
             Arrays.asList(new Pair<String, EnumSet<Operators>>("Numeric", m_numericOps),
                 new Pair<String, EnumSet<Operators>>("Logical", m_logicalOps), new Pair<String, EnumSet<Operators>>(

@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.dmg.pmml.MININGFUNCTION;
@@ -106,6 +107,7 @@ import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
 
 /**
@@ -381,9 +383,10 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.PMMLRule).cloned();
         ruleFactory.disableColumnChecks();
         ruleFactory.disableFlowVariableChecks();
+        Map<String, FlowVariable> flowVars = getAvailableInputFlowVariables();
         for (String rule : res.rules()) {
             try {
-                ruleFactory.parse(rule, null, getAvailableInputFlowVariables());
+                ruleFactory.parse(rule, null, flowVars);
             } catch (ParseException e) {
                 throw new InvalidSettingsException(e.getMessage(), e);
             }

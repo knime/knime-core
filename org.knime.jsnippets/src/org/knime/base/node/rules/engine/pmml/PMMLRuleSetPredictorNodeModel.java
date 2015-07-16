@@ -57,6 +57,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.dmg.pmml.RuleSelectionMethodDocument.RuleSelectionMethod;
+import org.dmg.pmml.RuleSetModelDocument.RuleSetModel;
 import org.knime.base.node.rules.engine.pmml.PMMLRuleTranslator.Rule;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
@@ -202,11 +203,61 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
      */
     private ColumnRearranger createColumnRearranger(final PMMLPortObject obj, final DataTableSpec spec,
         final ExecutionMonitor exec) throws InvalidSettingsException {
+        exec.setMessage("Loading model.");
+        return createRearranger(
+            obj,
+            spec,
+            m_doReplaceColumn.getBooleanValue(),
+            m_doReplaceColumn.getBooleanValue() ? m_replaceColumn.getStringValue() : DataTableSpec.getUniqueColumnName(
+                spec, m_outputColumn.getStringValue()), m_addConfidence.getBooleanValue(),
+            m_confidenceColumn.getStringValue(), /*no validation column*/-1, /* no statistics computed, so concurrent processing is allowed*/
+            true);
+    }
+
+    /**
+     * Constructs the {@link ColumnRearranger} for computing the new columns.
+     *
+     * @param obj The {@link PMMLPortObject} of the preprocessing model.
+     * @param spec The {@link DataTableSpec} of the table.
+     * @param replaceColumn Should replace the {@code outputColumnName}?
+     * @param outputColumnName The output column name (which might be an existing).
+     * @param addConfidence Should add the confidence values to a column?
+     * @param confidenceColumnName The name of the confidence column.
+     * @param validationColumnIdx Index of the validation column, {@code -1} if not specified.
+     * @return The {@link ColumnRearranger} computing the result.
+     * @throws InvalidSettingsException Problem with rules.
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static ColumnRearranger createRearranger(final PMMLPortObject obj, final DataTableSpec spec,
+        final boolean replaceColumn, final String outputColumnName, final boolean addConfidence,
+        final String confidenceColumnName, final int validationColumnIdx) throws InvalidSettingsException {
+        return createRearranger(obj, spec, replaceColumn, outputColumnName, addConfidence, confidenceColumnName,
+            validationColumnIdx, /*might compute statistics*/false);
+    }
+
+    /**
+     * Constructs the {@link ColumnRearranger} for computing the new columns.
+     *
+     * @param obj The {@link PMMLPortObject} of the preprocessing model.
+     * @param spec The {@link DataTableSpec} of the table.
+     * @param replaceColumn Should replace the {@code outputColumnName}?
+     * @param outputColumnName The output column name (which might be an existing).
+     * @param addConfidence Should add the confidence values to a column?
+     * @param confidenceColumnName The name of the confidence column.
+     * @param validationColumnIdx Index of the validation column, {@code -1} if not specified.
+     * @param processConcurrently Should be {@code false} when the statistics are to be computed.
+     * @return The {@link ColumnRearranger} computing the result.
+     * @throws InvalidSettingsException Problem with rules.
+     */
+    private static ColumnRearranger createRearranger(final PMMLPortObject obj, final DataTableSpec spec,
+        final boolean replaceColumn, final String outputColumnName, final boolean addConfidence,
+        final String confidenceColumnName, final int validationColumnIdx, final boolean processConcurrently)
+        throws InvalidSettingsException {
         List<Node> models = obj.getPMMLValue().getModels(PMMLModelType.RuleSetModel);
         if (models.size() != 1) {
             throw new InvalidSettingsException("Expected exactly on RuleSetModel, but got: " + models.size());
         }
-        exec.setMessage("Loading model.");
         final PMMLRuleTranslator translator = new PMMLRuleTranslator();
         obj.addModelTranslater(translator);
         obj.initializeModelTranslator(translator);
@@ -216,11 +267,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         final List<PMMLRuleTranslator.Rule> rules = translator.getRules();
         ColumnRearranger ret = new ColumnRearranger(spec);
         final List<DataColumnSpec> targetCols = obj.getSpec().getTargetCols();
-        // createType(m_outputColumnType.getStringValue());
         final DataType dataType = targetCols.isEmpty() ? StringCell.TYPE : targetCols.get(0).getType();
-        DataColumnSpecCreator specCreator =
-            new DataColumnSpecCreator(m_doReplaceColumn.getBooleanValue() ? m_replaceColumn.getStringValue()
-                : DataTableSpec.getUniqueColumnName(spec, m_outputColumn.getStringValue()), dataType);
+        DataColumnSpecCreator specCreator = new DataColumnSpecCreator(outputColumnName, dataType);
         Set<DataCell> outcomes = new LinkedHashSet<DataCell>();
         for (Rule rule : rules) {
             DataCell outcome;
@@ -260,17 +308,17 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         final String defaultScore = translator.getDefaultScore();
         final Double defaultConfidence = translator.getDefaultConfidence();
         final DataColumnSpec[] specs;
-        if (m_addConfidence.getBooleanValue()) {
+        if (addConfidence) {
             specs =
                 new DataColumnSpec[]{
-                    new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(ret.createSpec(),
-                        m_confidenceColumn.getStringValue()), DoubleCell.TYPE).createSpec(), colSpec};
+                    new DataColumnSpecCreator(
+                        DataTableSpec.getUniqueColumnName(ret.createSpec(), confidenceColumnName), DoubleCell.TYPE)
+                        .createSpec(), colSpec};
         } else {
             specs = new DataColumnSpec[]{colSpec};
         }
-        final int oldColumnIndex =
-            m_doReplaceColumn.getBooleanValue() ? ret.indexOf(m_replaceColumn.getStringValue()) : -1;
-        ret.append(new AbstractCellFactory(true, specs) {
+        final int oldColumnIndex = replaceColumn ? ret.indexOf(outputColumnName) : -1;
+        ret.append(new AbstractCellFactory(processConcurrently, specs) {
             private final List<String> m_values;
             {
                 Map<String, List<String>> dd = translator.getDataDictionary();
@@ -308,7 +356,7 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
              * @return The result and possibly the confidence.
              */
             private DataCell[] toCells(final Pair<DataCell, Double> resultAndConfidence) {
-                if (!m_addConfidence.getBooleanValue()) {
+                if (!addConfidence) {
                     return new DataCell[]{resultAndConfidence.getFirst()};
                 }
                 if (resultAndConfidence.getSecond() == null) {
@@ -388,8 +436,15 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                 if (bestRule == null) {
                     return pair(result(defaultScore), defaultConfidence);
                 }
+                bestRule.setRecordCount(bestRule.getRecordCount() + 1);
+                DataCell result = result(bestRule);
+                if (validationColumnIdx >= 0) {
+                    if (row.getCell(validationColumnIdx).equals(result)) {
+                        bestRule.setNbCorrect(bestRule.getNbCorrect() + 1);
+                    }
+                }
                 Double confidence = bestRule.getConfidence();
-                return pair(result(bestRule), confidence == null ? defaultConfidence : confidence);
+                return pair(result, confidence == null ? defaultConfidence : confidence);
             }
 
             /**
@@ -443,16 +498,43 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                 for (final PMMLRuleTranslator.Rule rule : rules) {
                     Boolean eval = rule.getCondition().evaluate(row, spec);
                     if (eval == Boolean.TRUE) {
+                        rule.setRecordCount(rule.getRecordCount() + 1);
+                        DataCell result = result(rule);
+                        if (validationColumnIdx >= 0) {
+                            if (row.getCell(validationColumnIdx).equals(result)) {
+                                rule.setNbCorrect(rule.getNbCorrect() + 1);
+                            }
+                        }
                         Double confidence = rule.getConfidence();
-                        return pair(result(rule), confidence == null ? defaultConfidence : confidence);
+                        return pair(result, confidence == null ? defaultConfidence : confidence);
                     }
                 }
                 return pair(result(defaultScore), defaultConfidence);
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void afterProcessing() {
+                super.afterProcessing();
+                obj.getPMMLValue();
+                RuleSetModel ruleSet = translator.getOriginalRuleSetModel();
+                assert rules.size() == ruleSet.getRuleSet().getSimpleRuleList().size();
+                for (int i = 0; i < rules.size(); ++i) {
+                    Rule rule = rules.get(i);
+                    ruleSet.getRuleSet().getSimpleRuleArray(i).setRecordCount(rule.getRecordCount());
+                    if (validationColumnIdx >= 0) {
+                        ruleSet.getRuleSet().getSimpleRuleArray(i).setNbCorrect(rule.getNbCorrect());
+                    } else if (ruleSet.getRuleSet().getSimpleRuleArray(i).isSetNbCorrect()) {
+                        ruleSet.getRuleSet().getSimpleRuleArray(i).unsetNbCorrect();
+                    }
+                }
+            }
         });
-        if (m_doReplaceColumn.getBooleanValue()) {
-            ret.remove(m_replaceColumn.getStringValue());
-            ret.move(ret.getColumnCount() - 1 - (m_addConfidence.getBooleanValue() ? 1 : 0), oldColumnIndex);
+        if (replaceColumn) {
+            ret.remove(outputColumnName);
+            ret.move(ret.getColumnCount() - 1 - (addConfidence ? 1 : 0), oldColumnIndex);
         }
         return ret;
     }

@@ -93,6 +93,10 @@ import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
  * @since 2.8
  */
 public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvider {
+//    private static final String CFGKEY_MISSINGS_AND_NANS_MATCH = "missingsAndNaNsMatch";
+//
+//    private static final boolean DEFAULT_MISSINGS_AND_NANS_MATCH = true;
+
     private final RuleEngineSettings m_settings = new RuleEngineSettings();
 
     private int m_rowCount;
@@ -294,12 +298,29 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
 
     /**
      * Computes the output's type based on the types of the outcomes and on the option of allowed boolean outcome.
+     * <br/>
+     * Its usage is discouraged (outcome type defaults to {@link StringCell#TYPE}), please consider {@link #computeOutputType(List, DataType, boolean)} instead.
      *
      * @param types The type of outcomes.
      * @param allowBooleanOutcome Allow or not boolean results in outcome?
      * @return The {@link DataType} specifying the result's type.
      */
     public static DataType computeOutputType(final List<DataType> types, final boolean allowBooleanOutcome) {
+        return computeOutputType(types, StringCell.TYPE, allowBooleanOutcome);
+    }
+
+    /**
+     * Computes the output's type based on the types of the outcomes and on the option of allowed boolean outcome. In
+     * case there are no enabled (non-commented out) rules, the type {@code outcomeType} will be used.
+     *
+     * @param types The type of outcomes.
+     * @param outcomeType The default outcome type if no enabled rules were present.
+     * @param allowBooleanOutcome Allow or not boolean results in outcome?
+     * @return The {@link DataType} specifying the result's type.
+     * @since 2.12
+     */
+    public static DataType computeOutputType(final List<DataType> types, final DataType outcomeType,
+        final boolean allowBooleanOutcome) {
         final DataType outType;
         if (types.size() > 0) {
             DataType temp = types.get(0);
@@ -312,26 +333,39 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
             }
             outType = allowBooleanOutcome ? temp : BooleanCell.TYPE.isASuperTypeOf(temp) ? IntCell.TYPE : temp;
         } else {
-            outType = StringCell.TYPE;
+            outType = outcomeType;
         }
         return outType;
     }
 
     /**
      * Computes the outcome's type.
+     * <br/>
+     * Its usage is discouraged. Please consider {@link #computeOutputType(List, DataType, RuleNodeSettings)}
      *
      * @param rules The {@link Rule}s.
      * @param nodeType The {@link RuleNodeSettings}.
      * @return The type of the output according to {@code rules} and {@code nodeType}.
      */
     public static DataType computeOutputType(final List<Rule> rules, final RuleNodeSettings nodeType) {
+        return computeOutputType(rules, StringCell.TYPE, nodeType);
+    }
+    /**
+     * Computes the outcome's type.
+     *
+     * @param rules The {@link Rule}s.
+     * @param outcomeType The outcome column's type.
+     * @param nodeType The {@link RuleNodeSettings}.
+     * @return The type of the output according to {@code rules} and {@code nodeType}.
+     */
+    public static DataType computeOutputType(final List<Rule> rules, final DataType outcomeType, final RuleNodeSettings nodeType) {
         // determine output type
         List<DataType> types = new ArrayList<DataType>();
         // add outcome column types
         for (Rule r : rules) {
             types.add(r.getOutcome().getType());
         }
-        return computeOutputType(types, nodeType.allowBooleanOutcome());
+        return computeOutputType(types, outcomeType, nodeType.allowBooleanOutcome());
     }
 
     /** {@inheritDoc} */
@@ -454,4 +488,12 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
             }
         }
     }
+
+//    /**
+//     * @return Creates a {@link SettingsModelBoolean} that allows matching of missing and {@link Double#NaN} values in
+//     *         comparisons.
+//     */
+//    public static SettingsModelBoolean createMissingsAndNaNsMatch() {
+//        return new SettingsModelBoolean(CFGKEY_MISSINGS_AND_NANS_MATCH, DEFAULT_MISSINGS_AND_NANS_MATCH);
+//    }
 }

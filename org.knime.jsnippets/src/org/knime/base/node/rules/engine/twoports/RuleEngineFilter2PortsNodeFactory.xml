@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <knimeNode type="Manipulator" icon="./rule_engine_filter.png"
-	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Rule-based Row Filter</name>
+	xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+	<name>Rule-based Row Filter (Dictionary)</name>
 	<shortDescription>
-		 Filters the input table based on user-defined business rules
+		 Filters the input table based on user-defined (in a table) business rules
 	</shortDescription>
 
 	<fullDescription>
@@ -15,11 +15,11 @@
             excluded. If no rule matches the row will be excluded.
             Inclusion and exclusion may be inverted, see the options below.
 			<p>
-				Each rule is represented by a line.
+				Each rule is represented by a row.
 				The comments start with
 				<tt>//</tt>
 				in a line, and anything after that is not interpreted as a rule in
-				that line.
+				that row.
 				Rules consist of a condition part (antecedent), which must
 				evaluate to
 				<i>true</i>
@@ -32,12 +32,12 @@
 				.
 			</p>
 			<p>
-				If no rule matches, the outcome is treated as if it were
+				If no rule matches, the outcome is treated as if it was
 				<tt>FALSE</tt>
 				.
 			</p>
 			<p>
-				Columns are given by their name surrounded by $, numbers are given
+				Columns are given by their names surrounded by $, numbers are given
 				in the usual decimal representation. Note that strings must not
 				contain (double-)quotes (for those cases use the following syntax: <tt>/Oscar Wilde's wisdom: "Experience is simply the name we give our mistakes."/</tt>). The flow variables are
 				represented by
@@ -61,13 +61,13 @@
 				<tt>ROWID</tt>
 				represents the row key string, the
 				<tt>ROWINDEX</tt>
-				is a the index of the row (first row has
+				is the index of the row (first row has
 				<tt>0</tt>
 				value), while
 				<tt>ROWCOUNT</tt>
 				stands for the number of rows in the table.
 			</p>
-			<p>Some example rules (each should be in one line):</p>
+			<p>Some example rules (each should be in one row):</p>
 			<pre>
 // This is a comment
 $Col0$ > 0 => TRUE
@@ -90,11 +90,6 @@ $Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
 </pre>
 			The flow variables, table constants can also appear in conditions.
 			<p>
-				You can use either Ctrl+Space to insert predefined parts, or
-				select them from the upper controls.
-			</p>
-			
-			<p>
 			The following comparisons result true
 			(other values are neither less, nor greater or equal to missing and NaN values):
 			<ul>
@@ -104,21 +99,8 @@ $Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
 			</p>
 		</intro>
 
-		<option name="Column List">Available columns, which can be used as variables
-			in a rule.
-		</option>
-		<option name="Flow Variable List">Available flow variables, which can be used as
-			variables in a rule.
-		</option>
-		<option name="Category">The operator categories.</option>
-		<option name="Function">A list of valid operators in the selected
-			category.
-		</option>
-		<option name="Description">Short help about the operator.</option>
-		<option name="Expression">The rule editor. You can complete the expressions
-            with Ctrl+Space. Each row represents a rule. A red background of the
-            line signals an error and the left side of the editor then shows an error icon.
-		</option>
+        <option name="Rules column">Name of the column in the second input table containing the rules or just the conditions if an outcome column is also selected. In case the rules are available during configuration, the type of the outcome column is shown at the right end of this configuration row.</option>
+        <option name="=>">In case your rules are in two separate columns (condition and outcome), this should be the column containing the outcome values. (Ignored for the comment -starting with <tt>//</tt>- conditions. It should not contain missing values or other than the logical/boolean values or the <tt>TRUE</tt>/<tt>FALSE</tt> values in a String column.</option>
 		<option
 			name="Include TRUE matches">A row will be <b>in</b>cluded in the output if the first rule that
 			matches has TRUE outcome. If the first matching rule has a FALSE outcome or no rule matches the row will
@@ -129,10 +111,13 @@ $Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
             matches has TRUE outcome. If the first matching rule has a FALSE outcome or no rule matches the row will
             be included.
 		</option>
+        <option name="Errors">The errors found in the input table parsing the rules column</option>
+        <option name="Warnings">The warnings found in the input table parsing the rules column</option>
 	</fullDescription>
 
 	<ports>
 		<inPort index="0" name="Input table">Any data table from which to filter rows</inPort>
+		<inPort index="1" name="Rules">Table containing the rules</inPort>
 		<outPort index="0" name="Filtered">Data table with the included rows</outPort>
 	</ports>
 </knimeNode>

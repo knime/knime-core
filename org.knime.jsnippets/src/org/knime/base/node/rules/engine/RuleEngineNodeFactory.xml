@@ -24,10 +24,10 @@
 				<i>true</i>
 				or
 				<i>false</i>
-				, and an outcome (consequent, after the => symbol) which is put into
+				, and an outcome (consequent, after the =&gt; symbol) which is put into
 				the new column if the rule matches.
 			</p>
-			<p>The outcome of a rule may be any of the following: a string, a number, a boolean constant, a reference
+			<p>The outcome of a rule may be any of the following: a string (between <tt>"</tt> or <tt>/</tt>), a number, a boolean constant, a reference
                 to another column or the value of a flow variable value.
 				The type of the outcome column is the common super
 				type of all possible

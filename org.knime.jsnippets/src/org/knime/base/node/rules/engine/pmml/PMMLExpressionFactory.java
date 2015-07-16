@@ -56,6 +56,7 @@ import java.util.Set;
 
 import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
 import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLFalsePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
@@ -114,7 +115,7 @@ public class PMMLExpressionFactory implements RuleExpressionFactory<PMMLPredicat
      * @return The {@link PMMLRuleCompoundPredicate} representing the arguments.
      */
     private PMMLPredicate createConnective(final List<PMMLPredicate> boolExpressions, final PMMLBooleanOperator op) {
-        final PMMLRuleCompoundPredicate ret = new PMMLRuleCompoundPredicate(op);
+        final PMMLCompoundPredicate ret = new PMMLCompoundPredicate(op);
         ret.setPredicates(new LinkedList<PMMLPredicate>(boolExpressions));
         return ret;
     }
@@ -133,7 +134,7 @@ public class PMMLExpressionFactory implements RuleExpressionFactory<PMMLPredicat
     @Override
     public PMMLPredicate missing(final Expression reference) {
         m_usedColumns.add(expressionToString(reference));
-        return new PMMLRuleSimplePredicate(expressionToString(reference), PMMLOperator.IS_MISSING, null);
+        return new PMMLSimplePredicate(expressionToString(reference), PMMLOperator.IS_MISSING, null);
     }
 
     /**
@@ -233,9 +234,9 @@ public class PMMLExpressionFactory implements RuleExpressionFactory<PMMLPredicat
                     default:
                         throw new UnsupportedOperationException("Not supported: " + op);
             }
-            return new PMMLRuleSimplePredicate(expressionToString(right), opposite, expressionToString(left));
+            return new PMMLSimplePredicate(expressionToString(right), opposite, expressionToString(left));
         }
-        return new PMMLRuleSimplePredicate(expressionToString(left), op, expressionToString(right));
+        return new PMMLSimplePredicate(expressionToString(left), op, expressionToString(right));
     }
 
     /**

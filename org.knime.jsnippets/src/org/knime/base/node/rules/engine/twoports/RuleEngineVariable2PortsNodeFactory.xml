@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <knimeNode type="Manipulator" icon="./rule_engine_variable.png"
-	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Rule Engine Variable</name>
+	xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
+	<name>Rule Engine Variable (Dictionary)</name>
 	<shortDescription>
-		 Applies user-defined business rules to the flow variables
+		 Applies user-defined (in a table) business rules to the flow variables
 	</shortDescription>
 
 	<fullDescription>
@@ -14,11 +14,11 @@
 			will become the value of the flow variable.
 			The first matching rule will determine the outcome.
 			<p>
-				Each rule is represented by a line.
+				Each rule is represented by a row.
 				The comments start with
 				<tt>//</tt>
-				in a line, and anything after that is not interpreted as a rule in
-				that line.
+				in a condition cell, and anything after that is not interpreted as a rule in
+				that row.
 				Rules consist of a condition part (antecedent), which must
 				evaluate to
 				<i>true</i>
@@ -59,7 +59,7 @@
                 are case-sensitive.
             </p>
 
-			<p>Some example rules (each should be in one line):</p>
+			<p>Some example rules (each should be in one row):</p>
 			<pre>
 // This is a comment
 $${DFlowVar0}$$ > 0 => "Positive"
@@ -83,10 +83,6 @@ $${SFlowVar10}$$ MATCHES $${SFlowVar0}$$ OR $${DFlowVar2}$$ &lt; $${IFlowVar1}$$
     $${SFlowVar0}$$
 </pre>
 			You can compare different flow variables.
-			<p>
-				You can use either Ctrl+Space to insert predefined parts, or
-				select them from the upper controls.
-			</p>
 			
 			<p>
 				The NaNs equal to other NaN values (other values are neither less, nor
@@ -94,26 +90,19 @@ $${SFlowVar10}$$ MATCHES $${SFlowVar0}$$ OR $${DFlowVar2}$$ &lt; $${IFlowVar1}$$
 			</p>
 		</intro>
 
-		<option name="Flow Variable List">Available flow variables, which can be used as
-			variables in a rule.
-		</option>
-		<option name="Category">The operator categories.</option>
-		<option name="Function">A list of valid operators in the selected
-			category.
-		</option>
-		<option name="Description">Short help about the operator.</option>
-		<option name="Expression">The rule editor. You can complete the expressions
-            with Ctrl+Space. Each row represents a rule. A red background of the
-            line signals an error and the left side of the editor then shows an error icon.
-		</option>
-		<option name="New flow variable name">Name of the new flow variable,
+        <option name="Rules column">Name of the column in the second input table containing the rules or just the conditions if an outcome column is also selected. In case the rules are available during configuration, the type of the outcome column is shown at the right end of this configuration row.</option>
+        <option name="=>">In case your rules are in two separate columns (condition and outcome), this should be the column containing the outcome values. (Ignored for the comment -starting with <tt>//</tt>- conditions. In case it contains missing value for non-comment conditions, the output type will be String!) For String columns the outcome should not be quoted (by <tt>"</tt> or by <tt>/</tt>)</option>
+		<option name="Result variable">Name of the new flow variable,
 			which contains the
 			outcome of the rules.
 		</option>
+        <option name="Errors">The errors found in the input table parsing the rules column</option>
+        <option name="Warnings">The warnings found in the input table parsing the rules column</option>
 	</fullDescription>
 
 	<ports>
 		<inPort index="0" name="Input variables (optional)">Input variables (optional)</inPort>
-		<outPort index="0" name="Output variables">Output variables.</outPort>
+		<inPort index="1" name="Rules">Table containing the rules</inPort>
+		<outPort index="0" name="Output variables">Output variable</outPort>
 	</ports>
 </knimeNode>

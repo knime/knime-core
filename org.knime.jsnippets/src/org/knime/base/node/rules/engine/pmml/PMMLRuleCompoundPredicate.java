@@ -55,6 +55,7 @@ import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
  *
  * @author Gabor Bakos
  */
+@Deprecated
 public class PMMLRuleCompoundPredicate extends PMMLCompoundPredicate {
     private final PMMLBooleanOperator m_booleanOperator;
 
