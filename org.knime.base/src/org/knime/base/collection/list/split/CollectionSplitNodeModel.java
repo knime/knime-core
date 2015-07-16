@@ -54,6 +54,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -240,12 +241,17 @@ final class CollectionSplitNodeModel extends NodeModel {
             newColSpecs[i] = spec.getColumnSpec(i);
         }
         DataColumnSpec[] oldReplacedSpecs = fac.getColumnSpecs();
+
+        DataType[] mostSpecificTypes = fac.getCommonTypes();
+        DataColumnDomain[] domains = fac.getDomains();
+
         for (int i = 0; i < oldReplacedSpecs.length; i++) {
             DataColumnSpec s = oldReplacedSpecs[i];
             Integer index = colMap.get(s.getName());
             DataColumnSpecCreator creator =
                 new DataColumnSpecCreator(newColSpecs[index]);
-            creator.setType(fac.getCommonTypes()[i]);
+            creator.setType(mostSpecificTypes[i]);
+            creator.setDomain(domains[i]);
             newColSpecs[index] = creator.createSpec();
         }
         DataTableSpec newSpec = new DataTableSpec(spec.getName(), newColSpecs);

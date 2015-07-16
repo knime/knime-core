@@ -51,28 +51,37 @@ package org.knime.base.collection.list.split;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableDomainCreator;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DomainCreatorColumnSelection;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
  * CellFactory being used to split the column.
- * Extracted this class from CollectionSplitNodeModel because it is used in XPath since 2.11.
+ *
  * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
  * @since 2.12
  */
-public class SplitCellFactory implements CellFactory {
+class SplitCellFactory implements CellFactory {
     private final DataColumnSpec[] m_colSpecs;
     private final DataType[] m_commonTypes;
     private final int m_colIndex;
     private String m_warnMessage;
+    private final DataTableDomainCreator m_domainCreator;
 
     /** Create new cell factory.
      * @param colIndex Index of collection column
@@ -82,6 +91,29 @@ public class SplitCellFactory implements CellFactory {
         m_commonTypes = new DataType[colSpecs.length];
         m_colSpecs = colSpecs;
         m_colIndex = colIndex;
+
+        DataTableSpec dummySpec = new DataTableSpec(colSpecs);
+        m_domainCreator = new DataTableDomainCreator(dummySpec, new DomainCreatorColumnSelection() {
+            @Override
+            public boolean dropDomain(final DataColumnSpec colSpec) {
+                return false;
+            }
+
+            @Override
+            public boolean createDomain(final DataColumnSpec colSpec) {
+                return true;
+            }
+        }, new DomainCreatorColumnSelection() {
+            @Override
+            public boolean dropDomain(final DataColumnSpec colSpec) {
+                return false;
+            }
+
+            @Override
+            public boolean createDomain(final DataColumnSpec colSpec) {
+                return true;
+            }
+        });
     }
 
     /** {@inheritDoc} */
@@ -133,6 +165,7 @@ public class SplitCellFactory implements CellFactory {
             m_warnMessage = "At least one row had more elements than "
                 + "specified; row was truncated.";
         }
+        m_domainCreator.updateDomain(new DefaultRow(row.getKey(), result));
         return result;
     }
 
@@ -147,6 +180,32 @@ public class SplitCellFactory implements CellFactory {
     /** @return the commonTypes */
     public DataType[] getCommonTypes() {
         return m_commonTypes;
+    }
+
+    /**
+     * Returns the domains that were computed while processing all rows.
+     *
+     * @return an array with domain
+     */
+    public DataColumnDomain[] getDomains() {
+        DataColumnDomain[] domains = new DataColumnDomain[m_colSpecs.length];
+
+        int i = 0;
+        for (DataColumnSpec cs : m_domainCreator.createSpec()) {
+            DataColumnDomainCreator crea = new DataColumnDomainCreator(cs.getDomain());
+            if (!m_commonTypes[i].isCompatible(BoundedValue.class)) {
+                crea.setLowerBound(null);
+                crea.setUpperBound(null);
+            }
+            if (!m_commonTypes[i].isCompatible(NominalValue.class)) {
+                crea.setValues(null);
+            }
+
+            domains[i] = crea.createDomain();
+            i++;
+        }
+
+        return domains;
     }
 
     /** @return the warnMessage or null */
