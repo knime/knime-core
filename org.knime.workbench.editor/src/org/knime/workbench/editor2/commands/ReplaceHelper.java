@@ -49,9 +49,7 @@
 package org.knime.workbench.editor2.commands;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Set;
+import java.util.List;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
@@ -72,9 +70,9 @@ public class ReplaceHelper {
 
     private WorkflowManager m_wfm;
 
-    private Set<ConnectionContainer> m_incomingConnections;
+    private List<ConnectionContainer> m_incomingConnections;
 
-    private Set<ConnectionContainer> m_outgoingConnections;
+    private List<ConnectionContainer> m_outgoingConnections;
 
     private NodeContainer m_oldNode;
 
@@ -85,12 +83,13 @@ public class ReplaceHelper {
     public ReplaceHelper(final WorkflowManager wfm, final NodeContainer oldNode) {
         m_wfm = wfm;
         m_oldNode = oldNode;
-        m_incomingConnections = m_wfm.getIncomingConnectionsFor(m_oldNode.getID());
-        m_outgoingConnections = m_wfm.getOutgoingConnectionsFor(m_oldNode.getID());
+        m_incomingConnections = new ArrayList<>(m_wfm.getIncomingConnectionsFor(m_oldNode.getID()));
+        m_outgoingConnections = new ArrayList<>(m_wfm.getOutgoingConnectionsFor(m_oldNode.getID()));
     }
 
     /**
      * Checks execution status of downstream nodes and pops up reset warning if enabled.
+     *
      * @return if new node can be replaced
      */
     public boolean replaceNode() {
@@ -124,6 +123,7 @@ public class ReplaceHelper {
 
     /**
      * Connects new node with connection of the old node.
+     *
      * @param container new node container
      */
     public void reconnect(final NodeContainer container) {
@@ -136,78 +136,30 @@ public class ReplaceHelper {
         info.setIsDropLocation(false);
         container.setUIInformation(info);
 
+        int portOffset = 0;
+        if (m_oldNode instanceof WorkflowManager && !(container instanceof WorkflowManager)) {
+            portOffset = 1;
 
-        ArrayList<ConnectionContainer> sortedIncomingConnections = new ArrayList<ConnectionContainer>(m_incomingConnections);
-        // sort according to ports
-        Collections.sort(sortedIncomingConnections, new Comparator<ConnectionContainer>() {
+        }
 
-            @Override
-            public int compare(final ConnectionContainer o1, final ConnectionContainer o2) {
-                if (o1.getSourcePort() < o2.getSourcePort()) {
-                    return -1;
-                } else if (o1.getSourcePort() == o2.getSourcePort()) {
-                    return 0;
-                } else {
-                    return 1;
-                }
-            }
-        });
         // set incoming connections
-        int p = 0;
-        for (int i = 0; i < sortedIncomingConnections.size(); i++) {
-            ConnectionContainer cc = sortedIncomingConnections.get(i);
+        for (int i = 0; i < m_incomingConnections.size(); i++) {
+            ConnectionContainer cc = m_incomingConnections.get(i);
 
-            while (!m_wfm.canAddConnection(cc.getSource(), cc.getSourcePort(), container.getID(), p)) {
-                p++;
-                if (p > container.getNrInPorts()) {
-                    break;
-                }
-            }
-
-            if (p > container.getNrInPorts()) {
-                break;
-            } else {
-                m_wfm.addConnection(cc.getSource(), cc.getSourcePort(), container.getID(), p++);
-            }
-            if (p > container.getNrInPorts()) {
-                break;
+            if (m_wfm.canAddConnection(cc.getSource(), portOffset + cc.getSourcePort(), container.getID(),
+                cc.getDestPort())) {
+                m_wfm.addConnection(cc.getSource(), portOffset + cc.getSourcePort(), container.getID(),
+                    cc.getDestPort());
             }
         }
 
-        ArrayList<ConnectionContainer> sortedOutgoingConnections = new ArrayList<ConnectionContainer>(m_outgoingConnections);
-        // sort according to ports
-        Collections.sort(sortedOutgoingConnections, new Comparator<ConnectionContainer>() {
-
-            @Override
-            public int compare(final ConnectionContainer o1, final ConnectionContainer o2) {
-                if (o1.getDestPort() < o2.getDestPort()) {
-                    return -1;
-                } else if (o1.getDestPort() == o2.getDestPort()) {
-                    return 0;
-                } else {
-                    return 1;
-                }
-            }
-        });
         // set outgoing connections
-        p = 0;
-        for (int i = 0; i < sortedOutgoingConnections.size(); i++) {
-            ConnectionContainer cc = sortedOutgoingConnections.get(i);
+        for (int i = 0; i < m_outgoingConnections.size(); i++) {
+            ConnectionContainer cc = m_outgoingConnections.get(i);
 
-            while (!m_wfm.canAddConnection(container.getID(), p, cc.getDest(), cc.getDestPort())) {
-                p++;
-                if (p > container.getNrOutPorts()) {
-                    break;
-                }
-            }
-
-            if (p > container.getNrOutPorts()) {
-                break;
-            } else {
-                m_wfm.addConnection(container.getID(), p++, cc.getDest(), cc.getDestPort());
-            }
-            if (p > container.getNrOutPorts()) {
-                break;
+            if (m_wfm.canAddConnection(container.getID(), cc.getSourcePort() + portOffset, cc.getDest(),
+                cc.getDestPort())) {
+                m_wfm.addConnection(container.getID(), cc.getSourcePort() + portOffset, cc.getDest(), cc.getDestPort());
             }
         }
     }
