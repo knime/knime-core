@@ -82,7 +82,7 @@ public class MemoryAlertSystemTest {
         assertThat("Cannot test because memory usage is already above threshold: " + MemoryAlertSystem.getUsage(),
             MemoryAlertSystem.getInstance().isMemoryLow(), is(false));
         m_memSystem = MemoryAlertSystem.getInstance();
-        NodeLogger.getLogger(MemoryAlertSystemTest.class).debug(
+        NodeLogger.getLogger(getClass()).debug(
             "Memory usage: " + MemoryAlertSystem.getUsedMemory() + "/" + MemoryAlertSystem.getMaximumMemory() + " => "
                 + MemoryAlertSystem.getUsage());
     }
@@ -128,6 +128,8 @@ public class MemoryAlertSystemTest {
             }
         }).start();
 
+        NodeLogger.getLogger(getClass()).debug(
+            "Going to sleep, memory usage is " + MemoryAlertSystem.getUsage());
         m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 20000);
         // should return quite fast and not time out the test method
     }
