@@ -686,16 +686,16 @@ public class DatabaseConnectionSettings {
             stmt = conn.createStatement();
             LOGGER.debug("Executing SQL statement \"" + statement + "\"");
             stmt.execute(statement);
+            if (!conn.getAutoCommit()) {
+                conn.commit();
+            }
+        } catch (SQLException ex) {
+            if ((conn != null) && !conn.getAutoCommit()) {
+                conn.rollback();
+            }
         } finally {
             if (stmt != null) {
                 stmt.close();
-                stmt = null;
-            }
-            if (conn != null) {
-                if (!conn.getAutoCommit()) {
-                    conn.commit();
-                }
-                conn = null;
             }
         }
     }
