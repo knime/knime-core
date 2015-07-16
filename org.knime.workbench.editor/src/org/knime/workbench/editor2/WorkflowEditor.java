@@ -1555,7 +1555,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                if (!Display.getDefault().isDisposed()) {
+                if (!Display.getDefault().isDisposed() && (m_manager != null)) {
                     // mark all sub editors as saved
                     for (IEditorPart subEditor : getSubEditors()) {
                         final WorkflowEditor editor = (WorkflowEditor)subEditor;
