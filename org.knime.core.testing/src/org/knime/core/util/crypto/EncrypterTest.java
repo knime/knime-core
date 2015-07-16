@@ -76,8 +76,8 @@ public class EncrypterTest {
         assertThat("Expected same", encryptedText2, is(encryptedText));
 
         text = "äüößjjjhdshvoihgudfhgdfbv";
-        encryptedText = enc.encrypt(text);
-        encryptedText2 = enc.encrypt(text);
+        encryptedText = enc.encrypt(text, 27);
+        encryptedText2 = enc.encrypt(text, 28);
         assertThat("Expected to be different", encryptedText2, not(encryptedText));
     }
 
