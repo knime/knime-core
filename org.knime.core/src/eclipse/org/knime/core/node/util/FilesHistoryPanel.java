@@ -831,10 +831,16 @@ public final class FilesHistoryPanel extends JPanel {
     @Override
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
-        m_chooseButton.setEnabled(enabled);
-        m_textBox.setEnabled(enabled);
+
         if (m_flowVariableButton != null) {
+            boolean replacedByVariable = m_flowVariableButton.getFlowVariableModel().isVariableReplacementEnabled();
+
+            m_chooseButton.setEnabled(enabled && !replacedByVariable);
+            m_textBox.setEnabled(enabled && !replacedByVariable);
             m_flowVariableButton.setEnabled(enabled);
+        } else {
+            m_chooseButton.setEnabled(enabled);
+            m_textBox.setEnabled(enabled);
         }
     }
 
