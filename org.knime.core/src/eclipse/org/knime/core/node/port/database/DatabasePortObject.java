@@ -92,6 +92,14 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
     @SuppressWarnings("hiding")
     public static final PortType TYPE = new PortType(DatabasePortObject.class);
 
+    /**
+     * Optional database port type formed <code>PortObjectSpec.class</code> and
+     * <code>PortObject.class</code> from this class.
+     * @since 2.12
+     */
+    @SuppressWarnings("hiding")
+    public static final PortType TYPE_OPTIONAL = new PortType(DatabasePortObject.class, true);
+
     /** {@inheritDoc} */
     @Override
     public DatabasePortObjectSpec getSpec() {

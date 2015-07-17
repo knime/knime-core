@@ -78,6 +78,12 @@ public class ImagePortObject extends AbstractPortObject {
     /** Convenience accessor for the port type. */
     public static final PortType TYPE = new PortType(ImagePortObject.class);
 
+    /**
+     * Convenience accessor for the optional port type.
+     * @since 2.12
+     **/
+    public static final PortType TYPE_OPTIONAL = new PortType(ImagePortObject.class, true);
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ImagePortObject.class);
 
