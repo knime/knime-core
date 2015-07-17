@@ -49,14 +49,17 @@
 package org.knime.workbench.editor2.commands;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.Comparator;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -70,9 +73,9 @@ public class ReplaceHelper {
 
     private WorkflowManager m_wfm;
 
-    private List<ConnectionContainer> m_incomingConnections;
+    private ArrayList<ConnectionContainer> m_incomingConnections;
 
-    private List<ConnectionContainer> m_outgoingConnections;
+    private ArrayList<ConnectionContainer> m_outgoingConnections;
 
     private NodeContainer m_oldNode;
 
@@ -83,8 +86,23 @@ public class ReplaceHelper {
     public ReplaceHelper(final WorkflowManager wfm, final NodeContainer oldNode) {
         m_wfm = wfm;
         m_oldNode = oldNode;
-        m_incomingConnections = new ArrayList<>(m_wfm.getIncomingConnectionsFor(m_oldNode.getID()));
-        m_outgoingConnections = new ArrayList<>(m_wfm.getOutgoingConnectionsFor(m_oldNode.getID()));
+        m_incomingConnections = new ArrayList<ConnectionContainer>(m_wfm.getIncomingConnectionsFor(m_oldNode.getID()));
+        m_outgoingConnections = new ArrayList<ConnectionContainer>(m_wfm.getOutgoingConnectionsFor(m_oldNode.getID()));
+
+        // sort according to ports
+        Collections.sort(m_incomingConnections, new Comparator<ConnectionContainer>() {
+            @Override
+            public int compare(final ConnectionContainer o1, final ConnectionContainer o2) {
+                return Integer.compare(o1.getDestPort(), o2.getDestPort());
+            }
+        });
+        Collections.sort(m_outgoingConnections, new Comparator<ConnectionContainer>() {
+            @Override
+            public int compare(final ConnectionContainer o1, final ConnectionContainer o2) {
+                return Integer.compare(o1.getSourcePort(), o2.getSourcePort());
+            }
+        });
+
     }
 
     /**
@@ -136,30 +154,72 @@ public class ReplaceHelper {
         info.setIsDropLocation(false);
         container.setUIInformation(info);
 
-        int portOffset = 0;
+        int inShift = 0;
+        int outShift = 0;
+
         if (m_oldNode instanceof WorkflowManager && !(container instanceof WorkflowManager)) {
-            portOffset = 1;
+            // replacing a meta node (no opt. flow var ports) with a "normal" node (that has optional flow var ports)
+            if (m_oldNode.getNrInPorts() > 0 && container.getNrInPorts() > 1) {
+                // shift ports one index - unless we need to use the invisible optional flow var port of new node
+                if (!m_oldNode.getInPort(0).getPortType().equals(FlowVariablePortObject.TYPE)) {
+                    inShift = 1;
+                } else {
+                    if (container.getInPort(1).getPortType().equals(FlowVariablePortObject.TYPE)) {
+                        inShift = 1;
+                    }
+                }
+            }
+            if (m_oldNode.getNrOutPorts() > 0 && container.getNrOutPorts() > 1) {
+                if (!m_oldNode.getOutPort(0).getPortType().equals(FlowVariablePortObject.TYPE)) {
+                    outShift = 1;
+                } else {
+                    if (container.getOutPort(1).getPortType().equals(FlowVariablePortObject.TYPE)) {
+                        outShift = 1;
+                    }
+                }
+            }
+        } else if (!(m_oldNode instanceof WorkflowManager) && container instanceof WorkflowManager) {
+            // replacing a "normal" node with a meta node
+            boolean p0Conn = false;
+            for (ConnectionContainer cc : m_incomingConnections) {
+                if (cc.getDestPort() == 0) {
+                    p0Conn = true;
+                    break;
+                }
+            }
+            if (!p0Conn) {
+                inShift = -1;
+            }
+            p0Conn = false;
+            for (ConnectionContainer cc : m_outgoingConnections) {
+                if (cc.getSourcePort() == 0) {
+                    p0Conn = true;
+                    break;
+                }
+            }
+            if (!p0Conn) {
+                outShift = -1;
+            }
 
         }
 
         // set incoming connections
-        for (int i = 0; i < m_incomingConnections.size(); i++) {
-            ConnectionContainer cc = m_incomingConnections.get(i);
-
-            if (m_wfm.canAddConnection(cc.getSource(), portOffset + cc.getSourcePort(), container.getID(),
-                cc.getDestPort())) {
-                m_wfm.addConnection(cc.getSource(), portOffset + cc.getSourcePort(), container.getID(),
-                    cc.getDestPort());
+        NodeID newId = container.getID();
+        for (ConnectionContainer c : m_incomingConnections) {
+            if (m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), newId, c.getDestPort() + inShift)) {
+                m_wfm.addConnection(c.getSource(), c.getSourcePort(), newId, c.getDestPort() + inShift);
+            } else {
+                break;
             }
         }
 
         // set outgoing connections
-        for (int i = 0; i < m_outgoingConnections.size(); i++) {
-            ConnectionContainer cc = m_outgoingConnections.get(i);
-
-            if (m_wfm.canAddConnection(container.getID(), cc.getSourcePort() + portOffset, cc.getDest(),
-                cc.getDestPort())) {
-                m_wfm.addConnection(container.getID(), cc.getSourcePort() + portOffset, cc.getDest(), cc.getDestPort());
+        for (ConnectionContainer c : m_outgoingConnections) {
+            if (m_wfm
+                .canAddConnection(newId, c.getSourcePort() + outShift, c.getDest(), c.getDestPort())) {
+                m_wfm.addConnection(newId, c.getSourcePort() + outShift, c.getDest(), c.getDestPort());
+            } else {
+                break;
             }
         }
     }
