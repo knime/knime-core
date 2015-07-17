@@ -162,7 +162,7 @@ public class MemoryAlertSystemTest {
             @SuppressWarnings("unused")
             byte[] buf = new byte[reserveSize];
             forceGC();
-            Thread.sleep(1000);
+            Thread.sleep(2000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(true));
         } finally {
