@@ -152,9 +152,6 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         spanel1.setMaximumSize(new Dimension(30, 10));
 
         m_newminTextField = new JTextField(2);
-        JPanel nminpanel = new JPanel();
-        nminpanel.setLayout(new BorderLayout());
-        nminpanel.add(m_newminTextField, BorderLayout.WEST);
 
         JLabel nmax = new JLabel("Max: ");
         JPanel spanel2 = new JPanel();
@@ -163,17 +160,14 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         spanel2.setMaximumSize(new Dimension(30, 10));
 
         m_newmaxTextField = new JTextField(2);
-        JPanel nmaxpanel = new JPanel();
-        nmaxpanel.setLayout(new BorderLayout());
-        nmaxpanel.add(m_newmaxTextField, BorderLayout.WEST);
 
         panel1.add(m_minmaxButton);
         panel1.add(spanel1);
-        panel1.add(nminpanel);
+        panel1.add(m_newminTextField);
         panel1.add(Box.createHorizontalGlue());
         panel1.add(new JPanel());
         panel1.add(spanel2);
-        panel1.add(nmaxpanel);
+        panel1.add(m_newmaxTextField);
         panel1.add(Box.createHorizontalGlue());
 
         // z-score
@@ -195,6 +189,7 @@ public class NormalizerNodeDialog extends NodeDialogPane {
         group.add(m_decButton);
 
         m_minmaxButton.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 if (m_minmaxButton.isSelected()) {
                     m_filterpanel.setEnabled(true);
@@ -204,6 +199,7 @@ public class NormalizerNodeDialog extends NodeDialogPane {
             }
         });
         m_zscoreButton.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 if (m_zscoreButton.isSelected()) {
                     m_filterpanel.setEnabled(true);
@@ -213,6 +209,7 @@ public class NormalizerNodeDialog extends NodeDialogPane {
             }
         });
         m_decButton.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 if (m_decButton.isSelected()) {
                     m_filterpanel.setEnabled(true);

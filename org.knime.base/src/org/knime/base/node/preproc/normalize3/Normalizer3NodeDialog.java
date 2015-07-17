@@ -131,9 +131,6 @@ public class Normalizer3NodeDialog extends NodeDialogPane {
         spanel1.setMaximumSize(new Dimension(30, 10));
 
         m_minTextField = new JTextField(5);
-        JPanel nminpanel = new JPanel();
-        nminpanel.setLayout(new BorderLayout());
-        nminpanel.add(m_minTextField, BorderLayout.WEST);
 
         JLabel nmax = new JLabel("Max: ");
         JPanel spanel2 = new JPanel();
@@ -142,17 +139,14 @@ public class Normalizer3NodeDialog extends NodeDialogPane {
         spanel2.setMaximumSize(new Dimension(30, 10));
 
         m_maxTextField = new JTextField(5);
-        JPanel nmaxpanel = new JPanel();
-        nmaxpanel.setLayout(new BorderLayout());
-        nmaxpanel.add(m_maxTextField, BorderLayout.WEST);
 
         panel1.add(minmaxButton);
         panel1.add(spanel1);
-        panel1.add(nminpanel);
+        panel1.add(m_minTextField);
         panel1.add(Box.createHorizontalGlue());
         panel1.add(new JPanel());
         panel1.add(spanel2);
-        panel1.add(nmaxpanel);
+        panel1.add(m_maxTextField);
         panel1.add(Box.createHorizontalGlue());
 
         // z-score
