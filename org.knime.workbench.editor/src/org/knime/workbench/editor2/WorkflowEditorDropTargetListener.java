@@ -65,6 +65,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -555,6 +557,14 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
             } else {
                 getViewer().getEditDomain().getCommandStack().execute(command);
             }
+            // after adding a node the editor should get the focus
+            // this is issued asynchronously, in order to avoid bug #3029
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    Workbench.getInstance().getActiveWorkbenchWindow().getActivePage().getActiveEditor().setFocus();
+                }
+            });
         } else {
             getCurrentEvent().detail = DND.DROP_NONE;
         }
