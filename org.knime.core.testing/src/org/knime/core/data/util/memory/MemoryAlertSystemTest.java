@@ -218,6 +218,7 @@ public class MemoryAlertSystemTest {
             System.gc();
             Thread.sleep(50);
         }
-        NodeLogger.getLogger(MemoryAlertSystemTest.class).debug("Called System.gc");
+        NodeLogger.getLogger(MemoryAlertSystemTest.class).debug(
+            "Called System.gc, memory usage is now " + MemoryAlertSystem.getUsage());
     }
 }

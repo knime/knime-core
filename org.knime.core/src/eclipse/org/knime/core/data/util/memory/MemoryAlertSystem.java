@@ -363,7 +363,7 @@ public final class MemoryAlertSystem {
             long remainingTime = timeout;
             m_gcEventLock.lock();
             try {
-                while (getUsage() > threshold) {
+                while (m_lowMemory && (getUsage() > threshold)) {
                     long diff = System.currentTimeMillis();
                     if (!m_gcEvent.await(remainingTime, TimeUnit.MILLISECONDS)) {
                         return false;
