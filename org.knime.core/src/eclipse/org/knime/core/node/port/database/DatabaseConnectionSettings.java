@@ -693,6 +693,7 @@ public class DatabaseConnectionSettings {
             if ((conn != null) && !conn.getAutoCommit()) {
                 conn.rollback();
             }
+            throw ex;
         } finally {
             if (stmt != null) {
                 stmt.close();
