@@ -94,6 +94,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.EclipseUtil;
 import org.osgi.service.prefs.Preferences;
 
 /**
@@ -312,7 +313,8 @@ public final class NodeTimer {
         private void sendToServer(final boolean properShutdown) {
             // Only send if user chose to do so
             Preferences preferences = InstanceScope.INSTANCE.getNode("org.knime.workbench.core");
-            boolean sendStatistics = preferences.getBoolean("knime.sendAnonymousStatistics", false);
+            boolean sendStatistics = preferences.getBoolean("knime.sendAnonymousStatistics", false)
+                    && !EclipseUtil.isRunFromSDK();
             if (!sendStatistics) {
                 LOGGER.debug("Sending of usage stats disabled.");
                 return;
