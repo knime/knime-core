@@ -456,11 +456,6 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
     public SchemaType exportTo(final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
         m_nameMapper = new DerivedFieldMapper(pmmlDoc);
         PMML pmml = pmmlDoc.getPMML();
-//        PMMLPortObjectSpec.writeHeader(pmml);
-//        pmml.setVersion("4.2");
-//        new PMMLDataDictionaryTranslator().exportTo(pmmlDoc, spec);
-//
-//        initDataDictionary(pmmlDoc);
         RuleSetModel ruleSetModel = pmml.addNewRuleSetModel();
 
         PMMLMiningSchemaTranslator.writeMiningSchema(spec, ruleSetModel);
@@ -485,7 +480,6 @@ public class PMMLRuleTranslator extends PMMLConditionTranslator implements PMMLT
             ruleSet.setDefaultScore(m_defaultScore);
         }
         new DerivedFieldMapper(pmmlDoc);
-        //
         addRules(ruleSet, m_rules);
         return RuleSetModel.type;
     }

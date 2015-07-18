@@ -198,7 +198,7 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
                 rules.add(new Pair<PMMLPredicate, Expression>(expression, outcome));
                 outcomeTypes.add(outcome.getOutputType());
                 simpleRule.setScore(outcome.toString());
-                simpleRule.setConfidence(confidenceForRule(simpleRule, line, ruleText));
+//                simpleRule.setConfidence(confidenceForRule(simpleRule, line, ruleText));
                 simpleRule.setWeight(weightForRule(simpleRule, line, ruleText));
                 outcomes.add(simpleRule.getScore());
             } catch (ParseException e) {

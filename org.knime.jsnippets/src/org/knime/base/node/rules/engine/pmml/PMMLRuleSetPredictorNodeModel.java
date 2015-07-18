@@ -520,14 +520,17 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                 super.afterProcessing();
                 obj.getPMMLValue();
                 RuleSetModel ruleSet = translator.getOriginalRuleSetModel();
-                assert rules.size() == ruleSet.getRuleSet().getSimpleRuleList().size();
-                for (int i = 0; i < rules.size(); ++i) {
-                    Rule rule = rules.get(i);
-                    ruleSet.getRuleSet().getSimpleRuleArray(i).setRecordCount(rule.getRecordCount());
-                    if (validationColumnIdx >= 0) {
-                        ruleSet.getRuleSet().getSimpleRuleArray(i).setNbCorrect(rule.getNbCorrect());
-                    } else if (ruleSet.getRuleSet().getSimpleRuleArray(i).isSetNbCorrect()) {
-                        ruleSet.getRuleSet().getSimpleRuleArray(i).unsetNbCorrect();
+                assert rules.size() == ruleSet.getRuleSet().getSimpleRuleList().size()
+                    + ruleSet.getRuleSet().getCompoundRuleList().size();
+                if (ruleSet.getRuleSet().getSimpleRuleList().size() == rules.size()) {
+                    for (int i = 0; i < rules.size(); ++i) {
+                        Rule rule = rules.get(i);
+                        ruleSet.getRuleSet().getSimpleRuleArray(i).setRecordCount(rule.getRecordCount());
+                        if (validationColumnIdx >= 0) {
+                            ruleSet.getRuleSet().getSimpleRuleArray(i).setNbCorrect(rule.getNbCorrect());
+                        } else if (ruleSet.getRuleSet().getSimpleRuleArray(i).isSetNbCorrect()) {
+                            ruleSet.getRuleSet().getSimpleRuleArray(i).unsetNbCorrect();
+                        }
                     }
                 }
             }
