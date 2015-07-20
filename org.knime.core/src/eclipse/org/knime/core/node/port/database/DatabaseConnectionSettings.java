@@ -612,11 +612,17 @@ public class DatabaseConnectionSettings {
         if (useCredential) {
             credName = settings.getString("credential_name");
             if (cp != null) {
-                ICredentials cred = cp.get(credName);
-                user = cred.getLogin();
-                password = cred.getPassword();
-                if (password == null) {
-                    LOGGER.warn("Credentials/Password has not been set, using empty password.");
+                try {
+                    ICredentials cred = cp.get(credName);
+                    user = cred.getLogin();
+                    password = cred.getPassword();
+                    if (password == null) {
+                        LOGGER.warn("Credentials/Password has not been set, using empty password.");
+                    }
+                } catch (IllegalArgumentException e) {
+                    if (!write) {
+                        throw new InvalidSettingsException(e.getMessage());
+                    }
                 }
             }
         } else {
