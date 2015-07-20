@@ -229,6 +229,12 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             return new DataTableSpec[]{lastSpec};
         }
         try {
+            if ((m_settings.getCredentialName() == null)
+                && ((m_settings.getUserName(getCredentialsProvider()) == null) || m_settings.getUserName(
+                    getCredentialsProvider()).isEmpty())) {
+                throw new InvalidSettingsException("No credentials or username for authentication given");
+            }
+
             if ((m_settings.getQuery() == null) || m_settings.getQuery().isEmpty()) {
                 throw new InvalidSettingsException("No query configured.");
             }
@@ -294,8 +300,9 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
                     + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER
                     + ") not replaced.");
         }
-        // validates the current settings on a temp. connection
-        new DatabaseQueryConnectionSettings(settings, getCredentialsProvider());
+
+        DatabaseQueryConnectionSettings s = new DatabaseQueryConnectionSettings();
+        s.validateConnection(settings, getCredentialsProvider());
     }
 
     /**
