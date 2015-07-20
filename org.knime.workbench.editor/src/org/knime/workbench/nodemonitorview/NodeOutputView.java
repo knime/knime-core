@@ -47,7 +47,6 @@
  */
 package org.knime.workbench.nodemonitorview;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -68,7 +67,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
@@ -82,17 +80,14 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.RetargetAction;
 import org.eclipse.ui.part.ViewPart;
 import org.knime.core.data.DataTable;
-import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -101,6 +96,7 @@ import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.tableview.TableView;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
@@ -117,7 +113,6 @@ import org.knime.core.node.workflow.WorkflowEvent.Type;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
-import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.ui.wrapper.Panel2CompositeWrapper;
@@ -132,6 +127,7 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
     /** The ID of the view as specified with the extension point. */
     public static final String ID = "org.knime.workbench.nodeoutputview";
 
+    private static final String DEF_VIEW_NAME = "Node Output View";
     private Text m_title;
 
     private Label m_info;
@@ -155,6 +151,8 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
     private IStructuredSelection m_lastSelectionWhilePinned;
 
     private IStructuredSelection m_selectionWhenLocked;
+
+    private WorkflowManager m_parentWfm;
 
     private WorkflowManager m_workflow;
 
@@ -373,12 +371,26 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
         selectionChanged(null, m_lastSelection);
     }
 
+
+    private void disconnectFromWFM() {
+        if (m_workflow != null) {
+            m_workflow.removeListener(this);
+            m_parentWfm.removeListener(this);
+            if (m_lastNode != null) {
+                if (m_workflow.containsNodeContainer(m_lastNode)) {
+                    m_workflow.getNodeContainer(m_lastNode).removeNodeStateChangeListener(this);
+                }
+            }
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void dispose() {
         getViewSite().getPage().removeSelectionListener(this);
+        disconnectFromWFM();
         super.dispose();
     }
 
@@ -390,6 +402,8 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
     @Override
     public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
         if (!(selection instanceof IStructuredSelection)) {
+            // unsupported selection
+//            showErrorAndClear("");
             return;
         }
         IStructuredSelection structSel = (IStructuredSelection)selection;
@@ -438,15 +452,19 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
 
     private void checkWorkflowManagerListener(final WorkflowManager wfm) {
         if (m_workflow != null && wfm != m_workflow) {
+            m_parentWfm.removeListener(this);
             m_workflow.removeListener(this);
         }
         if (m_workflow == null || m_workflow != wfm) {
             m_workflow = wfm;
-            wfm.addListener(this);
+            m_parentWfm = wfm.getParent();
+            m_workflow.addListener(this);
+            m_parentWfm.addListener(this); // need to know if flow gets deleted
         }
     }
 
     private void showErrorAndClear(final String errMsg) {
+        setPartName(DEF_VIEW_NAME); // the API documentation lies :(
         m_title.setText("");
         m_errorLabel.setText(errMsg);
         m_lastSelection = null;
@@ -460,7 +478,11 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
      * the underlying NC changed.
      */
     private void updateNodeContainerInfo(final NodeID nc) {
+        if (m_portIndex.getCombo().isDisposed()) {
+            return;
+        }
         if (nc == null) {
+            showErrorAndClear("");
             return;
         }
         m_portIndex.getCombo().setEnabled(false);
@@ -475,6 +497,7 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
         if ((m_lastNode == null) || (m_lastNode != nc)) {
             m_lastNode = nc;
             node.addNodeStateChangeListener(NodeOutputView.this);
+            setPartName(node.getNameWithID());
         }
         m_title.setText(node.getName() + "  (" + node.getID() + ")");
         switch (m_choice) {
@@ -781,6 +804,15 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
             Object oldValue = event.getOldValue();
             if (oldValue instanceof NodeContainer) {
                 NodeContainer oldNode = (NodeContainer)oldValue;
+                if (oldNode.getID().equals(m_workflow.getID())) {
+                    // our flow got removed (i.e. the editor or the workbench is closed)
+                    disconnectFromWFM();
+                    m_lastNode = null;
+                    m_workflow = null;
+                    m_parentWfm = null;
+                    updateNCinfoInSWT(null);
+                    return;
+                }
                 if (oldNode.getID().equals(m_lastNode)) {
                     oldNode.removeNodeStateChangeListener(this);
                     m_pinButton.setChecked(false); // pinned node is gone: unpin
@@ -826,7 +858,6 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
                 updateNodeContainerInfo(id);
             }
         });
-
     }
 
     /**
@@ -836,24 +867,6 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
     public void saveState(final IMemento memento) {
         super.saveState(memento);
         memento.putInteger("org.knime.workbench.nodeoutportview.version", 1);
-        if (m_lastNode != null) {
-            memento.putInteger("org.knime.workbench.nodeoutportview.nodeIndex", m_lastNode.getIndex());
-            ReferencedFile refDir = m_workflow.getWorkingDir();
-            if (refDir != null) {
-                memento
-                    .putString("org.knime.workbench.nodeoutportview.workflowDir", refDir.getFile().getAbsolutePath());
-            }
-
-        }
-        memento.putBoolean("org.knime.workbench.nodeoutportview.pinned", m_pinned);
-        memento.putBoolean("org.knime.workbench.nodeoutportview.locked", m_branchLocked);
-        memento.putString("org.knime.workbench.nodeoutportview.choice", m_choice.name());
-        try {
-            memento.putInteger("org.knime.workbench.nodeoutportview.portIndex",
-                Integer.parseInt(m_portIndex.getSelection().toString().substring(5).replace(']', ' ').trim()));
-        } catch (NumberFormatException nfe) {
-            memento.putInteger("org.knime.workbench.nodeoutportview.portIndex", 0);
-        }
     }
 
     /**
@@ -867,32 +880,7 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
         }
         Integer ver = memento.getInteger("org.knime.workbench.nodeoutportview.version");
         if (ver != null && ver == 1) {
-            m_choice = DISPLAYOPTIONS.valueOf(memento.getString("org.knime.workbench.nodeoutportview.choice"));
-            Integer nodeIdx = memento.getInteger("org.knime.workbench.nodeoutportview.nodeIndex");
-            String workflowDir = memento.getString("org.knime.workbench.nodeoutportview.workflowDir");
-            if (nodeIdx != null && workflowDir != null) {
-                IEditorPart editor =
-                    PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-                if (editor instanceof WorkflowEditor) {
-                    WorkflowManager wfm = ((WorkflowEditor)editor).getWorkflowManager();
-                    ReferencedFile refDir = wfm.getWorkingDir();
-                    if (refDir != null && refDir.getFile().equals(new File(workflowDir))) {
-                        NodeID newID = new NodeID(wfm.getID(), nodeIdx);
-                        if (wfm.containsNodeContainer(newID)) {
-                            m_lastSelection = new StructuredSelection(wfm.getNodeContainer(newID));
-                        }
-                    }
-                }
-            }
-            if (m_lastSelection != null) {
-                m_pinned = memento.getBoolean("org.knime.workbench.nodeoutportview.pinned");
-                m_branchLocked = memento.getBoolean("org.knime.workbench.nodeoutportview.locked");
-                m_portIndexInit = memento.getInteger("org.knime.workbench.nodeoutportview.portIndex");
-            } else {
-                m_pinned = false;
-                m_branchLocked = false;
-                m_portIndexInit = 0;
-            }
+            // fully restoring the state requires access to the editor - which may not be initiated yet.
         }
     }
 }
