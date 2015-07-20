@@ -638,15 +638,6 @@
             icon="icons/node_monitor.png"
             id="org.knime.workbench.nodemonitorview.nodemonitorview"
             name="Node Monitor"/>
-      <view
-            allowMultiple="true"
-            category="org.knime.workbench.ui.category"
-            class="org.knime.workbench.nodemonitorview.NodeOutputView"
-            icon="icons/openPortView.png"
-            id="org.knime.workbench.nodeoutputview"
-            name="Node Output View"
-            restorable="true">
-      </view>
    </extension>
      <extension
            point="org.eclipse.ui.contexts">
@@ -656,11 +647,5 @@
               name="In KNIME perspective"
               parentId="org.eclipse.ui.contexts.window">
         </context>
-     </extension>
-     <extension
-           point="org.knime.workbench.ui.multipleInstanceViews">
-        <multipleInstanceView
-              id="org.knime.workbench.nodeoutputview">
-        </multipleInstanceView>
      </extension>
 </plugin>
