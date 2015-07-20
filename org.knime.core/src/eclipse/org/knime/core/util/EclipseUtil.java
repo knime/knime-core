@@ -49,6 +49,7 @@ package org.knime.core.util;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -126,6 +127,7 @@ public final class EclipseUtil {
     }
 
     private static final boolean RUN_FROM_SDK;
+    private static final boolean RUN_IN_DEBUG;
 
     static {
         boolean b = false;
@@ -137,6 +139,17 @@ public final class EclipseUtil {
             throw ex;
         } finally {
             RUN_FROM_SDK = b;
+        }
+
+        boolean d = false;
+        try {
+            d = checkDebug();
+        } catch (RuntimeException ex) {
+            NodeLogger.getLogger("org.knime.core.util.EclipseUtil").error(
+                "Could not determine if we are running in debug mode: " + ex.getMessage(), ex);
+            throw ex;
+        } finally {
+            RUN_IN_DEBUG = d;
         }
     }
 
@@ -154,6 +167,18 @@ public final class EclipseUtil {
         return RUN_FROM_SDK;
     }
 
+    /**
+     * Returns the whether the current application has been started in debug or production mode. Note
+     * that this method only guesses based on some indications and may be wrong (i.e. it returns <code>false</code> even
+     * though the application has been started in debug) in some rare cases.
+     *
+     * @return <code>true</code> if the application has been started in debug mode, <code>false</code> otherwise
+     * @since 2.12
+     */
+    public static boolean isRunInDebug() {
+        return RUN_IN_DEBUG;
+    }
+
     private static boolean checkSDK() {
         Location installLocation = Platform.getInstallLocation();
         if (installLocation == null) {
@@ -165,6 +190,15 @@ public final class EclipseUtil {
         }
 
         return configurationLocation.getURL().getPath().contains("/.metadata/.plugins/org.eclipse.pde.core/");
+    }
+
+    private static boolean checkDebug() {
+        for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
+            if (arg.startsWith("-agentlib:jdwp")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
