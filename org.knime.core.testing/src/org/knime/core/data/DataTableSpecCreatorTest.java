@@ -45,12 +45,15 @@
  */
 package org.knime.core.data;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collections;
 import java.util.Map;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -77,7 +80,7 @@ public final class DataTableSpecCreatorTest {
         }
         return result;
     }
-    
+
     @Test
     public void testCreatorSimple() {
         DataColumnSpec[] cols = createColumnSpecs(5, "ColName");
@@ -87,7 +90,7 @@ public final class DataTableSpecCreatorTest {
         DataTableSpec toTest = creator.createSpec();
         Assert.assertEquals(reference, toTest);
     }
-    
+
     @Test(expected=IllegalArgumentException.class)
     public void testCreatorSimpleConflictNames() {
         DataColumnSpec[] cols = createColumnSpecs(5, "ColName");
@@ -95,7 +98,7 @@ public final class DataTableSpecCreatorTest {
         creator.addColumns(cols);
         creator.addColumns(cols[4]); // throws exception
     }
-    
+
     @Test
     public void testCreatorMultipleTableSpecs() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
@@ -111,7 +114,7 @@ public final class DataTableSpecCreatorTest {
         System.arraycopy(cols3, 0, allCols, cols1.length + cols2.length, cols3.length);
         Assert.assertEquals(outputSpec, new DataTableSpec(allCols));
     }
-    
+
     @Test(expected=IllegalArgumentException.class)
     public void testCreatorMultipleTableSpecsConflictNames() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
@@ -121,7 +124,7 @@ public final class DataTableSpecCreatorTest {
         creator.addColumns(new DataTableSpec(cols2));
         creator.addColumns(new DataTableSpec(cols2)); // throws exception
     }
-    
+
     @Test
     public void testSetName() {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
@@ -130,14 +133,56 @@ public final class DataTableSpecCreatorTest {
         creator.addColumns(cols1).setName(name);
         Assert.assertEquals(creator.createSpec().getName(), name);
     }
-    
+
     @Test(expected=UnsupportedOperationException.class)
     public void testEmptyProperty() {
         Map<String, String> props = new DataTableSpec().getProperties();
         Assert.assertTrue(props.isEmpty());
         props.put("key", "value"); // read only, throws exception
     }
-    
+
+    @Test
+    public void testReplace() {
+        DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
+        DataTableSpecCreator creator = new DataTableSpecCreator();
+        creator.addColumns(cols1);
+        DataColumnSpec replaceCol = new DataColumnSpecCreator("ColName2", BooleanCell.TYPE).createSpec();
+        creator.replaceColumn(2, replaceCol);
+
+        replaceCol = new DataColumnSpecCreator("ColName-somethingdifferent", BooleanCell.TYPE).createSpec();
+        creator.replaceColumn(0, replaceCol);
+
+        DataTableSpec spec = creator.createSpec();
+
+        final DataColumnSpec colSpec0 = spec.getColumnSpec(0);
+        assertEquals("Column names don't match", "ColName-somethingdifferent", colSpec0.getName());
+        assertEquals("Column types don't match", BooleanCell.TYPE, colSpec0.getType());
+
+        final DataColumnSpec colSpec2 = spec.getColumnSpec(2);
+        assertEquals("Column names don't match", "ColName2", colSpec2.getName());
+        assertEquals("Column types don't match", BooleanCell.TYPE, colSpec2.getType());
+
+        creator.addColumns(new DataColumnSpecCreator("ColName0", BooleanCell.TYPE).createSpec());
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testReplaceWithDuplicate() {
+        DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
+        DataTableSpecCreator creator = new DataTableSpecCreator();
+        creator.addColumns(cols1);
+        DataColumnSpec replaceCol = new DataColumnSpecCreator("ColName3", BooleanCell.TYPE).createSpec();
+        creator.replaceColumn(2, replaceCol);
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void testReplaceWithInvalidIndex() {
+        DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
+        DataTableSpecCreator creator = new DataTableSpecCreator();
+        creator.addColumns(cols1);
+        DataColumnSpec replaceCol = new DataColumnSpecCreator("NewName", BooleanCell.TYPE).createSpec();
+        creator.replaceColumn(6, replaceCol);
+    }
+
     @Test
     public void testAllPropertiesAndSaveLoad() throws Exception {
         DataColumnSpec[] cols1 = createColumnSpecs(5, "ColName");
@@ -160,5 +205,5 @@ public final class DataTableSpecCreatorTest {
         Assert.assertEquals(loadProperties.get("key2"), "value2");
         Assert.assertEquals(spec, load);
     }
-    
+
 }

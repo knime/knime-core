@@ -52,6 +52,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.core.node.util.CheckUtils;
+
 /**
  * Creator for {@link DataTableSpec}. This class can be used to set different fields (columns, name, properties).
  *
@@ -90,6 +92,28 @@ public final class DataTableSpecCreator {
         addColumns(spec);
         setName(spec.getName());
         putProperties(spec.getProperties());
+    }
+
+
+    /** Replaces an existing column with a new column.
+     * @param index (valid) index for the column to be replaced.
+     * @param colSpec The new, non-null column spec.
+     * @return this
+     * @since 2.12
+     */
+    public DataTableSpecCreator replaceColumn(final int index, final DataColumnSpec colSpec) {
+        CheckUtils.checkArgument(index >= 0 && index < m_columnSpecs.size(),
+                "Invalid column index %d (max allowed %d)", index, m_columnSpecs.size() - 1);
+        CheckUtils.checkArgumentNotNull(colSpec);
+        DataColumnSpec oldColSpec = m_columnSpecs.get(index);
+        CheckUtils.checkArgument(oldColSpec.getName().equals(colSpec.getName())
+            || !m_columnSpecMap.containsKey(colSpec.getName()),
+            "Invalid (duplicate) column name \"%s\"", colSpec.getName());
+        m_columnSpecs.remove(index);
+        m_columnSpecMap.remove(oldColSpec.getName());
+        m_columnSpecs.add(index, colSpec);
+        m_columnSpecMap.put(colSpec.getName(), index);
+        return this;
     }
 
     /**

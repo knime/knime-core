@@ -52,8 +52,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +65,9 @@ import javax.swing.Icon;
 
 import org.knime.core.data.DataValue.UtilityFactory;
 import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.renderer.DataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRendererFamily;
+import org.knime.core.data.renderer.DefaultDataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.SetOfRendererFamilies;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
@@ -988,33 +992,30 @@ public final class DataType {
     }
 
     /**
-     * Returns a family of all renderers that are available for this
-     * <code>DataType</code>. The returned
-     * {@link org.knime.core.data.renderer.DataValueRendererFamily} will contain
-     * all renderers that are supported or available through the compatible
-     * {@link org.knime.core.data.DataValue} interfaces. If no renderer was
-     * declared by the {@link org.knime.core.data.DataValue} interfaces,
-     * this method will make sure that at least a default renderer (using the
-     * {@link DataCell#toString()} method) is returned.
+     * Returns a family of all renderers that are available for this <code>DataType</code>. The returned
+     * {@link org.knime.core.data.renderer.DataValueRendererFamily} will contain all renderers that are supported or
+     * available through the compatible {@link org.knime.core.data.DataValue} interfaces. If no renderer was declared by
+     * the {@link org.knime.core.data.DataValue} interfaces, this method will make sure that at least a default renderer
+     * (using the {@link DataCell#toString()} method) is returned.
      *
      * <p>
-     * The {@link DataColumnSpec} is passed to all renderer families retrieved
-     * from the underlying {@link UtilityFactory}. Most of the renderer
-     * implementations won't need column domain information but some do. For
-     * instance a class that renders the double value in the column according to
-     * the minimum/maximum values in the {@link DataColumnDomain}.
+     * The {@link DataColumnSpec} is passed to all renderer families retrieved from the underlying
+     * {@link UtilityFactory}. Most of the renderer implementations won't need column domain information but some do.
+     * For instance a class that renders the double value in the column according to the minimum/maximum values in the
+     * {@link DataColumnDomain}.
      *
-     * @param spec the column spec to the column for which the renderer will be
-     *            used
-     * @return a family of all renderers that are available for this
-     *         <code>DataType</code>
+     * @param spec the column spec to the column for which the renderer will be used
+     * @return a family of all renderers that are available for this <code>DataType</code>
+     * @deprecated Replaced by {@link #getRendererFactories()}
      */
+    @Deprecated
     public DataValueRendererFamily getRenderer(final DataColumnSpec spec) {
         ArrayList<DataValueRendererFamily> list =
             new ArrayList<DataValueRendererFamily>();
         // first add the preferred value class, if any
         for (Class<? extends DataValue> cl : m_valueClasses) {
             UtilityFactory fac = getUtilityFor(cl);
+
             DataValueRendererFamily fam = fac.getRendererFamily(spec);
             if (fam != null) {
                 list.add(fam);
@@ -1035,6 +1036,49 @@ public final class DataType {
             list.add(new DefaultDataValueRendererFamily());
         }
         return new SetOfRendererFamilies(list);
+    }
+
+    /**
+     * Returns the list of registered renderer factories, using an extension point driven mechanism to collect all
+     * instances registered with the implemented data value interfaces. If no renderer was declared by the
+     * {@link org.knime.core.data.DataValue} interfaces, this method will make sure that at least a default renderer
+     * (using the {@link DataCell#toString()} method) is returned.
+     *
+     * @return an ordered, non-empty collection of factories.
+     * @since 2.12
+     */
+    public Collection<DataValueRendererFactory> getRendererFactories() {
+        Map<String, DataValueRendererFactory> map = new LinkedHashMap<>();
+
+        Collection<Class<? extends DataValue>> allValueClasses = new LinkedHashSet<>();
+        allValueClasses.addAll(m_valueClasses); // first value will be the preferred one - if any
+        allValueClasses.addAll(m_adapterValueList);
+        for (Class<? extends DataValue> cl : allValueClasses) {
+            UtilityFactory fac = getUtilityFor(cl);
+            if (!(fac instanceof ExtensibleUtilityFactory)) {
+                continue;
+            }
+
+            ExtensibleUtilityFactory efac = (ExtensibleUtilityFactory)fac;
+            // make sure the preferred and default renderers come first
+            DataValueRendererFactory prefRendererFac = efac.getPreferredRenderer();
+            if (prefRendererFac != null) {
+                map.put(prefRendererFac.getId(), prefRendererFac);
+            }
+            DataValueRendererFactory defaultRendererFac = efac.getDefaultRenderer();
+            if (defaultRendererFac != null) {
+                map.put(defaultRendererFac.getId(), defaultRendererFac);
+            }
+            for (DataValueRendererFactory rf : efac.getAvailableRenderers()) {
+                map.put(rf.getId(), rf);
+            }
+        }
+        if (map.isEmpty()) {
+            DefaultDataValueRenderer.Factory f = new DefaultDataValueRenderer.Factory();
+            map.put(f.getId(), f);
+        }
+
+        return map.values();
     }
 
     /**
