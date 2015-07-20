@@ -348,8 +348,12 @@ public final class NodeTimer {
                     throw new HttpException("Server returned HTTP code " + responseString);
                 }
                 LOGGER.debug("Successfully sent node usage stats to server");
-            } catch (Exception ex) {
-                LOGGER.debug("Node usage file did not send: " + ex.getMessage());
+            } catch (HttpException ex) {
+                LOGGER.warn("Node usage file failed to send  because of a protocol exception.", ex);
+            } catch (IOException ex) {
+                LOGGER.debug("Node usage file did not send. Not logging additional information, "
+                    + "since this is commonly due to limited internet connection: "
+                    + ex.getClass().getName() + " - " + ex.getMessage());
             } finally {
                 if (method != null) {
                     method.releaseConnection();
