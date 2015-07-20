@@ -127,7 +127,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
         super.start(context);
 
         if (!Boolean.getBoolean("java.awt.headless")) {
-            createImageRegistry();
+            getImageRegistry();
         }
 
         try {
