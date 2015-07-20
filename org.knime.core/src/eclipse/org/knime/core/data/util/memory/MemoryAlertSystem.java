@@ -363,13 +363,16 @@ public final class MemoryAlertSystem {
             long remainingTime = timeout;
             m_gcEventLock.lock();
             try {
-                while (m_lowMemory && (getUsage() > threshold)) {
+                double usage = getUsage();
+                while (m_lowMemory && (usage > threshold)) {
                     long diff = System.currentTimeMillis();
                     if (!m_gcEvent.await(remainingTime, TimeUnit.MILLISECONDS)) {
                         return false;
                     } else {
                         remainingTime -= System.currentTimeMillis() - diff;
                     }
+                    usage = getUsage();
+                    LOGGER.debug("Wakeup in sleepWhileLow, current usage: " + usage);
                 }
                 return true;
             } finally {
