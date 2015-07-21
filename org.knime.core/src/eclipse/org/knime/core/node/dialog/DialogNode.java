@@ -48,6 +48,10 @@ package org.knime.core.node.dialog;
 
 import java.util.regex.Pattern;
 
+import javax.swing.InputVerifier;
+import javax.swing.JComponent;
+import javax.swing.text.JTextComponent;
+
 import org.knime.core.node.InvalidSettingsException;
 
 
@@ -74,6 +78,28 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
      * @since 2.12
      */
     public static final Pattern PARAMETER_NAME_PATTERN = Pattern.compile("^[a-zA-Z](?:[-_]?[a-zA-Z0-9]+)*$");
+
+    /**
+     * Input verifier for swing component, such as text field, that checks against {@link #PARAMETER_NAME_PATTERN}.
+     *
+     * @since 2.12
+     */
+    public static final InputVerifier PARAMETER_NAME_VERIFIER = new InputVerifier() {
+        @Override
+        public boolean verify(final JComponent input) {
+           if (input instanceof JTextComponent) {
+              JTextComponent textComponent = (JTextComponent)input;
+              String text = textComponent.getText();
+              return DialogNode.PARAMETER_NAME_PATTERN.matcher(text).matches();
+           }
+           return true;
+        }
+
+        @Override
+        public boolean shouldYieldFocus(final JComponent input) {
+           return verify(input);
+        }
+    };
 
     /**
      * @return The representation content of the dialog node.

@@ -91,6 +91,12 @@
                 <message_argument value="PARAMETER_NAME_PATTERN"/>
             </message_arguments>
         </filter>
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="PARAMETER_NAME_VERIFIER"/>
+            </message_arguments>
+        </filter>
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNode"/>
