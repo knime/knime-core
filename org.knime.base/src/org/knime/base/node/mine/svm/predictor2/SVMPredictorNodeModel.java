@@ -49,12 +49,15 @@ package org.knime.base.node.mine.svm.predictor2;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import org.knime.base.node.mine.svm.PMMLSVMTranslator;
 import org.knime.base.node.mine.svm.Svm;
 import org.knime.base.node.mine.util.PredictorHelper;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -167,6 +170,9 @@ public final class SVMPredictorNodeModel extends NodeModel {
 
         List<Svm> svms = trans.getSVMs();
         m_svms = svms.toArray(new Svm[svms.size()]);
+        if (m_addProbabilities.getBooleanValue() == port.getSpec().getTargetCols().size() > 0) {
+            adjustOrder(port.getSpec().getTargetCols().get(0));
+        }
         DataTableSpec testSpec =
                 ((BufferedDataTable)inData[1]).getDataTableSpec();
         PMMLPortObjectSpec pmmlSpec = ((PMMLPortObject)inData[0]).getSpec();
@@ -202,6 +208,26 @@ public final class SVMPredictorNodeModel extends NodeModel {
         BufferedDataTable result =
                 exec.createColumnRearrangeTable(testData, colre, exec);
         return new BufferedDataTable[]{result};
+    }
+
+    /**
+     * @param targetSpec The target column from the model.
+     */
+    private void adjustOrder(final DataColumnSpec targetSpec) {
+        if (targetSpec.getDomain() != null) {
+            Map<String, Svm> map = new HashMap<>();
+            for (Svm svm : m_svms) {
+                map.put(svm.getPositive(), svm);
+            }
+            int i = 0;
+            for (DataCell v : targetSpec.getDomain().getValues()) {
+                String key = v.toString();
+                Svm svm = map.get(key);
+                if (svm != null) {
+                    m_svms[i++] = svm;
+                }
+            }
+        }
     }
 
     /**
