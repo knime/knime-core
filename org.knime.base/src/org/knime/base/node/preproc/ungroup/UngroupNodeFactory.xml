@@ -30,7 +30,7 @@
             selected collection columns.
        </option>
        <option name="Enable hiliting">
-            If enabled, the hiliting of a input row results in hilting 
+            If enabled, the hiliting of a input row results in hiliting 
             all rows (given in the collection cell) of the ungrouped output
             table vs. if all output rows (represented in or more collection 
             cell) the input row(s) are hilit as well. Depending on 

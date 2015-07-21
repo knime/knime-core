@@ -50,17 +50,17 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This class holds the settings for the value counter node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ValueCounterSettings {
     private String m_colName;
     private boolean m_hiliting;
-    
+
 
     /**
      * Sets the column name.
-     * 
+     *
      * @param columnName a column name
      */
     public void columnName(final String columnName) {
@@ -69,32 +69,32 @@ public class ValueCounterSettings {
 
     /**
      * Returns the column name.
-     * 
+     *
      * @return the column name
      */
     public String columnName() {
         return m_colName;
     }
 
-    
+
     /**
      * @param b enable or disable hiliting
      */
     public void hiliting(final boolean b) {
         m_hiliting = b;
     }
-    
-    
+
+
     /**
-     * @return boolean for hilting 
+     * @return boolean for hiliting
      */
     public boolean hiliting() {
         return m_hiliting;
     }
-    
+
     /**
      * Save the settings into the node settings object.
-     * 
+     *
      * @param settings node settings
      */
     public void saveSettings(final NodeSettingsWO settings) {
@@ -104,7 +104,7 @@ public class ValueCounterSettings {
 
     /**
      * Loads the settings from the node settings object.
-     * 
+     *
      * @param settings node settings
      * @throws InvalidSettingsException if settings are missing
      */

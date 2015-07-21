@@ -95,8 +95,8 @@ import org.knime.core.node.property.hilite.KeyEvent;
  *
  * The graph view displayed the view of the Decision Tree to Image node.
  *
- * @author Heiko HOfer
- * 
+ * @author Heiko Hofer
+ *
  * @since 2.6
  */
 final class DecTreeLearnerGraphView2 extends
@@ -451,7 +451,7 @@ final class DecTreeLearnerGraphView2 extends
         // Traverse the tree breadth first
         while (!toProcess.isEmpty()) {
             DecisionTreeNode curr = toProcess.remove(0);
-            // bug 2695: if not all pattern are selected for hilting, the
+            // bug 2695: if not all pattern are selected for hiliting, the
             // view will automatically hilite all branches that does not
             // cover any pattern
             if (curr.coveredPattern().isEmpty()) {

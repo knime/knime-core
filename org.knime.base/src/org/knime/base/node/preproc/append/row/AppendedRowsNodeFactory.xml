@@ -25,7 +25,7 @@
             row IDs are encountered. This option is efficient while checking 
             uniqueness.</option>
         <option name="Use intersection of columns">
-        	Use ony the columns that appear in both input tables. Any other
+        	Use only the columns that appear in both input tables. Any other
         	column is ignored and won't appear in the output table.
         </option>
         <option name="Use union of columns">
@@ -33,7 +33,7 @@
         	missing values if they miss cells for some columns.
         </option>
         <option name="Enable hiliting">
-            Enables hilting between both inputs and the concatenated output
+            Enables hiliting between both inputs and the concatenated output
             table.
         </option>
 		</fullDescription>

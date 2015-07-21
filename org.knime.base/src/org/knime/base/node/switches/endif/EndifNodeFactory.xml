@@ -12,6 +12,17 @@
         This nodes takes the data either from the top or bottom input port or
         concatenates the two tables if both branches contain data.
         </intro>
+        <option name="Skip Rows"> Duplicate row identifiers (RowID) occurring in the 
+            second table are not appended to the output table. This option is 
+            relatively memory intensive as it needs to cache the row IDs in
+            order to find duplicates.</option>
+        <option name="Append suffix"> The output table will contain all rows, but
+            duplicate row identifiers are labeled with a suffix. Similar to
+            the "Skip Rows" option this method is also memory intensive. </option>
+        <option name="Enable hiliting">
+            Enables hiliting between both inputs and the concatenated output
+            table.
+        </option>
     </fullDescription>
     
     <ports>
