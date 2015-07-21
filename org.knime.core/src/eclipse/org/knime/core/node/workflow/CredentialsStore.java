@@ -127,7 +127,7 @@ public final class CredentialsStore implements Observer {
     public synchronized Credentials get(final String name) {
         Credentials c = m_credentials.get(name);
         WorkflowManager parent = m_manager.getParent();
-        while (c == null && parent != WorkflowManager.ROOT) {
+        while (c == null && parent != null) {
             CredentialsStore parentStore = parent.getCredentialsStore();
             c = parentStore.m_credentials.get(name);
             parent = parent.getParent();
@@ -242,7 +242,7 @@ public final class CredentialsStore implements Observer {
         ArrayList<String> result = new ArrayList<String>();
         result.addAll(m_credentials.keySet());
         WorkflowManager parent = m_manager.getParent();
-        while (parent != WorkflowManager.ROOT) {
+        while (parent != null) {
             CredentialsStore parentStore = parent.getCredentialsStore();
             for (String s : parentStore.m_credentials.keySet()) {
                 if (!result.contains(s)) {

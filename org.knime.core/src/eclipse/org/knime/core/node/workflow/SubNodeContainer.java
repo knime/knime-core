@@ -1724,8 +1724,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     CredentialsProvider getCredentialsProvider() {
-        // TODO needed once we want to support workflow credentials
-        return null;
+        // TODO remove the whole method as soon as we have introduced quickform credentials
+        return new CredentialsProvider(this, new CredentialsStore(m_wfm));
     }
 
     /**
