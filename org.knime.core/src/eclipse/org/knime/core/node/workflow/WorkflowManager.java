@@ -5605,14 +5605,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         checkForNodeStateChanges(false);
     }
 
-    /** Configure a SingleNodeContainer.
+    /** Configure a SingleNodeContainer. This method is really private API but has public scope to enable the streaming
+     * executor to propagate flow variable control into nodes prior (streaming) execution.
      *
      * @param snc node to be configured
      * @param keepNodeMessage Whether to keep previously set node messages
      *        (important during load sometimes)
      * @return true if the configuration did change something.
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
      */
-    private boolean configureSingleNodeContainer(final SingleNodeContainer snc, final boolean keepNodeMessage) {
+    public boolean configureSingleNodeContainer(final SingleNodeContainer snc, final boolean keepNodeMessage) {
         boolean configurationChanged = false;
         synchronized (m_workflowMutex) {
             NodeMessage oldMessage = keepNodeMessage ? snc.getNodeMessage() : NodeMessage.NONE;
