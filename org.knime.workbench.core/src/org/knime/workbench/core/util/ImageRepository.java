@@ -120,6 +120,8 @@ public final class ImageRepository {
         CollapseAll("icons/collapseall.png"),
         /** Icon for expanding all levels in a tree. */
         ExpandAll("icons/expandall.png"),
+        /** Icon for expanding one level in a tree. */
+        Expand("icons/expand.png"),
         /** Icon for synching a tree with another selection. */
         Synch("icons/sync.png"),
         /** Icon for refreshing a component. */
@@ -251,7 +253,9 @@ public final class ImageRepository {
         /** ServerSpace Explorer Icon: idle job. */
         TeamSpaceIcon("icons/team_space/explorer_teamspace.png"),
         /** LocalSpace Explorer Icon: server root. */
-        LocalSpaceIcon("icons/workflow_projects.png");
+        LocalSpaceIcon("icons/workflow_projects.png"),
+        /** WorkflowDiff: action icon. */
+        WorkflowDiffIcon("icons/diff.png");
 
         private final URL m_url;
 
