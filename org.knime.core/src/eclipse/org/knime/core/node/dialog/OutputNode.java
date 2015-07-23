@@ -31,7 +31,9 @@ package org.knime.core.node.dialog;
  */
 public interface OutputNode {
     /**
-     * Returns an object representing the node's external output.
+     * Returns an object representing the node's external output. If the node is not yet executed, the returned object
+     * may be empty and not contain any values.
+     *
      * @return an external output, never <code>null</code>
      */
     public ExternalNodeData getExternalOutput();

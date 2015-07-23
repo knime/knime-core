@@ -9063,16 +9063,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * Receive output from workflow by means of {@link org.knime.core.node.dialog.OutputNode}. Calling this method on a
-     * non-fully executed workflow causes an exception to be thrown.
+     * Receive output from workflow by means of {@link org.knime.core.node.dialog.OutputNode}. If the workflow is not
+     * fully executed, the map contains only the keys of the outputs. The values are all <code>null</code>
+     * in this case.
      *
-     * @return A map from node's parameter name to its JSON object result.
+     * @return A map from node's parameter name to its node data
      * @since 2.12
      */
     public Map<String, ExternalNodeData> getExternalOutputs() {
         Map<String, ExternalNodeData> result = new LinkedHashMap<>();
         synchronized (getWorkflowMutex()) {
-            CheckUtils.checkState(getNodeContainerState().isExecuted(), "Workflow not completely executed");
+
             Map<NodeID, OutputNode> nodeMap = findNodes(OutputNode.class, false);
             for (Map.Entry<NodeID, OutputNode> e : nodeMap.entrySet()) {
                 ExternalNodeData externalOutput = e.getValue().getExternalOutput();
