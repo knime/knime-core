@@ -33,11 +33,14 @@
     <appender name="logfile" class="org.knime.core.util.LogfileAppender">
         <layout class="org.knime.core.node.NodeLoggerPatternLayout">
             <!--  Supported parameter are 
-                %W = Workflow directory 
+                %W = Workflow directory if available
                     the depth can be specified e.g. %W{2} prints the name of the workflow and the folder it is located in
                     if the depth is omitted the complete workflow directory is printed
-                %N = Node name
-                %I = Node id 
+                %N = Node name if available
+                %Q = Qualifier as a combination of N (Node name) and c (category). Displays the category if the node name is not available.
+                    the depth can be specified and is used for the category e.g. %Q{1} prints only last index of the category
+                    if the depth is omitted the complete category is printed
+                %I = Node id if available
                     the depth can be specified e.g. %I{1} prints only last index of the node id
                     if the depth is omitted the complete node id is printed
             -->
@@ -50,26 +53,24 @@
         that is why we use the NullApender that does no log to any file. -->
         <layout class="org.knime.core.node.NodeLoggerPatternLayout">
             <!--  Supported parameter are 
-                %W = Workflow directory 
+                %W = Workflow directory if available
                     the depth can be specified e.g. %W{2} prints the name of the workflow and the folder it is located in
                     if the depth is omitted the complete workflow directory is printed
-                %N = Node name
-                %I = Node id 
+                %N = Node name if available
+                %Q = Qualifier as a combination of N (Node name) and c (category). Displays the category if the node name is not available.
+                    the depth can be specified and is used for the category e.g. %Q{1} prints only last index of the category
+                    if the depth is omitted the complete category is printed
+                %I = Node id if available
                     the depth can be specified e.g. %I{1} prints only last index of the node id
                     if the depth is omitted the complete node id is printed
             -->
-            <param name="ConversionPattern" value="%-5p %-25N\t %-15I\t %.10000m\n" />
-            <!-- More compact log pattern.
-            <param name="ConversionPattern" value="%-5p %N %I %.10000m\n" />
+            <param name="ConversionPattern" value="%-5p %-20Q{1} %-10I %.10000m\n" />
+            <!-- Strict pattern that maintains the distance by truncating long qualifiers and node ids
+            <param name="ConversionPattern" value="%-5p %-35.35Q{1} %-20.20I %.10000m\n" />
             -->
-        </layout>
-    </appender>
-    
-    <!-- This appender is unused by default and should be used to enable debug
-        messages for certain loggers by appending it to them -->
-    <appender name="debug" class="org.apache.log4j.ConsoleAppender">
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-5p\t %c{1}\t %.10000m\n" />
+            <!-- Compact log pattern.
+            <param name="ConversionPattern" value="%-5p %Q{1} %I %.10000m\n" />
+            -->
         </layout>
     </appender>
 

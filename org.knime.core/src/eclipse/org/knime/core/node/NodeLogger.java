@@ -44,12 +44,14 @@
  */
 package org.knime.core.node;
 
-import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.util.Date;
@@ -317,7 +319,10 @@ public final class NodeLogger {
                     latestLog4jConfig) != null) : "latest log4j-configuration "
                         + " could not be found";
             File knimeDir = new File(KNIMEConstants.getKNIMEHomeDir());
-            File log4j = new File(knimeDir, "log4j.xml");
+            //we use log4j3 as log file name starting with KNIME 2.12 which introduced the new
+            //org.knime.core.node.NodeLoggerPatternLayout class. This way older versions of KNIME can also open
+            //workflows created with >2.12 since they simply ignore the new log file
+            File log4j = new File(knimeDir, "log4j3.xml");
 
             File legacyFile = new File(knimeDir, "log4j-1.1.0.xml");
             if (legacyFile.exists() && !legacyFile.renameTo(log4j)) {
@@ -330,7 +335,28 @@ public final class NodeLogger {
                         + " to 'log4j-1.1.0.xml' and remove"
                         + " 'log4j-1.1.0.xml' to get rid of this message.");
             }
-            if (!log4j.exists() || checkPreviousLog4j(log4j, latestLog4jConfig)) {
+            if (!log4j.exists()) {
+                //this might be a workspace created prior KNIME 2.12 which introduced the new
+                //org.knime.core.node.NodeLoggerPatternLayout class check that it is the default version which
+                //we can safely overwrite
+                final File log4jOld = new File(knimeDir, "log4j.xml");
+                if (!log4jOld.exists()) {
+                    //this is a new workspace so simply use the new log file
+                    copyCurrentLog4j(log4j, latestLog4jConfig);
+                } else if (checkPreviousLog4j(log4jOld, latestLog4jConfig)) {
+                    //this is an old workspace <KNIME 2.12 with a default log file so delete the old log file
+                    copyCurrentLog4j(log4j, latestLog4jConfig);
+                    log4jOld.delete();
+                } else {
+                    //this is an old workspace with an adapted log4j file which we should continue to use
+                    final File templateFile = new File(knimeDir, "log4j3.xml_template");
+                    if (!templateFile.exists()) {
+                        //create a template file which contains the new logging settings
+                        copyCurrentLog4j(templateFile, latestLog4jConfig);
+                    }
+                    log4j = log4jOld;
+                }
+            } else if (checkPreviousLog4j(log4j, latestLog4jConfig)) {
                 copyCurrentLog4j(log4j, latestLog4jConfig);
             }
             DOMConfigurator.configure(log4j.toURI().toURL());
@@ -346,11 +372,11 @@ public final class NodeLogger {
     private static void copyCurrentLog4j(final File dest, final String latestLog4jConfig) throws IOException {
         try (final InputStream in = NodeLogger.class.getClassLoader().getResourceAsStream(latestLog4jConfig);
                 final FileOutputStream out = new FileOutputStream(dest);){
-        if (in == null) {
-            throw new IOException("Latest log4j-config '"
-                    + latestLog4jConfig + "' not found");
-        }
-        FileUtil.copy(in, out);
+            if (in == null) {
+                throw new IOException("Latest log4j-config '"
+                        + latestLog4jConfig + "' not found");
+            }
+            FileUtil.copy(in, out);
         }
     }
 
@@ -380,42 +406,30 @@ public final class NodeLogger {
      */
     private static boolean checkPreviousLog4j(final File current, final String latestLog4jConfig)
             throws IOException {
-        try (FileInputStream reader = new FileInputStream(current);) {
-            byte[] currentContents = new byte[(int)current.length()];
+        try (final FileInputStream reader = new FileInputStream(current);) {
+            final byte[] currentContents = new byte[(int)current.length()];
             reader.read(currentContents);
-            ClassLoader cl = NodeLogger.class.getClassLoader();
-
+            final ClassLoader cl = NodeLogger.class.getClassLoader();
             for (int k = 0; k < Integer.MAX_VALUE; k++) {
                 String file = "log4j/log4j-" + k + ".xml";
                 if (latestLog4jConfig.equals(file)) {
                     break;
                 }
-
                 // compare the two files
-                try (InputStream in = new BufferedInputStream(cl.getResourceAsStream(file));) {
-                    int i = 0;
+                try (
+                        final BufferedReader currentReader =
+                                new BufferedReader(new InputStreamReader(new ByteArrayInputStream(currentContents)));
+                        final BufferedReader existingReader =
+                                new BufferedReader(new InputStreamReader(cl.getResourceAsStream(file)));) {
                     boolean match = true;
-                    while (true) {
-                        byte b = (byte) in.read();
-                        if ((i >= currentContents.length) && (b == -1)) {
-                            break;
-                        }
-
-                        if (i >= currentContents.length) {
+                    String line1 = null;
+                    String line2 = null;
+                    while (((line1 = currentReader.readLine()) != null)
+                            && ((line2 = existingReader.readLine()) != null)) {
+                        if (!line1.equals(line2)) {
                             match = false;
                             break;
                         }
-
-                        if (b == -1) {
-                            match = false;
-                            break;
-                        }
-
-                        if (currentContents[i] != b) {
-                            match = false;
-                            break;
-                        }
-                        i++;
                     }
                     if (match) {
                         return true;
@@ -572,6 +586,7 @@ public final class NodeLogger {
             //enable the node id logging if one of the appender contains the node id or node name pattern
             LOG_NODE_ID |= conversionPattern.contains("%" + NodeLoggerPatternLayout.NODE_ID);
             LOG_NODE_ID |= conversionPattern.contains("%" + NodeLoggerPatternLayout.NODE_NAME);
+            LOG_NODE_ID |= conversionPattern.contains("%" + NodeLoggerPatternLayout.QUALIFIER);
             if (LOG_NODE_ID) {
                 LogLog.debug("Node id logging enabled due to pattern layout");
             }

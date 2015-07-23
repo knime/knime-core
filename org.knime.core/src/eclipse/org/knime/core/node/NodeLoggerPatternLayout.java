@@ -70,6 +70,8 @@ public class NodeLoggerPatternLayout extends PatternLayout {
     static final char NODE_ID = 'I';
     /**Node name pattern.*/
     static final char NODE_NAME = 'N';
+    /**Qualifier pattern as a combination of node name and category.*/
+    static final char QUALIFIER = 'Q';
     /**Workflow directory pattern.*/
     static final char WORKFLOW_DIR = 'W';
 
@@ -95,6 +97,10 @@ public class NodeLoggerPatternLayout extends PatternLayout {
             case WORKFLOW_DIR:
                 currentLiteral.setLength(0);
                 addConverter(new WorkflowDirLogPatternConverter(formattingInfo, extractPrecisionOption()));
+                break;
+            case QUALIFIER:
+                currentLiteral.setLength(0);
+                addConverter(new QualifierPatternConverter(formattingInfo, extractPrecisionOption()));
                 break;
             default:
                 super.finalizeConverter(c);
@@ -150,7 +156,7 @@ public class NodeLoggerPatternLayout extends PatternLayout {
         /**
          * @param formattingInfo
          */
-        NodeNameLogPatternConverter(final FormattingInfo formattingInfo) {
+        protected NodeNameLogPatternConverter(final FormattingInfo formattingInfo) {
             super(formattingInfo);
         }
 
@@ -168,6 +174,46 @@ public class NodeLoggerPatternLayout extends PatternLayout {
             return null;
         }
     }
+
+    class QualifierPatternConverter extends NodeNameLogPatternConverter {
+        private int m_precision;
+
+        /**
+         * @param formattingInfo
+         */
+        QualifierPatternConverter(final FormattingInfo formattingInfo, final int precision) {
+            super(formattingInfo);
+            m_precision = precision;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        protected String convert(final LoggingEvent event) {
+            final String msg = super.convert(event);
+            if (msg != null) {
+                return msg;
+            }
+            final String n = event.getLoggerName();
+            //copied from PatternParser.NamedPatternConverter
+            if (m_precision <= 0) {
+                return n;
+            } else {
+                int len = n.length();
+                // We substract 1 from 'len' when assigning to 'end' to avoid out of
+                // bounds exception in return r.substring(end+1, len). This can happen if
+                // precision is 1 and the category name ends with a dot.
+                int end = len - 1;
+                for (int i = m_precision; i > 0; i--) {
+                    end = n.lastIndexOf('.', end - 1);
+                    if (end == -1) {
+                        return n;
+                    }
+                }
+                return n.substring(end + 1, len);
+            }
+        }
+    }
+
     class WorkflowDirLogPatternConverter extends PatternConverter {
         private int m_precision;
         /**
