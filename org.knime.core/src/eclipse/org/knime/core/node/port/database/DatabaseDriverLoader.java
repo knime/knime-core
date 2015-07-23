@@ -59,6 +59,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -238,9 +239,11 @@ public final class DatabaseDriverLoader {
                             DRIVERFILE_TO_DRIVERCLASS.put(driverName, file);
                         } catch (InstantiationException | IllegalAccessException | ExceptionInInitializerError
                                 | NoClassDefFoundError ex) {
+                            Throwable cause = (ex.getCause() != null) ? ExceptionUtils.getRootCause(ex) : ex;
+
                             // also catching a few errors, see bug #5582 for details
                             LOGGER.info("Could not create instance of JDBC driver class '" + driverClass.getName()
-                                + "': " + ex.getMessage(), ex);
+                                + "': " + cause.getMessage(), cause);
                         }
                     }
                 }
