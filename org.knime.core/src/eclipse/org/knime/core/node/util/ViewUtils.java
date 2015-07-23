@@ -91,16 +91,20 @@ public final class ViewUtils {
 
     static {
         boolean available;
-        try {
-            // This call is to initialize the SWT class. The class initialization will throw an error in case
-            // no X libraries are available under Linux. In this case we shouldn't try to access the SWT display.
-            // See also bug #4465.
-            Display.getAppName();
-            available = true;
-        } catch (UnsatisfiedLinkError err) {
-            NodeLogger.getLogger(ViewUtils.class).info("Could not intitialize SWT display, probably because X11 or GTK "
-                    + " libraries are missing. Assuming we are running headless.", err);
+        if (Boolean.valueOf("java.awt.headless")) {
             available = false;
+        } else {
+            try {
+                // This call is to initialize the SWT class. The class initialization will throw an error in case
+                // no X libraries are available under Linux. In this case we shouldn't try to access the SWT display.
+                // See also bug #4465.
+                Display.getAppName();
+                available = true;
+            } catch (UnsatisfiedLinkError err) {
+                NodeLogger.getLogger(ViewUtils.class).info("Could not intitialize SWT display, probably because X11 or GTK "
+                        + " libraries are missing. Assuming we are running headless.", err);
+                available = false;
+            }
         }
         DISPLAY_AVAILABLE = available;
     }
