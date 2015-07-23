@@ -178,7 +178,12 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
             throws Exception {
         PortObject[] dataFromParent = m_subNodeContainer.fetchInputDataFromParent();
         pushFlowVariables();
-        return ArrayUtils.removeAll(dataFromParent, 0);
+        PortObject[] resultData = new PortObject[dataFromParent.length - 1];
+        for (int i = 1; i < dataFromParent.length; i++) {
+            PortObject o = dataFromParent[i];
+            resultData[i - 1] = o instanceof BufferedDataTable ? exec.createWrappedTable((BufferedDataTable)o) : o;
+        }
+        return resultData;
     }
 
     /**
