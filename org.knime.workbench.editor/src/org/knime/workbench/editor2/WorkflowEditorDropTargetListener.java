@@ -66,7 +66,10 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.internal.Workbench;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -562,7 +565,16 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    Workbench.getInstance().getActiveWorkbenchWindow().getActivePage().getActiveEditor().setFocus();
+                    IWorkbenchWindow w = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+                    if (w != null) {
+                        IWorkbenchPage p = w.getActivePage();
+                        if (p != null) {
+                            IEditorPart e = p.getActiveEditor();
+                            if (e != null) {
+                                e.setFocus();
+                            }
+                        }
+                    }
                 }
             });
         } else {
