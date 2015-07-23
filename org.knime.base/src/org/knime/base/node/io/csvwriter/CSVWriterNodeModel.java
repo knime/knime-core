@@ -81,6 +81,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.PortInput;
 import org.knime.core.node.streamable.PortOutput;
@@ -124,6 +125,14 @@ public class CSVWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_settings.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[] {InputPortRole.NONDISTRIBUTED_STREAMABLE};
     }
 
     /**
