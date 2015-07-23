@@ -91,7 +91,7 @@ public final class ViewUtils {
 
     static {
         boolean available;
-        if (Boolean.valueOf("java.awt.headless")) {
+        if (Boolean.getBoolean("java.awt.headless")) {
             available = false;
         } else {
             try {
