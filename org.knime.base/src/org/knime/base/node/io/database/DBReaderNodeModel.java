@@ -229,7 +229,8 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             return new DataTableSpec[]{lastSpec};
         }
         try {
-            if ((m_settings.getCredentialName() == null)
+            if (!hasDatabaseInputConnection(inSpecs)
+                && (m_settings.getCredentialName() == null)
                 && ((m_settings.getUserName(getCredentialsProvider()) == null) || m_settings.getUserName(
                     getCredentialsProvider()).isEmpty())) {
                 throw new InvalidSettingsException("No credentials or username for authentication given");
@@ -260,6 +261,11 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         }
     }
 
+    private boolean hasDatabaseInputConnection(final PortObjectSpec[] inSpecs) {
+        return (inSpecs.length > getNrInPorts() - 1)
+                && (inSpecs[getNrInPorts() - 1] instanceof DatabaseConnectionPortObjectSpec);
+    }
+
     /**
      * @param inSpecs input spec
      * @param load {@link DatabaseReaderConnection} to use
@@ -271,8 +277,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         throws InvalidSettingsException, SQLException {
         String query = parseQuery(m_settings.getQuery());
         DatabaseQueryConnectionSettings connSettings;
-        if ((inSpecs.length > getNrInPorts() - 1)
-            && (inSpecs[getNrInPorts() - 1] instanceof DatabaseConnectionPortObjectSpec)) {
+        if (hasDatabaseInputConnection(inSpecs)) {
             DatabaseConnectionPortObjectSpec connSpec =
                 (DatabaseConnectionPortObjectSpec)inSpecs[getNrInPorts() - 1];
             connSettings = new DatabaseQueryConnectionSettings(
