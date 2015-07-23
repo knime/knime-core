@@ -5605,17 +5605,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         checkForNodeStateChanges(false);
     }
 
-    /** Configure a SingleNodeContainer. This method is really private API but has public scope to enable the streaming
-     * executor to propagate flow variable control into nodes prior (streaming) execution.
+    /** Configure a SingleNodeContainer.
      *
      * @param snc node to be configured
      * @param keepNodeMessage Whether to keep previously set node messages
      *        (important during load sometimes)
      * @return true if the configuration did change something.
-     * @since 2.12
-     * @noreference This method is not intended to be referenced by clients.
      */
-    public boolean configureSingleNodeContainer(final SingleNodeContainer snc, final boolean keepNodeMessage) {
+    private boolean configureSingleNodeContainer(final SingleNodeContainer snc, final boolean keepNodeMessage) {
         boolean configurationChanged = false;
         synchronized (m_workflowMutex) {
             NodeMessage oldMessage = keepNodeMessage ? snc.getNodeMessage() : NodeMessage.NONE;
@@ -5668,27 +5665,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // used to track changes
                 FlowObjectStack oldFOS = snc.createOutFlowObjectStack();
                 // create new FlowObjectStack
-                FlowObjectStack scsc;
-                FlowObjectStack nodeOutgoingStack = new FlowObjectStack(sncID);
                 boolean flowStackConflict = false;
-                if (isSourceNode(sncID)) {
-                    // no input ports - create new stack, prefilled with Workflow variables:
-                    scsc = new FlowObjectStack(sncID, getWorkflowVariableStack());
-                } else {
-                    try {
-                        scsc = new FlowObjectStack(sncID, sos);
-                    } catch (IllegalFlowObjectStackException e) {
-                        LOGGER.warn("Unable to merge flow object stacks: " + e.getMessage(), e);
-                        scsc = new FlowObjectStack(sncID);
-                        flowStackConflict = true;
-                    }
+                FlowObjectStack scsc;
+                try {
+                    scsc =  createAndSetFlowObjectStackFor(snc, sos);
+                } catch (IllegalFlowObjectStackException e) {
+                    LOGGER.warn("Unable to merge flow object stacks: " + e.getMessage(), e);
+                    scsc = new FlowObjectStack(sncID);
+                    flowStackConflict = true;
                 }
-                if (snc.isModelCompatibleTo(ScopeStartNode.class)) {
-                    // the stack will automatically add the ID of the head of the scope (the owner!)
-                    FlowScopeContext ssc = ((NativeNodeContainer)snc).getNode().getInitialScopeContext();
-                    nodeOutgoingStack.push(ssc);
-                }
-                snc.setFlowObjectStack(scsc, nodeOutgoingStack);
                 snc.setCredentialsStore(m_credentialsStore);
                 // update backwards reference for loops
                 if (snc.isModelCompatibleTo(LoopEndNode.class)) {
@@ -5793,6 +5778,40 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // need to be configured no matter what - they can change their state
         // because 3 nodes before in the pipeline the execute state changed...
 //        return configurationChanged == configurationChanged;
+    }
+
+    /** Merges the incoming flow object stacks and sets it into the argument node. Called prior configuration and
+     * externally via the streaming executor.
+     *
+     * <p>
+     * This method is private API but has public scope to enable the streaming
+     * executor to propagate flow variable control into nodes prior (streaming) execution.
+     * @param snc The node to inject into - must exist in workflow
+     * @param sos The upstream stacks.
+     * @return The merged stack as set into the node.
+     * @throws IllegalFlowObjectStackException e.g. conflicting loops.
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public FlowObjectStack createAndSetFlowObjectStackFor(final SingleNodeContainer snc, final FlowObjectStack[] sos)
+    throws IllegalFlowObjectStackException {
+        CheckUtils.checkState(Thread.holdsLock(m_workflowMutex), "Workflow mutex not held");
+        NodeID sncID = snc.getID();
+        FlowObjectStack scsc;
+        FlowObjectStack nodeOutgoingStack = new FlowObjectStack(sncID);
+        if (isSourceNode(sncID)) {
+            // no input ports - create new stack, prefilled with Workflow variables:
+            scsc = new FlowObjectStack(sncID, getWorkflowVariableStack());
+        } else {
+            scsc = new FlowObjectStack(sncID, sos);
+        }
+        if (snc.isModelCompatibleTo(ScopeStartNode.class)) {
+            // the stack will automatically add the ID of the head of the scope (the owner!)
+            FlowScopeContext ssc = ((NativeNodeContainer)snc).getNode().getInitialScopeContext();
+            nodeOutgoingStack.push(ssc);
+        }
+        snc.setFlowObjectStack(scsc, nodeOutgoingStack);
+        return scsc;
     }
 
     /** Configure the nodes in WorkflowManager, connected to a specific set of ports.

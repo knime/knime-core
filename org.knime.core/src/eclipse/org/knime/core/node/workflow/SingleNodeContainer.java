@@ -247,15 +247,20 @@ public abstract class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * Calls configure in the node, allowing the current job manager to modify
-     * the output specs according to its settings (in case it modifies the
-     * node's output).
+     * Calls configure in the node, whereby it also updates the settings in case the node is driven by flow variables.
+     * It also allows the current job manager to modify the output specs according to its  settings
+     * (in case it modifies the node's output).
+     *
+     * <p>This method is KNIME private API and is called from the framework and the streaming executor (which is why
+     * it has public scope).
      *
      * @param inSpecs the input specs to node configure
      * @param keepNodeMessage see {@link SingleNodeContainer#configure(PortObjectSpec[], boolean)}
      * @return true of configure succeeded.
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
      */
-    private boolean callNodeConfigure(final PortObjectSpec[] inSpecs, final boolean keepNodeMessage) {
+    public final boolean callNodeConfigure(final PortObjectSpec[] inSpecs, final boolean keepNodeMessage) {
         final NodeExecutionJobManager jobMgr = findJobManager();
         NodeConfigureHelper nch = new NodeConfigureHelper() {
 
