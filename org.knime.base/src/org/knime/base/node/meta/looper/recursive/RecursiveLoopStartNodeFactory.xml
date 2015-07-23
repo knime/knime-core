@@ -4,18 +4,18 @@
     <name>Recursive Loop Start</name>
     
     <shortDescription>
-    The loop start node for recursion. This type of loop enables you to receive data from the loop end.
+    The loop start node for recursion. This type of loop enables you to receive two data tables from the loop end.
     </shortDescription>
     
     <fullDescription>
         <intro> 
-        Using the recursive loop construct you have the possibility to receive a data table passed to a 
-        corresponding loop end back in the loop start node. 
+        <p>
+       The Recursive Loop node pair enables the passing of a data table from the Recursive Loop End back to the Recursive Loop Start.</p>
         
-        First the loop start node needs an initialization table. This table is output in the first iteration of the recursive loop.
-        <br/>
-        The corresponding loop end receives a data table and passes it back to the loop start node.
-        Starting with the second iteration of the recursive loop the loop start node outputs the data as inserted into the loop end in the previous run.
+        <p>The Loop Start requires an initialized table. This table is output by the Recursive Loop Start in the first iteration of the loop.</p>
+        
+        <p>The table received by the corresponding Recursive Loop End is passed back to the Recursive Loop Start node.
+        Starting with the second iteration, the Recursive Loop Start node outputs the data as received by the Recursive Loop End.</p>
         
         </intro>
         

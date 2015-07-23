@@ -9,13 +9,13 @@
     
     <fullDescription>
         <intro> 
-        Using the recursive loop construct you have the possibility to receive a data table passed to a 
-        corresponding loop end back in the loop start node. 
+        <p>
+        The Recursive Loop node pair enables the passing of two data tables from the Recursive Loop End's input ports 1 and 2 back to the Recursive Loop Start's output ports 0 and 1.</p>
         
-        First the loop start node needs an initialization table. This table is output in the first iteration of the recursive loop.
-        <br/>
-        The corresponding loop end receives a data table and passes it back to the loop start node.
-        Starting with the second iteration of the recursive loop the loop start node outputs the data as inserted into the loop end in the previous run.
+        <p>The Loop Start requires an initialized table. This table is output by the Recursive Loop Start in the first iteration of the loop.</p>
+        
+        <p>The tables received by the corresponding Recursive Loop End are passed back to a Recursive Loop Start node.
+        Starting with the second iteration, the Recursive Loop Start node outputs the data as received by the Recursive Loop End.</p>
         
         </intro>
         

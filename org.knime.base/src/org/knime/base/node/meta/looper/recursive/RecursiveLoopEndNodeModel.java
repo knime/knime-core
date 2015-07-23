@@ -145,7 +145,7 @@ public class RecursiveLoopEndNodeModel extends NodeModel implements LoopEndNode 
 
         boolean endLoop = checkDataTableSize(m_minNumberOfRows.getIntValue())
                 || (m_iterationnr + 1) >= m_maxIterations.getIntValue()
-                || m_endLoop.getStringValue().equals("true");
+                || m_endLoop.getStringValue().equalsIgnoreCase("true");
 
         if (m_onlyLastResult.getBooleanValue()) {
             if (endLoop) {
