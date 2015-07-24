@@ -214,8 +214,8 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         if (alreadyAsked) {
             return;
         }
-        String message = "Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data.\n"
-                + "Click <a href=\"https://tech.knime.org/faq#usage_data\">here</a> to find out what is being transmitted.\n"
+        String message = "Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data. "
+                + "Click <a href=\"https://tech.knime.org/faq#usage_data\">here</a> to find out what is being transmitted. "
                 + "You can also change this setting in the KNIME preferences later.\n\n"
                 + "Do you allow KNIME to collect and send anonymous usage data?";
         boolean allow = LinkMessageDialog.openQuestion(shell, "Help improve KNIME", message);
