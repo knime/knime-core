@@ -282,6 +282,12 @@ public final class JavaCodeCompiler {
         }
     }
 
+    /**
+     * Creates a class loader for the compiled classes.
+     * @param parent the parent class loader that is used as fallback when a class is not found.
+     * @return a class loader that can load the compiled classes.
+     * @throws CompilationFailedException when the compilation of the given source code failed.
+     */
     public ClassLoader createClassLoader(final ClassLoader parent)
         throws CompilationFailedException {
         if (m_fileMgr == null) {
@@ -308,7 +314,7 @@ public final class JavaCodeCompiler {
             @Override
             protected Class<?> findClass(final String name)
                     throws ClassNotFoundException {
-                byte[] byteCode = m_fileMgr.getClassByteCode(name);
+                byte[] byteCode = m_fileMgr.getClassByteCode(name.replace('.', '/'));
                 return defineClass(name, byteCode, 0, byteCode.length);
             }
         };
