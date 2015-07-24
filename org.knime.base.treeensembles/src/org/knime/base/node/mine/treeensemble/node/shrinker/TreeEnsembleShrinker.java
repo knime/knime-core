@@ -61,10 +61,11 @@ import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeClassification;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.StringValue;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  * @author Patrick Winter, University of Konstanz
@@ -83,6 +84,8 @@ class TreeEnsembleShrinker {
 
     private ExecutionContext m_exec;
 
+    private ExecutionMonitor m_shrinkProgress;
+
     /**
      * Create a shrinker for the given ensemble.
      *
@@ -94,7 +97,7 @@ class TreeEnsembleShrinker {
      * @param exec The execution context
      * @throws CanceledExecutionException If execution has been canceled
      */
-    public TreeEnsembleShrinker(final TreeEnsembleModel initialEnsemble, final DataTable evaluationData,
+    public TreeEnsembleShrinker(final TreeEnsembleModel initialEnsemble, final BufferedDataTable evaluationData,
         final String targetColumn, final ExecutionContext exec) throws CanceledExecutionException {
         m_exec = exec;
         m_initialEnsemble = initialEnsemble;
@@ -114,17 +117,25 @@ class TreeEnsembleShrinker {
             AbstractTreeModel<?> tree = m_initialEnsemble.getTreeModel(i);
             m_currentTrees.add(tree);
             List<String> predictions = new ArrayList<String>();
-            // Create predictions for this tree
-            for (DataRow row : evaluationData) {
-                m_exec.checkCanceled();
-                PredictorRecord record =
-                    m_initialEnsemble.createPredictorRecord(row,
-                        m_initialEnsemble.getLearnAttributeSpec(evaluationData.getDataTableSpec()));
-                TreeNodeClassification match = (TreeNodeClassification)tree.findMatchingNode(record);
-                predictions.add(match.getMajorityClassName());
-            }
             m_predictions.put(tree, predictions);
         }
+        m_exec.setMessage("Predicting");
+        ExecutionMonitor predictionProgress = m_exec.createSubProgress(0.5);
+        int current = 0;
+        for (DataRow row : evaluationData) {
+            predictionProgress.setMessage("Predicting row " + (current + 1) + " of " + evaluationData.getRowCount());
+            predictionProgress.setProgress(current++/(double)evaluationData.getRowCount());
+            PredictorRecord record =
+                m_initialEnsemble.createPredictorRecord(row,
+                    m_initialEnsemble.getLearnAttributeSpec(evaluationData.getDataTableSpec()));
+            for (AbstractTreeModel<?> tree : m_currentTrees) {
+                m_exec.checkCanceled();
+                TreeNodeClassification match = (TreeNodeClassification)tree.findMatchingNode(record);
+                m_predictions.get(tree).add(match.getMajorityClassName());
+            }
+        }
+        predictionProgress.setProgress(1);
+        m_shrinkProgress = m_exec.createSubProgress(0.5);
         // Calculate accuracy for the current set of trees
         m_currentAccuracy = calcAccuracy(null);
     }
@@ -138,6 +149,7 @@ class TreeEnsembleShrinker {
      * @throws CanceledExecutionException If execution has been canceled
      */
     public void autoShrink() throws CanceledExecutionException {
+        m_exec.setMessage("Shrinking");
         // We want to keep track of the best accuracy we had and what ensemble produced it
         double bestAccuracy = m_currentAccuracy;
         List<AbstractTreeModel<?>> bestEnsemble = new ArrayList<AbstractTreeModel<?>>(m_currentTrees);
@@ -151,7 +163,8 @@ class TreeEnsembleShrinker {
             // For each tree in the current ensemble we want to know how the accuracy changes
             for (AbstractTreeModel<?> tree : m_currentTrees) {
                 m_exec.checkCanceled();
-                m_exec.setProgress(calcsDone++/(double)numberOfCalcs);
+                m_shrinkProgress.setMessage(calcsDone + " of " + numberOfCalcs + " calculations done");
+                m_shrinkProgress.setProgress(calcsDone++/(double)numberOfCalcs);
                 // Calculate accuracy without this tree
                 double newAccuracy = calcAccuracy(tree);
                 // If accuracy is better than what we had so far this is our current best selection
@@ -181,6 +194,7 @@ class TreeEnsembleShrinker {
      * @throws CanceledExecutionException If execution has been canceled
      */
     public void shrinkTo(final int numberOfTrees) throws CanceledExecutionException {
+        m_exec.setMessage("Shrinking");
         // Calculate the number of calcAccuracy() calls so we can update the progress
         int numberOfCalcs = numberOfCalculations(m_currentTrees.size(), numberOfTrees);
         int calcsDone = 0;
@@ -191,7 +205,8 @@ class TreeEnsembleShrinker {
             double maxAccuracy = -1;
             for (AbstractTreeModel<?> tree : m_currentTrees) {
                 m_exec.checkCanceled();
-                m_exec.setProgress(calcsDone++/(double)numberOfCalcs);
+                m_shrinkProgress.setMessage(calcsDone + " of " + numberOfCalcs + " calculations done");
+                m_shrinkProgress.setProgress(calcsDone++/(double)numberOfCalcs);
                 double newAccuracy = calcAccuracy(tree);
                 // If accuracy is better than what we had so far this is our current best selection
                 if (newAccuracy > maxAccuracy) {

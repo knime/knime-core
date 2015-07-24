@@ -57,7 +57,6 @@ import org.dmg.pmml.PMMLDocument;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModel;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
@@ -109,7 +108,7 @@ class TreeEnsembleShrinkerNodeModel extends NodeModel {
         }
         // If our result size is not smaller than the current ensemble we don't have to do the following and therefore can save time
         if (shrink) {
-            DataTable inData = (DataTable)inObjects[1];
+            BufferedDataTable inData = (BufferedDataTable)inObjects[1];
             // Create shrinker
             TreeEnsembleShrinker shrinker =
                 new TreeEnsembleShrinker(treeEnsemble, inData, m_config.getTargetColumn(), exec);
