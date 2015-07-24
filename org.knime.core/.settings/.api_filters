@@ -126,6 +126,12 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNodeValue"/>
+                <message_argument value="loadFromJson(JsonValue)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNodeValue"/>
                 <message_argument value="loadFromString(String)"/>
             </message_arguments>
         </filter>

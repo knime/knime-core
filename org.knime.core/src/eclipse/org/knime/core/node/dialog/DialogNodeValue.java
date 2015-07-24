@@ -47,7 +47,7 @@
 package org.knime.core.node.dialog;
 
 import javax.json.JsonException;
-import javax.json.JsonObject;
+import javax.json.JsonValue;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -87,19 +87,19 @@ public interface DialogNodeValue {
 
     /**
      * Called when parameterized via web service invocation. Each implementation should support reading its value from
-     * a JSON object.
-     * @param json To read from, not null.
+     * a JSON value.
+     * @param json a JSON value, never <code>null</code>
      * @throws JsonException If parsing fails.
      * @since 2.12
      */
-    public abstract void loadFromJson(final JsonObject json) throws JsonException;
+    public abstract void loadFromJson(final JsonValue json) throws JsonException;
 
-    /** Reverse operation to {@link #loadFromJson(JsonObject)}. This can be used to dump the current configuration to a
+    /** Reverse operation to {@link #loadFromJson(JsonValue)}. This can be used to dump the current configuration to a
      * file that can then be modified by the user. It helps the user to understand the structure of the expected
-     * {@link JsonObject}
-     * @return Content as {@link JsonObject}, not null.
+     * {@link JsonValue}.
+     * @return Content as {@link JsonValue}, never <code>null</code>
      * @since 2.12
      */
-    public JsonObject toJson();
+    public JsonValue toJson();
 
 }
