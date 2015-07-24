@@ -179,13 +179,11 @@ public class SleepNodeModel extends NodeModel {
             // wait to
             Calendar c = Calendar.getInstance();
             c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DATE), m_toHours, m_toMin, m_toSec);
-            final long sleepTime = c.getTimeInMillis() - System.currentTimeMillis();
-
-            if (sleepTime <= 0) {
-                return inData;
-            } else {
-                waitFor(sleepTime);
+            if (c.getTimeInMillis() - System.currentTimeMillis() <= 0) {
+                c.add(Calendar.DAY_OF_YEAR, 1);
             }
+            final long sleepTime = c.getTimeInMillis() - System.currentTimeMillis();
+            waitFor(sleepTime);
         } else if (m_selection == 2) {
             WatchService w = FileSystems.getDefault().newWatchService();
             Path p = Paths.get(m_filePath);
