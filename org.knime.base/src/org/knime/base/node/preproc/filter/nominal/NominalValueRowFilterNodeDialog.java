@@ -44,25 +44,28 @@
  */
 package org.knime.base.node.preproc.filter.nominal;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.HashMap;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -81,7 +84,7 @@ import org.knime.core.node.NotConfigurableException;
 /**
  * <code>NodeDialog</code> for the "PossibleValueRowFilter" Node. Adds a
  * select box for the nominal column and an include and exclude list with the
- * necessar buttons to add, add all, remove, and remove all possible values from
+ * necessary buttons to add, add all, remove, and remove all possible values from
  * one list to the other. The lists are update, when a nominal column is
  * selected.
  *
@@ -113,14 +116,14 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
     /** Config key for the selected column. */
     static final String CFG_SELECTED_COL = "selected_column";
 
-    /** Config key for the possible values to include. */
+    /** Config key for the possible values to be included. */
     static final String CFG_SELECTED_ATTR = "selected attributes";
 
     /**
      * New pane for configuring the PossibleValueRowFilter node.
      */
     protected NominalValueRowFilterNodeDialog() {
-        m_colAttributes = new HashMap<String, Set<DataCell>>();
+        m_colAttributes = new LinkedHashMap<String, Set<DataCell>>();
         m_columns = new DefaultComboBoxModel();
         m_included = new DefaultListModel();
         m_excluded = new DefaultListModel();
@@ -129,23 +132,17 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
 
         m_columnSelection = new JComboBox(m_columns);
         m_columnSelection.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
-        // add listener to column selection box
-        // to change exclude list
+        // add listener to column selection box to change exclude list
         m_columnSelection.addItemListener(this);
 
         // create the GUI
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        Box colBox = Box.createHorizontalBox();
-        colBox.add(Box.createHorizontalStrut(10));
-        colBox.add(new JLabel("Select column:"));
-        colBox.add(Box.createHorizontalStrut(10));
-        colBox.add(m_columnSelection);
-        colBox.add(Box.createHorizontalStrut(20));
-        colBox.add(Box.createHorizontalGlue());
-        panel.add(colBox);
-        panel.add(createAttributeSelectionLists());
-        panel.add(Box.createVerticalGlue());
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Select column:"));
+        JPanel columnSelectionPanel = new JPanel(new BorderLayout());
+        columnSelectionPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        columnSelectionPanel.add(m_columnSelection, BorderLayout.CENTER);
+        panel.add(columnSelectionPanel, BorderLayout.NORTH);
+        panel.add(createAttributeSelectionLists(), BorderLayout.CENTER);
         addTab("Selection", new JScrollPane(panel));
     }
 
@@ -154,9 +151,27 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         overall.setBorder(new TitledBorder("Nominal value selection:"));
         // left excluded
         Box excluded = Box.createVerticalBox();
-        excluded.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createLineBorder(Color.RED), "Excluded:"));
+        excluded.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.RED), "Excluded:"));
         m_excludeList.setMinimumSize(new Dimension(200, 200));
+        m_excludeList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(final MouseEvent me) {
+                if (me.getClickCount() == 2) {
+                    final List<Object> exs = m_excludeList.getSelectedValuesList();
+                    for (final Object cell : exs) {
+                        m_excluded.removeElement(cell);
+                    }
+                    m_included.removeAllElements();
+                    List<Object> hash = Arrays.asList(m_excluded.toArray());
+                    for (final DataCell cell : m_colAttributes.get(m_columns.getSelectedItem())) {
+                        final String s = cell.toString();
+                        if (!hash.contains(s)) {
+                            m_included.addElement(s);
+                        }
+                    }
+                }
+            }
+        });
         // force fixed width for list
         m_excludeList.setFixedCellWidth(200);
         JScrollPane exclScroller = new JScrollPane(m_excludeList);
@@ -230,9 +245,27 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
 
         // right included
         Box included = Box.createVerticalBox();
-        included.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createLineBorder(Color.GREEN), "Included:"));
+        included.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.GREEN), "Included:"));
         m_includeList.setMinimumSize(new Dimension(200, 200));
+        m_includeList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(final MouseEvent me) {
+                if (me.getClickCount() == 2) {
+                    final List<Object> ins = m_includeList.getSelectedValuesList();
+                    for (final Object cell : ins) {
+                        m_included.removeElement(cell);
+                    }
+                    m_excluded.removeAllElements();
+                    List<Object> hash = Arrays.asList(m_included.toArray());
+                    for (final DataCell cell : m_colAttributes.get(m_columns.getSelectedItem())) {
+                        final String s = cell.toString();
+                        if (!hash.contains(s)) {
+                            m_excluded.addElement(s);
+                        }
+                    }
+                }
+            }
+        });
         // force list to have fixed width
         m_includeList.setFixedCellWidth(200);
         JScrollPane inclScroller = new JScrollPane(m_includeList);
@@ -334,4 +367,5 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         }
         settings.addStringArray(CFG_SELECTED_ATTR, selected);
     }
+
 }
