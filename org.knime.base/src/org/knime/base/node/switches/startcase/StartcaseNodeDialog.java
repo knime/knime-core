@@ -58,7 +58,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class StartcaseNodeDialog extends DefaultNodeSettingsPane {
 
-    static final String[] options = { "0", "1", "2" };
+    /** Possible options to select output port. */
+    static final String[] options = {"0", "1", "2"};
 
     /**
      *
@@ -68,7 +69,7 @@ public class StartcaseNodeDialog extends DefaultNodeSettingsPane {
         FlowVariableModel fvm = createFlowVariableModel(smfs);
 
         addDialogComponent(new DialogComponentStringSelection(
-                smfs, "Choose Active Port:",
+                smfs, "Select active port:",
                 Arrays.asList(options), false, fvm));
 
         SettingsModelBoolean activateAllOutputsDuringConfigureModel =

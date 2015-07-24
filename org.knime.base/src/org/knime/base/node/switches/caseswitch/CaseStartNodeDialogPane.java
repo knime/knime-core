@@ -61,10 +61,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
  */
 final class CaseStartNodeDialogPane extends DefaultNodeSettingsPane {
 
+    /**
+     * Constructor.
+     */
     CaseStartNodeDialogPane() {
         SettingsModelIntegerBounded smib = CaseStartNodeModel.createSelectedPortModel();
         FlowVariableModel fvm = createFlowVariableModel(smib);
-        addDialogComponent(new DialogComponentNumber(smib, "Select the active port", 1, fvm));
+        addDialogComponent(new DialogComponentNumber(smib, "Select active port", 1, fvm));
 
         SettingsModelBoolean activateAllOutputsDuringConfigureModel =
                 CaseStartNodeModel.createActivateAllOutputsDuringConfigureModel();

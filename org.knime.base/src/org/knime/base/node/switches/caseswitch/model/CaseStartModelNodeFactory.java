@@ -58,6 +58,9 @@ import org.knime.core.node.port.PortType;
  */
 public final class CaseStartModelNodeFactory extends CaseStartNodeFactory {
 
+    /**
+     * Constructor.
+     */
     public CaseStartModelNodeFactory() {
         super(new PortType(PortObject.class));
     }

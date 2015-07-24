@@ -69,7 +69,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -91,11 +90,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  *
  * @author M. Berthold, University of Konstanz
  */
-public class EndifNodeModel extends NodeModel
-implements InactiveBranchConsumer {
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(EndifNodeModel.class);
+public class EndifNodeModel extends NodeModel implements InactiveBranchConsumer {
 
     /** NodeSettings key if to append suffix. If false, skip the rows. */
     static final String CFG_APPEND_SUFFIX = "append_suffix";

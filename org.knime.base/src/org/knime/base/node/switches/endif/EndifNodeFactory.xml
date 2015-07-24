@@ -16,7 +16,7 @@
             second table are not appended to the output table. This option is 
             relatively memory intensive as it needs to cache the row IDs in
             order to find duplicates.</option>
-        <option name="Append suffix"> The output table will contain all rows, but
+        <option name="Append Suffix"> The output table will contain all rows, but
             duplicate row identifiers are labeled with a suffix. Similar to
             the "Skip Rows" option this method is also memory intensive. </option>
         <option name="Enable hiliting">

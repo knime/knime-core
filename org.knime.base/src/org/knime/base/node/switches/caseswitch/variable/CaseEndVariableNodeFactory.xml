@@ -22,9 +22,7 @@
 				retain their correct values. If you need to change the value of existing
 				variables, please either use
 				a new flow variable, or use a
-				<i>Variable to Tablerow</i>
-				node before a conventional
-				<i>End CASE</i>
+				<i>Variable to Table Row</i> node before a conventional <i>End CASE</i>
 				node.
 			</p>
         </intro>

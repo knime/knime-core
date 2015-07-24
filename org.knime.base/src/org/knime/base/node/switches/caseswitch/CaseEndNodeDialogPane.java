@@ -57,6 +57,9 @@ import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
  */
 final class CaseEndNodeDialogPane extends DefaultNodeSettingsPane {
 
+    /**
+     * Constructor.
+     */
     CaseEndNodeDialogPane() {
         addDialogComponent(new DialogComponentButtonGroup(
             CaseEndNodeModel.createMultipleActiveHandlingSettingsModel(),

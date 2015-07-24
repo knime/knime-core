@@ -65,7 +65,7 @@ public class ManualIfNodeDialog extends DefaultNodeSettingsPane {
      */
     public ManualIfNodeDialog() {
         addDialogComponent(new DialogComponentButtonGroup(ManualIfNodeModel.createChoiceModel(),
-                false, "Choose Active Port:", BOTH, BOTTOM, TOP));
+                false, " Select active port ", BOTH, BOTTOM, TOP));
 
         SettingsModelBoolean activateAllOutputsDuringConfigureModel =
                 ManualIfNodeModel.createActivateAllOutputsDuringConfigureModel();
