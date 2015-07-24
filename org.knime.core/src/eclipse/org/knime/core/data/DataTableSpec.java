@@ -685,7 +685,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /**
      * Returns an array of strings retrieved by {@link DataColumnSpec#getName()}
-     * for all column specs with this spec.
+     * for all column specs with this spec (ordered by index).
      * @return an array of column names
      * @since 2.6
      */
@@ -852,6 +852,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * @return iterator of the underlying list of <code>DataColumnSpec</code>s
      * @see java.lang.Iterable#iterator()
      */
+    @Override
     public Iterator<DataColumnSpec> iterator() {
         // both method do not copy the data but only keep a reference.
         return Collections.unmodifiableList(
@@ -1036,6 +1037,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         // column names, first entry value will be returned
         TreeMap<Integer, String> map = new TreeMap<Integer, String>(
                 new Comparator<Integer>() {
+                    @Override
                     public int compare(final Integer i, final Integer j) {
                         return Double.compare(i, j);
                     }
