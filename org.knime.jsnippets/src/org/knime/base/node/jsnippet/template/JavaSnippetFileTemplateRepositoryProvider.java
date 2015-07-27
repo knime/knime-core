@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,11 +40,46 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-	<p>
-	  Templates for the Java Snippet nodes.
-	</p>
-	<p>The classes within this package might change and are not meant as public API.</p>
-</body>
+ * ------------------------------------------------------------------------
+ *
+ * History
+ *   05.06.2012 (hofer): created
+ */
+package org.knime.base.node.jsnippet.template;
+
+import org.knime.core.node.NodeSettingsRO;
+
+
+/**
+ * A provider to the default template repository.
+ * <p>This class might change and is not meant as public API.
+ * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
+ */
+public class JavaSnippetFileTemplateRepositoryProvider implements TemplateRepositoryProvider<JavaSnippetTemplate> {
+
+    private static final FileTemplateRepositoryProvider<JavaSnippetTemplate> PROVIDER =
+            new FileTemplateRepositoryProvider<>("jsnippets", new SnippetTemplateFactory<JavaSnippetTemplate>() {
+                @Override
+                public JavaSnippetTemplate create(final NodeSettingsRO settings) {
+                    return JavaSnippetTemplate.create(settings);
+                }
+            });
+    /**
+     * Constructor
+     */
+    public JavaSnippetFileTemplateRepositoryProvider() {
+
+    }
+
+    /**
+     * @see org.knime.base.node.jsnippet.template.FileTemplateRepositoryProvider#getRepository()
+     */
+    @Override
+    public FileTemplateRepository<JavaSnippetTemplate> getRepository() {
+        return PROVIDER.getRepository();
+    }
+}

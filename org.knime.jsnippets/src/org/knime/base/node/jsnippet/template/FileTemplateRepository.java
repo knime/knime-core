@@ -58,18 +58,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.knime.base.node.jsnippet.JSnippetTemplate;
+import org.knime.base.node.jsnippet.util.JSnippetTemplate;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 
 /**
  * A {@link TemplateRepository} which stores templates on the disk.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @param <T> {@link JSnippetTemplate}
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("rawtypes")
-public final class FileTemplateRepository extends TemplateRepository {
+public final class FileTemplateRepository<T extends JSnippetTemplate> extends TemplateRepository<T> {
     private static NodeLogger logger
         = NodeLogger.getLogger(FileTemplateRepository.class);
 
@@ -77,7 +83,9 @@ public final class FileTemplateRepository extends TemplateRepository {
     private boolean m_readonly;
 
     /** Templates grouped by meta category. */
-    private Map<Class, Collection<JSnippetTemplate>> m_templates;
+    private Map<Class, Collection<T>> m_templates;
+
+    private SnippetTemplateFactory<T> m_factory;
 
 
     /**
@@ -88,16 +96,16 @@ public final class FileTemplateRepository extends TemplateRepository {
      * @throws IOException if a template cannot be read
      */
 
-    private FileTemplateRepository(final File folder, final boolean readonly)
+    private FileTemplateRepository(final File folder, final boolean readonly, final SnippetTemplateFactory<T> factory)
             throws IOException {
         super();
         m_folder = folder;
         m_readonly = readonly;
+        m_factory = factory;
 
-        m_templates = new HashMap<Class, Collection<JSnippetTemplate>>();
+        m_templates = new HashMap<>();
 
-        Collection<JSnippetTemplate> templates =
-            new ArrayList<JSnippetTemplate>();
+        Collection<T> templates = new ArrayList<>();
 
         if (m_folder.exists()) {
             for (File meta : m_folder.listFiles()) {
@@ -118,13 +126,12 @@ public final class FileTemplateRepository extends TemplateRepository {
      * @param templates the templates to add to
      * @param file the file to read
      */
-    private void addIfTemplate(final Collection<JSnippetTemplate> templates,
-            final File file) {
+    private void addIfTemplate(final Collection<T> templates, final File file) {
         if (file.getName().endsWith(".xml")) {
-            try {
+            try (FileInputStream in = new FileInputStream(file)){
                 NodeSettingsRO settings =
-                    NodeSettings.loadFromXML(new FileInputStream(file));
-                templates.add(JSnippetTemplate.create(settings));
+                    NodeSettings.loadFromXML(in);
+                templates.add(m_factory.create(settings));
             } catch (Exception e) {
                 logger.error("The following file seems to be no template. "
                         + file.getAbsolutePath(), e);
@@ -137,12 +144,12 @@ public final class FileTemplateRepository extends TemplateRepository {
      * Append given templates to the list of templates.
      * @param templates the templates to append.
      */
-    private void appendTemplates(final Collection<JSnippetTemplate> templates) {
-        for (JSnippetTemplate template : templates) {
+    private void appendTemplates(final Collection<T> templates) {
+        for (T template : templates) {
             Class key = template.getMetaCategory();
-            Collection<JSnippetTemplate> collection = m_templates.get(key);
+            Collection<T> collection = m_templates.get(key);
             if (null == collection) {
-                collection = new ArrayList<JSnippetTemplate>();
+                collection = new ArrayList<>();
             }
             collection.add(template);
             m_templates.put(key, collection);
@@ -153,37 +160,39 @@ public final class FileTemplateRepository extends TemplateRepository {
     /** Create a repository from the templates in the given folder. Templates
      * in this repository cannot be removed or replaced.
      * @param folder the folder with the repositories
+     * @param factory {@link SnippetTemplateFactory}
      * @return the template repository
      * @throws IOException if a template cannot be read
      */
-    public static FileTemplateRepository createProtected(final File folder)
+    public static <T extends JSnippetTemplate> FileTemplateRepository<T> createProtected(final File folder,
+        final SnippetTemplateFactory<T> factory)
             throws IOException {
-        return new FileTemplateRepository(folder, true);
+        return new FileTemplateRepository<>(folder, true, factory);
     }
 
     /** Create a repository from the templates in the given folder. Templates
      * may be removed or replaced. Use <code>createProtected</code> for a
      * repository that is read only.
      * @param folder the folder with the repositories
+     * @param factory {@link SnippetTemplateFactory}
      * @return the template repository
      * @throws IOException if a template cannot be read
      */
-    public static FileTemplateRepository create(final File folder)
-            throws IOException {
-        return new FileTemplateRepository(folder, false);
+    public static <T extends JSnippetTemplate> FileTemplateRepository<T> create(final File folder,
+        final SnippetTemplateFactory<T> factory) throws IOException {
+        return new FileTemplateRepository<>(folder, false, factory);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Collection<JSnippetTemplate> getTemplates(
-            final Collection<Class> metaCategories) {
+    public Collection<T> getTemplates(final Collection<Class> metaCategories) {
         if (metaCategories.size() == 1) {
             return m_templates.get(metaCategories.iterator().next());
         } else {
-            Collection<JSnippetTemplate> templates =
-                new ArrayList<JSnippetTemplate>();
+            Collection<T> templates =
+                new ArrayList<>();
             for (Class c : metaCategories) {
                 if (m_templates.containsKey(c)) {
                     templates.addAll(m_templates.get(c));
@@ -197,7 +206,7 @@ public final class FileTemplateRepository extends TemplateRepository {
      * {@inheritDoc}
      */
     @Override
-    public boolean isRemoveable(final JSnippetTemplate template) {
+    public boolean isRemoveable(final T template) {
         if (!m_readonly) {
             return isInRepository(template);
         } else {
@@ -206,9 +215,8 @@ public final class FileTemplateRepository extends TemplateRepository {
     }
 
     /** Returns true when the given template is in this repository. */
-    private boolean isInRepository(final JSnippetTemplate template) {
-        Collection<JSnippetTemplate> templates =
-            m_templates.get(template.getMetaCategory());
+    private boolean isInRepository(final T template) {
+        Collection<T> templates = m_templates.get(template.getMetaCategory());
         return null != templates ? templates.contains(template) : false;
     }
 
@@ -216,11 +224,11 @@ public final class FileTemplateRepository extends TemplateRepository {
      * {@inheritDoc}
      */
     @Override
-    public boolean removeTemplate(final JSnippetTemplate template) {
+    public boolean removeTemplate(final T template) {
         if (m_readonly) {
             return false;
         }
-        Collection<JSnippetTemplate> templates =
+        Collection<T> templates =
             m_templates.get(template.getMetaCategory());
         boolean removed = templates.remove(template);
         if (removed) {
@@ -237,7 +245,8 @@ public final class FileTemplateRepository extends TemplateRepository {
      * Add a template to the default location.
      * @param template the template
      */
-    void addTemplate(final JSnippetTemplate template) {
+    @Override
+    public void addTemplate(final T template) {
         if (m_readonly) {
             throw new RuntimeException("This repository is read only."
                     + "Cannot add a template.");
@@ -286,10 +295,10 @@ public final class FileTemplateRepository extends TemplateRepository {
      * {@inheritDoc}
      */
     @Override
-    public JSnippetTemplate getTemplate(final UUID id) {
+    public T getTemplate(final UUID id) {
         String refID = id.toString();
-        for (Collection<JSnippetTemplate> templates : m_templates.values()) {
-            for (JSnippetTemplate template : templates) {
+        for (Collection<T> templates : m_templates.values()) {
+            for (T template : templates) {
                 if (template.getUUID().equals(refID)) {
                     return template;
                 }
@@ -302,7 +311,14 @@ public final class FileTemplateRepository extends TemplateRepository {
      * {@inheritDoc}
      */
     @Override
-    public String getDisplayLocation(final JSnippetTemplate template) {
-        return isInRepository(template) ? getFile(template).getPath() : null;
+    public String getDisplayLocation(final T template) {
+        if (isInRepository(template)) {
+            if (m_readonly) {
+                //Show only the name for read only repositories
+               return template.getName();
+            }
+            return getFile(template).getPath();
+        }
+        return null;
     }
 }

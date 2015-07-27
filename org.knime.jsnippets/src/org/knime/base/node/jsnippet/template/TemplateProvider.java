@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,99 +41,37 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   02.04.2012 (hofer): created
+ *   25.07.2015 (koetter): created
  */
 package org.knime.base.node.jsnippet.template;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.Platform;
-import org.knime.base.node.jsnippet.JSnippetTemplate;
-import org.knime.core.node.NodeLogger;
+import org.knime.base.node.jsnippet.util.JSnippetTemplate;
 
 /**
- * A central provider for Java Snippet templates.
  *
- * @author Heiko Hofer
+ * <p>This class might change and is not meant as public API.
+ * @author Tobias Koetter, KNIME.com
+ * @param <T> {@link JSnippetTemplate} implementation
+ * @since 2.12
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
-@SuppressWarnings("rawtypes")
-public final class TemplateProvider extends TemplateRepository
-        implements ChangeListener {
-    private static final String EXTENSION_POINT_ID =
-        "org.knime.jsnippets.templaterepository";
-    private static final Object LOCK = new Object[0];
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            TemplateProvider.class);
+public interface TemplateProvider<T extends JSnippetTemplate> {
+
     /**
      * The display name of the category with all templates.
      */
-    static final String ALL_CATEGORY = "All";
-
-    private Map<Class, Map<String, Collection<JSnippetTemplate>>> m_templates;
-    private List<TemplateRepository> m_repos;
-    private FileTemplateRepository m_defaultRepo;
-
-    private static TemplateProvider provider;
-
-    /**
-     * prevent instantiation from outside.
-     */
-    private TemplateProvider() {
-        m_defaultRepo = (FileTemplateRepository)
-            new DefaultFileTemplateRepositoryProvider().getRepository();
-        m_repos = new ArrayList<TemplateRepository>();
-        IConfigurationElement[] config = Platform.getExtensionRegistry()
-            .getConfigurationElementsFor(EXTENSION_POINT_ID);
-
-        for (IConfigurationElement e : config) {
-            try {
-                final Object o = e.createExecutableExtension("provider-class");
-                if (o instanceof TemplateRepositoryProvider) {
-                    TemplateRepository repo =
-                        ((TemplateRepositoryProvider)o).getRepository();
-                    if (null != repo) {
-                        repo.addChangeListener(this);
-                        m_repos.add(repo);
-                    }
-                }
-            } catch (CoreException ex) {
-                LOGGER.error("Error while reading jsnippet template "
-                        + "repositories.", ex);
-            }
-        }
-        m_templates = new HashMap<Class,
-            Map<String, Collection<JSnippetTemplate>>>();
-    }
-
-    /**
-     * Get default shared instance.
-     * @return default TemplateProvider
-     */
-    public static TemplateProvider getDefault() {
-        synchronized (LOCK) {
-            if (null == provider) {
-                provider = new TemplateProvider();
-            }
-        }
-        return provider;
-    }
+    public static final String ALL_CATEGORY = "All";
 
     /**
      * Get all categories.
@@ -140,166 +79,47 @@ public final class TemplateProvider extends TemplateRepository
      * meta categories will be displayed.
      * @return the categories
      */
-    public Set<String> getCategories(final Collection<Class> metaCategories) {
-        initTemplates(metaCategories);
-        Set<String> categories = new LinkedHashSet<String>();
-        for (Class c : metaCategories) {
-            if (m_templates.containsKey(c)) {
-                categories.addAll(m_templates.get(c).keySet());
-            }
-        }
-        return categories;
-    }
+    @SuppressWarnings("rawtypes")
+    public Set<String> getCategories(Collection<Class> metaCategories);
 
     /**
-     * {@inheritDoc}
+     * Get the {@link JSnippetTemplate}s in the given meta category.
+     * @param metaCategories only templates from these
+     * meta categories will be returned.
+     * @return the {@link JSnippetTemplate}s in the given meta category
      */
-    @Override
-    public Collection<JSnippetTemplate> getTemplates(
-            final Collection<Class> metaCategories) {
-        initTemplates(metaCategories);
-        Set<JSnippetTemplate> templates = new LinkedHashSet<JSnippetTemplate>();
-        for (Class c : metaCategories) {
-            if (m_templates.containsKey(c)) {
-                templates.addAll(m_templates.get(c).get(ALL_CATEGORY));
-            }
-        }
-        return templates;
-    }
+    @SuppressWarnings("rawtypes")
+    public Collection<T> getTemplates(Collection<Class> metaCategories);
 
     /**
-     * Get the {@link JSnippetTemplate}s in the given category.
+     * Get the {@link JavaSnippetTemplate}s in the given category.
      * @param metaCategories only templates from these
      * meta categories will be returned.
      * @param category a category as given by getCategories()
-     * @return the {@link JSnippetTemplate}s in the given category
+     * @return the {@link JavaSnippetTemplate}s in the given category
      */
-    public Collection<JSnippetTemplate> getTemplates(
-            final Collection<Class> metaCategories,
-            final String category) {
-        initTemplates(metaCategories);
-        Set<JSnippetTemplate> templates = new LinkedHashSet<JSnippetTemplate>();
-        for (Class c : metaCategories) {
-            if (m_templates.containsKey(c)) {
-                templates.addAll(m_templates.get(c).get(category));
-            }
-        }
-        return templates;
-    }
-
-    /** Load templates for the given meta categories.
-     * @param metaCategories the meta categories
-     */
-    private void initTemplates(final Collection<Class> metaCategories) {
-        // reset data
-        for (Class key : metaCategories) {
-            if (m_templates.containsKey(key)) {
-                m_templates.remove(key);
-            }
-            Map<String, Collection<JSnippetTemplate>> templates =
-                new LinkedHashMap<String, Collection<JSnippetTemplate>>();
-            templates.put(ALL_CATEGORY, new ArrayList<JSnippetTemplate>());
-            m_templates.put(key, templates);
-        }
-        for (TemplateRepository repo : m_repos) {
-            appendTemplates(repo.getTemplates(metaCategories));
-        }
-    }
+    @SuppressWarnings("rawtypes")
+    public abstract Collection<T> getTemplates(Collection<Class> metaCategories, String category);
 
     /**
      * Add a template to the default location.
      * @param template the template
      */
-    public void addTemplate(final JSnippetTemplate template) {
-        m_defaultRepo.removeChangeListener(this);
-        m_defaultRepo.addTemplate(template);
-        m_defaultRepo.addChangeListener(this);
-        appendTemplates(Collections.singletonList(template));
-        // notify listeners
-        fireStateChanged();
-    }
-
-
-    /**
-     * Append to given list of templates.
-     * @param templates the templates
-     */
-    private void appendTemplates(final Collection<JSnippetTemplate> templates) {
-        if (null == templates) {
-            return;
-        }
-        for (JSnippetTemplate template : templates) {
-            Class key = template.getMetaCategory();
-            appendTemplateTo(m_templates.get(key), template);
-        }
-    }
-
-    /**
-     * Append the template to the given map.
-     * @param map the map
-     * @param template the template
-     */
-    private void appendTemplateTo(
-            final Map<String, Collection<JSnippetTemplate>> map,
-            final JSnippetTemplate template) {
-        map.get(ALL_CATEGORY).add(template);
-        String key = template.getCategory();
-        if (!map.containsKey(key)) {
-            map.put(key, new ArrayList<JSnippetTemplate>());
-        }
-        map.get(key).add(template);
-    }
+    public abstract void addTemplate(T template);
 
     /**
      * Test if a template can be removed.
      * @param template the template
      * @return true when removeTemplate(template) could be successful
      */
-    @Override
-    public boolean isRemoveable(final JSnippetTemplate template) {
-        for (TemplateRepository repo : m_repos) {
-            if (repo.isRemoveable(template)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    public abstract boolean isRemoveable(T template);
 
     /**
      * Remove the given template.
      * @param template the template to be removed
      * @return when the template is successfully removed
      */
-    @Override
-    public boolean removeTemplate(final JSnippetTemplate template) {
-        if (isRemoveable(template)) {
-            boolean success;
-            for (TemplateRepository repo : m_repos) {
-                repo.removeChangeListener(this);
-                success = repo.removeTemplate(template);
-                if (success) {
-                    break;
-                }
-                repo.addChangeListener(this);
-            }
-            fireStateChanged();
-            return true;
-        } else {
-            return false;
-        }
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void stateChanged(final ChangeEvent e) {
-        // A template changed unexpectedly, reset temporary data
-        m_templates.clear();
-        // notify listeners
-        fireStateChanged();
-    }
+    public boolean removeTemplate(T template);
 
     /**
      * Get the template with the given id.
@@ -307,19 +127,7 @@ public final class TemplateProvider extends TemplateRepository
      * @return the template or null if a template with the id does not exist.
      * @throws NullPointerException if id is null.
      */
-    @Override
-    public JSnippetTemplate getTemplate(final UUID id) {
-        if (null == id) {
-            throw new NullPointerException("UUID is null.");
-        }
-        for (TemplateRepository repo : m_repos) {
-            JSnippetTemplate template = repo.getTemplate(id);
-            if (null != template) {
-                return template;
-            }
-        }
-        return null;
-    }
+    public T getTemplate(UUID id);
 
     /**
      * Get a short descriptive string about the location of the template.
@@ -332,18 +140,12 @@ public final class TemplateProvider extends TemplateRepository
      * no string could be generated.
      * @throws NullPointerException if template is null.
      */
-    @Override
-    public String getDisplayLocation(final JSnippetTemplate template) {
-        if (null == template) {
-            throw new NullPointerException("template is null.");
-        }
-        for (TemplateRepository repo : m_repos) {
-            String loc = repo.getDisplayLocation(template);
-            if (null != loc) {
-                return loc;
-            }
-        }
-        return null;
-    }
+    public String getDisplayLocation(T template);
+
+    /**
+     * Add listener to be notified when the list of templates changed.
+     * @param l the listener
+     */
+    public void addChangeListener(ChangeListener l);
 
 }

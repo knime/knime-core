@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,94 +41,74 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   02.04.2012 (hofer): created
+ *   26.07.2015 (koetter): created
  */
 package org.knime.base.node.jsnippet.template;
 
-import java.awt.Component;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
 
 import org.knime.base.node.jsnippet.util.JSnippetTemplate;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 
 /**
- * The default implementation of TemplateController. It provides methods to get
- * a preview and to replace the setting of a java snippet by the settings of a
- * template.
- * <p>This class might change and is not meant as public API.
  *
- * @author Heiko Hofer
- * @param <T> the {@link JSnippetTemplate} implementation
+ * <p>This class might change and is not meant as public API.
+ * @author Tobias Koetter, KNIME.com
+ * @param <T> {@link JSnippetTemplate} implementation
  * @since 2.12
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public class DefaultTemplateController<T extends JSnippetTemplate> implements TemplateController<T> {
-    private TemplateNodeDialog<T> m_model;
-    private TemplateNodeDialog<T> m_preview;
-    private DataTableSpec m_spec;
-    private Map<String, FlowVariable> m_flowVariables;
+public class FileTemplateRepositoryProvider<T extends JSnippetTemplate> implements TemplateRepositoryProvider<T> {
 
+    private static NodeLogger logger = NodeLogger.getLogger(JavaSnippetFileTemplateRepositoryProvider.class);
+    private FileTemplateRepository<T> defaultRepo;
+    private final Object m_lock = new Object[0];
+    private SnippetTemplateFactory<T> m_factory;
+    private String m_directoryName;
 
     /**
-     * Create a new instance.
-     * @param model the dialog that serves as a model in the MVC principle
-     * @param preview the dialog used for preview of the template
+     * @param directoryName name of the directory the snippet templates should be stored
+     * @param factory {@link SnippetTemplateFactory}
      */
-    public DefaultTemplateController(final TemplateNodeDialog<T> model,
-            final TemplateNodeDialog<T> preview) {
-        super();
-        m_model = model;
-        m_preview = preview;
+    public FileTemplateRepositoryProvider(final String directoryName, final SnippetTemplateFactory<T> factory) {
+        m_directoryName = directoryName;
+        m_factory = factory;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getPreview() {
-        return m_preview.getPanel();
+    public FileTemplateRepository<T> getRepository() {
+        synchronized (m_lock) {
+            if (null == defaultRepo) {
+                File file = getDefaultLocation();
+                try {
+                    defaultRepo = FileTemplateRepository.create(file, m_factory);
+                } catch (IOException e) {
+                    logger.error("Cannot create the default template provider for the java snippet nodes", e);
+                }
+            }
+        }
+        return defaultRepo;
     }
 
     /**
-     * {@inheritDoc}
+     * Get the default location for snippet templates.
+     * @return the default directory for snippet templates.
      */
-    @Override
-    public void setPreviewSettings(final T template) {
-        m_preview.applyTemplate(template, m_spec, m_flowVariables);
+    private File getDefaultLocation() {
+        final File dir = new File(new File(KNIMEConstants.getKNIMEHomeDir()), m_directoryName);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        return dir;
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setSettings(final T template) {
-        m_model.applyTemplate(template, m_spec, m_flowVariables);
-    }
-
-    /**
-     * Set the spec used for for the preview and applying a template to
-     * the model.
-     * @param spec the spec of the input
-     */
-    public void setDataTableSpec(final DataTableSpec spec) {
-        m_spec = spec;
-
-    }
-
-    /**
-     * Set the flow variables used for for the preview and applying a
-     * template to the model.
-     * @param flowVariables the flow variables
-     */
-    public void setFlowVariables(
-            final Map<String, FlowVariable> flowVariables) {
-        m_flowVariables = flowVariables;
-    }
-
 }

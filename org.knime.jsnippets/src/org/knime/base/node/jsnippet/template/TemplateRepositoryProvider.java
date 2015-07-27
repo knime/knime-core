@@ -47,15 +47,23 @@
  */
 package org.knime.base.node.jsnippet.template;
 
+import org.knime.base.node.jsnippet.util.JSnippetTemplate;
+
 /**
  * Factory to create and access template repositories for the java snippet node.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @param <T> {@link JSnippetTemplate} implementation
+ * @since 2.12
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
-public interface TemplateRepositoryProvider {
+public interface TemplateRepositoryProvider<T extends JSnippetTemplate> {
     /**
      * Get the repository.
      * @return the repository
      */
-    public TemplateRepository getRepository();
+    public TemplateRepository<T> getRepository();
 }

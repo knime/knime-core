@@ -43,57 +43,81 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   05.06.2012 (hofer): created
+ *   02.04.2012 (hofer): created
  */
 package org.knime.base.node.jsnippet.template;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.knime.core.node.KNIMEConstants;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
 
-/**
- * A provider to the default template repository.
- * @author Heiko Hofer
- */
-public class DefaultFileTemplateRepositoryProvider
-        implements TemplateRepositoryProvider {
-    private static NodeLogger logger
-        = NodeLogger.getLogger(DefaultFileTemplateRepositoryProvider.class);
-    private static FileTemplateRepository defaultRepo;
-    private final Object m_lock = new Object[0];
 
+/**
+ * A central provider for Java Snippet templates.
+ * <p>This class might change and is not meant as public API.
+ *
+ * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
+ */
+public final class JavaSnippetTemplateProvider extends AbstractJSnippetTemplateProvider<JavaSnippetTemplate> {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaSnippetTemplateProvider.class);
+
+    private static final Object LOCK = new Object[0];
+    private static final String EXTENSION_POINT_ID =
+        "org.knime.jsnippets.templaterepository";
+    private static TemplateProvider<JavaSnippetTemplate> provider;
     /**
-     * {@inheritDoc}
+     * prevent instantiation from outside.
      */
-    @Override
-    public TemplateRepository getRepository() {
-        synchronized (m_lock) {
-            if (null == defaultRepo) {
-                File file = getDefaultLocation();
-                try {
-                    defaultRepo = FileTemplateRepository.create(file);
-                } catch (IOException e) {
-                    logger.error("Cannot create the default template "
-                            + "provider for the java snippet nodes", e);
+    private JavaSnippetTemplateProvider() {
+        super(new JavaSnippetFileTemplateRepositoryProvider().getRepository());
+        setRepositories(loadExtension());
+    }
+
+    private List<TemplateRepository<JavaSnippetTemplate>> loadExtension() {
+        final List<TemplateRepository<JavaSnippetTemplate>> m_repos = new ArrayList<>();
+        IConfigurationElement[] config = Platform.getExtensionRegistry()
+            .getConfigurationElementsFor(EXTENSION_POINT_ID);
+
+        for (IConfigurationElement e : config) {
+            try {
+                final Object o = e.createExecutableExtension("provider-class");
+                if (o instanceof TemplateRepositoryProvider) {
+                    @SuppressWarnings("unchecked")
+                    TemplateRepository<JavaSnippetTemplate> repo =
+                        ((TemplateRepositoryProvider<JavaSnippetTemplate>)o).getRepository();
+                    if (null != repo) {
+                        repo.addChangeListener(this);
+                        m_repos.add(repo);
+                    }
                 }
+            } catch (CoreException ex) {
+                LOGGER.error("Error while reading jsnippet template "
+                        + "repositories.", ex);
             }
         }
-        return defaultRepo;
+        return m_repos;
     }
 
     /**
-     * Get the default location for snippet templates.
-     * @return the default directory for snippet templates.
+     * Get default shared instance.
+     * @return default TemplateProvider
      */
-    private File getDefaultLocation() {
-        File dir = new File(new File(KNIMEConstants.getKNIMEHomeDir()),
-                "jsnippets");
-
-        if (!dir.exists()) {
-            dir.mkdirs();
+    public static TemplateProvider<JavaSnippetTemplate> getDefault() {
+        synchronized (LOCK) {
+            if (null == provider) {
+                provider = new JavaSnippetTemplateProvider();
+            }
         }
-        return dir;
+        return provider;
     }
+
 }

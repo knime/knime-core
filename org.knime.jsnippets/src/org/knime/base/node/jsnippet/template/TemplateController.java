@@ -49,15 +49,21 @@ package org.knime.base.node.jsnippet.template;
 
 import java.awt.Component;
 
-import org.knime.base.node.jsnippet.JSnippetTemplate;
+import org.knime.base.node.jsnippet.util.JSnippetTemplate;
 
 /**
  * Can generate a preview for a template and can update the settings of the
  * Java Snippet node.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @param <T> the {@link JSnippetTemplate} implementation
+ * @since 2.12
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
  */
-public interface TemplateController {
+public interface TemplateController <T extends JSnippetTemplate> {
 
     /**
      * Get the preview component.
@@ -69,7 +75,7 @@ public interface TemplateController {
      * Set the parameters for the preview component.
      * @param template the settings
      */
-    public void setPreviewSettings(final JSnippetTemplate template);
+    public void setPreviewSettings(final T template);
 
     /**
      * Set the parameters for the java snippet node. This will replace the
@@ -77,6 +83,6 @@ public interface TemplateController {
      *
      * @param template the template
      */
-    public void setSettings(JSnippetTemplate template);
+    public void setSettings(final T template);
 
 }

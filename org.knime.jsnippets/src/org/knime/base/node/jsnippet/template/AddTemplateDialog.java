@@ -72,24 +72,33 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
-import org.knime.base.node.jsnippet.JSnippetTemplate;
-import org.knime.base.node.jsnippet.JavaSnippet;
+import org.knime.base.node.jsnippet.util.JSnippet;
+import org.knime.base.node.jsnippet.util.JSnippetTemplate;
 
 /**
  * A dialog with most basic settings for an output field.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @param <S> {@link JSnippet} implementation
+ * @param <T> {@link JSnippetTemplate} implementation
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
-public final class AddTemplateDialog extends JDialog {
-    private JSnippetTemplate m_result;
+public final class AddTemplateDialog <S extends JSnippet<T>, T extends JSnippetTemplate> extends JDialog {
+    private T m_result;
 
-    private JComboBox m_category;
+    private JComboBox<String> m_category;
     private JTextField m_name;
     private JTextArea m_description;
-    private JavaSnippet m_settings;
+    private JSnippet<T> m_settings;
     @SuppressWarnings("rawtypes")
     private Class m_metaCategory;
+
+    private TemplateProvider<T> m_provider;
 
 
 
@@ -101,13 +110,13 @@ public final class AddTemplateDialog extends JDialog {
      * @param metaCategories the meta category
      */
     @SuppressWarnings("rawtypes")
-    private AddTemplateDialog(final Frame parent,
-            final JavaSnippet snippet,
-            final Class metaCategories) {
+    private AddTemplateDialog(final Frame parent, final S snippet, final Class metaCategories,
+        final TemplateProvider<T> provider) {
         super(parent, true);
 
         m_settings = snippet;
         m_metaCategory = metaCategories;
+        m_provider = provider;
 
         setTitle("Add a Java snippet template.");
         // instantiate the components of the dialog
@@ -168,10 +177,9 @@ public final class AddTemplateDialog extends JDialog {
         c.weightx = 0;
         c.weighty = 0;
 
-        TemplateProvider provider = TemplateProvider.getDefault();
-        m_category = new JComboBox();
+        m_category = new JComboBox<>();
         m_category.setEditable(true);
-        Set<String> categories = provider.getCategories(
+        Set<String> categories = m_provider.getCategories(
                 Collections.singletonList(m_metaCategory));
         categories.remove(TemplateProvider.ALL_CATEGORY);
         for (String category : categories) {
@@ -213,8 +221,8 @@ public final class AddTemplateDialog extends JDialog {
 
 
     /** Save settings in field m_result. */
-    private JSnippetTemplate takeOverSettings() {
-        JSnippetTemplate template = m_settings.createTemplate(m_metaCategory);
+    private T takeOverSettings() {
+        T template = m_settings.createTemplate(m_metaCategory);
         template.setCategory((String)m_category.getSelectedItem());
         template.setName(m_name.getText());
         template.setDescription(m_description.getText());
@@ -254,24 +262,23 @@ public final class AddTemplateDialog extends JDialog {
      * dialog pops up and the user values are discarded.
      *
      * @param parent frame who owns this dialog
-     * @param snippet the snippet to creat the template
+     * @param snippet the snippet to create the template
      * @param metaCategories the meta category
+     * @param provider {@link TemplateProvider}
      * @return new template are null in case of cancellation
      */
-    @SuppressWarnings("rawtypes")
-    public static JSnippetTemplate openUserDialog(final Frame parent,
-            final JavaSnippet snippet,
-            final Class metaCategories) {
-        AddTemplateDialog dialog = new AddTemplateDialog(parent, snippet,
-                metaCategories);
-        return dialog.showDialog();
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static <T extends JSnippetTemplate>T openUserDialog(final Frame parent,
+            final JSnippet<T> snippet, final Class metaCategories, final TemplateProvider<T> provider) {
+        AddTemplateDialog dialog = new AddTemplateDialog(parent, snippet, metaCategories, provider);
+        return (T)dialog.showDialog();
     }
 
     /**
      * Shows the dialog and waits for it to return. If the user
      * pressed Ok it returns the OutCol definition
      */
-    private JSnippetTemplate showDialog() {
+    private T showDialog() {
         pack();
         centerDialog();
 

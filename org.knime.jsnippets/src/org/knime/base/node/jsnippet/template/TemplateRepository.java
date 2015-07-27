@@ -54,13 +54,19 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.EventListenerList;
 
-import org.knime.base.node.jsnippet.JSnippetTemplate;
+import org.knime.base.node.jsnippet.util.JSnippetTemplate;
 
 /**
  *
+ * <p>This class might change and is not meant as public API.
  * @author Heiko Hofer
+ * @param <T> {@link JSnippetTemplate} implementation
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public abstract class TemplateRepository {
+public abstract class TemplateRepository <T extends JSnippetTemplate> {
     private EventListenerList m_listenerList = new EventListenerList();
     private ChangeEvent m_changeEvent;
 
@@ -71,8 +77,13 @@ public abstract class TemplateRepository {
      * @return the {@link JSnippetTemplate}s in the given meta category
      */
     @SuppressWarnings("rawtypes")
-    public abstract Collection<JSnippetTemplate> getTemplates(
-            final Collection<Class> metaCategories);
+    public abstract Collection<T> getTemplates(final Collection<Class> metaCategories);
+
+    /**
+     * Add a template to the default location.
+     * @param template the template
+     */
+    public abstract void addTemplate(final T template);
 
     /**
      * Test if a template can be removed. Returns only true if the template
@@ -80,14 +91,14 @@ public abstract class TemplateRepository {
      * @param template the template
      * @return true when removeTemplate(template) could be successful
      */
-    public abstract boolean isRemoveable(final JSnippetTemplate template);
+    public abstract boolean isRemoveable(final T template);
 
     /**
      * Remove the given template.
      * @param template the template to be removed
      * @return when the template is successfully removed
      */
-    public abstract boolean removeTemplate(final JSnippetTemplate template);
+    public abstract boolean removeTemplate(final T template);
 
     /**
      * Get the template with the given id.
@@ -95,7 +106,7 @@ public abstract class TemplateRepository {
      * @return the template or null if a template with the id does not exist.
      * @throws NullPointerException if id is null.
      */
-    public abstract JSnippetTemplate getTemplate(final UUID id);
+    public abstract T getTemplate(final UUID id);
 
     /**
      * Get a short descriptive string about the location of the template.
@@ -107,7 +118,7 @@ public abstract class TemplateRepository {
      * @return the string describing the location of the template
      * @throws NullPointerException if template is null.
      */
-    public abstract String getDisplayLocation(final JSnippetTemplate template);
+    public abstract String getDisplayLocation(final T template);
 
     /**
      * Add listener to be notified when the list of templates changed.

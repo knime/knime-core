@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,10 +41,10 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   07.06.2012 (hofer): created
+ *   26.07.2015 (koetter): created
  */
 package org.knime.base.node.jsnippet.template;
 
@@ -54,40 +55,39 @@ import java.net.URL;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.knime.base.node.jsnippet.util.JSnippetTemplate;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.osgi.framework.Bundle;
 
 /**
- * A m_file template provider for templates relative to a plugin. Since the
- * templates are shipped out by a plugin, they cannot be removed or replaced.
  *
- * @author Heiko Hofer
+ * <p>This class might change and is not meant as public API.
+ * @author Tobias Koetter, KNIME.com
+ * @param <T> {@link JSnippetTemplate} implementation
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public class PluginFileTemplateRepositoryProvider
-        implements TemplateRepositoryProvider {
-    private static NodeLogger logger
-        = NodeLogger.getLogger(PluginFileTemplateRepositoryProvider.class);
-    private static FileTemplateRepository repo;
+public class PluginTemplateRepositoryProvider<T extends JSnippetTemplate>
+implements TemplateRepositoryProvider<T> {
+
+    private static NodeLogger logger = NodeLogger.getLogger(JavaSnippetPluginTemplateRepositoryProvider.class);
+    private FileTemplateRepository<T> m_repo;
     private final Object m_lock = new Object[0];
-
     private File m_file;
-
-    /**
-     * Create a instance for the bundle "org.knime.jnippets" and the relative
-     * path "/jsnippets".
-     */
-    public PluginFileTemplateRepositoryProvider() {
-        this("org.knime.jsnippets", "jsnippets");
-    }
+    private SnippetTemplateFactory<T> m_factory;
 
     /**
      * @param symbolicName the name of the bundle like "org.nime.jsnipptes"
      * @param relativePath the path to the repositories base folder,
      *  i.e. "/jsnippes"
+     * @param factory {@link SnippetTemplateFactory}
      */
-    public PluginFileTemplateRepositoryProvider(final String symbolicName,
-            final String relativePath) {
+    public PluginTemplateRepositoryProvider(final String symbolicName,
+            final String relativePath, final SnippetTemplateFactory<T> factory) {
+        m_factory = factory;
         try {
             Bundle bundle = Platform.getBundle(symbolicName);
             URL url = FileLocator.find(bundle, new Path(relativePath), null);
@@ -98,23 +98,22 @@ public class PluginFileTemplateRepositoryProvider
                     + relativePath + ".", e);
         }
     }
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public TemplateRepository getRepository() {
+    public TemplateRepository<T> getRepository() {
         synchronized (m_lock) {
-            if (null == repo) {
+            if (null == m_repo) {
                 try {
-                    repo = FileTemplateRepository.createProtected(m_file);
+                    m_repo = FileTemplateRepository.createProtected(m_file, m_factory);
                 } catch (IOException e) {
                     logger.error("Cannot create the template provider with "
                             + "base file " + m_file.getAbsolutePath(), e);
                 }
             }
         }
-        return repo;
+        return m_repo;
     }
 
 }

@@ -1,5 +1,6 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,11 +41,30 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-	<p>
-	  Templates for the Java Snippet nodes.
-	</p>
-	<p>The classes within this package might change and are not meant as public API.</p>
-</body>
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   26.07.2015 (koetter): created
+ */
+package org.knime.base.node.jsnippet.template;
+
+import org.knime.base.node.jsnippet.util.JSnippetTemplate;
+import org.knime.core.node.NodeSettingsRO;
+
+/**
+ *
+ * <p>This class might change and is not meant as public API.
+ * @author Tobias Koetter, KNIME.com
+ * @param <T> {@link JSnippetTemplate} implementation
+ * @since 2.12
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference This interface is not intended to be referenced by clients.
+ */
+public interface SnippetTemplateFactory<T extends JSnippetTemplate> {
+    /**
+     * @param settings the settings of the template
+     * @return the new created {@link JSnippetTemplate}
+     */
+    public T create(final NodeSettingsRO settings);
+}

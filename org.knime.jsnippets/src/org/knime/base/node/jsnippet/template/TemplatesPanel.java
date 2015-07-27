@@ -77,42 +77,51 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.html.HTMLEditorKit;
 
-import org.knime.base.node.jsnippet.JSnippetTemplate;
+import org.knime.base.node.jsnippet.util.JSnippetTemplate;
 
 /**
  * The Panel displayed in the templates tab of a jsnippet dialog.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @param <T> {@link JSnippetTemplate} instance
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings({"rawtypes", "serial" })
-public class TemplatesPanel extends JPanel {
+public class TemplatesPanel<T extends JSnippetTemplate> extends JPanel {
     private static final String CARD_EMPTY_SELECTION = "CARD_EMPTY_SELECTION";
     private static final String CARD_PREVIEW = "CARD_PREVIEW";
-    private JComboBox m_categories;
+    private JComboBox<String> m_categories;
     /** Displays templates that are in the currently selected category. */
-    private JList m_templates;
+    private JList<T> m_templates;
     private JTextPane m_description;
     private Collection<Class> m_metaCategories;
     private JPanel m_previewPanel;
     private JPanel m_previewPane;
-    private TemplateController m_controller;
+    private TemplateController<T> m_controller;
     private ActionListener m_categoriesListener;
     private JButton m_removeTemplateButton;
     private JButton m_applyTemplateButton;
+    private TemplateProvider<T> m_provider;
 
     /**
      * Create a new instance.
      * @param metaCategories the meta categories to display
      * @param controller the controller used to create the preview and to apply
      * template to the java snippet node
+     * @param provider the {@link TemplateProvider} to use
      */
     public TemplatesPanel(final Collection<Class> metaCategories,
-            final TemplateController controller) {
+            final TemplateController<T> controller, final TemplateProvider<T> provider) {
         super(new BorderLayout());
         m_controller = controller;
         m_metaCategories = metaCategories;
+        m_provider = provider;
 
-        m_categories = new JComboBox();
+        m_categories = new JComboBox<>();
         m_categoriesListener = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
@@ -124,10 +133,10 @@ public class TemplatesPanel extends JPanel {
         m_categories.addActionListener(m_categoriesListener);
         updateCategories();
 
-        m_templates = new JList(new DefaultListModel());
+        m_templates = new JList<>(new DefaultListModel<T>());
         m_templates.setSelectionMode(
                 ListSelectionModel.SINGLE_SELECTION);
-        m_templates.setCellRenderer(new TemplateListCellRenderer());
+        m_templates.setCellRenderer(new TemplateListCellRenderer<T>());
 
         m_templates.addListSelectionListener(new ListSelectionListener() {
 
@@ -144,7 +153,7 @@ public class TemplatesPanel extends JPanel {
         m_description.setEditable(false);
 
         updateTemplatesList(TemplateProvider.ALL_CATEGORY);
-        TemplateProvider.getDefault().addChangeListener(new ChangeListener() {
+        m_provider.addChangeListener(new ChangeListener() {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -168,11 +177,10 @@ public class TemplatesPanel extends JPanel {
     }
 
     private void updateCategories() {
-        TemplateProvider provider = TemplateProvider.getDefault();
 
         m_categories.removeActionListener(m_categoriesListener);
         m_categories.removeAllItems();
-        Set<String> categories = provider.getCategories(m_metaCategories);
+        Set<String> categories = m_provider.getCategories(m_metaCategories);
         for (String category : categories) {
             m_categories.addItem(category);
         }
@@ -183,12 +191,12 @@ public class TemplatesPanel extends JPanel {
     private void onSelectionInTemplateList(final Object selected) {
         CardLayout cl = (CardLayout)(m_previewPane.getLayout());
         if (selected != null) {
-            JSnippetTemplate template = (JSnippetTemplate) selected;
+            @SuppressWarnings("unchecked")
+            T template = (T) selected;
             m_description.setText(template.getDescription());
             m_description.setCaretPosition(0);
 
-            boolean removeable =
-                TemplateProvider.getDefault().isRemoveable(template);
+            boolean removeable = m_provider.isRemoveable(template);
             m_removeTemplateButton.setEnabled(removeable);
             m_applyTemplateButton.setEnabled(true);
 
@@ -213,10 +221,9 @@ public class TemplatesPanel extends JPanel {
 
     private void updateTemplatesList(final String category) {
         Object selected = m_templates.getSelectedValue();
-        DefaultListModel model = (DefaultListModel)m_templates.getModel();
+        DefaultListModel<T> model = (DefaultListModel<T>)m_templates.getModel();
         model.clear();
-        TemplateProvider provider = TemplateProvider.getDefault();
-        for (JSnippetTemplate template : provider.getTemplates(
+        for (T template : m_provider.getTemplates(
                 m_metaCategories, category)) {
             model.addElement(template);
         }
@@ -226,7 +233,7 @@ public class TemplatesPanel extends JPanel {
     /**
      * Renderer the name of Java Snippet templates.
      */
-    private static class TemplateListCellRenderer extends
+    private static class TemplateListCellRenderer<T extends JSnippetTemplate> extends
             DefaultListCellRenderer {
         /**
          * {@inheritDoc}
@@ -235,7 +242,8 @@ public class TemplatesPanel extends JPanel {
         public Component getListCellRendererComponent(final JList list,
                 final Object value, final int index, final boolean isSelected,
                 final boolean cellHasFocus) {
-            JSnippetTemplate m = (JSnippetTemplate)value;
+            @SuppressWarnings("unchecked")
+            T m = (T)value;
             Component c = super.getListCellRendererComponent(list,
                     m.getName(),
                     index, isSelected, cellHasFocus);
@@ -298,8 +306,8 @@ public class TemplatesPanel extends JPanel {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                JSnippetTemplate template =
-                    (JSnippetTemplate)m_templates.getSelectedValue();
+                T template =
+                    m_templates.getSelectedValue();
                 if (null != template) {
                     m_controller.setSettings(template);
                 }
@@ -311,10 +319,9 @@ public class TemplatesPanel extends JPanel {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                JSnippetTemplate template =
-                    (JSnippetTemplate)m_templates.getSelectedValue();
+                T template = m_templates.getSelectedValue();
                 if (null != template) {
-                    TemplateProvider.getDefault().removeTemplate(template);
+                    m_provider.removeTemplate(template);
                 }
             }
         });

@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,11 +40,50 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-	<p>
-	  Templates for the Java Snippet nodes.
-	</p>
-	<p>The classes within this package might change and are not meant as public API.</p>
-</body>
+ * ------------------------------------------------------------------------
+ *
+ * History
+ *   07.06.2012 (hofer): created
+ */
+package org.knime.base.node.jsnippet.template;
+
+import org.knime.core.node.NodeSettingsRO;
+
+
+/**
+ * A m_file template provider for templates relative to a plugin. Since the
+ * templates are shipped out by a plugin, they cannot be removed or replaced.
+ * <p>This class might change and is not meant as public API.
+ *
+ * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
+ */
+ public class JavaSnippetPluginTemplateRepositoryProvider implements TemplateRepositoryProvider<JavaSnippetTemplate> {
+
+     private static final PluginTemplateRepositoryProvider<JavaSnippetTemplate> PROVIDER =
+             new PluginTemplateRepositoryProvider<>("org.knime.jsnippets", "jsnippets",
+                     new SnippetTemplateFactory<JavaSnippetTemplate>() {
+         @Override
+         public JavaSnippetTemplate create(final NodeSettingsRO settings) {
+             return JavaSnippetTemplate.create(settings);
+         }
+     });
+
+    /**
+     * Create a instance for the bundle "org.knime.jnippets" and the relative
+     * path "/jsnippets".
+     */
+    public JavaSnippetPluginTemplateRepositoryProvider() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TemplateRepository<JavaSnippetTemplate> getRepository() {
+        return PROVIDER.getRepository();
+    }
+}
