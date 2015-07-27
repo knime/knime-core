@@ -53,6 +53,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
@@ -108,8 +109,8 @@ public abstract class MultiThreadWorker<In, Out> {
     /** Executor to be used, if null use the KNIME global thread pool. */
     private Executor m_executor;
 
-    /** Exception pointer, if non-null the execution will abort. */
-    private Exception m_exception;
+    /** Exception pointer, if set the execution will abort. */
+    private final ExceptionReference m_exceptionReference;
 
     /** Thread running the {@link #run(Iterable)} method (kept to be able to
      * interrupt it). */
@@ -153,6 +154,7 @@ public abstract class MultiThreadWorker<In, Out> {
         m_nextFinishedIndex = 0;
         m_maxQueueSize = maxQueueSize;
         m_maxActiveInstanceSize = maxActiveInstanceSize;
+        m_exceptionReference = new ExceptionReference();
     }
 
     /** @return Get the number of already submitted tasks (index of the
@@ -243,6 +245,7 @@ public abstract class MultiThreadWorker<In, Out> {
             for (In in : inputIterable) {
                 m_maxActiveInstanceSemaphore.acquire();
                 m_maxQueueSemaphore.acquire();
+                m_exceptionReference.checkExceptionInMainThread();
                 if (m_isCanceled) {
                     throw new CancellationException();
                 }
@@ -263,19 +266,15 @@ public abstract class MultiThreadWorker<In, Out> {
             }
             // wait for all jobs to finish
             m_maxQueueSemaphore.acquire(m_maxQueueSize);
-        } catch (InterruptedException ie) {
+        } catch (InterruptedException | CancellationException ie) {
             innerCancel(true);
-            if (m_exception == null) {
-                throw ie;
-            } else {
-                // reset interrupted flag that was set when an exception has
-                // occurred in callProcessFinished
-                Thread.interrupted();
-            }
+            m_isCanceled = true;
+        } finally {
+            // reset interrupted flag that was set when an exception has
+            // occurred in callProcessFinished
+            Thread.interrupted();
         }
-        if (m_exception != null) {
-            throw new ExecutionException(m_exception);
-        }
+        m_exceptionReference.checkExceptionInMainThread();
         if (m_isCanceled) {
             throw new CancellationException();
         }
@@ -304,7 +303,7 @@ public abstract class MultiThreadWorker<In, Out> {
             // Attempt to flush output hash. The output is processed
             // sequentially according to the input ordering.
             synchronized (m_finishedTasks) {
-                if (m_isCanceled) {
+                if (m_exceptionReference.get() != null || m_isCanceled) {
                     // don't processFinished if canceled
                     return;
                 }
@@ -315,7 +314,6 @@ public abstract class MultiThreadWorker<In, Out> {
                         try {
                             processFinished(first);
                         } catch (Exception e) {
-                            cancel(true);
                             if (e instanceof CancellationException
                                     || e instanceof InterruptedException) {
                                 // ordinary cancel
@@ -325,10 +323,10 @@ public abstract class MultiThreadWorker<In, Out> {
                                         + e.getClass().getSimpleName());
                             } else {
                                 // abnormal termination
-                                m_exception = e;
-                                m_logger.warn("Unhandled exception in "
-                                        + "processFinished", e);
+                                m_exceptionReference.compareAndSet(null, e);
                             }
+                            cancel(true);
+                            return;
                         } finally {
                             m_maxQueueSemaphore.release();
                         }
@@ -431,6 +429,7 @@ public abstract class MultiThreadWorker<In, Out> {
                 /** {@inheritDoc} */
                 @Override
                 public Out call() throws Exception {
+                    m_exceptionReference.checkExceptionInSiblingThread();
                     return MultiThreadWorker.this.compute(in, index);
                 }
             });
@@ -452,6 +451,40 @@ public abstract class MultiThreadWorker<In, Out> {
         @Override
         protected void done() {
             callProcessFinished(this);
+        }
+    }
+
+
+    /** A reference to the exception that might be thrown when processing one of the workers. If set all current
+     * and future work will be stopped and the exception will be rethrown when appropriate.
+     */
+    @SuppressWarnings("serial")
+    private static final class ExceptionReference extends AtomicReference<Exception> {
+
+
+        /** Called by a worker thread - it should just abort if another worker failed. In the OK case this method
+         * just returns without throwing an exception.
+         * @throws ExecutionException Wrapping the original exception - ignored by the caller as their was another
+         * cause some place else.
+         */
+        void checkExceptionInSiblingThread() throws ExecutionException {
+            Exception exception = get();
+            if (exception != null) {
+                throw new ExecutionException("Exception occurred in sibling worker thread", exception);
+            }
+        }
+
+        /** Called by the main thread to rethrow the exception, if any.
+         * @throws ExecutionException the (possibly) wrapped exception.
+         */
+        void checkExceptionInMainThread() throws ExecutionException {
+            Exception exception = get();
+            if (exception != null) {
+                if (exception instanceof ExecutionException) {
+                    throw (ExecutionException)exception;
+                }
+                throw new ExecutionException(exception);
+            }
         }
     }
 
