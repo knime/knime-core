@@ -66,14 +66,14 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
 
-import org.knime.base.node.jsnippet.JavaField.InCol;
-import org.knime.base.node.jsnippet.JavaField.InVar;
-import org.knime.base.node.jsnippet.JavaFieldList.InColList;
-import org.knime.base.node.jsnippet.JavaFieldList.InVarList;
-import org.knime.base.node.jsnippet.JavaSnippetFields;
 import org.knime.base.node.jsnippet.type.TypeProvider;
 import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
+import org.knime.base.node.jsnippet.util.JavaField.InCol;
+import org.knime.base.node.jsnippet.util.JavaField.InVar;
+import org.knime.base.node.jsnippet.util.JavaFieldList.InColList;
+import org.knime.base.node.jsnippet.util.JavaFieldList.InVarList;
+import org.knime.base.node.jsnippet.util.JavaSnippetFields;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -84,9 +84,14 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * The table where java snippet fields for input columns and flow variables
+ * <p>This class might change and is not meant as public API.
  * can be defined.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings({"rawtypes", "serial" })
 public class InFieldsTable extends ConfigTablePanel {
@@ -133,7 +138,7 @@ public class InFieldsTable extends ConfigTablePanel {
             public void actionPerformed(final ActionEvent e) {
                 DataColumnSpec defaultColTarget = null;
                 if (null != m_spec) {
-                    Set<String> cols = new HashSet<String>();
+                    Set<String> cols = new HashSet<>();
                     for (int r = 0; r < m_model.getRowCount(); r++) {
                         Object value = m_model.getValueAt(r, Column.COLUMN);
                         if (value instanceof DataColumnSpec) {
@@ -159,7 +164,7 @@ public class InFieldsTable extends ConfigTablePanel {
                 }
                 FlowVariable defaultVarTarget = null;
                 if (null != m_flowVars) {
-                    Set<String> flowVars = new HashSet<String>();
+                    Set<String> flowVars = new HashSet<>();
                     for (int r = 0; r < m_model.getRowCount(); r++) {
                         Object value = m_model.getValueAt(r, Column.COLUMN);
                         if (value instanceof FlowVariable) {
@@ -212,7 +217,7 @@ public class InFieldsTable extends ConfigTablePanel {
 
         m_model.setValueAt(colSpec, r, Column.COLUMN);
         String colName = colSpec.getName();
-        Set<String> taken = new HashSet<String>();
+        Set<String> taken = new HashSet<>();
         for (int i = 0; i < m_model.getRowCount(); i++) {
             taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
         }
@@ -241,7 +246,7 @@ public class InFieldsTable extends ConfigTablePanel {
         m_model.addRow();
         m_model.setValueAt(var, r, Column.COLUMN);
         String varName = var.getName();
-        Set<String> taken = new HashSet<String>();
+        Set<String> taken = new HashSet<>();
         for (int i = 0; i < m_model.getRowCount(); i++) {
             taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
         }

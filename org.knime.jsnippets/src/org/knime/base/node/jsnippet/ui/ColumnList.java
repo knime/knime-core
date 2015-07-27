@@ -65,8 +65,13 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * A component that presents a list of input columns for the snippet dialogs.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
 public class ColumnList extends JList {

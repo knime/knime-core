@@ -63,24 +63,29 @@ import org.fife.ui.rsyntaxtextarea.parser.DefaultParseResult;
 import org.fife.ui.rsyntaxtextarea.parser.DefaultParserNotice;
 import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
 import org.fife.ui.rsyntaxtextarea.parser.ParserNotice;
-import org.knime.base.node.jsnippet.JavaSnippet;
-import org.knime.base.node.jsnippet.JavaSnippetCompiler;
+import org.knime.base.node.jsnippet.util.JSnippet;
+import org.knime.base.node.jsnippet.util.JavaSnippetCompiler;
 import org.knime.core.node.NodeLogger;
 
 /**
  *
+ * <p>This class might change and is not meant as public API.
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class JSnippetParser extends AbstractParser {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             JSnippetParser.class);
-    private JavaSnippet m_snippet;
+    private JSnippet<?> m_snippet;
 
     /**
      * Create a new parser.
      * @param snippet the snippet
      */
-    public JSnippetParser(final JavaSnippet snippet) {
+    public JSnippetParser(final JSnippet<?> snippet) {
         m_snippet = snippet;
     }
 
@@ -94,7 +99,7 @@ public class JSnippetParser extends AbstractParser {
         JavaSnippetCompiler compiler = new JavaSnippetCompiler(m_snippet);
         StringWriter log = new StringWriter();
         DiagnosticCollector<JavaFileObject> digsCollector =
-            new DiagnosticCollector<JavaFileObject>();
+            new DiagnosticCollector<>();
         CompilationTask compileTask = null;
         try {
             compileTask = compiler.getTask(log, digsCollector);

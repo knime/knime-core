@@ -65,6 +65,7 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Utility class for the InFieldsTable and the OutFieldsTable.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
  */

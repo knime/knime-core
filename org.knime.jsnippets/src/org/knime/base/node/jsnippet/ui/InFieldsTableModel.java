@@ -59,8 +59,13 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * The table model for the input fields table. It provides validation.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
 public class InFieldsTableModel extends FieldsTableModel {
@@ -77,7 +82,7 @@ public class InFieldsTableModel extends FieldsTableModel {
     public InFieldsTableModel() {
         super(new String[]{
                 "Column / Flow variable", "Java Type", "Java Field"});
-        Map<Column, Integer> columns = new HashMap<Column, Integer>();
+        Map<Column, Integer> columns = new HashMap<>();
         columns.put(Column.COLUMN, 0);
         columns.put(Column.JAVA_TYPE, 1);
         columns.put(Column.JAVA_FIELD, 2);

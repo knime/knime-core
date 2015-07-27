@@ -64,10 +64,10 @@ import java.util.Set;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
@@ -78,14 +78,14 @@ import javax.swing.plaf.UIResource;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
-import org.knime.base.node.jsnippet.JavaField;
-import org.knime.base.node.jsnippet.JavaField.OutCol;
-import org.knime.base.node.jsnippet.JavaField.OutVar;
-import org.knime.base.node.jsnippet.JavaFieldList.OutColList;
-import org.knime.base.node.jsnippet.JavaFieldList.OutVarList;
-import org.knime.base.node.jsnippet.JavaSnippetFields;
 import org.knime.base.node.jsnippet.type.TypeProvider;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
+import org.knime.base.node.jsnippet.util.JavaField;
+import org.knime.base.node.jsnippet.util.JavaField.OutCol;
+import org.knime.base.node.jsnippet.util.JavaField.OutVar;
+import org.knime.base.node.jsnippet.util.JavaFieldList.OutColList;
+import org.knime.base.node.jsnippet.util.JavaFieldList.OutVarList;
+import org.knime.base.node.jsnippet.util.JavaSnippetFields;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -99,8 +99,13 @@ import org.knime.core.node.workflow.FlowVariable.Type;
 /**
  * The table where java snippet fields for output columns and flow variables
  * can be defined.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings({"rawtypes", "serial" })
 public class OutFieldsTable extends ConfigTablePanel {
@@ -280,7 +285,7 @@ public class OutFieldsTable extends ConfigTablePanel {
             public void actionPerformed(final ActionEvent e) {
                 DataColumnSpec defaultColTarget = null;
                 if (null != m_spec) {
-                    Set<String> cols = new HashSet<String>();
+                    Set<String> cols = new HashSet<>();
                     for (int r = 0; r < m_model.getRowCount(); r++) {
                         Object value = m_model.getValueAt(r, Column.COLUMN);
                         if (value instanceof DataColumnSpec) {
@@ -306,7 +311,7 @@ public class OutFieldsTable extends ConfigTablePanel {
                 }
                 FlowVariable defaultVarTarget = null;
                 if (null != m_flowVars) {
-                    Set<String> flowVars = new HashSet<String>();
+                    Set<String> flowVars = new HashSet<>();
                     for (int r = 0; r < m_model.getRowCount(); r++) {
                         Object value = m_model.getValueAt(r, Column.COLUMN);
                         if (value instanceof FlowVariable) {
@@ -738,7 +743,7 @@ public class OutFieldsTable extends ConfigTablePanel {
          */
         public BooleanRenderer() {
             super();
-            setHorizontalAlignment(JLabel.CENTER);
+            setHorizontalAlignment(SwingConstants.CENTER);
             setBorderPainted(true);
         }
 
@@ -777,7 +782,7 @@ public class OutFieldsTable extends ConfigTablePanel {
         private Map<Type, FlowVariable> m_flowVars;
 
         public InputListCellRenderer() {
-            m_flowVars = new HashMap<FlowVariable.Type, FlowVariable>();
+            m_flowVars = new HashMap<>();
             m_flowVars.put(Type.DOUBLE, new FlowVariable("double", 1.0));
             m_flowVars.put(Type.INTEGER, new FlowVariable("int", 1));
             m_flowVars.put(Type.STRING, new FlowVariable("string", "1.0"));
@@ -877,7 +882,7 @@ public class OutFieldsTable extends ConfigTablePanel {
         private Map<Type, FlowVariable> m_flowVars;
 
         public DataTypeTableCellRenderer() {
-            m_flowVars = new HashMap<FlowVariable.Type, FlowVariable>();
+            m_flowVars = new HashMap<>();
             m_flowVars.put(Type.DOUBLE, new FlowVariable("double", 1.0));
             m_flowVars.put(Type.INTEGER, new FlowVariable("int", 1));
             m_flowVars.put(Type.STRING, new FlowVariable("string", "1.0"));

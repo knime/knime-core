@@ -54,8 +54,13 @@ import org.knime.core.node.util.DefaultConfigTableModel;
 
 /**
  * Extends the table model by validation methods.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
 public abstract class FieldsTableModel extends DefaultConfigTableModel {
@@ -98,7 +103,7 @@ public abstract class FieldsTableModel extends DefaultConfigTableModel {
     protected void setColumnsMap(final Map<Column, Integer> columns) {
         m_columns = columns;
 
-        m_columnsReverse = new HashMap<Integer, FieldsTableModel.Column>();
+        m_columnsReverse = new HashMap<>();
         for (Column column : m_columns.keySet()) {
             m_columnsReverse.put(m_columns.get(column), column);
         }

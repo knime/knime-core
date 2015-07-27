@@ -71,7 +71,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.apache.commons.lang3.StringUtils;
-import org.knime.base.node.jsnippet.JavaSnippetUtil;
+import org.knime.base.node.jsnippet.util.JavaSnippetUtil;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
@@ -81,8 +81,13 @@ import org.knime.core.util.SimpleFileFilter;
 
 /**
  * List of jars required for compilation (separate tab).
+ * <p>This class might change and is not meant as public API.
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
 public class JarListPanel extends JPanel {
@@ -295,6 +300,7 @@ public class JarListPanel extends JPanel {
         if (isEnabled() != enabled) {
             m_addJarList.setEnabled(enabled);
             m_addJarFilesButton.setEnabled(enabled);
+            m_addJarURLsButton.setEnabled(enabled);
             m_removeButton.setEnabled(enabled);
         }
         super.setEnabled(enabled);

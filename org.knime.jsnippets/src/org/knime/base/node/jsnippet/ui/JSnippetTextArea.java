@@ -51,17 +51,22 @@ import java.awt.Color;
 
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
-import org.knime.base.node.jsnippet.JavaSnippet;
-import org.knime.base.node.jsnippet.JavaSnippetDocument;
 import org.knime.base.node.jsnippet.guarded.GuardedDocument;
 import org.knime.base.node.jsnippet.guarded.GuardedSection;
 import org.knime.base.node.jsnippet.guarded.GuardedSectionsFoldParser;
+import org.knime.base.node.jsnippet.guarded.JavaSnippetDocument;
+import org.knime.base.node.jsnippet.util.JSnippet;
 import org.knime.base.node.util.KnimeSyntaxTextArea;
 
 /**
  * A text area for the java snippet expression.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
 public class JSnippetTextArea extends KnimeSyntaxTextArea {
@@ -70,9 +75,9 @@ public class JSnippetTextArea extends KnimeSyntaxTextArea {
      * Create a new component.
      * @param snippet the snippet
      */
-    public JSnippetTextArea(final JavaSnippet snippet) {
+    public JSnippetTextArea(final JSnippet<?> snippet) {
         // initial text != null causes a null pointer exception
-        super(new JavaSnippetDocument(), null, 20, 60);
+        super(new JavaSnippetDocument("public void temp()"), null, 20, 60);
 
         setDocument(snippet.getDocument());
         addParser(snippet.getParser());

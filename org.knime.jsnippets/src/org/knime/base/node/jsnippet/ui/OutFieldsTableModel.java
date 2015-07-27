@@ -64,8 +64,13 @@ import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * The table model for the OutFieldsTable. It provides validation.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
 public class OutFieldsTableModel extends FieldsTableModel {
@@ -91,7 +96,7 @@ public class OutFieldsTableModel extends FieldsTableModel {
     public OutFieldsTableModel(final boolean flowVarsOnly) {
         super(getColumns(flowVarsOnly));
         m_flowVarsOnly = flowVarsOnly;
-        Map<Column, Integer> columns = new HashMap<Column, Integer>();
+        Map<Column, Integer> columns = new HashMap<>();
         if (flowVarsOnly) {
             columns.put(Column.REPLACE_EXISTING, 0);
             columns.put(Column.COLUMN, 1);

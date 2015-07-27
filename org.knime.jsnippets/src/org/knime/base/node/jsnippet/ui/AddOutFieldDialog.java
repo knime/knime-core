@@ -77,12 +77,12 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
-import org.knime.base.node.jsnippet.JavaField;
-import org.knime.base.node.jsnippet.JavaField.OutCol;
-import org.knime.base.node.jsnippet.JavaField.OutVar;
 import org.knime.base.node.jsnippet.type.TypeProvider;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
 import org.knime.base.node.jsnippet.ui.OutFieldsTable.FieldType;
+import org.knime.base.node.jsnippet.util.JavaField;
+import org.knime.base.node.jsnippet.util.JavaField.OutCol;
+import org.knime.base.node.jsnippet.util.JavaField.OutVar;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -95,8 +95,12 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * A dialog with most basic settings for an output field.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
 public final class AddOutFieldDialog extends JDialog {
@@ -382,7 +386,7 @@ public final class AddOutFieldDialog extends JDialog {
                 : m_knimeName.getText();
             outCol.setKnimeName(colName);
 
-            Set<String> taken = new HashSet<String>();
+            Set<String> taken = new HashSet<>();
             for (int i = 0; i < m_model.getRowCount(); i++) {
                 taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
             }
@@ -424,7 +428,7 @@ public final class AddOutFieldDialog extends JDialog {
                 : m_knimeName.getText();
             outVar.setKnimeName(colName);
 
-            Set<String> taken = new HashSet<String>();
+            Set<String> taken = new HashSet<>();
             for (int i = 0; i < m_model.getRowCount(); i++) {
                 taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
             }
@@ -525,7 +529,7 @@ public final class AddOutFieldDialog extends JDialog {
         private Map<FlowVariable.Type, FlowVariable> m_flowVars;
 
         public TypeListCellRender() {
-            m_flowVars = new HashMap<FlowVariable.Type, FlowVariable>();
+            m_flowVars = new HashMap<>();
             m_flowVars.put(FlowVariable.Type.DOUBLE, new FlowVariable("double", 1.0));
             m_flowVars.put(FlowVariable.Type.INTEGER, new FlowVariable("int", 1));
             m_flowVars.put(FlowVariable.Type.STRING, new FlowVariable("string", "1.0"));

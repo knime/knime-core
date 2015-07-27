@@ -55,13 +55,13 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
-import org.knime.base.node.jsnippet.JavaSnippet;
-import org.knime.base.node.jsnippet.JavaSnippetFields;
-import org.knime.base.node.jsnippet.JavaSnippetSettings;
 import org.knime.base.node.jsnippet.expression.Type;
 import org.knime.base.node.jsnippet.type.TypeProvider;
 import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
+import org.knime.base.node.jsnippet.util.JSnippet;
+import org.knime.base.node.jsnippet.util.JavaSnippetFields;
+import org.knime.base.node.jsnippet.util.JavaSnippetSettings;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -71,11 +71,16 @@ import org.knime.core.node.workflow.FlowVariable;
 /**
  * This class is the clue between the fields tables and the java snippet and
  * its text area.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class JSnippetFieldsController {
-    private final JavaSnippet m_snippet;
+    private final JSnippet<?> m_snippet;
     private final InFieldsTable m_inFieldsTable;
     private final OutFieldsTable m_outFieldsTable;
     /** flag to recreate snippets system fields only if needed. */
@@ -90,7 +95,7 @@ public class JSnippetFieldsController {
      * @param inFieldsTable java fields representing inputs
      * @param outFieldsTable java fields representing java snippet outputs
      */
-    public JSnippetFieldsController(final JavaSnippet snippet,
+    public JSnippetFieldsController(final JSnippet<?> snippet,
             final InFieldsTable inFieldsTable,
             final OutFieldsTable outFieldsTable) {
         m_snippet = snippet;

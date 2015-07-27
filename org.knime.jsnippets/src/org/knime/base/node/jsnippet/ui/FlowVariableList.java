@@ -59,17 +59,23 @@ import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 
+import org.knime.base.node.util.KnimeSyntaxTextArea;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * A component that presents a list of flow variables for the snippet dialogs.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
 public class FlowVariableList extends JList {
-    private JSnippetTextArea m_snippet;
+    private KnimeSyntaxTextArea m_snippet;
     private JSnippetFieldsController m_fields;
 
     /**
@@ -123,11 +129,11 @@ public class FlowVariableList extends JList {
     }
 
     /**
-     * A double click on an element will perform an insection to this text area.
+     * A double click on an element will perform an insertion to this text area.
      *
      * @param snippet the text area
      */
-    public void install(final JSnippetTextArea snippet) {
+    public void install(final KnimeSyntaxTextArea snippet) {
         m_snippet = snippet;
     }
 
@@ -148,7 +154,7 @@ public class FlowVariableList extends JList {
      * @param flowVars the flow variables.
      */
     public void setFlowVariables(final Collection<FlowVariable> flowVars) {
-        Collection<FlowVariable> sortedFlowVars = new TreeSet<FlowVariable>(new Comparator<FlowVariable>() {
+        Collection<FlowVariable> sortedFlowVars = new TreeSet<>(new Comparator<FlowVariable>() {
             @Override
             public int compare(final FlowVariable o1, final FlowVariable o2) {
                 return o1.getName().compareTo(o2.getName());
