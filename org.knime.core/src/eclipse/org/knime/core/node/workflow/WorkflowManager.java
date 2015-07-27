@@ -6395,7 +6395,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         linkedMeta.notifyTemplateConnectionChangedListener();
                     }
                     if (e instanceof IOException) {
-                        throw (IOException)e;
+                        throw new IOException("Could not update metanode '" + tnc + "': " + e.getMessage(), e);
                     } else if (e instanceof CanceledExecutionException) {
                         throw new IOException("Canceled while loading from template", e);
                     } else if (e instanceof RuntimeException) {

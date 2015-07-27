@@ -224,7 +224,7 @@ public class WorkflowLoadHelper {
         }
         String fileName = getDotKNIMEFileName();
         if (!directory.isDirectory() || !directory.canRead()) {
-            throw new IOException("Can't read directory " + directory);
+            throw new IOException("Can't read metanode/template directory " + directory);
         }
 
         // template.knime or workflow.knime
