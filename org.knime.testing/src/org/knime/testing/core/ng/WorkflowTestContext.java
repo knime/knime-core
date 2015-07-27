@@ -90,6 +90,8 @@ public class WorkflowTestContext {
 
     private final TestrunConfiguration m_globalConfiguration;
 
+    private final List<NodeContainer> m_alreadyOpenWorkflows;
+
     /**
      * Creates a new test context.
      *
@@ -97,6 +99,7 @@ public class WorkflowTestContext {
      */
     public WorkflowTestContext(final TestrunConfiguration globalConfiguration) {
         m_globalConfiguration = globalConfiguration;
+        m_alreadyOpenWorkflows = new ArrayList<NodeContainer>(WorkflowManager.ROOT.getNodeContainers());
     }
 
     /**
@@ -193,6 +196,15 @@ public class WorkflowTestContext {
      */
     public Set<String> getNodesUnderTest() {
         return Collections.unmodifiableSet(m_nodesUnderTest);
+    }
+
+    /**
+     * Returns a list of workflows that were already open when the test started.
+     *
+     * @return a possibly empty list of workflow managers
+     */
+    public List<NodeContainer> getAlreadyOpenWorkflows() {
+        return m_alreadyOpenWorkflows;
     }
 
     /**

@@ -47,7 +47,8 @@
  */
 package org.knime.testing.core.ng;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
@@ -78,13 +79,11 @@ class WorkflowCloseTest extends WorkflowTest {
             m_context.getWorkflowManager().shutdown();
             m_context.getWorkflowManager().getParent().removeNode(m_context.getWorkflowManager().getID());
 
-            Collection<NodeContainer> openWorkflows = WorkflowManager.ROOT.getNodeContainers();
-            if (openWorkflows.size() > 1) {
+            List<NodeContainer> openWorkflows = new ArrayList<NodeContainer>(WorkflowManager.ROOT.getNodeContainers());
+            openWorkflows.removeAll(m_context.getAlreadyOpenWorkflows());
+            if (openWorkflows.size() > 0) {
                 result.addFailure(this, new AssertionFailedError(openWorkflows.size()
                         + " dangling workflows detected: " + openWorkflows));
-            } else if ((openWorkflows.size() == 1)
-                    && !openWorkflows.iterator().next().getName().contains("MetaNode Repository")) {
-                result.addFailure(this, new AssertionFailedError("1 dangling workflow detected: " + openWorkflows));
             }
         } catch (Throwable t) {
             result.addError(this, t);
