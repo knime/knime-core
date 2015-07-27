@@ -55,12 +55,14 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import org.knime.base.node.jsnippet.template.JavaSnippetTemplate;
 import org.knime.base.node.jsnippet.ui.ColumnList;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
 import org.knime.base.node.jsnippet.ui.FlowVariableList;
 import org.knime.base.node.jsnippet.ui.InFieldsTable;
 import org.knime.base.node.jsnippet.ui.OutFieldsTable;
+import org.knime.base.node.jsnippet.util.JavaSnippetSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
@@ -180,7 +182,7 @@ public class JavaEditVarNodeDialog extends JavaSnippetNodeDialog {
      * {@inheritDoc}
      */
     @Override
-    public void applyTemplate(final JSnippetTemplate template,
+    public void applyTemplate(final JavaSnippetTemplate template,
                               final DataTableSpec spec,
                               final Map<String, FlowVariable> flowVariables) {
         super.applyTemplate(template, spec, flowVariables);

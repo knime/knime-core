@@ -88,8 +88,12 @@ import org.fife.ui.rsyntaxtextarea.folding.Fold;
 import org.fife.ui.rsyntaxtextarea.folding.FoldManager;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.base.node.jsnippet.guarded.GuardedDocument;
+import org.knime.base.node.jsnippet.guarded.JavaSnippetDocument;
 import org.knime.base.node.jsnippet.template.AddTemplateDialog;
 import org.knime.base.node.jsnippet.template.DefaultTemplateController;
+import org.knime.base.node.jsnippet.template.JavaSnippetTemplate;
+import org.knime.base.node.jsnippet.template.JavaSnippetTemplateProvider;
+import org.knime.base.node.jsnippet.template.TemplateNodeDialog;
 import org.knime.base.node.jsnippet.template.TemplateProvider;
 import org.knime.base.node.jsnippet.template.TemplatesPanel;
 import org.knime.base.node.jsnippet.ui.ColumnList;
@@ -102,6 +106,7 @@ import org.knime.base.node.jsnippet.ui.JSnippetTextArea;
 import org.knime.base.node.jsnippet.ui.JarListPanel;
 import org.knime.base.node.jsnippet.ui.OutFieldsTable;
 import org.knime.base.node.jsnippet.ui.OutFieldsTableModel;
+import org.knime.base.node.jsnippet.util.JavaSnippetSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -119,7 +124,7 @@ import org.knime.core.node.workflow.FlowVariable;
  *
  * @author Heiko Hofer
  */
-public class JavaSnippetNodeDialog extends NodeDialogPane {
+public class JavaSnippetNodeDialog extends NodeDialogPane implements TemplateNodeDialog<JavaSnippetTemplate> {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             JavaSnippetNodeDialog.class);
 
@@ -140,14 +145,15 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
 
     private JarListPanel m_jarPanel;
 
-    private DefaultTemplateController m_templatesController;
+    private DefaultTemplateController<JavaSnippetTemplate> m_templatesController;
     private boolean m_isEnabled;
 
     private File[] m_autoCompletionJars;
 
 
-    @SuppressWarnings("rawtypes")
+
     /** The templates category for templates viewed or edited by this dialog. */
+    @SuppressWarnings("rawtypes")
     protected Class m_templateMetaCategory;
     private JLabel m_templateLocation;
 
@@ -283,25 +289,23 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
             public void actionPerformed(final ActionEvent e) {
                 Frame parent = (Frame)SwingUtilities.getAncestorOfClass(
                         Frame.class, addTemplateButton);
-                JSnippetTemplate newTemplate =
-                    AddTemplateDialog.openUserDialog(
-                        parent, m_snippet,
-                        m_templateMetaCategory);
+                JavaSnippetTemplate newTemplate =
+                    AddTemplateDialog.openUserDialog(parent, m_snippet, m_templateMetaCategory,
+                        JavaSnippetTemplateProvider.getDefault());
                 if (null != newTemplate) {
-                    TemplateProvider.getDefault().addTemplate(newTemplate);
+                    JavaSnippetTemplateProvider.getDefault().addTemplate(newTemplate);
                     // update the template UUID of the current snippet
                     m_settings.setTemplateUUID(newTemplate.getUUID());
-                    String loc = TemplateProvider.getDefault().
-                        getDisplayLocation(newTemplate);
+                    String loc = JavaSnippetTemplateProvider.getDefault().getDisplayLocation(newTemplate);
                     m_templateLocation.setText(loc);
                     JavaSnippetNodeDialog.this.getPanel().validate();
                 }
             }
         });
         JPanel templateInfoPanel = new JPanel(new BorderLayout());
-        TemplateProvider provider = TemplateProvider.getDefault();
+        TemplateProvider<JavaSnippetTemplate> provider = JavaSnippetTemplateProvider.getDefault();
         String uuid = m_settings.getTemplateUUID();
-        JSnippetTemplate template = null != uuid ? provider.getTemplate(
+        JavaSnippetTemplate template = null != uuid ? provider.getTemplate(
                 UUID.fromString(uuid)) : null;
         String loc = null != template
                 ? createTemplateLocationText(template)
@@ -352,11 +356,10 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
     private JPanel createTemplatesPanel() {
         JavaSnippetNodeDialog preview = createPreview();
 
-        m_templatesController = new DefaultTemplateController(
-                this, preview);
-        TemplatesPanel templatesPanel = new TemplatesPanel(
-                Collections.singleton(m_templateMetaCategory),
-                m_templatesController);
+        m_templatesController = new DefaultTemplateController<>(this, preview);
+        TemplatesPanel<JavaSnippetTemplate> templatesPanel = new TemplatesPanel<>(
+                Collections.singletonList(m_templateMetaCategory),
+                m_templatesController, JavaSnippetTemplateProvider.getDefault());
         return templatesPanel;
     }
 
@@ -601,9 +604,9 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
         m_templatesController.setFlowVariables(getAvailableFlowVariables());
 
         // update template info panel
-        TemplateProvider provider = TemplateProvider.getDefault();
+        TemplateProvider<JavaSnippetTemplate> provider = JavaSnippetTemplateProvider.getDefault();
         String uuid = m_settings.getTemplateUUID();
-        JSnippetTemplate template = null != uuid ? provider.getTemplate(
+        JavaSnippetTemplate template = null != uuid ? provider.getTemplate(
                 UUID.fromString(uuid)) : null;
         String loc = null != template ? createTemplateLocationText(template)
                 : "";
@@ -616,7 +619,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
      * @param flowVariables the flow variables at the input
      * @param spec the input spec
      */
-    public void applyTemplate(final JSnippetTemplate template,
+    @Override
+    public void applyTemplate(final JavaSnippetTemplate template,
             final DataTableSpec spec,
             final Map<String, FlowVariable> flowVariables) {
         // save and read settings to decouple objects.
@@ -658,8 +662,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
      * @param template the template
      * @return the template's loacation for display
      */
-    private String createTemplateLocationText(final JSnippetTemplate template) {
-        TemplateProvider provider = TemplateProvider.getDefault();
+    private String createTemplateLocationText(final JavaSnippetTemplate template) {
+        TemplateProvider<JavaSnippetTemplate> provider = JavaSnippetTemplateProvider.getDefault();
         return provider.getDisplayLocation(template);
     }
 
@@ -737,7 +741,4 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
     protected void preSaveSettings(final JavaSnippetSettings s) {
         // just a place holder.
     }
-
-
-
 }

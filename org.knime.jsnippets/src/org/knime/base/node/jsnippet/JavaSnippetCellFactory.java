@@ -54,12 +54,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.base.node.jsnippet.JavaField.InCol;
-import org.knime.base.node.jsnippet.JavaField.InVar;
-import org.knime.base.node.jsnippet.JavaField.OutCol;
-import org.knime.base.node.jsnippet.JavaField.OutVar;
-import org.knime.base.node.jsnippet.JavaFieldList.OutColList;
-import org.knime.base.node.jsnippet.JavaFieldList.OutVarList;
 import org.knime.base.node.jsnippet.expression.Abort;
 import org.knime.base.node.jsnippet.expression.AbstractJSnippet;
 import org.knime.base.node.jsnippet.expression.Cell;
@@ -67,6 +61,13 @@ import org.knime.base.node.jsnippet.expression.TypeException;
 import org.knime.base.node.jsnippet.type.TypeProvider;
 import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.base.node.jsnippet.type.data.JavaToDataCell;
+import org.knime.base.node.jsnippet.util.FlowVariableRepository;
+import org.knime.base.node.jsnippet.util.JavaField.InCol;
+import org.knime.base.node.jsnippet.util.JavaField.InVar;
+import org.knime.base.node.jsnippet.util.JavaField.OutCol;
+import org.knime.base.node.jsnippet.util.JavaField.OutVar;
+import org.knime.base.node.jsnippet.util.JavaFieldList.OutColList;
+import org.knime.base.node.jsnippet.util.JavaFieldList.OutVarList;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -144,7 +145,7 @@ public class JavaSnippetCellFactory implements CellFactory {
             // populate data structure with the input cells
             Map<String, Cell> cellsMap = createCellsMap(row);
             if (null == m_columns) {
-                m_columns = new ArrayList<String>();
+                m_columns = new ArrayList<>();
                 m_columns.addAll(cellsMap.keySet());
             }
             Field[] fs =
@@ -156,7 +157,7 @@ public class JavaSnippetCellFactory implements CellFactory {
                 }
                 if (field.getName().equals("m_cells")) {
                     field.setAccessible(true);
-                    List<Cell> cells = new ArrayList<Cell>();
+                    List<Cell> cells = new ArrayList<>();
                     cells.addAll(cellsMap.values());
                     field.set(m_jsnippet, cells);
                 }
@@ -330,7 +331,7 @@ public class JavaSnippetCellFactory implements CellFactory {
      * @return
      */
     private Map<String, Cell> createCellsMap(final DataRow row) {
-        Map<String, Cell> cells = new LinkedHashMap<String, Cell>(
+        Map<String, Cell> cells = new LinkedHashMap<>(
                 row.getNumCells());
         for (int i = 0; i < row.getNumCells(); i++) {
             String name = m_spec.getColumnSpec(i).getName();

@@ -51,6 +51,9 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.knime.base.node.jsnippet.util.FlowVariableRepository;
+import org.knime.base.node.jsnippet.util.JavaSnippetSettings;
+import org.knime.base.node.jsnippet.util.ValidationReport;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;

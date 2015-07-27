@@ -47,10 +47,10 @@
  */
 package org.knime.base.node.jsnippet;
 
-import static org.knime.base.node.jsnippet.JavaSnippetDocument.GUARDED_BODY_END;
-import static org.knime.base.node.jsnippet.JavaSnippetDocument.GUARDED_BODY_START;
-import static org.knime.base.node.jsnippet.JavaSnippetDocument.GUARDED_FIELDS;
-import static org.knime.base.node.jsnippet.JavaSnippetDocument.GUARDED_IMPORTS;
+import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_BODY_END;
+import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_BODY_START;
+import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_FIELDS;
+import static org.knime.base.node.jsnippet.guarded.JavaSnippetDocument.GUARDED_IMPORTS;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -83,11 +83,6 @@ import javax.tools.JavaFileObject.Kind;
 
 import org.eclipse.jdt.internal.compiler.tool.EclipseFileObject;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
-import org.knime.base.node.jsnippet.JavaField.InCol;
-import org.knime.base.node.jsnippet.JavaField.InVar;
-import org.knime.base.node.jsnippet.JavaField.OutCol;
-import org.knime.base.node.jsnippet.JavaField.OutVar;
-import org.knime.base.node.jsnippet.JavaFieldList.OutColList;
 import org.knime.base.node.jsnippet.expression.Abort;
 import org.knime.base.node.jsnippet.expression.AbstractJSnippet;
 import org.knime.base.node.jsnippet.expression.Cell;
@@ -97,9 +92,24 @@ import org.knime.base.node.jsnippet.expression.Type;
 import org.knime.base.node.jsnippet.expression.TypeException;
 import org.knime.base.node.jsnippet.guarded.GuardedDocument;
 import org.knime.base.node.jsnippet.guarded.GuardedSection;
+import org.knime.base.node.jsnippet.guarded.JavaSnippetDocument;
+import org.knime.base.node.jsnippet.template.JavaSnippetTemplate;
 import org.knime.base.node.jsnippet.type.TypeProvider;
 import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.base.node.jsnippet.ui.JSnippetParser;
+import org.knime.base.node.jsnippet.util.FlowVariableRepository;
+import org.knime.base.node.jsnippet.util.JSnippet;
+import org.knime.base.node.jsnippet.util.JavaField;
+import org.knime.base.node.jsnippet.util.JavaField.InCol;
+import org.knime.base.node.jsnippet.util.JavaField.InVar;
+import org.knime.base.node.jsnippet.util.JavaField.OutCol;
+import org.knime.base.node.jsnippet.util.JavaField.OutVar;
+import org.knime.base.node.jsnippet.util.JavaFieldList.OutColList;
+import org.knime.base.node.jsnippet.util.JavaSnippetCompiler;
+import org.knime.base.node.jsnippet.util.JavaSnippetFields;
+import org.knime.base.node.jsnippet.util.JavaSnippetSettings;
+import org.knime.base.node.jsnippet.util.JavaSnippetUtil;
+import org.knime.base.node.jsnippet.util.ValidationReport;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -125,7 +135,7 @@ import org.knime.core.util.FileUtil;
  * @author Heiko Hofer
  */
 @SuppressWarnings("restriction")
-public final class JavaSnippet {
+public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     private static class SnippetCache {
         private String m_snippetCode;
         private Class<? extends AbstractJSnippet> m_snippetClass;
@@ -264,7 +274,8 @@ public final class JavaSnippet {
      * @return the jar files for the class path
      * @throws IOException when a file could not be loaded
      */
-    File[] getClassPath() throws IOException {
+    @Override
+    public File[] getClassPath() throws IOException {
         // use cached list if present
         if (filesExist(m_jarFileCache)) {
             return m_jarFileCache;
@@ -277,7 +288,7 @@ public final class JavaSnippet {
         }
 
         if (null != m_jarFiles && m_jarFiles.length > 0) {
-            List<File> jarFiles = new ArrayList<File>();
+            List<File> jarFiles = new ArrayList<>();
             jarFiles.add(jSnippetJar);
             for (int i = 0; i < m_jarFiles.length; i++) {
                 try {
@@ -309,11 +320,11 @@ public final class JavaSnippet {
         return exists;
     }
 
+
     /**
-     * Get compilation units used by the JavaSnippetCompiler.
-     * @return the files to compile
-     * @throws IOException When files cannot be created.
+     * {@inheritDoc}
      */
+    @Override
     public Iterable<? extends JavaFileObject> getCompilationUnits()
         throws IOException {
 
@@ -364,12 +375,11 @@ public final class JavaSnippet {
     }
 
 
+
     /**
-     * Return true when this snippet is the creator and maintainer of the
-     * given source.
-     * @param source the source
-     * @return if this snippet is the given source
+     * {@inheritDoc}
      */
+    @Override
     public boolean isSnippetSource(final JavaFileObject source) {
         return null != m_snippet ? source.equals(m_snippet) : false;
     }
@@ -386,7 +396,7 @@ public final class JavaSnippet {
         File jarFile = FileUtil.createTempFile("jsnippet", ".jar", new File(KNIMEConstants.getKNIMETempDir()), true);
         JarOutputStream jar = new JarOutputStream(new FileOutputStream(jarFile));
 
-        Collection<Object> classes = new ArrayList<Object>();
+        Collection<Object> classes = new ArrayList<>();
         classes.add(AbstractJSnippet.class);
         classes.add(Abort.class);
         classes.add(Cell.class);
@@ -484,10 +494,11 @@ public final class JavaSnippet {
     }
 
 
+
     /**
-     * Get the document with the code of the snippet.
-     * @return the document
+     * {@inheritDoc}
      */
+    @Override
     public GuardedDocument getDocument() {
         // Lazy initialization of the document
         if (m_document == null) {
@@ -517,7 +528,7 @@ public final class JavaSnippet {
 
     /** Create the document with the default skeleton. */
     private GuardedDocument createDocument() {
-        return new JavaSnippetDocument();
+        return new JavaSnippetDocument("public void snippet() throws TypeException, ColumnException, Abort");
     }
 
     /** Initialize document with information from the settings. */
@@ -632,10 +643,11 @@ public final class JavaSnippet {
     }
 
 
+
     /**
-     * Get the parser for the snippet's document.
-     * @return the parser
+     * {@inheritDoc}
      */
+    @Override
     public Parser getParser() {
         // lazy initialization of the parser
         if (m_parser == null) {
@@ -672,8 +684,8 @@ public final class JavaSnippet {
      */
     public ValidationReport validateSettings(final DataTableSpec spec,
         final FlowVariableRepository flowVariableRepository) {
-        List<String> errors = new ArrayList<String>();
-        List<String> warnings = new ArrayList<String>();
+        List<String> errors = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
 
         // check input fields
         for (InCol field : m_fields.getInColFields()) {
@@ -877,21 +889,22 @@ public final class JavaSnippet {
     }
 
     /**
-     * Create a template for this snippet.
-     * @param metaCategory the meta category of the template
-     * @return the template with a new uuid.
+     * {@inheritDoc}
      */
+    @Override
     @SuppressWarnings("rawtypes")
-    public JSnippetTemplate createTemplate(final Class metaCategory) {
-        JSnippetTemplate template = new JSnippetTemplate(metaCategory,
+    public JavaSnippetTemplate createTemplate(final Class metaCategory) {
+        JavaSnippetTemplate template = new JavaSnippetTemplate(metaCategory,
                 getSettings());
         return template;
     }
 
-    /** Get the path to the temporary directory of this java snippet.
-     * @return the path to the temporary directory
+
+    /**
+     * {@inheritDoc}
      */
-    File getTempClassPath() {
+    @Override
+    public File getTempClassPath() {
         return m_tempClassPathDir;
     }
 
@@ -904,9 +917,9 @@ public final class JavaSnippet {
     }
 
     /**
-     * Set the system fields in the java snippet.
-     * @param fields the fields to set
+     * {@inheritDoc}
      */
+    @Override
     public void setJavaSnippetFields(final JavaSnippetFields fields) {
         m_fields = fields;
         if (null != m_document) {
@@ -943,7 +956,7 @@ public final class JavaSnippet {
         JavaSnippetCompiler compiler = new JavaSnippetCompiler(this);
         StringWriter log = new StringWriter();
         DiagnosticCollector<JavaFileObject> digsCollector =
-            new DiagnosticCollector<JavaFileObject>();
+            new DiagnosticCollector<>();
         CompilationTask compileTask = null;
         try {
             compileTask = compiler.getTask(log, digsCollector);
@@ -988,7 +1001,7 @@ public final class JavaSnippet {
      * Create an instance of the snippet.
      * @return a snippet instance
      */
-    AbstractJSnippet createSnippetInstance() {
+    public AbstractJSnippet createSnippetInstance() {
         Class<? extends AbstractJSnippet> jsnippetClass = createSnippetClass();
         AbstractJSnippet instance;
         try {
