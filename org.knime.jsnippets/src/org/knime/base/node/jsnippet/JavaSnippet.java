@@ -283,8 +283,7 @@ public final class JavaSnippet {
                 try {
                     jarFiles.add(JavaSnippetUtil.toFile(m_jarFiles[i]));
                 } catch (InvalidSettingsException e) {
-                    // jar file does not exist
-                    // TODO how to react?
+                    throw new IOException(e.getMessage(), e);
                 }
             }
             m_jarFileCache = jarFiles.toArray(new File[jarFiles.size()]);
@@ -949,7 +948,7 @@ public final class JavaSnippet {
         try {
             compileTask = compiler.getTask(log, digsCollector);
         } catch (IOException e) {
-            throw new IllegalStateException("Compile with errors", e);
+            throw new IllegalStateException("Compile with errors: " + e.getMessage(), e);
         }
         boolean success = compileTask.call();
         if (success) {
