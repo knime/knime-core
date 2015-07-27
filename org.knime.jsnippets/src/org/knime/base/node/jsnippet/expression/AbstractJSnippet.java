@@ -51,9 +51,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.base.node.jsnippet.FlowVariableRepository;
 import org.knime.base.node.jsnippet.type.TypeProvider;
 import org.knime.base.node.jsnippet.type.data.DataValueToJava;
+import org.knime.base.node.jsnippet.util.FlowVariableRepository;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -276,7 +276,7 @@ public abstract class AbstractJSnippet {
      * @return the flow variables of the given type.
      */
     protected <T> Map<String, T> getFlowVariables(final T t) {
-        Map<String, T> flowVars = new HashMap<String, T>();
+        Map<String, T> flowVars = new HashMap<>();
         for (String s : m_flowVars.getFlowVariables(t.getClass())) {
             flowVars.put(s, getFlowVariable(s, t));
         }
