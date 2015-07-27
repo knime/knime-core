@@ -121,8 +121,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
 // init SQL statement component
         m_statmnt.setPreferredSize(new Dimension(350, 200));
         m_statmnt.setFont(DBDialogPane.FONT);
-        m_statmnt.setText("SELECT * FROM "
-                + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER);
+        m_statmnt.setText("SELECT * FROM ("
+                + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER + ") AS result");
 
 // init database table browser
         final JPanel browserPanel = new JPanel(new BorderLayout());
@@ -269,7 +269,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
         // statement
         String statement = s.getQuery();
         m_statmnt.setText(statement == null
-                ? "SELECT * FROM " + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER
+                ? "SELECT * FROM (" + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER + ") AS result"
                 : statement);
         // select the table placeholder statement for easier replacements
         selectPlaceHolder(m_statmnt, DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER);

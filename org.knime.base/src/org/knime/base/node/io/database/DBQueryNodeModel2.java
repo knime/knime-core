@@ -68,8 +68,8 @@ import org.knime.core.node.port.database.DatabaseReaderConnection;
  */
 final class DBQueryNodeModel2 extends DBNodeModel implements FlowVariableProvider {
 
-    private String m_query = "SELECT * FROM "
-        + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER;
+    private String m_query = "SELECT * FROM ("
+        + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER + ") AS result";
 
     /**
      * Creates a new database reader.
