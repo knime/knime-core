@@ -30,6 +30,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/preproc/joiner/Joiner2NodeDialog.java" type="org.knime.base.node.preproc.joiner.Joiner2NodeDialog">
+        <filter id="354463860">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.joiner.Joiner2NodeDialog"/>
+                <message_argument value="Joiner2NodeDialog()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/switches/endmodelcase/EndmodelcaseNodeFactory.java" type="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory">
         <filter id="338792546">
             <message_arguments>

@@ -110,9 +110,11 @@ final class DBJoinerNodeDialog extends NodeDialogPane {
 
     private ColumnFilterPanel m_rightFilterPanel;
 
-    private final JCheckBox m_removeLeftJoinCols = new JCheckBox("Filter left joining columns");
+    private final JCheckBox m_removeLeftJoinCols =
+            new JCheckBox("Remove joining columns from top input ('left' table)");
 
-    private final JCheckBox m_removeRightJoinCols = new JCheckBox("Filter right joining columns");
+    private final JCheckBox m_removeRightJoinCols =
+            new JCheckBox("Remove joining columns from bottom input ('right' table)");
 
     private JRadioButton m_matchAllButton = new JRadioButton("Match all of the following");
 
@@ -220,11 +222,11 @@ final class DBJoinerNodeDialog extends NodeDialogPane {
         c.weightx = 1;
         c.gridwidth = 1;
         m_leftFilterPanel = new ColumnFilterPanel(true);
-        m_leftFilterPanel.setBorder(BorderFactory.createTitledBorder("Left Table"));
+        m_leftFilterPanel.setBorder(BorderFactory.createTitledBorder("Top Input ('left' table)"));
         p.add(m_leftFilterPanel, c);
         c.gridy++;
         m_rightFilterPanel = new ColumnFilterPanel(true);
-        m_rightFilterPanel.setBorder(BorderFactory.createTitledBorder("Right Table"));
+        m_rightFilterPanel.setBorder(BorderFactory.createTitledBorder("Bottom Input ('right' table)"));
         p.add(m_rightFilterPanel, c);
         c.gridy++;
         p.add(createDuplicateColumnHandlingUIConstrols(), c);

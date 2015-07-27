@@ -409,7 +409,7 @@ public class ColumnPairsSelectionPanel extends JPanel {
      * @return a component for the header view of a scroll pane.
      */
     public Component getHeaderView() {
-        return getHeaderView("Left Table", "Right Table");
+        return getHeaderView("Top Input ('left' table)", "Bottom Input ('right' table)");
     }
 
 

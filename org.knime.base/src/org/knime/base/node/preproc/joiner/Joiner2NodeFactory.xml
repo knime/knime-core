@@ -10,32 +10,32 @@
         </intro>
         <tab name="Joiner settings">
             <option name="Join mode">
-                If a row from the left table cannot be joined with a row from the right table (and vice versa) there are
+                If a row from the top table cannot be joined with a row from the bottom table (and vice versa) there are
                 several options of handling this situation. After an
                 <b>Inner Join</b>
                 only matching rows will show up in the output table. A
                 <b>Left Outer Join</b>
-                will fill up the columns that come from the right table with missing values if no matching row exists in
-                the right table. Likewise, a
+                will fill up the columns that come from the bottom table with missing values if no matching row exists in
+                the bottom table. Likewise, a
                 <b>Right Outer Join</b>
-                will fill up the columns from the left table with missing values if no matching row in the left table
+                will fill up the columns from the top table with missing values if no matching row in the top table
                 exists. A
                 <b>Full Outer Join</b>
-                will fill up columns from both the left and right table with missing values if a row cannot be joined.
+                will fill up columns from both the top and bottom table with missing values if a row cannot be joined.
             </option>        
             <option name="Joining columns">
-                Select the columns from the left input table and the right input 
-                table that should be used for joining. You may selected a real
+                Select the columns from the top input ('left' table) and the bottom input 
+                ('right' table) that should be used for joining. You may selected a real
                 column or the table's row ID here. You must make sure, that the type 
                 of selected columns matches. The row IDs are interpreted as 
                 StringCells.
                 <br/>
                 <b>Match all of the following:</b> 
-                A row of the left input table and a row of the right input table 
+                A row of the top input table and a row of the bottom input table 
                 match if they match in all specified column pairs.
                 <br/>
                 <b>Match any of the following:</b>
-                A row of the left input table and a row of the right input table 
+                A row of the top input table and a row of the bottom input table 
                 match if they match in at least one specified column pairs.            
             </option>
             <option name="Performance Tuning">
@@ -46,12 +46,12 @@
             </option>
             <option name="Row ID separator in joined table">
                 The row IDs of the joined table are a concatenation of the row ID
-                of the left input table, this separator and the row ID of the right
+                of the top input table, this separator and the row ID of the bottom
                 input table.
             </option>        
         </tab>
         <tab name="Column selection">
-            <option name="Column Selection (Left Table and Right Table)">
+            <option name="Column Selection (Top Input ('left' table) and Bottom Input ('right' table))">
                 <br/>
                 <b>Exclude:</b> This list contains the column names of the input table that are 
                 excluded.
@@ -76,27 +76,26 @@
                 The option allows you to change the behaviour if the include
                 lists of both input tables contain columns with the same name. 
                 <br/>
-                <b>Filter duplicates:</b> Only the columns from the left input table
+                <b>Filter duplicates:</b> Only the columns from the top input table
                 will show up in the output table.
                 <br/>
                 <b>Don't execute:</b> Don't allow to execute this node if there are
                 duplicate column names in the include lists. 
                 <br/>
                 <b>Append suffix:</b> Append a suffix to the duplicate column names
-                from the right input table so that they also show up in the output
+                from the bottom input table so that they also show up in the output
                 table.
             </option>
             <option name="Joining columns handling">
-                The option allows filtering the left/right joining columns, i.e. the
-                joining columns defined in the Joiner Settings tab will not show up
-                in the output table.
+                The option allows filtering the top ('left' table) or bottom ('right' table) joining columns, i.e. the
+                joining columns defined in the Joiner Settings tab will not show up in the output table.
             </option>
         </tab>
 
     </fullDescription>
     <ports>
-        <inPort index="0" name="Left table">Table contributing to the left part of the output table</inPort>
-        <inPort index="1" name="Right table">Table contributing to the right part of the output table</inPort>
+        <inPort index="0" name="Top Input ('left' table)">Table contributing to the left part of the output table</inPort>
+        <inPort index="1" name="Bottom Input ('right' table)">Table contributing to the right part of the output table</inPort>
         <outPort index="0" name="Joined table">Joined Table</outPort>
     </ports>
 </knimeNode>

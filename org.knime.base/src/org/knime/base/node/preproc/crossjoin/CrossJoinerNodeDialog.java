@@ -64,20 +64,20 @@ final class CrossJoinerNodeDialog extends DefaultNodeSettingsPane {
      */
     CrossJoinerNodeDialog() {
         addDialogComponent(new DialogComponentString(CrossJoinerNodeModel.createRightColumnNameSuffixSettingsModel(),
-                                                     "Right table's column name suffix"));
+                                                     "Bottom table's column name suffix"));
         addDialogComponent(new DialogComponentString(
                             CrossJoinerNodeModel.createRowKeySeparatorSettingsModel(), "Separator for new RowIds"));
         addDialogComponent(new DialogComponentNumber(
                             CrossJoinerNodeModel.createCacheSizeSettingsModel(), "Chunk size: ", 10));
 
         final SettingsModelBoolean showFirstRowIdsModel = CrossJoinerNodeModel.createshowFirstRowIdsSettingsModel();
-        addDialogComponent(new DialogComponentBoolean(showFirstRowIdsModel, "Append left data tables RowIds"));
+        addDialogComponent(new DialogComponentBoolean(showFirstRowIdsModel, "Append top data tables RowIds"));
         addDialogComponent(new DialogComponentString(
-            CrossJoinerNodeModel.createFirstRowIdsNameSettingsModel(showFirstRowIdsModel), "Column name(left)"));
+            CrossJoinerNodeModel.createFirstRowIdsNameSettingsModel(showFirstRowIdsModel), "Column name(top)"));
         final SettingsModelBoolean showSecondRowIdsModel = CrossJoinerNodeModel.createshowSecondRowIdsSettingsModel();
-        addDialogComponent(new DialogComponentBoolean(showSecondRowIdsModel, "Append right data tables RowIds"));
+        addDialogComponent(new DialogComponentBoolean(showSecondRowIdsModel, "Append bottom data tables RowIds"));
         addDialogComponent(new DialogComponentString(
-            CrossJoinerNodeModel.createSecondRowIdsNameSettingsModel(showSecondRowIdsModel), "Column name(right)"));
+            CrossJoinerNodeModel.createSecondRowIdsNameSettingsModel(showSecondRowIdsModel), "Column name(bottom)"));
     }
 }
 

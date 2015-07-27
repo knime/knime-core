@@ -88,8 +88,8 @@ import org.knime.core.node.util.ColumnPairsSelectionPanel;
  * @author Heiko Hofer
  */
 public class Joiner2NodeDialog extends NodeDialogPane {
-    private final JComboBox m_joinMode =
-            new JComboBox(new Object[]{JoinMode.InnerJoin,
+    private final JComboBox<JoinMode> m_joinMode =
+            new JComboBox<>(new JoinMode[]{JoinMode.InnerJoin,
                     JoinMode.LeftOuterJoin, JoinMode.RightOuterJoin,
                     JoinMode.FullOuterJoin});
 
@@ -113,9 +113,9 @@ public class Joiner2NodeDialog extends NodeDialogPane {
     private ColumnFilterPanel m_leftFilterPanel;
     private ColumnFilterPanel m_rightFilterPanel;
     private final JCheckBox m_removeLeftJoinCols =
-        new JCheckBox("Filter left joining columns");
+        new JCheckBox("Remove joining columns from top input ('left' table)");
     private final JCheckBox m_removeRightJoinCols =
-        new JCheckBox("Filter right joining columns");
+        new JCheckBox("Remove joining columns from bottom input ('right' table)");
     private JRadioButton m_matchAllButton = new JRadioButton(
             "Match all of the following");
     private JRadioButton m_matchAnyButton = new JRadioButton(
@@ -129,12 +129,37 @@ public class Joiner2NodeDialog extends NodeDialogPane {
     /**
      * Creates a new dialog for the joiner node.
      */
-    public Joiner2NodeDialog() {
+    Joiner2NodeDialog() {
+        init();
+    }
+
+    /**
+     * Constructor for extending classes. All extending classes need to call
+     * the {@link #init()} method after initialising all members.
+     * @param ignore parameter that is ignored
+     * @since 2.12
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    protected Joiner2NodeDialog(final boolean ignore) {
+
+    }
+
+    /**
+     * Initialize the dialog tabs.
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    protected void init() {
         addTab("Joiner Settings", createJoinerSettingsTab());
         addTab("Column Selection", createColumnSelectionTab());
     }
 
-    private JPanel createJoinerSettingsTab() {
+    /**
+     * @return the main joiner settings tab
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    protected JPanel createJoinerSettingsTab() {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
@@ -154,7 +179,7 @@ public class Joiner2NodeDialog extends NodeDialogPane {
 
         c.weightx = 1;
         c.weighty = 1;
-        p.add(createJoinPredicateUIControls(), c);
+        p.add(createJoinPredicateUIControls(true, true), c);
 
         c.gridy++;
         c.weightx = 0;
@@ -173,7 +198,14 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         return p;
     }
 
-    private JPanel createJoinPredicateUIControls() {
+    /**
+     * @param includeRowId <code>true</code> if the user can select the row id as a potential matching column
+     * @param showMatchModes <code>true</code> if the AND and OR match mode option should available
+     * @return the column pair panel
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    protected JPanel createJoinPredicateUIControls(final boolean includeRowId, final boolean showMatchModes) {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
@@ -183,22 +215,26 @@ public class Joiner2NodeDialog extends NodeDialogPane {
 
         c.gridx = 0;
         c.gridy = 0;
-        JPanel matchButtonPanel = new JPanel(new FlowLayout());
-        matchButtonPanel.add(m_matchAllButton);
-        matchButtonPanel.add(m_matchAnyButton);
-        p.add(matchButtonPanel, c);
+        if (showMatchModes) {
+            JPanel matchButtonPanel = new JPanel(new FlowLayout());
+            matchButtonPanel.add(m_matchAllButton);
+            matchButtonPanel.add(m_matchAnyButton);
+            p.add(matchButtonPanel, c);
 
-        ButtonGroup group = new ButtonGroup();
-        group.add(m_matchAllButton);
-        group.add(m_matchAnyButton);
+            ButtonGroup group = new ButtonGroup();
+            group.add(m_matchAllButton);
+            group.add(m_matchAnyButton);
 
-        c.gridx = 0;
-        c.gridy++;
+            c.gridx = 0;
+            c.gridy++;
+        }
         c.gridwidth = 3;
         c.weightx = 1;
         c.weighty = 1;
 
-        m_columnPairs = new ColumnPairsSelectionPanel() {
+        m_columnPairs = new ColumnPairsSelectionPanel(includeRowId) {
+            private static final long serialVersionUID = 1L;
+
             /**
              * {@inheritDoc}
              */
@@ -227,7 +263,12 @@ public class Joiner2NodeDialog extends NodeDialogPane {
 
     }
 
-    private JPanel createJoinModeUIControls() {
+    /**
+     * @return the join mode panel
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    protected JPanel createJoinModeUIControls() {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
@@ -291,6 +332,10 @@ public class Joiner2NodeDialog extends NodeDialogPane {
     }
 
     private JComponent createColumnSelectionTab() {
+        return createColumnSelectionTab("Top Input ('left' table)", "Bottom Input ('right' table)");
+    }
+
+    private JComponent createColumnSelectionTab(final String topTitle, final String bottomTitle) {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -303,19 +348,24 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         c.gridwidth = 1;
         m_leftFilterPanel = new ColumnFilterPanel(true);
         m_leftFilterPanel.setBorder(
-                BorderFactory.createTitledBorder("Left Table"));
+                BorderFactory.createTitledBorder(topTitle));
         p.add(m_leftFilterPanel, c);
         c.gridy++;
         m_rightFilterPanel = new ColumnFilterPanel(true);
         m_rightFilterPanel.setBorder(
-                BorderFactory.createTitledBorder("Right Table"));
+                BorderFactory.createTitledBorder(bottomTitle));
         p.add(m_rightFilterPanel, c);
         c.gridy++;
         p.add(createDuplicateColumnHandlingUIConstrols(), c);
         return new JScrollPane(p);
     }
 
-    private JPanel createDuplicateColumnHandlingUIConstrols() {
+    /**
+     * @return the duplicate column handling panel
+     * @since 2.12
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    protected JPanel createDuplicateColumnHandlingUIConstrols() {
         JPanel left = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 

@@ -352,10 +352,12 @@ public final class Joiner {
     }
 
     /**
-     * @param dataTableSpec
-     * @return
+     * @param dataTableSpec input spec of the left DataTable
+     * @return the names of all columns to include from the left input table
+     * @throws InvalidSettingsException if the input spec is not compatible with the settings
+     * @since 2.12
      */
-    private List<String> getLeftIncluded(final DataTableSpec dataTableSpec)
+    public List<String> getLeftIncluded(final DataTableSpec dataTableSpec)
     throws InvalidSettingsException {
         List<String> leftCols = new ArrayList<String>();
         for (DataColumnSpec column : dataTableSpec) {
@@ -384,10 +386,12 @@ public final class Joiner {
     }
 
     /**
-     * @param dataTableSpec
-     * @return
+     * @param dataTableSpec input spec of the right DataTable
+     * @return the names of all columns to include from the left input table
+     * @throws InvalidSettingsException if the input spec is not compatible with the settings
+     * @since 2.12
      */
-    private List<String> getRightIncluded(final DataTableSpec dataTableSpec)
+    public List<String> getRightIncluded(final DataTableSpec dataTableSpec)
     throws InvalidSettingsException {
         List<String> rightCols = new ArrayList<String>();
         for (DataColumnSpec column : dataTableSpec) {
