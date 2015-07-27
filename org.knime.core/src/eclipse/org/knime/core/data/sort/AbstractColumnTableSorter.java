@@ -395,11 +395,16 @@ abstract class AbstractColumnTableSorter {
     private void fillBuffer(final RowIterator iterator, final ExecutionMonitor readExec)
         throws CanceledExecutionException {
 
-        while (iterator.hasNext() && !m_memService.isMemoryLow()) {
+        // read at least two rows, otherwise we won't make any progress
+        long count = 0;
+        while (iterator.hasNext()) {
             readExec.checkCanceled();
             DataRow r = iterator.next();
             for (Entry<SortingDescription, List<DataRow>> descr : m_buffer.entrySet()) {
                 descr.getValue().add(descr.getKey().createSubRow(r));
+            }
+            if ((++count >= 2) &&  m_memService.isMemoryLow()) {
+                break;
             }
         }
     }
