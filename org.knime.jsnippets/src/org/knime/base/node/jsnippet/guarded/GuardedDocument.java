@@ -58,8 +58,12 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 
 /**
  * A Document with guarded, non editable areas.
- *
+ * <p>This class might change and is not meant as public API.
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("serial")
 public class GuardedDocument extends RSyntaxDocument {
@@ -75,7 +79,7 @@ public class GuardedDocument extends RSyntaxDocument {
      */
     public GuardedDocument(final String syntaxStyle) {
         super(syntaxStyle);
-        m_guards = new LinkedHashMap<String, GuardedSection>();
+        m_guards = new LinkedHashMap<>();
     }
 
     /**

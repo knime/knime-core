@@ -60,8 +60,13 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * A FoldParser that gives folds for every guarded section.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 public class GuardedSectionsFoldParser implements FoldParser {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(

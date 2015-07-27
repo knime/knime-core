@@ -53,8 +53,13 @@ import javax.swing.text.Position;
 
 /**
  * A guarded, e.g. non editable section in a document.
+ * <p>This class might change and is not meant as public API.
  *
  * @author Heiko Hofer
+ * @since 2.12
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class GuardedSection {
 
