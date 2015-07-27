@@ -32,9 +32,9 @@
       <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.rules.engine.totable.RulesToTableNodeFactory" id="org.knime.base.node.rules.engine.totable.RulesToTableNodeFactory"/>
    </extension>
    <extension point="org.knime.jsnippets.templaterepository">
-         <template-repository id="org.knime.base.node.jsnippet.template.DefaultFileTemplateRepositoryProvider" provider-class="org.knime.base.node.jsnippet.template.DefaultFileTemplateRepositoryProvider">
+         <template-repository id="org.knime.base.node.jsnippet.template.JavaSnippetFileTemplateRepositoryProvider" provider-class="org.knime.base.node.jsnippet.template.JavaSnippetFileTemplateRepositoryProvider">
          </template-repository>
-         <template-repository id="org.knime.base.node.jsnippet.template.PluginFileTemplateRepositoryProvider" provider-class="org.knime.base.node.jsnippet.template.PluginFileTemplateRepositoryProvider">
+         <template-repository id="org.knime.base.node.jsnippet.template.JavaSnippetPluginTemplateRepositoryProvider" provider-class="org.knime.base.node.jsnippet.template.JavaSnippetPluginTemplateRepositoryProvider">
          </template-repository>
    </extension>
 
