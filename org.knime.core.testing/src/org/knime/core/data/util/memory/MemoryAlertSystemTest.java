@@ -147,6 +147,8 @@ public class MemoryAlertSystemTest {
         MemoryAlertListener listener = new MemoryAlertListener() {
             @Override
             protected boolean memoryAlert(final MemoryAlert alert) {
+                NodeLogger.getLogger(MemoryAlertSystemTest.class).debug(
+                    "Memory listener called, current usage is " + MemoryAlertSystem.getUsage());
                 listenerCalled.set(true);
                 return false;
             }

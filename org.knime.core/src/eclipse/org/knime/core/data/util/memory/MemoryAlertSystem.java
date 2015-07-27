@@ -59,6 +59,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -105,7 +106,7 @@ public final class MemoryAlertSystem {
 
     private final Condition m_gcEvent = m_gcEventLock.newCondition();
 
-    private volatile boolean m_lowMemory;
+    private final AtomicBoolean m_lowMemory = new AtomicBoolean();
 
     private final AtomicLong m_lastEventTimestamp = new AtomicLong();
 
@@ -156,7 +157,7 @@ public final class MemoryAlertSystem {
         } while (!m_lastEventTimestamp.compareAndSet(prev, next));
 
         if (prev < not.getTimeStamp()) {
-            m_lowMemory = true;
+            m_lowMemory.set(true);
             sendMemoryAlert();
         }
     }
@@ -173,7 +174,7 @@ public final class MemoryAlertSystem {
 
         if (prev < not.getTimeStamp()) {
             LOGGER.debug("Memory usage below threshold of " + usageThreshold + " after GC run");
-            m_lowMemory = false;
+            m_lowMemory.set(false);
         }
 
         m_gcEventLock.lock();
@@ -339,7 +340,7 @@ public final class MemoryAlertSystem {
      * @return <code>true</code> if memory is low, <code>false</code> otherwise
      */
     public boolean isMemoryLow() {
-        return m_lowMemory;
+        return m_lowMemory.get();
     }
 
     /**
@@ -359,12 +360,12 @@ public final class MemoryAlertSystem {
                 + threshold + " vs. " + (m_memPool.getCollectionUsageThreshold() / (double)getMaximumMemory()));
         }
 
-        if (m_lowMemory) {
+        if (m_lowMemory.get()) {
             long remainingTime = timeout;
             m_gcEventLock.lock();
             try {
                 double usage = getUsage();
-                while (m_lowMemory && (usage > threshold)) {
+                while (m_lowMemory.get() && (usage > threshold)) {
                     long diff = System.currentTimeMillis();
                     if (!m_gcEvent.await(remainingTime, TimeUnit.MILLISECONDS)) {
                         return false;
