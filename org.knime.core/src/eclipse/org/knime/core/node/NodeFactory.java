@@ -49,6 +49,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
@@ -293,7 +295,8 @@ public abstract class NodeFactory<T extends NodeModel> {
         if (imagePath.startsWith("./")) {
             imagePath = imagePath.substring("./".length());
         }
-        if (!imagePath.startsWith("/")) {
+        Path p = Paths.get(imagePath);
+        if (!p.isAbsolute() && !imagePath.startsWith("/")) {
             imagePath = getClass().getPackage().getName().replace('.', '/') + "/" + imagePath;
 
             Matcher m = ICON_PATH_PATTERN.matcher(imagePath);
