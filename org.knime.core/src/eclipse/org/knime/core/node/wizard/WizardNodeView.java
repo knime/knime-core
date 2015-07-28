@@ -46,6 +46,7 @@
  */
 package org.knime.core.node.wizard;
 
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -200,6 +201,12 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         });
 
         m_shell.setSize(800, 600);
+
+        Point middle = new Point(knimeWindowBounds.width / 2, knimeWindowBounds.height / 2);
+        // Left upper point for window
+        Point newLocation = new Point(middle.x - (m_shell.getSize().x / 2) + knimeWindowBounds.x,
+                                      middle.y - (m_shell.getSize().y / 2) + knimeWindowBounds.y);
+        m_shell.setLocation(newLocation.x, newLocation.y);
         m_shell.addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(final DisposeEvent e) {
