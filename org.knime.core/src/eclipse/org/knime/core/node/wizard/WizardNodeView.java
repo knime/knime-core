@@ -259,6 +259,9 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
      */
     @Override
     public final void closeView() {
+        if ((m_shell != null) && !m_shell.isDisposed()) {
+            m_shell.dispose();
+        }
         m_shell = null;
         m_browser = null;
         m_viewSet = false;
