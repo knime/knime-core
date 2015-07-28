@@ -77,8 +77,10 @@ import org.knime.core.util.Pair;
  * corresponds the option "R<-cor(R, use="pairwise.complete.obs")" in R.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.12
+ * @noreference This class is not intended to be referenced by clients (except for KNIME core plug-ins).
  */
-final class CorrelationComputer {
+public final class CorrelationComputer {
 
     private final DataTableSpec m_tableSpec;
     /** indices of numeric columns. */
@@ -119,7 +121,7 @@ final class CorrelationComputer {
     /** Inits fields.
      * @param filteredSpec ...
      * @param maxPossibleValues ... */
-    CorrelationComputer(final DataTableSpec filteredSpec,
+    public CorrelationComputer(final DataTableSpec filteredSpec,
             final int maxPossibleValues) {
         m_tableSpec = filteredSpec;
         int colCount = filteredSpec.getNumColumns();
@@ -151,7 +153,7 @@ final class CorrelationComputer {
      * @param exec ...
      * @throws CanceledExecutionException */
     @SuppressWarnings("unchecked")
-    void calculateStatistics(final BufferedDataTable table,
+    public void calculateStatistics(final BufferedDataTable table,
             final ExecutionContext exec) throws CanceledExecutionException {
         DataTableSpec filterTableSpec = table.getDataTableSpec();
         assert filterTableSpec.equalStructure(m_tableSpec);
@@ -251,7 +253,7 @@ final class CorrelationComputer {
      * @param exec ...
      * @return the output matrix to be turned into the output model
      * @throws CanceledExecutionException */
-    HalfDoubleMatrix calculateOutput(final BufferedDataTable table,
+    public HalfDoubleMatrix calculateOutput(final BufferedDataTable table,
             final ExecutionMonitor exec) throws CanceledExecutionException {
         assert table.getDataTableSpec().equalStructure(m_tableSpec);
         int catCount = m_categoricalColIndexMap.length;
@@ -452,7 +454,7 @@ final class CorrelationComputer {
     /** Composes warning message on which columns are constant.
      * @param maxToReport ...
      * @return message or null. */
-    String getNumericConstantColumnPairs(final int maxToReport) {
+    public String getNumericConstantColumnPairs(final int maxToReport) {
         if (m_numericsWithConstantValues.isEmpty()) {
             return null;
         }
@@ -485,8 +487,10 @@ final class CorrelationComputer {
     /** Calculates G formula, for details see
      * http://en.wikipedia.org/wiki/Chi-square_test and
      * http://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V_%28statistics%29.
+     * @param contingency the contingency table
+     * @return cramer's V
      */
-    private static double computeCramersV(final int[][] contingency) {
+    public static double computeCramersV(final int[][] contingency) {
         if (contingency.length <= 1 || contingency[0].length <= 1) {
             return 0.0;
         }

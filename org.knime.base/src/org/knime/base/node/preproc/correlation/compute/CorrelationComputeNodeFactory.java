@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 17, 2007 (wiswedel): created
  */
@@ -52,10 +52,12 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public class CorrelationComputeNodeFactory extends NodeFactory<CorrelationComputeNodeModel> {
+public final class CorrelationComputeNodeFactory extends NodeFactory<CorrelationComputeNodeModel> {
 
     /**
      * {@inheritDoc}

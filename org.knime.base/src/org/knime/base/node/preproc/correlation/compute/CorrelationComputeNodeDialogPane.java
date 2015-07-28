@@ -57,10 +57,10 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
  * Dialog for correlation node. Shows only a column filter.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class CorrelationComputeNodeDialogPane extends DefaultNodeSettingsPane {
+final class CorrelationComputeNodeDialogPane extends DefaultNodeSettingsPane {
 
     /** Inits dialog, adds only a column filter. */
-    public CorrelationComputeNodeDialogPane() {
+    CorrelationComputeNodeDialogPane() {
         SettingsModelColumnFilter2 fS = CorrelationComputeNodeModel.createColumnFilterModel();
         DialogComponentColumnFilter2 cF =
             new DialogComponentColumnFilter2(fS, 0);

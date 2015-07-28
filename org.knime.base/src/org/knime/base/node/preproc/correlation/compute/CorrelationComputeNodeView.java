@@ -68,9 +68,9 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -103,7 +103,7 @@ import org.knime.core.node.tableview.TableView;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class CorrelationComputeNodeView extends NodeView<CorrelationComputeNodeModel> {
+final class CorrelationComputeNodeView extends NodeView<CorrelationComputeNodeModel> {
 
     private final TableView m_tableView;
     private String m_currentRendererID = ColorRender.DESCRIPTION;
@@ -111,11 +111,11 @@ public class CorrelationComputeNodeView extends NodeView<CorrelationComputeNodeM
     /** Inits GUI.
      * @param model The underlying model.
      */
-    public CorrelationComputeNodeView(final CorrelationComputeNodeModel model) {
+    CorrelationComputeNodeView(final CorrelationComputeNodeModel model) {
         super(model);
         m_tableView = new TableView(new MyTableContentView());
         m_tableView.setColumnHeaderResizingAllowed(true);
-        Component c = m_tableView.getCorner(JScrollPane.UPPER_LEFT_CORNER);
+        Component c = m_tableView.getCorner(ScrollPaneConstants.UPPER_LEFT_CORNER);
         if (c instanceof JTableHeader) {
             JTableHeader cornerHeader = (JTableHeader)c;
             cornerHeader.setDefaultRenderer(new LegendCornerAll());
@@ -200,7 +200,7 @@ public class CorrelationComputeNodeView extends NodeView<CorrelationComputeNodeM
     private void changeRenderer(final String renderer) {
         TableContentView tcv = m_tableView.getContentTable();
         tcv.changeRenderer(DoubleCell.TYPE, renderer);
-        Component c = m_tableView.getCorner(JScrollPane.UPPER_LEFT_CORNER);
+        Component c = m_tableView.getCorner(ScrollPaneConstants.UPPER_LEFT_CORNER);
         LegendCornerAll cornerRenderer = null;
         if (c instanceof JTableHeader) {
             JTableHeader corner = (JTableHeader)c;
