@@ -90,7 +90,7 @@ public class WorkflowTestContext {
 
     private final TestrunConfiguration m_globalConfiguration;
 
-    private final List<NodeContainer> m_alreadyOpenWorkflows;
+    private final List<NodeContainer> m_alreadyOpenWorkflows = new ArrayList<>();
 
     /**
      * Creates a new test context.
@@ -99,7 +99,6 @@ public class WorkflowTestContext {
      */
     public WorkflowTestContext(final TestrunConfiguration globalConfiguration) {
         m_globalConfiguration = globalConfiguration;
-        m_alreadyOpenWorkflows = new ArrayList<NodeContainer>(WorkflowManager.ROOT.getNodeContainers());
     }
 
     /**
@@ -130,8 +129,11 @@ public class WorkflowTestContext {
      * @throws InvalidSettingsException if the settings of the Testflow Configuration node are invalid
      */
     public void setWorkflowManager(final WorkflowManager manager) throws InvalidSettingsException, IOException {
+        m_alreadyOpenWorkflows.clear();
+        m_alreadyOpenWorkflows.addAll(WorkflowManager.ROOT.getNodeContainers());
         if (manager != null) {
             recordNodes(manager);
+            m_alreadyOpenWorkflows.remove(manager);
         }
         m_flowConfiguration = new TestflowConfiguration(manager, m_globalConfiguration);
         m_manager = manager;
