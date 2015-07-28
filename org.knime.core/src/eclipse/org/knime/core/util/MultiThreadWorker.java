@@ -325,7 +325,7 @@ public abstract class MultiThreadWorker<In, Out> {
                                 // abnormal termination
                                 m_exceptionReference.compareAndSet(null, e);
                             }
-                            cancel(true);
+                            innerCancel(true);
                             return;
                         } finally {
                             m_maxQueueSemaphore.release();
