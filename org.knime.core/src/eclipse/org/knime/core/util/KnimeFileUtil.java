@@ -121,4 +121,22 @@ public final class KnimeFileUtil {
         File templateFile = new File(file, WorkflowPersistor.TEMPLATE_FILE);
         return templateFile.exists();
     }
+
+    /**
+     * @param file to check
+     * @return true if this is a meta node (or a sub node) in a workflow (or meta node in another meta node, etc.)
+     * @since 2.12
+     */
+    public static boolean isMetaNode(final File file) {
+        if (file == null || !file.exists() || !file.isDirectory()) {
+            return false;
+        }
+        File parent = file.getParentFile();
+        if (parent == null || !parent.exists()) {
+            // parent must have a workflow file for this to be a meta (or sub) node
+            return false;
+        }
+        return new File(file, WorkflowPersistor.WORKFLOW_FILE).exists()
+            && new File(parent, WorkflowPersistor.WORKFLOW_FILE).exists();
+    }
 }
