@@ -232,6 +232,9 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
             }
             if (!error) {
                 File file = FileUtil.getFileFromURL(url);
+                if (file == null) {
+                    throw new IllegalArgumentException("URL does not point to a local file: " + url);
+                }
                 if (!file.exists()) {
                     // if file does not exists fail if specified
                     if (m_failOnInvalidLocationModel.getBooleanValue()) {
