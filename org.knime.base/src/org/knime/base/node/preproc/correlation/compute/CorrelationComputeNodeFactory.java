@@ -56,6 +56,7 @@ import org.knime.core.node.NodeView;
  * @author Bernd Wiswedel, University of Konstanz
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
+ * @since 2.12
  */
 public final class CorrelationComputeNodeFactory extends NodeFactory<CorrelationComputeNodeModel> {
 
