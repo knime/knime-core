@@ -654,7 +654,19 @@ public final class FilesHistoryPanel extends JPanel {
         } catch (IOException | URISyntaxException | InvalidPathException ex) {
             // ignore
         }
-        int r = fileChooser.showDialog(FilesHistoryPanel.this, "OK");
+        int r;
+
+       /* This if construct is result of a fix for bug 5841.
+        * showDialog does not resolve localized folder names correctly under Mac OS,
+        * so we use the methods showSaveDialog and showOpenDialog if possible.
+        */
+        if (this.m_dialogType == JFileChooser.SAVE_DIALOG) {
+            r = fileChooser.showSaveDialog(FilesHistoryPanel.this);
+        } else if (this.m_dialogType == JFileChooser.OPEN_DIALOG) {
+            r = fileChooser.showOpenDialog(FilesHistoryPanel.this);
+        } else {
+            r = fileChooser.showDialog(FilesHistoryPanel.this, "OK");
+        }
         if (r == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             if (file.exists() && (m_selectMode == JFileChooser.FILES_ONLY)
