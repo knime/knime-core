@@ -204,27 +204,6 @@ public class TableCreator2NodeModel extends NodeModel {
         cont.close();
 
         BufferedDataTable out = cont.getTable();
-
-        // fix for bug #2969
-        if (!toRemove.isEmpty()) {
-            int oldLength = m_settings.getRowIndices().length;
-            int newLength = oldLength - toRemove.size();
-            int[] rowIndices = new int[newLength];
-            int[] colIndices = new int[newLength];
-            String[] values = new String[newLength];
-            c = 0;
-            for (int i = 0; i < newLength; i++) {
-                if (!toRemove.contains(i)) {
-                    rowIndices[c] = m_settings.getRowIndices()[i];
-                    colIndices[c] = m_settings.getColumnIndices()[i];
-                    values[c] = m_settings.getValues()[i];
-                    c++;
-                }
-            }
-            m_settings.setRowIndices(rowIndices);
-            m_settings.setColumnIndices(colIndices);
-            m_settings.setValues(values);
-        }
         return new BufferedDataTable[]{out};
     }
 
