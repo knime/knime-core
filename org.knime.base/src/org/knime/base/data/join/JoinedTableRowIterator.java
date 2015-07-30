@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.data.join;
 
@@ -62,12 +62,12 @@ import org.knime.core.node.NodeLogger;
  * the same. If that is not the case, the order of the <code>left</code> table
  * is the one that counts, followed by the ones that are in the
  * <code>right</code> table but not in the <code>left</code> one.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 class JoinedTableRowIterator extends RowIterator {
 
-    private static final NodeLogger LOGGER = 
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(JoinedTableRowIterator.class);
 
     /**
@@ -119,7 +119,7 @@ class JoinedTableRowIterator extends RowIterator {
 
     /**
      * Creates new Iterator based on <code>table</code>.
-     * 
+     *
      * @param table the table to iterate over
      * @throws NullPointerException if argument is <code>null</code>
      */
@@ -233,7 +233,7 @@ class JoinedTableRowIterator extends RowIterator {
     private DataRow getRightMissing(final RowKey key) {
         DataTableSpec spec = m_table.getRightTable().getDataTableSpec();
         if (m_rightMissingCells == null) {
-            LOGGER.debug("Creating missing values for right table on key \""
+            LOGGER.debug("Creating missing values for bottom table on key \""
                     + key + "\"");
             if (!m_table.isPrintedErrorOnMissing()) {
                 printMissingError(false);
@@ -248,7 +248,7 @@ class JoinedTableRowIterator extends RowIterator {
     private DataRow getLeftMissing(final RowKey key) {
         DataTableSpec spec = m_table.getLeftTable().getDataTableSpec();
         if (m_leftMissingCells == null) {
-            LOGGER.debug("Creating missing values for left table on key \""
+            LOGGER.debug("Creating missing values for top table on key \""
                     + key + "\"");
             if (!m_table.isPrintedErrorOnMissing()) {
                 printMissingError(true);

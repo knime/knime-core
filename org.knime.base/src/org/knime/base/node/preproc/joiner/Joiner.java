@@ -219,7 +219,7 @@ public final class Joiner {
                     m_configWarnings.add("The column \"" + duplicate
                             + "\" can be found in "
                             + "both input tables but with different data type. "
-                            + "Only the one in the left input table will show "
+                            + "Only the one in the top input table will show "
                             + "up in the output table. Please change the "
                             + "Duplicate Column Handling if both columns "
                             + "should show up in the ouput table.");
@@ -369,7 +369,7 @@ public final class Joiner {
         leftJoinCols.remove(Joiner2Settings.ROW_KEY_IDENTIFIER);
         if (!leftCols.containsAll(leftJoinCols)) {
             leftJoinCols.removeAll(leftCols);
-            throw new InvalidSettingsException("The left input table has "
+            throw new InvalidSettingsException("The top input table has "
                + "changed. Some joining columns are missing: "
                + ConvenienceMethods.getShortStringFrom(leftJoinCols, 3));
         }
@@ -403,7 +403,7 @@ public final class Joiner {
         rightJoinCols.remove(Joiner2Settings.ROW_KEY_IDENTIFIER);
         if (!rightCols.containsAll(rightJoinCols)) {
             rightJoinCols.removeAll(rightCols);
-            throw new InvalidSettingsException("The right input table has "
+            throw new InvalidSettingsException("The bottom input table has "
                     + "changed. Some joining columns are missing: "
                     + ConvenienceMethods.getShortStringFrom(rightJoinCols, 3));
         }
@@ -1115,8 +1115,8 @@ public final class Joiner {
                 && s.getLeftJoinColumns().length
                 != s.getRightJoinColumns().length) {
             throw new InvalidSettingsException(
-                    "Number of columns selected from the left table and from "
-                    + "the right table do not match");
+                    "Number of columns selected from the top table and from "
+                    + "the bottom table do not match");
         }
 
         if (s.getDuplicateHandling().equals(DuplicateHandling.AppendSuffix)
@@ -1154,7 +1154,7 @@ public final class Joiner {
                         + "found. The \"Duplicate Column Handling\" is "
                         + "configured to  filter duplicates, but the "
                         + "duplicate columns are not equal since the "
-                        + "left table has more elements than the right "
+                        + "top table has more elements than the bottom "
                         + "table.");
                 break;
             }
@@ -1169,7 +1169,7 @@ public final class Joiner {
                     + "\" can be found in "
                     + "both input tables but the content is not "
                     + "equal. "
-                    + "Only the one in the left input table will show "
+                    + "Only the one in the top input table will show "
                     + "up in the output table. Please change the "
                     + "Duplicate Column Handling if both columns "
                     + "should show up in the ouput table.";
@@ -1182,8 +1182,8 @@ public final class Joiner {
             m_runtimeWarnings.add("Possible problem in configuration found. "
                     + "The \"Duplicate Column Handling\" is configured to "
                     + "filter duplicates, but the duplicate columns are not "
-                    + "equal since the right table has more elements than the "
-                    + "left table.");
+                    + "equal since the bottom table has more elements than the "
+                    + "top table.");
         }
         for (int i = 0; i < duplicates.size(); i++) {
             if (null != messages[i]) {
