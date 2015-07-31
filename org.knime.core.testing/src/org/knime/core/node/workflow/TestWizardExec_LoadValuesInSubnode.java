@@ -96,12 +96,12 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
     public void testWizardStepThroughWithSeveralLoopIterations() throws Exception {
         final int numLoops = 3;
         final WorkflowManager wfm = getManager();
-        assertTrue("should have new wizard execution", WizardExecutionController.hasWizardExecution(wfm));
+        assertTrue("Should have new wizard execution", WizardExecutionController.hasWizardExecution(wfm));
         checkState(m_filterSubnode, InternalNodeContainerState.CONFIGURED);
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();
         waitWhile(wfm, new WizardHold(wfm));
-        assertTrue("should have steps", wizardController.hasCurrentWizardPage());
+        assertTrue("Should have steps", wizardController.hasCurrentWizardPage());
         checkState(m_colFilterInFilterSubnode, InternalNodeContainerState.EXECUTED);
         WizardPageContent currentWizardPage = wizardController.getCurrentWizardPage();
         //don't load anything here, just execute to next subnode (all columns included)
@@ -133,7 +133,7 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
             assertEquals("Loading cluster label should not have caused errors", 0, errorMap.size());
         }
 
-        //showing result of labeling
+        //display result of labeling
         wizardController.stepNext();
         waitWhile(wfm, new WizardHold(wfm));
         checkState(m_showClustersSubnode, InternalNodeContainerState.EXECUTED);
@@ -144,6 +144,43 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         wizardController.stepNext();
         waitWhile(wfm, new WizardHold(wfm));
         assertFalse("Should have no more pages", wizardController.hasCurrentWizardPage());
+        checkState(wfm, InternalNodeContainerState.EXECUTED);
+    }
+
+    public void testWizardStepBackInsideLoop() throws Exception {
+        final WorkflowManager wfm = getManager();
+        WizardExecutionController wizardController = wfm.getWizardExecutionController();
+        assertFalse("Should have no previous steps", wizardController.hasPreviousWizardPage());
+        wizardController.stepFirst();
+        waitWhile(wfm, new WizardHold(wfm));
+        assertTrue("should have steps", wizardController.hasCurrentWizardPage());
+        checkState(m_colFilterInFilterSubnode, InternalNodeContainerState.EXECUTED);
+
+        //standard no of clusters (5)
+        wizardController.stepNext();
+        waitWhile(wfm, new WizardHold(wfm));
+        checkState(m_noClustersSubnode, InternalNodeContainerState.EXECUTED);
+
+        //two loop iterations
+        wizardController.stepNext();
+        waitWhile(wfm, new WizardHold(wfm));
+        checkState(m_labelClustersSubnode, InternalNodeContainerState.EXECUTED);
+        checkState(m_loopEndNode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+        wizardController.stepNext();
+        waitWhile(wfm, new WizardHold(wfm));
+        checkState(m_labelClustersSubnode, InternalNodeContainerState.EXECUTED);
+        checkState(m_loopEndNode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+
+        //step back from inside loop
+        assertTrue("Should have previous steps", wizardController.hasPreviousWizardPage());
+        wizardController.stepBack();
+        checkState(m_noClustersSubnode, InternalNodeContainerState.EXECUTED);
+        checkState(m_labelClustersSubnode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+        checkState(wfm, InternalNodeContainerState.IDLE);
+        assertTrue("Should have page to prompt", wizardController.hasCurrentWizardPage());
+
+        //execute all
+
         checkState(wfm, InternalNodeContainerState.EXECUTED);
     }
 

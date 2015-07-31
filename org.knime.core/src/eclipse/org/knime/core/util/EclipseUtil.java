@@ -68,6 +68,11 @@ import org.eclipse.osgi.baseadaptor.loader.ClasspathEntry;
 import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.knime.core.node.NodeLogger;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.application.ApplicationHandle;
 
 /**
  * This class contains some misc utility methods around basic Eclipse funtionality.
@@ -316,4 +321,31 @@ public final class EclipseUtil {
         }
         jar.close();
     }
+
+
+    /**
+     * Checks whether this KNIME instance runs as an RMI application on the server.
+     *
+     * @return <code>true</code> if we are running on the server, <code>false</code> otherwise
+     * @since 2.12
+     */
+    public static boolean determineServerUsage() {
+        Bundle myself = FrameworkUtil.getBundle(EclipseUtil.class);
+        if (myself != null) {
+            BundleContext ctx = myself.getBundleContext();
+            ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
+            if (ser != null) {
+                ApplicationHandle appHandle = ctx.getService(ser);
+                String instanceId = appHandle.getInstanceId();
+                boolean b = (instanceId != null) && instanceId.contains("KNIME_REMOTE_APPLICATION");
+                ctx.ungetService(ser);
+                return b;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
 }

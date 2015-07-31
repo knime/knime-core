@@ -625,14 +625,7 @@ public final class NodeLogger {
                 if (workflowManager != null) {
                     final WorkflowContext workflowContext = workflowManager.getContext();
                     if (workflowContext != null) {
-                        //Location where the workflow is defined (null on the client only for server execution)
-                        File originalLocation = workflowContext.getOriginalLocation();
-                        if (originalLocation == null) {//we are in the client and need to get the current location
-                            //Location where the workflow is executed (e.g. directory of the workflow job on the server)
-                            workflowDir = workflowContext.getCurrentLocation(); //Location on the client
-                        } else {
-                            workflowDir = originalLocation;
-                        }
+                        workflowDir = workflowContext.getCurrentLocation();
                     }
                 }
             }

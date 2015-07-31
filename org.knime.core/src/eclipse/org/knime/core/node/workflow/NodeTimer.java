@@ -362,12 +362,14 @@ public final class NodeTimer {
         }
 
         private void asyncSendToServer() {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    sendToServer(false);
-                }
-            }, "KNIME-Node-Usage-Sender").start();
+            if (!EclipseUtil.determineServerUsage()) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        sendToServer(false);
+                    }
+                }, "KNIME-Node-Usage-Sender").start();
+            }
         }
 
         private Thread asyncWriteToFile() {

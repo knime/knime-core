@@ -148,13 +148,13 @@ final class DBJoinerNodeModel extends DBNodeModel {
         List<String> leftColumns = Arrays.asList(leftSpec.getColumnNames());
         for (String joinColumn : m_settings.getLeftJoinOnColumns()) {
             if (!leftColumns.contains(joinColumn)) {
-                throw new InvalidSettingsException("Left table is missing join column " + joinColumn);
+                throw new InvalidSettingsException("Top table is missing join column " + joinColumn);
             }
         }
         List<String> rightColumns = Arrays.asList(rightSpec.getColumnNames());
         for (String joinColumn : m_settings.getRightJoinOnColumns()) {
             if (!rightColumns.contains(joinColumn)) {
-                throw new InvalidSettingsException("Right table is missing join column " + joinColumn);
+                throw new InvalidSettingsException("Bottom table is missing join column " + joinColumn);
             }
         }
     }

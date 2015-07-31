@@ -241,7 +241,7 @@ public class PNGImageContent implements ImageContent {
     /** {@inheritDoc} */
     @Override
     public DataCell toImageCell() {
-        if (m_imageBytes.length < BLOB_SIZE_THRESHOLD) {
+        if (m_imageBytes.length >= BLOB_SIZE_THRESHOLD) {
             return new PNGImageBlobCell(this);
         } else {
             return new PNGImageCell(this);
