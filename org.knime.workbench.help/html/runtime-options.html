@@ -59,11 +59,6 @@
   </p>
   <h3>General properties</h3>
   <dl>
-    <dt>
-      knime.expert.mode=<em>(true|false)</em>
-    </dt>
-    <dd>Enables the expert mode, which shows nodes and settings in node
-      dialogs that are for experienced users who know what they are doing.</dd>
 
     <dt>
       org.knime.core.maxThreads=<em>&lt;number&gt;</em>
@@ -109,6 +104,20 @@
       (see above).
     </dd>
 
+    <dt>knime.domain.valuecount=<em>&lt;number&gt;</em></dt>
+    <dd>The number of nominal values kept in the domain when adding rows to a table. This is only the default and may
+    be overruled by individual node implementations.</dd>
+
+
+    <dt>org.knime.container.cellsinmemory=<em>&lt;number&gt;</em></dt>
+    <dd>Sets the maximum number of cells per output table that are kept in memory if the the caching mode is
+    "Keep only small tables in memory".
+    </dd>
+    
+    <dt>org.knime.container.minspace.temp=<em>&lt;number&gt;</em></dt>
+    <dd>Java property to specify the minimum free disc space in MB that needs to be available. If less is
+     available, no further table files & blobs will be created (resulting in an exception).</dd>
+     
     <dt>
       knime.compress.io=<em>(true|false)</em>
     </dt>
