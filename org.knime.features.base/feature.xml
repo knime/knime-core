@@ -729,18 +729,12 @@ license terms applicable to such Node, including when such Node is
 propagated with or for interoperation with KNIME.
    </license>
 
-   <includes
-         id="org.eclipse.rcp.swt_patch"
-         version="0.0.0"/>
-
    <requires>
-      <import feature="org.eclipse.gef" version="3.4.2.v20090218-1145-67728084A56B4I233613552" match="compatible"/>
-      <import feature="org.eclipse.platform" version="3.4.2.R342_v20090122-9I96EiWElHi8lheoJKJIvhM3JfVsYbRrgVIWL" match="compatible"/>
-      <import feature="org.eclipse.rcp" version="3.4.200.R342_v20090122-989JESTEbig-SVaL8UJHcYBr4A63" match="compatible"/>
-      <import plugin="org.eclipse.jdt.core"/>
-      <import plugin="org.apache.log4j"/>
-      <import plugin="org.knime.workbench.explorer.view" version="6.3.2" match="greaterOrEqual"/>
-      <import plugin="org.knime.core.util" version="4.5.1" match="greaterOrEqual"/>
+      <import feature="org.eclipse.gef" version="3.9.0" match="greaterOrEqual"/>
+      <import feature="org.eclipse.platform" version="4.4.2" match="greaterOrEqual"/>
+      <import feature="org.eclipse.rcp" version="4.4.2" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.core" version="3.10.0" match="greaterOrEqual"/>
+      <import plugin="org.knime.workbench.explorer.view" version="7.0.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin

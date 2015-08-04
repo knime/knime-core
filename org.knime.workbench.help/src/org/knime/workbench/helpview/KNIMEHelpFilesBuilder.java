@@ -48,14 +48,16 @@
 package org.knime.workbench.helpview;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.regex.Pattern;
 
-import org.eclipse.core.runtime.adaptor.LocationManager;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.PathUtils;
 import org.knime.workbench.helpview.wizard.KNIMEHelpFilesWizard;
 import org.knime.workbench.helpview.wizard.NodeDescriptionConverter;
 
@@ -130,11 +132,10 @@ public class KNIMEHelpFilesBuilder implements IApplication {
         if (destinationDir == null) {
             // Clean the plugin configuration, because otherwise the help files
             // will not be found
-            File osgiConfig = LocationManager.getOSGiConfigurationDir();
-            if (!FileUtil.deleteRecursively(osgiConfig)) {
-                System.err.println("Something went wrong while cleaning the "
-                        + "configuration");
-            }
+
+            Path osgiConfig =
+                FileUtil.resolveToPath(Platform.getConfigurationLocation().getURL()).resolve("org.eclipse.osgi");
+            PathUtils.deleteDirectoryIfExists(osgiConfig);
         }
         return EXIT_OK;
     }

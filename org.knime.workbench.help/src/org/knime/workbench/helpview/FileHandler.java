@@ -57,9 +57,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jetty.http.MimeTypes;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.knime.core.node.NodeLogger;
-import org.mortbay.jetty.MimeTypes;
-import org.mortbay.jetty.handler.AbstractHandler;
 import org.osgi.framework.Bundle;
 
 /**
@@ -82,9 +83,8 @@ final class FileHandler extends AbstractHandler {
      * {@inheritDoc}
      */
     @Override
-    public void handle(final String target, final HttpServletRequest request,
-            final HttpServletResponse response, final int dispatch)
-            throws IOException, ServletException {
+    public void handle(final String target, final Request baseRequest, final HttpServletRequest request, final HttpServletResponse response)
+        throws IOException, ServletException {
         String bundleName = request.getParameter("bundle");
         String file = request.getParameter("file");
         Bundle bundle = Platform.getBundle(bundleName);

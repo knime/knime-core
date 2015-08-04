@@ -47,9 +47,9 @@
  */
 package org.knime.workbench.helpview;
 
+import org.eclipse.jetty.util.DateCache;
+import org.eclipse.jetty.util.log.Logger;
 import org.knime.core.node.NodeLogger;
-import org.mortbay.log.Logger;
-import org.mortbay.util.DateCache;
 
 /**
  * This class is not intended to be used externally!
@@ -96,17 +96,6 @@ public class JettyLogger implements Logger {
     }
 
     @Override
-    public void info(final String msg, final Object arg0, final Object arg1) {
-        String d = DATE_CACHE.now();
-        int ms = DATE_CACHE.lastMs();
-        synchronized (m_buffer) {
-            tag(d, ms, ":INFO:");
-            format(msg, arg0, arg1);
-            m_logger.info(m_buffer.toString());
-        }
-    }
-
-    @Override
     public void debug(final String msg, final Throwable th) {
         if (DEBUG) {
             String d = DATE_CACHE.now();
@@ -117,30 +106,6 @@ public class JettyLogger implements Logger {
                 format(th);
                 m_logger.debug(m_buffer.toString(), th);
             }
-        }
-    }
-
-    @Override
-    public void debug(final String msg, final Object arg0, final Object arg1) {
-        if (DEBUG) {
-            String d = DATE_CACHE.now();
-            int ms = DATE_CACHE.lastMs();
-            synchronized (m_buffer) {
-                tag(d, ms, ":DBUG:");
-                format(msg, arg0, arg1);
-                m_logger.debug(m_buffer.toString());
-            }
-        }
-    }
-
-    @Override
-    public void warn(final String msg, final Object arg0, final Object arg1) {
-        String d = DATE_CACHE.now();
-        int ms = DATE_CACHE.lastMs();
-        synchronized (m_buffer) {
-            tag(d, ms, ":WARN:");
-            format(msg, arg0, arg1);
-            m_logger.warn(m_buffer.toString());
         }
     }
 
@@ -169,58 +134,26 @@ public class JettyLogger implements Logger {
         m_buffer.append(ms).append(tag).append(m_name).append(':');
     }
 
-    @SuppressWarnings("null")
-    private void format(final String msg, final Object arg0, final Object arg1) {
-        int i0 = msg == null ? -1 : msg.indexOf("{}");
-        int i1 = i0 < 0 ? -1 : msg.indexOf("{}", i0 + 2);
-
-        if (i0 >= 0) {
-            format(msg.substring(0, i0));
-            format(String.valueOf(arg0 == null ? "null" : arg0));
-
-            if (i1 >= 0) {
-                format(msg.substring(i0 + 2, i1));
-                format(String.valueOf(arg1 == null ? "null" : arg1));
-                format(msg.substring(i1 + 2));
+    private String format(String msg, final Object... args) {
+        msg = String.valueOf(msg); // Avoids NPE
+        String braces = "{}";
+        StringBuilder builder = new StringBuilder();
+        int start = 0;
+        for (Object arg : args) {
+            int bracesIndex = msg.indexOf(braces, start);
+            if (bracesIndex < 0) {
+                builder.append(msg.substring(start));
+                builder.append(" ");
+                builder.append(arg);
+                start = msg.length();
             } else {
-                format(msg.substring(i0 + 2));
-                if (arg1 != null) {
-                    m_buffer.append(' ');
-                    format(String.valueOf(arg1));
-                }
-            }
-        } else {
-            format(msg);
-            if (arg0 != null) {
-                m_buffer.append(' ');
-                format(String.valueOf(arg0));
-            }
-            if (arg1 != null) {
-                m_buffer.append(' ');
-                format(String.valueOf(arg1));
+                builder.append(msg.substring(start, bracesIndex));
+                builder.append(String.valueOf(arg));
+                start = bracesIndex + braces.length();
             }
         }
-    }
-
-    private void format(final String msg) {
-        if (msg == null) {
-            m_buffer.append("null");
-        } else {
-            for (int i = 0; i < msg.length(); i++) {
-                char c = msg.charAt(i);
-                if (Character.isISOControl(c)) {
-                    if (c == '\n') {
-                        m_buffer.append('|');
-                    } else if (c == '\r') {
-                        m_buffer.append('<');
-                    } else {
-                        m_buffer.append('?');
-                    }
-                } else {
-                    m_buffer.append(c);
-                }
-            }
-        }
+        builder.append(msg.substring(start));
+        return builder.toString();
     }
 
     private void format(final Throwable th) {
@@ -247,10 +180,99 @@ public class JettyLogger implements Logger {
      */
     @Override
     public Logger getLogger(final String name) {
-        if (((name == null) && (m_name == null))
-                || ((name != null) && name.equals(m_name))) {
+        if (((name == null) && (m_name == null)) || ((name != null) && name.equals(m_name))) {
             return this;
         }
         return new JettyLogger(name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        return m_name;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void warn(final String msg, final Object... args) {
+        String d = DATE_CACHE.now();
+        int ms = DATE_CACHE.lastMs();
+        synchronized (m_buffer) {
+            tag(d, ms, ":WARN:");
+            format(msg, args);
+            m_logger.warn(m_buffer.toString());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void warn(final Throwable thrown) {
+        m_logger.warn("", thrown);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void info(final String msg, final Object... args) {
+        String d = DATE_CACHE.now();
+        int ms = DATE_CACHE.lastMs();
+        synchronized (m_buffer) {
+            tag(d, ms, ":INFO:");
+            format(msg, args);
+            m_logger.info(m_buffer.toString());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void info(final Throwable thrown) {
+        m_logger.info("", thrown);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void info(final String msg, final Throwable thrown) {
+        m_logger.info(msg, thrown);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void debug(final String msg, final Object... args) {
+        String d = DATE_CACHE.now();
+        int ms = DATE_CACHE.lastMs();
+        synchronized (m_buffer) {
+            tag(d, ms, ":INFO:");
+            format(msg, args);
+            m_logger.debug(m_buffer.toString());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void debug(final Throwable thrown) {
+        m_logger.debug("", thrown);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void ignore(final Throwable ignored) {
+        // ignore
     }
 }
