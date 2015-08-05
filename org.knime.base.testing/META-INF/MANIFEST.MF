@@ -24,6 +24,6 @@ Export-Package: org.knime.base,
  org.knime.base.util.kdtree,
  org.knime.base.util.math,
  org.knime.core.data.container.blobs
-Require-Bundle: org.junit;bundle-version="4.8.1",
- org.knime.testing;bundle-version="2.3.0"
+Require-Bundle: org.junit;bundle-version="[4.8.1,5.0.0)",
+ org.knime.testing;bundle-version="[3.0.0,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7

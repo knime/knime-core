@@ -99,9 +99,8 @@ public class JettyLogger implements Logger {
     public void debug(final String msg, final Throwable th) {
         if (DEBUG) {
             String d = DATE_CACHE.now();
-            int ms = DATE_CACHE.lastMs();
             synchronized (m_buffer) {
-                tag(d, ms, ":DBUG:");
+                tag(d, ":DBUG:");
                 format(msg);
                 format(th);
                 m_logger.debug(m_buffer.toString(), th);
@@ -112,26 +111,17 @@ public class JettyLogger implements Logger {
     @Override
     public void warn(final String msg, final Throwable th) {
         String d = DATE_CACHE.now();
-        int ms = DATE_CACHE.lastMs();
         synchronized (m_buffer) {
-            tag(d, ms, ":WARN:");
+            tag(d, ":WARN:");
             format(msg);
             format(th);
             m_logger.warn(m_buffer.toString(), th);
         }
     }
 
-    private void tag(final String d, final int ms, final String tag) {
+    private void tag(final String d, final String tag) {
         m_buffer.setLength(0);
-        m_buffer.append(d);
-        if (ms > 99) {
-            m_buffer.append('.');
-        } else if (ms > 9) {
-            m_buffer.append(".0");
-        } else {
-            m_buffer.append(".00");
-        }
-        m_buffer.append(ms).append(tag).append(m_name).append(':');
+        m_buffer.append(d).append(tag).append(m_name).append(':');
     }
 
     private String format(String msg, final Object... args) {
@@ -200,9 +190,8 @@ public class JettyLogger implements Logger {
     @Override
     public void warn(final String msg, final Object... args) {
         String d = DATE_CACHE.now();
-        int ms = DATE_CACHE.lastMs();
         synchronized (m_buffer) {
-            tag(d, ms, ":WARN:");
+            tag(d, ":WARN:");
             format(msg, args);
             m_logger.warn(m_buffer.toString());
         }
@@ -222,9 +211,8 @@ public class JettyLogger implements Logger {
     @Override
     public void info(final String msg, final Object... args) {
         String d = DATE_CACHE.now();
-        int ms = DATE_CACHE.lastMs();
         synchronized (m_buffer) {
-            tag(d, ms, ":INFO:");
+            tag(d, ":INFO:");
             format(msg, args);
             m_logger.info(m_buffer.toString());
         }
@@ -252,9 +240,8 @@ public class JettyLogger implements Logger {
     @Override
     public void debug(final String msg, final Object... args) {
         String d = DATE_CACHE.now();
-        int ms = DATE_CACHE.lastMs();
         synchronized (m_buffer) {
-            tag(d, ms, ":INFO:");
+            tag(d, ":INFO:");
             format(msg, args);
             m_logger.debug(m_buffer.toString());
         }
@@ -274,5 +261,13 @@ public class JettyLogger implements Logger {
     @Override
     public void ignore(final Throwable ignored) {
         // ignore
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void debug(final String msg, final long value) {
+        debug(msg, new Object[] { value });
     }
 }

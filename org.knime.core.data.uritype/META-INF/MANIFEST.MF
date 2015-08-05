@@ -5,6 +5,6 @@ Bundle-SymbolicName: org.knime.core.data.uritype;singleton:=true
 Bundle-Version: 3.0.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.core.data.uri
-Require-Bundle: org.knime.core
+Require-Bundle: org.knime.core;bundle-version="[3.0.0,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy

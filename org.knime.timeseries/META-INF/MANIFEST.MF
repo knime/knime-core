@@ -19,7 +19,7 @@ Export-Package: org.knime.timeseries,
  org.knime.timeseries.node.stringtotimestamp,
  org.knime.timeseries.node.time2string,
  org.knime.timeseries.util
-Require-Bundle: org.knime.base;bundle-version="[2.0.0,3.0.0)",
- org.apache.commons.lang3;bundle-version="3.2.1"
+Require-Bundle: org.knime.base;bundle-version="[3.0.0,4.0.0)",
+ org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy

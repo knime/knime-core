@@ -116,7 +116,7 @@ final class FileHandler extends AbstractHandler {
         }
 
         response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType(new String(MIME_MAP.getMimeByExtension(file).asArray(), "US-ASCII"));
+        response.setContentType(MIME_MAP.getMimeByExtension(file));
 
         byte[] buf = new byte[16384];
         OutputStream out = response.getOutputStream();

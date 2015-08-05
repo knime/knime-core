@@ -48,8 +48,8 @@ import java.net.BindException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.eclipse.jetty.server.NetworkTrafficServerConnector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
@@ -101,7 +101,7 @@ public class HelpviewPlugin extends AbstractUIPlugin {
         // start an embedded webserver for serving bundle-local or node-local
         // files in the node descriptions
         m_server = new Server();
-        SelectChannelConnector connector = new SelectChannelConnector();
+        NetworkTrafficServerConnector connector = new NetworkTrafficServerConnector(m_server);
         connector.setPort(PORT);
         try {
             connector.setHost(InetAddress.getLocalHost().getHostAddress());

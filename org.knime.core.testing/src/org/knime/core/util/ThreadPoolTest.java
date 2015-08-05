@@ -54,11 +54,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import junit.framework.TestCase;
-
-import org.eclipse.core.runtime.internal.adaptor.ContextFinder;
+import org.eclipse.osgi.internal.framework.ContextFinder;
 import org.hamcrest.core.Is;
 import org.knime.core.node.NodeLogger;
+
+import junit.framework.TestCase;
 
 /**
  * Testcase for the thread pool.
