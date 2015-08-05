@@ -419,12 +419,12 @@
 <rect height="491.79999" id="rect1389" style="fill:none" width="729.90002" x="-219.60001" y="50"/>
 <text font-size="20" id="text799" style="font-size:20px;fill:#7d7d7d;font-family:Calibri-Bold" transform="translate(330.7646,50.8442)"/>
 <text font-size="20" id="KNIME-Version" style="font-size:20px;text-align:end;text-anchor:end;fill:#7d7d7d;font-family:Calibri-Bold" x="443.19031" y="44.8442">
-<tspan id="tspan408" style="text-align:end;text-anchor:end">Version 2.12.0</tspan>
+<tspan id="tspan408" style="text-align:end;text-anchor:end">Version 3.0.0</tspan>
 </text>
 <text font-size="20" id="text803" style="font-size:20px;fill:#7d7d7d;font-family:Calibri-Bold" transform="translate(431.9344,50.8442)"/>
 <text font-size="12" id="text805" style="font-size:12px;font-family:Calibri" transform="translate(330.7644,66.9167)"/>
 <text font-size="12" id="KNIME-Builddate" style="font-size:12px;text-align:end;text-anchor:end;fill:#7d7d7d;font-family:Calibri" x="443.28003" y="60.916702">
-<tspan id="tspan413" style="text-align:end;text-anchor:end">(Build July 31, 2015)</tspan>
+<tspan id="tspan413" style="text-align:end;text-anchor:end">(Nightly-Build)</tspan>
 </text>
 <text font-size="12" id="text809" style="font-size:12px;font-family:Calibri" transform="translate(435.2604,66.9167)"/>
 <g id="g811">
