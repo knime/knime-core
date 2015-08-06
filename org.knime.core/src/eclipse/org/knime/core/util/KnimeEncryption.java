@@ -49,6 +49,7 @@ package org.knime.core.util;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
+import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -134,7 +135,7 @@ public final class KnimeEncryption {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] ciphertext = cipher.doFinal(
                 new String(password).getBytes("UTF-8"));
-        return Base64.encodeBase64String(ciphertext);
+        return Base64.getEncoder().encodeToString(ciphertext);
     }
 
     /**
@@ -178,7 +179,7 @@ public final class KnimeEncryption {
             return password;
         }
         // perform the decryption
-        byte[] pw = Base64.decodeBase64(password);
+        byte[] pw = Base64.getDecoder().decode(password);
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
         byte[] decryptedText = cipher.doFinal(pw);
         return new String(decryptedText, "UTF-8");

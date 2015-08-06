@@ -52,6 +52,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -975,7 +976,7 @@ public abstract class Config extends ConfigBase
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(o);
         oos.close();
-        return Base64.encodeBase64String(baos.toByteArray());
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
     /**
@@ -990,7 +991,7 @@ public abstract class Config extends ConfigBase
     private static final Object readObject(final String className,
             final String serString)
             throws IOException, ClassNotFoundException {
-        byte[] bytes = Base64.decodeBase64(serString);
+        byte[] bytes = Base64.getDecoder().decode(serString);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         GlobalObjectInputStream ois;
         if (className == null) {

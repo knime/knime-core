@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -353,6 +354,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         editMenu.add(new Separator());
         editMenu.add(m_deleteAction);
         editMenu.add(m_selectAllAction);
+        editMenu.add(new GroupMarker(IWorkbenchActionConstants.FIND_EXT));
 
         // View menu
         addMultiViewsToMenu(viewMenu);
@@ -389,7 +391,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     protected void fillCoolBar(final ICoolBarManager coolBar) {
         // create a toolbar and add it to the coolbar :)
         IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
-        coolBar.removeAll();
+        Stream.of(coolBar.getItems()).forEach(item -> toolbar.remove(item));
         coolBar.add(new ToolBarContributionItem(toolbar, "main"));
 
         // add tools to the toolbar
