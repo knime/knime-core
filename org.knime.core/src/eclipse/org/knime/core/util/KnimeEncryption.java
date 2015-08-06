@@ -58,7 +58,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
 
-import org.apache.commons.codec.binary.Base64;
 import org.knime.core.node.NodeLogger;
 
 /**
