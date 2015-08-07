@@ -62,6 +62,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 
 /**
+ * Calculates the covariance between two columns per group.
  *
  * @author Lara Gorini
  * @since 2.12

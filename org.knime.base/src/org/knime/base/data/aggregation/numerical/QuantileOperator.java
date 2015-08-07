@@ -51,7 +51,6 @@ import java.util.List;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import org.apache.commons.math.util.ResizableDoubleArray;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile.EstimationType;
 import org.apache.commons.math3.util.KthSelector;
@@ -79,15 +78,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Lara Gorini
  * @since 2.12
  */
-public class QuantileOperator extends AggregationOperator {
+public class QuantileOperator extends StoreResizableDoubleArrayOperator {
 
     private static final DataType TYPE = DoubleCell.TYPE;
 
     private QuantileSettingsPanel m_settingsPanel;
 
     private final QuantileFuntionSettings m_settings = new QuantileFuntionSettings();
-
-    private final ResizableDoubleArray m_cells;
 
     /**
      * Constructor for class QuantileOperator.
@@ -103,15 +100,6 @@ public class QuantileOperator extends AggregationOperator {
         super(operatorData, globalSettings, opColSettings);
         m_settings.setQuantile(quantile);
         m_settings.setEstimation(estimation);
-        try {
-            int maxVal = getMaxUniqueValues();
-            if (maxVal == 0) {
-                maxVal++;
-            }
-            m_cells = new ResizableDoubleArray(maxVal);
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException("Maximum unique values number too big");
-        }
     }
 
     /**
@@ -164,22 +152,12 @@ public class QuantileOperator extends AggregationOperator {
         return m_settings.getFunctionModel().getDoubleValue() + "-quantile";
     }
 
-    @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (m_cells.getNumElements() >= getMaxUniqueValues()) {
-            setSkipMessage("Group contains too many values");
-            return true;
-        }
-        m_cells.addElement(((DoubleValue)cell).getDoubleValue());
-        return false;
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
     protected DataCell getResultInternal() {
-        final double[] cells = m_cells.getElements();
+        final double[] cells = super.getCells().getElements();
         if (cells.length == 0) {
             return DataType.getMissingCell();
         }
@@ -188,14 +166,6 @@ public class QuantileOperator extends AggregationOperator {
 
         double evaluate = estType.evaluate(cells, quantile * 100, new KthSelector());
         return new DoubleCell(evaluate);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void resetInternal() {
-        m_cells.clear();
     }
 
     /**
