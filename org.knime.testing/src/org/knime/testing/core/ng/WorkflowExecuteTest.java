@@ -51,9 +51,7 @@ import java.lang.management.MemoryUsage;
 import java.util.Formatter;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import junit.framework.AssertionFailedError;
-import junit.framework.TestResult;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.NodeLogger;
@@ -67,6 +65,9 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.GUIDeadlockDetector;
 import org.knime.testing.core.TestrunConfiguration;
 import org.knime.testing.node.config.TestConfigNodeModel;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.TestResult;
 
 /**
  * Executed a workflows and checks if all nodes are executed (except nodes that are supposed to fail). The workflow is
@@ -195,6 +196,10 @@ class WorkflowExecuteTest extends WorkflowTest {
                             "Node '" + node.getNameWithID() + "' is not executed. Error message is: "
                                     + nodeMessage.getMessage();
                     result.addFailure(this, new AssertionFailedError(error));
+
+                    Pattern p = Pattern.compile(Pattern.quote(nodeMessage.getMessage()));
+                    flowConfiguration.addNodeErrorMessage(node.getID(), p);
+                    flowConfiguration.addRequiredError(p);
                 } else if (status.isExecuted() && flowConfiguration.nodeMustFail(node.getID())) {
                     String error = "Node '" + node.getNameWithID() + "' is executed although it should have failed.";
                     result.addFailure(this, new AssertionFailedError(error));

@@ -447,6 +447,17 @@ class TestflowConfiguration {
     }
 
     /**
+     * Adds a new expected node error message. This is useful in case a node has unexpectedly failed during execution
+     * and is already reported in the execution sub-test.
+     *
+     * @param nodeId the node's ID
+     * @param p the error message pattern
+     */
+    public void addNodeErrorMessage(final NodeID nodeId, final Pattern p) {
+        m_nodeErrorMessages.put(nodeId, p);
+    }
+
+    /**
      * Returns the pattern for the expected warning message for the given node.
      *
      * @param nodeId the node's full ID (including the workflow manager's prefix)
@@ -463,6 +474,16 @@ class TestflowConfiguration {
      */
     public Collection<Pattern> getRequiredErrors() {
         return m_requiredErrors;
+    }
+
+    /**
+     * Adds a new required log error message. This is useful in case a node has unexpectedly failed during execution
+     * and is already reported in the execution sub-test.
+     *
+     * @param p the error message pattern
+     */
+    public void addRequiredError(final Pattern p) {
+        m_requiredErrors.add(p);
     }
 
     /**
