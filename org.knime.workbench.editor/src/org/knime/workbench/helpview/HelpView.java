@@ -241,7 +241,9 @@ public class HelpView extends ViewPart implements ISelectionListener,
                 m_browser.getDisplay().asyncExec(new Runnable() {
                     @Override
                     public void run() {
-                        m_browser.setText(content.toString());
+                        if (!m_browser.isDisposed()) {
+                            m_browser.setText(content.toString());
+                        }
                     }
                 });
             } else if (m_isFallback) {
