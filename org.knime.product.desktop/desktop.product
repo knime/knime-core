@@ -27,6 +27,9 @@ All other trademarks are the property of their respective owners.
    </configIni>
 
    <launcherArgs>
+      <programArgsMac>-vm
+../Eclipse/jre/Home/lib/jli/libjli.dylib
+      </programArgsMac>
       <vmArgs>-server
 -Dsun.java2d.d3d=false
 -Dosgi.classloader.lock=classname
