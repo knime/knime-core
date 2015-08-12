@@ -59,6 +59,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -104,6 +105,7 @@ import org.knime.base.node.jsnippet.util.JavaField.InCol;
 import org.knime.base.node.jsnippet.util.JavaField.InVar;
 import org.knime.base.node.jsnippet.util.JavaField.OutCol;
 import org.knime.base.node.jsnippet.util.JavaField.OutVar;
+import org.knime.base.node.jsnippet.util.JavaFieldList;
 import org.knime.base.node.jsnippet.util.JavaFieldList.OutColList;
 import org.knime.base.node.jsnippet.util.JavaSnippetCompiler;
 import org.knime.base.node.jsnippet.util.JavaSnippetFields;
@@ -139,6 +141,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     private static class SnippetCache {
         private String m_snippetCode;
         private Class<? extends AbstractJSnippet> m_snippetClass;
+        private boolean m_hasCustomFields;
 
         void invalidate() {
             m_snippetCode = null;
@@ -154,15 +157,42 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
             }
         }
 
-        void update(final Document snippetDoc, final Class<? extends AbstractJSnippet> snippetClass) {
+        boolean hasCustomFields() {
+            return m_hasCustomFields;
+        }
+
+        void update(final Document snippetDoc, final Class<? extends AbstractJSnippet> snippetClass,
+            final JavaSnippetSettings settings) {
             try {
                 m_snippetCode = snippetDoc.getText(0, snippetDoc.getLength());
                 m_snippetClass = snippetClass;
+
+                m_hasCustomFields = false;
+                JavaSnippetFields systemFields = settings.getJavaSnippetFields();
+                for (Field f : snippetClass.getDeclaredFields()) {
+                    if (!isSystemField(systemFields.getInColFields(), f.getName())
+                        && !isSystemField(systemFields.getOutColFields(), f.getName())
+                        && !isSystemField(systemFields.getInVarFields(), f.getName())
+                        && !isSystemField(systemFields.getOutVarFields(), f.getName())) {
+                        m_hasCustomFields = true;
+                        break;
+                    }
+
+                }
             } catch (BadLocationException ex) {
                 // ignore and clear cache
                 m_snippetCode = null;
                 m_snippetClass = null;
             }
+        }
+
+        private static boolean isSystemField(final JavaFieldList<? extends JavaField> list, final String fieldName) {
+            for (JavaField f : list) {
+                if (f.getJavaName().equals(fieldName)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         Class<? extends AbstractJSnippet> getSnippetClass() {
@@ -947,53 +977,56 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
      */
     @SuppressWarnings("unchecked")
     private Class<? extends AbstractJSnippet> createSnippetClass() {
-        if (m_snippetCache.isValid(getDocument())) {
-            return m_snippetCache.getSnippetClass();
-        } else {
-            m_snippetCache.invalidate();
-        }
-
         JavaSnippetCompiler compiler = new JavaSnippetCompiler(this);
-        StringWriter log = new StringWriter();
-        DiagnosticCollector<JavaFileObject> digsCollector =
-            new DiagnosticCollector<>();
-        CompilationTask compileTask = null;
-        try {
-            compileTask = compiler.getTask(log, digsCollector);
-        } catch (IOException e) {
-            throw new IllegalStateException("Compile with errors: " + e.getMessage(), e);
-        }
-        boolean success = compileTask.call();
-        if (success) {
-            try {
-                ClassLoader loader = compiler.createClassLoader(
-                        this.getClass().getClassLoader());
 
-                Class<? extends AbstractJSnippet> snippetClass =
-                    (Class<? extends AbstractJSnippet>)loader.loadClass("JSnippet");
-                m_snippetCache.update(getDocument(), snippetClass);
-                return snippetClass;
-            } catch (ClassNotFoundException e) {
-                throw new IllegalStateException(
-                        "Could not load class file.", e);
-            } catch (IOException e) {
-                throw new IllegalStateException(
-                        "Could not load jar files.", e);
+        if (m_snippetCache.isValid(getDocument())) {
+            if (!m_snippetCache.hasCustomFields()) {
+                return m_snippetCache.getSnippetClass();
             }
         } else {
-            StringBuilder msg = new StringBuilder();
-            msg.append("Compile with errors:\n");
-            for (Diagnostic<? extends JavaFileObject> d
-                    : digsCollector.getDiagnostics()) {
-                boolean isSnippet = this.isSnippetSource(d.getSource());
-                if (isSnippet && d.getKind().equals(javax.tools.Diagnostic.Kind.ERROR)) {
-                    msg.append("Error: ");
-                    msg.append(d.getMessage(Locale.US));
-                    msg.append('\n');
-                }
+            // recompile
+            m_snippetCache.invalidate();
+            StringWriter log = new StringWriter();
+            DiagnosticCollector<JavaFileObject> digsCollector =
+                    new DiagnosticCollector<>();
+            CompilationTask compileTask = null;
+            try {
+                compileTask = compiler.getTask(log, digsCollector);
+            } catch (IOException e) {
+                throw new IllegalStateException("Compile with errors: " + e.getMessage(), e);
             }
+            boolean success = compileTask.call();
+            if (!success) {
+                StringBuilder msg = new StringBuilder();
+                msg.append("Compile with errors:\n");
+                for (Diagnostic<? extends JavaFileObject> d
+                        : digsCollector.getDiagnostics()) {
+                    boolean isSnippet = this.isSnippetSource(d.getSource());
+                    if (isSnippet && d.getKind().equals(javax.tools.Diagnostic.Kind.ERROR)) {
+                        msg.append("Error: ");
+                        msg.append(d.getMessage(Locale.US));
+                        msg.append('\n');
+                    }
+                }
 
-            throw new IllegalStateException(msg.toString());
+                throw new IllegalStateException(msg.toString());
+            }
+        }
+
+        try {
+            ClassLoader loader = compiler.createClassLoader(
+                    this.getClass().getClassLoader());
+
+            Class<? extends AbstractJSnippet> snippetClass =
+                (Class<? extends AbstractJSnippet>)loader.loadClass("JSnippet");
+            m_snippetCache.update(getDocument(), snippetClass, m_settings);
+            return snippetClass;
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException(
+                    "Could not load class file.", e);
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Could not load jar files.", e);
         }
     }
 
