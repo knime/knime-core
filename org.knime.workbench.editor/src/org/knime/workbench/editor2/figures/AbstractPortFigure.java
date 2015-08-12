@@ -199,30 +199,30 @@ public abstract class AbstractPortFigure extends Shape {
     @Override
     public Color getBackgroundColor() {
         // the colors set here get lightened up, if the port is optional
-        Color color = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
+        Color color = new Color(Display.getCurrent(), 155, 155, 155);
         if (PMMLPortObject.TYPE.isSuperTypeOf(getType())) {
             // model
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
+            color = new Color(Display.getCurrent(), 20, 105, 175);
         } else if (AbstractSimplePortObject.class.isAssignableFrom(getType()
                 .getPortObjectClass())) {
             // model
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_CYAN);
+            color = new Color(Display.getCurrent(), 30, 185, 220);
         } else if (getType().equals(BufferedDataTable.TYPE)) {
             // data
             color = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
         } else if (getType().equals(DatabaseConnectionPortObject.TYPE)) {
             // database connection
-            color = new Color(Display.getCurrent(), 0xff, 0x50, 0x50);
+            color = new Color(Display.getCurrent(), 255, 75, 75);
         } else if (getType().equals(DatabasePortObject.TYPE)) {
             // database
             color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
         } else if (getType().equals(ImagePortObject.TYPE)) {
             // image
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GREEN);
+            color = new Color(Display.getCurrent(), 65, 190, 120);
         } else if ("org.knime.network.core.knime.port.GraphPortObject".equals(
                 getType().getPortObjectClass().getName())) {
             // network / graph
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_YELLOW);
+            color = new Color(Display.getCurrent(), 200, 230, 50);
         } else if (getType().equals(FlowVariablePortObject.TYPE)) {
             // variable ports created by the framework are of different color
             // as long as they are not connected
@@ -248,7 +248,7 @@ public abstract class AbstractPortFigure extends Shape {
      */
     public static synchronized Color getFlowVarPortColor() {
         if (colorFlowvarPort == null) {
-            colorFlowvarPort = Display.getCurrent().getSystemColor(SWT.COLOR_RED);
+            colorFlowvarPort = new Color(Display.getCurrent(), 255, 75, 75);
         }
         return colorFlowvarPort;
     }

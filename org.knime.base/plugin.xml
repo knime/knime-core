@@ -30,7 +30,7 @@
             path="/"/>
       <category
             after="database"
-            icon="icons/16x16/category_transform.gif"
+            icon="icons/16x16/manipulation.png"
             level-id="manipulation"
             name="Data Manipulation"
             path="/"/>
@@ -69,13 +69,13 @@
             path="/mining"/>
       <category
             after="manipulation"
-            icon="icons/16x16/category_visualize.gif"
+            icon="icons/16x16/category_visualize.png"
             level-id="view"
             name="Data Views"
             path="/"/>
       <category
             level-id="property"
-            icon="icons/16x16/category_properties.gif"
+            icon="icons/16x16/category_properties.png"
             description="View Properties"
             path="/view"
             name="Property"/>

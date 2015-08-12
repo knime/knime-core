@@ -94,7 +94,7 @@
         <h2>Ports</h2>
         <dl>
             <xsl:if test="t:dataIn|t:modelIn|t:predParamIn">
-                <div class="group">
+                <div class="group dlGroup">
                     <div class="groupname">Input Ports</div>
                     <table>
                         <xsl:for-each select="t:dataIn|t:modelIn|t:predParamIn">
@@ -113,7 +113,7 @@
                 </div>
             </xsl:if>
             <xsl:if test="t:dataOut|t:modelOut|t:predParamOut">
-                <div class="group">
+                <div class="group dlGroup">
                     <div class="groupname">Output Ports</div>
                     <table>
                         <xsl:for-each select="t:dataOut|t:modelOut|t:predParamOut">
