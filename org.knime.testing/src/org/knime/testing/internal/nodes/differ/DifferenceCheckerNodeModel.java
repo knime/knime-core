@@ -106,7 +106,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
             throw new InvalidSettingsException("No reference table available");
         }
 
-        if (m_settings.configuredColumns().size() == 0) {
+        if (m_settings.configuredColumns().isEmpty()) {
             // auto-configure
             for (DataColumnSpec dcs : inSpecs[1]) {
                 DifferenceCheckerFactory<? extends DataValue> fac = new EqualityChecker.Factory();
