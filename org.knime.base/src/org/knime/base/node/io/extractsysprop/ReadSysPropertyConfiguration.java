@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -160,7 +161,7 @@ final class ReadSysPropertyConfiguration {
      * @return A new map of string containing all system properties.
      */
     static Map<String, String> readAllProps() {
-        Map<String, String> result = new LinkedHashMap<String, String>();
+        Map<String, String> result = new TreeMap<String, String>();
         Properties properties = System.getProperties();
         for (Map.Entry<Object, Object> e : properties.entrySet()) {
             Object key = e.getKey();
@@ -245,11 +246,13 @@ final class ReadSysPropertyConfiguration {
             return new DataTable() {
 
                 /** {@inheritDoc} */
+                @Override
                 public DataTableSpec getDataTableSpec() {
                     return SPEC;
                 }
 
                 /** {@inheritDoc} */
+                @Override
                 public RowIterator iterator() {
                     return new DefaultRowIterator(rows);
                 }
