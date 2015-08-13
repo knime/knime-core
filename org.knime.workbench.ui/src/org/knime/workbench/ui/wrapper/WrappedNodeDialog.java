@@ -275,9 +275,20 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     public void create() {
         super.create();
-        if (!Platform.OS_MACOSX.equals(Platform.getOS())) {
-            getShell().setSize(getInitialSize());
+        Point size;
+        if (Platform.OS_MACOSX.equals(Platform.getOS())) {
+            // For Mac OS X the size is already correct
+            size = getShell().getSize();
+        } else {
+            // For other systems we calculate it
+            size = getInitialSize();
         }
+        Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
+        // Middle point relative to the KNIME window
+        Point middle = new Point(knimeWindowBounds.width / 2, knimeWindowBounds.height / 2);
+        // Absolute upper left point for the dialog
+        Point newLocation = new Point(middle.x - (size.x / 2) + knimeWindowBounds.x, middle.y - (size.y / 2) + knimeWindowBounds.y);
+        getShell().setBounds(newLocation.x, newLocation.y, size.x, size.y);
     }
 
     /**
