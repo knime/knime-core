@@ -62,8 +62,6 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -72,7 +70,6 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -104,9 +101,6 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  * @author Thomas Gabriel, University of Konstanz, Germany
  */
 public class WrappedNodeDialog extends Dialog {
-
-    private Composite m_container;
-
     private final NodeContainer m_nodeContainer;
 
     private Panel2CompositeWrapper m_wrapper;
@@ -264,34 +258,13 @@ public class WrappedNodeDialog extends Dialog {
                 Display.getCurrent()
                         .getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
         area.setBackground(backgroundColor);
-        m_container = new Composite(area, SWT.NONE);
-        final GridLayout gridLayout = new GridLayout();
-        gridLayout.marginWidth = 0;
-        gridLayout.marginHeight = 0;
-        gridLayout.horizontalSpacing = 0;
-        m_container.setLayout(gridLayout);
-        m_container.setLayoutData(new GridData(GridData.FILL_BOTH));
+        // m_container.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         // create the dialogs' panel and pass it to the SWT wrapper composite
         getShell().setText("Dialog - " + m_nodeContainer.getDisplayLabel());
 
         JPanel p = m_dialogPane.getPanel();
-        m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
-        m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
-        m_wrapper.addFocusListener(new FocusAdapter() {
-            /**
-             * @param e focus event passed to the underlying AWT component
-             */
-            @Override
-            public void focusGained(final FocusEvent e) {
-                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
-                    @Override
-                    public void run() {
-                        m_wrapper.getAwtPanel().requestFocus();
-                    }
-                });
-            }
-        });
+        m_wrapper = new Panel2CompositeWrapper(area, p, SWT.EMBEDDED);
 
         return area;
     }
@@ -694,7 +667,7 @@ public class WrappedNodeDialog extends Dialog {
 
         // set the size of the container composite
         Point size = new Point(width, height);
-        m_container.setSize(size);
+        m_wrapper.setSize(size);
         return size;
     }
 }

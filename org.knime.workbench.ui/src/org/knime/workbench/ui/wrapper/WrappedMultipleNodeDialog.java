@@ -50,8 +50,6 @@ package org.knime.workbench.ui.wrapper;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -59,7 +57,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -84,10 +81,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  * @author Peter Ohl, KNIME.com AG, Switzerland
  */
 public class WrappedMultipleNodeDialog extends Dialog {
-
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WrappedMultipleNodeDialog.class.getName());
-
-    private Composite m_container;
 
     private final WorkflowManager m_parentMgr;
 
@@ -150,36 +144,13 @@ public class WrappedMultipleNodeDialog extends Dialog {
         Composite area = (Composite)super.createDialogArea(parent);
         Color backgroundColor = Display.getCurrent().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
         area.setBackground(backgroundColor);
-        m_container = new Composite(area, SWT.NONE);
-        final GridLayout gridLayout = new GridLayout();
-        gridLayout.marginWidth = 0;
-        gridLayout.marginHeight = 0;
-        gridLayout.horizontalSpacing = 0;
-        m_container.setLayout(gridLayout);
-        m_container.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         String title = "Select Job Manager";
         if (m_nodes.length > 1) {
             title += " for " + m_nodes.length + " Nodes";
         }
         getShell().setText(title);
-
-        m_wrapper = new Panel2CompositeWrapper(m_container, m_dialogPane, SWT.EMBEDDED);
-        m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
-        m_wrapper.addFocusListener(new FocusAdapter() {
-            /**
-             * @param e focus event passed to the underlying AWT component
-             */
-            @Override
-            public void focusGained(final FocusEvent e) {
-                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
-                    @Override
-                    public void run() {
-                        m_wrapper.getAwtPanel().requestFocus();
-                    }
-                });
-            }
-        });
+        m_wrapper = new Panel2CompositeWrapper(area, m_dialogPane, SWT.EMBEDDED);
         if (m_initValue != null) {
             m_dialogPane.loadSettings(m_initValue, null);
         }
@@ -381,7 +352,7 @@ public class WrappedMultipleNodeDialog extends Dialog {
 
         // set the size of the container composite
         Point size = new Point(width, height);
-        m_container.setSize(size);
+        m_wrapper.setSize(size);
         return size;
     }
 }
