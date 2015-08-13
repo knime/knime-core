@@ -49,8 +49,8 @@ package org.knime.core.data.property;
 
 import java.awt.Color;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
@@ -63,7 +63,7 @@ import org.knime.core.node.config.ConfigWO;
 /**
  * Color model which maps a set of <code>DataCell</code> objects to
  * <code>Color</code>.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz, Germany
  */
 public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
@@ -141,7 +141,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
      */
     public static ColorModelNominal load(final ConfigRO config)
             throws InvalidSettingsException {
-        Map<DataCell, ColorAttr> map = new HashMap<DataCell, ColorAttr>();
+        Map<DataCell, ColorAttr> map = new LinkedHashMap<>();
         ConfigRO keyConfig = config.getConfig(CFG_KEYS);
         for (String key : keyConfig.keySet()) {
             Color color;
