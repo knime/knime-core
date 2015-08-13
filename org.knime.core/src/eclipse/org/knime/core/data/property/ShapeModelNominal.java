@@ -48,8 +48,8 @@
 package org.knime.core.data.property;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
@@ -139,7 +139,7 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
      */
     public static ShapeModelNominal load(final ConfigRO config)
             throws InvalidSettingsException {
-        Map<DataCell, Shape> map = new HashMap<DataCell, Shape>();
+        Map<DataCell, Shape> map = new LinkedHashMap<>();
         ConfigRO keyConfig = config.getConfig(CFG_KEYS);
         for (String key : keyConfig.keySet()) {
             String shape = config.getString(key.toString());

@@ -50,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -422,7 +423,7 @@ public class KnnNodeModel extends NodeModel {
         }
 
         HashMap<DataCell, MutableDouble> classWeights =
-                new HashMap<DataCell, MutableDouble>();
+                new LinkedHashMap<DataCell, MutableDouble>();
         List<NearestNeighbour<DataCell>> nearestN =
                 tree.getKNearestNeighbours(features,
                         Math.min(m_settings.k(), tree.size()));
