@@ -319,6 +319,14 @@ public class AbstractRuleParser implements Parser {
             return m_wrapped.getClosestStandardTokenTypeForInternalType(type);
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isIdentifierChar(final int languageIndex, final char ch) {
+            return m_wrapped.isIdentifierChar(languageIndex, ch);
+        }
+
     }
 
     private DataTableSpec m_dataTableSpec;

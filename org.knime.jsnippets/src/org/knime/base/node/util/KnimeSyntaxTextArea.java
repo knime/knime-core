@@ -52,7 +52,6 @@ import java.io.InputStream;
 import javax.swing.ToolTipManager;
 
 import org.fife.rsta.ac.LanguageSupportFactory;
-import org.fife.rsyntaxarea.internal.RSyntaxAreaActivator;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.Theme;
@@ -69,11 +68,6 @@ import org.knime.core.node.NodeLogger;
  */
 @SuppressWarnings("serial")
 public class KnimeSyntaxTextArea extends RSyntaxTextArea {
-
-    static {
-        RSyntaxAreaActivator.ensureWorkaroundBug3692Applied();
-    }
-
     private static final NodeLogger LOGGER = NodeLogger.getLogger(KnimeSyntaxTextArea.class);
 
     /**

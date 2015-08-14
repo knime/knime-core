@@ -85,7 +85,6 @@ import javax.swing.text.JTextComponent;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 
-import org.fife.rsyntaxarea.internal.RSyntaxAreaActivator;
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
@@ -114,11 +113,6 @@ import org.knime.ext.sun.nodes.script.expression.Expression;
  */
 @SuppressWarnings("serial")
 public class JSnippetPanel extends JPanel {
-
-    static {
-        RSyntaxAreaActivator.ensureWorkaroundBug3692Applied();
-    }
-
     private JList m_colList;
 
     private JList m_flowVarsList;
