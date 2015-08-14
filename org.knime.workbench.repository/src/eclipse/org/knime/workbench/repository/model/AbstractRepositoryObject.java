@@ -63,8 +63,6 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     private String m_afterID = "";
 
-    private boolean m_isExpertNode;
-
     private String m_contributingPlugin;
 
 
@@ -101,7 +99,6 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
         this.m_name = copy.m_name;
         this.m_id = copy.m_id;
         this.m_afterID = copy.m_afterID;
-        this.m_isExpertNode = copy.m_isExpertNode;
         this.m_contributingPlugin = copy.m_contributingPlugin;
     }
 
@@ -169,6 +166,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
      *
      * @return the name
      */
+    @Override
     public String getName() {
         return m_name;
     }
@@ -210,20 +208,6 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
      */
     public void setAfterID(final String id) {
         m_afterID = id;
-    }
-
-    /**
-     * @return the isExpertNode
-     */
-    public boolean isExpertNode() {
-        return m_isExpertNode;
-    }
-
-    /**
-     * @param isExpertNode the isExpertNode to set
-     */
-    public void setExpertNode(final boolean isExpertNode) {
-        m_isExpertNode = isExpertNode;
     }
 
     /**

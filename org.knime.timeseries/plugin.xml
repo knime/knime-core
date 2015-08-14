@@ -54,21 +54,18 @@
             </node>
             <node
                   category-path="/timeseries"
-                  expert-flag="false"
                   factory-class="org.knime.timeseries.node.movagg.MovingAggregationNodeFactory"
                   id="org.knime.timeseries.node.movagg.MovingAggregationNodeFactory">
             </node>
             
       <node
             category-path="/timeseries"
-            expert-flag="false"
             factory-class="org.knime.timeseries.node.dateshift.DateShiftNodeFactory"
             id="org.knime.timeseries.node.converter.DateShiftNodeFactory">
       </node>
       
       <!--node deprecated
             category-path="/timeseries"
-            expert-flag="false"
             factory-class="org.knime.timeseries.node.timemissvaluehandler.TimeMissValueNodeFactory"
             id="org.knime.timeseries.node.timemissvaluehandler.TimeMissValueNodeFactory"/-->
    </extension>
@@ -96,7 +93,6 @@
       <PersistedMetaNode
             category-path="/timeseries/meta"
             description="Removes the seasonality from the selected time series.  This metanode selects one time series column, optionally one datetime column, and an interval lag. Then it performs x(t) – x(t-interval lag) to correct the seasonality.  Note: It does not find automatically the optimal interval lag. The interval lag has to be supplied by the user. (Optimal Interval Lag can be found via the linear correlation node, by knowledge, or by some specific formulas)."
-            expert-flag="false"
             icon="icons/category_time.png"
             id="SeasonalityCorrection"
             name="Seasonality Correction"
@@ -105,7 +101,6 @@
       <PersistedMetaNode
             category-path="/timeseries/meta"
             description="This node  selects a time series column, optionally a datetime column, and a lag. Then it trains a model (linear regression or neural network or whatever has a numerical output). The model can be changed (like in the cross-validation node)."
-            expert-flag="false"
             icon="icons/category_time.png"
             id="Time-SeriesAuto-PredictionTraining"
             name="Time-Series Auto-Prediction Training"
@@ -115,7 +110,6 @@
             after="Time-SeriesAuto-PredictionTraining"
             category-path="/timeseries/meta"
             description="This metanode applies all previously selected variables (time series column, lag and datetime column) to the predictor node. Note that the predictor node has to be consistent with the training node ion the time series training metanode."
-            expert-flag="false"
             icon="icons/category_time.png"
             id="Time-SeriesAuto-PredictionPredictor"
             name="Time-Series Auto-Prediction Predictor"

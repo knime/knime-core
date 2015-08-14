@@ -64,7 +64,6 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.repository.model.AbstractContainerObject;
 import org.knime.workbench.repository.model.Category;
@@ -157,22 +156,19 @@ public final class RepositoryManager {
 
     private void readRepository(final IProgressMonitor monitor) {
         assert !m_root.hasChildren();
-        boolean isInExpertMode =
-                Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
-
         readCategories(monitor);
         if (monitor.isCanceled()) {
             return;
         }
-        readNodes(isInExpertMode, monitor);
+        readNodes(monitor);
         if (monitor.isCanceled()) {
             return;
         }
-        readNodeSets(isInExpertMode, monitor);
+        readNodeSets(monitor);
         if (monitor.isCanceled()) {
             return;
         }
-        readMetanodes(isInExpertMode, monitor);
+        readMetanodes(monitor);
         if (monitor.isCanceled()) {
             return;
         }
@@ -180,7 +176,7 @@ public final class RepositoryManager {
         m_loadListeners.clear();
     }
 
-    private void readMetanodes(final boolean isInExpertMode, final IProgressMonitor monitor) {
+    private void readMetanodes(final IProgressMonitor monitor) {
         // iterate over the meta node config elements
         // and create meta node templates
         IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
@@ -195,16 +191,8 @@ public final class RepositoryManager {
                 try {
                     MetaNodeTemplate metaNode =
                             RepositoryFactory.createMetaNode(mnConfig);
-                    boolean skip = !isInExpertMode && metaNode.isExpertNode();
-                    if (skip) {
-                        LOGGER.debug("Skipping meta node definition '"
-                                + metaNode.getID() + "': " + metaNode.getName()
-                                + " (not in expert mode)");
-                        continue;
-                    } else {
-                        LOGGER.debug("Found meta node definition '"
-                            + metaNode.getID() + "': " + metaNode.getName());
-                    }
+                    LOGGER.debug("Found meta node definition '"
+                        + metaNode.getID() + "': " + metaNode.getName());
                     for (Listener l : m_loadListeners) {
                         l.newMetanode(m_root, metaNode);
                     }
@@ -332,7 +320,7 @@ public final class RepositoryManager {
     /**
      * @param isInExpertMode
      */
-    private void readNodes(final boolean isInExpertMode, final IProgressMonitor monitor) {
+    private void readNodes(final IProgressMonitor monitor) {
         //
         // Second, process the contributed nodes
         //
@@ -355,16 +343,8 @@ public final class RepositoryManager {
                 try {
                     NodeTemplate node = RepositoryFactory.createNode(e);
 
-                    boolean skip = !isInExpertMode && node.isExpertNode();
-                    if (skip) {
-                        LOGGER.debug("Skipping node extension '" + node.getID()
-                                + "': " + node.getName()
-                                + " (not in expert mode)");
-                        continue;
-                    } else {
-                        LOGGER.debug("Found node extension '" + node.getID()
-                                + "': " + node.getName());
-                    }
+                    LOGGER.debug("Found node extension '" + node.getID()
+                            + "': " + node.getName());
                     for (Listener l : m_loadListeners) {
                         l.newNode(m_root, node);
                     }
@@ -439,7 +419,7 @@ public final class RepositoryManager {
     /**
      * @param isInExpertMode
      */
-    private void readNodeSets(final boolean isInExpertMode, final IProgressMonitor monitor) {
+    private void readNodeSets(final IProgressMonitor monitor) {
         //
         // Process the contributed node sets
         //

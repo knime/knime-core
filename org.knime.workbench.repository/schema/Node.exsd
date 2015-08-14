@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="org.knime.workbench.repository">
+<schema targetNamespace="org.knime.workbench.repository" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appInfo>
          <meta.schema plugin="org.knime.workbench.repository" id="node" name="Node"/>
@@ -11,6 +11,11 @@
    </annotation>
 
    <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
       <complexType>
          <sequence minOccurs="0" maxOccurs="unbounded">
             <choice>
@@ -80,13 +85,6 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="expert-flag" type="boolean" use="default" value="false">
-            <annotation>
-               <documentation>
-                  Set &lt;i&gt;true&lt;/i&gt; if the node should only appear in the node repository if the expert flag is set (changable in preference page). If unsure, leave empty as it defaults to &lt;i&gt;false&lt;/i&gt;.
-               </documentation>
-            </annotation>
-         </attribute>
       </complexType>
    </element>
 
@@ -126,13 +124,5 @@
       </documentation>
    </annotation>
 
-   <annotation>
-      <appInfo>
-         <meta.section type="copyright"/>
-      </appInfo>
-      <documentation>
-         
-      </documentation>
-   </annotation>
 
 </schema>

@@ -693,7 +693,6 @@
             after="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory"
             id="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory" />
       <node
@@ -1330,7 +1329,6 @@
       <node
             after="org.knime.base.node.image.ImageToTableNodeFactory"
             category-path="/view/view-util"
-            expert-flag="false"
             factory-class="org.knime.base.node.image.tablerowtoimage.TableRowToImageNodeFactory"
             id="org.knime.base.node.image.tablerowtoimage.TableRowToImageNodeFactory">
       </node>
@@ -1467,13 +1465,11 @@
       </node>
       <node
             category-path="/io/io-other"
-            expert-flag="false"
             factory-class="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory"
             id="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory">
       </node>
       <node
             category-path="/io/io-other"
-            expert-flag="false"
             factory-class="org.knime.base.node.image.writeimage.WriteImageNodeFactory"
             id="org.knime.base.node.image.writemage.WriteImageNodeFactory">
       </node>
@@ -1499,44 +1495,37 @@
       </node> 
       <node
             category-path="/misc"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.urltofilepath.UrlToFilePathNodeFactory"
             id="org.knime.base.node.preproc.urltofilepath.UrlToFilePathNodeFactory">
       </node>
       <node
             category-path="/misc"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.urltofilepathvariable.UrlToFilePathVariableNodeFactory"
             id="org.knime.base.node.preproc.urltofilepathvariable.UrlToFilePathVariableNodeFactory">
       </node>
       <node
             category-path="//manipulation/column/column-convert+replace"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.rounddouble.RoundDoubleNodeFactory"
             id="org.knime.base.node.preproc.rounddouble.RoundDoubleNodeFactory">
       </node>      
       <node
             category-path="/manipulation/column/column-transform"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory"
             id="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-transform"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.columnlag.LagColumnNodeFactory"
             id="org.knime.base.node.preproc.columnlag.LagColumnNodeFactory"
             after="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory">
       </node>
       <node
             category-path="/misc"
-            expert-flag="false"
             factory-class="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory"
             id="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory">
       </node>
       <node
             category-path="/misc"
-            expert-flag="false"
             factory-class="org.knime.base.node.util.sendmail.SendMailNodeFactory"
             id="org.knime.base.node.util.sendmail.SendMailNodeFactory">
       </node>
@@ -1552,86 +1541,72 @@
       </node>
       <node
             category-path="/misc"
-            expert-flag="false"
             factory-class="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"
             id="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory">
       </node>      
       <node
             category-path="/flowcontrol/variables"
-            expert-flag="false"
             factory-class="org.knime.base.node.util.mergevariables.MergeVariablesNodeFactory"
             id="org.knime.base.node.util.mergevariables.MergeVariablesNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            expert-flag="false"
             factory-class="org.knime.base.node.meta.looper.group.GroupLoopStartNodeFactory"
             id="org.knime.base.node.meta.looper.group.GroupLoopStartNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            expert-flag="false"
             factory-class="org.knime.base.node.meta.looper.variableloopend.VariableLoopEndNodeFactory"
             id="org.knime.base.node.meta.looper.variableloopend.VariableLoopEndNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory"
             id="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.bytevector.create.CreateByteVectorNodeFactory"
             id="org.knime.base.node.preproc.bytevector.create.CreateByteVectorNodeFactory"
             after="org.knime.base.collection.list.split.CollectionSplitNodeFactory"/>
       <node
             category-path="/manipulation/column/column-split+combine"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.bytevector.expand.ExpandByteVectorNodeFactory"
             id="org.knime.base.node.preproc.bytevector.expand.ExpandByteVectorNodeFactory"
             after="org.knime.base.node.preproc.bytevector.create.CreateByteVectorNodeFactory"/>
       <node
             category-path="/flowcontrol/trycatch"
-            expert-flag="false"
             factory-class="org.knime.base.node.flowcontrol.trycatch.generictry.DataPortTryNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.generictry.DataPortTryNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/trycatch"
-            expert-flag="false"
             factory-class="org.knime.base.node.flowcontrol.trycatch.generictry.VariablePortTryNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.generictry.VariablePortTryNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/trycatch"
-            expert-flag="false"
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.DataPortCatchNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.genericcatch.DataPortCatchNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/trycatch"
-            expert-flag="false"
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.VariablePortCatchNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.genericcatch.VariablePortCatchNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/trycatch"
-            expert-flag="false"
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.DBPortCatchNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.genericcatch.DBPortCatchNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/trycatch"
-            expert-flag="false"
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory">
       </node>
       <node
             after="org.knime.base.node.flowcontrol.trycatch.generictry.VariablePortTryNodeFactory"
             category-path="/flowcontrol/trycatch"
-            expert-flag="false"
             factory-class="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory">
       </node>
@@ -1645,7 +1620,6 @@
       <node
             after="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"
             category-path="/io/io-other"
-            expert-flag="false"
             factory-class="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory"
             id="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory">
       </node>
@@ -1656,43 +1630,36 @@
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            expert-flag="false"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopStartNodeFactory"
             id="org.knime.base.node.meta.looper.recursive.RecursiveLoopStartNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            expert-flag="false"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEndNodeFactory"
             id="org.knime.base.node.meta.looper.recursive.RecursiveLoopEndNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            expert-flag="false"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopStart2NodeFactory"
             id="org.knime.base.node.meta.looper.recursive.RecursiveLoopStart2NodeFactory">
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
-            expert-flag="false"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory"
             id="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory">
       </node>
       <node
             category-path="/manipulation/pmml"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.pmml.xml2pmml.XML2PMMLNodeFactory"
             id="org.knime.base.node.preproc.pmml.xml2pmml.XML2PMMLNodeFactory">
       </node>
       <node
             category-path="/database/database-connector"
-            expert-flag="false"
             factory-class="org.knime.base.node.io.database.connection.JDBCConnectorNodeFactory"
             id="org.knime.base.node.io.database.JDBCConnectorNodeFactory">
       </node>
       <node
             category-path="/database/database-io"
-            expert-flag="false"
             factory-class="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory"
             id="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory">
       </node>
@@ -1708,7 +1675,6 @@
       </node>
       <node
             category-path="database/database-utility"
-            expert-flag="false"
             factory-class="org.knime.base.node.io.database.drop.DBDropTableNodeFactory"
             id="org.knime.base.node.io.database.drop.DBDropTableNodeFactory">
       </node>
@@ -1719,13 +1685,11 @@
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.colautotypecast.ColumnAutoTypeCasterNodeFactory"
             id="org.knime.base.node.preproc.coltypechanger.ColumnTypeChangerNodeFactory">
       </node>
            <node
             category-path="/io/read"
-            expert-flag="false"
             factory-class="org.knime.base.node.io.fixedwidthfr.FixedWidthFRNodeFactory"
             id="org.knime.base.node.io.fixedwidthfr.FixedWidthFRNodeFactory">
       </node>
@@ -1735,25 +1699,21 @@
             id="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"/>
       <!-- <node
             category-path="/mining/miscClass"
-            expert-flag="false"
             factory-class="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory"
             id="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory">
       </node> -->
       <node
             category-path="/manipulation/column/column-transform"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.pmml.missingval.compute.MissingValueHandlerNodeFactory"
             id="org.knime.base.node.preproc.pmml.missingval.compute.MissingValueHandlerNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-transform"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory"
             id="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            expert-flag="false"
             factory-class="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory"
             id="org.knime.base.node.preproc.colconvert.numbertocategory.NumberToCategoryApplyNodeFactory">
       </node>
@@ -1763,13 +1723,11 @@
       		id="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory"/>
       <node
             category-path="/misc"
-            expert-flag="false"
             factory-class="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory"
             id="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory">
       </node>
       <node
             category-path="/misc"
-            expert-flag="false"
             factory-class="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory"
             id="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory">
       </node>

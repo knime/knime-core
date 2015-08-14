@@ -144,8 +144,6 @@ public final class RepositoryFactory {
                 element.getDeclaringExtension().getNamespaceIdentifier();
         NodeTemplate node = new NodeTemplate(id, factory.getNodeName(), pluginID);
         node.setAfterID(str(element.getAttribute("after"), ""));
-        boolean b = Boolean.parseBoolean(element.getAttribute("expert-flag"));
-        node.setExpertNode(b);
         node.setFactory((Class<NodeFactory<? extends NodeModel>>)factory
                 .getClass());
 
@@ -175,8 +173,6 @@ public final class RepositoryFactory {
         String after = configuration.getAttribute("after");
         String iconPath = configuration.getAttribute("icon");
         String categoryPath = configuration.getAttribute("category-path");
-        boolean isExpertNode =
-                Boolean.parseBoolean(configuration.getAttribute("expert-flag"));
         String pluginId =
                 configuration.getDeclaringExtension().getNamespaceIdentifier();
         String description = configuration.getAttribute("description");
@@ -195,7 +191,6 @@ public final class RepositoryFactory {
         if (description != null) {
             template.setDescription(description);
         }
-        template.setExpertNode(isExpertNode);
         if (!Boolean.getBoolean("java.awt.headless")) {
             // Load images from declaring plugin
             Image icon = null;
@@ -411,9 +406,6 @@ public final class RepositoryFactory {
             node.setFactory(factoryClass);
 
             node.setAfterID(nodeSet.getAfterID(factoryId));
-            boolean b =
-                    Boolean.parseBoolean(element.getAttribute("expert-flag"));
-            node.setExpertNode(b);
 
             if (!Boolean.getBoolean("java.awt.headless")) {
                 Image icon = ImageRepository.getScaledImage(factory, 16, 16);
