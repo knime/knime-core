@@ -53,7 +53,7 @@
             path="/manipulation/row"/>
       <category
             after="statistics"
-            icon="icons/16x16/category_learner.gif"
+            icon="icons/16x16/category_mining.png"
             level-id="mining"
             name="Mining"
             path="/"/>
