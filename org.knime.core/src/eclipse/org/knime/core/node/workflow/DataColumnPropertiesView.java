@@ -47,6 +47,7 @@ package org.knime.core.node.workflow;
 import java.awt.BorderLayout;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 import javax.swing.JPanel;
 
@@ -60,20 +61,20 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.tableview.TableView;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class DataColumnPropertiesView extends JPanel {
-    
+
     private final DataTableSpec m_tableSpec;
-    
+
     private final TableView m_propsView;
-    
+
     private final Object m_lock = new Object();
-    
+
     /**
-     * 
-     * @param tableSpec data table spec to extract the data column properties 
+     *
+     * @param tableSpec data table spec to extract the data column properties
      *  from
      */
     public DataColumnPropertiesView(final DataTableSpec tableSpec) {
@@ -86,11 +87,11 @@ public class DataColumnPropertiesView extends JPanel {
         updatePropsTable();
     }
 
-    
+
     private DataTable createPropsTable() {
         if (m_tableSpec != null) {
             // output has as many cols
-            int numOfCols = m_tableSpec.getNumColumns(); 
+            int numOfCols = m_tableSpec.getNumColumns();
             String[] colNames = new String[numOfCols];
             DataType[] colTypes = new DataType[numOfCols];
             // colnames are the same as incoming, types are all StringTypes
@@ -99,7 +100,7 @@ public class DataColumnPropertiesView extends JPanel {
                 colTypes[c] = StringCell.TYPE;
             }
             // get keys for ALL props in the table. Each will show in one row.
-            HashSet<String> allKeys = new HashSet<String>();
+            HashSet<String> allKeys = new LinkedHashSet<String>();
             for (int c = 0; c < numOfCols; c++) {
                 Enumeration<String> props =
                     m_tableSpec.getColumnSpec(c).getProperties().properties();
@@ -137,16 +138,16 @@ public class DataColumnPropertiesView extends JPanel {
             return result.getTable();
         }
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public String getName() {
-        return "Properties"; 
+        return "Properties";
     }
-    
+
     private void updatePropsTable() {
         synchronized (m_lock) {
             m_propsView.setDataTable(createPropsTable());

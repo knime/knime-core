@@ -48,7 +48,7 @@
 package org.knime.core.node.workflow;
 
 import java.awt.Rectangle;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.core.node.port.PortObject;
@@ -78,7 +78,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
      */
     NodeOutPortWrapper(final int portIndex, final PortType pType) {
         super(portIndex, pType);
-        m_listener = new HashSet<NodeStateChangeListener>();
+        m_listener = new LinkedHashSet<>();
     }
 
     /**

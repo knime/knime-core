@@ -50,7 +50,7 @@ package org.knime.workbench.repository;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -81,8 +81,7 @@ public final class NodeUsageRegistry {
     private static final LinkedList<NodeTemplate> LAST_USED =
             new LinkedList<NodeTemplate>();
 
-    private static final Set<NodeUsageListener> LISTENERS =
-            new HashSet<NodeUsageListener>();
+    private static final Set<NodeUsageListener> LISTENERS = new LinkedHashSet<>();
 
     private static List<NodeTemplate> cachedFrequent;
 

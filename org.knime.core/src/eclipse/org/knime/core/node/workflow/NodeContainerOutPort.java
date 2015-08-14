@@ -48,7 +48,7 @@
 package org.knime.core.node.workflow;
 
 import java.awt.Rectangle;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.swing.SwingUtilities;
@@ -105,7 +105,7 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
         m_portView = null;
         // TODO register this object as listener to spec/object... changes with Node!!
         m_snc.addNodeStateChangeListener(this);
-        m_listener = new HashSet<NodeStateChangeListener>();
+        m_listener = new LinkedHashSet<>();
     }
 
     /**

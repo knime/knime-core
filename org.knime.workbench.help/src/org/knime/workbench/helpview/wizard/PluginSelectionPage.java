@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -248,7 +249,10 @@ public class PluginSelectionPage extends WizardPage {
                 }
             }
         }
-        m_table.setInput(all.toArray());
+
+        String[] allPlugins = all.toArray(new String[all.size()]);
+        Arrays.sort(allPlugins);
+        m_table.setInput(allPlugins);
         m_table.setCheckedElements(checked.toArray());
         m_table.setGrayedElements(grayed.toArray());
     }
