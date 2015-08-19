@@ -159,7 +159,7 @@ public class OpenInteractiveViewAction extends Action {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private AbstractWizardNodeView getConfiguredWizardNodeView(final NodeModel nodeModel) {
-        //TODO uncomment for 2.12, make view interchangeable
+        //TODO uncomment for 3.1, make view interchangeable
         //TODO get preference key
         /*String viewID = "org.knime.ext.chromedriver.ChromeWizardNodeView";
         try {
