@@ -37,6 +37,8 @@ All other trademarks are the property of their respective owners.
 -XX:+UnsyncloadClass 
 -Dknime.enable.fastload=true
 -XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot
+         <argsX86>-Xmx512m</argsX86>
+         <argsX86_64>-Xmx1024m</argsX86_64>
       </vmArgs>
       <vmArgsMac>-XstartOnFirstThread
 -Xdock:icon=../Resources/Knime.icns
