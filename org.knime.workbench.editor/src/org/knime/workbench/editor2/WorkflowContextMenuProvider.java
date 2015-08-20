@@ -81,7 +81,6 @@ import org.knime.workbench.editor2.actions.ConvertMetaNodeToSubNodeAction;
 import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.DisconnectSubNodeLinkAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
-import org.knime.workbench.editor2.actions.ExecuteAndOpenInteractiveViewAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
 import org.knime.workbench.editor2.actions.ExpandSubNodeAction;
@@ -335,9 +334,6 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 if (container.hasInteractiveView() || container.hasInteractiveWebView()) {
                     action = new OpenInteractiveViewAction(container);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                    manager.remove(ExecuteAndOpenViewAction.ID);
-                    action = new ExecuteAndOpenInteractiveViewAction(container);
-                    manager.insertAfter(ExecuteAction.ID, action);
                 }
 
                 if (container instanceof WorkflowManager) {

@@ -117,7 +117,18 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Execute the selected nodes and open first view.";
+        String tooltip = "Execute the selected node";
+        NodeContainerEditPart[] parts = getSelectedParts(NodeContainerEditPart.class);
+        if (parts.length == 1) {
+            tooltip += " node";
+            NodeContainer nc = parts[0].getNodeContainer();
+            if (nc.hasInteractiveView() || nc.hasInteractiveWebView()) {
+                return tooltip + " and open interactive view.";
+            }
+        } else {
+            tooltip += "s";
+        }
+        return tooltip + " and open first view.";
     }
 
     /**
@@ -134,7 +145,9 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         WorkflowManager wm = getEditor().getWorkflowManager();
         for (int i = 0; i < parts.length; i++) {
             NodeContainer nc = parts[i].getNodeContainer();
-            if (wm.canExecuteNode(nc.getID()) && nc.getNrViews() > 0) {
+            boolean hasView = nc.getNrViews() > 0;
+            hasView |= nc.hasInteractiveView() || nc.hasInteractiveWebView();
+            if (wm.canExecuteNode(nc.getID()) && hasView) {
                 return true;
             }
         }
@@ -142,7 +155,9 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     }
 
     private void executeAndOpen(final NodeContainer cont) {
-        if (cont.getNrViews() > 0) {
+        boolean hasView = cont.getNrViews() > 0;
+        hasView |= cont.hasInteractiveView() || cont.hasInteractiveWebView();
+        if (hasView) {
             // another listener must be registered at the workflow manager to
             // receive also those events from nodes that have just been queued
             cont.addNodeStateChangeListener(new NodeStateChangeListener() {
@@ -158,7 +173,12 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                             @Override
                             public void run() {
                                 // run open view action
-                                IAction viewAction = new OpenViewAction(cont, 0);
+                                IAction viewAction;
+                                if (cont.hasInteractiveView() || cont.hasInteractiveWebView()) {
+                                    viewAction = new OpenInteractiveViewAction(cont);
+                                } else {
+                                    viewAction = new OpenViewAction(cont, 0);
+                                }
                                 viewAction.run();
                             }
                         });

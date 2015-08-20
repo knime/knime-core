@@ -47,15 +47,11 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import javax.swing.SwingUtilities;
-
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
@@ -142,7 +138,9 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
         boolean atLeastOneNodeIsExecuted = false;
         for (int i = 0; i < parts.length; i++) {
             NodeContainer nc = parts[i].getNodeContainer();
-            atLeastOneNodeIsExecuted |= nc.getNodeContainerState().isExecuted() && nc.getNrViews() > 0;
+            boolean hasView = nc.getNrViews() > 0;
+            hasView |= nc.hasInteractiveView() || nc.hasInteractiveWebView();
+            atLeastOneNodeIsExecuted |= nc.getNodeContainerState().isExecuted() && hasView;
         }
         return atLeastOneNodeIsExecuted;
 
@@ -159,16 +157,20 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                 + " node(s)...");
         for (NodeContainerEditPart p : nodeParts) {
             final NodeContainer cont = p.getNodeContainer();
-            final Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
-            if (cont.getNodeContainerState().isExecuted() && cont.getNrViews() > 0) {
-                SwingUtilities.invokeLater(new Runnable() {
+            boolean hasView = cont.getNrViews() > 0;
+            hasView |= cont.hasInteractiveView() || cont.hasInteractiveWebView();
+            if (cont.getNodeContainerState().isExecuted() && hasView) {
+                Display.getDefault().asyncExec(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            final String title = cont.getViewName(0) + " - "
-                                + cont.getDisplayLabel();
-                            java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);
-                            Node.invokeOpenView(cont.getView(0), title, bounds);
+                            final IAction action;
+                            if (cont.hasInteractiveView() || cont.hasInteractiveWebView()) {
+                                action = new OpenInteractiveViewAction(cont);
+                            } else {
+                                action = new OpenViewAction(cont, 0);
+                            }
+                            action.run();
                         } catch (Throwable t) {
                             MessageBox mb = new MessageBox(
                                     Display.getDefault().getActiveShell(),
