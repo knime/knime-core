@@ -739,4 +739,11 @@ propagated with or for interoperation with KNIME.
       <import feature="org.eclipse.equinox.p2.user.ui" version="2.0.1" match="greaterOrEqual"/>
    </requires>
 
+   <plugin
+         id="org.knime.product.macosx"
+         os="macosx"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
 </feature>
