@@ -124,6 +124,9 @@ public class XORElementOperator extends AggregationOperator {
                         return true;
                     }
                     m_vals.add(valCell);
+                } else {
+                    //if more than one group contains the element->remove it from the values
+                    m_vals.remove(valCell);
                 }
             }
         }
