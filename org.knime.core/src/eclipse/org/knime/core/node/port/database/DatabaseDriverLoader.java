@@ -52,6 +52,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -128,17 +129,20 @@ public final class DatabaseDriverLoader {
         DRIVER_TO_URL.put("org.sqlite.JDBC", "jdbc:sqlite:");
     }
 
+    private static final boolean ODBC_AVAILABLE;
+
     static {
         // make sure that all static variables are initialized before (i.e. above) this static block
         createDriverProtocolMapping();
-        registerODBCBridge();
+        ODBC_AVAILABLE = registerODBCBridge();
         loadDriversFromExtensionPoint();
     }
+
 
     /**
      * Registers the native JDBC-ODBC bridge.
      */
-    private static void registerODBCBridge() {
+    private static boolean registerODBCBridge() {
         try {
             // Bug 3821: prevent loading sun.jdbc.odbc.JdbcOdbcDriver driver on Linux (with missing libodbc.so library)
             if (Platform.OS_LINUX.equals(Platform.getOS())) {
@@ -148,7 +152,7 @@ public final class DatabaseDriverLoader {
                     LOGGER.info("Could not load 'libJdbcOdbc.so' library which is known to be a problem under Linux"
                         + " when using the '" + JDBC_ODBC_DRIVER + "'; that is, the driver is not loaded.");
                     // don't load driver
-                    return;
+                    return false;
                 }
             }
             Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
@@ -157,8 +161,10 @@ public final class DatabaseDriverLoader {
             LOGGER.debug("Database driver " + driverName + " loaded successfully. Driver info: " + d.getInfo());
             // DriverManager.registerDriver(d);
             DRIVER_MAP.put(driverName, d);
+            return true;
         } catch (Throwable t) {
             LOGGER.warn("Could not load driver class '" + JDBC_ODBC_DRIVER + "'");
+            return false;
         }
     }
 
@@ -266,6 +272,11 @@ public final class DatabaseDriverLoader {
      */
     private static DatabaseWrappedDriver getWrappedDriver(
             final String driverName) throws Exception {
+        if (JDBC_ODBC_DRIVER.equals(driverName) && !ODBC_AVAILABLE) {
+            throw new SQLException(
+                "JDBC-ODBC driver is not available on this Linux system due to missing native ODBC libraries");
+        }
+
         DatabaseWrappedDriver wdriver = DRIVER_MAP.get(driverName);
         if (wdriver != null) {
             LOGGER.debug("Database driver " + driverName + " retrieved from driver map");
