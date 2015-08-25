@@ -46,8 +46,8 @@
 package org.knime.base.node.preproc.groupby;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -204,7 +204,7 @@ public class BigGroupByTable extends GroupByTable {
         //(such as cells that contain chemical structures).
         //In this rare case this map will contain for each group of data cells
         //that are pairwise equal in the chunk a separate entry.
-        final Map<GroupKey, Pair<ColumnAggregator[], Set<RowKey>>> chunkMembers = new HashMap<>(3);
+        final Map<GroupKey, Pair<ColumnAggregator[], Set<RowKey>>> chunkMembers = new LinkedHashMap<>(3);
         boolean logUnusualCells = true;
         String groupLabel = "";
         for (final DataRow row : sortedTable) {
@@ -257,7 +257,7 @@ public class BigGroupByTable extends GroupByTable {
                 if (isEnableHilite()) {
                     rowKeys = new HashSet<>();
                 } else {
-                    rowKeys = Collections.EMPTY_SET;
+                    rowKeys = Collections.emptySet();
                 }
                 member = new Pair<>(cloneColumnAggregators(), rowKeys);
                 final DataCell[] groupKeys = new DataCell[currentGroup.length];
