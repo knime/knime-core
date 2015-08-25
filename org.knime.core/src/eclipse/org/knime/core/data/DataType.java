@@ -63,6 +63,7 @@ import java.util.Set;
 
 import javax.swing.Icon;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataValue.UtilityFactory;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.renderer.DataValueRendererFactory;
@@ -1340,6 +1341,46 @@ public final class DataType {
             b.append(")");
         }
         return b.toString();
+    }
+
+    /** A slightly nicer string representation that can be used in UI elements. It will strip off "Cell" or "DataCell"
+     * and the fully qualified name of data value interface if this a non-native type.
+     *
+     * <p>For "DoubleCell" it would just return "Double". For a non-native type, say a DoubleCell type with a different
+     * preferred value, it would return "Non-Native [ComplexNumber, Double, DataValue, ...]"
+     *
+     * @return A (non-canonical) string representation of this type, never null.
+     * @since 2.12
+     */
+    public String toPrettyString() {
+        StringBuilder b = new StringBuilder();
+        if (m_cellClass != null) {
+            b.append(stripEnd(m_cellClass.getSimpleName(), "DataCell", "Cell"));
+        } else {
+            b.append("Non-Native ");
+            for (int i = 0; i < Math.min(3, m_valueClasses.size()); i++) {
+                b.append(i == 0 ? "[" : ", ");
+                b.append(stripEnd(m_valueClasses.get(i).getSimpleName(), "DataValue", "Value"));
+            }
+            b.append(m_valueClasses.size() > 3 ? ", ...]" : "]");
+        }
+        if (getCollectionElementType() != null) {
+            b.append(" (Collection of: ");
+            b.append(getCollectionElementType().toString());
+            b.append(")");
+        }
+        return b.toString();
+    }
+
+    private static String stripEnd(final String toStrip, final String... ends) {
+        if (Arrays.asList(ends).contains(toStrip)) {
+            return toStrip;
+        }
+        String result = toStrip;
+        for (String end : ends) {
+            result = StringUtils.removeEndIgnoreCase(result, end);
+        }
+        return result;
     }
 
     private static final class ClassAndSubDataTypePair {

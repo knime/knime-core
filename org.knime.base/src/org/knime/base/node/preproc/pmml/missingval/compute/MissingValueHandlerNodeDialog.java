@@ -344,7 +344,7 @@ public class MissingValueHandlerNodeDialog extends NodeDialogPane {
             gbc.gridx = 0;
             gbc.ipadx = 10;
 
-            JLabel l = new JLabel(type.toString());
+            JLabel l = new JLabel(type.toPrettyString());
             m_typeSettingsPanel.add(l, gbc);
             gbc.gridx = 1;
             gbc.ipadx = 0;
