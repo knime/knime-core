@@ -48,6 +48,7 @@ package org.knime.core.node.port.database;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Driver;
@@ -234,7 +235,8 @@ public final class DatabaseDriverLoader {
                 String name = entry.getName();
                 if (name.endsWith(".class")) {
                     Class<?> driverClass = loadClass(name, bundleClassLoader, fileClassLoader);
-                    if ((driverClass != null) && Driver.class.isAssignableFrom(driverClass)) {
+                    if ((driverClass != null) && Driver.class.isAssignableFrom(driverClass) &&
+                            ((driverClass.getModifiers() & Modifier.ABSTRACT) == 0)) {
                         try {
                             DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver)driverClass.newInstance());
                             String driverName = d.toString();
