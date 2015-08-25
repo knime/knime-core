@@ -107,7 +107,7 @@ public class DatabaseConnectionSettings {
     private static final ExecutorService CONNECTION_CREATOR_EXECUTOR =
             ThreadUtils.executorServiceWithContext(Executors.newCachedThreadPool());
 
-    private static int databaseTimeout = getSystemPropertyDatabaseTimeout();
+    private static int databaseTimeout = Math.max(15, getSystemPropertyDatabaseTimeout());
 
     static {
         if (databaseTimeout >= 0) {
