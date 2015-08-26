@@ -239,6 +239,7 @@ public class MVSettings {
             return type.getCellClass().getCanonicalName();
         } else {
             StringBuffer sb = new StringBuffer();
+            sb.append("Non-Native ");
             List<Class<? extends DataValue>> valueClasses = type.getValueClasses();
             for (int i = 0; i < valueClasses.size(); i++) {
                 if (i > 0) {
