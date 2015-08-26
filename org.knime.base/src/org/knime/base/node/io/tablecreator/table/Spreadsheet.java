@@ -53,6 +53,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -105,8 +106,8 @@ public class Spreadsheet extends JComponent {
 
         m_table = new SpreadsheetTable();
         m_scrollPane = new JScrollPane(
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         add(m_scrollPane, BorderLayout.CENTER);
 
 
@@ -152,25 +153,25 @@ public class Spreadsheet extends JComponent {
         m_table.getEditorTextField().addKeyListener(inputLineContr);
 
         KeyStroke ctrlX = KeyStroke.getKeyStroke(KeyEvent.VK_X,
-                KeyEvent.CTRL_MASK);
+                InputEvent.CTRL_MASK);
         m_table.getInputMap().put(ctrlX, "SpreadsheetCut");
         m_table.getActionMap().put("SpreadsheetCut",
                 new CutAction(m_table));
 
         KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C,
-                KeyEvent.CTRL_MASK);
+                InputEvent.CTRL_MASK);
         m_table.getInputMap().put(ctrlC, "SpreadsheetCopy");
         m_table.getActionMap().put("SpreadsheetCopy",
                 new CopyAction(m_table));
 
         KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V,
-                KeyEvent.CTRL_MASK);
+                InputEvent.CTRL_MASK);
         m_table.getInputMap().put(ctrlV, "SpreadsheetPaste");
         m_table.getActionMap().put("SpreadsheetPaste",
                 new PasteAction(m_table));
 
         KeyStroke ctrlA = KeyStroke.getKeyStroke(KeyEvent.VK_A,
-                KeyEvent.CTRL_MASK);
+                InputEvent.CTRL_MASK);
         m_table.getInputMap().put(ctrlA, "SpreadsheetSelectAll");
         m_table.getActionMap().put("SpreadsheetSelectAll",
                 new SelectAllAction(m_table));
@@ -587,8 +588,6 @@ public class Spreadsheet extends JComponent {
         for (int k = 0; k < colCount; k++) {
             ColProperty colProperty =
                 model.getColumnProperties().get(k);
-            String missingValuePattern = colProperty != null ?
-                    colProperty.getMissingValuePattern() : "";
             for (int i = 0; i < rowCount; i++) {
                 Object value = model.getValueAt(i, k);
                 if (value instanceof Cell) {
@@ -599,7 +598,8 @@ public class Spreadsheet extends JComponent {
                 } else { // value is an empty string
                     if (null != colProperty) {
                         DataCellFactory cellFactory = new DataCellFactory();
-                        cellFactory.setMissingValuePattern(missingValuePattern);
+                        cellFactory.setMissingValuePattern(colProperty.getMissingValuePattern());
+                        cellFactory.setFormatParameter(colProperty.getFormatParameter().orElse(null));
                         DataCell dataCell = cellFactory.createDataCellOfType(
                             colProperty.getColumnSpec().getType(),
                             value.toString());

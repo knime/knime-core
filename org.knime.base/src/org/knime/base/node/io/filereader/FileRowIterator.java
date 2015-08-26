@@ -372,9 +372,8 @@ class FileRowIterator extends RowIterator {
                 DataColumnSpec cSpec = m_tableSpec.getColumnSpec(createdCols);
                 // now get that new cell
                 // (it throws an exception at us if it couldn't)
-                row[createdCols] =
-                        createNewDataCellOfType(cSpec.getType(), token,
-                                isMissingCell, rowHeader, row);
+                row[createdCols] = createNewDataCellOfType(cSpec.getType(), token, isMissingCell,
+                    m_frSettings.getFormatParameterForColumn(readCols).orElse(null), rowHeader, row);
                 createdCols++;
             }
             readCols++;
@@ -483,6 +482,7 @@ class FileRowIterator extends RowIterator {
      * @param createMissingCell If set <code>true</code> a missing cell of the
      *            passed type will be created. The <code>data</code> parameter
      *            is ignored then.
+     * @param formatParameter an optional format parameter, may be <code>null</code>
      * @param rowHeader the rowID - for nice error messages only
      * @param row the cells of the row created so far. Used for messages only.
      * @return data cell of the type specified in <code> type </code>
@@ -490,12 +490,14 @@ class FileRowIterator extends RowIterator {
      */
     private DataCell createNewDataCellOfType(final DataType type,
             final String data, final boolean createMissingCell,
+            final String formatParameter,
             final String rowHeader, final DataCell[] row) {
 
         if (createMissingCell) {
             return DataType.getMissingCell();
         }
 
+        m_cellFactory.setFormatParameter(formatParameter);
         DataCell result = m_cellFactory.createDataCellOfType(type, data);
 
         if (result != null) {

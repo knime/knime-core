@@ -51,7 +51,7 @@ import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.JTable;
-import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
@@ -110,8 +110,6 @@ class CellRenderer extends DefaultTableCellRenderer {
         }
         ColProperty colProperty =
             m_tableModel.getColumnProperties().get(column);
-        String missingValuePattern = colProperty != null ?
-            colProperty.getMissingValuePattern() : "";
         if (value instanceof Cell) {
             Cell cell = (Cell)value;
             if (cell.getValue() == null) {
@@ -121,7 +119,8 @@ class CellRenderer extends DefaultTableCellRenderer {
         } else { // value is an empty string
             if (null != colProperty && isInFilledArea(row, column)) {
                 DataCellFactory cellFactory = new DataCellFactory();
-                cellFactory.setMissingValuePattern(missingValuePattern);
+                cellFactory.setMissingValuePattern(colProperty.getMissingValuePattern());
+                cellFactory.setFormatParameter(colProperty.getFormatParameter().orElse(null));
                 DataCell dataCell = cellFactory.createDataCellOfType(
                       colProperty.getColumnSpec().getType(), value.toString());
                 if (null == dataCell) {
@@ -163,9 +162,9 @@ class CellRenderer extends DefaultTableCellRenderer {
             Cell cell = (Cell)value;
             if (cell.getValue() != null && cell.getType().isCompatible(
                   DoubleValue.class)) {
-                setHorizontalAlignment(JTextField.RIGHT);
+                setHorizontalAlignment(SwingConstants.RIGHT);
             } else {
-                setHorizontalAlignment(JTextField.LEFT);
+                setHorizontalAlignment(SwingConstants.LEFT);
             }
             setText(((Cell)value).getText());
         } else {

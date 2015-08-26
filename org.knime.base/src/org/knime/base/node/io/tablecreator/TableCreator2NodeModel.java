@@ -184,6 +184,7 @@ public class TableCreator2NodeModel extends NodeModel {
                 }
                 String missValPattern = colProps[k].getMissingValuePattern();
                 cellFactory.setMissingValuePattern(missValPattern);
+                cellFactory.setFormatParameter(colProps[k].getFormatParameter().orElse(null));
                 DataCell result = cellFactory.createDataCellOfType(
                             colProps[k].getColumnSpec().getType(), value);
                 if (null != result) {

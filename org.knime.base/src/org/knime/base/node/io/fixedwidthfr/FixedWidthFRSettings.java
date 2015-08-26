@@ -86,8 +86,6 @@ public class FixedWidthFRSettings {
      */
     static final String CFGKEY_URL = "FileLocationURL";
 
-    private static final String CFGKEY_PRESERVESETTINGS = "PreserveSettings";
-
     private URL m_fileLocation;
 
     private List<FixedWidthColProperty> m_colProperties;
@@ -108,7 +106,7 @@ public class FixedWidthFRSettings {
         m_colProperties = new ArrayList<FixedWidthColProperty>();
 
         m_colProperties.add(new FixedWidthColProperty("remaining characters", StringCell.TYPE, Integer.MAX_VALUE, true,
-            null));
+            null, null));
 
         m_numberOfColumns = m_colProperties.size();
 
@@ -269,7 +267,7 @@ public class FixedWidthFRSettings {
         m_colProperties = new Vector<FixedWidthColProperty>();
 
         m_colProperties.add(new FixedWidthColProperty("remaining characters", StringCell.TYPE, Integer.MAX_VALUE, true,
-            null));
+            null, null));
 
         m_numberOfColumns = m_colProperties.size();
 
@@ -370,6 +368,22 @@ public class FixedWidthFRSettings {
         }
         return result;
     }
+
+    /**
+     * @return an array with the format parameters from all included columns. Note: The length of this array is
+     *         equal to getNumberOfIncludedColumns
+     */
+    public String[] getFormatParameters() {
+        String[] result = new String[getNumberOfIncludedColumns()];
+        int r = 0;
+        for (int i = 0; i < m_colProperties.size(); i++) {
+            if (m_colProperties.get(i).getInclude()) {
+                result[r++] = m_colProperties.get(i).getFormatParameter().orElse(null);
+            }
+        }
+        return result;
+    }
+
 
     /**
      * @return an array with all column widths also not included columns

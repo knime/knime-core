@@ -68,7 +68,6 @@ Export-Package: Jama,
  org.knime.base.node.io.table.read,
  org.knime.base.node.io.table.write,
  org.knime.base.node.io.tablecreator,
- org.knime.base.node.io.tablecreator.prop,
  org.knime.base.node.io.tablecreator.table,
  org.knime.base.node.meta.feature.backwardelim,
  org.knime.base.node.meta.looper,
@@ -277,5 +276,5 @@ Require-Bundle: org.knime.core;bundle-version="[3.0.0,4.0.0)";visibility:=reexpo
  org.apache.commons.math3;bundle-version="[3.2.0,4.0.0)",
  javax.mail.glassfish;bundle-version="[1.4.1,2.0.0)",
  org.knime.workbench.repository
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-BuddyPolicy: dependent

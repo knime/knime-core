@@ -82,6 +82,8 @@ public class FixedWidthRowIterator extends CloseableRowIterator {
 
     private String[] m_missingValuePatterns;
 
+    private String[] m_formatParameters;
+
     private DataCellFactory m_dataCellFactory;
 
     private int m_lineNumber;
@@ -112,8 +114,9 @@ public class FixedWidthRowIterator extends CloseableRowIterator {
         m_inputStream = m_nodeSettings.createNewInputReader();
         m_tokenizer = new FixedWidthTokenizer(m_inputStream, m_nodeSettings);
         m_missingValuePatterns = m_nodeSettings.getMissingValuePatterns();
+        m_formatParameters = m_nodeSettings.getFormatParameters();
 
-        m_dataCellFactory = new DataCellFactory();
+        m_dataCellFactory = new DataCellFactory(exec);
 
         m_lineNumber = 0;
     }
@@ -171,6 +174,7 @@ public class FixedWidthRowIterator extends CloseableRowIterator {
         DataColumnSpec cSpec = null;
         while (createdCols < rowLength) {
             m_dataCellFactory.setMissingValuePattern(m_missingValuePatterns[createdCols]);
+            m_dataCellFactory.setFormatParameter(m_formatParameters[createdCols]);
             token = m_tokenizer.nextToken();
             if (!m_tokenizer.getReachedEndOfLine()) {
                 cSpec = m_tableSpec.getColumnSpec(createdCols);

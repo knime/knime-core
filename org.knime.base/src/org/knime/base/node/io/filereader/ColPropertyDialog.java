@@ -48,10 +48,8 @@
 package org.knime.base.node.io.filereader;
 
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
@@ -71,13 +69,16 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.data.BoundedValue;
+import org.knime.core.data.ConfigurableDataCellFactory;
+import org.knime.core.data.DataCellFactory;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.NominalValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.node.util.ViewUtils;
 
 
 /**
@@ -85,24 +86,13 @@ import org.knime.core.data.def.StringCell;
  * @author Peter Ohl, University of Konstanz
  */
 public final class ColPropertyDialog extends JDialog {
-
-    // constants for the combobox
-    private static final int TYPE_DOUBLE = 0;
-
-    private static final int TYPE_INT = 1;
-
-    private static final int TYPE_STRING = 2;
-
-    private static final int TYPE_SMILES = 3;
-
-    private static final String[] TYPES;
+    private static final DataType[] TYPES;
 
     static {
-        if (SmilesTypeHelper.INSTANCE.isSmilesAvailable()) {
-            TYPES = new String[] {"Double", "Integer", "String", "Smiles"};
-        } else {
-            TYPES = new String[] {"Double", "Integer", "String"};
-        }
+        TYPES = DataTypeRegistry.getInstance().availableDataTypes().stream()
+                .filter(d -> d.getCellFactory(null).orElse(null) instanceof FromSimpleString)
+                .sorted((a, b) -> a.getName().compareTo(b.getName()))
+                .toArray(DataType[]::new);
     }
 
 
@@ -117,12 +107,16 @@ public final class ColPropertyDialog extends JDialog {
 
     private JTextField m_colNameField;
 
-    private JComboBox m_typeChooser;
+    private JComboBox<DataType> m_typeChooser;
 
     private JTextField m_missValueField;
 
     // the index in the type combobox of the old type.
-    private int m_oldType;
+    private DataType m_oldType;
+
+    private JLabel m_optionalParameterLabel;
+
+    private JComboBox<String> m_optionalParameterField;
 
     // the properties object we store (only) domain settings in. If null user
     // did not open the domain dialog and we are supposed to use default values.
@@ -135,14 +129,8 @@ public final class ColPropertyDialog extends JDialog {
 
     private JButton m_domainButton;
 
-    private ColPropertyDialog() {
-        // don't call me.
-        assert false;
-    }
-
     private ColPropertyDialog(final Frame parent, final int colIdx,
             final Vector<ColProperty> allColProps) {
-
         super(parent, true);
 
         m_colIdx = colIdx;
@@ -152,6 +140,7 @@ public final class ColPropertyDialog extends JDialog {
         // instantiate the components of the dialog
         m_skipColumn = new JCheckBox("DON'T include column in output table");
         m_skipColumn.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 skipColumnHasChanged();
             }
@@ -170,9 +159,9 @@ public final class ColPropertyDialog extends JDialog {
         // panel for the type is next
         JPanel typePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 5));
         typePanel.add(new JLabel("Type: "));
-        m_typeChooser = new JComboBox(TYPES);
-        m_typeChooser.setPrototypeDisplayValue("0123456789");
+        m_typeChooser = new JComboBox<>(TYPES);
         m_typeChooser.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 typeSelectionChanged();
             }
@@ -184,6 +173,16 @@ public final class ColPropertyDialog extends JDialog {
         missPanel.add(new JLabel("miss. value pattern:"));
         m_missValueField = new JTextField(8);
         missPanel.add(m_missValueField);
+
+        // the optional format parameter
+        JPanel parameterPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 2));
+        m_optionalParameterLabel = new JLabel("Format:");
+        m_optionalParameterLabel.setEnabled(false);
+        parameterPanel.add(m_optionalParameterLabel);
+        m_optionalParameterField = new JComboBox<>();
+        m_optionalParameterField.setEnabled(false);
+        m_optionalParameterField.setEditable(true);
+        parameterPanel.add(m_optionalParameterField);
 
         // the warning message
         JPanel warnPanel = new JPanel();
@@ -198,6 +197,7 @@ public final class ColPropertyDialog extends JDialog {
         m_domainButton = new JButton("Domain...");
         domainPanel.add(m_domainButton);
         m_domainButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 openDomainDialog();
                 m_warnLabel.setText("");
@@ -210,6 +210,7 @@ public final class ColPropertyDialog extends JDialog {
         JButton ok = new JButton("OK");
         // add action listener
         ok.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 onOK();
             }
@@ -217,6 +218,7 @@ public final class ColPropertyDialog extends JDialog {
         JButton cancel = new JButton("Cancel");
         // add action listener
         cancel.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent event) {
                 onCancel();
             }
@@ -233,6 +235,7 @@ public final class ColPropertyDialog extends JDialog {
         dlgPanel.add(namePanel);
         dlgPanel.add(typePanel);
         dlgPanel.add(missPanel);
+        dlgPanel.add(parameterPanel);
         dlgPanel.add(warnPanel);
         dlgPanel.add(domainPanel);
 
@@ -245,7 +248,6 @@ public final class ColPropertyDialog extends JDialog {
 
         setModal(true);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-
     }
 
     private void skipColumnHasChanged() {
@@ -268,8 +270,13 @@ public final class ColPropertyDialog extends JDialog {
 
         // set the new name and type - regardless of their correctness
         domainProperty.changeColumnName(m_colNameField.getText());
-        domainProperty.changeColumnType(getTypeFromComboIndex(m_typeChooser
-                .getSelectedIndex()));
+
+        DataType selectedType = (DataType) m_typeChooser.getSelectedItem();
+        if (!domainProperty.getColumnSpec().getType().equals(selectedType)) {
+            domainProperty.changeDomain(new DataColumnDomainCreator().createDomain());
+        }
+
+        domainProperty.changeColumnType(selectedType);
 
         if (m_userDomainSettings != null) {
             // calling this dialog for the 2nd time. Use vals from first call.
@@ -297,8 +304,38 @@ public final class ColPropertyDialog extends JDialog {
             m_warnLabel.setText("Domain settings were reset!!");
         }
 
+        configureParameterField();
         setEnableStatusOfDomainButton();
+    }
 
+    private void configureParameterField() {
+        m_optionalParameterField.removeAllItems();
+        m_optionalParameterLabel.setEnabled(false);
+        m_optionalParameterField.setEnabled(false);
+        m_optionalParameterLabel.setToolTipText(null);
+        m_optionalParameterField.setToolTipText(null);
+
+        if (!m_skipColumn.isSelected()) {
+            DataType selectedType = (DataType) m_typeChooser.getSelectedItem();
+            if (selectedType != null) {
+                DataCellFactory fac = selectedType.getCellFactory(null).orElseGet(null);
+                if (fac instanceof ConfigurableDataCellFactory) {
+                    ConfigurableDataCellFactory cfac = (ConfigurableDataCellFactory)fac;
+
+                    m_optionalParameterLabel.setEnabled(true);
+                    m_optionalParameterField.setEnabled(true);
+                    for (String s : cfac.getPredefinedParameters()) {
+                        m_optionalParameterField.addItem(s);
+                    }
+                    m_optionalParameterField.setSelectedItem(m_allColProps.get(m_colIdx).getFormatParameter().orElse(null));
+
+                    m_optionalParameterLabel.setToolTipText(cfac.getParameterDescription());
+                    m_optionalParameterField.setToolTipText(cfac.getParameterDescription());
+
+                    pack();
+                }
+            }
+        }
     }
 
     private void setEnableStatusOfDomainButton() {
@@ -308,23 +345,14 @@ public final class ColPropertyDialog extends JDialog {
             return;
         }
 
-        DataType selectedType =
-                getTypeFromComboIndex(m_typeChooser.getSelectedIndex());
+        DataType selectedType = (DataType) m_typeChooser.getSelectedItem();
 
         if (selectedType == null) {
             m_domainButton.setEnabled(false);
             return;
         }
-            // if (selectedType.isCompatible(StringValue.class)
-        // || selectedType.isCompatible(IntValue.class)) {
-        /*
-         * TODO: The DataContainer doesn't support nominal values for integer
-         * columns yet. If it does, replace the if stmt below with the one above
-         * (the domain dialog already supports int types). Also, somehow, tell
-         * the data container about the user's decision.
-         */
-        if (selectedType.isCompatible(StringValue.class)
-                && selectedType.isCompatible(NominalValue.class)) {
+
+        if (selectedType.isCompatible(StringValue.class) || selectedType.isCompatible(BoundedValue.class)) {
             m_domainButton.setEnabled(true);
         } else {
             m_domainButton.setEnabled(false);
@@ -384,8 +412,8 @@ public final class ColPropertyDialog extends JDialog {
         // the column name
         m_colNameField.setText(theColSpec.getName().toString());
         // figure out the old type index (in the combo box) to pre-set it
-        m_oldType = getComboIndexFromType(theColSpec.getType());
-        m_typeChooser.setSelectedIndex(m_oldType);
+        m_oldType = theColSpec.getType();
+        m_typeChooser.setSelectedItem(m_oldType);
         // the missing value
         m_missValueField.setText(theColProp.getMissingValuePattern());
 
@@ -393,7 +421,8 @@ public final class ColPropertyDialog extends JDialog {
                 + "'");
 
         pack();
-        centerDialog();
+        ViewUtils.centerLocation(this, getParent().getBounds());
+
 
         setVisible(true);
         /* ---- won't come back before dialog is disposed -------- */
@@ -425,26 +454,13 @@ public final class ColPropertyDialog extends JDialog {
         // (tg) dispose(); causes the parent to move to back
     }
 
-    /**
-     * Sets this dialog in the center of the screen observing the current screen
-     * size.
-     */
-    private void centerDialog() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension size = getSize();
-        setBounds(Math.max(0, (screenSize.width - size.width) / 2), Math.max(0,
-                (screenSize.height - size.height) / 2), Math.min(
-                screenSize.width, size.width), Math.min(screenSize.height,
-                size.height));
-    }
-
     private Vector<ColProperty> takeOverSettings() {
         ColProperty theColProp = m_allColProps.get(m_colIdx);
 
         // get the new values
-        int newType = m_typeChooser.getSelectedIndex();
         String newName = m_colNameField.getText();
         String newMissVal = m_missValueField.getText();
+        String formatParameter = (String) m_optionalParameterField.getSelectedItem();
 
         // create the new ColProperty object to return (start with the old vals)
         ColProperty newColProp = (ColProperty)theColProp.clone();
@@ -493,24 +509,10 @@ public final class ColPropertyDialog extends JDialog {
         // take over the new value
         newColProp.changeColumnName(newName);
 
+        DataType newType = (DataType) m_typeChooser.getSelectedItem();
         if (newType != m_oldType) {
             /* user changed column type. Take it over. */
-            DataType type = getTypeFromComboIndex(newType);
-            if (type == null) {
-                // internal error - shouldn't happen
-                JOptionPane
-                        .showMessageDialog(
-                                this,
-                                "Unexpected and invalid type (looks like an "
-                                        + "internal error!). "
-                                        + "Try selecting another type "
-                                        + "or press cancel.",
-                                "Internal Error: Unexpected type",
-                                JOptionPane.ERROR_MESSAGE);
-                return null;
-
-            }
-            newColProp.changeColumnType(type);
+            newColProp.changeColumnType(newType);
             /*
              * and change domain/poss.value settings as they are of the old type
              */
@@ -524,6 +526,8 @@ public final class ColPropertyDialog extends JDialog {
                 newColProp.setMissingValuePattern(newMissVal);
             }
         }
+
+        newColProp.setFormatParameter(formatParameter);
 
         if (m_userDomainSettings != null) {
             // user changed domain. take it over
@@ -540,34 +544,4 @@ public final class ColPropertyDialog extends JDialog {
         return result;
 
     }
-
-    private DataType getTypeFromComboIndex(final int comboBoxIndex) {
-        // extract new type
-        switch (comboBoxIndex) {
-        case TYPE_STRING:
-            return StringCell.TYPE;
-        case TYPE_INT:
-            return IntCell.TYPE;
-        case TYPE_DOUBLE:
-            return DoubleCell.TYPE;
-        case TYPE_SMILES:
-            return SmilesTypeHelper.INSTANCE.getSmilesType();
-        default:
-            return null;
-        }
-    }
-
-    private int getComboIndexFromType(final DataType type) {
-        if (type.equals(IntCell.TYPE)) {
-            return TYPE_INT;
-        } else if (type.equals(DoubleCell.TYPE)) {
-            return TYPE_DOUBLE;
-        } else if (type.equals(SmilesTypeHelper.INSTANCE.getSmilesType())) {
-            return TYPE_SMILES;
-        } else {
-            assert (type.equals(StringCell.TYPE));
-            return TYPE_STRING;
-        }
-    }
-
 }

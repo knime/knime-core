@@ -54,7 +54,6 @@ import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -78,37 +77,28 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.io.filereader.SmilesTypeHelper;
+import org.knime.core.data.ConfigurableDataCellFactory;
+import org.knime.core.data.DataCellFactory;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataType;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  *
  * @author Tim-Oliver Buchholz
  */
 final class NewColumnDialog extends JDialog {
-
-    // constants for the combobox
-    private static final int TYPE_DOUBLE = 0;
-
-    private static final int TYPE_INT = 1;
-
-    private static final int TYPE_STRING = 2;
-
-    private static final int TYPE_SMILES = 3;
-
-    private static final String[] TYPES;
+    private static final DataType[] TYPES;
 
     private static final String[] MISSING_VALUE_PATTERNS = new String[]{"<none>", "<whitespace>"};
 
     static {
-        if (SmilesTypeHelper.INSTANCE.isSmilesAvailable()) {
-            TYPES = new String[]{"Double", "Integer", "String", "Smiles"};
-        } else {
-            TYPES = new String[]{"Double", "Integer", "String"};
-        }
+        TYPES = DataTypeRegistry.getInstance().availableDataTypes().stream()
+            .filter(d -> d.getCellFactory(null).orElse(null) instanceof FromSimpleString)
+            .sorted((a, b) -> a.getName().compareTo(b.getName()))
+            .toArray(DataType[]::new);
     }
 
     private JTextField m_colNameField;
@@ -123,7 +113,11 @@ final class NewColumnDialog extends JDialog {
 
     private JComboBox<String> m_missValueChooser;
 
-    private JComboBox<String> m_typeChooser;
+    private JLabel m_formatParameterLabel;
+
+    private JComboBox<String> m_formatParameterChooser;
+
+    private JComboBox<DataType> m_typeChooser;
 
     private JCheckBox m_skipColumn;
 
@@ -227,8 +221,9 @@ final class NewColumnDialog extends JDialog {
         // panel for the type is next
         JPanel typePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 5));
         typePanel.add(new JLabel("Type: "));
-        m_typeChooser = new JComboBox<String>(TYPES);
-        m_typeChooser.setSelectedIndex(getComboIndexFromType(type));
+        m_typeChooser = new JComboBox<>(TYPES);
+        m_typeChooser.setSelectedItem(type);
+        m_typeChooser.addActionListener(e -> typeChanged());
         typePanel.add(m_typeChooser);
 
         // the missing value components
@@ -239,6 +234,16 @@ final class NewColumnDialog extends JDialog {
         m_missValueChooser.setEditable(true);
         m_missValueChooser.setSelectedItem(mvpSelection);
         missPanel.add(m_missValueChooser);
+
+        // the format parameter components
+        JPanel formatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 3, 5));
+        m_formatParameterLabel = new JLabel("Format:");
+        formatPanel.add(m_formatParameterLabel);
+        m_formatParameterChooser = new JComboBox<>();
+        m_formatParameterChooser.setEditable(true);
+        typeChanged();
+        formatPanel.add(m_formatParameterChooser);
+
 
         // set size
         m_numOfColSpinner.setPreferredSize(prefDim);
@@ -318,6 +323,12 @@ final class NewColumnDialog extends JDialog {
         c.gridx = 0;
         c.gridy = 3;
         c.gridwidth = 3;
+        c.anchor = GridBagConstraints.WEST;
+        dlgPanel.add(formatPanel, c);
+
+        c.gridx = 0;
+        c.gridy = 4;
+        c.gridwidth = 3;
         dlgPanel.add(skipPanel, c);
 
         // add dialog and control panel to the content pane
@@ -331,6 +342,37 @@ final class NewColumnDialog extends JDialog {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
     }
 
+    private void typeChanged() {
+        DataType type = (DataType)m_typeChooser.getSelectedItem();
+        m_formatParameterChooser.removeAllItems();
+        m_formatParameterLabel.setEnabled(false);
+        m_formatParameterChooser.setEnabled(false);
+        m_formatParameterLabel.setToolTipText(null);
+        m_formatParameterChooser.setToolTipText(null);
+
+        if (type != null) {
+            DataCellFactory f = type.getCellFactory(null).orElse(null);
+            if (f instanceof ConfigurableDataCellFactory) {
+                ConfigurableDataCellFactory cfac = (ConfigurableDataCellFactory)f;
+
+                for (String s : cfac.getPredefinedParameters()) {
+                    m_formatParameterChooser.addItem(s);
+                }
+                if (m_allColumns.size() > m_colIdx) {
+                    m_formatParameterChooser.setSelectedItem(m_allColumns.get(m_colIdx).getFormatParameter().orElse(null));
+                } else {
+                    m_formatParameterChooser.setSelectedItem(null);
+                }
+
+                m_formatParameterLabel.setEnabled(true);
+                m_formatParameterChooser.setEnabled(true);
+                m_formatParameterLabel.setToolTipText(cfac.getParameterDescription());
+                m_formatParameterChooser.setToolTipText(cfac.getParameterDescription());
+            }
+        }
+        pack();
+    }
+
     /**
      * Called when user presses the ok button.
      */
@@ -341,7 +383,7 @@ final class NewColumnDialog extends JDialog {
         String missingValuePattern;
         int numOfCol = (int)m_numOfColSpinner.getValue();
 
-        DataType type = getTypeFromComboIndex(m_typeChooser.getSelectedIndex());
+        DataType type = (DataType)m_typeChooser.getSelectedItem();
         if (checkName(name) && checkWidth(width)) {
             int w = Integer.parseInt(width);
             missingValuePattern = getMissingValuePattern(w);
@@ -355,7 +397,7 @@ final class NewColumnDialog extends JDialog {
                         colName = name;
                     }
                     m_result.add(new FixedWidthColProperty(colName, type, w, !m_skipColumn.isSelected(),
-                        missingValuePattern));
+                        missingValuePattern, (String) m_formatParameterChooser.getSelectedItem()));
                 }
                 shutDown();
             }
@@ -467,16 +509,6 @@ final class NewColumnDialog extends JDialog {
         setVisible(false);
     }
 
-    /**
-     * Sets this dialog in the center of the screen observing the current screen size.
-     */
-    private void centerDialog() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension size = getSize();
-        setBounds(Math.max(0, (screenSize.width - size.width) / 2), Math.max(0, (screenSize.height - size.height) / 2),
-            Math.min(screenSize.width, size.width), Math.min(screenSize.height, size.height));
-    }
-
     private List<FixedWidthColProperty> showDialog() {
         setTitle("Set column properties");
         if (m_hasRowHeader && m_colIdx == 0) {
@@ -487,7 +519,7 @@ final class NewColumnDialog extends JDialog {
             m_typeChooser.setEnabled(false);
         }
         pack();
-        centerDialog();
+        ViewUtils.centerLocation(this, getParent().getBounds());
 
         setVisible(true);
         return m_result;
@@ -505,34 +537,5 @@ final class NewColumnDialog extends JDialog {
         NewColumnDialog colPropDlg = new NewColumnDialog(f, allColProperties, colIdx, hasRowHeader);
         return colPropDlg.showDialog();
 
-    }
-
-    private DataType getTypeFromComboIndex(final int comboBoxIndex) {
-        // extract new type
-        switch (comboBoxIndex) {
-            case TYPE_STRING:
-                return StringCell.TYPE;
-            case TYPE_INT:
-                return IntCell.TYPE;
-            case TYPE_DOUBLE:
-                return DoubleCell.TYPE;
-            case TYPE_SMILES:
-                return SmilesTypeHelper.INSTANCE.getSmilesType();
-            default:
-                return null;
-        }
-    }
-
-    private int getComboIndexFromType(final DataType type) {
-        if (type.equals(IntCell.TYPE)) {
-            return TYPE_INT;
-        } else if (type.equals(DoubleCell.TYPE)) {
-            return TYPE_DOUBLE;
-        } else if (type.equals(SmilesTypeHelper.INSTANCE.getSmilesType())) {
-            return TYPE_SMILES;
-        } else {
-            assert (type.equals(StringCell.TYPE));
-            return TYPE_STRING;
-        }
     }
 }

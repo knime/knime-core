@@ -55,6 +55,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Vector;
 
 import org.knime.base.node.util.BufferedFileReader;
@@ -149,6 +150,8 @@ public class FileReaderSettings extends TokenizerSettings {
      */
     private Vector<String> m_missingPatterns;
 
+    private Vector<String> m_formatParameters;
+
     /*
      * if set to a not-negative number, it limits the number of lines read from
      * the input file. -1 reads all.
@@ -199,6 +202,8 @@ public class FileReaderSettings extends TokenizerSettings {
 
     private static final String CFGKEY_MISSING = "MissPattern";
 
+    private static final String CFGKEY_FORMAT = "FormatParameter";
+
     private static final String CFGKEY_GLOBALMISSPATTERN = "globalMissPattern";
 
     private static final String CFGKEY_TABLENAME = "TableName";
@@ -248,6 +253,7 @@ public class FileReaderSettings extends TokenizerSettings {
 
         m_rowDelimiters = new HashSet<String>(clonee.m_rowDelimiters);
         m_missingPatterns = new Vector<String>(clonee.m_missingPatterns);
+        m_formatParameters = new Vector<>(clonee.m_formatParameters);
         m_globalMissPatternStrCols = clonee.m_globalMissPatternStrCols;
         m_columnNumberDeterminingLine = clonee.m_columnNumberDeterminingLine;
 
@@ -276,6 +282,7 @@ public class FileReaderSettings extends TokenizerSettings {
 
         m_rowDelimiters = new HashSet<String>();
         m_missingPatterns = new Vector<String>();
+        m_formatParameters = new Vector<>();
         m_globalMissPatternStrCols = null; // no global missing value pattern
         m_columnNumberDeterminingLine = -1;
 
@@ -369,6 +376,19 @@ public class FileReaderSettings extends TokenizerSettings {
                 readMissingPatternsFromConfig(missPattConf);
             }
 
+            if (cfg.containsKey(CFGKEY_FORMAT)) {
+                NodeSettingsRO formatConf;
+                try {
+                    formatConf = cfg.getNodeSettings(CFGKEY_FORMAT);
+                } catch (InvalidSettingsException ice) {
+                    throw new InvalidSettingsException(
+                            "Illegal config object for file "
+                                    + "reader settings! Wrong type of key '"
+                                    + CFGKEY_FORMAT + "'!", ice);
+                }
+                readFormatParametersFromConfig(formatConf);
+            }
+
             m_globalMissPatternStrCols =
                     cfg.getString(CFGKEY_GLOBALMISSPATTERN, null);
             NodeSettingsRO rowDelimConf = null;
@@ -449,6 +469,7 @@ public class FileReaderSettings extends TokenizerSettings {
 
         saveRowDelimitersToConfig(cfg.addNodeSettings(CFGKEY_ROWDELIMS));
         saveMissingPatternsToConfig(cfg.addNodeSettings(CFGKEY_MISSINGS));
+        saveFormatParametersToConfig(cfg.addNodeSettings(CFGKEY_FORMAT));
         cfg.addString(CFGKEY_GLOBALMISSPATTERN, m_globalMissPatternStrCols);
         cfg.addChar(CFGKEY_DECIMALSEP, m_decimalSeparator);
         cfg.addChar(CFGKEY_THOUSANDSEP, m_thousandsSeparator);
@@ -506,6 +527,36 @@ public class FileReaderSettings extends TokenizerSettings {
             cfg.addString(CFGKEY_MISSING + m, m_missingPatterns.get(m));
         }
 
+    }
+
+
+    private void readFormatParametersFromConfig(final NodeSettingsRO formatConf) {
+        int m = 0;
+        for (String key : formatConf.keySet()) {
+            // they should all start with "MissPattern"...
+            if (key.indexOf(CFGKEY_FORMAT) != 0) {
+                LOGGER.warn("Illegal format parameter configuration '" + key + "'. Ignoring it!");
+            } else {
+                try {
+                    String format = formatConf.getString(CFGKEY_FORMAT + m);
+                    setFormatParameterForColumn(m, format);
+                    m++;
+                } catch (InvalidSettingsException ice) {
+                    LOGGER.warn("Illegal format parameter configuration '" + key
+                        + "' (should be of type string). Ignoring it!");
+                }
+            }
+        }
+    }
+
+    /*
+     * saves all currently set missing patterns for each column to a config
+     * object
+     */
+    private void saveFormatParametersToConfig(final NodeSettingsWO cfg) {
+        for (int m = 0; m < m_formatParameters.size(); m++) {
+            cfg.addString(CFGKEY_FORMAT + m, m_formatParameters.get(m));
+        }
     }
 
     /*
@@ -992,6 +1043,36 @@ public class FileReaderSettings extends TokenizerSettings {
         return m_missingPatterns.get(colIdx);
     }
 
+
+    /**
+     * Sets an optional format for the column. The format will be passed to the data cell factory.
+     *
+     * @param colIdx the index of the column this missing value is set for
+     * @param format a format parameter for the data cell factory for the given column, may be <code>null</code>
+     * @since 3.0
+     */
+    public void setFormatParameterForColumn(final int colIdx, final String format) {
+        if (m_formatParameters.size() <= colIdx) {
+            m_formatParameters.setSize(colIdx + 1);
+        }
+        m_formatParameters.set(colIdx, format);
+    }
+
+    /**
+     * Returns an optional format for the column. The format can be passed to the data cell factory.
+     *
+     * @param colIdx the index of the column this missing value is set for
+     * @return a format parameter for the data cell factory for the given column
+     * @since 3.0
+     */
+    public Optional<String> getFormatParameterForColumn(final int colIdx) {
+        if (m_formatParameters.size() <= colIdx) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(m_formatParameters.get(colIdx));
+    }
+
+
     /**
      * @return the character that is considered decimal separator in the data
      *         (token) for a double type column
@@ -1346,6 +1427,13 @@ public class FileReaderSettings extends TokenizerSettings {
             res.append(m_globalMissPatternStrCols);
         }
         res.append("\n");
+        res.append("Format parameters: ");
+        for (int p = 0; p < m_formatParameters.size(); p++) {
+            res.append(m_formatParameters.get(p));
+            if (p < m_formatParameters.size() - 1) {
+                res.append(", ");
+            }
+        }
         return res.toString();
     }
 }

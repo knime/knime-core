@@ -50,11 +50,13 @@ package org.knime.base.node.io.filereader;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.text.ParseException;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Vector;
@@ -65,6 +67,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
+import javax.swing.JFormattedTextField;
+import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -76,11 +80,13 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-
 
 /**
  *
@@ -95,7 +101,7 @@ public class DomainDialog extends JDialog {
     // components needed to handle int possible values adding/removal
     private JTextField m_editField;
 
-    private JList m_valueList;
+    private JList<Object> m_valueList;
 
     private JLabel m_errorLabel;
 
@@ -109,18 +115,21 @@ public class DomainDialog extends JDialog {
     // and the new user settings - if valid and okay is pressed.
     private ColProperty m_result;
 
+    private JFormattedTextField m_lowerBoundField;
+
+    private JFormattedTextField m_upperBoundField;
+
     /**
-     * Creates a new dialog for user domain settings of one column. Provide
-     * current column name and type in the colProp object, and call the
-     * {@link #showDialog} method to get user input. After {@link #showDialog}
-     * returns the method getDomainSettings will return the new settings.
+     * Creates a new dialog for user domain settings of one column. Provide current column name and type in the colProp
+     * object, and call the {@link #showDialog} method to get user input. After {@link #showDialog} returns the method
+     * getDomainSettings will return the new settings.
      *
      * @param parent the owner of this dialog
-     * @param colProp current column settings. The column type will be used to
-     *            determine required settings, values in the domain will be used
-     *            as default settings.
+     * @param colProp current column settings. The column type will be used to determine required settings, values in
+     *            the domain will be used as default settings.
+     * @since 3.0
      */
-    DomainDialog(final JDialog parent, final ColProperty colProp) {
+    public DomainDialog(final JDialog parent, final ColProperty colProp) {
         super(parent);
 
         assert colProp != null;
@@ -128,13 +137,21 @@ public class DomainDialog extends JDialog {
         m_colProp = colProp;
         m_result = null;
 
-        JPanel domainPanel = createDomainPanel();
+        JPanel domainPanel = null;
+        if (m_colProp.getColumnSpec().getType().isCompatible(DoubleValue.class)) {
+            domainPanel = createNumericDomainPanel();
+        } else if (m_colProp.getColumnSpec().getType().isCompatible(StringValue.class)) {
+            domainPanel = createNominalDomainPanel();
+        } else {
+            assert false : "unsupported type";
+        }
 
         // the OK and Cancel button
         JPanel control = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton ok = new JButton("OK");
         // add action listener
         ok.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 onOk();
             }
@@ -142,6 +159,7 @@ public class DomainDialog extends JDialog {
         JButton cancel = new JButton("Cancel");
         // add action listener
         cancel.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent event) {
                 onCancel();
             }
@@ -159,64 +177,131 @@ public class DomainDialog extends JDialog {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
     }
 
-    private JPanel createDomainPanel() {
+    private JPanel createNominalDomainPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "domain values for nominal data"));
-
-        if (m_colProp.getColumnSpec().getType().isCompatible(IntValue.class)) {
-
-            // Integer column domain panel
-
-            Box nomBox = Box.createHorizontalBox();
-            m_containsVals = new JCheckBox("Integer column contains "
-                    + "nominal values");
-            m_containsVals.addItemListener(new ItemListener() {
-                public void itemStateChanged(final ItemEvent e) {
-                    containsValsChanged();
-                }
-            });
-            nomBox.add(m_containsVals);
-            nomBox.add(Box.createHorizontalGlue());
-
-            // part for the nominal values
-            Box valueBox = Box.createHorizontalBox();
-            valueBox.add(createIntValuesPanel());
-            valueBox.add(Box.createHorizontalGlue());
-            panel.add(valueBox);
-
-        } else if (m_colProp.getColumnSpec().getType().isCompatible(
-                StringValue.class)) {
 
             // String column domain panel
+            panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                "domain values for nominal data"));
 
             Box valueBox = Box.createHorizontalBox();
             valueBox.add(createStringValuesPanel());
             valueBox.add(Box.createHorizontalGlue());
             panel.add(valueBox);
 
-        } else {
-            assert false : "unsupported type";
-        }
+            panel.add(Box.createVerticalStrut(5));
+            panel.add(new JLabel("Values found in the table will be added " + "automatically."));
+            panel.add(new JLabel("Enter only additional values here that you want " + "to be in the domain"));
 
-        panel.add(Box.createVerticalStrut(5));
-        panel.add(new JLabel("Values found in the table will be added "
-                + "automatically."));
-        panel.add(new JLabel("Enter only additional values here that you want "
-                + "to be in the domain"));
+            return panel;
 
-        return panel;
     }
 
-    /*
-     * returns the bordered possible values box. It contains a box with the edit
-     * fields, which can be dis/enabled seperately (by the read from file
-     * checkbox). This method will set the global member m_intValsEditBox to
-     * point to this edit fields.
-     */
-    private JPanel createIntValuesPanel() {
-        return createValuesPanel(false);
+    private JPanel createNumericDomainPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+            panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Domain values"));
+
+            // Integer column domain panel
+
+            Box nomBox = Box.createHorizontalBox();
+
+            JPanel up = new JPanel();
+            up.setLayout(new BoxLayout(up, BoxLayout.X_AXIS));
+            JLabel upperBoundLabel = new JLabel("Upper Bound: ");
+            up.add(upperBoundLabel);
+
+            m_upperBoundField = new JFormattedTextField(new AbstractFormatter() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public Object stringToValue(final String text) throws ParseException {
+                    try {
+                        if (m_colProp.getColumnSpec().getType().equals(DoubleCell.TYPE)) {
+                            return Double.parseDouble(text);
+                        }
+                        if (m_colProp.getColumnSpec().getType().equals(IntCell.TYPE)) {
+                            return Integer.parseInt(text);
+                        }
+                        // should not happen
+                        throw new NumberFormatException("Impossible column type.");
+                    } catch (NumberFormatException nfe) {
+                        throw new ParseException("Contains non-numeric chars", 0);
+                    }
+                }
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public String valueToString(final Object value) throws ParseException {
+                    return value == null ? null : value.toString();
+                }
+            });
+            m_upperBoundField.setColumns(8);
+            up.add(m_upperBoundField);
+
+            JPanel low = new JPanel();
+            low.setLayout(new BoxLayout(low, BoxLayout.X_AXIS));
+            JLabel lowerBoundLabel = new JLabel("Lower Bound: ");
+            low.add(lowerBoundLabel);
+
+            m_lowerBoundField = new JFormattedTextField(new AbstractFormatter() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public Object stringToValue(final String text) throws ParseException {
+                    try {
+                        if (m_colProp.getColumnSpec().getType().equals(DoubleCell.TYPE)) {
+                            return Double.parseDouble(text);
+                        }
+                        if (m_colProp.getColumnSpec().getType().equals(IntCell.TYPE)) {
+                            return Integer.parseInt(text);
+                        }
+                        // should not happen
+                        throw new NumberFormatException("Impossible column type.");
+                    } catch (NumberFormatException nfe) {
+                        throw new ParseException("Contains non-numeric chars", 0);
+                    }
+                }
+
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public String valueToString(final Object value) throws ParseException {
+                    return value == null ? null : value.toString();
+                }
+            });
+            m_lowerBoundField.setColumns(8);
+            low.add(m_lowerBoundField);
+
+            if (m_colProp.getColumnSpec().getDomain().getUpperBound() != null) {
+                if (m_colProp.getColumnSpec().getType().equals(IntCell.TYPE)) {
+                    m_upperBoundField.setValue(((IntValue)m_colProp.getColumnSpec().getDomain().getUpperBound())
+                        .getIntValue());
+                    m_lowerBoundField.setValue(((IntValue)m_colProp.getColumnSpec().getDomain().getLowerBound())
+                        .getIntValue());
+                }
+            }
+            if (m_colProp.getColumnSpec().getDomain().getLowerBound() != null) {
+                if (m_colProp.getColumnSpec().getType().equals(DoubleCell.TYPE)) {
+                    m_upperBoundField.setValue(((DoubleValue)m_colProp.getColumnSpec().getDomain().getUpperBound())
+                        .getDoubleValue());
+                    m_lowerBoundField.setValue(((DoubleValue)m_colProp.getColumnSpec().getDomain().getLowerBound())
+                        .getDoubleValue());
+                }
+            }
+
+            panel.add(low);
+            panel.add(up);
+            panel.add(nomBox);
+
+            return panel;
     }
 
     /*
@@ -242,14 +327,13 @@ public class DomainDialog extends JDialog {
     private JPanel createValuesPanel(final boolean stringValues) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "poss. Values"));
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "poss. Values"));
 
         if (!stringValues) {
             // the checkbox to tell if this columns contains nominal values
-            m_containsVals = new JCheckBox(
-                    "this integer column contains nominal values");
+            m_containsVals = new JCheckBox("this integer column contains nominal values");
             m_containsVals.addItemListener(new ItemListener() {
+                @Override
                 public void itemStateChanged(final ItemEvent e) {
                     containsValsChanged();
                 }
@@ -266,7 +350,7 @@ public class DomainDialog extends JDialog {
         m_editField.setMaximumSize(new Dimension(100, 25));
         m_editField.setMinimumSize(new Dimension(100, 25));
         m_editField.setPreferredSize(new Dimension(100, 25));
-        m_valueList = new JList();
+        m_valueList = new JList<>();
         m_valueList.setMinimumSize(new Dimension(100, 150));
         m_valueList.setMaximumSize(new Dimension(100, 150));
         m_valueList.setPreferredSize(new Dimension(100, 150));
@@ -275,12 +359,14 @@ public class DomainDialog extends JDialog {
         m_addButton = new JButton("Add");
         if (stringValues) {
             m_addButton.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     addStringPosValue();
                 }
             });
         } else {
             m_addButton.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     addIntPosValue();
                 }
@@ -289,6 +375,7 @@ public class DomainDialog extends JDialog {
 
         m_remButton = new JButton("Remove");
         m_remButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 remSelPosValues();
             }
@@ -347,8 +434,8 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * Called when user pressed "Remove" to remove selected item from the list
-     * of possible values. The Range settings are not changed.
+     * Called when user pressed "Remove" to remove selected item from the list of possible values. The Range settings
+     * are not changed.
      */
     protected void remSelPosValues() {
         // clear the error.
@@ -381,10 +468,9 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * Called when the user pressed the "Add" button to add an integer value to
-     * the list of possible values. Will add the number entered, or set the
-     * error text, if user input is invalid. It will adjust the range settings
-     * (if any) to include the new value.
+     * Called when the user pressed the "Add" button to add an integer value to the list of possible values. Will add
+     * the number entered, or set the error text, if user input is invalid. It will adjust the range settings (if any)
+     * to include the new value.
      */
     protected void addIntPosValue() {
         // clear the error.
@@ -412,8 +498,7 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * Called when the user pressed the "Add" button to add a string value to
-     * the list of possible values.
+     * Called when the user pressed the "Add" button to add a string value to the list of possible values.
      */
     protected void addStringPosValue() {
         if (m_editField.getText().length() > 0) {
@@ -462,23 +547,15 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * Shows the dialog with the passed default settings (passed to the
-     * constructor). It will not return until the user closes the dialog. If the
-     * dialog was canceled, <code>null</code> will be returned as result,
-     * otherwise the column property passed to the constructor with a modified
-     * domain and nominal value flag will be returned.
+     * Shows the dialog with the passed default settings (passed to the constructor). It will not return until the user
+     * closes the dialog. If the dialog was canceled, <code>null</code> will be returned as result, otherwise the column
+     * property passed to the constructor with a modified domain and nominal value flag will be returned.
      *
-     * @return a modified col property object, or <code>null</code> if user
-     *         canceled
+     * @return a modified col property object, or <code>null</code> if user canceled
      */
     public ColProperty showDialog() {
 
         // fill in the values from the passed col property object
-
-        if (m_colProp.getColumnSpec().getType().isCompatible(IntValue.class)) {
-            m_containsVals.setSelected(m_colProp
-                    .getReadPossibleValuesFromFile());
-        }
 
         // and the possible values - if set
         DataColumnDomain domain = m_colProp.getColumnSpec().getDomain();
@@ -491,11 +568,11 @@ public class DomainDialog extends JDialog {
 
         // now show the dialog, show it and wait until it comes back.
 
-        setTitle("New domain settings for column '"
-                + m_colProp.getColumnSpec().getName().toString() + "'");
+        setTitle("New domain settings for column '" + m_colProp.getColumnSpec().getName().toString() + "'");
 
         pack();
         centerDialog();
+
         setVisible(true);
         /* --- won't return before dialog is disposed ------------- */
         /* --- m_result is set, if user pressed okay -------------- */
@@ -531,54 +608,74 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * Sets this dialog in the center of the screen observing the current screen
-     * size.
+     * Sets this dialog in the center of its parent component or the screen if it does not have a parent.
      */
     private void centerDialog() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        Container parent = getParent();
+        Rectangle parentBounds;
+        if (parent != null) {
+            parentBounds = parent.getBounds();
+        } else {
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            parentBounds = new Rectangle(0, 0, screenSize.width, screenSize.height);
+        }
+
         Dimension size = getSize();
-        setBounds(Math.max(0, (screenSize.width - size.width) / 2), Math.max(0,
-                (screenSize.height - size.height) / 2), Math.min(
-                screenSize.width, size.width), Math.min(screenSize.height,
-                size.height));
+        int x = Math.max(0, parentBounds.x + (parentBounds.width / 2) - (size.width / 2));
+        int y = Math.max(0, parentBounds.y + (parentBounds.height / 2) - (size.height / 2));
+
+        setBounds(x, y, size.width, size.height);
     }
 
     /**
-     * @return an object with domain values set by the user. Or
-     *         <code>null</code> if settings are invalid. Then, a error
+     * @return an object with domain values set by the user. Or <code>null</code> if settings are invalid. Then, a error
      *         message box is displayed.
      */
     private ColProperty takeOverSettings() {
 
         ColProperty result = new ColProperty();
-        DataColumnSpecCreator dcsc = new DataColumnSpecCreator(
-                m_colProp.getColumnSpec().getName(),
-                m_colProp.getColumnSpec().getType());
+        if (m_colProp.getColumnSpec().getType().isCompatible(StringValue.class)) {
+            DataColumnSpecCreator dcsc =
+                new DataColumnSpecCreator(m_colProp.getColumnSpec().getName(), m_colProp.getColumnSpec().getType());
 
-        if (m_containsVals != null) {
-            result.setReadPossibleValuesFromFile(m_containsVals.isSelected());
-        }
-
-        if ((m_containsVals == null) || m_containsVals.isSelected()) {
-            // if it's null we have a string column
-
-            Set<DataCell> pVals = null;
-            // tranfser possible values
-            int valCount = m_valueList.getModel().getSize();
-            pVals = new LinkedHashSet<DataCell>();
-            for (int i = 0; i < valCount; i++) {
-                DataCell val = (DataCell)m_valueList.getModel().getElementAt(i);
-                pVals.add(val);
+            if (m_containsVals != null) {
+                result.setReadPossibleValuesFromFile(m_containsVals.isSelected());
             }
 
-            if (pVals.size() > 0) {
-                DataColumnDomainCreator domainCreator =
-                    new DataColumnDomainCreator(pVals);
-                dcsc.setDomain(domainCreator.createDomain());
-            }
-        }
+            if ((m_containsVals == null) || m_containsVals.isSelected()) {
+                // if it's null we have a string column
 
-        result.setColumnSpec(dcsc.createSpec());
+                Set<DataCell> pVals = null;
+                // tranfser possible values
+                int valCount = m_valueList.getModel().getSize();
+                pVals = new LinkedHashSet<DataCell>();
+                for (int i = 0; i < valCount; i++) {
+                    DataCell val = (DataCell)m_valueList.getModel().getElementAt(i);
+                    pVals.add(val);
+                }
+
+                if (pVals.size() > 0) {
+                    DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(pVals);
+                    dcsc.setDomain(domainCreator.createDomain());
+                }
+            }
+
+            result.setColumnSpec(dcsc.createSpec());
+        } else {
+            DataType type = m_colProp.getColumnSpec().getType();
+            DataColumnSpecCreator dcsc = new DataColumnSpecCreator(m_colProp.getColumnSpec().getName(), type);
+            DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
+
+            if (type.equals(IntCell.TYPE)) {
+                domainCreator.setLowerBound(new IntCell((int)m_lowerBoundField.getValue()));
+                domainCreator.setUpperBound(new IntCell((int)m_upperBoundField.getValue()));
+            } else if (type.equals(DoubleCell.TYPE)) {
+                domainCreator.setLowerBound(new DoubleCell((double)m_lowerBoundField.getValue()));
+                domainCreator.setUpperBound(new DoubleCell((double)m_upperBoundField.getValue()));
+            }
+            dcsc.setDomain(domainCreator.createDomain());
+            result.setColumnSpec(dcsc.createSpec());
+        }
 
         return result;
 

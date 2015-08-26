@@ -49,6 +49,7 @@
 package org.knime.base.node.io.fixedwidthfr;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -86,6 +87,8 @@ public class FixedWidthColProperty {
 
     private static final String CFGKEY_MISSVALPAT = "MissingValuePattern";
 
+    private static final String CFGKEY_FORMAT = "FormatParameter";
+
     private DataColumnSpec m_colSpec;
 
     private int m_width;
@@ -93,6 +96,8 @@ public class FixedWidthColProperty {
     private boolean m_include;
 
     private String m_missingValuePattern;
+
+    private String m_formatParameter;
 
     /**
      *
@@ -108,8 +113,6 @@ public class FixedWidthColProperty {
         m_width = Integer.MAX_VALUE;
 
         m_include = true;
-
-        m_missingValuePattern = null;
     }
 
     /**
@@ -119,9 +122,10 @@ public class FixedWidthColProperty {
      * @param width the width of the new column
      * @param include if the column should be included
      * @param missingValuePattern the pattern for missing values
+     * @param formatParameter the optional format parameter
      */
     FixedWidthColProperty(final String name, final DataType type, final int width, final boolean include,
-        final String missingValuePattern) {
+        final String missingValuePattern, final String formatParameter) {
         DataColumnSpecCreator c = new DataColumnSpecCreator(name, type);
 
         m_colSpec = c.createSpec();
@@ -131,6 +135,8 @@ public class FixedWidthColProperty {
         m_include = include;
 
         m_missingValuePattern = missingValuePattern;
+
+        m_formatParameter = formatParameter;
     }
 
     /**
@@ -147,6 +153,7 @@ public class FixedWidthColProperty {
         m_width = cfg.getInt(CFGKEY_COLWIDTH);
         m_include = cfg.getBoolean(CFGKEY_INCLUDE);
         m_missingValuePattern = cfg.getString(CFGKEY_MISSVALPAT);
+        m_formatParameter = cfg.getString(CFGKEY_FORMAT, "");
 
         // read the stuff for the ColumnSpec
         String colName = cfg.getString(CFGKEY_COLNAME);
@@ -203,6 +210,8 @@ public class FixedWidthColProperty {
         m_include = fixedWidthColProperty.m_include;
 
         m_missingValuePattern = fixedWidthColProperty.m_missingValuePattern;
+
+        m_formatParameter = fixedWidthColProperty.m_formatParameter;
     }
 
     /**
@@ -216,6 +225,7 @@ public class FixedWidthColProperty {
         cfg.addInt(CFGKEY_COLWIDTH, m_width);
         cfg.addBoolean(CFGKEY_INCLUDE, m_include);
         cfg.addString(CFGKEY_MISSVALPAT, m_missingValuePattern);
+        cfg.addString(CFGKEY_FORMAT, m_formatParameter);
 
         // add the stuff from the ColumnSpec
         cfg.addString(CFGKEY_COLNAME, m_colSpec.getName());
@@ -274,7 +284,6 @@ public class FixedWidthColProperty {
      * @return the missing-value pattern
      */
     public String getMissingValuePattern() {
-        // TODO Auto-generated method stub
         return m_missingValuePattern;
     }
 
@@ -283,5 +292,19 @@ public class FixedWidthColProperty {
      */
     public void setMissingValuePattern(final String str) {
         m_missingValuePattern = str;
+    }
+
+    /**
+     * @return the formatParameter
+     */
+    public Optional<String> getFormatParameter() {
+        return Optional.ofNullable(m_formatParameter);
+    }
+
+    /**
+     * @param formatParameter the formatParameter to set
+     */
+    public void setFormatParameter(final String formatParameter) {
+        m_formatParameter = formatParameter;
     }
 }

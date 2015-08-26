@@ -47,13 +47,18 @@
  */
 package org.knime.base.node.io.filereader;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.knime.core.data.ConfigurableDataCellFactory;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory.FromString;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.ExecutionContext;
 
 /**
  * Helper class for the file reader node. Creates data cells of a certain type
@@ -63,9 +68,9 @@ import org.knime.core.data.def.StringCell;
  */
 public class DataCellFactory {
 
-    private char m_decimalSeparator;
+    private char m_decimalSeparator = '.';
 
-    private char m_thousandsSeparator;
+    private char m_thousandsSeparator = '\0';
 
     private String m_thousandsRegExpr;
 
@@ -73,20 +78,37 @@ public class DataCellFactory {
 
     private String m_missingValuePattern;
 
+    private String m_formatParameter;
+
+    private final Map<DataType, org.knime.core.data.DataCellFactory> m_cellFactoryMap = new HashMap<>();
+
+    private final ExecutionContext m_execContext;
+
+
     /**
      * Creates a new factory that can be used to create {@link DataCell}s from
      * a string representation of data. By default the decimal separator for
      * floating point number is a point, thousands grouping is disabled, and no
      * missing value pattern is set.
+     * @deprecated use {@link #DataCellFactory(ExecutionContext)} instead
      */
+    @Deprecated
     public DataCellFactory() {
+        this(null);
+    }
 
-        m_decimalSeparator = '.';
-        m_thousandsSeparator = '\0';
-        m_thousandsRegExpr = null;
-        m_missingValuePattern = null;
-        m_lastErrorMessage = null;
 
+    /**
+     * Creates a new factory that can be used to create {@link DataCell}s from
+     * a string representation of data. By default the decimal separator for
+     * floating point number is a point, thousands grouping is disabled, and no
+     * missing value pattern is set.
+     *
+     * @param execContext the current execution context which is required by some data cell implementations
+     * @since 3.0
+     */
+    public DataCellFactory(final ExecutionContext execContext) {
+        m_execContext = execContext;
     }
 
     /**
@@ -197,12 +219,20 @@ public class DataCellFactory {
         return m_missingValuePattern;
     }
 
+
+    /**
+     * Sets the optional format parameter required by the underlying {@link org.knime.core.data.DataCellFactory}.
+     *
+     * @param formatParameter format for the data cell factory, may be <code>null</code>
+     * @since 3.0
+     */
+    public void setFormatParameter(final String formatParameter) {
+        m_formatParameter = formatParameter;
+    }
+
     /**
      * Creates a {@link DataCell} of the specified type from the data passed.
-     * Supported are the types of {@link StringCell}, {@link IntCell}, and
-     * {@link DoubleCell}, as well as smiles cells, if the corresponding
-     * plug-in is installed (see {@link SmilesTypeHelper}). A {@link DataCell}
-     * with a missing value is created if the passed data equals (see
+     * A {@link DataCell} with a missing value is created if the passed data equals (see
      * {@link String#equals(Object)} the currently set missing value pattern
      * (disabled by default, see {@link #setMissingValuePattern(String)}).<br>
      * A {@link StringCell} can always be created, returns only
@@ -234,8 +264,7 @@ public class DataCellFactory {
      * @see #getErrorMessage()
      * @see DataType#getMissingCell()
      */
-    public final DataCell createDataCellOfType(final DataType type,
-            final String data) {
+    public final DataCell createDataCellOfType(final DataType type, String data) {
 
         if (type == null || data == null) {
             throw new NullPointerException(
@@ -249,110 +278,48 @@ public class DataCellFactory {
             return DataType.getMissingCell();
         }
 
-        if (type.equals(StringCell.TYPE)) {
+        org.knime.core.data.DataCellFactory cellFactory = m_cellFactoryMap.get(type);
+        if (cellFactory == null) {
+            cellFactory = type.getCellFactory(m_execContext)
+                    .orElseThrow(() -> new IllegalArgumentException("No data cell factory for data type '" + type
+                        + "' found"));
+            m_cellFactoryMap.put(type, cellFactory);
+        }
 
-            try {
-                return new StringCell(data);
-            } catch (Throwable t) {
-                m_lastErrorMessage = t.getMessage();
-                if (m_lastErrorMessage == null) {
-                    m_lastErrorMessage = "No details.";
-                }
-                return null;
-            }
+        if (cellFactory instanceof ConfigurableDataCellFactory) {
+            ((ConfigurableDataCellFactory) cellFactory).configure(m_formatParameter);
+        }
 
-        } else if (type.equals(IntCell.TYPE)) {
-
+        if (type.equals(DoubleCell.TYPE)) {
             // for numbers, trim data and accept empty tokens as missing
             // cells
-            String trimmed = data.trim();
-            if (trimmed.isEmpty()) {
-                return DataType.getMissingCell();
-            }
-            // this is a feature of the parseInt method: it bails on '+'
-            if (trimmed.charAt(0) == '+') {
-                trimmed = trimmed.substring(1);
-                if (trimmed.isEmpty()) {
-                    m_lastErrorMessage =
-                        "Invalid number format. Got '+' for an integer.";
-                    return null;
-                }
-            }
-            try {
-                int val = Integer.parseInt(trimmed);
-                return new IntCell(val);
-            } catch (NumberFormatException nfe) {
-                m_lastErrorMessage =
-                        "Wrong data format. Got '" + data + "' for an integer.";
-                return null;
-            } catch (Throwable t) {
-                m_lastErrorMessage = t.getMessage();
-                if (m_lastErrorMessage == null) {
-                    m_lastErrorMessage = "No details.";
-                }
-                m_lastErrorMessage += " (Got '" + data + "' for an integer.)";
-                return null;
-            }
-
-        } else if (type.equals(DoubleCell.TYPE)) {
-            // for numbers, trim data and accept empty tokens as missing
-            // cells
-            String dblData = data.trim();
-            if (dblData.isEmpty()) {
-                return DataType.getMissingCell();
-            }
             // remove thousands grouping
             if (m_thousandsRegExpr != null) {
-                dblData = dblData.replaceAll(m_thousandsRegExpr, "");
+                data = data.replaceAll(m_thousandsRegExpr, "");
             }
+
             // replace decimal separator with java separator '.'
             if (m_decimalSeparator != '.') {
                 // we must reject tokens with a '.'.
-                if (dblData.indexOf('.') >= 0) {
+                if (data.indexOf('.') >= 0) {
                     m_lastErrorMessage =
                             "Wrong data format. Got '" + data
                                     + "' for a floating point.";
                     return null;
                 }
-                dblData = dblData.replace(m_decimalSeparator, '.');
+                data = data.replace(m_decimalSeparator, '.');
             }
-            try {
-                double val = Double.parseDouble(dblData);
-                return new DoubleCell(val);
-            } catch (NumberFormatException nfe) {
-                m_lastErrorMessage =
-                        "Wrong data format. Got '" + data
-                                + "' for a floating point number.";
-                return null;
-            } catch (Throwable t) {
-                m_lastErrorMessage = t.getMessage();
-                if (m_lastErrorMessage == null) {
-                    m_lastErrorMessage = "No details.";
-                }
-                m_lastErrorMessage += " (Got '" + data + "' for an integer.)";
-                return null;
-            }
-
-        } else if (type.equals(SmilesTypeHelper.INSTANCE.getSmilesType())) {
-            try {
-
-                return SmilesTypeHelper.INSTANCE.newInstance(data);
-
-            } catch (Throwable t) {
-                m_lastErrorMessage = "Error during SMILES cell creation: ";
-                if (t.getMessage() != null) {
-                    m_lastErrorMessage += t.getMessage();
-                } else {
-                    m_lastErrorMessage += "<no details available>";
-                }
-                return null;
-            }
-        } else {
-            throw new IllegalArgumentException(
-                    "Cannot create DataCell of type " + type.toString()
-                            + ". Looks like an internal error.");
         }
 
+        try {
+            return ((FromString) cellFactory).createCell(data);
+        } catch (Throwable t) {
+            m_lastErrorMessage = t.getMessage();
+            if (m_lastErrorMessage == null) {
+                m_lastErrorMessage = "No details.";
+            }
+            return null;
+        }
     }
 
     /**

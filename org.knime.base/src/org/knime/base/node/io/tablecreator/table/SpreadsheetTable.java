@@ -64,6 +64,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -86,11 +87,11 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
 
 import org.knime.base.node.io.filereader.ColProperty;
-import org.knime.base.node.io.tablecreator.prop.SmilesTypeHelper;
+import org.knime.core.data.ConfigurableDataCellFactory;
+import org.knime.core.data.DataCellFactory;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataType;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.util.ViewUtils;
 
@@ -480,39 +481,26 @@ class SpreadsheetTable extends JTable {
             m_table = table;
 
             JMenu changeType = new JMenu("Change Type");
-            JMenuItem doubleType = new JMenuItem("Double");
-            doubleType.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    changeSelectedColumnsType(DoubleCell.TYPE);
-                }
-            });
-            changeType.add(doubleType);
-            JMenuItem intType = new JMenuItem("Integer");
-            intType.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    changeSelectedColumnsType(IntCell.TYPE);
-                }
-            });
-            changeType.add(intType);
-            JMenuItem stringType = new JMenuItem("String");
-            stringType.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    changeSelectedColumnsType(StringCell.TYPE);
-                }
-            });
-            changeType.add(stringType);
-            if (SmilesTypeHelper.INSTANCE.isSmilesAvailable()) {
-                JMenuItem smilesType = new JMenuItem("Smiles");
-                smilesType.addActionListener(new ActionListener() {
+
+            Iterator<DataType> it = DataTypeRegistry.getInstance().availableDataTypes().stream()
+                    .filter(d -> {
+                            DataCellFactory f = d.getCellFactory(null).orElse(null);
+                            return (f instanceof FromSimpleString) && !(f instanceof ConfigurableDataCellFactory);
+                    })
+                    .sorted((a, b) -> a.getName().compareTo(b.getName()))
+                    .iterator();
+
+            while (it.hasNext()) {
+                DataType type = it.next();
+
+                JMenuItem item = new JMenuItem(type.getName());
+                item.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(final ActionEvent e) {
-                        changeSelectedColumnsType(SmilesTypeHelper.INSTANCE.getSmilesType());
+                        changeSelectedColumnsType(type);
                     }
                 });
-                changeType.add(smilesType);
+                changeType.add(item);
             }
 
             m_popup = new JPopupMenu();

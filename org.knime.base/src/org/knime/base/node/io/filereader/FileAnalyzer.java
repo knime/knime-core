@@ -367,9 +367,11 @@ public final class FileAnalyzer {
         // of the above method call
         DataType[] columnTypes = new DataType[colProps.length];
         String[] missValues = new String[colProps.length];
+        String[] formatParameters = new String[colProps.length];
         for (int c = 0; c < colProps.length; c++) {
             columnTypes[c] = colProps[c].getColumnSpec().getType();
             missValues[c] = colProps[c].getMissingValuePattern();
+            formatParameters[c] = colProps[c].getFormatParameter().orElse(null);
         }
         subExec.setProgress(1.0);
         checkInterrupt(exec);
@@ -437,14 +439,14 @@ public final class FileAnalyzer {
                 System.arraycopy(columnHeaders, 0, colNames, 1,
                         colNames.length - 1);
                 return createColProps(colNames, userColProps, columnTypes,
-                        missValues, exec);
+                        missValues, formatParameters, exec);
             }
 
             // another indication for a column_headers_must_have is when the
             // first line contains tokens that are not type compliant with all
             // other lines (e.g. all items in the column are integers except in
             // the first line).
-            DataCellFactory cellFactory = new DataCellFactory();
+            DataCellFactory cellFactory = new DataCellFactory(null);  // we create simple cells only
             cellFactory.setDecimalSeparator(result.getDecimalSeparator());
             cellFactory.setThousandsSeparator(result.getThousandsSeparator());
 
@@ -456,6 +458,7 @@ public final class FileAnalyzer {
                     continue;
                 }
                 cellFactory.setMissingValuePattern(missValues[c]);
+                cellFactory.setFormatParameter(formatParameters[c]);
 
                 DataCell dc =
                         cellFactory.createDataCellOfType(columnTypes[c],
@@ -469,7 +472,7 @@ public final class FileAnalyzer {
                 // header is not data: must be column header
                 result.setFileHasColumnHeaders(true);
                 return createColProps(columnHeaders, userColProps, columnTypes,
-                        missValues, exec);
+                        missValues, formatParameters, exec);
             }
 
             // if all column headers fit the type of the column, the rowHeader
@@ -489,7 +492,7 @@ public final class FileAnalyzer {
                         // header is not data: must be column header
                         result.setFileHasColumnHeaders(true);
                         return createColProps(columnHeaders, userColProps,
-                                columnTypes, missValues, exec);
+                                columnTypes, missValues, formatParameters, exec);
                     }
                 }
             }
@@ -500,14 +503,13 @@ public final class FileAnalyzer {
                     && consecutiveHeaders(columnHeaders, exec)) {
                 result.setFileHasColumnHeaders(true);
                 return createColProps(columnHeaders, userColProps, columnTypes,
-                        missValues, exec);
+                        missValues, formatParameters, exec);
             }
             // otherwise we assume the first line doesn't contain headers.
             // pass an array with null strings and it will create headers for us
             result.setFileHasColumnHeaders(false);
             String[] nulls = new String[columnHeaders.length]; // null array
-            return createColProps(nulls, userColProps, columnTypes, missValues,
-                    exec);
+            return createColProps(nulls, userColProps, columnTypes, missValues, formatParameters, exec);
         } else {
             // user set fileHasColHeaders - see if it's true or false
             result.setFileHasColumnHeaders(userSettings
@@ -524,16 +526,16 @@ public final class FileAnalyzer {
                     System.arraycopy(columnHeaders, 0, colNames, 1,
                             colNames.length - 1);
                     return createColProps(colNames, userColProps, columnTypes,
-                            missValues, exec);
+                            missValues, formatParameters, exec);
                 } else {
                     return createColProps(columnHeaders, userColProps,
-                            columnTypes, missValues, exec);
+                            columnTypes, missValues, formatParameters, exec);
                 }
             } else {
                 // don't read col headers - create null array to generate names
                 String[] colNames = new String[columnHeaders.length];
                 return createColProps(colNames, userColProps, columnTypes,
-                        missValues, exec);
+                        missValues, formatParameters, exec);
             }
         }
     }
@@ -675,11 +677,12 @@ public final class FileAnalyzer {
      */
     private static Vector<ColProperty> createColProps(final String[] colNames,
             final Vector<ColProperty> userProps, final DataType[] colTypes,
-            final String[] missValuePattern, final ExecutionMonitor exec)
+            final String[] missValuePattern, final String[] formatParameters, final ExecutionMonitor exec)
             throws InterruptedExecutionException {
 
         assert colNames.length == colTypes.length;
         assert colNames.length == missValuePattern.length;
+        assert colNames.length == formatParameters.length;
 
         // keep the actually used col names in a set for fast look up
         Set<String> resultNames = new HashSet<String>();
@@ -726,6 +729,7 @@ public final class FileAnalyzer {
                 colProp.setColumnSpec(dcsc.createSpec());
                 // set the missing value pattern
                 colProp.setMissingValuePattern(missValuePattern[c]);
+                colProp.setFormatParameter(formatParameters[c]);
                 // With IntValues we give the user the choice of reading nominal
                 // values (in the domain dialog). Default is: don't
                 if (colTypes[c].equals(IntCell.TYPE)) {
@@ -818,7 +822,7 @@ public final class FileAnalyzer {
         int linesRead = 0;
         int colIdx = -1;
 
-        DataCellFactory cellFactory = new DataCellFactory();
+        DataCellFactory cellFactory = new DataCellFactory(null); // we create simple cells only, no execContext needed
         cellFactory.setDecimalSeparator(result.getDecimalSeparator());
         cellFactory.setThousandsSeparator(result.getThousandsSeparator());
 

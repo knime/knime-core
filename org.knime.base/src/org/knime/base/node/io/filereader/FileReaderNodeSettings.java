@@ -53,6 +53,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 
@@ -349,6 +350,32 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                     + " patterns for index '" + colIdx + "' yet.");
         }
         m_columnProperties.get(colIdx).setMissingValuePattern(pattern);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<String> getFormatParameterForColumn(final int colIdx) {
+        if ((m_columnProperties == null)
+                || (colIdx >= m_columnProperties.size())) {
+            return Optional.empty();
+        }
+        return m_columnProperties.get(colIdx).getFormatParameter();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setFormatParameterForColumn(final int colIdx, final String format) {
+        if ((m_columnProperties == null)
+                || (colIdx >= m_columnProperties.size())) {
+            throw new IllegalArgumentException("Can't set format parameter "
+                    + " for index '" + colIdx + "' yet.");
+        }
+        m_columnProperties.get(colIdx).setFormatParameter(format);
     }
 
     /**

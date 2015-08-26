@@ -48,6 +48,7 @@
 package org.knime.base.node.io.filereader;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -74,6 +75,8 @@ public class ColProperty {
     /* the pattern causing a missing cell to be created */
     private String m_missValuePattern;
 
+    private String m_formatParameter;
+
     /*
      * if true the object contains values set by the user - otherwise its all
      * default settings.
@@ -95,6 +98,8 @@ public class ColProperty {
 
     private static final String CFGKEY_MISSVALUE = "MissValuePattern";
 
+    private static final String CFGKEY_FORMAT = "FormatParameter";
+
     private static final String CFGKEY_COLNAME = "ColumnName";
 
     private static final String CFGKEY_COLTYPE = "ColumnClass";
@@ -115,11 +120,6 @@ public class ColProperty {
      * Creates an empty column properties object.
      */
     public ColProperty() {
-        m_colSpec = null;
-        m_missValuePattern = null;
-        m_userSettings = false;
-        m_readPossValsFromFile = false;
-        m_skipColumn = false;
     }
 
     /**
@@ -139,6 +139,7 @@ public class ColProperty {
 
         m_userSettings = cfg.getBoolean(CFGKEY_USERSETTINGS);
         m_missValuePattern = cfg.getString(CFGKEY_MISSVALUE, null);
+        m_formatParameter = cfg.getString(CFGKEY_FORMAT, "");
         m_readPossValsFromFile = cfg.getBoolean(CFGKEY_READVALS);
         // default to false for backward compatibility
         m_skipColumn = cfg.getBoolean(CFGKEY_SKIP, false);
@@ -207,6 +208,7 @@ public class ColProperty {
 
         cfg.addBoolean(CFGKEY_USERSETTINGS, m_userSettings);
         cfg.addString(CFGKEY_MISSVALUE, m_missValuePattern);
+        cfg.addString(CFGKEY_FORMAT, m_formatParameter);
         cfg.addBoolean(CFGKEY_READVALS, m_readPossValsFromFile);
         cfg.addBoolean(CFGKEY_SKIP, m_skipColumn);
 
@@ -257,6 +259,27 @@ public class ColProperty {
      */
     public void setMissingValuePattern(final String missValue) {
         m_missValuePattern = missValue;
+    }
+
+
+    /**
+     * Returns the optional format parameter used by some cell factories.
+     *
+     * @return the optional format parameter
+     * @since 3.0
+     */
+    public Optional<String> getFormatParameter() {
+        return Optional.ofNullable(m_formatParameter);
+    }
+
+    /**
+     * Sets the optional format parameter for the factory for this column.
+     *
+     * @param formatParameter the format parameter or <code>null</code>
+     * @since 3.0
+     */
+    public void setFormatParameter(final String formatParameter) {
+        m_formatParameter = formatParameter;
     }
 
     /**
@@ -361,6 +384,9 @@ public class ColProperty {
             sb.append("<null ColSpec>");
         }
         sb.append(", MissVal: " + m_missValuePattern);
+        if ((m_formatParameter != null) && !m_formatParameter.isEmpty()) {
+            sb.append(", Format: " + m_formatParameter);
+        }
         sb.append(", userSetSettings: " + m_userSettings);
         sb.append(", readVals: " + m_readPossValsFromFile);
         return sb.toString();
@@ -379,6 +405,7 @@ public class ColProperty {
         result.m_colSpec = m_colSpec;
         // Strings as well
         result.m_missValuePattern = m_missValuePattern;
+        result.m_formatParameter = m_formatParameter;
         result.m_skipColumn = m_skipColumn;
         result.m_userSettings = m_userSettings;
         result.m_readPossValsFromFile = m_readPossValsFromFile;

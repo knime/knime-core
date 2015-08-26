@@ -62,6 +62,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.knime.base.node.io.filereader.ColProperty;
+import org.knime.base.node.io.filereader.ColPropertyDialog;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.def.StringCell;
@@ -125,17 +126,7 @@ class PropertyColumnsAction extends AbstractAction {
         colProps.add(target);
         Frame parent = (Frame)SwingUtilities.getAncestorOfClass(
                 Frame.class, m_table);
-//
-//        Vector<ColProperty> result =
-//            org.knime.base.node.io.filereader.ColPropertyDialog.openUserDialog(
-//                    parent,
-//                colProps.size() - 1,
-//                colProps);
-        Vector<ColProperty> result =
-            org.knime.base.node.io.tablecreator.prop.ColPropertyDialog.openUserDialog(
-                    parent,
-                colProps.size() - 1,
-                colProps);
+        Vector<ColProperty> result = ColPropertyDialog.openUserDialog(parent, colProps.size() - 1, colProps);
         if (null != result) {
             //props.put(colIdx, result.get(colProps.size() - 1));
             ((SpreadsheetTableModel)m_table.getModel()).setColProperty(colIdx,
