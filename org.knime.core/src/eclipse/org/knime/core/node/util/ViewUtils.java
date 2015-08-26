@@ -319,19 +319,19 @@ public final class ViewUtils {
     }
 
     /**
-     * Centers a window relative to the KNIME window.
+     * Centers a window relative to a parent window.
      *
-     * @param window The window that will be centered
-     * @param knimeWindowBounds Bounds of the KNIME window
+     * @param window the window that will be centered
+     * @param parentBounds bounds of the parent relative to which the window should be centered
      * @since 2.12
      */
-    public static void centerLocation(final Window window, final Rectangle knimeWindowBounds) {
-        if (knimeWindowBounds!=null) {
+    public static void centerLocation(final Window window, final Rectangle parentBounds) {
+        if (parentBounds != null) {
             // Middle point of rectangle
-            Point middle = new Point(knimeWindowBounds.width / 2, knimeWindowBounds.height / 2);
+            Point middle = new Point(parentBounds.width / 2, parentBounds.height / 2);
             // Left upper point for window
-            Point newLocation = new Point(middle.x - (window.getWidth() / 2) + knimeWindowBounds.x,
-                                          middle.y - (window.getHeight() / 2) + knimeWindowBounds.y);
+            Point newLocation = new Point(middle.x - (window.getWidth() / 2) + parentBounds.x,
+                                          middle.y - (window.getHeight() / 2) + parentBounds.y);
             window.setLocation(newLocation);
         } else {
         	window.setLocationRelativeTo(null);
