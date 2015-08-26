@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (mb): created
  *   21.06.06 (bw & po): reviewed
@@ -49,13 +49,18 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.IntervalValue;
@@ -63,42 +68,28 @@ import org.knime.core.data.IntervalValue;
 /**
  * A <code>DataCell</code> implementation holding a numeric interval as value
  * by storing left and right bound.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
-        IntervalValue {
-
+public final class IntervalCell extends DataCell implements IntervalValue, FuzzyIntervalValue {
     /**
      * Convenience access member for
      * <code>DataType.getType(IntervalCell.class)</code>.
-     * 
+     *
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = DataType.getType(IntervalCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     * 
-     * @return IntervalValue.class
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return IntervalValue.class;
-    }
-
-    private static final IntervalSerializer SERIALIZER =
-            new IntervalSerializer();
-
-    /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
-     * 
+     *
      * @return a serializer for reading/writing cells of this kind
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final IntervalSerializer getCellSerializer() {
-        return SERIALIZER;
+        return new IntervalSerializer();
     }
 
     /** Left interval bound. */
@@ -115,13 +106,13 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
 
     /**
      * Creates a new interval cell based on the minimum and maximum value.
-     * 
+     *
      * @param left bound
      * @param right bound
      * @param includeLeft whether the left bound is included
      * @param includeRight whether the right bound is included
-     * @throws IllegalArgumentException if <code>min</code> &gt;
-     *             <code>max</code>
+     * @throws IllegalArgumentException if <code>left</code> &gt;
+     *             <code>right</code>
      */
     public IntervalCell(final double left, final double right,
             final boolean includeLeft, final boolean includeRight) {
@@ -131,7 +122,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
                     + getRightBracket() + " left must be less or equal to "
                     + "right interval value!");
         }
-        
+
         m_left = left;
         m_right = right;
         m_includeLeft = includeLeft;
@@ -139,13 +130,13 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     }
 
     /**
-     * Creates a new interval cell based on the minimum and maximum value, 
+     * Creates a new interval cell based on the minimum and maximum value,
      * while both bounds are included.
-     * 
+     *
      * @param left bound
      * @param right bound
-     * @throws IllegalArgumentException if <code>min</code> &gt;
-     *             <code>max</code>
+     * @throws IllegalArgumentException if <code>left</code> &gt;
+     *             <code>right</code>
      */
     public IntervalCell(final double left, final double right) {
         this(left, right, true, true);
@@ -170,6 +161,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * @return Minimum support value.
      */
+    @Override
     public double getMinSupport() {
         return getLeftBound();
     }
@@ -177,6 +169,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * @return Minimum core value.
      */
+    @Override
     public double getMinCore() {
         return getLeftBound();
     }
@@ -184,6 +177,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * @return Maximum core value.
      */
+    @Override
     public double getMaxCore() {
         return getRightBound();
     }
@@ -191,22 +185,24 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * @return Maximum support value.
      */
+    @Override
     public double getMaxSupport() {
         return getRightBound();
     }
 
     /**
      * Returns the mean of minimum and maximum border.
-     * 
+     *
      * @return the mean of both value
      */
+    @Override
     public double getCenterOfGravity() {
         return (getRightBound() + getLeftBound()) / 2.0;
     }
 
     /**
      * Checks if this and the given cell have equal values.
-     * 
+     *
      * @param dc the other <code>IntervalCell</code> to check values
      * @return true if both, minimum and maximum border have equal values,
      *         otherwise false
@@ -217,7 +213,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     protected boolean equalsDataCell(final DataCell dc) {
         IntervalCell ic = (IntervalCell)dc;
         if (Double.isNaN(ic.getLeftBound()) && Double.isNaN(getLeftBound())
-                && Double.isNaN(ic.getRightBound()) 
+                && Double.isNaN(ic.getRightBound())
                 && Double.isNaN(getRightBound())) {
             return true;
         }
@@ -229,7 +225,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
 
     /**
      * Computes hash code based on all private members.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -250,7 +246,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
 
     /**
      * Return a string summary of this object.
-     * 
+     *
      * @return <code>[left,right]</code> string
      * @see java.lang.Object#toString()
      */
@@ -261,15 +257,97 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     }
 
     /**
-     * Factory for (de-)serializing a <code>IntervalCell</code>.
+     * Factory for {@link IntervalCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
      */
-    private static class IntervalSerializer implements
+    public static final class IntervallCellFactory implements FromSimpleString, FromComplexString {
+        /**
+         * The data type for the cells created by this factory.
+         */
+        public static final DataType TYPE = IntervalCell.TYPE;
+
+        private static final Pattern PATTERN = Pattern.compile("^([\\[\\(])(.+),(.+)([\\[\\(])$");
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataType getDataType() {
+            return TYPE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell createCell(final String input) throws ParseException {
+            return create(input);
+        }
+
+        /**
+         * Creates a new interval cell by parsing the given string. The expected format is the standard notation for
+         * intervals, e.g. <tt>[1, 2]</tt> or <tt>(0.1, 1.1]</tt>.
+         *
+         * @param s an interval
+         * @return a new data cell
+         * @throws ParseException if the string is not a valid interval
+         */
+        public static DataCell create(final String s) throws ParseException {
+            Matcher m = PATTERN.matcher(s);
+            if (!m.matches()) {
+                throw new ParseException("'" + s + "' is not a valid interval", 0);
+            }
+
+            boolean includeLeft = "[".equals(m.group(1));
+            double left = Double.parseDouble(m.group(2));
+            double right = Double.parseDouble(m.group(3));
+            boolean includeRight = "]".equals(m.group(4));
+
+            return new IntervalCell(left, right, includeLeft, includeRight);
+        }
+
+        /**
+         * Creates a new interval cell based on the minimum and maximum value.
+         *
+         * @param left bound
+         * @param right bound
+         * @param includeLeft whether the left bound is included
+         * @param includeRight whether the right bound is included
+         * @return a new data cell
+         * @throws IllegalArgumentException if <code>left</code> &gt; <code>right</code>
+         */
+        public static DataCell create(final double left, final double right, final boolean includeLeft,
+            final boolean includeRight) {
+            return new IntervalCell(left, right, includeLeft, includeRight);
+        }
+
+        /**
+         * Creates a new interval cell based on the minimum and maximum value while both bounds are included.
+         *
+         * @param left bound
+         * @param right bound
+         * @return a new data cell
+         * @throws IllegalArgumentException if <code>left</code> &gt; <code>right</code>
+         */
+        public static DataCell create(final double left, final double right) {
+            return create(left, right, true, true);
+        }
+    }
+
+    /**
+     * Factory for (de-)serializing a <code>IntervalCell</code>.
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class IntervalSerializer implements
             DataCellSerializer<IntervalCell> {
 
         /**
          * {@inheritDoc}
          */
-        public void serialize(final IntervalCell cell, 
+        @Override
+        public void serialize(final IntervalCell cell,
                 final DataCellDataOutput output) throws IOException {
             output.writeDouble(cell.getLeftBound());
             output.writeDouble(cell.getRightBound());
@@ -280,6 +358,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
         /**
          * {@inheritDoc}
          */
+        @Override
         public IntervalCell deserialize(final DataCellDataInput input)
                 throws IOException {
             return new IntervalCell(input.readDouble(), input.readDouble(),
@@ -290,6 +369,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getRightBound() {
         return m_right;
     }
@@ -297,6 +377,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getLeftBound() {
         return m_left;
     }
@@ -304,6 +385,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public int compare(final double value) {
         if (value < m_left) {
             return -1;
@@ -324,6 +406,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public int compare(final DoubleValue value) {
         return compare(value.getDoubleValue());
     }
@@ -331,6 +414,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean includes(final IntervalValue value) {
         if (value.getLeftBound() < m_left) {
             return false;
@@ -352,6 +436,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean leftBoundIncluded() {
         return m_includeLeft;
     }
@@ -359,6 +444,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean rightBoundIncluded() {
         return m_includeRight;
     }

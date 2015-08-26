@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (mb): created
  *   21.06.06 (bw & po): reviewed
@@ -49,13 +49,16 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
 
@@ -63,10 +66,10 @@ import org.knime.core.data.FuzzyNumberValue;
  * A data cell implementation holding a Fuzzy number by storing this value in
  * three private <code>double</code> members, that is one for the core and two
  * for the min/max of the support. It also provides a fuzzy interval value.
- * 
+ *
  * <p>
  * The height of the membership value at the core value is assumed to be 1.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
 public final class FuzzyNumberCell extends DataCell implements
@@ -75,34 +78,22 @@ public final class FuzzyNumberCell extends DataCell implements
     /**
      * Convenience access member for
      * <code>DataType.getType(FuzzyNumberCell.class)</code>.
-     * 
+     *
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = DataType.getType(FuzzyNumberCell.class);
 
-    private static final FuzzyNumberSerializer SERIALIZER =
-            new FuzzyNumberSerializer();
-
     /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
-     * 
+     *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final FuzzyNumberSerializer getCellSerializer() {
-        return SERIALIZER;
-    }
-
-    /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     * 
-     * @return FuzzyNumberValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return FuzzyNumberValue.class;
+        return new FuzzyNumberSerializer();
     }
 
     /** Minimum support value. */
@@ -116,7 +107,7 @@ public final class FuzzyNumberCell extends DataCell implements
 
     /**
      * Creates a new fuzzy number cell based on min, max support, and core.
-     * 
+     *
      * @param minSupp Minimum support value.
      * @param core Core value.
      * @param maxSupp Maximum support value.
@@ -138,6 +129,7 @@ public final class FuzzyNumberCell extends DataCell implements
     /**
      * @return Minimum support value.
      */
+    @Override
     public double getMinSupport() {
         return m_minSupp;
     }
@@ -145,6 +137,7 @@ public final class FuzzyNumberCell extends DataCell implements
     /**
      * @return Core value.
      */
+    @Override
     public double getCore() {
         return m_core;
     }
@@ -152,6 +145,7 @@ public final class FuzzyNumberCell extends DataCell implements
     /**
      * @return Maximum support value.
      */
+    @Override
     public double getMaxSupport() {
         return m_maxSupp;
     }
@@ -163,6 +157,7 @@ public final class FuzzyNumberCell extends DataCell implements
     /**
      * @return <code>#getCore()</code>
      */
+    @Override
     public double getMinCore() {
         return getCore();
     }
@@ -170,6 +165,7 @@ public final class FuzzyNumberCell extends DataCell implements
     /**
      * @return <code>#getCore()</code>
      */
+    @Override
     public double getMaxCore() {
         return getCore();
     }
@@ -180,6 +176,7 @@ public final class FuzzyNumberCell extends DataCell implements
      *         (left triangle, right triangle). This value is divided by the
      *         overall membership function volume.
      */
+    @Override
     public double getCenterOfGravity() {
         // left support
         double a1 = (getCore() - getMinSupport()) / 2.0;
@@ -201,7 +198,7 @@ public final class FuzzyNumberCell extends DataCell implements
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         FuzzyNumberCell fc = (FuzzyNumberCell)dc;
-        if (Double.isNaN(fc.m_minSupp) && Double.isNaN(m_minSupp) 
+        if (Double.isNaN(fc.m_minSupp) && Double.isNaN(m_minSupp)
                 && Double.isNaN(fc.m_core) && Double.isNaN(m_core)
                 && Double.isNaN(fc.m_maxSupp) && Double.isNaN(m_maxSupp)) {
             return true;
@@ -230,12 +227,72 @@ public final class FuzzyNumberCell extends DataCell implements
         return "<" + m_minSupp + "," + m_core + "," + m_maxSupp + ">";
     }
 
-    /** Factory for (de-)serializing a FuzzyNumberCell. */
-    private static class FuzzyNumberSerializer implements
-            DataCellSerializer<FuzzyNumberCell> {
+    /**
+     * Factory for {@link FuzzyNumberCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
+     */
+    public static final class FuzzyNumberCellFactory implements FromSimpleString, FromComplexString {
+        /**
+         * The data type for the cells created by this factory.
+         */
+        public static final DataType TYPE = FuzzyNumberCell.TYPE;
+
         /**
          * {@inheritDoc}
          */
+        @Override
+        public DataType getDataType() {
+            return TYPE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell createCell(final String input) throws ParseException {
+            return create(input);
+        }
+
+        public static DataCell create(final String s) {
+            if (s.length() < 7) {
+                throw new NumberFormatException("'" + s + "' is not a valid fuzzy number");
+            }
+
+            String[] parts = s.substring(1, s.length() - 1).split(",");
+            if (parts.length != 3) {
+                throw new NumberFormatException("'" + s + "' is not a valid fuzzy number");
+            }
+
+            return new FuzzyNumberCell(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]),
+                Double.parseDouble(parts[2]));
+        }
+
+        /**
+         * Creates a new fuzzy number cell based on min, max support, and core.
+         *
+         * @param minSupp minimum support value
+         * @param core core value
+         * @param maxSupp maximum support value
+         * @return a new data cell
+         * @throws IllegalArgumentException if not <code>minSupp <= core <= maxSupp</code>
+         */
+        public static DataCell create(final double minSupp, final double core, final double maxSupp) {
+            return new FuzzyNumberCell(minSupp, core, maxSupp);
+        }
+    }
+
+    /**
+     * Factory for (de-)serializing a FuzzyNumberCell.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class FuzzyNumberSerializer implements DataCellSerializer<FuzzyNumberCell> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void serialize(final FuzzyNumberCell cell,
                 final DataCellDataOutput output) throws IOException {
             output.writeDouble(cell.getMinSupport());
@@ -246,6 +303,7 @@ public final class FuzzyNumberCell extends DataCell implements
         /**
          * {@inheritDoc}
          */
+        @Override
         public FuzzyNumberCell deserialize(final DataCellDataInput input)
                 throws IOException {
             double minSupp = input.readDouble();

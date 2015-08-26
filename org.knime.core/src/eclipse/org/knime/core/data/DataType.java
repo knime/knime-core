@@ -59,10 +59,12 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.swing.Icon;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataValue.UtilityFactory;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.renderer.DataValueRendererFactory;
@@ -70,16 +72,15 @@ import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.SetOfRendererFamilies;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
-import org.knime.core.internal.SerializerMethodLoader;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
+ * <p>
  * Type description associated with a certain implementation of a
  * {@link DataCell}. It essentially keeps the list of compatible
  * {@link DataValue} interfaces (i.e.
@@ -87,23 +88,32 @@ import org.knime.core.node.util.ConvenienceMethods;
  * {@link org.knime.core.data.renderer.DataValueRenderer} for this type, and
  * (potentially more than one) {@link DataValueComparator} for {@link DataCell}
  * of this type.
+ * </p>
  *
  * <p>
  * There are two forms of <code>DataType</code>s: the so-called native type,
  * which is assigned to a certain {@link org.knime.core.data.DataCell},
  * and the non-native type, which only consists of a list of compatible
  * {@link org.knime.core.data.DataValue} classes.
+ * </p>
  *
  * <p>
  * Furthermore, it provides the possibility to get a common super type for two
  * {@link org.knime.core.data.DataCell}s. In case they are not compatible to
  * each other, the returned <code>DataType</code> is calculated based on the
  * intersection of both compatible {@link org.knime.core.data.DataValue} lists.
+ * </p>
  *
  * <p>
  * In addition, the {@link org.knime.core.data.DataCell} representing missing
  * values is defined in this class and can be accessed via
  * {@link #getMissingCell()}.
+ * </p>
+ *
+ * <p>
+ * <tt>DataType</tt>s must be registered at the extension point <tt>org.knime.core.DataType</tt>. Otherwise they
+ * are not visible to consumers outside the plug-in, such as input nodes.
+ * </p>
  *
  * <p>
  * On details of <code>DataType</code> in KNIME see the <a
@@ -118,7 +128,7 @@ import org.knime.core.node.util.ConvenienceMethods;
 public final class DataType {
 
     /**
-     * Backward compatible class of a missing cell. The INSTANCE has been replaced by MissingCell in the same packe
+     * Backward compatible class of a missing cell. The INSTANCE has been replaced by MissingCell in the same package
      * with KNIME 2.7
      * @deprecated Missing cell in package is used instead: {@link org.knime.core.data.MissingCell}
      */
@@ -195,11 +205,6 @@ public final class DataType {
     private static final String CFG_VALUE_CLASSES = "value_classes";
     /** Config key for adapter classes. */
     private static final String CFG_ADAPTER_CLASSES = "adapter_classes";
-
-    /** Map of the referring <code>DataCell</code> serializer. */
-    private static final Map<Class<? extends DataCell>, DataCellSerializer>
-        CLASS_TO_SERIALIZER_MAP =
-            new HashMap<Class<? extends DataCell>, DataCellSerializer>();
 
     /**
      * Map containing all <code>DataCell.class-DataType</code> tuples
@@ -288,7 +293,7 @@ public final class DataType {
      * <code>from</code> <code>DataType</code> and will be created newly.
      *
      * @param from the <code>DataType</code> to clone
-     * @param preferred the new preferred value class
+     * @param preferred the new preferred value class, never <code>null</code>
      * @return a new <code>DataType</code> with the given preferred value class
      * @throws IllegalArgumentException
      *  if <code>from.isCompatible(preferred)</code> returns <code>false</code>
@@ -323,27 +328,12 @@ public final class DataType {
      * the {@link org.knime.core.data.DataCell} implementation
      * or <code>null</code> if no such serializer is available
      * @throws NullPointerException if the argument is <code>null</code>
+     *
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
-    @SuppressWarnings("unchecked")
-    // access to CLASS_TO_SERIALIZER_MAP
+    @Deprecated
     public static <T extends DataCell> DataCellSerializer<T> getCellSerializer(final Class<T> cl) {
-        synchronized (CLASS_TO_SERIALIZER_MAP) {
-            if (CLASS_TO_SERIALIZER_MAP.containsKey(cl)) {
-                return CLASS_TO_SERIALIZER_MAP.get(cl);
-            }
-            DataCellSerializer<T> result = null;
-            try {
-                result = SerializerMethodLoader.getSerializer(cl, DataCellSerializer.class, "getCellSerializer", false);
-            } catch (NoSuchMethodException nsme) {
-                if (KNIMEConstants.ASSERTIONS_ENABLED) {
-                    LOGGER.warn("Class \"" + cl.getSimpleName() + "\" does not define method \"getCellSerializer\", "
-                            + "using ordinary (but slow) java serialization. This warning does not appear if "
-                            + "assertions are off.", nsme);
-                }
-            }
-            CLASS_TO_SERIALIZER_MAP.put(cl, result);
-            return result;
-        }
+        return DataTypeRegistry.getInstance().getSerializer(cl).orElse(null);
     }
 
     /**
@@ -435,18 +425,18 @@ public final class DataType {
         Exception exception = null;
         try {
             Method method = cl.getMethod("getPreferredValueClass");
-            Class<? extends DataValue> result =
-                (Class<? extends DataValue>)method.invoke(null);
+
+            @SuppressWarnings("unchecked")
+            Class<? extends DataValue> result = (Class<? extends DataValue>)method.invoke(null);
             LOGGER.debug(result.getSimpleName() + " is the preferred value "
                     + "class of cell implementation " + cl.getSimpleName()
                     + ", made sanity check");
+            LOGGER.coding(cl + " provides the static 'getPreferredValueClass' method which is deprecated and will be "
+                + "removed with the next major release. The preferred value class is now the first implemented DataValue "
+                + "interface.");
             return result;
         } catch (NoSuchMethodException nsme) {
             // no such method - perfectly ok, ignore it.
-            LOGGER.debug("Class \"" + cl.getSimpleName() + "\" doesn't "
-                    + "have a default value class (it does not implement "
-                    + "a static method \"getPreferredValueClass()\"). "
-                    + "Returning null");
             return null;
         } catch (InvocationTargetException ite) {
             exception = ite;
@@ -643,7 +633,6 @@ public final class DataType {
      *         be loaded from the given
      *         {@link org.knime.core.node.config.ConfigRO}
      */
-    @SuppressWarnings("unchecked") // type casts
     public static DataType load(final ConfigRO config)
             throws InvalidSettingsException {
         String cellClassName = config.getString(CFG_CELL_NAME);
@@ -658,24 +647,22 @@ public final class DataType {
         // if it has a class name it is a native type
         if (cellClassName != null) {
             try {
-                Class<? extends DataCell> cellClass =
-                        (Class<? extends DataCell>)GlobalClassCreator.createClass(cellClassName);
-                return getType(cellClass, collectionElementType, adapterClasses);
-            } catch (ClassCastException cce) {
-                throw new InvalidSettingsException(cellClassName
-                    + " Class not derived from DataCell: " + cce.getMessage());
-            } catch (ClassNotFoundException cnfe) {
-                throw new InvalidSettingsException(cellClassName
-                    + " Class not found: " + cnfe.getMessage());
+                Optional<Class<? extends DataCell>> o = DataTypeRegistry.getInstance().getCellClass(cellClassName);
+                if (o.isPresent()) {
+                    return getType(o.get(), collectionElementType, adapterClasses);
+                } else {
+                    throw new InvalidSettingsException("Data cell implementation '" + cellClassName + "' not found.");
+                }
+            } catch (ClassCastException ex) {
+                throw new InvalidSettingsException(ex.getMessage(), ex);
             }
         }
 
         // non-native type, must have the following fields.
-        boolean hasPrefValueClass = config.getBoolean(CFG_HAS_PREF_VALUE);
         String[] valueClassNames = config.getStringArray(CFG_VALUE_CLASSES);
         List<Class<? extends DataValue>> valueClasses = getClasses(valueClassNames);
         try {
-            return new DataType(hasPrefValueClass, valueClasses, collectionElementType, adapterClasses);
+            return new DataType(valueClasses, collectionElementType, adapterClasses);
         } catch (IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae);
         }
@@ -683,10 +670,6 @@ public final class DataType {
 
     /** Cell class defines a native type. */
     private final Class<? extends DataCell> m_cellClass;
-
-    /** Flag if the first element in m_valueClasses contains the
-     * preferred value class. */
-    private final boolean m_hasPreferredValueClass;
 
     /** List of all implemented {@link org.knime.core.data.DataValue}
      * interfaces. */
@@ -696,19 +679,18 @@ public final class DataType {
 
     private final List<Class<? extends DataValue>> m_adapterValueList;
 
+    private String m_name;
+
     /**
      * Creates a new, non-native <code>DataType</code>. This method is used
      * from the {@link #load(ConfigRO)} method.
-     * @param hasPreferredValue if preferred value is set
      * @param valueClasses all implemented {@link org.knime.core.data.DataValue} interfaces
      * @param adapterClasses adapter list
      */
-    private DataType(final boolean hasPreferredValue,
-            final List<Class<? extends DataValue>> valueClasses,
+    private DataType(final List<Class<? extends DataValue>> valueClasses,
             final DataType collectionElementType,
             final List<Class<? extends DataValue>> adapterClasses) {
         m_cellClass = null;
-        m_hasPreferredValueClass = hasPreferredValue;
         m_valueClasses = valueClasses;
         boolean hasCollectionDataValue = false;
         for (Class<? extends DataValue> v : m_valueClasses) {
@@ -751,9 +733,8 @@ public final class DataType {
                     + "not implement the interface!");
         }
         m_valueClasses = new ArrayList<Class<? extends DataValue>>();
-        m_hasPreferredValueClass = preferred != null;
         // put preferred value class at the first position in m_valueClasses
-        if (m_hasPreferredValueClass) {
+        if (preferred != null) {
             m_valueClasses.add(preferred);
             valueClasses.remove(preferred);
         }
@@ -786,6 +767,15 @@ public final class DataType {
             m_adapterValueList = Collections.emptyList();
         }
         m_collectionElementType = elementType;
+
+        UtilityFactory utilityFac = DataType.getUtilityFor(getPreferredValueClass());
+        if (utilityFac instanceof ExtensibleUtilityFactory) {
+            m_name = ((ExtensibleUtilityFactory) utilityFac).getName();
+        } else if (m_cellClass != null) {
+            m_name = m_cellClass.getSimpleName();
+        } else {
+            m_name = null;
+        }
     }
 
     /**
@@ -798,7 +788,7 @@ public final class DataType {
      * not native, i.e. the cell class is <code>null</code>.
      *
      * @param type the type to clone
-     * @param preferred the new preferred value class of the new type
+     * @param preferred the new preferred value class of the new type, never <code>null</code>
      */
     private DataType(final DataType type, final Class<? extends DataValue> preferred) {
         if (!type.m_valueClasses.contains(preferred)) {
@@ -816,7 +806,6 @@ public final class DataType {
         }
         m_collectionElementType = type.m_collectionElementType;
         m_adapterValueList = type.m_adapterValueList;
-        m_hasPreferredValueClass = true;
     }
 
     /**
@@ -825,10 +814,6 @@ public final class DataType {
      * {@link #getCommonSuperType(DataType, DataType)} method.
      */
     private DataType(final DataType type1, final DataType type2) {
-        // preferred class must match, if any
-        m_hasPreferredValueClass =
-            type1.m_hasPreferredValueClass && type2.m_hasPreferredValueClass
-            && type1.m_valueClasses.get(0).equals(type2.m_valueClasses.get(0));
         // linked set ensures that the first element is the preferred value
         LinkedHashSet<Class<? extends DataValue>> valueClassHash = new LinkedHashSet<Class<? extends DataValue>>();
         valueClassHash.addAll(type1.m_valueClasses);
@@ -908,18 +893,14 @@ public final class DataType {
             return false;
         }
         DataType o = (DataType)other;
-        // both have a preferred value or both do not.
-        if (m_hasPreferredValueClass != o.m_hasPreferredValueClass) {
+
+        // check if preferred value classes match
+        Class<? extends DataValue> myPreferred = m_valueClasses.get(0);
+        Class<? extends DataValue> oPreferred = o.m_valueClasses.get(0);
+        if (!myPreferred.equals(oPreferred)) {
             return false;
         }
-        // if they do, both preferred value classes must match
-        if (m_hasPreferredValueClass) {
-            Class<? extends DataValue> myPreferred = m_valueClasses.get(0);
-            Class<? extends DataValue> oPreferred = o.m_valueClasses.get(0);
-            if (!myPreferred.equals(oPreferred)) {
-                return false;
-            }
-        }
+
         if (!m_valueClasses.containsAll(o.m_valueClasses)) {
             return false;
         }
@@ -974,21 +955,14 @@ public final class DataType {
     }
 
     /**
-     * Returns the preferred value class of the current <code>DataType</code>
-     * or <code>null</code> if not available. The preferred value class is
-     * defined through the {@link org.knime.core.data.DataCell}
-     * implementation. This method returns <code>null</code> if either the cell
-     * implementation lacks the information or this <code>DataType</code> has
-     * been created as an intersection of two types whose preferred value
-     * classes do not match.
+     * Returns the preferred value class of the current <code>DataType</code>.
+     * The preferred value class is defined through the {@link org.knime.core.data.DataCell}
+     * implementation or the intersection of the value classes when creating non-native types.
      *
-     * @return the preferred value class or <code>null</code>
+     * @return the preferred value class, never <code>null</code>
      */
     public Class<? extends DataValue> getPreferredValueClass() {
-        if (m_hasPreferredValueClass) {
-            return m_valueClasses.get(0);
-        }
-        return null;
+        return m_valueClasses.get(0);
     }
 
     /**
@@ -1100,7 +1074,7 @@ public final class DataType {
      */
     @Override
     public int hashCode() {
-        int result = Boolean.valueOf(m_hasPreferredValueClass).hashCode();
+        int result = 0x6172618;
         for (Class<? extends DataValue> cl : m_valueClasses) {
             result ^= cl.hashCode();
         }
@@ -1235,11 +1209,13 @@ public final class DataType {
                 new LinkedHashSet<Class<? extends DataValue>>(m_adapterValueList);
         newAdapterHash.addAll(Arrays.asList(valueClasses));
         List<Class<? extends DataValue>> newAdapterList = new ArrayList<Class<? extends DataValue>>(newAdapterHash);
+
         if (m_cellClass != null) {
             return getType(m_cellClass, m_collectionElementType, newAdapterList);
+        } else {
+            // non native type
+            return new DataType(m_valueClasses, m_collectionElementType, newAdapterList);
         }
-        // non native type
-        return new DataType(m_hasPreferredValueClass, m_valueClasses, m_collectionElementType, newAdapterList);
     }
 
     /** Get a cell class that was used to create this type. The result may be null. Note, if a column's type returns a
@@ -1270,7 +1246,7 @@ public final class DataType {
 
         if (m_cellClass == null) {
             config.addString(CFG_CELL_NAME, null);
-            config.addBoolean(CFG_HAS_PREF_VALUE, m_hasPreferredValueClass);
+            config.addBoolean(CFG_HAS_PREF_VALUE, true); // only for backwards compatibility
             String[] valueClasses = convertClassesToNames(m_valueClasses);
             config.addStringArray(CFG_VALUE_CLASSES, valueClasses);
         } else {
@@ -1307,16 +1283,43 @@ public final class DataType {
         List<Class<? extends DataValue>> valueClasses = new ArrayList<Class<? extends DataValue>>();
         for (int i = 0; i < classnames.length; i++) {
             try {
-                valueClasses.add((Class<? extends DataValue>)GlobalClassCreator.createClass(classnames[i]));
+                Optional<Class<? extends DataValue>> o = DataTypeRegistry.getInstance().getValueClass(classnames[i]);
+                if (o.isPresent()) {
+                    valueClasses.add(o.get());
+                } else {
+                    throw new InvalidSettingsException("Data Value extension " + classnames[i] + " not found");
+                }
             } catch (ClassCastException cce) {
-                throw new InvalidSettingsException(classnames[i]
-                        + " Class not derived from DataValue: " + cce.getMessage());
-            } catch (ClassNotFoundException cnfe) {
-                throw new InvalidSettingsException(classnames[i]
-                    + " Class not found: " + cnfe.getMessage());
+                throw new InvalidSettingsException(cce.getMessage(), cce);
             }
         }
         return valueClasses;
+    }
+
+
+    /**
+     * Returns a human-readable name for this data type.
+     *
+     * @return the data types' name
+     * @since 3.0
+     */
+    public String getName() {
+        return (m_name != null) ? m_name : "?";
+    }
+
+    /**
+     * Returns a cell factory that can create cells of this DataType. If not cell factory is available, an empty
+     * {@link Optional} is returned.
+     * The passed execution context is required by some factories for creating cells, therefore it's recommended to
+     * always provide an execution context if available. In case you only want to inspect the factory's capabilities,
+     * it's fine to pass <code>null</code>.
+     *
+     * @param exec the current execution context, may be <code>null</code>
+     * @return a data cell factory or an empty optional
+     * @since 3.0
+     */
+    public Optional<DataCellFactory> getCellFactory(final ExecutionContext exec) {
+        return DataTypeRegistry.getInstance().getFactory(this, exec);
     }
 
     /**
@@ -1328,8 +1331,8 @@ public final class DataType {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        if (m_cellClass != null) {
-            b.append(m_cellClass.getSimpleName());
+        if (m_name != null) {
+            b.append(m_name);
         } else {
             b.append("Non-Native ");
             b.append(Arrays.toString(m_valueClasses.toArray()));
@@ -1340,6 +1343,47 @@ public final class DataType {
             b.append(")");
         }
         return b.toString();
+    }
+
+    /**
+     * A slightly nicer string representation that can be used in UI elements. It will strip off fully qualified name
+     * of data value interface if this a non-native type.
+     *
+     * <p>For a non-native type, say a DoubleCell type with a different
+     * preferred value, it would return "Non-Native [ComplexNumber, Double, DataValue, ...]"
+     *
+     * @return A (non-canonical) string representation of this type, never null.
+     * @since 3.0
+     */
+    public String toPrettyString() {
+        StringBuilder b = new StringBuilder();
+        if (m_name != null) {
+            b.append(m_name);
+        } else {
+            b.append("Non-Native ");
+            for (int i = 0; i < Math.min(3, m_valueClasses.size()); i++) {
+                b.append(i == 0 ? "[" : ", ");
+                b.append(stripEnd(m_valueClasses.get(i).getSimpleName(), "DataValue", "Value"));
+            }
+            b.append(m_valueClasses.size() > 3 ? ", ...]" : "]");
+        }
+        if (getCollectionElementType() != null) {
+            b.append(" (Collection of: ");
+            b.append(getCollectionElementType().toString());
+            b.append(")");
+        }
+        return b.toString();
+    }
+
+    private static String stripEnd(final String toStrip, final String... ends) {
+        if (Arrays.asList(ends).contains(toStrip)) {
+            return toStrip;
+        }
+        String result = toStrip;
+        for (String end : ends) {
+            result = StringUtils.removeEndIgnoreCase(result, end);
+        }
+        return result;
     }
 
     private static final class ClassAndSubDataTypePair {

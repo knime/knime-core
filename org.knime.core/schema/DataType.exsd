@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.knime.core" id="DataType" name="DataType"/>
+      </appInfo>
+      <documentation>
+         This extension points registers a DataType at the KNIME Core. All plug-ins can then create and use cells of the registered data types.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="DataType"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="DataType">
+      <annotation>
+         <documentation>
+            A DataType is a common concept in KNIME. This extension adds meta information to data types, e.g. factories for creating cells of the type or serializer implementations for storing cell in data tables.
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="serializer" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="cellClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The &quot;simple&quot; DataCell implementation class, e.g. IntCell, SmilesCell, or SdfCell. This is only used as an identifier but should be the same as the simple cell implementation. BlobCell or FileStoreCell variants of simple cells need not be registered separately. Instead several serializers for the concrete implementations must be registered and the factory should create instances of the specific implementation.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.knime.core.data.DataCell:"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="factoryClass" type="string">
+            <annotation>
+               <documentation>
+                  A factory for creating concrete DataCell objects. New instances of factories are created every time someone requests a factory. Nevertheless they should be thread-safe.
+You can use the same factory class for normal cells and blob cells.
+If you want to support creating cells from different sources you can implement several DataCellFactory interfaces in your implementation. See the Javadoc of org.knime.core.data.DataCellFactory.
+A DataCellFactory is optional, however generic input nodes won&apos;t be able to create cells of this type.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.DataCellParser"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="serializer">
+      <annotation>
+         <documentation>
+            Registers a serializer for a specific cell implementation.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="cellClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The concrete cell class, e.g. StringCell, SdfCell, or SdfBlobCell.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.knime.core.data.DataCell:"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="serializerClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The serializer implementation for instances of the cell class.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.DataCellSerializer"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         KNIME 3.0
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         &lt;extension point=&quot;org.knime.core.DataType&quot;&gt;
+	&lt;DataType
+		cellClass=&quot;org.knime.core.data.def.IntCell&quot;
+        factoryClass=&quot;org.knime.core.data.def.IntCell$IntCellFactory&quot;&gt;
+		&lt;serializer
+			cellClass=&quot;org.knime.core.data.def.IntCell&quot;
+			serializerClass=&quot;org.knime.core.data.def.IntCell$IntCellSerializer&quot;&gt;
+		&lt;/serializer&gt;
+	&lt;/DataType&gt;
+&lt;/extension&gt;
+
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         All DataTypes in the KNIME core are registered via this extension point, therefore simply have a look at the sources of org.knime.core.
+
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         (C) KNIME GmbH, Konstanz, Germany.
+      </documentation>
+   </annotation>
+
+</schema>

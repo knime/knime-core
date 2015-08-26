@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (mb): created
  *   21.06.06 (bw & po): reviewed
@@ -56,9 +56,11 @@ import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
@@ -68,47 +70,39 @@ import org.knime.core.data.FuzzyNumberValue;
  * A data cell implementation holding a double value by storing this value in a
  * private <code>double</code> member. It provides a double value and a fuzzy
  * number value, as well as a fuzzy interval value.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
-public final class DoubleCell extends DataCell 
-    implements DoubleValue, ComplexNumberValue, FuzzyNumberValue, 
+public final class DoubleCell extends DataCell
+    implements DoubleValue, ComplexNumberValue, FuzzyNumberValue,
     FuzzyIntervalValue, BoundedValue {
-    
-    /** Convenience access member for 
-     * <code>DataType.getType(DoubleCell.class)</code>. 
+
+    /** Convenience access member for
+     * <code>DataType.getType(DoubleCell.class)</code>.
      * @see DataType#getType(Class)
      */
-    public static final DataType TYPE = 
+    public static final DataType TYPE =
         DataType.getType(DoubleCell.class);
 
-    /** Returns the preferred value class of this cell implementation. 
-     * This method is called per reflection to determine which is the 
-     * preferred renderer, comparator, etc.
-     * @return DoubleValue.class
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return DoubleValue.class;
-    }
-    
-    private static final DataCellSerializer<DoubleCell> SERIALIZER = 
-        new DoubleSerializer();
-    
-    /** Returns the factory to read/write DataCells of this class from/to
+
+    /**
+     * Returns the factory to read/write DataCells of this class from/to
      * a DataInput/DataOutput. This method is called via reflection.
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final DataCellSerializer<DoubleCell> getCellSerializer() {
-        return SERIALIZER;
+        return new DoubleSerializer();
     }
-    
+
     private final double m_double;
 
     /**
      * Creates a new cell for a generic double value. Also acting as
      * FuzzyNumberCell and FuzzyIntervalCell.
-     * 
+     *
      * @param d The double value.
      */
     public DoubleCell(final double d) {
@@ -118,6 +112,7 @@ public final class DoubleCell extends DataCell
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getDoubleValue() {
         return m_double;
     }
@@ -125,6 +120,7 @@ public final class DoubleCell extends DataCell
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getCore() {
         return m_double;
     }
@@ -132,6 +128,7 @@ public final class DoubleCell extends DataCell
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMaxSupport() {
         return m_double;
     }
@@ -139,6 +136,7 @@ public final class DoubleCell extends DataCell
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMinSupport() {
         return m_double;
     }
@@ -146,6 +144,7 @@ public final class DoubleCell extends DataCell
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMaxCore() {
         return m_double;
     }
@@ -153,6 +152,7 @@ public final class DoubleCell extends DataCell
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMinCore() {
         return m_double;
     }
@@ -160,6 +160,7 @@ public final class DoubleCell extends DataCell
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getCenterOfGravity() {
         return m_double;
     }
@@ -167,17 +168,19 @@ public final class DoubleCell extends DataCell
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getImaginaryValue() {
         return 0.0;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getRealValue() {
         return m_double;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -207,26 +210,90 @@ public final class DoubleCell extends DataCell
     public String toString() {
         return Double.toString(m_double);
     }
-    
-    /** Factory for (de-)serializing a DoubleCell. */
-    private static class DoubleSerializer 
+
+    /**
+     * Factory for (de-)serializing a {@link DoubleCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class DoubleSerializer
         implements DataCellSerializer<DoubleCell> {
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public void serialize(
-                final DoubleCell cell, final DataCellDataOutput out) 
+                final DoubleCell cell, final DataCellDataOutput out)
             throws IOException {
             out.writeDouble(cell.m_double);
         }
-        
+
         /**
          * {@inheritDoc}
          */
-        public DoubleCell deserialize(final DataCellDataInput input) 
+        @Override
+        public DoubleCell deserialize(final DataCellDataInput input)
             throws IOException {
             double d = input.readDouble();
+            return new DoubleCell(d);
+        }
+    }
+
+
+    /**
+     * Factory for {@link DoubleCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
+     */
+    public static final class DoubleCellFactory implements FromSimpleString, FromComplexString {
+        /**
+         * The data type for the cells created by this factory.
+         */
+        public static final DataType TYPE = DoubleCell.TYPE;
+
+        /**
+         * {@inheritDoc}
+         *
+         * Uses {@link Double#parseDouble(String)} to convert the string into a double.
+         */
+        @Override
+        public DataCell createCell(final String s) {
+            return create(s);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataType getDataType() {
+            return TYPE;
+        }
+
+        /**
+         * Creates a new double cell by parsing the given string with {@link Double#parseDouble(String)}.
+         *
+         * @param s a string
+         * @return a new double cell
+         * @throws NumberFormatException if the string is not a valid double number
+         */
+        public static DataCell create(final String s) {
+            String trimmed = s.trim();
+            if (trimmed.isEmpty()) {
+                return DataType.getMissingCell();
+            }
+
+            return new DoubleCell(Double.parseDouble(trimmed));
+        }
+
+        /**
+         * Creates a new double cell with the given value.
+         *
+         * @param d any double value
+         * @return a new data cell
+         */
+        public static DataCell create(final double d) {
             return new DoubleCell(d);
         }
     }

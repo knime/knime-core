@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (mb): created
  *   21.06.06 (bw & po): reviewed
@@ -49,13 +49,16 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.FuzzyIntervalValue;
 
 
@@ -64,42 +67,32 @@ import org.knime.core.data.FuzzyIntervalValue;
  * value in four private <code>double</code> members, two for the min/max
  * values of the support, and two for the min/max values of the core of the
  * fuzzy interval.
- * 
+ *
  * <p>The height of the membership value in the core region is assumed to be 1.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
 public final class FuzzyIntervalCell extends DataCell implements
         FuzzyIntervalValue {
 
-    /** Convenience access member for 
-     * <code>DataType.getType(FuzzyIntervalCell.class)</code>. 
+    /** Convenience access member for
+     * <code>DataType.getType(FuzzyIntervalCell.class)</code>.
      * @see DataType#getType(Class)
      */
-    public static final DataType TYPE = 
+    public static final DataType TYPE =
         DataType.getType(FuzzyIntervalCell.class);
 
-    /** Returns the preferred value class of this cell implementation. 
-     * This method is called per reflection to determine which is the 
-     * preferred renderer, comparator, etc.
-     * @return FuzzyIntervalValue.class
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return FuzzyIntervalValue.class;
-    }
-    
-    private static final FuzzyIntervalSerializer SERIALIZER = 
-        new FuzzyIntervalSerializer();
-    
     /** Returns the factory to read/write DataCells of this class from/to
      * a DataInput/DataOutput. This method is called via reflection.
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final FuzzyIntervalSerializer getCellSerializer() {
-        return SERIALIZER;
+        return new FuzzyIntervalSerializer();
     }
-    
+
     /** Minimum support value. */
     private final double m_minSupp;
 
@@ -115,7 +108,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     /**
      * Creates a new fuzzy interval cell based on the min/max of support and of
      * core.
-     * 
+     *
      * @param minSupp Minimum support value.
      * @param minCore Minimum core value.
      * @param maxCore Maximum core value.
@@ -139,6 +132,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     /**
      * @return Minimum support value.
      */
+    @Override
     public double getMinSupport() {
         return m_minSupp;
     }
@@ -146,6 +140,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     /**
      * @return Minimum core value.
      */
+    @Override
     public double getMinCore() {
         return m_minCore;
     }
@@ -153,6 +148,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     /**
      * @return Maximum core value.
      */
+    @Override
     public double getMaxCore() {
         return m_maxCore;
     }
@@ -160,6 +156,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     /**
      * @return Maximum support value.
      */
+    @Override
     public double getMaxSupport() {
         return m_maxSupp;
     }
@@ -172,6 +169,7 @@ public final class FuzzyIntervalCell extends DataCell implements
      *         product of the gravity point and area for each interval. This
      *         value is divided by the overall membership function volume.
      */
+    @Override
     public double getCenterOfGravity() {
         // left support
         double a1 = (getMinCore() - getMinSupport()) / 2.0;
@@ -196,13 +194,13 @@ public final class FuzzyIntervalCell extends DataCell implements
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         FuzzyIntervalCell fc = (FuzzyIntervalCell)dc;
-        if (Double.isNaN(fc.m_minSupp) && Double.isNaN(m_minSupp) 
+        if (Double.isNaN(fc.m_minSupp) && Double.isNaN(m_minSupp)
                 && Double.isNaN(fc.m_minCore) && Double.isNaN(m_minCore)
                 && Double.isNaN(fc.m_maxCore) && Double.isNaN(m_maxCore)
                 && Double.isNaN(fc.m_maxSupp) && Double.isNaN(m_maxSupp)) {
             return true;
         }
-        return (fc.m_minSupp == m_minSupp) && (fc.m_minCore == m_minCore) 
+        return (fc.m_minSupp == m_minSupp) && (fc.m_minCore == m_minCore)
             && (fc.m_maxCore == m_maxCore) && (fc.m_maxSupp == m_maxSupp);
     }
 
@@ -216,7 +214,7 @@ public final class FuzzyIntervalCell extends DataCell implements
         long minCoreBits = Double.doubleToLongBits(m_minCore);
         long maxCoreBits = Double.doubleToLongBits(m_maxCore);
         long maxSuppBits = Double.doubleToLongBits(m_maxSupp);
-        long bits = minSuppBits ^ (minCoreBits >> 1) 
+        long bits = minSuppBits ^ (minCoreBits >> 1)
             ^ (maxCoreBits >> 2) ^ (maxSuppBits << 1);
         return (int)(bits ^ (bits >>> 32));
     }
@@ -226,28 +224,90 @@ public final class FuzzyIntervalCell extends DataCell implements
      */
     @Override
     public String toString() {
-        return "<" + m_minSupp + "," + m_minCore + "," 
+        return "<" + m_minSupp + "," + m_minCore + ","
             + m_maxCore + "," + m_maxSupp + ">";
     }
 
-    /** Factory for (de-)serializing a FuzzyIntervalCell. */
-    private static class FuzzyIntervalSerializer 
-        implements DataCellSerializer<FuzzyIntervalCell> {
-        
+    /**
+     * Factory for {@link FuzzyIntervalCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
+     */
+    public static final class FuzzyIntervallCellFactory implements FromSimpleString, FromComplexString {
+        /**
+         * The data type for the cells created by this factory.
+         */
+        public static final DataType TYPE = FuzzyIntervalCell.TYPE;
+
         /**
          * {@inheritDoc}
          */
-        public void serialize(final FuzzyIntervalCell cell, 
+        @Override
+        public DataType getDataType() {
+            return TYPE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell createCell(final String input) throws ParseException {
+            return create(input);
+        }
+
+        public static DataCell create(final String s) {
+            if (s.length() < 9) {
+                throw new NumberFormatException("'" + s + "' is not a valid fuzzy interval");
+            }
+
+            String[] parts = s.substring(1, s.length() - 1).split(",");
+            if (parts.length != 4) {
+                throw new NumberFormatException("'" + s + "' is not a valid fuzzy interval");
+            }
+
+            return new FuzzyIntervalCell(Double.parseDouble(parts[0]), Double.parseDouble(parts[1]),
+                Double.parseDouble(parts[2]), Double.parseDouble(parts[3]));
+        }
+
+        /**
+         * Creates a new fuzzy interval cell based on the min/max of support and of core.
+         *
+         * @param minSupp minimum support value
+         * @param minCore minimum core value
+         * @param maxCore maximum core value
+         * @param maxSupp maximum support value
+         * @return a new data cell
+         * @throws IllegalArgumentException If not <code>a <= b <= c <= d</code>.
+         */
+        public static DataCell create(final double minSupp, final double minCore, final double maxCore,
+            final double maxSupp) {
+            return new FuzzyIntervalCell(minSupp, minCore, maxCore, maxSupp);
+        }
+    }
+
+    /**
+     * Factory for (de-)serializing a FuzzyIntervalCell.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class FuzzyIntervalSerializer implements DataCellSerializer<FuzzyIntervalCell> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void serialize(final FuzzyIntervalCell cell,
                 final DataCellDataOutput output) throws IOException {
             output.writeDouble(cell.getMinSupport());
             output.writeDouble(cell.getMinCore());
             output.writeDouble(cell.getMaxCore());
             output.writeDouble(cell.getMaxSupport());
         }
-        
+
         /**
          * {@inheritDoc}
          */
+        @Override
         public FuzzyIntervalCell deserialize(
                 final DataCellDataInput input) throws IOException {
             double minSupp = input.readDouble();

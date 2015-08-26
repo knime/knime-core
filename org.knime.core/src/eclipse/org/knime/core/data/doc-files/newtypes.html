@@ -133,14 +133,16 @@ classes/interfaces:</p>
   methods to retrieve specific information to this type implementation. If
   no such a member is provided, the reflection mechanism will use the
   information from the super interface, i.e. DataValue (though, no customized
-  information is available in this case). It is highly recommended to define the 
-  <a href="../DataValue.UtilityFactory.html">UtilityFactory</a> as an inner class
+  information is available in this case). It is highly recommended to subclass
+  <a href="../ExtensibleUtilityFactory.html">ExtensibleUtilityFactory</a> instead of
+  implementing the <a href="../DataValue.UtilityFactory.html">UtilityFactory</a> interface.
+  Usually the special utility factory is defined as an inner class
   of the interface. The new interface should be similar to: 
   <pre>
   public interface MyDataValue extends DataValue {
     
     /** Derived locally. */
-    public static final UtilityFactory UTILITY = new UtilityFactory() {
+    public static final UtilityFactory UTILITY = new ExtensibleUtilityFactory() {
        ...
     };
     
@@ -161,81 +163,43 @@ classes/interfaces:</p>
   make the list of compatible <a href="../DataValue.html">DataValue</a>s
   available through the DataCell's <a href="../DataType.html">DataType</a>.
   
-  You associate your DataCell implementation with your newly created DataType by 
-  returning it in the <a href="../DataCell.html#getType()">MyNewCell#getType()</a>.
-  This is determined at runtime, the
-  first time the method <a href="../DataType.html#getType(java.lang.Class)">
-  DataType.getType(MyNewCell.class)</a> is invoked – either directly or implicitly. 
+  You associate your DataCell implementation with your newly created DataType by registered the cell implementation
+  at the extension point <code>org.knime.core.DataType</code> (see the description of the extension point for details). 
   There are two important issues when defining a new <a href="../DataCell.html">DataCell</a>:
 
   <ul>
     <li><b>Preferred value class</b>: A <a href="../DataCell.html">DataCell</a>
     may potentially implement more than just one single 
-    <a href="../DataValue.html">DataValue</a> interface. There is no natural
-    order on the implemented interfaces but one normally desires to have a
-    “preferred” value class. (Think of the new molecule type from before, which
-    is compatible to the new MyDataValue interface but also to 
-    <a href="../StringValue.html">StringValue</a> – both values support a
-    customized renderer: Which renderer should KNIME use by default?) To
-    overcome this situation, KNIME will attempt to call a static method in the 
-    <a href="../DataCell.html">DataCell</a> implementation with the following
-    signature and use the returned value as “preferred” value class. 
-    <pre>
-    public static final Class&lt;? extends DataValue&gt; getPreferredValueClass()
-    </pre>
-    Implement this method and return a <a href="../DataValue.html">DataValue</a>
-    class that your <a href="../DataCell.html">DataCell</a> is implementing. If
-    no such method exists, the order on the implemented values is undefined.</li>
+    <a href="../DataValue.html">DataValue</a> interface. Take the new molecule type from before as an example, which
+    is compatible to the new <tt>MyDataValue</tt>tt> interface but also to 
+    <a href="../StringValue.html">StringValue</a>. Both values support a
+    customized renderer: Which renderer should KNIME use by default? To
+    overcome this situation, KNIME will use the <em>first</em> implemented DataValue interface as “preferred” value
+    class. 
     
-    <li><b>DataCellSerializer&lt;MyCell&gt;</b>: Knime frequently buffers
+    <li><b>DataCellSerializer&lt;MyCell&gt;</b>: KNIME frequently buffers
     data to hard disc since <a href="../DataTable.html">DataTable</a>s can get
     arbitrarily big. By default it uses Java-serialization (the base <a
       href="../DataCell.html">DataCell</a> implements <code>java.io.Serializable</code>.
     Since standard serialization is slow, we support reading and writing
     through an appropriate factory, called 
-    <a href="../DataCellSerializer.html">DataCellSerializer</a>.
-    KNIME will check for a static method in your 
-    <a href="../DataCell.html">DataCell</a> implementation: 
-    <pre>
-    public static final DataCellSerializer&lt;MyCell&gt; getCellSerializer()
-    </pre> 
-    and if such a method exists, it will use the returned serializer. 
-    Note, you also need to have the correct return type, i.e. the
+    <a href="../DataCellSerializer.html">DataCellSerializer</a>. In case you implement your custom serializer (which
+    you reall should!), it must be registered as "serializer" for the specific cell implementation at the extension
+    point <code>org.knime.core.DataType</code> (see the description of the extension point for details).
+     
+    Note that your serializer must have the correct return type, i.e. the
     generic parameter of the <a href="../DataCellSerializer.html">DataCellSerializer</a>
-    must be your <a href="../DataCell.html">DataCell</a> class. </li>
+    must be your <a href="../DataCell.html">DataCell</a> class.</li>
   </ul>
   </li>
 </ol>
 
-<p>The skeleton for the new 
-<a href="../DataCell.html">DataCell</a> will look like:
-</p>
-<pre>public class MyCell extends DataCell implements MyValue, StringValue {
 
-    public static final Class&lt;? extends DataValue&gt; getPreferredValueClass() {
-        return MyValue.class;
-    }
-    
-    public static final DataCellSerializer&lt;MyCell&gt; getCellSerializer() {
-        return new DataCellSerializer() {
-            public void serialize(MyCell cell, DataOutput output) throws IOException {
-                ...
-            }
-            public MyCell deserialize(DataInput input) throws IOException {
-                ...
-                return new MyCell(...);
-            }
-        };
-    }
-    ...
-}</pre>
 <h2><a name="typecollection">Collection of DataTypes</a></h2>
 <p>Documentation is pending... For a quick overview refer to the  
 implementations of <a href="../collection/CollectionDataValue.html">
 CollectionDataValue</a> and <a href="../collection/ListCell.html">
 ListCell</a>.
 </p>
-
-
 </body>
 </html>

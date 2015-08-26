@@ -84,6 +84,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.BlobSupportDataCellIterator;
@@ -106,7 +107,6 @@ import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.data.util.memory.MemoryAlert;
 import org.knime.core.data.util.memory.MemoryAlertListener;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -1131,16 +1131,13 @@ class Buffer implements KNIMEStreamConstants {
             throws InvalidSettingsException {
         String[] cellClasses = settings.getStringArray(CFG_CELL_CLASSES);
         CellClassInfo[] shortCutsLookup = new CellClassInfo[cellClasses.length];
+
+
         for (int i = 0; i < cellClasses.length; i++) {
-            Class<?> cl;
-            try {
-                cl = GlobalClassCreator.createClass(cellClasses[i]);
-            } catch (ClassNotFoundException e) {
-                throw new InvalidSettingsException("Can't load data cell " + "class \"" + cellClasses[i] + "\"", e);
-            }
-            if (!DataCell.class.isAssignableFrom(cl)) {
-                throw new InvalidSettingsException("No data cell class: \"" + cellClasses[i] + "\"");
-            }
+            String cellClassName = cellClasses[i];
+
+            Class<?> cl = DataTypeRegistry.getInstance().getCellClass(cellClassName)
+                .orElseThrow(() -> new InvalidSettingsException("Data cell class \"" + cellClassName + "\" is unknown."));
             try {
                 shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, null);
             } catch (IllegalArgumentException e) {
@@ -1161,15 +1158,10 @@ class Buffer implements KNIMEStreamConstants {
         for (String s : keys) {
             NodeSettingsRO single = typeSubSettings.getNodeSettings(s);
             String className = single.getString(CFG_CELL_SINGLE_CLASS);
-            Class<?> cl;
-            try {
-                cl = GlobalClassCreator.createClass(className);
-            } catch (ClassNotFoundException e) {
-                throw new InvalidSettingsException("Can't load data cell " + "class \"" + className + "\"", e);
-            }
-            if (!DataCell.class.isAssignableFrom(cl)) {
-                throw new InvalidSettingsException("No data cell class: \"" + className + "\"");
-            }
+
+            Class<?> cl = DataTypeRegistry.getInstance().getCellClass(className)
+                .orElseThrow(() -> new InvalidSettingsException("Can't load data cell class '" +className + "'"));
+
             DataType elementType = null;
             if (single.containsKey(CFG_CELL_SINGLE_ELEMENT_TYPE)) {
                 NodeSettingsRO subTypeConfig = single.getNodeSettings(CFG_CELL_SINGLE_ELEMENT_TYPE);

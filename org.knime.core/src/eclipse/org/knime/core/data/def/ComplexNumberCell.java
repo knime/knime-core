@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   23.03.2006 (cebron): created
  *   21.06.06 (bw & po): reviewed
@@ -50,20 +50,25 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 
 /**
  * A data cell implementation holding a complex number value by storing this
  * value in two double member variables. It provides access to the complex
  * number value.
- * 
+ *
  * @author ciobaca, University of Konstanz
  */
 public final class ComplexNumberCell extends DataCell implements
@@ -76,28 +81,16 @@ public final class ComplexNumberCell extends DataCell implements
             DataType.getType(ComplexNumberCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     * 
-     * @return ComplexNumberValue.class
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return ComplexNumberValue.class;
-    }
-
-    private static final ComplexNumberSerializer SERIALIZER =
-            new ComplexNumberSerializer();
-
-    /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
-     * 
+     *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final ComplexNumberSerializer getCellSerializer() {
-        return SERIALIZER;
+        return new ComplexNumberSerializer();
     }
 
     /** real part of the complex number. */
@@ -108,7 +101,7 @@ public final class ComplexNumberCell extends DataCell implements
 
     /**
      * Creates a new cell for a complex number.
-     * 
+     *
      * @param real The double value.
      * @param imag The imaginary value.
      */
@@ -120,6 +113,7 @@ public final class ComplexNumberCell extends DataCell implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getRealValue() {
         return m_real;
     }
@@ -127,6 +121,7 @@ public final class ComplexNumberCell extends DataCell implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getImaginaryValue() {
         return m_imag;
     }
@@ -170,14 +165,91 @@ public final class ComplexNumberCell extends DataCell implements
     }
 
     /**
-     * Factory for (de-)serializing a {@link ComplexNumberCell}.
+     * Factory for {@link ComplexNumberCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
      */
-    private static class ComplexNumberSerializer implements
+    public static final class ComplexNumberCellFactory implements FromSimpleString, FromComplexString {
+        /**
+         * The data type for the cells created by this factory.
+         */
+        public static final DataType TYPE = ComplexNumberCell.TYPE;
+
+        private static final Pattern SPLIT_PATTERN = Pattern.compile("^(.+?)(?:\\s*([\\+\\-])(?:\\s*i\\s*\\*(.+)|(.*)i)?$");
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataType getDataType() {
+            return TYPE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell createCell(final String input) throws ParseException {
+            return create(input);
+        }
+
+        /**
+         * Creates a new complex number cell by parsing the given string. The expected format is
+         * <tt>real "+" img"i"</tt>, e.g <tt>3 + 2i</tt>, <tt>0.5 - 0.3i</tt>, <tt>0.1</tt>, <tt>-i</tt>.
+         *
+         * @param s a string denoting a complex number
+         * @return a new complex number cell
+         */
+        public static DataCell create(final String s) {
+            Matcher m = SPLIT_PATTERN.matcher(s);
+            if (m.matches()) {
+                double real = 0, img = 0;
+
+                if ("i".equals(m.group(1))) {
+                    img = 1;
+                } else if ("-i".equals(m.group(1))) {
+                    img = -1;
+                } else {
+                    real = Double.parseDouble(m.group(1));
+                    double sign = "-".equals(m.group(2)) ? -1 : 1;
+                    if (m.group(3) != null) {
+                        img = sign * Double.parseDouble(m.group(3));
+                    } else if (m.group(4) != null) {
+                        img = sign * Double.parseDouble(m.group(4));
+                    }
+                }
+                return new ComplexNumberCell(real, img);
+            } else {
+                throw new NumberFormatException("'" + s + "_ is not a valid complex number, expected something that "
+                    + "matches '" + SPLIT_PATTERN.pattern() + "'");
+            }
+        }
+
+        /**
+         * Creates a new complex number cell from the real and imaginary parts.
+         *
+         * @param real the real part
+         * @param img the imaginary part
+         * @return a new data cell
+         */
+        public static DataCell create(final double real, final double img) {
+            return new ComplexNumberCell(real, img);
+        }
+    }
+
+    /**
+     * Factory for (de-)serializing a {@link ComplexNumberCell}.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class ComplexNumberSerializer implements
             DataCellSerializer<ComplexNumberCell> {
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public void serialize(final ComplexNumberCell cell,
                 final DataCellDataOutput output) throws IOException {
             output.writeDouble(cell.getRealValue());
@@ -187,6 +259,7 @@ public final class ComplexNumberCell extends DataCell implements
         /**
          * {@inheritDoc}
          */
+        @Override
         public ComplexNumberCell deserialize(final DataCellDataInput input)
                 throws IOException {
             double real = input.readDouble();

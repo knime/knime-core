@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (mb): created
  *   21.06.06 (bw & po): reviewed
@@ -49,62 +49,58 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromInputStream;
+import org.knime.core.data.DataCellFactory.FromReader;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 
 /**
  * A data cell implementation holding a string value by storing this value in a
  * private {@link String} member.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
-public final class StringCell extends DataCell 
+public final class StringCell extends DataCell
 implements StringValue, NominalValue {
 
     /**
      * Convenience access member for
      * <code>DataType.getType(StringCell.class)</code>.
-     * 
+     *
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = DataType.getType(StringCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     * 
-     * @return StringValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return StringValue.class;
-    }
-
-    private static final StringSerializer SERIALIZER = new StringSerializer();
-
-    /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
-     * 
+     *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final StringSerializer getCellSerializer() {
-        return SERIALIZER;
+        return new StringSerializer();
     }
 
     private final String m_string;
 
     /**
      * Creates a new String Cell based on the given String value.
-     * 
+     *
      * @param str The String value to store.
      * @throws NullPointerException If the given String value is
      *             <code>null</code>.
@@ -119,6 +115,7 @@ implements StringValue, NominalValue {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getStringValue() {
         return m_string;
     }
@@ -147,13 +144,18 @@ implements StringValue, NominalValue {
         return m_string.hashCode();
     }
 
-    /** Factory for (de-)serializing a StringCell. */
-    private static class StringSerializer implements
+    /**
+     * Factory for (de-)serializing a {@link StringCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class StringSerializer implements
             DataCellSerializer<StringCell> {
         /**
          * {@inheritDoc}
          */
-        public void serialize(final StringCell cell, 
+        @Override
+        public void serialize(final StringCell cell,
                 final DataCellDataOutput output) throws IOException {
             output.writeUTF(cell.getStringValue());
         }
@@ -161,6 +163,7 @@ implements StringValue, NominalValue {
         /**
          * {@inheritDoc}
          */
+        @Override
         public StringCell deserialize(
                 final DataCellDataInput input) throws IOException {
             String s = input.readUTF();
@@ -169,4 +172,69 @@ implements StringValue, NominalValue {
 
     }
 
+
+    /**
+     * Factory for {@link StringCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
+     */
+    public static final class StringCellFactory
+        implements FromSimpleString, FromComplexString, FromReader, FromInputStream {
+        /**
+         * The data type for the cells created by this factory.
+         */
+        public static final DataType TYPE = StringCell.TYPE;
+
+        /**
+         * {@inheritDoc}
+         *
+         * Uses {@link Integer#parseInt(String)} to convert the string into an int.
+         */
+        @Override
+        public DataCell createCell(final String s) {
+            return create(s);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataType getDataType() {
+            return TYPE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell createCell(final InputStream input) throws IOException {
+            return createCell(new InputStreamReader(input, "UTF-8"));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell createCell(final Reader input) throws IOException {
+            StringBuilder buf = new StringBuilder(1024);
+            char[] c = new char[1024];
+            int size;
+            while ((size = input.read(c)) != -1) {
+                buf.append(c, 0, size);
+            }
+
+            return new StringCell(buf.toString());
+        }
+
+        /**
+         * Creates a new string cell with the given value.
+         *
+         * @param s any string
+         * @return a new data cell
+         */
+        public static DataCell create(final String s) {
+            return new StringCell(s);
+        }
+    }
 }

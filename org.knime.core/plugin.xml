@@ -7,6 +7,7 @@
    <extension-point id="NodeFactoryClassMapper" name="Changes NodeFactory class names in saved workflows" schema="schema/NodeFactoryClassMapper.exsd"/>
    <extension-point id="DatabaseUtility" name="DatabaseUtility" schema="schema/DatabaseUtility.exsd"/>
    <extension-point id="WizardNodeView" name="WizardNodeView" schema="schema/WizardNodeView.exsd"/>
+   <extension-point id="DataType" name="DataType" schema="schema/DataType.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory
@@ -239,5 +240,85 @@
             name="Internal Browser"
             viewClass="org.knime.core.node.wizard.WizardNodeView">
       </wizardNodeView>
+   </extension>
+   <extension
+         point="org.knime.core.DataType">
+      <DataType
+            cellClass="org.knime.core.data.def.IntCell"
+            factoryClass="org.knime.core.data.def.IntCell$IntCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.def.IntCell"
+               serializerClass="org.knime.core.data.def.IntCell$IntCellSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.StringCell"
+            factoryClass="org.knime.core.data.def.StringCell$StringCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.def.StringCell"
+               serializerClass="org.knime.core.data.def.StringCell$StringSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.DoubleCell"
+            factoryClass="org.knime.core.data.def.DoubleCell$DoubleCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.def.DoubleCell"
+               serializerClass="org.knime.core.data.def.DoubleCell$DoubleSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.date.DateAndTimeCell"
+            factoryClass="org.knime.core.data.date.DateAndTimeCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.date.DateAndTimeCell"
+               serializerClass="org.knime.core.data.date.DateAndTimeCellSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.BooleanCell"
+            factoryClass="org.knime.core.data.def.BooleanCell$BooleanCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.def.BooleanCell"
+               serializerClass="org.knime.core.data.def.BooleanCell$BooleanSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.ComplexNumberCell"
+            factoryClass="org.knime.core.data.def.ComplexNumberCell$ComplexNumberCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.def.ComplexNumberCell"
+               serializerClass="org.knime.core.data.def.ComplexNumberCell$ComplexNumberSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.FuzzyIntervalCell">
+         <serializer
+               cellClass="org.knime.core.data.def.FuzzyIntervalCell"
+               serializerClass="org.knime.core.data.def.FuzzyIntervalCell$FuzzyIntervalSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.LongCell"
+            factoryClass="org.knime.core.data.def.LongCell$LongCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.def.LongCell"
+               serializerClass="org.knime.core.data.def.LongCell$LongSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.IntervalCell">
+         <serializer
+               cellClass="org.knime.core.data.def.IntervalCell"
+               serializerClass="org.knime.core.data.def.IntervalCell$IntervalSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.FuzzyNumberCell">
+         <serializer
+               cellClass="org.knime.core.data.def.FuzzyNumberCell"
+               serializerClass="org.knime.core.data.def.FuzzyNumberCell$FuzzyNumberSerializer">
+         </serializer>
+      </DataType>
    </extension>
 </plugin>

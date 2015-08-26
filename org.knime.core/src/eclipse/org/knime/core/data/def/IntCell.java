@@ -50,15 +50,18 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
@@ -85,28 +88,16 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     public static final DataType TYPE = DataType.getType(IntCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     * @return IntValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return IntValue.class;
-    }
-
-    private static final DataCellSerializer<IntCell> SERIALIZER =
-            new IntSerializer();
-
-    /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
      *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final DataCellSerializer<IntCell> getCellSerializer() {
-        return SERIALIZER;
+        return new IntCellSerializer();
     }
 
     private final int m_int;
@@ -123,11 +114,13 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getIntValue() {
         return m_int;
     }
 
     /** {@inheritDoc} */
+    @Override
     public long getLongValue() {
         return m_int;
     }
@@ -135,6 +128,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getDoubleValue() {
         return m_int;
     }
@@ -142,6 +136,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getCore() {
         return m_int;
     }
@@ -149,6 +144,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMaxSupport() {
         return m_int;
     }
@@ -156,6 +152,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMinSupport() {
         return m_int;
     }
@@ -163,6 +160,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMaxCore() {
         return m_int;
     }
@@ -170,6 +168,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMinCore() {
         return m_int;
     }
@@ -177,6 +176,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getCenterOfGravity() {
         return m_int;
     }
@@ -184,6 +184,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getImaginaryValue() {
         return 0.0;
     }
@@ -191,6 +192,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getRealValue() {
         return m_int;
     }
@@ -219,12 +221,18 @@ public class IntCell extends DataCell implements IntValue, LongValue,
         return Integer.toString(m_int);
     }
 
-    /** Factory for (de-)serializing a IntCell. */
-    private static class IntSerializer implements DataCellSerializer<IntCell> {
+    /**
+     * Serializer for an {@link IntCell}.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class IntCellSerializer implements DataCellSerializer<IntCell> {
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public void serialize(final IntCell cell,
                 final DataCellDataOutput output) throws IOException {
             output.writeInt(cell.m_int);
@@ -233,6 +241,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
         /**
          * {@inheritDoc}
          */
+        @Override
         public IntCell deserialize(
                 final DataCellDataInput input) throws IOException {
             int i = input.readInt();
@@ -240,4 +249,69 @@ public class IntCell extends DataCell implements IntValue, LongValue,
         }
     }
 
+
+    /**
+     * Factory for {@link IntCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
+     */
+    public static final class IntCellFactory implements FromSimpleString, FromComplexString {
+        /**
+         * The data type for the cells created by this factory.
+         */
+        public static final DataType TYPE = IntCell.TYPE;
+
+        /**
+         * {@inheritDoc}
+         *
+         * Uses {@link Integer#parseInt(String)} to convert the string into an int.
+         */
+        @Override
+        public DataCell createCell(final String s) throws ParseException {
+            return create(s);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataType getDataType() {
+            return TYPE;
+        }
+
+        /**
+         * Creates a new int cell by parsing the given string with {@link Integer#parseInt(String)}.
+         *
+         * @param s a string
+         * @return a new int cell
+         * @throws NumberFormatException if the string is not a valid integer number
+         */
+        public static DataCell create(final String s) {
+            String trimmed = s.trim();
+            if (trimmed.isEmpty()) {
+                return DataType.getMissingCell();
+            }
+
+            // this is a feature of the parseInt method: it bails on '+'
+            if (trimmed.charAt(0) == '+') {
+                trimmed = trimmed.substring(1);
+                if (trimmed.isEmpty()) {
+                    throw new NumberFormatException("Invalid number format, got '+' for an integer.");
+                }
+            }
+
+            return new IntCell(Integer.parseInt(trimmed));
+        }
+
+        /**
+         * Creates a new int cell with the given value.
+         *
+         * @param i any int value
+         * @return a new data cell
+         */
+        public static DataCell create(final int i) {
+            return new IntCell(i);
+        }
+    }
 }

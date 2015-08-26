@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,51 +44,39 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   14.09.2009 (Fabian Dill): created
+ *   20.08.2015 (thor): created
  */
-package org.knime.core.data.date;
+package org.knime.core.data;
 
-import java.io.IOException;
-
-import org.knime.core.data.DataCellDataInput;
-import org.knime.core.data.DataCellDataOutput;
-import org.knime.core.data.DataCellSerializer;
+import java.util.Collection;
 
 /**
- * Serializes a {@link DateAndTimeCell} by writing the long representing the UTC
- * time and the booleans whether date, time, or milliseconds are available.
+ * Additional interface for {@link DataCellFactory}s that can be configured, e.g. with a pattern for interpreting string
+ * input.
  *
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 3.0
- * @noreference This class is not intended to be referenced by clients.
  */
-public final class DateAndTimeCellSerializer implements DataCellSerializer<DateAndTimeCell> {
+public interface ConfigurableDataCellFactory {
     /**
-     * {@inheritDoc}
+     * Configures this reader with the given format parameters.
+     *
+     * @param format a format string describing the expected input data, maybe <code>null</code>
+     * @throws IllegalArgumentException if the parameters are invalid
      */
-    @Override
-    public DateAndTimeCell deserialize(final DataCellDataInput input)
-            throws IOException {
-        long utcTime = input.readLong();
-        boolean hasDate = input.readBoolean();
-        boolean hasTime = input.readBoolean();
-        boolean hasMillis = input.readBoolean();
-        DateAndTimeCell cell = new DateAndTimeCell(utcTime, hasDate, hasTime,
-                hasMillis);
-        return cell;
-    }
+    void configure(String format);
 
     /**
-     * {@inheritDoc}
+     * Returns a human-readable description for the supported parameters.
+     *
+     * @return a parameter description, never <code>null</code>
      */
-    @Override
-    public void serialize(final DateAndTimeCell cell,
-            final DataCellDataOutput output)
-            throws IOException {
-        output.writeLong(cell.getUTCTimeInMillis());
-        output.writeBoolean(cell.hasDate());
-        output.writeBoolean(cell.hasTime());
-        output.writeBoolean(cell.hasMillis());
-    }
+    String getParameterDescription();
 
+    /**
+     * Returns a (possibly empty) collection of predefined parameters.
+     *
+     * @return a collection with parameters, never <code>null</code>
+     */
+    Collection<String> getPredefinedParameters();
 }

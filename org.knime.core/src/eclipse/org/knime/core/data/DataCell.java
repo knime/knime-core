@@ -57,17 +57,20 @@ import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobWrapperDataCell;
 
 /**
+ * <p>
  * Abstract base class of all <code>DataCell</code>s, which acts as a container
  * for arbitrary values and defines the common abilities all cells must provide,
  * that is: retrieve the cell type, a string representation of the value,
  * find out if this cell is missing, and test whether it is equal to another
  * one.
+ * </p>
  *
  * <p>
- * Derived classes have to implement at least one interface
- * derived from {@link DataValue}. The derived class must be
+ * Subclasses have to implement at least one interface
+ * derived from {@link DataValue}. DataCells must be
  * read-only, i.e. setter methods must not be implemented and
  * objects returned by any of the get methods must be immutable.
+ * </p>
  *
  * <p>
  * This class implements {@link java.io.Serializable}. However, if
@@ -76,37 +79,17 @@ import org.knime.core.data.container.BlobWrapperDataCell;
  * {@link DataCellDataInput} or
  * {@link DataCellDataOutput} source. Ordinary Java
  * serialization is considerably slower than implementing your own
- * {@link DataCellSerializer}. To register
- * such a serializer, define a static method having the following signature:
- *
- * <pre>
- *   public static final {@link DataCellSerializer}&lt;YourCellClass&gt;
- *       getCellSerializer() {
- *     ...
- *   }
- * </pre>
- *
- * where <i>YourCellClass</i> is the name of your <code>DataCell</code>
- * implementation. This method will be called by reflection, whenever the cell
- * at hand needs to be written or read.
+ * {@link DataCellSerializer}. Register this serializer at the extension point
+ * <code>org.knime.core.DataType</code>.
+ * </p>
  *
  * <p>
  * <a name="preferredvalueclass"/>
- * Since <code>DataCell</code> may implement different {@link DataValue}
- * interfaces but only one is the <i>preferred</i> value class,
- * implement a static method in your derived class with the following signature:
- *
- * <pre>
- *    public static final Class&lt;? extends DataValue&gt;
- *      getPreferredValueClass() {
- *        ...
- *    }
- * </pre>
- *
- * This method is called once when the runtime {@link DataType} of the cell is
- * created using reflection. The associated {@link DataType} provides the
- * renderer, icon, and comparator of this preferred value. If this method is
- * not implemented, the order on the value interfaces is undefined.
+ * Since <code>DataCell</code>s may implement several {@link DataValue}
+ * interfaces but only one is the <i>preferred</i> value class, the order of the implemented interfaces is important.
+ * The first implemented {@link DataValue} interface is taken as the preferred value class. The {@link DataType}
+ * associated with this cell implementation will then provide the renderer, icon, and comparator of this preferred
+ * value.
  *
  * <p>
  * For further details on data types, see also the <a
@@ -117,8 +100,6 @@ import org.knime.core.data.container.BlobWrapperDataCell;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class DataCell implements DataValue, Serializable {
-
-    /** */
     private static final long serialVersionUID = 7415713938002260608L;
 
     /**

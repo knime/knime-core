@@ -53,13 +53,12 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.regex.Pattern;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -83,13 +82,6 @@ public class DateAndTimeCell extends DataCell
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             DateAndTimeCell.class);
 
-
-    /** Static method indicating preferred value class as required by
-     * DataCell API.
-     * @return DateAndTimeValue.class */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return DateAndTimeValue.class;
-    }
 
     /**
      *
@@ -137,18 +129,17 @@ public class DateAndTimeCell extends DataCell
     /** {@link DataType} of this cell. */
     public static final DataType TYPE = DataType.getType(DateAndTimeCell.class);
 
-    private static final DataCellSerializer<DateAndTimeCell> SERIALIZER
-            = new DateAndTimeCellSerializer();
-
     /**
      *
      * @return serializer for this cell
      * @see DataCellSerializer
      * @see DataCell
+     *
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
-    public static final DataCellSerializer<DateAndTimeCell>
-        getCellSerializer() {
-        return SERIALIZER;
+    @Deprecated
+    public static final DataCellSerializer<DateAndTimeCell> getCellSerializer() {
+        return DataTypeRegistry.getInstance().getSerializer(DateAndTimeCell.class).orElse(null);
     }
 
     private final Calendar m_utcCalendar;
@@ -409,7 +400,7 @@ public class DateAndTimeCell extends DataCell
         }
     }
 
-    private static DateFormat getFormat(final boolean hasDate, final boolean hasTime, final boolean hasMillis) {
+    static DateFormat getFormat(final boolean hasDate, final boolean hasTime, final boolean hasMillis) {
         DateFormat format;
         if (hasDate && hasTime && hasMillis) {
             format = FORMAT_DATE_AND_TIME_AND_MS;
@@ -429,12 +420,6 @@ public class DateAndTimeCell extends DataCell
         return format;
     }
 
-    private static final Pattern MS_PATTERN = Pattern.compile("\\.[0-9]{1,3}$");
-
-    private static final Pattern DATE_PATTERN = Pattern.compile("^[0-9]{4}-[0-9]{2}-[0-9]{2}");
-
-    private static final Pattern TIME_PATTERN = Pattern.compile("[0-9]{2}:[0-9]{2}:[0-9]{2}");
-
     /**
      * Creates a new DateAndTimeCell from the given string. All strings created by DateAndTimeCell.toString() or
      * DateAndTimeCell.getStringValue() are accepted.
@@ -450,20 +435,11 @@ public class DateAndTimeCell extends DataCell
      * @return the cell containing the parsed date
      * @throws ParseException when the string cannot be parsed
      * @since 2.12
+     * @deprecated use {@link DateAndTimeCellFactory#create(String)} instead
      */
+    @Deprecated
     public static DateAndTimeCell fromString(final String s) throws ParseException {
-        boolean hasMillis = MS_PATTERN.matcher(s).find();
-        boolean hasDate = DATE_PATTERN.matcher(s).find();
-        boolean hasTime = TIME_PATTERN.matcher(s).find();
-        if (!(hasMillis || hasDate || hasTime) || (!hasTime && hasMillis)) {
-            throw new ParseException("The given string does not conform to the required format.", 0);
-        }
-        DateFormat format = getFormat(hasDate, hasTime, hasMillis);
-        Date date;
-        synchronized (format) {
-            date = format.parse(s);
-        }
-        return new DateAndTimeCell(date.getTime(), hasDate, hasTime, hasMillis);
+        return (DateAndTimeCell)DateAndTimeCellFactory.create(s);
     }
 
     // ***************************************************************

@@ -48,15 +48,18 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
@@ -78,28 +81,16 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     public static final DataType TYPE = DataType.getType(LongCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     * @return LongValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return LongValue.class;
-    }
-
-    private static final DataCellSerializer<LongCell> SERIALIZER =
-            new LongSerializer();
-
-    /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
      *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final DataCellSerializer<LongCell> getCellSerializer() {
-        return SERIALIZER;
+        return new LongSerializer();
     }
 
     private final long m_long;
@@ -116,6 +107,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public long getLongValue() {
         return m_long;
     }
@@ -123,6 +115,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getDoubleValue() {
         return m_long;
     }
@@ -130,6 +123,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getCore() {
         return m_long;
     }
@@ -137,6 +131,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMaxSupport() {
         return m_long;
     }
@@ -144,6 +139,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMinSupport() {
         return m_long;
     }
@@ -151,6 +147,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMaxCore() {
         return m_long;
     }
@@ -158,6 +155,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getMinCore() {
         return m_long;
     }
@@ -165,6 +163,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getCenterOfGravity() {
         return m_long;
     }
@@ -172,6 +171,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getImaginaryValue() {
         return 0.0;
     }
@@ -179,6 +179,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getRealValue() {
         return m_long;
     }
@@ -207,12 +208,81 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
         return Long.toString(m_long);
     }
 
-    /** Factory for (de-)serializing a LongCell. */
-    private static class LongSerializer implements DataCellSerializer<LongCell> {
+    /**
+     * Factory for {@link LongCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
+     */
+    public static final class LongCellFactory implements FromSimpleString, FromComplexString {
+        /**
+         * The data type for the cells created by this factory.
+         */
+        public static final DataType TYPE = LongCell.TYPE;
+
+        /**
+         * {@inheritDoc}
+         *
+         * Uses {@link Long#parseLong(String)} to convert the string into a long.
+         */
+        @Override
+        public DataCell createCell(final String s) throws ParseException {
+            return create(s);
+        }
 
         /**
          * {@inheritDoc}
          */
+        @Override
+        public DataType getDataType() {
+            return TYPE;
+        }
+
+        /**
+         * Creates a new long cell by parsing the given string with {@link Long#parseLong(String)}.
+         *
+         * @param s a string
+         * @return a new long cell
+         * @throws NumberFormatException if the string is not a valid long number
+         */
+        public static DataCell create(final String s) {
+            String trimmed = s.trim();
+            if (trimmed.isEmpty()) {
+                return DataType.getMissingCell();
+            }
+
+            // this is a feature of the parseInt method: it bails on '+'
+            if (trimmed.charAt(0) == '+') {
+                trimmed = trimmed.substring(1);
+                if (trimmed.isEmpty()) {
+                    throw new NumberFormatException("Invalid number format, got '+' for a long.");
+                }
+            }
+
+            return new LongCell(Long.parseLong(trimmed));
+        }
+
+        /**
+         * Creates a new long cell with the given value.
+         *
+         * @param l any long value
+         * @return a new data cell
+         */
+        public static DataCell create(final int l) {
+            return new LongCell(l);
+        }
+    }
+
+    /**
+     * Factory for (de-)serializing a LongCell.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class LongSerializer implements DataCellSerializer<LongCell> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void serialize(final LongCell cell,
                 final DataCellDataOutput output) throws IOException {
             output.writeLong(cell.m_long);
@@ -221,6 +291,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
         /**
          * {@inheritDoc}
          */
+        @Override
         public LongCell deserialize(final DataCellDataInput input)
                 throws IOException {
             long l = input.readLong();

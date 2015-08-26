@@ -54,9 +54,11 @@ import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
@@ -89,9 +91,11 @@ public final class BooleanCell extends DataCell implements BooleanValue,
     /** Get singleton instance for given value.
      * @param value The value
      * @return the cell instance representing the value
+     * @deprecated use {@link BooleanCellFactory#create(boolean)} instead
      */
+    @Deprecated
     public static final BooleanCell get(final boolean value) {
-        return value ? TRUE : FALSE;
+        return (BooleanCell)BooleanCellFactory.create(value);
     }
 
     /**
@@ -103,28 +107,16 @@ public final class BooleanCell extends DataCell implements BooleanValue,
     public static final DataType TYPE = DataType.getType(BooleanCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     * @return BooleanValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return BooleanValue.class;
-    }
-
-    private static final DataCellSerializer<BooleanCell> SERIALIZER =
-            new BooleanSerializer();
-
-    /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
      *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final DataCellSerializer<BooleanCell> getCellSerializer() {
-        return SERIALIZER;
+        return new BooleanSerializer();
     }
 
     private final boolean m_boolean;
@@ -134,7 +126,7 @@ public final class BooleanCell extends DataCell implements BooleanValue,
      *
      * @param b The boolean value to store.
      */
-    private BooleanCell(final boolean i) {
+    BooleanCell(final boolean i) {
         m_boolean = i;
     }
 
@@ -262,8 +254,63 @@ public final class BooleanCell extends DataCell implements BooleanValue,
         return m_boolean ? TRUE : FALSE;
     }
 
-    /** Factory for (de-)serializing a BooleanCell. */
-    private static class BooleanSerializer
+    /**
+     * Factory for {@link BooleanCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
+     */
+    public static final class BooleanCellFactory implements FromSimpleString, FromComplexString {
+        /**
+         * The data type for the cells created by this factory.
+         */
+        public static final DataType TYPE = BooleanCell.TYPE;
+
+        /**
+         * {@inheritDoc}
+         *
+         * Uses {@link Boolean#parseBoolean(String)} to convert the string into a boolean.
+         */
+        @Override
+        public DataCell createCell(final String s) {
+            return create(s);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataType getDataType() {
+            return TYPE;
+        }
+
+        /**
+         * Creates a new boolean cell by parsing the string with {@link Boolean#parseBoolean(String)}.
+         *
+         * @param s any string
+         * @return a new data cell
+         */
+        public static DataCell create(final String s) {
+            return Boolean.parseBoolean(s) ? TRUE : FALSE;
+        }
+
+        /**
+         * Creates a new boolean cell with the given value.
+         *
+         * @param b a boolean
+         * @return a new data cell
+         */
+        public static DataCell create(final boolean b) {
+            return b ? TRUE : FALSE;
+        }
+    }
+
+    /**
+     * Factory for (de-)serializing a BooleanCell.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class BooleanSerializer
         implements DataCellSerializer<BooleanCell> {
 
         /**
