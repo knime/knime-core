@@ -57,21 +57,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  */
 @SuppressWarnings("serial")
 public final class MissingCell extends DataCell implements MissingValue {
-
     static final MissingCell INSTANCE = new MissingCell(null);
-
-    /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     * @return MissingValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return MissingValue.class;
-    }
-
-    private static final MissingSerializer SERIALIZER = new MissingSerializer();
 
     /**
      * Returns the factory to read/write DataCells of this class from/to a
@@ -79,9 +65,11 @@ public final class MissingCell extends DataCell implements MissingValue {
      *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final MissingSerializer getCellSerializer() {
-        return SERIALIZER;
+        return new MissingSerializer();
     }
 
     private final String m_error;
@@ -147,9 +135,12 @@ public final class MissingCell extends DataCell implements MissingValue {
         return m_error == null ? 0 : m_error.hashCode();
     }
 
-    /** Factory for (de-)serializing a MissingCell. */
-    private static class MissingSerializer implements DataCellSerializer<MissingCell> {
-
+    /**
+     * Factory for (de-)serializing a MissingCell.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class MissingSerializer implements DataCellSerializer<MissingCell> {
         // add more later, for instance if we also add a stack trace?
         private static final byte ERROR_SET_BIT = (byte)0x1;
 

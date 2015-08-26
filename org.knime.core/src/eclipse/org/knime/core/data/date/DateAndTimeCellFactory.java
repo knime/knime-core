@@ -91,7 +91,7 @@ public final class DateAndTimeCellFactory implements FromSimpleString, FromCompl
      * {@inheritDoc}
      */
     @Override
-    public DataCell createCell(final String s) throws ParseException {
+    public DataCell createCell(final String s) {
         return create(s, m_format);
     }
 
@@ -144,14 +144,14 @@ public final class DateAndTimeCellFactory implements FromSimpleString, FromCompl
      * Date and time with milliseconds: yyyy-MM-dd'T'HH:mm:ss.S
      * @param s the string to parse into date
      * @return the cell containing the parsed date
-     * @throws ParseException when the string cannot be parsed
+     * @throws IllegalArgumentException when the string cannot be parsed
      **/
-    public static DataCell create(final String s) throws ParseException {
+    public static DataCell create(final String s) {
         boolean hasMillis = MS_PATTERN.matcher(s).find();
         boolean hasDate = DATE_PATTERN.matcher(s).find();
         boolean hasTime = TIME_PATTERN.matcher(s).find();
         if (!(hasMillis || hasDate || hasTime) || (!hasTime && hasMillis)) {
-            throw new ParseException("The given string does not conform to the required format.", 0);
+            throw new IllegalArgumentException("The given string does not conform to the required format.");
         }
 
         DateFormat format = DateAndTimeCell.getFormat(hasDate, hasTime, hasMillis);
@@ -167,10 +167,16 @@ public final class DateAndTimeCellFactory implements FromSimpleString, FromCompl
      * @param s any parseable date string
      * @param dateFormat a date format
      * @return a new data cell
-     * @throws ParseException if the input cannot be parsed to a date
+     * @throws IllegalArgumentException if the input cannot be parsed to a date
      */
-    public static DataCell create(final String s, final DateFormat dateFormat) throws ParseException {
-        Date date = dateFormat.parse(s);
+    public static DataCell create(final String s, final DateFormat dateFormat)  {
+        Date date;
+        try {
+            date = dateFormat.parse(s);
+        } catch (ParseException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+
         boolean hasDay = (dateFormat instanceof SimpleDateFormat) ?
             ((SimpleDateFormat) dateFormat).toPattern().matches(".*[yYMLwWDdFEu].*") : true;
         boolean hasTime = (dateFormat instanceof SimpleDateFormat) ?

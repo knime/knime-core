@@ -104,4 +104,4 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.10.0,4.0.0)";visibility:=ree
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

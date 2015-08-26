@@ -52,7 +52,6 @@ import java.util.BitSet;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 
@@ -72,17 +71,6 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = DataType.getType(BitVectorCell.class);
-
-    /**
-     * Preferred value class of a BitVectorCell is BitVectorValue. This method
-     * is called per reflection.
-     *
-     * @return BitVectorValue.class
-     * @see DataCell
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return BitVectorValue.class;
-    }
 
     private final BitSet m_bits; // store all those bits in java's
 

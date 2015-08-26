@@ -54,7 +54,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.vector.bitvector.SparseBitVectorCellFactory;
 
 /**
@@ -72,28 +72,16 @@ public class SparseByteVectorCell extends DataCell implements ByteVectorValue {
             DataType.getType(SparseByteVectorCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     * @return ByteVectorValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return ByteVectorValue.class;
-    }
-
-    private static final DataCellSerializer<SparseByteVectorCell> SERIALIZER =
-            new SparseByteVectorSerializer();
-
-    /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
      *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final DataCellSerializer<SparseByteVectorCell> getCellSerializer() {
-        return SERIALIZER;
+        return new SparseByteVectorSerializer();
     }
 
     private final SparseByteVector m_byteVector;
@@ -196,13 +184,17 @@ public class SparseByteVectorCell extends DataCell implements ByteVectorValue {
         return new SparseByteVector(m_byteVector);
     }
 
-    /** Factory for (de-)serializing a DenseBitVectorCell. */
-    private static class SparseByteVectorSerializer implements
-            DataCellSerializer<SparseByteVectorCell> {
+    /**
+     * Factory for (de-)serializing a DenseBitVectorCell.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class SparseByteVectorSerializer implements DataCellSerializer<SparseByteVectorCell> {
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public void serialize(final SparseByteVectorCell cell,
                 final DataCellDataOutput out) throws IOException {
 
@@ -221,6 +213,7 @@ public class SparseByteVectorCell extends DataCell implements ByteVectorValue {
         /**
          * {@inheritDoc}
          */
+        @Override
         public SparseByteVectorCell deserialize(final DataCellDataInput input)
                 throws IOException {
             long length = input.readLong();

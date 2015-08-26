@@ -54,6 +54,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromInputStream;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.node.NodeLogger;
@@ -66,7 +68,7 @@ import org.xml.sax.SAXException;
  *
  * @author Heiko Hofer
  */
-public class PMMLCellFactory {
+public class PMMLCellFactory implements FromComplexString, FromInputStream {
     /**
      * Minimum size for blobs in bytes. That is, if a given string is at least
      * as large as this value, it will be represented by a blob cell
@@ -109,11 +111,6 @@ public class PMMLCellFactory {
 
     /** Type for PMML cells. */
     public static final DataType TYPE = DataType.getType(PMMLCell.class);
-
-    /** Don't instantiate this class. */
-    private PMMLCellFactory() {
-    	// private constructor prevents that an instance is created
-    }
 
     /**
      * Factory method to create {@link DataCell} representing
@@ -192,6 +189,41 @@ public class PMMLCellFactory {
             return new PMMLBlobCell(content);
         } else {
             return new PMMLCell(content);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public DataCell createCell(final String input) {
+        try {
+            return create(input);
+        } catch (IOException | ParserConfigurationException | SAXException | XMLStreamException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public DataType getDataType() {
+        return PMMLCell.TYPE;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public DataCell createCell(final InputStream input) throws IOException {
+        try {
+            return create(input);
+        } catch (ParserConfigurationException | SAXException | XMLStreamException ex) {
+            throw new IllegalArgumentException(ex);
         }
     }
 }

@@ -51,7 +51,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.container.BlobDataCell;
 
 
@@ -60,30 +60,33 @@ import org.knime.core.data.container.BlobDataCell;
  */
 @SuppressWarnings("serial")
 public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
+    /**
+     * Serialier for {@link PNGImageBlobCell}s.
+     *
+     * @since 3.0
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class PNGSerializer implements DataCellSerializer<PNGImageBlobCell> {
+        @Override
+        public PNGImageBlobCell deserialize(final DataCellDataInput input) throws IOException {
+            return new PNGImageBlobCell(PNGImageContent.deserialize(input));
+        }
 
-    /** @return PNGImageValue.class */
-    public static Class<? extends DataValue> getPreferredValueClass() {
-        return PNGImageValue.class;
+        @Override
+        public void serialize(final PNGImageBlobCell cell, final DataCellDataOutput output) throws IOException {
+            cell.m_content.serialize(output);
+        }
     }
 
-    /** Serializer as required by parent class.
+    /**
+     * Serializer as required by parent class.
+     *
      * @return A serializer for reading/writing cells of this kind.
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static DataCellSerializer<PNGImageBlobCell> getCellSerializer() {
-        return new DataCellSerializer<PNGImageBlobCell>() {
-
-            @Override
-            public PNGImageBlobCell deserialize(final DataCellDataInput input)
-                    throws IOException {
-                return new PNGImageBlobCell(PNGImageContent.deserialize(input));
-            }
-
-            @Override
-            public void serialize(final PNGImageBlobCell cell,
-                    final DataCellDataOutput output) throws IOException {
-                cell.m_content.serialize(output);
-            }
-        };
+        return new PNGSerializer();
     }
 
     private final PNGImageContent m_content;
@@ -132,7 +135,7 @@ public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
      */
     @Override
     public String getImageExtension() {
-        
+
         return "png";
     }
 

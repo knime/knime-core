@@ -54,6 +54,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromInputStream;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.node.NodeLogger;
@@ -66,7 +68,7 @@ import org.xml.sax.SAXException;
  *
  * @author Heiko Hofer
  */
-public class XMLCellFactory {
+public class XMLCellFactory implements FromComplexString, FromInputStream {
     /**
      * Minimum size for blobs in bytes. That is, if a given string is at least
      * as large as this value, it will be represented by a blob cell
@@ -220,5 +222,40 @@ public class XMLCellFactory {
                 return new XMLCell(content);
             }
     	}
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public DataCell createCell(final String input) {
+        try {
+            return create(input);
+        } catch (ParserConfigurationException | SAXException | XMLStreamException | IOException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public DataType getDataType() {
+        return XMLCell.TYPE;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public DataCell createCell(final InputStream input) throws IOException {
+        try {
+            return create(input);
+        } catch (ParserConfigurationException | SAXException | XMLStreamException ex) {
+            throw new IllegalArgumentException(ex);
+        }
     }
 }

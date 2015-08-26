@@ -59,6 +59,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory.FromInputStream;
+import org.knime.core.data.DataType;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.ExecutionContext;
@@ -75,7 +77,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.7
  */
-public final class BinaryObjectCellFactory {
+public final class BinaryObjectCellFactory implements FromInputStream {
 
     /** System property to adjust the memory limit for "small" binary object.
      * Default is {@value #DEFAULT_MEMORY_LIMIT} bytes. Valid values are count in bytes or values like "1M" */
@@ -96,7 +98,7 @@ public final class BinaryObjectCellFactory {
         TMP_DIR_FOLDER = new File(System.getProperty("java.io.tmpdir"));
     }
 
-    private final FileStoreFactory m_fileStoreFactory;
+    private FileStoreFactory m_fileStoreFactory;
     private int m_fileNameIndex;
 
     /** Create new cell factory based on a node's execution context. The argument object is used to
@@ -106,22 +108,27 @@ public final class BinaryObjectCellFactory {
      *             (using {@link ExecutionContext#createFileStore(String)}.
      */
     public BinaryObjectCellFactory(final ExecutionContext exec) {
-        this(FileStoreFactory.createWorkflowFileStoreFactory(exec));
+        init(exec);
     }
 
     /** Factory of binary objects, which are <b>not</b> associated with the workflow. This constructor
      * should only be used if a factory is used for temporary, non-persistent objects (e.g. in views).
      */
     public BinaryObjectCellFactory() {
-        this(FileStoreFactory.createNotInWorkflowFileStoreFactory());
+        init(null);
     }
 
-    /** Private constructor that just sets the fields.
-     * @param fileStoreFactory ...
+    /**
+     * {@inheritDoc}
+     * @since 3.0
      */
-    private BinaryObjectCellFactory(final FileStoreFactory fileStoreFactory) {
-        m_fileNameIndex = 0;
-        m_fileStoreFactory = fileStoreFactory;
+    @Override
+    public void init(final ExecutionContext execContext) {
+        if (execContext != null) {
+            m_fileStoreFactory = FileStoreFactory.createWorkflowFileStoreFactory(execContext);
+        } else {
+            m_fileStoreFactory = FileStoreFactory.createNotInWorkflowFileStoreFactory();
+        }
     }
 
     /** Creates a new cell given a byte array.
@@ -175,7 +182,7 @@ public final class BinaryObjectCellFactory {
      * @return ...
      * @throws IOException ...
      */
-    private MessageDigest newMD5Digest() throws IOException {
+    private static MessageDigest newMD5Digest() throws IOException {
         MessageDigest md5MessageDigest;
         try {
             md5MessageDigest = MessageDigest.getInstance("MD5");
@@ -211,5 +218,21 @@ public final class BinaryObjectCellFactory {
         return s;
     }
 
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public DataType getDataType() {
+        return BinaryObjectDataCell.TYPE;
+    }
 
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public DataCell createCell(final InputStream input) throws IOException {
+        return create(input);
+    }
 }

@@ -56,7 +56,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.StringValue;
 import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Document;
@@ -72,9 +72,12 @@ public class PMMLCell extends DataCell implements PMMLValue, StringValue {
      */
     public static final DataType TYPE = DataType.getType(PMMLCell.class);
 
-    private final static PMMLSerializer SERIALIZER = new PMMLSerializer();
-    private static class PMMLSerializer
-            implements DataCellSerializer<PMMLCell> {
+    /**
+     * Serializer for {@link PMMLCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class PMMLSerializer implements DataCellSerializer<PMMLCell> {
         /**
          * {@inheritDoc}
          */
@@ -113,19 +116,11 @@ public class PMMLCell extends DataCell implements PMMLValue, StringValue {
      * Returns the serializer for XML cells.
      *
      * @return a serializer
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static DataCellSerializer<PMMLCell> getCellSerializer() {
-        return SERIALIZER;
-    }
-
-    /**
-     * Returns the preferred value class for XML cells which is
-     * {@link PMMLValue}.
-     *
-     * @return the preferred value class
-     */
-    public static Class<? extends DataValue> getPreferredValueClass() {
-        return PMMLValue.class;
+        return new PMMLSerializer();
     }
 
     private final PMMLCellContent m_content;

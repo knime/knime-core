@@ -56,7 +56,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.StringValue;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -74,8 +74,12 @@ public class XMLCell extends DataCell implements XMLValue, StringValue {
      */
     public static final DataType TYPE = DataType.getType(XMLCell.class);
 
-    private final static XMLSerializer SERIALIZER = new XMLSerializer();
-    private static class XMLSerializer implements DataCellSerializer<XMLCell> {
+    /**
+     * Serializer for {@link XMLCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class XMLSerializer implements DataCellSerializer<XMLCell> {
         /**
          * {@inheritDoc}
          */
@@ -112,21 +116,12 @@ public class XMLCell extends DataCell implements XMLValue, StringValue {
      * Returns the serializer for XML cells.
      *
      * @return a serializer
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static DataCellSerializer<XMLCell> getCellSerializer() {
-        return SERIALIZER;
+        return new XMLSerializer();
     }
-
-    /**
-     * Returns the preferred value class for XML cells which is
-     * {@link XMLValue}.
-     *
-     * @return the preferred value class
-     */
-    public static Class<? extends DataValue> getPreferredValueClass() {
-        return XMLValue.class;
-    }
-
 
     private final XMLCellContent m_content;
 

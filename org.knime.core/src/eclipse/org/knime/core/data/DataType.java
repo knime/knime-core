@@ -139,15 +139,6 @@ public final class DataType {
         /** Singleton to be used. */
         static final MissingCell INSTANCE = new MissingCell();
 
-        /**
-         * Returns always <code>DataValue.class</code> as the most generic data
-         * value.
-         * @return <code>DataValue.class</code> always.
-         */
-        public static Class<? extends DataValue> getPreferredValueClass() {
-            return DataValue.class;
-        }
-
         /** Don't let anyone instantiate this class. */
         private MissingCell() {
         }

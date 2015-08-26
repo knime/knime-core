@@ -56,6 +56,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 
@@ -66,15 +67,14 @@ import org.knime.core.data.filestore.FileStoreCell;
  */
 @SuppressWarnings("serial")
 public final class BinaryObjectFileStoreDataCell extends FileStoreCell implements BinaryObjectDataValue {
-
-
-    /** Serializer as required by framework.
-     * @return New serializer
-     * @noreference This method is not intended to be referenced by clients.
+    /**
+     * Serializer for {@link BinaryObjectFileStoreDataCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static final DataCellSerializer<BinaryObjectFileStoreDataCell> getCellSerializer() {
-        return new DataCellSerializer<BinaryObjectFileStoreDataCell>() {
-
+    public static final class BinaryObjectFileStoreCellSerializer
+        implements DataCellSerializer<BinaryObjectFileStoreDataCell> {
             /** {@inheritDoc} */
             @Override
             public BinaryObjectFileStoreDataCell deserialize(final DataCellDataInput input)
@@ -84,21 +84,26 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
                 return new BinaryObjectFileStoreDataCell(md5sum);
             }
 
-            /** {@inheritDoc} */
-            @Override
-            public void serialize(final BinaryObjectFileStoreDataCell cell, final DataCellDataOutput output)
-                    throws IOException {
-                byte[] md5sum = cell.m_md5sum;
-                output.writeInt(md5sum.length);
-                output.write(md5sum);
-            }
-        };
+        /** {@inheritDoc} */
+        @Override
+        public void serialize(final BinaryObjectFileStoreDataCell cell, final DataCellDataOutput output)
+                throws IOException {
+            byte[] md5sum = cell.m_md5sum;
+            output.writeInt(md5sum.length);
+            output.write(md5sum);
+        }
     }
 
-    /** Preferred value type is {@link BinaryObjectDataValue}. See {@link org.knime.core.data.DataCell} API for details.
-     * @return Class of {@link BinaryObjectDataValue} */
-    public static final Class<BinaryObjectDataValue> getPreferredValueClass() {
-        return BinaryObjectDataValue.class;
+    /**
+     * Serializer as required by framework.
+     * @return New serializer
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @deprecated user {@link DataTypeRegistry#getSerializer(Class)} instead
+     */
+    @Deprecated
+    public static final DataCellSerializer<BinaryObjectFileStoreDataCell> getCellSerializer() {
+        return new BinaryObjectFileStoreCellSerializer();
     }
 
     private final byte[] m_md5sum;

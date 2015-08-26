@@ -48,7 +48,6 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
-import java.text.ParseException;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
@@ -226,7 +225,7 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
          * Uses {@link Long#parseLong(String)} to convert the string into a long.
          */
         @Override
-        public DataCell createCell(final String s) throws ParseException {
+        public DataCell createCell(final String s) {
             return create(s);
         }
 

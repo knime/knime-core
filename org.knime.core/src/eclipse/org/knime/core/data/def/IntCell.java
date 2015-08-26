@@ -50,7 +50,6 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
-import java.text.ParseException;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.ComplexNumberValue;
@@ -268,7 +267,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
          * Uses {@link Integer#parseInt(String)} to convert the string into an int.
          */
         @Override
-        public DataCell createCell(final String s) throws ParseException {
+        public DataCell createCell(final String s) {
             return create(s);
         }
 

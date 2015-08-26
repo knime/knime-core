@@ -282,7 +282,7 @@ public final class IntervalCell extends DataCell implements IntervalValue, Fuzzy
          * {@inheritDoc}
          */
         @Override
-        public DataCell createCell(final String input) throws ParseException {
+        public DataCell createCell(final String input) {
             return create(input);
         }
 
@@ -294,10 +294,10 @@ public final class IntervalCell extends DataCell implements IntervalValue, Fuzzy
          * @return a new data cell
          * @throws ParseException if the string is not a valid interval
          */
-        public static DataCell create(final String s) throws ParseException {
+        public static DataCell create(final String s) {
             Matcher m = PATTERN.matcher(s);
             if (!m.matches()) {
-                throw new ParseException("'" + s + "' is not a valid interval", 0);
+                throw new IllegalArgumentException("'" + s + "' is not a valid interval");
             }
 
             boolean includeLeft = "[".equals(m.group(1));

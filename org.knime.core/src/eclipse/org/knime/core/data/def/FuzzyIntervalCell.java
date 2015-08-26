@@ -49,7 +49,6 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
-import java.text.ParseException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -252,7 +251,7 @@ public final class FuzzyIntervalCell extends DataCell implements
          * {@inheritDoc}
          */
         @Override
-        public DataCell createCell(final String input) throws ParseException {
+        public DataCell createCell(final String input) {
             return create(input);
         }
 

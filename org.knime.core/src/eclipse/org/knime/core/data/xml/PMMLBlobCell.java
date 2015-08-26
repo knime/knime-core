@@ -58,7 +58,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.pmml.PMMLModelType;
@@ -76,8 +76,13 @@ import org.xml.sax.SAXException;
 @SuppressWarnings("serial")
 public class PMMLBlobCell extends BlobDataCell
         implements PMMLValue, StringValue {
-    private final static PMMLSerializer SERIALIZER = new PMMLSerializer();
-    private static class PMMLSerializer implements DataCellSerializer<PMMLBlobCell> {
+
+    /**
+     * Serializer for {@link PMMLBlobCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class PMMLSerializer implements DataCellSerializer<PMMLBlobCell> {
         /**
          * {@inheritDoc}
          */
@@ -116,20 +121,11 @@ public class PMMLBlobCell extends BlobDataCell
      * Returns the serializer for PMML cells.
      *
      * @return a serializer
+     * @deprecated user {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static DataCellSerializer<PMMLBlobCell> getCellSerializer() {
-        return SERIALIZER;
-    }
-
-
-    /**
-     * Returns the preferred value class for PMML cells which is
-     * {@link PMMLValue}.
-     *
-     * @return the preferred value class
-     */
-    public static Class<? extends DataValue> getPreferredValueClass() {
-        return PMMLValue.class;
+        return new PMMLSerializer();
     }
 
     private final PMMLCellContent m_content;

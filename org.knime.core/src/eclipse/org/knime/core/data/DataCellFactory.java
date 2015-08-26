@@ -81,9 +81,9 @@ public interface DataCellFactory {
          *
          * @param input a string, never <code>null</code>
          * @return a new data cell
-         * @throws ParseException if the string cannot be converted into a data cell
+         * @throws IllegalArgumentException if the string cannot be converted into a data cell
          */
-        DataCell createCell(String input) throws ParseException;
+        DataCell createCell(String input);
     }
 
     /**
@@ -114,10 +114,10 @@ public interface DataCellFactory {
          *
          * @param input an input stream, never <code>null</code>
          * @return a new data cell
-         * @throws ParseException if the stream contents cannot be converted into a data cell
+         * @throws IllegalArgumentException if the stream contents cannot be converted into a data cell
          * @throws IOException if an I/O error occurs
          */
-        DataCell createCell(InputStream input) throws ParseException, IOException;
+        DataCell createCell(InputStream input) throws IOException;
     }
 
     /**

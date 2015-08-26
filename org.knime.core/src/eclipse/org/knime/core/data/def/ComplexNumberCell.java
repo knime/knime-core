@@ -50,7 +50,6 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -190,7 +189,7 @@ public final class ComplexNumberCell extends DataCell implements
          * {@inheritDoc}
          */
         @Override
-        public DataCell createCell(final String input) throws ParseException {
+        public DataCell createCell(final String input) {
             return create(input);
         }
 

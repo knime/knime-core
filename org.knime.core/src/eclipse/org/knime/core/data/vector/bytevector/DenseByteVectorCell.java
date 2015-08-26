@@ -52,9 +52,11 @@ import java.io.IOException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
 
 /**
@@ -72,28 +74,16 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
             DataType.getType(DenseByteVectorCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     * @return ByteVectorValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return ByteVectorValue.class;
-    }
-
-    private static final DataCellSerializer<DenseByteVectorCell> SERIALIZER =
-            new DenseByteVectorSerializer();
-
-    /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
      *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final DataCellSerializer<DenseByteVectorCell> getCellSerializer() {
-        return SERIALIZER;
+        return new DenseByteVectorSerializer();
     }
 
     private final DenseByteVector m_byteVector;
@@ -205,13 +195,54 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
         return new DenseByteVector(m_byteVector);
     }
 
-    /** Factory for (de-)serializing a DenseBitVectorCell. */
-    private static class DenseByteVectorSerializer implements
-            DataCellSerializer<DenseByteVectorCell> {
+    /**
+     * Factory for {@link DenseByteVectorCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
+     */
+    public static final class Factory implements FromSimpleString, FromComplexString {
+        // TODO make this a ConfigurableDataCellFactory
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell createCell(final String input) {
+            byte[] bytes = new byte[(input.length()  + 1) / 2];
+
+            int index = 0;
+            for (int i = 0; i < input.length(); i += 2) {
+                byte b = (byte) ((input.charAt(i) - '0') << 4);
+
+                if (i < input.length() - 1) {
+                    b += (byte) (input.charAt(i + 1) - '0');
+                }
+                bytes[index++] = b;
+            }
+
+            return new DenseByteVectorCell(new DenseByteVector(bytes));
+        }
 
         /**
          * {@inheritDoc}
          */
+        @Override
+        public DataType getDataType() {
+            return DenseByteVectorCell.TYPE;
+        }
+    }
+
+
+    /**
+     * Serializer {@link DenseByteVectorCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class DenseByteVectorSerializer implements DataCellSerializer<DenseByteVectorCell> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public void serialize(final DenseByteVectorCell cell,
                 final DataCellDataOutput out) throws IOException {
 
@@ -225,6 +256,7 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DenseByteVectorCell deserialize(final DataCellDataInput input)
                 throws IOException {
             int arrayLength = input.readInt();
@@ -235,5 +267,4 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
             return new DenseByteVectorCell(new DenseByteVector(cnts));
         }
     }
-
 }

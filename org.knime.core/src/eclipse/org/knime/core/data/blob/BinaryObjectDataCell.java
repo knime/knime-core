@@ -56,6 +56,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 
 /** Cell implementation of {@link BinaryObjectDataValue} that keeps the binary content in a byte array.
  *
@@ -64,26 +65,13 @@ import org.knime.core.data.DataType;
  */
 @SuppressWarnings("serial")
 public final class BinaryObjectDataCell extends DataCell implements BinaryObjectDataValue {
-
-    /** Type associated with this cells implementing {@link BinaryObjectDataValue}. */
-    public static final DataType TYPE = DataType.getType(BinaryObjectDataCell.class);
-
-    /** Preferred value type is {@link BinaryObjectDataValue}. See {@link DataCell} API for details.
-     * @return Class of {@link BinaryObjectDataValue} */
-    public static final Class<BinaryObjectDataValue> getPreferredValueClass() {
-        return BinaryObjectDataValue.class;
-    }
-
-    private final byte[] m_bytes;
-    private final byte[] m_md5sum;
-
-    /** Serializer as required by {@link DataCell} class.
-     * @return A serializer.
-     * @noreference This method is not intended to be referenced by clients.
+    /**
+     * Serializer for {@link BinaryObjectDataCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static final DataCellSerializer<BinaryObjectDataCell> getCellSerializer() {
-        return new DataCellSerializer<BinaryObjectDataCell>() {
-
+    public static final class BinaryObjectCellSerializer implements DataCellSerializer<BinaryObjectDataCell> {
             /** {@inheritDoc} */
             @Override
             public BinaryObjectDataCell deserialize(final DataCellDataInput input)
@@ -97,16 +85,33 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
                 return new BinaryObjectDataCell(bytes, md5sum);
             }
 
-            /** {@inheritDoc} */
-            @Override
-            public void serialize(final BinaryObjectDataCell cell, final DataCellDataOutput output)
-                    throws IOException {
-                output.writeInt(cell.m_bytes.length);
-                output.write(cell.m_bytes);
-                output.writeInt(cell.m_md5sum.length);
-                output.write(cell.m_md5sum);
-            }
-        };
+        /** {@inheritDoc} */
+        @Override
+        public void serialize(final BinaryObjectDataCell cell, final DataCellDataOutput output)
+                throws IOException {
+            output.writeInt(cell.m_bytes.length);
+            output.write(cell.m_bytes);
+            output.writeInt(cell.m_md5sum.length);
+            output.write(cell.m_md5sum);
+        }
+    }
+
+    /** Type associated with this cells implementing {@link BinaryObjectDataValue}. */
+    public static final DataType TYPE = DataType.getType(BinaryObjectDataCell.class);
+
+    private final byte[] m_bytes;
+    private final byte[] m_md5sum;
+
+    /**
+     * Serializer as required by {@link DataCell} class.
+     *
+     * @return A serializer.
+     * @noreference This method is not intended to be referenced by clients.
+     * @deprecated user {@link DataTypeRegistry#getSerializer(Class)} instead
+     */
+    @Deprecated
+    public static final DataCellSerializer<BinaryObjectDataCell> getCellSerializer() {
+        return new BinaryObjectCellSerializer();
     }
 
     /** Constructor used by factory.

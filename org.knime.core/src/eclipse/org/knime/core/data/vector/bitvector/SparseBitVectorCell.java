@@ -48,13 +48,16 @@
 package org.knime.core.data.vector.bitvector;
 
 import java.io.IOException;
+import java.math.BigInteger;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellFactory.FromComplexString;
+import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 
 /**
  * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
@@ -80,28 +83,16 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
             DataType.getType(SparseBitVectorCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     * @return BitVectorValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return BitVectorValue.class;
-    }
-
-    private static final DataCellSerializer<SparseBitVectorCell> SERIALIZER =
-            new SparseBitVectorSerializer();
-
-    /**
      * Returns the factory to read/write DataCells of this class from/to a
      * DataInput/DataOutput. This method is called via reflection.
      *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final DataCellSerializer<SparseBitVectorCell> getCellSerializer() {
-        return SERIALIZER;
+        return new SparseBitVectorSerializer();
     }
 
     private final SparseBitVector m_bitVector;
@@ -231,10 +222,39 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
         return m_bitVector.cardinalityOfRelativeComplement(bitVectorCell.m_bitVector);
     }
 
-    /** Factory for (de-)serializing a DenseBitVectorCell. */
-    private static class SparseBitVectorSerializer implements
-            DataCellSerializer<SparseBitVectorCell> {
 
+    /**
+     * Factory for {@link SparseBitVectorCell}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 3.0
+     */
+    public static final class Factory implements FromSimpleString, FromComplexString {
+        // TODO make this a ConfigurableDataCellFactory
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell createCell(final String input) {
+            BigInteger big = new BigInteger(input, 2);
+            return new SparseBitVectorCell(new SparseBitVector(big.toString(16)));
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataType getDataType() {
+            return SparseBitVectorCell.TYPE;
+        }
+    }
+
+    /**
+     * Factory for (de-)serializing a DenseBitVectorCell.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class SparseBitVectorSerializer implements DataCellSerializer<SparseBitVectorCell> {
         /**
          * {@inheritDoc}
          */
@@ -266,5 +286,4 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
             return new SparseBitVectorCell(new SparseBitVector(length, idx));
         }
     }
-
 }
