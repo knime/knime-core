@@ -47,7 +47,10 @@
  */
 package org.knime.core.node.util;
 
+import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.knime.core.node.NodeLogger;
 
@@ -170,6 +173,35 @@ public final class ConvenienceMethods {
         }
         return b.toString();
 
+    }
+
+    /**
+     * Returns all generic interfaces implemented by the given class and its subclasses.
+     *
+     * @param clazz any class object, must not be <code>null</code>
+     * @return a (possibly empty) collection with generic interfaces
+     * @since 3.0
+     */
+    public static Collection<Type> getAllGenericInterfaces(final Class<?> clazz) {
+        Set<Type> l = new LinkedHashSet<>();
+        getAllGenericInterfaces(clazz, l);
+        return l;
+    }
+
+    private static void getAllGenericInterfaces(final Class<?> clazz, final Set<Type> types) {
+        if (clazz == null) {
+            return;
+        }
+
+        for (Type t : clazz.getGenericInterfaces()) {
+            types.add(t);
+        }
+
+        for (Class<?> iface : clazz.getInterfaces()) {
+            getAllGenericInterfaces(iface, types);
+        }
+
+        getAllGenericInterfaces(clazz.getSuperclass(), types);
     }
 
 }
