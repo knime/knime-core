@@ -68,11 +68,14 @@ import org.knime.core.node.ExecutionContext;
  */
 public interface DataCellFactory {
     /**
-     * Factory that creates cells from simple, usually single-line, strings.
+     * Factory that creates cells from strings. <b>This interface is not meant for direct implementation. Implement
+     * {@link FromSimpleString} or {@link FromComplexString} instead.</b>
      *
      * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @noimplement This interface is not intended to be implemented by clients, implement {@link FromSimpleString}
+     *              and/or {@link FromComplexString} instead
      */
-    public interface FromSimpleString extends DataCellFactory {
+    public interface FromString extends DataCellFactory {
         /**
          * Creates a new data cell from a string.
          *
@@ -84,19 +87,19 @@ public interface DataCellFactory {
     }
 
     /**
+     * Factory that creates cells from simple, usually single-line, strings.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     */
+    public interface FromSimpleString extends FromString {
+    }
+
+    /**
      * Factory that creates cells from complex, usually multi-line, string representations.
      *
      * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
      */
-    public interface FromComplexString extends DataCellFactory {
-        /**
-         * Creates a new data cell from a string.
-         *
-         * @param input a string, never <code>null</code>
-         * @return a new data cell
-         * @throws ParseException if the string cannot be converted into a data cell
-         */
-        DataCell createCell(String input) throws ParseException;
+    public interface FromComplexString extends FromString {
     }
 
     /**
