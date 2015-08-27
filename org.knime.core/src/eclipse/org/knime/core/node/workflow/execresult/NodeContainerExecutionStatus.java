@@ -82,32 +82,38 @@ public interface NodeContainerExecutionStatus {
      */
     public NodeContainerExecutionStatus getChildStatus(final int idSuffix);
 
+    /** Convenience shortcut to create failure with no children but custom error message.
+     * @param message The message in {@link #toString()}.
+     * @return a new failure with a custom message.
+     * @since 3.0 */
+    static public NodeContainerExecutionStatus newFailure(final String message) {
+        return new NodeContainerExecutionStatus() {
+
+            /**
+             * @param idSuffix ignored
+             * @return {@link NodeContainerExecutionStatus#FAILURE} (this)
+             */
+            @Override
+            public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
+                return this;
+            }
+
+            /** @return false */
+            @Override
+            public boolean isSuccess() {
+                return false;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public String toString() {
+                return message;
+            }
+        };
+    }
+
     /** Represents a failed execution. */
-    public static final NodeContainerExecutionStatus FAILURE =
-        new NodeContainerExecutionStatus() {
-
-        /**
-         * @param idSuffix ignored
-         * @return {@link NodeContainerExecutionStatus#FAILURE} (this)
-         */
-        @Override
-        public NodeContainerExecutionStatus getChildStatus(
-                final int idSuffix) {
-            return FAILURE;
-        }
-
-        /** @return false */
-        @Override
-        public boolean isSuccess() {
-            return false;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public String toString() {
-            return "Failure execution status";
-        }
-    };
+    public static final NodeContainerExecutionStatus FAILURE = newFailure("Failure execution status");
 
     /** Represents a successful execution. */
     public static final NodeContainerExecutionStatus SUCCESS =
