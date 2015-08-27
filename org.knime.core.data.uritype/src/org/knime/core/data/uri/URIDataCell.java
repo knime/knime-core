@@ -54,7 +54,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.StringValue;
 
 /**
@@ -76,30 +76,23 @@ public class URIDataCell extends DataCell implements URIDataValue, StringValue {
      */
     public static final DataType TYPE = DataType.getType(URIDataCell.class);
 
-    private static final URIDataCellSerializer SERIALIZER = new URIDataCellSerializer();
-
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
-     *
-     *
-     * @return URIDataValue.class;
+     * Serializer for this class (see {@link DataCell} description.
+     * 
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return URIDataValue.class;
-    }
-
-    /**Serializer for this class (see {@link DataCell} description. */
+    @Deprecated
     public static final DataCellSerializer<URIDataCell> getCellSerializer() {
-    	return SERIALIZER;
+    	return new URIDataCellSerializer();
     }
 
     private final URIContent m_uriContent;
 
     /**
      * @param uriContent Content of this cell. Must not be null.
+     * @deprecated use {@link UriCellFactory#create(String)} instead
      */
+    @Deprecated
     public URIDataCell(final URIContent uriContent) {
         if (uriContent == null) {
             throw new NullPointerException("Argument must not be null.");
@@ -145,9 +138,12 @@ public class URIDataCell extends DataCell implements URIDataValue, StringValue {
         return getURIContent().hashCode();
     }
 
-    private static final class URIDataCellSerializer implements
-            DataCellSerializer<URIDataCell> {
-
+    /**
+     * Serializer for {@link URIDataCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class URIDataCellSerializer implements DataCellSerializer<URIDataCell> {
         /**
          * {@inheritDoc}
          */
@@ -169,7 +165,5 @@ public class URIDataCell extends DataCell implements URIDataValue, StringValue {
             URIContent cnt = URIContent.load(input);
             return new URIDataCell(cnt);
         }
-
     }
-
 }

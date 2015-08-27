@@ -54,15 +54,14 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
 import org.knime.core.data.TimestampValue;
 
 /**
  * Implementation of a <code>DataCell</code> holding day/time
  * information as {@link Date}.
- * 
+ *
  * @author M. Berthold, University of Konstanz
- * @deprecated Date and time in KNIME is represented by 
+ * @deprecated Date and time in KNIME is represented by
  * {@link org.knime.core.data.date.DateAndTimeValue} and
  * {@link org.knime.core.data.date.DateAndTimeCell}. This class will be removed
  * in future versions of KNIME.
@@ -70,25 +69,16 @@ import org.knime.core.data.TimestampValue;
 @Deprecated
 public class TimestampCell extends DataCell implements TimestampValue {
 
-    /** Convenience access member for 
-     * <code>DataType.getType(TimestampCell.class)</code>. 
+    /** Convenience access member for
+     * <code>DataType.getType(TimestampCell.class)</code>.
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = DataType.getType(TimestampCell.class);
-    
-    /** Returns the preferred value class of this cell implementation. 
-     * This method is called per reflection to determine which is the 
-     * preferred renderer, comparator, etc.
-     * @return TimestampValue.class;
-     */
-    public static final Class<? extends DataValue> getPreferredValueClass() {
-        return TimestampValue.class;
-    }
-    
+
     /** Internal representation as {@link java.lang.Date}. */
     private final Date m_date;
 
-    
+
     /**
      * Creates a new <code>TimestampCell</code> based on the given value.
      *
@@ -98,7 +88,7 @@ public class TimestampCell extends DataCell implements TimestampValue {
         m_date = d;
     }
 
-    /** 
+    /**
      * Parse string and create new date object. Use predefined format as
      * defined as <code>yyyy-MM-dd;HH:mm:ss.S</code>.
      * @param s the input string date
@@ -110,9 +100,9 @@ public class TimestampCell extends DataCell implements TimestampValue {
         // parse string
         m_date = df.parse(s);
     }
-    
+
     /** Parse string and create new date object. Format is also provided.
-     * 
+     *
      * @param s the input string
      * @param df the format specification for the date in s
      * @throws ParseException if parsing failed
@@ -121,7 +111,7 @@ public class TimestampCell extends DataCell implements TimestampValue {
             throws ParseException {
         this(df.parse(s));
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Date getDate() {
@@ -145,25 +135,26 @@ public class TimestampCell extends DataCell implements TimestampValue {
     public int hashCode() {
         return m_date.hashCode();
     }
-    
-    private static final TimestampCellSerializer SERIALIZER = 
-        new TimestampCellSerializer();
-    
+
     /** Returns the factory to read/write DataCells of this class from/to
      * a DataInput/DataOutput. This method is called via reflection.
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
      */
     public static final TimestampCellSerializer getCellSerializer() {
-        return SERIALIZER;
+        return new TimestampCellSerializer();
     }
-    
-    /** Factory for (de-)serializing a TimestampCell. */
-    private static class TimestampCellSerializer 
-            implements DataCellSerializer<TimestampCell> {
+
+    /**
+     * Factory for (de-)serializing a TimestampCell.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    @Deprecated
+    public static final class TimestampCellSerializer implements DataCellSerializer<TimestampCell> {
         /** {@inheritDoc} */
         @Override
-        public void serialize(final TimestampCell cell, 
+        public void serialize(final TimestampCell cell,
                 final DataCellDataOutput output) throws IOException {
             output.writeLong(cell.getDate().getTime());
 

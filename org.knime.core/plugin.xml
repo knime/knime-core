@@ -440,5 +440,12 @@
                serializerClass="org.knime.core.data.model.PortObjectCell$PortObjectCellSerializer">
          </serializer>
       </DataType>
+      <DataType
+            cellClass="org.knime.core.data.def.TimestampCell">
+         <serializer
+               cellClass="org.knime.core.data.def.TimestampCell"
+               serializerClass="org.knime.core.data.def.TimestampCell$TimestampCellSerializer">
+         </serializer>
+      </DataType>
    </extension>
 </plugin>

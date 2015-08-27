@@ -11,5 +11,16 @@
          </renderer>
       </dataValue>
    </extension>
+   <extension
+         point="org.knime.core.DataType">
+      <DataType
+            cellClass="org.knime.core.data.uri.URIDataCell"
+            factoryClass="org.knime.core.data.uri.UriCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.uri.URIDataCell"
+               serializerClass="org.knime.core.data.uri.URIDataCell$URIDataCellSerializer">
+         </serializer>
+      </DataType>
+   </extension>
 
 </plugin>
