@@ -60,6 +60,7 @@ import org.knime.base.node.preproc.pmml.missingval.handlers.DoNothingMissingCell
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -116,7 +117,7 @@ public class MVSettings {
      * @param settings the settings
      */
     public void setSettingsForDataType(final DataType dt, final MVIndividualSettings settings) {
-        m_generalSettings.put(dt.getCellClass().getCanonicalName(), settings);
+        m_generalSettings.put(getTypeKey(dt), settings);
     }
 
     /**
@@ -141,7 +142,7 @@ public class MVSettings {
             }
         }
         // Nothing has been found: Fall back to data type setting
-        return m_generalSettings.get(col.getType().getCellClass().getCanonicalName());
+        return m_generalSettings.get(getTypeKey(col.getType()));
     }
 
     /**
@@ -150,7 +151,7 @@ public class MVSettings {
      * @return the settings
      */
     public MVIndividualSettings getSettingsForDataType(final DataType dt) {
-        return m_generalSettings.get(dt.getCellClass().getCanonicalName());
+        return m_generalSettings.get(getTypeKey(dt));
     }
 
     /**
@@ -164,7 +165,6 @@ public class MVSettings {
             NodeSettingsWO colSetting = colSettings.addNodeSettings((Integer.toString(i++)));
             cols.saveSettings(colSetting);
         }
-
         NodeSettingsWO dtSettings = settings.addNodeSettings(DT_SETTINGS_CFG);
         for (Entry<String, MVIndividualSettings> entry : m_generalSettings.entrySet()) {
             NodeSettingsWO dtSetting = dtSettings.addNodeSettings(entry.getKey());
@@ -225,10 +225,30 @@ public class MVSettings {
     public void configure(final DataTableSpec dataTableSpec) {
         for (int i = 0; i < dataTableSpec.getNumColumns(); i++) {
             DataType type = dataTableSpec.getColumnSpec(i).getType();
-            if (!m_generalSettings.containsKey(type.getCellClass().getCanonicalName())) {
+            if (!m_generalSettings.containsKey(getTypeKey(type))) {
                 setSettingsForDataType(type, new MVIndividualSettings(
                                                     DoNothingMissingCellHandlerFactory.getInstance()));
             }
+        }
+    }
+
+    private String getTypeKey(final DataType type) {
+        // If the cell class is not available, we use all data values
+        // This is a fix for bug 6253
+        if (type.getCellClass() != null) {
+            return type.getCellClass().getCanonicalName();
+        } else {
+            StringBuffer sb = new StringBuffer();
+            sb.append("Non-Native ");
+            List<Class<? extends DataValue>> valueClasses = type.getValueClasses();
+            for (int i = 0; i < valueClasses.size(); i++) {
+                if (i > 0) {
+                    sb.append(";");
+                }
+                Class<? extends DataValue> c = valueClasses.get(i);
+                sb.append(c.getName());
+            }
+            return sb.toString();
         }
     }
 }
