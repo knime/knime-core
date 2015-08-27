@@ -57,6 +57,7 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 
 /**
  * Default implementation of a {@link CollectionDataValue}, whereas the
@@ -78,16 +79,15 @@ public class SetCell extends DataCell implements SetDataValue {
         return DataType.getType(SetCell.class, elementType);
     }
 
-    private static final DataCellSerializer<SetCell> SERIALIZER =
-            new SetCellSerializer();
-
     /**
      * Get serializer as required by {@link DataCell}.
      *
      * @return the serializer.
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final DataCellSerializer<SetCell> getCellSerializer() {
-        return SERIALIZER;
+        return new SetCellSerializer();
     }
 
     private final BlobSupportDataCellSet m_set;
@@ -106,6 +106,7 @@ public class SetCell extends DataCell implements SetDataValue {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean containsBlobWrapperCells() {
         return m_set.containsBlobWrapperCells();
     }
@@ -121,6 +122,7 @@ public class SetCell extends DataCell implements SetDataValue {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataType getElementType() {
         return m_set.getElementType();
     }
@@ -136,6 +138,7 @@ public class SetCell extends DataCell implements SetDataValue {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<DataCell> iterator() {
         return m_set.iterator();
     }
@@ -151,6 +154,7 @@ public class SetCell extends DataCell implements SetDataValue {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int size() {
         return m_set.size();
     }
@@ -170,12 +174,12 @@ public class SetCell extends DataCell implements SetDataValue {
         return m_set;
     }
 
-    /*
-     * --------- the serializer -------------------------------------------
+    /**
+     * Serializer for {@link SetCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
      */
-    private static final class SetCellSerializer implements
-            DataCellSerializer<SetCell> {
-
+    public static final class SetCellSerializer implements DataCellSerializer<SetCell> {
         /** {@inheritDoc} */
         @Override
         public SetCell deserialize(final DataCellDataInput input)

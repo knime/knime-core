@@ -405,5 +405,40 @@
                serializerClass="org.knime.core.data.vector.bytevector.SparseByteVectorCell$SparseByteVectorSerializer">
          </serializer>
       </DataType>
+      <DataType
+            cellClass="org.knime.core.data.filestore.internal.FileStoreKeyDataCell">
+         <serializer
+               cellClass="org.knime.core.data.filestore.internal.FileStoreKeyDataCell"
+               serializerClass="org.knime.core.data.filestore.internal.FileStoreKeyDataCell$FileStoreKeyCellSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.collection.ListCell">
+         <serializer
+               cellClass="org.knime.core.data.collection.ListCell"
+               serializerClass="org.knime.core.data.collection.ListCell$ListCellSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.collection.SparseListCell">
+         <serializer
+               cellClass="org.knime.core.data.collection.SparseListCell"
+               serializerClass="org.knime.core.data.collection.SparseListCell$SparseListCellSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.collection.SetCell">
+         <serializer
+               cellClass="org.knime.core.data.collection.SetCell"
+               serializerClass="org.knime.core.data.collection.SetCell$SetCellSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.model.PortObjectCell">
+         <serializer
+               cellClass="org.knime.core.data.model.PortObjectCell"
+               serializerClass="org.knime.core.data.model.PortObjectCell$PortObjectCellSerializer">
+         </serializer>
+      </DataType>
    </extension>
 </plugin>

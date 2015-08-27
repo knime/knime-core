@@ -57,6 +57,7 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 
 /**
  * Default implementation of a {@link CollectionDataValue}, whereby the
@@ -79,16 +80,15 @@ public class ListCell extends DataCell implements ListDataValue {
 
     private final BlobSupportDataCellList m_list;
 
-    private static final DataCellSerializer<ListCell> SERIALIZER =
-            new ListCellSerializer();
-
     /**
      * Get serializer as required by {@link DataCell}.
      *
      * @return Such a serializer.
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static final DataCellSerializer<ListCell> getCellSerializer() {
-        return SERIALIZER;
+        return new ListCellSerializer();
     }
 
     /**
@@ -163,9 +163,12 @@ public class ListCell extends DataCell implements ListDataValue {
     }
 
 
-    private static final class ListCellSerializer implements
-            DataCellSerializer<ListCell> {
-
+    /**
+     * Serializer for {@link ListCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class ListCellSerializer implements DataCellSerializer<ListCell> {
         /** {@inheritDoc} */
         @Override
         public ListCell deserialize(final DataCellDataInput input)

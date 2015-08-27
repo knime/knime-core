@@ -45,17 +45,18 @@
 
 package org.knime.core.data.collection;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Iterator;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.data.container.BlobWrapperDataCell;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Iterator;
 
 
 /**
@@ -66,13 +67,12 @@ import java.util.Iterator;
  * @author Tobias Koetter, University of Konstanz
  */
 public class SparseListCell extends DataCell implements SparseListDataValue {
-
-    private static final DataCellSerializer<SparseListCell> SERIALIZER =
-            new SparseListCellSerializer();
-
-    private static final class SparseListCellSerializer implements
-            DataCellSerializer<SparseListCell> {
-
+    /**
+     * Serializer for {@link SparseListCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class SparseListCellSerializer implements DataCellSerializer<SparseListCell> {
         /** {@inheritDoc} */
         @Override
         public SparseListCell deserialize(final DataCellDataInput input)
@@ -131,9 +131,11 @@ public class SparseListCell extends DataCell implements SparseListDataValue {
      * Get serializer as required by {@link DataCell}.
      *
      * @return Such a serializer.
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static DataCellSerializer<SparseListCell> getCellSerializer() {
-        return SERIALIZER;
+        return new SparseListCellSerializer();
     }
 
     private final BlobSupportDataCellList m_list;
@@ -148,12 +150,12 @@ public class SparseListCell extends DataCell implements SparseListDataValue {
 
     /**Constructor for class SparseListCell.
      * @param size the size of the vector.
- *                  Indices must be smaller than this number.
+     *            Indices must be smaller than this number.
      * @param elements the elements unequal to the default element
      * @param elementIdxs the array containing the indices of the elements to
      *            store. MUST be sorted (lowest index first).
      * @param defaultElement the element that should be returned as default
- *                          value if no value is set
+     *            value if no value is set
      *
      * @throws IllegalArgumentException if length is negative or if the array
      *             contains negative indices or indices larger than length - or

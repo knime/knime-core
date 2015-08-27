@@ -63,25 +63,26 @@ import org.knime.core.data.DataType;
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class FileStoreKeyDataCell extends DataCell implements FileStoreKeyDataValue {
+    /**
+     * Serializer for {@link FileStoreKeyDataCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class FileStoreKeyCellSerializer implements DataCellSerializer<FileStoreKeyDataCell> {
+        @Override
+        public void serialize(final FileStoreKeyDataCell cell, final DataCellDataOutput output) throws IOException {
+            cell.getKey().save(output);
+        }
+
+        @Override
+        public FileStoreKeyDataCell deserialize(final DataCellDataInput input) throws IOException {
+            return new FileStoreKeyDataCell(FileStoreKey.load(input));
+        }
+    }
 
     public static final DataType TYPE = DataType.getType(FileStoreKeyDataCell.class);
 
     private final FileStoreKey m_key;
-
-    public static final DataCellSerializer<FileStoreKeyDataCell> getCellSerializer() {
-        return new DataCellSerializer<FileStoreKeyDataCell>() {
-
-            @Override
-            public void serialize(final FileStoreKeyDataCell cell, final DataCellDataOutput output) throws IOException {
-                cell.getKey().save(output);
-            }
-
-            @Override
-            public FileStoreKeyDataCell deserialize(final DataCellDataInput input) throws IOException {
-                return new FileStoreKeyDataCell(FileStoreKey.load(input));
-            }
-        };
-    }
 
     /**
      * @param key */
@@ -112,5 +113,4 @@ public final class FileStoreKeyDataCell extends DataCell implements FileStoreKey
     public int hashCode() {
         return m_key.hashCode();
     }
-
 }

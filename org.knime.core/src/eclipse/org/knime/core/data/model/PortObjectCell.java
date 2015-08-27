@@ -54,7 +54,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.port.PortObject;
@@ -65,6 +65,35 @@ import org.knime.core.node.port.PortUtil;
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public class PortObjectCell extends DataCell implements PortObjectValue {
+    /**
+     * Serializer for {@link PortObjectCell}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class PortObjectCellSerializer implements DataCellSerializer<PortObjectCell> {
+        /** {@inheritDoc} */
+        @Override
+        public PortObjectCell deserialize(final DataCellDataInput input) throws IOException {
+            InputStream is = new NonClosableInputStream((InputStream)input);
+            try {
+                PortObject po = PortUtil.readObjectFromStream(is, null);
+                return new PortObjectCell(po);
+            } catch (CanceledExecutionException cee) {
+                throw new IOException(cee);
+            }
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void serialize(final PortObjectCell cell, final DataCellDataOutput output) throws IOException {
+            try {
+                PortUtil.writeObjectToStream(cell.m_content, (OutputStream)output, null);
+            } catch (CanceledExecutionException cee) {
+                throw new IOException(cee);
+            }
+        }
+    }
 
     /** Convenience access member for
      * <code>DataType.getType(PortObjectCell.class)</code>.
@@ -72,40 +101,15 @@ public class PortObjectCell extends DataCell implements PortObjectValue {
      */
     public static final DataType TYPE = DataType.getType(PortObjectCell.class);
 
-    /** @return PortObjectValue.class */
-    public static Class<? extends DataValue> getPreferredValueClass() {
-        return PortObjectValue.class;
-    }
-
-    /** Serializer as required by parent class.
+    /**
+     * Serializer as required by parent class.
+     *
      * @return A serializer for reading/writing cells of this kind.
+     * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @Deprecated
     public static DataCellSerializer<PortObjectCell> getCellSerializer() {
-        return new DataCellSerializer<PortObjectCell>() {
-            /** {@inheritDoc} */
-            @Override
-            public PortObjectCell deserialize(final DataCellDataInput input)
-                    throws IOException {
-                InputStream is = new NonClosableInputStream(
-                        (InputStream) input);
-                try {
-                    PortObject po = PortUtil.readObjectFromStream(is, null);
-                    return new PortObjectCell(po);
-                } catch (CanceledExecutionException cee) {
-                    throw new IOException(cee);
-                }
-            }
-            /** {@inheritDoc} */
-            @Override
-            public void serialize(final PortObjectCell cell,
-                    final DataCellDataOutput output) throws IOException {
-                try {
-                    PortUtil.writeObjectToStream(cell.m_content, (OutputStream)output, null);
-                } catch (CanceledExecutionException cee) {
-                    throw new IOException(cee);
-                }
-            }
-        };
+        return new PortObjectCellSerializer();
     }
 
     private final PortObject m_content;
