@@ -447,5 +447,17 @@
                serializerClass="org.knime.core.data.def.TimestampCell$TimestampCellSerializer">
          </serializer>
       </DataType>
+      <DataType
+            cellClass="org.knime.core.data.xml.PMMLCell"
+            factoryClass="org.knime.core.data.xml.PMMLCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.xml.PMMLCell"
+               serializerClass="org.knime.core.data.xml.PMMLCell$PMMLSerializer">
+         </serializer>
+         <serializer
+               cellClass="org.knime.core.data.xml.PMMLBlobCell"
+               serializerClass="org.knime.core.data.xml.PMMLBlobCell$PMMLSerializer">
+         </serializer>
+      </DataType>
    </extension>
 </plugin>
