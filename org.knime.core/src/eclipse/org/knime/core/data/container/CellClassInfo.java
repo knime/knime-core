@@ -49,6 +49,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.util.ConvenienceMethods;
 
@@ -133,7 +134,7 @@ final class CellClassInfo {
         }
         m_cellClass = cellClass;
         m_collectionElementType = collectionElementType;
-        m_serializer = DataType.getCellSerializer(cellClass);
+        m_serializer = DataTypeRegistry.getInstance().getSerializer(cellClass).orElse(null);
     }
 
     /** @return the collectionElementType or null if this represent not

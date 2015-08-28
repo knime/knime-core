@@ -298,13 +298,13 @@ public final class DataTypeRegistry {
      * @param cellClass a data cell class
      * @return an optional containing a serializer for the cell class
      */
-    public <T extends DataCell> Optional<DataCellSerializer<T>> getSerializer(final Class<T> cellClass) {
-        DataCellSerializer<T> ser = (DataCellSerializer<T>)m_serializers.get(cellClass);
+    public Optional<DataCellSerializer<DataCell>> getSerializer(final Class<? extends DataCell> cellClass) {
+        DataCellSerializer<DataCell> ser = (DataCellSerializer<DataCell>)m_serializers.get(cellClass);
         if (ser != null) {
             return Optional.of(ser);
         }
 
-        Optional<DataCellSerializer<T>> o2 = scanExtensionPointForSerializer(cellClass.getName());
+        Optional<DataCellSerializer<DataCell>> o2 = scanExtensionPointForSerializer(cellClass.getName());
         if (o2.isPresent()) {
             return o2;
         }

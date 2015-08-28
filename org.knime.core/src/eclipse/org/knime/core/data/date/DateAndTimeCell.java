@@ -137,9 +137,10 @@ public class DateAndTimeCell extends DataCell
      *
      * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Deprecated
     public static final DataCellSerializer<DateAndTimeCell> getCellSerializer() {
-        return DataTypeRegistry.getInstance().getSerializer(DateAndTimeCell.class).orElse(null);
+        return (DataCellSerializer) DataTypeRegistry.getInstance().getSerializer(DateAndTimeCell.class).orElse(null);
     }
 
     private final Calendar m_utcCalendar;

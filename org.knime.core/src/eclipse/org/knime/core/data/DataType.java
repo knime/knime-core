@@ -322,9 +322,10 @@ public final class DataType {
      *
      * @deprecated use {@link DataTypeRegistry#getSerializer(Class)} instead
      */
+    @SuppressWarnings("unchecked")
     @Deprecated
     public static <T extends DataCell> DataCellSerializer<T> getCellSerializer(final Class<T> cl) {
-        return DataTypeRegistry.getInstance().getSerializer(cl).orElse(null);
+        return (DataCellSerializer<T>)DataTypeRegistry.getInstance().getSerializer(cl).orElse(null);
     }
 
     /**
