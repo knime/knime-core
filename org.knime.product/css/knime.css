@@ -1,0 +1,147 @@
+@import url("platform:/plugin/org.eclipse.ui.themes/css/e4_basestyle.css");
+/*@import url("platform:/plugin/org.eclipse.ui.themes/css/e4-dark.css");*/
+
+/*
++++++++++++++++++++++++++++++++++++++++++++
+Settings of the currently active tab e.g. workflow editor
++++++++++++++++++++++++++++++++++++++++++++
+*/
+
+/*This is the currently active tab e.g. the opened workflow editor*/
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_TAB_BG_START{
+	color: #ffd800;
+}
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_TAB_BG_END {
+	color: #FFFFFF;
+}
+
+
+/*This is the currently active tab e.g. the opened workflow editor when it
+does not have the focus e.g. when the node configure  dialog is opened*/
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_NOFOCUS_TAB_BG_START {
+	color: #ffd800;
+}
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_NOFOCUS_TAB_BG_END {
+	color: #FFFFFF;
+}
+/*This is the font color of the currently active tab e.g. the opened workflow editor when it
+does not have the focus.*/ 
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_NOFOCUS_TAB_TEXT_COLOR {
+	color: #7d7d7d;
+}
+
+/*The border that surrounds the complete currently active tab e.g. the opened workflow editor.*/
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_TAB_OUTER_KEYLINE_COLOR {
+	color: #d7d7d7; /*Should have the same color as the window background*/
+}
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_TAB_INNER_KEYLINE_COLOR {
+	color: #ff0000; /*No idea where this is used*/
+}
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_TAB_OUTLINE_COLOR {
+	color: #f0f0f0; /*The outline around the tab and at the top of the editor should be the same color as the inactive tabs*/
+}
+
+
+/*THESE ARE THE ACTIVE UNSELECTED TABS*/
+/*The active but unselected tabs e.g. additional workflow tabs and background of these.*/
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_UNSELECTED_TABS_COLOR_START {
+	color: #f0f0f0;
+}
+ColorDefinition#org-eclipse-ui-workbench-ACTIVE_UNSELECTED_TABS_COLOR_END {
+/*Should be the same as color start*/
+	color: #f0f0f0;
+}
+
+
+
+/*
++++++++++++++++++++++++++++++++++++++++++++
+Settings of the currently inactive tab e.g. workflow repository
++++++++++++++++++++++++++++++++++++++++++++
+*/
+ColorDefinition#org-eclipse-ui-workbench-INACTIVE_UNSELECTED_TABS_COLOR_START {
+	color: #f0f0f0;
+}
+ColorDefinition#org-eclipse-ui-workbench-INACTIVE_UNSELECTED_TABS_COLOR_END {
+	color: #f0f0f0;
+}
+
+
+/*Border color of the inactive tabs e.g. node repository.*/
+ColorDefinition#org-eclipse-ui-workbench-INACTIVE_TAB_OUTER_KEYLINE_COLOR {
+	color: #f0f0f0;
+}
+ColorDefinition#org-eclipse-ui-workbench-INACTIVE_TAB_INNER_KEYLINE_COLOR {
+	color: #f0f0f0;
+}
+
+ColorDefinition#org-eclipse-ui-workbench-INACTIVE_TAB_OUTLINE_COLOR {
+	color: #f0f0f0;
+}
+ColorDefinition#org-eclipse-ui-workbench-INACTIVE_TAB_TEXT_COLOR {
+	color: #7d7d7d;
+}
+
+/*The general background*/
+/*Shell {
+	/*affects all windows so we SHOULDN'T CHANGE THIS!!!!
+  background-color: #d7d7d7;
+}*/
+
+/*The top menu bar and bottom status bar*/
+.MTrimBar {
+  background-color: #f0f0f0;
+}
+
+/*Add a little bit of space to the left and right of the window and the tool- and status bar*/
+.MTrimmedWindow.topLevel {
+	margin-top: 5px;
+	margin-bottom: 5px;
+	margin-left: 5px;
+	margin-right: 5px;
+	background-color: #d7d7d7;
+}
+/*.MTrimmedWindow {
+	margin-top: 2px;
+	margin-bottom: 2px;
+	margin-left: 2px;
+	margin-right: 2px;
+}*/
+
+/*additional tab settings such as border and corners*/
+CTabFolder {
+	swt-simple: true;
+	swt-corner-radius: 6; /* is the minimum radius we can use*/
+	swt-shadow-visible: false;
+	border-visible: false;
+	/*swt-selected-tab-fill: #FF0000;*/ 
+	/*swt-tab-outline: #FF0000;*/
+}
+
+.MPartStack {
+	swt-tab-renderer: url('bundleclass://org.eclipse.e4.ui.workbench.renderers.swt/org.eclipse.e4.ui.workbench.renderers.swt.CTabRendering');
+	swt-selected-tab-fill: #FFFFFF #FFFFFF 100% 100%;
+	padding: 5px 5px 5px; /*border around the content of a CTab*/
+	swt-shadow-visible: false;
+	swt-mru-visible: false;
+	color: '#org-eclipse-ui-workbench-INACTIVE_TAB_TEXT_COLOR';
+}
+
+.MPartStack.active.noFocus {
+	swt-selected-tab-fill: '#org-eclipse-ui-workbench-ACTIVE_NOFOCUS_TAB_BG_START' '#org-eclipse-ui-workbench-ACTIVE_NOFOCUS_TAB_BG_END' 100% 100%;
+}
+
+
+/**Settings for workflow editor split pane e.g. when two workflows are displayed next to each other*/
+CTabItem,
+CTabItem CLabel {
+    background-color: #f0f0f0; /* HACK for background of CTabFolder inner Toolbars e.g. editor split panel*/
+}
+
+
+
+
+
+
+
+

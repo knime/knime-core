@@ -45,6 +45,10 @@
                name="windowImages"
                value="icons/png/knime_16.png,icons/png/knime_32.png,icons/png/knime_48.png,icons/png/knime_64.png,icons/png/knime_128.png">
          </property>
+         <property
+               name="cssTheme"
+               value="org.knime.product.theme.knime">
+         </property>
       </product>
    </extension>
    <extension
@@ -84,5 +88,13 @@
             touchpointVersion="1.0.0"
             version="1.0.0">
       </action>
+   </extension>
+   <extension
+         point="org.eclipse.e4.ui.css.swt.theme">
+      <theme
+            basestylesheeturi="css/knime.css"
+            id="org.knime.product.theme.knime"
+            label="KNIME">
+      </theme>
    </extension>
 </plugin>
