@@ -106,6 +106,7 @@ public final class DataTypeRegistry {
 
         Stream.of(point.getExtensions())
             .flatMap(ext -> Stream.of(ext.getConfigurationElements()))
+            .filter(e -> (e.getAttribute("factoryClass") != null))
             .forEach(e -> m_factories.put(e.getAttribute("cellClass"), e));
     }
 

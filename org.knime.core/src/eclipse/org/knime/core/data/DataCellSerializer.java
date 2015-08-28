@@ -46,12 +46,10 @@
 package org.knime.core.data;
 
 import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.Modifier;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Interface for classes that can read or write specific {@link DataCell} implementations. Using
@@ -101,17 +99,20 @@ public interface DataCellSerializer<T extends DataCell> extends Serializer<T> {
      */
     @SuppressWarnings("unchecked")
     default Class<T> getCellClass() {
-        for (Type type : ConvenienceMethods.getAllGenericInterfaces(getClass())) {
-            if (type instanceof ParameterizedType) {
-                Type rawType = ((ParameterizedType) type).getRawType();
-                if (DataCellSerializer.class == rawType) {
-                    return (Class<T>)((ParameterizedType) type).getActualTypeArguments()[0];
-                }
+        try {
+            Class<T> c = (Class<T>)getClass().getMethod("deserialize", DataCellDataInput.class).getGenericReturnType();
+            if (!DataCell.class.isAssignableFrom(c) || ((c.getModifiers() & Modifier.ABSTRACT) != 0)) {
+                NodeLogger.getLogger(getClass())
+                    .coding(getClass().getName() + " does not use generics properly, the type of the created cells is '"
+                        + c.getName() + "'. Please fix your implementation by specifying a non-abstract data cell type "
+                        + "in the implemented DataCellSerializer interface.");
+                return (Class<T>)DataCell.class;
+            } else {
+                return c;
             }
+        } catch (NoSuchMethodException ex) {
+            // this is not possible
+            throw new AssertionError("Someone removed the 'deserialize' method from this interface");
         }
-
-        NodeLogger.getLogger(getClass()).coding(getClass().getName() + " does not use generics properly. Please fix "
-            + "your implementation by specifying a data cell type in the implemented DataCellSerializer interface.");
-        return (Class<T>)DataCell.class;
     }
 }
