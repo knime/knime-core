@@ -196,4 +196,14 @@
          </run>
       </application>
    </extension>
+   <extension
+         point="org.knime.core.DataType">
+      <DataType
+            cellClass="org.knime.testing.data.filestore.LargeFileStoreCell">
+         <serializer
+               cellClass="org.knime.testing.data.filestore.LargeFileStoreCell"
+               serializerClass="org.knime.testing.data.filestore.LargeFileStoreCell$Serializer">
+         </serializer>
+      </DataType>
+   </extension>
 </plugin>

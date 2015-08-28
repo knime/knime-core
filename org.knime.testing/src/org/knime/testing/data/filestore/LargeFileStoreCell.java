@@ -61,16 +61,10 @@ import org.knime.core.data.filestore.FileStoreCell;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class LargeFileStoreCell extends FileStoreCell implements LargeFileStoreValue {
-
-    public static final DataType TYPE = DataType.getType(LargeFileStoreCell.class);
-
-    private final long m_seed;
-
-    private LargeFile m_largeFile;
-
-    public static DataCellSerializer<LargeFileStoreCell> getCellSerializer() {
-        return new DataCellSerializer<LargeFileStoreCell>() {
-
+    /**
+     * Serializer for {@link LargeFileStoreCell}s.
+     */
+    public static final class Serializer implements DataCellSerializer<LargeFileStoreCell> {
             /** {@inheritDoc} */
             @Override
             public LargeFileStoreCell deserialize(final DataCellDataInput input)
@@ -79,15 +73,20 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
                 return new LargeFileStoreCell(seed);
             }
 
-            /** {@inheritDoc} */
-            @Override
-            public void serialize(final LargeFileStoreCell cell, final DataCellDataOutput output)
-                    throws IOException {
-                cell.m_largeFile.flushToFileStore(); // does nothing if already written (handles "keepInMemory")
-                output.writeLong(cell.m_seed);
-            }
-        };
+        /** {@inheritDoc} */
+        @Override
+        public void serialize(final LargeFileStoreCell cell, final DataCellDataOutput output)
+                throws IOException {
+            cell.m_largeFile.flushToFileStore(); // does nothing if already written (handles "keepInMemory")
+            output.writeLong(cell.m_seed);
+        }
     }
+
+    public static final DataType TYPE = DataType.getType(LargeFileStoreCell.class);
+
+    private final long m_seed;
+
+    private LargeFile m_largeFile;
 
     /** {@inheritDoc} */
     @Override
