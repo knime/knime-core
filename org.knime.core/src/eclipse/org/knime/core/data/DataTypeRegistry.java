@@ -108,6 +108,9 @@ public final class DataTypeRegistry {
             .flatMap(ext -> Stream.of(ext.getConfigurationElements()))
             .filter(e -> (e.getAttribute("factoryClass") != null))
             .forEach(e -> m_factories.put(e.getAttribute("cellClass"), e));
+
+        m_cellClassMap.put(DataCell.class.getName(), DataCell.class);
+        m_valueClassMap.put(DataValue.class.getName(), DataValue.class);
     }
 
     /**
