@@ -65,6 +65,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
@@ -327,7 +328,7 @@ public final class DatabaseWriterConnection {
             // we need to use the SQL type for creating the insert statements.
             Map<Integer, Integer> columnTypes = null;
             for (DataColumnSpec cs : spec) {
-                if (cs.getType().getPreferredValueClass() == null) {
+                if (cs.getType().getPreferredValueClass() == DataValue.class) {
                     columnTypes = getColumnTypes(conn, table);
                     break;
                 }
