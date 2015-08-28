@@ -188,7 +188,7 @@ public final class DataTypeRegistry {
             } catch (CoreException e) {
                 NodeLogger.getLogger(getClass())
                     .error("Could not create data cell factory '" + configElement.getAttribute("factoryClass")
-                        + "' for '" + configElement.getAttribute("class") + "' from plug-in '"
+                        + "' for '" + configElement.getAttribute("cellClass") + "' from plug-in '"
                         + configElement.getNamespaceIdentifier() + "': " + e.getMessage(), e);
             }
         }

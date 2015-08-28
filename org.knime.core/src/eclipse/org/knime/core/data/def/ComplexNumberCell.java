@@ -175,7 +175,7 @@ public final class ComplexNumberCell extends DataCell implements
          */
         public static final DataType TYPE = ComplexNumberCell.TYPE;
 
-        private static final Pattern SPLIT_PATTERN = Pattern.compile("^(.+?)(?:\\s*([\\+\\-])(?:\\s*i\\s*\\*(.+)|(.*)i)?$");
+        private static final Pattern SPLIT_PATTERN = Pattern.compile("^(.+?)(?:\\s*([\\+\\-])(?:\\s*i\\s*\\*(.+)|(.*)i))?$");
 
         /**
          * {@inheritDoc}

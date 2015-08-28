@@ -112,11 +112,6 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
     /** Type for XML cells. */
     public static final DataType TYPE = DataType.getType(XMLCell.class);
 
-    /** Don't instantiate this class. */
-    private XMLCellFactory() {
-    	// private constructor prevents that an instance is created
-    }
-
     /**
      * Factory method to create {@link DataCell} representing
      * {@link org.w3c.dom.Document}.

@@ -392,7 +392,7 @@
       </DataType>
       <DataType
             cellClass="org.knime.core.data.vector.bytevector.DenseByteVectorCell"
-            factoryClass="org.knime.core.data.vector.bitvector.DenseByteVectorCell$Factory">
+            factoryClass="org.knime.core.data.vector.bytevector.DenseByteVectorCell$Factory">
          <serializer
                cellClass="org.knime.core.data.vector.bytevector.DenseByteVectorCell"
                serializerClass="org.knime.core.data.vector.bytevector.DenseByteVectorCell$DenseByteVectorSerializer">
