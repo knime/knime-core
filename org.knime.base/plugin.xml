@@ -1871,5 +1871,15 @@
         <MissingCellHandler
               MissingCellHandlerFactory="org.knime.base.node.preproc.pmml.missingval.handlers.FixedLongValueMissingCellHandlerFactory">
         </MissingCellHandler>
+     </extension>
+     <extension
+           point="org.knime.core.DataType">
+        <DataType
+              cellClass="org.knime.base.data.bitvector.BitVectorCell">
+           <serializer
+                 cellClass="org.knime.base.data.bitvector.BitVectorCell"
+                 serializerClass="org.knime.core.data.NoSerializer">
+           </serializer>
+        </DataType>
      </extension>   
 </plugin>
