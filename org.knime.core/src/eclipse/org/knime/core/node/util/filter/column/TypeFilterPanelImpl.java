@@ -185,7 +185,7 @@ final class TypeFilterPanelImpl extends JPanel {
         for (DataColumnSpec column : columns) {
             if (m_filter == null || m_filter.include(column)) {
                 Class<? extends DataValue> prefValueClass = column.getType().getPreferredValueClass();
-                if (prefValueClass != null && !m_selections.containsKey(prefValueClass.getName())) {
+                if (!m_selections.containsKey(prefValueClass.getName())) {
                     UtilityFactory utilityFor = DataType.getUtilityFor(prefValueClass);
                     if (utilityFor instanceof ExtensibleUtilityFactory) {
                         ExtensibleUtilityFactory eu = (ExtensibleUtilityFactory)utilityFor;
@@ -317,15 +317,9 @@ final class TypeFilterPanelImpl extends JPanel {
                 }
             }
             final Class<? extends DataValue> preferredValueClass = spec.getType().getPreferredValueClass();
-            boolean toInclude = false;
             // Check if type would be included with the current settings
-            if (preferredValueClass != null) {
-                String key = preferredValueClass.getName();
-                if (m_selections.containsKey(key) && m_selections.get(key).isSelected()) {
-                    toInclude = true;
-                }
-            }
-            if (toInclude) {
+            String key = preferredValueClass.getName();
+            if (m_selections.containsKey(key) && m_selections.get(key).isSelected()) {
                 includes.add(spec);
             } else {
                 excludes.add(spec);

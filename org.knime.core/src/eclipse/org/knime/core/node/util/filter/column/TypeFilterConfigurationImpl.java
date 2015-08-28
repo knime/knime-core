@@ -141,14 +141,8 @@ final class TypeFilterConfigurationImpl implements Cloneable {
         for (DataColumnSpec column : columns) {
             if (m_filter == null || m_filter.include(column)) {
                 final Class<? extends DataValue> preferredValueClass = column.getType().getPreferredValueClass();
-                boolean toInclude = false;
-                if (preferredValueClass != null) {
-                    String key = preferredValueClass.getName();
-                    if (m_selections.containsKey(key) && m_selections.get(key)) {
-                        toInclude = true;
-                    }
-                }
-                if (toInclude) {
+                String key = preferredValueClass.getName();
+                if (m_selections.containsKey(key) && m_selections.get(key)) {
                     includes.add(column.getName());
                 } else {
                     excludes.add(column.getName());

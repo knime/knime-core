@@ -134,7 +134,7 @@ public final class DataType {
      */
     @SuppressWarnings("unused") // used in serialized workflows
     @Deprecated
-    private static final class MissingCell extends DataCell implements MissingValue {
+    static final class MissingCell extends DataCell implements MissingValue {
 
         /** Singleton to be used. */
         static final MissingCell INSTANCE = new MissingCell();

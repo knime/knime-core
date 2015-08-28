@@ -255,7 +255,7 @@ public final class RenameColumnSetting {
         } else {
             newDomain = inSpec.getDomain();
             Class<? extends DataValue> oldP = oldType.getPreferredValueClass();
-            if (oldP != null && oldP.equals(newVal)) {
+            if (oldP.equals(newVal)) {
                 newType = oldType;
             } else {
                 newType = DataType.cloneChangePreferredValue(oldType, newVal);

@@ -110,6 +110,7 @@ public final class DataTypeRegistry {
             .forEach(e -> m_factories.put(e.getAttribute("cellClass"), e));
 
         m_cellClassMap.put(DataCell.class.getName(), DataCell.class);
+        m_cellClassMap.put(DataType.MissingCell.class.getName(), DataType.MissingCell.class);
         m_valueClassMap.put(DataValue.class.getName(), DataValue.class);
     }
 
@@ -215,6 +216,11 @@ public final class DataTypeRegistry {
             return Optional.of(cellClass);
         }
 
+        if (className.startsWith("de.unikn.knime.")) {
+            return getCellClass(className.replace("de.unikn.knime.", "org.knime."));
+        }
+
+
         Optional<DataCellSerializer<DataCell>> o = scanExtensionPointForSerializer(className);
         if (o.isPresent()) {
             return Optional.of(m_cellClassMap.get(className));
@@ -299,14 +305,23 @@ public final class DataTypeRegistry {
      * @return an optional containing a serializer for the cell class
      */
     public Optional<DataCellSerializer<DataCell>> getSerializer(final Class<? extends DataCell> cellClass) {
+        @SuppressWarnings("unchecked")
         DataCellSerializer<DataCell> ser = (DataCellSerializer<DataCell>)m_serializers.get(cellClass);
         if (ser != null) {
-            return Optional.of(ser);
+            if (ser instanceof NoSerializer) {
+                return Optional.empty();
+            } else {
+                return Optional.of(ser);
+            }
         }
 
         Optional<DataCellSerializer<DataCell>> o2 = scanExtensionPointForSerializer(cellClass.getName());
         if (o2.isPresent()) {
-            return o2;
+            if (o2.get() instanceof NoSerializer) {
+                return Optional.empty();
+            } else {
+                return o2;
+            }
         }
 
         // check old static method
