@@ -355,7 +355,7 @@ public final class PMMLPortObject implements PortObject {
    /**
      * Creates a pmml document from scratch (still without a model) and stores
      * it as the PMMLValue of this class.
- * @param inData the data table spec
+     * @param inData the data table spec
      */
     private void initializePMMLDocument(final DataTableSpec inData) {
         m_pmmlDoc = PMMLDocument.Factory.newInstance(
