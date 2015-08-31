@@ -99,14 +99,10 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
      */
     @Override
     public void contributeToToolBar(final IToolBarManager tbm) {
-        tbm.add(getAction(ActionFactory.UNDO.getId()));
-        tbm.add(getAction(ActionFactory.REDO.getId()));
-
         tbm.add(new Separator());
         String[] zoomStrings = new String[] {ZoomManager.FIT_ALL,
                 ZoomManager.FIT_HEIGHT, ZoomManager.FIT_WIDTH};
         tbm.add(new ZoomComboContributionItem(getPage(), zoomStrings));
-
     }
 
     /**
