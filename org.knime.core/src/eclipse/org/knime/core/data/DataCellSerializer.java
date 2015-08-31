@@ -47,9 +47,12 @@ package org.knime.core.data;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Interface for classes that can read or write specific {@link DataCell} implementations. Using
@@ -99,6 +102,25 @@ public interface DataCellSerializer<T extends DataCell> extends Serializer<T> {
      */
     @SuppressWarnings("unchecked")
     default Class<T> getCellClass() {
+         for (Type type : ConvenienceMethods.getAllGenericInterfaces(getClass())) {
+            if (type instanceof ParameterizedType) {
+                Type rawType = ((ParameterizedType) type).getRawType();
+                Type typeArgument = ((ParameterizedType) type).getActualTypeArguments()[0];
+                if ((DataCellSerializer.class == rawType) && (typeArgument instanceof Class)) {
+                    return (Class<T>)((ParameterizedType) type).getActualTypeArguments()[0];
+                }
+            }
+        }
+
+        for (Type type : ConvenienceMethods.getAllGenericSuperclasses(getClass())) {
+            if (type instanceof ParameterizedType) {
+                Type typeArgument = ((ParameterizedType)type).getActualTypeArguments()[0];
+                if ((typeArgument instanceof Class) && DataCell.class.isAssignableFrom((Class<?>)typeArgument)) {
+                    return (Class<T>)typeArgument;
+                }
+            }
+        }
+
         try {
             Class<T> c = (Class<T>)getClass().getMethod("deserialize", DataCellDataInput.class).getGenericReturnType();
             if (!DataCell.class.isAssignableFrom(c) || ((c.getModifiers() & Modifier.ABSTRACT) != 0)) {

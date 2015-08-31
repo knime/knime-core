@@ -48,8 +48,10 @@
 package org.knime.core.node.util;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.knime.core.node.NodeLogger;
@@ -175,8 +177,33 @@ public final class ConvenienceMethods {
 
     }
 
+
     /**
-     * Returns all generic interfaces implemented by the given class and its subclasses.
+     * Returns all generic superclasses extended by the given class.
+     *
+     * @param clazz any class object, must not be <code>null</code>
+     * @return a (possibly empty) collection with generic classes
+     * @since 3.0
+     */
+    public static Collection<Type> getAllGenericSuperclasses(final Class<?> clazz) {
+        List<Type> l = new ArrayList<>();
+        getAllGenericSuperclasses(clazz, l);
+        return l;
+    }
+
+    private static void getAllGenericSuperclasses(final Class<?> clazz, final List<Type> types) {
+        if (clazz == null) {
+            return;
+        }
+
+        types.add(clazz.getGenericSuperclass());
+        if (clazz.getGenericSuperclass() instanceof Class) {
+            getAllGenericSuperclasses((Class<?>) clazz.getGenericSuperclass(), types);
+        }
+    }
+
+    /**
+     * Returns all generic interfaces implemented by the given class and its superclasses.
      *
      * @param clazz any class object, must not be <code>null</code>
      * @return a (possibly empty) collection with generic interfaces

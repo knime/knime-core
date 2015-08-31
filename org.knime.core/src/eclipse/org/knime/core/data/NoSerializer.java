@@ -56,15 +56,16 @@ import java.io.IOException;
  * non-functional!
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @param <T> the concrete subclass of DataCell
  * @since 3.0
  * @noreference This class is not intended to be referenced by clients.
  */
-public final class NoSerializer implements DataCellSerializer<DataCell> {
+public abstract class NoSerializer<T extends DataCell> implements DataCellSerializer<T> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public void serialize(final DataCell cell, final DataCellDataOutput output) throws IOException {
+    public final void serialize(final DataCell cell, final DataCellDataOutput output) throws IOException {
         throw new UnsupportedOperationException("Don't use this serializer!");
     }
 
@@ -72,7 +73,7 @@ public final class NoSerializer implements DataCellSerializer<DataCell> {
      * {@inheritDoc}
      */
     @Override
-    public DataCell deserialize(final DataCellDataInput input) throws IOException {
+    public final T deserialize(final DataCellDataInput input) throws IOException {
         throw new UnsupportedOperationException("Don't use this serializer!");
     }
 }
