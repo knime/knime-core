@@ -327,7 +327,8 @@ public final class DataTypeRegistry {
         // check old static method
         // TODO remove with next major release
         try {
-            ser = SerializerMethodLoader.getSerializer(cellClass, DataCellSerializer.class, "getCellSerializer", false);
+            DataCellSerializer<? extends DataCell> serializer = SerializerMethodLoader.getSerializer(cellClass, DataCellSerializer.class, "getCellSerializer", false);
+            ser = (DataCellSerializer<DataCell>)serializer;
             NodeLogger.getLogger(getClass())
                 .coding("No serializer for cell class '" + cellClass + "' registered at " + "extension point '"
                     + EXT_POINT_ID + "', using static method as fallback. Please change your "
