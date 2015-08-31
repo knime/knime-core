@@ -40,6 +40,8 @@ All other trademarks are the property of their respective owners.
          <argsX86>-Xmx512m</argsX86>
          <argsX86_64>-Xmx1024m</argsX86_64>
       </vmArgs>
+      <vmArgsLin>-Dorg.eclipse.swt.internal.gtk.disablePrinting
+      </vmArgsLin>
       <vmArgsMac>-XstartOnFirstThread
 -Xdock:icon=../Resources/Knime.icns
 -Dorg.eclipse.swt.internal.carbon.smallFonts
