@@ -1878,7 +1878,7 @@
               cellClass="org.knime.base.data.bitvector.BitVectorCell">
            <serializer
                  cellClass="org.knime.base.data.bitvector.BitVectorCell"
-                 serializerClass="org.knime.core.data.NoSerializer">
+                 serializerClass="org.knime.base.data.bitvector.BitVectorCell$Serializer">
            </serializer>
         </DataType>
      </extension>   

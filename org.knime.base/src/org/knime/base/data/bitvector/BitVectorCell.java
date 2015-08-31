@@ -52,6 +52,7 @@ import java.util.BitSet;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.NoSerializer;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 
@@ -368,4 +369,10 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
         }
         return null;
     }
+
+    /**
+     * @since 3.0
+     * @noreference This class is not intended to be referenced by clients.
+     */
+    public static final class Serializer extends NoSerializer<BitVectorCell> {}
 }
