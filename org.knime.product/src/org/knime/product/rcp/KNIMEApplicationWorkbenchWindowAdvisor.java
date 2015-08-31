@@ -182,12 +182,19 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         menuManager.remove("org.eclipse.ui.run");
         menuManager.remove("org.eclipse.ui.run"); // yes, it's in there twice
         menuManager.remove("navigate");
+
+        IMenuManager helpMenu = menuManager.findMenuUsingPath("Help");
+        if (helpMenu != null) {
+            helpMenu.remove("org.eclipse.equinox.p2.ui.sdk.update");
+        }
+
         menuManager.updateAll(true);
 
         Collection<String> toRemove =
             Arrays.asList("org.eclipse.debug.ui.launchActionSet",
                 "org.eclipse.ui.edit.text.actionSet.annotationNavigation",
-                "org.eclipse.ui.edit.text.actionSet.navigation");
+                "org.eclipse.ui.edit.text.actionSet.navigation",
+                "org.eclipse.search.searchActionSet");
 
         ICoolBarManager toolbarManager = ((WorkbenchWindow)workbenchWindow).getCoolBarManager2();
         Stream.of(toolbarManager.getItems()).filter(item -> toRemove.contains(item.getId()))
