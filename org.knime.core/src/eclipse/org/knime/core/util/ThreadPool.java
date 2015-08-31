@@ -731,6 +731,7 @@ public class ThreadPool {
                 currentPool.m_invisibleThreads.incrementAndGet();
             }
             try {
+                checkQueue();
                 while (m_pendingJobs.get() != 0) {
                     m_pendingJobs.wait();
                 }
