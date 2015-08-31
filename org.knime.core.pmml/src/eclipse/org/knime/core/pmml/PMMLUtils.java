@@ -285,8 +285,9 @@ public class PMMLUtils {
                 // use utf-8 as default encoding if none is set
                 encoding = "UTF-8";
             }
+            // see bug 6306 - XML 1.1 features not parsed 'correctly'
             ByteArrayInputStream inputStream =
-                    new ByteArrayInputStream(xmlDoc.xmlText()
+                    new ByteArrayInputStream(PMMLFormatter.xmlText(xmlDoc)
                             .getBytes(encoding));
             Document doc = builder.parse(inputStream);
             inputStream.close();

@@ -54,8 +54,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
+import org.apache.xmlbeans.XmlOptions;
 import org.dmg.pmml.PMMLDocument;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
@@ -67,6 +71,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.pmml.PMMLUtils;
 import org.knime.core.pmml.PMMLValidator;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
@@ -136,7 +141,14 @@ public class PMMLImport {
         PMMLDocument pmmlDoc = null;
         XmlObject xmlDoc;
         try (InputStream inStream = url.openStream()) {
-            xmlDoc = XmlObject.Factory.parse(inStream);
+            // see bug 6306 - XML 1.1 features not parsed 'correctly'
+            XmlOptions o = new XmlOptions();
+            try {
+                o.setLoadUseXMLReader( SAXParserFactory.newInstance().newSAXParser().getXMLReader() );
+            } catch (ParserConfigurationException | SAXException e) {
+                LOGGER.error("Unable to create SAX parser, will use default: " + e.getMessage(), e);
+            }
+            xmlDoc = XmlObject.Factory.parse(inStream, o);
         }
         if (xmlDoc instanceof PMMLDocument) {
             pmmlDoc = (PMMLDocument)xmlDoc;
