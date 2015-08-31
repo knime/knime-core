@@ -90,7 +90,7 @@ public class ProgressFigure extends RectangleFigure implements
     private static final Font QUEUED_FONT_SMALL;
 
     private static final Color PROGRESS_BAR_BACKGROUND_COLOR = new Color(null,
-            220, 220, 220);
+            189, 189, 189);
 
     private static final Color PROGRESS_BAR_COLOR = ColorConstants.darkBlue;
 
@@ -147,6 +147,7 @@ public class ProgressFigure extends RectangleFigure implements
     private ProgressToolTipHelper m_toolTipHelper;
 
     private final Runnable m_repaintObject = new Runnable() {
+        @Override
         public void run() {
 
             repaint();
@@ -210,6 +211,7 @@ public class ProgressFigure extends RectangleFigure implements
     private void drawSmoothRect(final Graphics graphics, final int x, final int y, final int w,
             final int h) {
 
+        graphics.setForegroundColor(PROGRESS_BAR_BACKGROUND_COLOR);
         graphics.drawLine(x + 1, y, x + w - 2, y);
         graphics.drawLine(x + 1, y + h - 1, x + w - 2, y + h - 1);
         graphics.drawLine(x, y + 1, x, y + h - 2);
