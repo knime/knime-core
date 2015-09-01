@@ -80,6 +80,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.contexts.IContextService;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -106,6 +107,24 @@ public class QuickNodeInsertionHandler extends AbstractHandler {
      * The eclipse command id.
      */
     public static final String COMMAND_ID = "org.knime.workbench.repository.view.QuickNodeInsertionHandler";
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isEnabled() {
+        // fixes bug 6268: CTRL+Space opens Quick Node Insertion instead of autocomplete for node dialogs
+        // that use the RSyntaxTextArea autocomplete feature
+
+        // according the extension point definition of org.eclipse.ui.contexts you can also define deletion markers
+        // but I did not get this to work - the quick node insertion always popped up in the dialog of a java snippet
+        // until we added this
+        IContextService ctxService = PlatformUI.getWorkbench().getService(IContextService.class);
+        if (ctxService != null && ctxService.getActiveContextIds().contains(IContextService.CONTEXT_ID_DIALOG)) {
+            return false;
+        }
+        return true;
+    }
 
     @Override
     public Object execute(final ExecutionEvent event) throws ExecutionException {
