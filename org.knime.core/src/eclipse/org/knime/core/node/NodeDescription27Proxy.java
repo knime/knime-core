@@ -57,6 +57,7 @@ import org.apache.xmlbeans.XmlOptions;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.node2012.InPortDocument.InPort;
 import org.knime.node2012.KnimeNodeDocument;
+import org.knime.node2012.KnimeNodeDocument.KnimeNode.Deprecated;
 import org.knime.node2012.OutPortDocument.OutPort;
 import org.knime.node2012.ViewDocument.View;
 import org.knime.node2012.ViewsDocument.Views;
@@ -95,6 +96,7 @@ public final class NodeDescription27Proxy extends NodeDescription {
      */
     public NodeDescription27Proxy(final Document doc) throws XmlException {
         m_document = KnimeNodeDocument.Factory.parse(doc.getDocumentElement(), OPTIONS);
+        setIsDeprecated(m_document.getKnimeNode().getDeprecated().equals(Deprecated.TRUE));
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             validate();
         }
@@ -109,6 +111,7 @@ public final class NodeDescription27Proxy extends NodeDescription {
      */
     public NodeDescription27Proxy(final KnimeNodeDocument doc) {
         m_document = doc;
+        setIsDeprecated(m_document.getKnimeNode().getDeprecated().equals(Deprecated.TRUE));
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             validate();
         }
@@ -286,6 +289,15 @@ public final class NodeDescription27Proxy extends NodeDescription {
             }
         }
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setIsDeprecated(final boolean b) {
+        super.setIsDeprecated(b);
+        m_document.getKnimeNode().setDeprecated(b ? Deprecated.TRUE : Deprecated.FALSE);
     }
 
     /**

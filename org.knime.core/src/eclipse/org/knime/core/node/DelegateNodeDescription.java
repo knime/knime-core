@@ -146,12 +146,17 @@ public class DelegateNodeDescription extends NodeDescription {
         return m_delegate.getXMLDescription();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDeprecated() {
+        return m_delegate.isDeprecated();
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
         return m_delegate.toString();
     }
-
-
-
 }

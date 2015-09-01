@@ -53,9 +53,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -330,90 +332,91 @@ public final class RepositoryManager {
             // this should never happen, but who knows...
             uncategorized = m_root;
         }
-        IExtension[] nodeExtensions = RepositoryManager.getExtensions(ID_NODE);
-        for (IExtension ext : nodeExtensions) {
-            // iterate through the config elements and create 'NodeTemplate'
-            // objects
-            IConfigurationElement[] elements = ext.getConfigurationElements();
-            for (IConfigurationElement e : elements) {
-                if (monitor.isCanceled()) {
-                    return;
+
+        Iterator<IConfigurationElement> it = Stream.of(RepositoryManager.getExtensions(ID_NODE))
+                .flatMap(ext -> Stream.of(ext.getConfigurationElements()))
+                .filter(elem -> !"true".equalsIgnoreCase(elem.getAttribute("deprecated")))
+                .iterator();
+
+        while (it.hasNext()) {
+            IConfigurationElement elem = it.next();
+            if (monitor.isCanceled()) {
+                return;
+            }
+
+            try {
+                NodeTemplate node = RepositoryFactory.createNode(elem);
+
+                LOGGER.debug("Found node extension '" + node.getID()
+                        + "': " + node.getName());
+                for (Listener l : m_loadListeners) {
+                    l.newNode(m_root, node);
                 }
 
-                try {
-                    NodeTemplate node = RepositoryFactory.createNode(e);
+                m_nodesById.put(node.getID(), node);
+                String nodeName = node.getID();
+                nodeName =
+                        nodeName.substring(nodeName.lastIndexOf('.') + 1);
 
-                    LOGGER.debug("Found node extension '" + node.getID()
-                            + "': " + node.getName());
-                    for (Listener l : m_loadListeners) {
-                        l.newNode(m_root, node);
+                // Ask the root to lookup the category-container located at
+                // the given path
+                IContainerObject parentContainer =
+                        m_root.findContainer(node.getCategoryPath());
+
+                // If parent category is illegal, log an error and append
+                // the node to the repository root.
+                if (parentContainer == null) {
+                    LOGGER.coding("Unknown category for node " + node.getID() + ": " + node.getCategoryPath()
+                            + ". Node will be added to 'Uncategorized' instead");
+                    uncategorized.addChild(node);
+                } else {
+                    String nodePluginId = elem.getNamespaceIdentifier();
+                    String categoryPluginId = parentContainer.getContributingPlugin();
+                    if (categoryPluginId == null) {
+                        categoryPluginId = "";
+                    }
+                    int secondDotIndex = nodePluginId.indexOf('.', nodePluginId.indexOf('.') + 1);
+                    if (secondDotIndex == -1) {
+                        secondDotIndex = 0;
                     }
 
-                    m_nodesById.put(node.getID(), node);
-                    String nodeName = node.getID();
-                    nodeName =
-                            nodeName.substring(nodeName.lastIndexOf('.') + 1);
-
-                    // Ask the root to lookup the category-container located at
-                    // the given path
-                    IContainerObject parentContainer =
-                            m_root.findContainer(node.getCategoryPath());
-
-                    // If parent category is illegal, log an error and append
-                    // the node to the repository root.
-                    if (parentContainer == null) {
-                        LOGGER.coding("Unknown category for node " + node.getID() + ": " + node.getCategoryPath()
-                                + ". Node will be added to 'Uncategorized' instead");
-                        uncategorized.addChild(node);
+                    if (!parentContainer.isLocked() ||
+                            nodePluginId.equals(categoryPluginId) ||
+                            nodePluginId.startsWith("org.knime.") ||
+                            nodePluginId.startsWith("com.knime.") ||
+                            nodePluginId.regionMatches(0, categoryPluginId, 0, secondDotIndex)) {
+                        // container not locked, or node and category from same plug-in
+                        // or the vendor is the same (comparing the first two parts of the plug-in ids)
+                        parentContainer.addChild(node);
                     } else {
-                        String nodePluginId = ext.getNamespaceIdentifier();
-                        String categoryPluginId = parentContainer.getContributingPlugin();
-                        if (categoryPluginId == null) {
-                            categoryPluginId = "";
-                        }
-                        int secondDotIndex = nodePluginId.indexOf('.', nodePluginId.indexOf('.') + 1);
-                        if (secondDotIndex == -1) {
-                            secondDotIndex = 0;
-                        }
-
-                        if (!parentContainer.isLocked() ||
-                                nodePluginId.equals(categoryPluginId) ||
-                                nodePluginId.startsWith("org.knime.") ||
-                                nodePluginId.startsWith("com.knime.") ||
-                                nodePluginId.regionMatches(0, categoryPluginId, 0, secondDotIndex)) {
-                            // container not locked, or node and category from same plug-in
-                            // or the vendor is the same (comparing the first two parts of the plug-in ids)
-                            parentContainer.addChild(node);
-                        } else {
-                            LOGGER.coding("Locked category for node " + node.getID() + ": " + node.getCategoryPath()
-                                        + ". Node will be added to 'Uncategorized' instead");
-                            uncategorized.addChild(node);
-                        }
+                        LOGGER.coding("Locked category for node " + node.getID() + ": " + node.getCategoryPath()
+                                    + ". Node will be added to 'Uncategorized' instead");
+                        uncategorized.addChild(node);
                     }
-
-                } catch (Throwable t) {
-                    String message =
-                            "Node " + e.getAttribute("id") + "' from plugin '"
-                                    + ext.getNamespaceIdentifier()
-                                    + "' could not be created: "
-                                    + t.getMessage();
-                    Bundle bundle =
-                            Platform.getBundle(ext.getNamespaceIdentifier());
-
-                    if ((bundle == null)
-                            || (bundle.getState() != Bundle.ACTIVE)) {
-                        // if the plugin is null, the plugin could not
-                        // be activated maybe due to a not
-                        // activateable plugin (plugin class can not be found)
-                        message +=
-                                " The corresponding plugin "
-                                        + "bundle could not be activated!";
-                    }
-                    LOGGER.error(message, t);
                 }
 
-            } // for configuration elements
-        } // for node extensions
+            } catch (Throwable t) {
+                String message =
+                        "Node " + elem.getAttribute("id") + "' from plugin '"
+                                + elem.getNamespaceIdentifier()
+                                + "' could not be created: "
+                                + t.getMessage();
+                Bundle bundle =
+                        Platform.getBundle(elem.getNamespaceIdentifier());
+
+                if ((bundle == null)
+                        || (bundle.getState() != Bundle.ACTIVE)) {
+                    // if the plugin is null, the plugin could not
+                    // be activated maybe due to a not
+                    // activateable plugin (plugin class can not be found)
+                    message +=
+                            " The corresponding plugin "
+                                    + "bundle could not be activated!";
+                }
+                LOGGER.error(message, t);
+            }
+
+        } // for configuration elements
     }
 
     /**
@@ -423,73 +426,71 @@ public final class RepositoryManager {
         //
         // Process the contributed node sets
         //
-        IExtension[] nodeExtensions = RepositoryManager
-                .getExtensions(ID_NODE_SET);
-        for (IExtension ext : nodeExtensions) {
-            // iterate through the config elements and create 'NodeTemplate'
-            // objects
-            IConfigurationElement[] elements = ext.getConfigurationElements();
-            for (IConfigurationElement elem : elements) {
-                try {
-                    Collection<DynamicNodeTemplate> dynamicNodeTemplates =
-                            RepositoryFactory.createNodeSet(m_root, elem);
+        Iterator<IConfigurationElement> it = Stream.of(RepositoryManager.getExtensions(ID_NODE_SET))
+            .flatMap(ext -> Stream.of(ext.getConfigurationElements()))
+            .filter(elem -> !"true".equalsIgnoreCase(elem.getAttribute("deprecated")))
+            .iterator();
 
-                    for (DynamicNodeTemplate node : dynamicNodeTemplates) {
-                        if (monitor.isCanceled()) {
-                            return;
-                        }
-                        for (Listener l : m_loadListeners) {
-                            l.newNode(m_root, node);
-                        }
+        while (it.hasNext()) {
+            IConfigurationElement elem = it.next();
+            try {
+                Collection<DynamicNodeTemplate> dynamicNodeTemplates =
+                        RepositoryFactory.createNodeSet(m_root, elem);
 
-                        m_nodesById.put(node.getID(), node);
-                        String nodeName = node.getID();
-                        nodeName = nodeName
-                                .substring(nodeName.lastIndexOf('.') + 1);
-
-                        // Ask the root to lookup the category-container located
-                        // at
-                        // the given path
-                        IContainerObject parentContainer = m_root
-                                .findContainer(node.getCategoryPath());
-
-                        // If parent category is illegal, log an error and
-                        // append
-                        // the node to the repository root.
-                        if (parentContainer == null) {
-                            LOGGER.warn("Invalid category-path for node "
-                                    + "contribution: '"
-                                    + node.getCategoryPath()
-                                    + "' - adding to root instead");
-                            m_root.addChild(node);
-                        } else {
-                            // everything is fine, add the node to its parent
-                            // category
-                            parentContainer.addChild(node);
-                        }
-
+                for (DynamicNodeTemplate node : dynamicNodeTemplates) {
+                    if (monitor.isCanceled()) {
+                        return;
+                    }
+                    for (Listener l : m_loadListeners) {
+                        l.newNode(m_root, node);
                     }
 
-                } catch (Throwable t) {
-                    String message = "Node " + elem.getAttribute("id")
-                            + "' from plugin '" + ext.getNamespaceIdentifier()
-                            + "' could not be created.";
-                    Bundle bundle = Platform.getBundle(ext
-                            .getNamespaceIdentifier());
+                    m_nodesById.put(node.getID(), node);
+                    String nodeName = node.getID();
+                    nodeName = nodeName
+                            .substring(nodeName.lastIndexOf('.') + 1);
 
-                    if ((bundle == null)
-                            || (bundle.getState() != Bundle.ACTIVE)) {
-                        // if the plugin is null, the plugin could not
-                        // be activated maybe due to a not
-                        // activateable plugin (plugin class can not be found)
-                        message += " The corresponding plugin "
-                                + "bundle could not be activated!";
+                    // Ask the root to lookup the category-container located
+                    // at
+                    // the given path
+                    IContainerObject parentContainer = m_root
+                            .findContainer(node.getCategoryPath());
+
+                    // If parent category is illegal, log an error and
+                    // append
+                    // the node to the repository root.
+                    if (parentContainer == null) {
+                        LOGGER.warn("Invalid category-path for node "
+                                + "contribution: '"
+                                + node.getCategoryPath()
+                                + "' - adding to root instead");
+                        m_root.addChild(node);
+                    } else {
+                        // everything is fine, add the node to its parent
+                        // category
+                        parentContainer.addChild(node);
                     }
-                    LOGGER.error(message, t);
+
                 }
 
-            } // for configuration elements
-        } // for node extensions
+            } catch (Throwable t) {
+                String message = "Node " + elem.getAttribute("id")
+                        + "' from plugin '" + elem.getNamespaceIdentifier()
+                        + "' could not be created.";
+                Bundle bundle = Platform.getBundle(elem
+                        .getNamespaceIdentifier());
+
+                if ((bundle == null)
+                        || (bundle.getState() != Bundle.ACTIVE)) {
+                    // if the plugin is null, the plugin could not
+                    // be activated maybe due to a not
+                    // activateable plugin (plugin class can not be found)
+                    message += " The corresponding plugin "
+                            + "bundle could not be activated!";
+                }
+                LOGGER.error(message, t);
+            }
+        }
     }
 
     /**

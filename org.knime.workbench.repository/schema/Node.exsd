@@ -85,6 +85,14 @@
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="deprecated" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Indicates whether this node is deprecated. Deprecated nodes are not shown in the node repository any more but are still loaded in existing workflows.
+If this flag is set in the extension point, there is not need to specify it also in the node description XML file any more.
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

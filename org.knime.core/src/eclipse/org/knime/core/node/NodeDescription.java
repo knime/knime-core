@@ -59,6 +59,8 @@ import org.w3c.dom.Element;
  * @since 2.8
  */
 public abstract class NodeDescription {
+    private boolean m_deprecated;
+
     /**
      * Returns the path to the node's icon. The path should be either absolute (with the root being the root of the
      * classpath) or relative to the node factory's location.
@@ -184,5 +186,26 @@ public abstract class NodeDescription {
         } else {
             return contents.substring(first + 1, last);
         }
+    }
+
+    /**
+     * Flags this node as deprecated node. Subclasses should override this method and modify the XML description
+     * accordingly.
+     *
+     * @param b <code>true</code> if this node is node is deprecated, <code>false</code> otherwise
+     * @since 3.0
+     */
+    protected void setIsDeprecated(final boolean b) {
+        m_deprecated = b;
+    }
+
+    /**
+     * Returns whether the node is deprecated.
+     *
+     * @return <code>true</code> if the node is deprecated, <code>false</code> otherwise
+     * @since 3.0
+     */
+    public boolean isDeprecated() {
+        return m_deprecated;
     }
 }

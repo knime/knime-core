@@ -102,6 +102,7 @@ final class NodeDescription13Proxy extends NodeDescription {
      */
     public NodeDescription13Proxy(final Document doc) throws XmlException {
         m_document = KnimeNodeDocument.Factory.parse(doc.getDocumentElement(), OPTIONS);
+        setIsDeprecated(m_document.getKnimeNode().getDeprecated());
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             validate();
         }
@@ -338,6 +339,15 @@ final class NodeDescription13Proxy extends NodeDescription {
             }
         }
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setIsDeprecated(final boolean b) {
+        super.setIsDeprecated(b);
+        m_document.getKnimeNode().setDeprecated(b);
     }
 
     /**

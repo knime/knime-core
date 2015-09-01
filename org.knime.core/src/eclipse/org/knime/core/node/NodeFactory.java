@@ -154,7 +154,7 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private boolean m_initialized = false;
 
-
+    
     /**
      * Creates a new <code>NodeFactory</code> and initializes the node description.
      */
@@ -214,6 +214,10 @@ public abstract class NodeFactory<T extends NodeModel> {
             m_logger.error("Node description of " + getClass().getName() + " does not conform to used XML schema: "
                 + ex.getMessage(), ex);
             m_nodeDescription = new NoDescriptionProxy(getClass());
+        }
+
+        if (NodeFactoryRepository.getInstance().isDeprecated(this)) {
+            setIsDeprecated(true);
         }
 
         m_icon = resolveIcon(m_nodeDescription.getIconPath());
@@ -651,5 +655,26 @@ public abstract class NodeFactory<T extends NodeModel> {
      */
     public String getInteractiveViewName() {
         return m_nodeDescription.getInteractiveViewName();
+    }
+
+    /**
+     * Sets if this node is deprecated. This method should not be called by clients, it's only called during
+     * construction of the node repository.
+     *
+     * @param b <code>true</code> if the node is deprecated, <code>false</code> otherwise
+     * @since 3.0
+     */
+    void setIsDeprecated(final boolean b) {
+        m_nodeDescription.setIsDeprecated(b);
+    }
+
+    /**
+     * Returns whether this node (factory) is deprecated.
+     *
+     * @return <code>true</code> if the node is deprecated, <code>false</code> otherwise
+     * @since 3.0
+     */
+    public boolean isDeprecated() {
+        return m_nodeDescription.isDeprecated();
     }
 }
