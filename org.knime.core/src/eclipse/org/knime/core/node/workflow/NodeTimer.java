@@ -204,10 +204,10 @@ public final class NodeTimer {
 
         private void processStatChanges() {
             if (System.currentTimeMillis() > m_timeOfLastSave + SAVEINTERVAL) {
-                asyncWriteToFile();
+                asyncWriteToFile(false);
                 m_timeOfLastSave = System.currentTimeMillis();
                 if (System.currentTimeMillis() > m_timeOfLastSend + SENDINTERVAL) {
-                    asyncSendToServer();
+                    asyncSendToServer(false);
                     m_timeOfLastSend = System.currentTimeMillis();
                 }
             }
@@ -361,22 +361,25 @@ public final class NodeTimer {
             }
         }
 
-        private void asyncSendToServer() {
+        private Thread asyncSendToServer(final boolean properShutdown) {
             if (!EclipseUtil.determineServerUsage()) {
-                new Thread(new Runnable() {
+                Thread t = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        sendToServer(false);
+                        sendToServer(properShutdown);
                     }
-                }, "KNIME-Node-Usage-Sender").start();
+                }, "KNIME-Node-Usage-Sender");
+                t.start();
+                return t;
             }
+            return null;
         }
 
-        private Thread asyncWriteToFile() {
+        private Thread asyncWriteToFile(final boolean properShutdown) {
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    writeToFile(false);
+                    writeToFile(properShutdown);
                 }
             }, "KNIME-Node-Usage-Writer");
             t.start();
@@ -389,8 +392,16 @@ public final class NodeTimer {
          * shutdown flag set.
          */
         public void performShutdown() {
-            writeToFile(true);
-            sendToServer(true);
+            Thread t = asyncWriteToFile(true);
+            try {
+                t.join(5000);
+            } catch (InterruptedException ex) { /* silently ignore to not block shutdown */ }
+            t = asyncSendToServer(true);
+            if (t != null) {
+                try {
+                    t.join(5000);
+                } catch (InterruptedException ex) { /* silently ignore to not block shutdown */ }
+            }
         }
 
         private void readFromFile() {
