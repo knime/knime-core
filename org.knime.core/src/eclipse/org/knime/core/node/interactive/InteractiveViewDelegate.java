@@ -62,6 +62,7 @@ public final class InteractiveViewDelegate<V extends ViewContent> {
 
     private WorkflowManager m_wfm;
     private NodeID m_nodeID;
+    private NodeModel m_nodeModel;
 
     public void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
         m_wfm = wfm;
@@ -75,6 +76,7 @@ public final class InteractiveViewDelegate<V extends ViewContent> {
         if (!(nm instanceof InteractiveNode)) {
             throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
         }
+        m_nodeModel = nm;
     }
 
     public boolean canReExecute() {

@@ -58,11 +58,11 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.wizard.AbstractWizardNodeView;
-import org.knime.core.node.wizard.WizardNodeView;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.editor2.WizardNodeView;
 
 /**
  * Action to open an interactive view of a node.

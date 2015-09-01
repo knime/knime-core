@@ -44,7 +44,7 @@
  *
  * Created on Apr 22, 2013 by Berthold
  */
-package org.knime.core.node.wizard;
+package org.knime.workbench.editor2;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -52,6 +52,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.charset.Charset;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.ProgressEvent;
@@ -63,16 +64,23 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.DefaultReexecutionCallback;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
+import org.knime.core.node.wizard.AbstractWizardNodeView;
+import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.WizardViewCreator;
+import org.knime.workbench.editor2.ElementRadioSelectionDialog.RadioItem;
 
 /**
  * Standard implementation for interactive views which are launched on the client side via an integrated browser. They
@@ -171,32 +179,142 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         buttonComposite.setLayoutData(new GridData(GridData.END, GridData.END, false, false));
         buttonComposite.setLayout(new RowLayout());
 
-        Button applyButton = new Button(buttonComposite, SWT.PUSH);
+        ToolBar toolBar = new ToolBar(buttonComposite, SWT.BORDER | SWT.HORIZONTAL);
+        ToolItem resetButton = new ToolItem(toolBar, SWT.PUSH);
+        resetButton.setText("Reset");
+        resetButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                // Could only call if actual settings have been changed,
+                // however there might be things in views that one can change
+                // which do not get saved, then it's nice to trigger the event anyways.
+                /*if (checkSettingsChanged()) {*/
+                    modelChanged();
+                /*}*/
+            }
+        });
+        new ToolItem(toolBar, SWT.SEPARATOR);
+        ToolItem applyButton = new ToolItem(toolBar, SWT.DROP_DOWN);
         applyButton.setText("Apply");
-        Button newDefaultButton = new Button(buttonComposite, SWT.PUSH);
-        newDefaultButton.setText("Use as new default");
-        Button closeButton = new Button(buttonComposite, SWT.PUSH);
-        closeButton.setText("Close");
+        applyButton.setToolTipText("Applies the current settings and triggers a re-execute of the node.");
+        DropdownSelectionListener applyListener = new DropdownSelectionListener(applyButton);
+        String aTTooltip = "Applies the current settings and triggers a re-execute of the node.";
+        applyListener.add("Apply temporarily", aTTooltip, new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                if (checkSettingsChanged()) {
+                    applyTriggered(false);
+                }
+            }
+        });
+        String nDTooltip = "Applies the current settings as the node default settings and triggers a re-execute of the node.";
+        applyListener.add("Apply as new default", nDTooltip, new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                if (checkSettingsChanged()) {
+                    applyTriggered(true);
+                }
+            }
+        });
+        applyButton.addSelectionListener(applyListener);
 
-        //action handler
         applyButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                applyTriggered(m_browser, false);
+                if (e.detail != SWT.ARROW) {
+                    if (checkSettingsChanged()) {
+                        ElementRadioSelectionDialog dialog = new ElementRadioSelectionDialog(m_browser.getShell());
+                        dialog.setTitle("Apply view settings");
+                        dialog.setMessage("Please choose one of the following options:");
+                        dialog.setSize(60, 9);
+                        RadioItem applyOption = new RadioItem("Apply settings temporarily", null,
+                            "Applies the current view settings to the node and triggers a re-execute of the node.");
+                        RadioItem newDefaultOption = new RadioItem("Apply settings as new default", null,
+                            "Applies the current view settings as the new default node settings and triggers a re-execute of the node.");
+                        dialog.setElements(new RadioItem[]{applyOption, newDefaultOption});
+                        dialog.setInitialSelectedElement(applyOption);
+                        dialog.open();
+                        if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
+                            return;
+                        }
+                        RadioItem selectedItem = dialog.getSelectedElement();
+                        if (applyOption.equals(selectedItem)) {
+                            applyTriggered(false);
+                        }
+                        if (newDefaultOption.equals(selectedItem)) {
+                            applyTriggered(true);
+                        }
+                    }
+                }
             }
         });
 
-        newDefaultButton.addSelectionListener(new SelectionAdapter() {
+        new ToolItem(toolBar, SWT.SEPARATOR);
+
+        ToolItem closeButton = new ToolItem(toolBar, SWT.DROP_DOWN);
+        closeButton.setText("Close");
+        closeButton.setToolTipText("Closes the view.");
+        DropdownSelectionListener closeListener = new DropdownSelectionListener(closeButton);
+        String cDTooltip = "Closes the view and discards any changes made.";
+        closeListener.add("Close && Discard", cDTooltip, new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                applyTriggered(m_browser, true);
+                m_shell.dispose();
             }
         });
+        String cATooltip = "Closes the view, applies the current settings and triggers a re-execute of the node.";
+        closeListener.add("Close && Apply temporarily", cATooltip, new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                applyTriggered(false);
+                m_shell.dispose();
+            }
+        });
+        String cTTooltip = "Closes the view, applies the current settings as node defaults and triggers a re-execute of the node.";
+        closeListener.add("Close && Apply as new default", cTTooltip, new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                applyTriggered(true);
+                m_shell.dispose();
+            }
+        });
+        closeButton.addSelectionListener(closeListener);
 
         closeButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                m_shell.dispose();
+                if (e.detail != SWT.ARROW) {
+                    if (checkSettingsChanged()) {
+                        /*MessageDialogWithToggle dialog =
+                            MessageDialogWithToggle.openOkCancelConfirm(m_browser.getShell(), "Discard Settings",
+                                "View settings have changed and will be lost. Do you want to continue?",
+                                "Do not ask again", false, null, null);*/
+                        ElementRadioSelectionDialog dialog = new ElementRadioSelectionDialog(m_browser.getShell());
+                        dialog.setTitle("View settings changed");
+                        dialog.setMessage("View settings have changed. Please choose one of the following options:");
+                        dialog.setSize(60, 13);
+                        RadioItem discardOption =
+                            new RadioItem("Discard Changes", null, "Discards any changes made and closes the view.");
+                        RadioItem applyOption = new RadioItem("Apply settings temporarily", null,
+                            "Applies the current view settings to the node, closes the view and triggers a re-execute of the node.");
+                        RadioItem newDefaultOption = new RadioItem("Apply settings as new default", null,
+                            "Applies the current view settings as the new default node settings, closes the view and triggers a re-execute of the node.");
+                        dialog.setElements(new RadioItem[]{discardOption, applyOption, newDefaultOption});
+                        dialog.setInitialSelectedElement(discardOption);
+                        dialog.open();
+                        if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
+                            return;
+                        }
+                        RadioItem selectedItem = dialog.getSelectedElement();
+                        if (applyOption.equals(selectedItem)) {
+                            applyTriggered(false);
+                        }
+                        if (newDefaultOption.equals(selectedItem)) {
+                            applyTriggered(true);
+                        }
+                    }
+                    m_shell.dispose();
+                }
             }
         });
 
@@ -244,6 +362,36 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
 
     }
 
+    class DropdownSelectionListener extends SelectionAdapter {
+        private ToolItem dropdown;
+
+        private Menu menu;
+
+        public DropdownSelectionListener(final ToolItem dropdown) {
+          this.dropdown = dropdown;
+          menu = new Menu(dropdown.getParent().getShell(), SWT.POP_UP);
+        }
+
+        public void add(final String text, final String tooltip, final SelectionAdapter selectionListener) {
+          //MenuItem menuItem = new MenuItem(menu, SWT.NONE);
+          MenuItem menuItem = new MenuItem(menu, SWT.CASCADE);
+          menuItem.setText(text);
+          menuItem.setToolTipText(tooltip);
+          menuItem.addSelectionListener(selectionListener);
+        }
+
+        @Override
+        public void widgetSelected(final SelectionEvent event) {
+          if (event.detail == SWT.ARROW) {
+            ToolItem item = (ToolItem) event.widget;
+            org.eclipse.swt.graphics.Rectangle rect = item.getBounds();
+            org.eclipse.swt.graphics.Point pt = item.getParent().toDisplay(new org.eclipse.swt.graphics.Point(rect.x, rect.y));
+            menu.setLocation(pt.x, pt.y + rect.height);
+            menu.setVisible(true);
+          }
+        }
+      }
+
     private void setBrowserURL() {
         try {
             File src = getViewSource();
@@ -274,7 +422,10 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         m_viewSet = false;
     }
 
-    private void applyTriggered(final Browser browser, final boolean useAsDefault) {
+    private void applyTriggered(final boolean useAsDefault) {
+        if (!checkSettingsChanged()) {
+            return;
+        }
         boolean valid = true;
         WizardViewCreator<REP, VAL> creator = getViewCreator();
         WebTemplate template = creator.getWebTemplate();
@@ -283,14 +434,14 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
             String evalCode =
                 creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + validateMethod
                     + "());");
-            String jsonString = (String)browser.evaluate(evalCode);
+            String jsonString = (String)m_browser.evaluate(evalCode);
             valid = Boolean.parseBoolean(jsonString);
         }
         if (valid) {
             String pullMethod = template.getPullViewContentMethodName();
             String evalCode =
                 creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + pullMethod + "());");
-            String jsonString = (String)browser.evaluate(evalCode);
+            String jsonString = (String)m_browser.evaluate(evalCode);
             try {
                 VAL viewValue = getNodeModel().createEmptyViewValue();
                 viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
@@ -300,4 +451,25 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
             }
         }
     }
+
+    private boolean checkSettingsChanged() {
+        WizardViewCreator<REP, VAL> creator = getViewCreator();
+        WebTemplate template = creator.getWebTemplate();
+        String pullMethod = template.getPullViewContentMethodName();
+        String evalCode =
+                creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + pullMethod + "());");
+        String jsonString = (String)m_browser.evaluate(evalCode);
+        try {
+            VAL viewValue = getNodeModel().createEmptyViewValue();
+            viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
+            VAL currentViewValue = getNodeModel().getViewValue();
+            if (currentViewValue != null) {
+                return !currentViewValue.equals(viewValue);
+            }
+        } catch (Exception e) {
+            //TODO: log error
+        }
+        return false;
+    }
+
 }

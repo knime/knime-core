@@ -648,4 +648,12 @@
               parentId="org.eclipse.ui.contexts.window">
         </context>
      </extension>
+     <extension
+         point="org.knime.core.WizardNodeView">
+      <wizardNodeView
+            description="This browser uses the native system browser that SWT can use. In a typical environment this should be Internet Explorer on Windows and WebKit on Linux and Mac."
+            name="Internal Browser"
+            viewClass="org.knime.workbench.editor2.WizardNodeView">
+      </wizardNodeView>
+   </extension>
 </plugin>
