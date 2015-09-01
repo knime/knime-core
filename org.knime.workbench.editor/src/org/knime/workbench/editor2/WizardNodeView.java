@@ -66,6 +66,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
@@ -202,18 +204,14 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         applyListener.add("Apply temporarily", aTTooltip, new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                if (checkSettingsChanged()) {
-                    applyTriggered(false);
-                }
+                applyTriggered(false);
             }
         });
         String nDTooltip = "Applies the current settings as the node default settings and triggers a re-execute of the node.";
         applyListener.add("Apply as new default", nDTooltip, new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                if (checkSettingsChanged()) {
-                    applyTriggered(true);
-                }
+                applyTriggered(true);
             }
         });
         applyButton.addSelectionListener(applyListener);
@@ -223,27 +221,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
             public void widgetSelected(final SelectionEvent e) {
                 if (e.detail != SWT.ARROW) {
                     if (checkSettingsChanged()) {
-                        ElementRadioSelectionDialog dialog = new ElementRadioSelectionDialog(m_browser.getShell());
-                        dialog.setTitle("Apply view settings");
-                        dialog.setMessage("Please choose one of the following options:");
-                        dialog.setSize(60, 9);
-                        RadioItem applyOption = new RadioItem("Apply settings temporarily", null,
-                            "Applies the current view settings to the node and triggers a re-execute of the node.");
-                        RadioItem newDefaultOption = new RadioItem("Apply settings as new default", null,
-                            "Applies the current view settings as the new default node settings and triggers a re-execute of the node.");
-                        dialog.setElements(new RadioItem[]{applyOption, newDefaultOption});
-                        dialog.setInitialSelectedElement(applyOption);
-                        dialog.open();
-                        if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
-                            return;
-                        }
-                        RadioItem selectedItem = dialog.getSelectedElement();
-                        if (applyOption.equals(selectedItem)) {
-                            applyTriggered(false);
-                        }
-                        if (newDefaultOption.equals(selectedItem)) {
-                            applyTriggered(true);
-                        }
+                        showApplyDialog();
                     }
                 }
             }
@@ -289,28 +267,8 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
                             MessageDialogWithToggle.openOkCancelConfirm(m_browser.getShell(), "Discard Settings",
                                 "View settings have changed and will be lost. Do you want to continue?",
                                 "Do not ask again", false, null, null);*/
-                        ElementRadioSelectionDialog dialog = new ElementRadioSelectionDialog(m_browser.getShell());
-                        dialog.setTitle("View settings changed");
-                        dialog.setMessage("View settings have changed. Please choose one of the following options:");
-                        dialog.setSize(60, 13);
-                        RadioItem discardOption =
-                            new RadioItem("Discard Changes", null, "Discards any changes made and closes the view.");
-                        RadioItem applyOption = new RadioItem("Apply settings temporarily", null,
-                            "Applies the current view settings to the node, closes the view and triggers a re-execute of the node.");
-                        RadioItem newDefaultOption = new RadioItem("Apply settings as new default", null,
-                            "Applies the current view settings as the new default node settings, closes the view and triggers a re-execute of the node.");
-                        dialog.setElements(new RadioItem[]{discardOption, applyOption, newDefaultOption});
-                        dialog.setInitialSelectedElement(discardOption);
-                        dialog.open();
-                        if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
+                        if  (!showCloseDialog()) {
                             return;
-                        }
-                        RadioItem selectedItem = dialog.getSelectedElement();
-                        if (applyOption.equals(selectedItem)) {
-                            applyTriggered(false);
-                        }
-                        if (newDefaultOption.equals(selectedItem)) {
-                            applyTriggered(true);
                         }
                     }
                     m_shell.dispose();
@@ -318,6 +276,17 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
             }
         });
 
+        m_shell.addListener(SWT.Close, new Listener() {
+
+            @Override
+            public void handleEvent(final Event event) {
+                if (checkSettingsChanged()) {
+                    event.doit = showCloseDialog();
+                }
+            }
+        });
+
+        //TODO: make initial size dynamic
         m_shell.setSize(800, 600);
 
         Point middle = new Point(knimeWindowBounds.width / 2, knimeWindowBounds.height / 2);
@@ -467,9 +436,57 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
                 return !currentViewValue.equals(viewValue);
             }
         } catch (Exception e) {
-            //TODO: log error
+            LOGGER.error("Could not create view value for comparison: " + e.getMessage(), e);
         }
         return false;
     }
 
+    private boolean showCloseDialog() {
+        String title = "View settings changed";
+        String message = "View settings have changed. Please choose one of the following options:";
+        return showApplyOptionsDialog(true, title, message);
+    }
+
+    private boolean showApplyDialog() {
+        String title = "Apply view settings";
+        String message = "Please choose one of the following options:";
+        return showApplyOptionsDialog(false, title, message);
+    }
+
+
+    private boolean showApplyOptionsDialog(final boolean showDiscardOption, final String title, final String message) {
+        ElementRadioSelectionDialog dialog = new ElementRadioSelectionDialog(m_browser.getShell());
+        dialog.setTitle(title);
+        dialog.setMessage(message);
+        dialog.setSize(60, showDiscardOption ? 14 : 11);
+        RadioItem discardOption =
+            new RadioItem("Discard Changes", null, "Discards any changes made and closes the view.");
+        RadioItem applyOption = new RadioItem("Apply settings temporarily", null,
+            "Applies the current view settings to the node" + (showDiscardOption ? ", closes the view" : "")
+            + " and triggers a re-execute of the node. This option will not override the default node settings "
+            + "set in the dialog. Changes will be lost when the node is reset.");
+        RadioItem newDefaultOption = new RadioItem("Apply settings as new default", null,
+            "Applies the current view settings as the new default node settings" + (showDiscardOption ? ", closes the view" : "")
+            + " and triggers a re-execute of the node. This option will override the settings set in the node dialog "
+            + "and changes made will remain applied after a node reset.");
+        if (showDiscardOption) {
+            dialog.setElements(new RadioItem[]{discardOption, applyOption, newDefaultOption});
+            dialog.setInitialSelectedElement(discardOption);
+        } else {
+            dialog.setElements(new RadioItem[]{applyOption, newDefaultOption});
+            dialog.setInitialSelectedElement(applyOption);
+        }
+        dialog.open();
+        if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
+            return false;
+        }
+        RadioItem selectedItem = dialog.getSelectedElement();
+        if (applyOption.equals(selectedItem)) {
+            applyTriggered(false);
+        }
+        if (newDefaultOption.equals(selectedItem)) {
+            applyTriggered(true);
+        }
+        return true;
+    }
 }

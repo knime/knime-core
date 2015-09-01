@@ -64,6 +64,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
 /**
+ * Dialog that displays a list of radio buttons along with tooltip and/or description text for selection.
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
@@ -81,7 +82,11 @@ public class ElementRadioSelectionDialog extends Dialog {
     private int m_height = 13;
 
     /**
-     * @param parent
+     * Creates a dialog instance. Note that the window will have no visual
+     * representation (no widgets) until it is told to open. By default,
+     * <code>open</code> blocks for dialogs.
+     *
+     * @param parent the parent shell, or <code>null</code> to create a top-level shell
      */
     public ElementRadioSelectionDialog(final Shell parent) {
         super(parent);
@@ -112,10 +117,7 @@ public class ElementRadioSelectionDialog extends Dialog {
         m_message = message;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    protected void setSelection(final RadioItem selection) {
+    private void setSelection(final RadioItem selection) {
         Assert.isNotNull(m_radioButtons);
         for (int i = 0; i < m_selectElements.length; i++) {
             if (m_selectElements[i].equals(selection)) {
@@ -155,16 +157,9 @@ public class ElementRadioSelectionDialog extends Dialog {
     }
 
     /**
-     * {@inheritDoc}
+     * @return the selected {@link RadioItem} element.
      */
     public RadioItem getSelectedElement() {
-        /*Assert.isNotNull(m_radioButtons);
-        for (int i = 0; i < m_radioButtons.length; i++) {
-            if (m_radioButtons[i].getSelection()) {
-                return m_selectElements[i];
-            }
-        }
-        return null;*/
         return m_selectedElement;
     }
 
@@ -208,7 +203,7 @@ public class ElementRadioSelectionDialog extends Dialog {
             });
             if (item.getDescription() != null) {
                 Label description = new Label(c, SWT.WRAP);
-                description.setLayoutData(new GridData(data.widthHint, convertHeightInCharsToPixels(2)));
+                description.setLayoutData(new GridData(data.widthHint, SWT.DEFAULT));
                 FontData[] fD = c.getFont().getFontData();
                 fD[0].setHeight(Math.max(fD[0].getHeight()-2, 6));
                 description.setFont(new Font(parent.getDisplay(), fD[0]));
@@ -217,6 +212,8 @@ public class ElementRadioSelectionDialog extends Dialog {
                     description.setToolTipText(item.getTooltip());
                 }
             }
+            Label spacer = new Label(c, SWT.CENTER); //spacer
+            spacer.setLayoutData(new GridData(data.widthHint, 5));
             m_radioButtons[i] = radio;
         }
         return c;
