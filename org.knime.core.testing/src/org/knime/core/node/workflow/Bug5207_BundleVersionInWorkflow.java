@@ -78,7 +78,7 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
         NodeAndBundleInformation tableBundleInfo = tableCreatorNC.getNodeAndBundleInformation();
         Bundle tableBundle = FrameworkUtil.getBundle(tableCreatorNC.getNodeModel().getClass());
         assertEquals("1.1.1.20140523", tableBundleInfo.getBundleVersion().toString());
-        assertFalse(tableBundle.getVersion() == tableBundleInfo.getBundleVersion()); // must not be the same
+        assertFalse(tableBundle.getVersion() == tableBundleInfo.getBundleVersion().orElse(null)); // must not be the same
         assertEquals(tableBundle.getSymbolicName(), tableBundleInfo.getBundleSymbolicName());
 
         // col filter is not executed and has current bundle version as version information

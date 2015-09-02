@@ -53,7 +53,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,10 +60,9 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.xmlbeans.XmlException;
-import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-import org.osgi.framework.Bundle;
+import org.knime.core.node.missing.MissingNodeFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -154,7 +152,7 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private boolean m_initialized = false;
 
-    
+
     /**
      * Creates a new <code>NodeFactory</code> and initializes the node description.
      */
@@ -259,20 +257,23 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Adds information about the bundle in which this node resides to the XML description tree. Note that the bundle
-     * information does not have a namespace!
+     * Adds information about the bundle/feature in which this node resides to the XML description tree. Note that the
+     * bundle information does not have a namespace!
      */
     private void addBundleInformation() {
         Element root = m_nodeDescription.getXMLDescription();
 
-        Bundle bundle = OSGIHelper.getBundle(this.getClass());
-        if ((root != null) && (bundle != null)) { // for running in non-osgi context
-            Dictionary<String, String> headers = bundle.getHeaders();
+        if ((root != null) && !(this instanceof MissingNodeFactory)) { // for running in non-osgi context
+            NodeAndBundleInformation nodeInfo = new NodeAndBundleInformation(this);
+
             Document doc = root.getOwnerDocument();
             Element bundleElement = doc.createElement("osgi-info");
-            bundleElement.setAttribute("bundle-symbolic-name", bundle.getSymbolicName());
-            bundleElement.setAttribute("bundle-name", headers.get("Bundle-Name"));
-            bundleElement.setAttribute("bundle-vendor", headers.get("Bundle-Vendor"));
+            bundleElement.setAttribute("bundle-symbolic-name",
+                nodeInfo.getFeatureSymbolicName().orElse(nodeInfo.getBundleSymbolicName().orElse("<Unknown>")));
+            bundleElement.setAttribute("bundle-name",
+                nodeInfo.getFeatureName().orElse(nodeInfo.getBundleName().orElse("<Unknown>")));
+            bundleElement.setAttribute("bundle-vendor",
+                nodeInfo.getFeatureVendor().orElse(nodeInfo.getBundleVendor().orElse("<Unknown>")));
             bundleElement.setAttribute("factory-package", this.getClass().getPackage().getName());
             root.appendChild(bundleElement);
         }

@@ -169,7 +169,7 @@ public final class EclipseUtil {
      * @return <code>true</code> if the application has been started from an SDK, <code>false</code> otherwise
      */
     public static boolean isRunFromSDK() {
-        return RUN_FROM_SDK;
+        return false /* RUN_FROM_SDK */;
     }
 
     /**

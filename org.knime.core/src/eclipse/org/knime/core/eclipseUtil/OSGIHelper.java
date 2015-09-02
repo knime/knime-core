@@ -45,11 +45,29 @@
  */
 package org.knime.core.eclipseUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.internal.app.CommandLineArgs;
+import org.eclipse.equinox.internal.p2.metadata.IRequiredCapability;
+import org.eclipse.equinox.p2.core.IProvisioningAgent;
+import org.eclipse.equinox.p2.core.IProvisioningAgentProvider;
+import org.eclipse.equinox.p2.core.ProvisionException;
+import org.eclipse.equinox.p2.engine.IProfile;
+import org.eclipse.equinox.p2.engine.IProfileRegistry;
+import org.eclipse.equinox.p2.metadata.IArtifactKey;
+import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.metadata.IRequirement;
+import org.eclipse.equinox.p2.query.IQueryResult;
+import org.eclipse.equinox.p2.query.QueryUtil;
+import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
 /**
  * This class contains some methods to access OSGI information that may not be
@@ -61,6 +79,9 @@ import org.osgi.framework.FrameworkUtil;
  */
 @SuppressWarnings("restriction")
 public final class OSGIHelper {
+    private static Map<Bundle, IInstallableUnit> bundleToFeatureMap = new HashMap<>();
+    private static IProfile p2Profile;
+
     /**
      * Returns the bundle that contains the given class.
      *
@@ -73,6 +94,82 @@ public final class OSGIHelper {
         } else {
             return null;
         }
+    }
+
+
+    /**
+     * Returns the feature in which the given bundle is packaged. If there is more than one feature providing the bundle
+     * then one of them (in no particular order) is returned. If the bundle cannot be found in any feature then an
+     * empty result is returned.
+     *
+     * @param bundle any bundle
+     * @return the installable unit containing the bundle
+     * @since 3.0
+     */
+    public static synchronized Optional<IInstallableUnit> getFeature(final Bundle bundle) {
+        IInstallableUnit u = bundleToFeatureMap.get(bundle);
+        if (u != null) {
+            return Optional.of(u);
+        } else if (getP2Profile() != null) {
+            IQueryResult<IInstallableUnit> queryResult = getP2Profile().query(QueryUtil.createIUGroupQuery(), null);
+            for (IInstallableUnit unit : queryResult) {
+                for (IArtifactKey afk : unit.getArtifacts()) {
+                    if (afk.getId().equals(bundle.getSymbolicName())) {
+                        bundleToFeatureMap.put(bundle, unit);
+                        return Optional.of(unit);
+                    }
+                }
+
+                for (IRequirement r : unit.getRequirements()) {
+                    if (r instanceof IRequiredCapability) {
+                        if (((IRequiredCapability)r).getName().equals(bundle.getSymbolicName())) {
+                            bundleToFeatureMap.put(bundle, unit);
+                            return Optional.of(unit);
+                        }
+                    }
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private synchronized static IProfile getP2Profile() {
+        if (p2Profile == null) {
+            BundleContext ctx = FrameworkUtil.getBundle(OSGIHelper.class).getBundleContext();
+            ServiceReference<IProvisioningAgentProvider> ref = ctx.getServiceReference(IProvisioningAgentProvider.class);
+            if (ref == null) {
+                NodeLogger.getLogger(OSGIHelper.class).debug("Strange, I couldn't get a service reference for "
+                    + IProvisioningAgentProvider.class);
+                return null;
+            }
+
+            IProvisioningAgentProvider agentProvider = ctx.getService(ref);
+            if (agentProvider == null) {
+                NodeLogger.getLogger(OSGIHelper.class).debug("Strange, I couldn't get a service for "
+                        + IProvisioningAgentProvider.class);
+                return null;
+            }
+
+            try {
+                IProvisioningAgent provisioningAgent = agentProvider.createAgent(null);
+                IProfileRegistry profileRegistry =
+                    (IProfileRegistry)provisioningAgent.getService(IProfileRegistry.SERVICE_NAME);
+                p2Profile = profileRegistry.getProfile(IProfileRegistry.SELF);
+                if (p2Profile == null) {
+                    NodeLogger.getLogger(OSGIHelper.class).debug("Couldn't get the p2 installation profile, very likely "
+                            + "because I'm started from the SDK");
+                    return null; // happens when started from the SDK
+                }
+            } catch (ProvisionException ex) {
+                NodeLogger.getLogger(OSGIHelper.class).error("Could not create provisioning agent: " + ex.getMessage(),
+                    ex);
+            } finally {
+                ctx.ungetService(ref);
+            }
+        }
+
+        return p2Profile;
     }
 
     /**

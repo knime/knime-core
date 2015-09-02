@@ -43,10 +43,12 @@
                 <xsl:apply-templates select="t:ports" />
                 <xsl:apply-templates select="t:views" />
 
+                <xsl:if test="osgi-info">
                 <div id="origin-bundle">
                     This node is contained in <em><xsl:value-of select="osgi-info/@bundle-name" /></em>
                     provided by <em><xsl:value-of select="osgi-info/@bundle-vendor" /></em>.
                 </div>
+                </xsl:if>
             </body>
         </html>
     </xsl:template>

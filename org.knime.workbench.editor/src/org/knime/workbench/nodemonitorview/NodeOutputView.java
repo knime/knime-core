@@ -96,7 +96,6 @@ import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.tableview.TableView;
-import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
@@ -665,16 +664,30 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
         // add information about plugin and version to list (in show all/expert mode only)
         if ((nc instanceof NativeNodeContainer) && showAll) {
             NativeNodeContainer nnc = (NativeNodeContainer)nc;
+
+            TableItem item4 = new TableItem(m_table, SWT.NONE);
+            item4.setText(0, "Node's feature name");
+            item4.setText(1, nnc.getNodeAndBundleInformation().getFeatureName().orElse("?"));
+
+            TableItem item5 = new TableItem(m_table, SWT.NONE);
+            item5.setText(0, "Node's feature symbolic name");
+            item5.setText(1, nnc.getNodeAndBundleInformation().getFeatureSymbolicName().orElse("?"));
+
+            TableItem item6 = new TableItem(m_table, SWT.NONE);
+            item6.setText(0, "Node's feature version (last saved with)");
+            item6.setText(1, nnc.getNodeAndBundleInformation().getFeatureVersion().map(v -> v.toString()).orElse("?"));
+
             TableItem item1 = new TableItem(m_table, SWT.NONE);
             item1.setText(0, "Node's plug-in name");
-            item1.setText(1, nnc.getNodeAndBundleInformation().getBundleName());
+            item1.setText(1, nnc.getNodeAndBundleInformation().getBundleName().orElse("?"));
+
             TableItem item2 = new TableItem(m_table, SWT.NONE);
             item2.setText(0, "Node's plug-in symbolic name");
-            item2.setText(1, nnc.getNodeAndBundleInformation().getBundleSymbolicName());
+            item2.setText(1, nnc.getNodeAndBundleInformation().getBundleSymbolicName().orElse("?"));
+
             TableItem item3 = new TableItem(m_table, SWT.NONE);
             item3.setText(0, "Node's plug-in version (last saved with)");
-            String version = nnc.getNodeAndBundleInformation().getBundleVersion().toString();
-            item3.setText(1, "0.0.0".equals(version) ? "<unknown>" : version);
+            item3.setText(1, nnc.getNodeAndBundleInformation().getBundleVersion().map(v -> v.toString()).orElse("?"));
         }
         // add settings to table
         Stack<Pair<Iterator<String>, ConfigBase>> stack = new Stack<Pair<Iterator<String>, ConfigBase>>();
