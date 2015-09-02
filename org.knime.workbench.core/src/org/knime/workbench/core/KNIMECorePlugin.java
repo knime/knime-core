@@ -126,7 +126,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
     public void start(final BundleContext context) throws Exception {
         super.start(context);
 
-        if (!Boolean.getBoolean("java.awt.headless")) {
+        if (!Boolean.getBoolean("java.awt.headless") && (Display.getCurrent() != null)) {
             getImageRegistry();
         }
 
