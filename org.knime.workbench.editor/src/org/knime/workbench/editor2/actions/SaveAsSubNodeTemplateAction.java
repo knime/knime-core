@@ -99,7 +99,7 @@ public class SaveAsSubNodeTemplateAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public String getText() {
-        return "Save as Sub Node Template...";
+        return "Save as Template...";
     }
 
     /**

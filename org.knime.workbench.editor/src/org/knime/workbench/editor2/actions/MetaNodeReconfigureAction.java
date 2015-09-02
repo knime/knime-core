@@ -88,7 +88,7 @@ public class MetaNodeReconfigureAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Reconfigure Meta Node";
+        return "Reconfigure...";
     }
 
     /**

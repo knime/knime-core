@@ -116,7 +116,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Change Link Type";
+        return "Change Link Type...";
     }
 
     /**

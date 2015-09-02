@@ -89,7 +89,7 @@ public class DisconnectMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Disconnect Meta Node Link";
+        return "Disconnect Link";
     }
 
     /**

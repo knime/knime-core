@@ -123,7 +123,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Update Node Link\t" + getHotkey("knime.commands.updateMetaNodeLink");
+        return "Update Link\t" + getHotkey("knime.commands.updateMetaNodeLink");
     }
 
     /**

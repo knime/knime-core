@@ -94,7 +94,7 @@ public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Reveal Meta Node Template";
+        return "Reveal Template";
     }
 
     /**

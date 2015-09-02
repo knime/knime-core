@@ -120,7 +120,7 @@ public class ChangeSubNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Change Link Type";
+        return "Change Link Type...";
     }
 
     /**

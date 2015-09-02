@@ -93,7 +93,7 @@ public class LockMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Lock Metanode";
+        return "Lock...";
     }
 
     /**

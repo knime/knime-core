@@ -92,7 +92,7 @@ public class DisconnectSubNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Disconnect Sub Node Link";
+        return "Disconnect Link";
     }
 
     /**

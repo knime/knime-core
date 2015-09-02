@@ -97,7 +97,7 @@ public class LockSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Lock Subnode";
+        return "Lock...";
     }
 
     /**

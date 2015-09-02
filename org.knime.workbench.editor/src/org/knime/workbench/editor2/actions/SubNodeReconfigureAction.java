@@ -88,7 +88,7 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Reconfigure Sub Node";
+        return "Reconfigure...";
     }
 
     /**

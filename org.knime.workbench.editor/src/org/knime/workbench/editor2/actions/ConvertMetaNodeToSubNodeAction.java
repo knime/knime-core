@@ -51,7 +51,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -64,14 +63,13 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author M. Berthold
  */
 public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ConvertMetaNodeToSubNodeAction.class);
 
     /**
      * unique ID for this action.
      */
     public static final String ID = "knime.action.convertmetanodetosubnode";
 
-    /** Subnode disabled by default (under development). Enable with -Dknime.subnode.enable=true. */
+    /** Subnode disabled by default (under development).  */
     public static final boolean ENABLE_SUBNODE_ACTION = Platform.getBundle("org.knime.js.base") != null;
 
     /**
@@ -94,7 +92,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Convert Meta Node to Sub Node";
+        return "Convert to Functional Unit";
     }
 
     /**
@@ -111,7 +109,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Convert Meta Node into a Sub Node";
+        return "Converts this metanode to a functional, sharable unit";
     }
 
     /**
@@ -146,7 +144,6 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
             return;
         }
 
-        LOGGER.debug("Creating 'Convert Meta Node to Sub Node' job for " + nodeParts.length + " node(s)...");
         try {
             WorkflowManager manager = getManager();
             WorkflowManager metaNode = (WorkflowManager)nodeParts[0].getNodeContainer();

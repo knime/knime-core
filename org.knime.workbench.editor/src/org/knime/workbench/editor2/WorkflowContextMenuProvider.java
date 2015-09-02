@@ -57,6 +57,7 @@ import org.eclipse.gef.ui.actions.GEFActionConstants;
 import org.eclipse.gef.ui.actions.UpdateAction;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
@@ -64,7 +65,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.LoopEndNode;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -76,7 +76,6 @@ import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.ChangeSubNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
-import org.knime.workbench.editor2.actions.CollapseSubNodeAction;
 import org.knime.workbench.editor2.actions.ConvertMetaNodeToSubNodeAction;
 import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.DisconnectSubNodeLinkAction;
@@ -120,6 +119,11 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowContextMenuProvider extends ContextMenuProvider {
+
+    private static final String GROUP_METANODE = "group.knime.metanode";
+    private static final String GROUP_METANODE_LINKS = "group.knime.metanode.links";
+    private static final String GROUP_SUBNODE = "group.knime.subnode";
+    private static final String GROUP_SUBNODE_LINKS = "group.knime.subnode.links";
 
     private final ActionRegistry m_actionRegistry;
 
@@ -256,12 +260,6 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         action = m_actionRegistry.getAction(CollapseMetaNodeAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
-        // collapse sub nodes
-        if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
-            action = m_actionRegistry.getAction(CollapseSubNodeAction.ID);
-            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-            ((AbstractNodeAction)action).update();
-        }
         // insert "select loop" if loop nodes are selected
         boolean addSelectLoop = true;
         for (Object p : parts) {
@@ -284,6 +282,9 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
             ((AbstractNodeAction)action).update();
         }
+
+        IMenuManager metanodeMenuMgr = null;
+        IMenuManager subnodeMenuMgr = null;
 
         // depending on the current selection: add the actions for the port
         // views and the node views
@@ -312,12 +313,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             if (p instanceof NodeContainerEditPart) {
 
                 NodeContainer container = null;
-                container =
-                        (NodeContainer)((NodeContainerEditPart)p).getModel();
+                container = (NodeContainer)((NodeContainerEditPart)p).getModel();
 
                 if (!(container instanceof WorkflowManager)) {
-                    action = m_actionRegistry.getAction(
-                            ToggleFlowVarPortsAction.ID);
+                    action = m_actionRegistry.getAction(ToggleFlowVarPortsAction.ID);
                     manager.appendToGroup(FLOW_VAR_PORT_GRP, action);
                     ((AbstractNodeAction)action).update();
                 }
@@ -326,8 +325,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 int numNodeViews = container.getNrViews();
                 for (int i = 0; i < numNodeViews; i++) {
                     action = new OpenViewAction(container, i);
-                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
-                            action);
+                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 }
 
                 // add interactive view options
@@ -337,54 +335,52 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 if (container instanceof WorkflowManager) {
-                    // expand meta nodes
+                    metanodeMenuMgr = getMetaNodeMenuManager(metanodeMenuMgr, manager);
+
+                    // OPEN META NODE
+                    action = new OpenSubworkflowEditorAction((NodeContainerEditPart)p);
+                    metanodeMenuMgr.appendToGroup(GROUP_METANODE, action);
+
+                    // EXPAND META NODE
                     action = m_actionRegistry.getAction(ExpandMetaNodeAction.ID);
-                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                    metanodeMenuMgr.appendToGroup(GROUP_METANODE, action);
                     ((AbstractNodeAction)action).update();
-                    // convert meta node to sub node
-                    if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
-                        action = m_actionRegistry.getAction(ConvertMetaNodeToSubNodeAction.ID);
-                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+
+                    // RECONFIGURE META NODE
+                    if (parts.size() == 1) {
+                        action = m_actionRegistry.getAction(MetaNodeReconfigureAction.ID);
+                        metanodeMenuMgr.appendToGroup(GROUP_METANODE, action);
                         ((AbstractNodeAction)action).update();
                     }
-                    action = new OpenSubworkflowEditorAction((NodeContainerEditPart)p);
-                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                    if (parts.size() == 1) {
-                        if (Role.Link.equals(((WorkflowManager)container).getTemplateInformation().getRole())) {
-                            action = m_actionRegistry.getAction(ChangeMetaNodeLinkAction.ID);
-                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                            ((AbstractNodeAction)action).update();
-                        } else {
-                            action = m_actionRegistry.getAction(MetaNodeReconfigureAction.ID);
-                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                            ((AbstractNodeAction)action).update();
-                        }
+
+                    // TO FUNCTIONAL UNIT (META NODE)
+                    if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
+                        action = m_actionRegistry.getAction(ConvertMetaNodeToSubNodeAction.ID);
+                        metanodeMenuMgr.appendToGroup(GROUP_METANODE, action);
+                        ((AbstractNodeAction)action).update();
                     }
+
                 }
 
-                // Add open editor action to sub node
-                if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
-                    if (container instanceof SubNodeContainer) {
-                        // expand sub nodes
-                        if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
-                            action = m_actionRegistry.getAction(ExpandSubNodeAction.ID);
-                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                            ((AbstractNodeAction)action).update();
-                        }
-                        action = new OpenSubNodeEditorAction((NodeContainerEditPart)p);
-                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                        if (parts.size() == 1) {
-                            if (Role.Link.equals(((SubNodeContainer)container).getTemplateInformation().getRole())) {
-                                action = m_actionRegistry.getAction(ChangeSubNodeLinkAction.ID);
-                                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                                ((AbstractNodeAction)action).update();
-                            } else {
-                                action = m_actionRegistry.getAction(SubNodeReconfigureAction.ID);
-                                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                                ((AbstractNodeAction)action).update();
-                            }
-                        }
-                    }
+                // SUBNODE
+                if (container instanceof SubNodeContainer && ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
+
+                    subnodeMenuMgr = getSubNodeMenuManager(subnodeMenuMgr, manager);
+
+                    // OPEN SUBNODE
+                    action = new OpenSubNodeEditorAction((NodeContainerEditPart)p);
+                    subnodeMenuMgr.appendToGroup(GROUP_SUBNODE, action);
+
+                    // EXPAND SUBNODE
+                    action = m_actionRegistry.getAction(ExpandSubNodeAction.ID);
+                    subnodeMenuMgr.appendToGroup(GROUP_SUBNODE, action);
+                    ((AbstractNodeAction)action).update();
+
+                    // RECONFIGURE SUBNODE
+                    action = m_actionRegistry.getAction(SubNodeReconfigureAction.ID);
+                    subnodeMenuMgr.appendToGroup(GROUP_SUBNODE, action);
+                    ((AbstractNodeAction)action).update();
+
                 }
 
                 // add port views
@@ -404,83 +400,119 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         }
 
         boolean addMetaNodeActions = false;
-        boolean addMetaNodeLinkActions = false;
+        boolean addSubNodeActions = false;
         for (Object p : parts) {
             if (p instanceof NodeContainerEditPart) {
-                NodeContainer model =
-                    ((NodeContainerEditPart)p).getNodeContainer();
+                NodeContainer model = ((NodeContainerEditPart)p).getNodeContainer();
                 if (model instanceof WorkflowManager) {
                     addMetaNodeActions = true;
-                    if (Role.Link.equals(((WorkflowManager)model).getTemplateInformation().getRole())) {
-                        addMetaNodeLinkActions = true;
-                    }
+                } else if (model instanceof SubNodeContainer) {
+                    addSubNodeActions = true;
                 }
             }
         }
-        if (addMetaNodeActions) {
-            action = m_actionRegistry.getAction(SaveAsMetaNodeTemplateAction.ID);
-            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-            ((AbstractNodeAction)action).update();
-            if (addMetaNodeLinkActions) {
-                action = m_actionRegistry.getAction(CheckUpdateMetaNodeLinkAction.ID);
-                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                ((AbstractNodeAction)action).update();
-                action = m_actionRegistry.getAction(RevealMetaNodeTemplateAction.ID);
-                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                ((AbstractNodeAction)action).update();
-                action = m_actionRegistry.getAction(DisconnectMetaNodeLinkAction.ID);
-                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                ((AbstractNodeAction)action).update();
-            }
 
+        if (addMetaNodeActions) {
+            metanodeMenuMgr = getMetaNodeMenuManager(metanodeMenuMgr, manager);
+
+            // SAVE AS TEMPLATE
+            action = m_actionRegistry.getAction(SaveAsMetaNodeTemplateAction.ID);
+            metanodeMenuMgr.appendToGroup(GROUP_METANODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // CHECK UPDATE
+            action = m_actionRegistry.getAction(CheckUpdateMetaNodeLinkAction.ID);
+            metanodeMenuMgr.appendToGroup(GROUP_METANODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // DISCONNECT
+            action = m_actionRegistry.getAction(DisconnectMetaNodeLinkAction.ID);
+            metanodeMenuMgr.appendToGroup(GROUP_METANODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // LINK TYPE
+            action = m_actionRegistry.getAction(ChangeMetaNodeLinkAction.ID);
+            metanodeMenuMgr.appendToGroup(GROUP_METANODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // REVEAL TEMPLATE
+            action = m_actionRegistry.getAction(RevealMetaNodeTemplateAction.ID);
+            metanodeMenuMgr.appendToGroup(GROUP_METANODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // LOCK
             if (Boolean.getBoolean(KNIMEConstants.PROPERTY_SHOW_METANODE_LOCK_ACTION)) {
                 action = m_actionRegistry.getAction(LockMetaNodeAction.ID);
-                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                metanodeMenuMgr.appendToGroup(GROUP_METANODE, action);
                 ((AbstractNodeAction)action).update();
             }
 
         }
 
-        boolean addSubNodeActions = false;
-        boolean addSubNodeLinkActions = false;
-        for (Object p : parts) {
-            if (p instanceof NodeContainerEditPart) {
-                NodeContainer model =
-                    ((NodeContainerEditPart)p).getNodeContainer();
-                if (model instanceof SubNodeContainer) {
-                    addSubNodeActions = true;
-                    if (Role.Link.equals(((SubNodeContainer)model).getTemplateInformation().getRole())) {
-                        addSubNodeLinkActions = true;
-                    }
-                }
-            }
-        }
         if (addSubNodeActions) {
-            action = m_actionRegistry.getAction(SaveAsSubNodeTemplateAction.ID);
-            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-            ((AbstractNodeAction)action).update();
-            if (addSubNodeLinkActions) {
-                action = m_actionRegistry.getAction(CheckUpdateMetaNodeLinkAction.ID);
-                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                ((AbstractNodeAction)action).update();
-                action = m_actionRegistry.getAction(RevealSubNodeTemplateAction.ID);
-                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                ((AbstractNodeAction)action).update();
-                action = m_actionRegistry.getAction(DisconnectSubNodeLinkAction.ID);
-                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                ((AbstractNodeAction)action).update();
-            }
 
+            subnodeMenuMgr = getSubNodeMenuManager(subnodeMenuMgr, manager);
+
+            // SAVE AS TEMPLATE (SUBNODE)
+            action = m_actionRegistry.getAction(SaveAsSubNodeTemplateAction.ID);
+            subnodeMenuMgr.appendToGroup(GROUP_SUBNODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // CHECK UPDATE (SUBNODE)
+            action = m_actionRegistry.getAction(CheckUpdateMetaNodeLinkAction.ID);
+            subnodeMenuMgr.appendToGroup(GROUP_SUBNODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // DISCONNECT LINK (SUBNODE)
+            action = m_actionRegistry.getAction(DisconnectSubNodeLinkAction.ID);
+            subnodeMenuMgr.appendToGroup(GROUP_SUBNODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // CHANGE LINK (SUBNODE)
+            action = m_actionRegistry.getAction(ChangeSubNodeLinkAction.ID);
+            subnodeMenuMgr.appendToGroup(GROUP_SUBNODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // REVEAL TEMPLATE (SUBNODE)
+            action = m_actionRegistry.getAction(RevealSubNodeTemplateAction.ID);
+            subnodeMenuMgr.appendToGroup(GROUP_SUBNODE_LINKS, action);
+            ((AbstractNodeAction)action).update();
+
+            // LOCK SUBNODE
             if (Boolean.getBoolean(KNIMEConstants.PROPERTY_SHOW_METANODE_LOCK_ACTION)) {
                 action = m_actionRegistry.getAction(LockSubNodeAction.ID);
-                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                subnodeMenuMgr.appendToGroup(GROUP_SUBNODE, action);
                 ((AbstractNodeAction)action).update();
             }
-
         }
 
         manager.updateAll(true);
     }
 
+    private static IMenuManager getMetaNodeMenuManager(final IMenuManager metaNodeManagerOrNull,
+        final IMenuManager parentMenuManager) {
+        if (metaNodeManagerOrNull == null) {
+            MenuManager m = new MenuManager("Meta Node",
+                ImageRepository.getImageDescriptor("/icons/meta/meta_custom_preview.png"), null);
+            m.add(new Separator(GROUP_METANODE));
+            m.add(new Separator(GROUP_METANODE_LINKS));
+            parentMenuManager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, m);
+            return m;
+        }
+        return metaNodeManagerOrNull;
+    }
+
+    private static IMenuManager getSubNodeMenuManager(final IMenuManager subNodeManagerOrNull,
+        final IMenuManager parentMenuManager) {
+        if (subNodeManagerOrNull == null) {
+            MenuManager m = new MenuManager("Sub Node",
+                ImageRepository.getImageDescriptor("/icons/meta/meta_custom_preview.png"), null);
+            m.add(new Separator(GROUP_SUBNODE));
+            m.add(new Separator(GROUP_SUBNODE_LINKS));
+            parentMenuManager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, m);
+            return m;
+        }
+        return subNodeManagerOrNull;
+    }
 
 }

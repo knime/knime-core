@@ -92,7 +92,7 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Expand Sub Node";
+        return "Expand";
     }
 
     /**

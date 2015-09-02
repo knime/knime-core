@@ -91,7 +91,7 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Expand Meta Node";
+        return "Expand";
     }
 
     /**

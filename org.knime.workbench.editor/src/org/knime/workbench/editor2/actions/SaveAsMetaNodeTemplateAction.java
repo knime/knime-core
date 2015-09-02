@@ -95,7 +95,7 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public String getText() {
-        return "Save as Meta Node Template...";
+        return "Save as Template...";
     }
 
     /**

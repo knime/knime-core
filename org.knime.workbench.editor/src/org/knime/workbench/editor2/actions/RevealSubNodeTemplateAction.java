@@ -97,7 +97,7 @@ public class RevealSubNodeTemplateAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Reveal Sub Node Template";
+        return "Reveal Template";
     }
 
     /**

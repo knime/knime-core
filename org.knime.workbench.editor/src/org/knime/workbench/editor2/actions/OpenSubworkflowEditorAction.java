@@ -85,7 +85,7 @@ public class OpenSubworkflowEditorAction extends Action {
      */
     @Override
     public String getText() {
-        return "Open Meta Node";
+        return "Open";
     }
 
     /**

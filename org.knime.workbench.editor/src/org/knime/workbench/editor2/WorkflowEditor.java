@@ -192,7 +192,6 @@ import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.ChangeSubNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
-import org.knime.workbench.editor2.actions.CollapseSubNodeAction;
 import org.knime.workbench.editor2.actions.ConvertMetaNodeToSubNodeAction;
 import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
@@ -664,7 +663,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         PasteAction paste = new PasteAction(this);
         PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
         CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
-        CollapseSubNodeAction collapseSub = new CollapseSubNodeAction(this);
         ExpandMetaNodeAction expand = new ExpandMetaNodeAction(this);
         ExpandSubNodeAction expandSub = new ExpandSubNodeAction(this);
         ConvertMetaNodeToSubNodeAction convert = new ConvertMetaNodeToSubNodeAction(this);
@@ -699,7 +697,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(hideNodeName);
         m_actionRegistry.registerAction(showNodeIdAction);
         m_actionRegistry.registerAction(collapse);
-        m_actionRegistry.registerAction(collapseSub);
         m_actionRegistry.registerAction(expand);
         m_actionRegistry.registerAction(expandSub);
         m_actionRegistry.registerAction(convert);

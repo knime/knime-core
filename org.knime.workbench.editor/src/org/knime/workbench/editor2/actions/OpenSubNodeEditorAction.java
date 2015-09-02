@@ -84,7 +84,7 @@ public class OpenSubNodeEditorAction extends Action {
      */
     @Override
     public String getText() {
-        return "Open Sub Node";
+        return "Open";
     }
 
     /**
