@@ -160,9 +160,9 @@ public final class JavaCodeCompiler {
         }
 
         compileArgs.add("-source");
-        compileArgs.add("1.7");
+        compileArgs.add("1.8");
         compileArgs.add("-target");
-        compileArgs.add("1.7");
+        compileArgs.add("1.8");
 
         compileArgs.add("-nowarn");
         if (m_additionalCompileArgs != null) {
