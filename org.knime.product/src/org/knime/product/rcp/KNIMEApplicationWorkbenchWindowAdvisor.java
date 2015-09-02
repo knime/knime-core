@@ -136,15 +136,12 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         org.eclipse.ui.ide.IDE.registerAdapters();
     }
 
-    /**
-     *
-     */
     private void showIntroPage() {
         IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
         boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
 
         if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
-            IntroPage.INSTANCE.show(false);
+            IntroPage.INSTANCE.show();
             if (IntroPage.INSTANCE.isFreshWorkspace()) {
                 PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setMaximized(true);
             }
@@ -159,6 +156,7 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
                             explorer.getViewer().getControl().getDisplay().asyncExec(new Runnable() {
                                 @Override
                                 public void run() {
+                                    explorer.getViewer().refresh();
                                     explorer.getViewer().expandAll();
                                 }
                             });

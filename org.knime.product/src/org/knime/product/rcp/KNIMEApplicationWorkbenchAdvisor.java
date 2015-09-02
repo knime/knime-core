@@ -118,13 +118,7 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
     public void preStartup() {
         super.preStartup();
 
-        IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
-        boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
-
         if (!EclipseUtil.isRunFromSDK()) {
-            if (showTipsAndTricks) {
-                IntroPage.INSTANCE.modifyWorkbenchState();
-            }
             if (IntroPage.INSTANCE.isFreshWorkspace()) {
                 KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new ExampleWorkflowExtractor());
             }
@@ -154,35 +148,9 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         // for the Update Manager is set and it asks the user for a password
         // if the Update Site is password protected
         IProxyService.class.getName();
-
-        IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
-        boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
-
-        if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
-            IntroPage.INSTANCE.show(false);
-            if (IntroPage.INSTANCE.isFreshWorkspace()) {
-                PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().setMaximized(true);
-            }
-        }
-
-        if (!EclipseUtil.isRunFromSDK() && IntroPage.INSTANCE.isFreshWorkspace()) {
-            for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
-                for (IWorkbenchPage page : window.getPages()) {
-                    for (IViewReference ref : page.getViewReferences()) {
-                        if (ExplorerView.ID.equals(ref.getId())) {
-                            final ExplorerView explorer = (ExplorerView)ref.getView(true);
-                            explorer.getViewer().getControl().getDisplay().asyncExec(new Runnable() {
-                                @Override
-                                public void run() {
-                                    explorer.getViewer().expandAll();
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-        }
+        // showIntroPage();
     }
+
 
     /**
      * {@inheritDoc}

@@ -50,8 +50,10 @@ package org.knime.product.rcp.intro;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.file.Path;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -64,16 +66,15 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.ui.internal.WorkbenchPlugin;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
@@ -82,10 +83,12 @@ import org.xml.sax.SAXException;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class MRUInjector extends AbstractInjector {
-    protected MRUInjector(final File templateFile, final ReentrantLock introFileLock, final IEclipsePreferences preferences,
-        final boolean isFreshWorkspace, final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
+    protected MRUInjector(final File templateFile, final ReentrantLock introFileLock,
+        final IEclipsePreferences preferences, final boolean isFreshWorkspace,
+        final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
         final TransformerFactory transformerFactory) {
-        super(templateFile, introFileLock, preferences, isFreshWorkspace, parserFactory, xpathFactory, transformerFactory);
+        super(templateFile, introFileLock, preferences, isFreshWorkspace, parserFactory, xpathFactory,
+            transformerFactory);
     }
 
     /**
@@ -104,9 +107,8 @@ class MRUInjector extends AbstractInjector {
         insertMRUList(mruList);
 
         String quickstartPath = Platform.getInstallLocation().getURL().getPath() + "quickstart.pdf";
-        NodeList nl =
-            (NodeList)xpath
-                .evaluate("//a[@class='quickstart-guide']", doc.getDocumentElement(), XPathConstants.NODESET);
+        NodeList nl = (NodeList)xpath.evaluate("//a[@class='quickstart-guide']", doc.getDocumentElement(),
+            XPathConstants.NODESET);
         for (int i = 0; i < nl.getLength(); i++) {
             Element link = (Element)nl.item(i);
             link.setAttribute("href", "file:" + quickstartPath);
@@ -118,26 +120,30 @@ class MRUInjector extends AbstractInjector {
      *
      * @param mruList the element for the mru list (an &lt;ul>)
      */
-    private void insertMRUList(final Element mruList) throws ParserConfigurationException, SAXException, IOException,
-        XPathExpressionException {
+    private void insertMRUList(final Element mruList)
+        throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
         if (m_isFreshWorkspace) {
             return; // no workflows used in a fresh workspace
         }
 
-        // if it's not fresh workspace, the workbench.xml file exists (already checked in IntroPage constructor)
-        IPath path = WorkbenchPlugin.getDefault().getDataLocation().append("workbench.xml");
+        // if it's not a fresh workspace, the workbench.xml file exists (already checked in IntroPage constructor)
+        Path path = IntroPage.getWorkbenchStateFile();
         DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         Document doc = parser.parse(path.toFile());
 
         XPath xpath = m_xpathFactory.newXPath();
+        String mruMemento =
+            (String)xpath.evaluate("persistedState[@key = 'memento']/@value", doc.getDocumentElement(), XPathConstants.STRING);
+
+        doc = parser.parse(new InputSource(new StringReader(mruMemento)));
+
         NodeList workflowList =
             (NodeList)xpath.evaluate("//mruList/file[@id = '" + WorkflowEditor.ID + "']/persistable",
                 doc.getDocumentElement(), XPathConstants.NODESET);
 
         if (workflowList.getLength() == 0) {
-            Element mru =
-                (Element)xpath.evaluate("//div[@id='mru']", mruList.getOwnerDocument().getDocumentElement(),
-                    XPathConstants.NODE);
+            Element mru = (Element)xpath.evaluate("//div[@id='mru']", mruList.getOwnerDocument().getDocumentElement(),
+                XPathConstants.NODE);
             mru.setAttribute("style", "display: none");
         } else {
             for (int i = 0; i < workflowList.getLength(); i++) {

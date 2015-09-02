@@ -47,33 +47,23 @@
  */
 package org.knime.product.rcp.intro;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
@@ -103,10 +93,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.ide.IDE;
-import org.eclipse.ui.internal.WorkbenchPlugin;
 import org.eclipse.ui.internal.browser.SystemBrowserInstance;
-import org.eclipse.ui.internal.browser.WebBrowserEditor;
-import org.eclipse.ui.internal.browser.WebBrowserUtil;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
@@ -122,11 +109,6 @@ import org.knime.workbench.ui.p2.actions.InvokeUpdateAction;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
-import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
@@ -148,8 +130,6 @@ public class IntroPage implements LocationListener {
 
     private boolean m_freshWorkspace;
 
-    private boolean m_workbenchModified;
-
     private XPathFactory m_xpathFactory;
 
     private DocumentBuilderFactory m_parserFactory;
@@ -161,14 +141,15 @@ public class IntroPage implements LocationListener {
     private final IEclipsePreferences m_prefs = InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass())
         .getSymbolicName());
 
+    static Path getWorkbenchStateFile() {
+        Bundle myself = FrameworkUtil.getBundle(IntroPage.class);
+        IPath path = Platform.getStateLocation(myself);
+        return path.toFile().toPath().getParent().resolve("org.eclipse.e4.workbench").resolve("workbench.xmi");
+    }
+
     private IntroPage() {
-        IPath path = WorkbenchPlugin.getDefault().getDataLocation();
-        if (path != null) {
-            path = path.append("workbench.xml");
-            File workbenchFile = path.toFile();
-            // in fresh workspaces, workbench.xml does not exist yet
-            m_freshWorkspace = !workbenchFile.exists();
-        }
+        // in fresh workspaces, workbench.xml does not exist yet
+        m_freshWorkspace = !Files.exists(getWorkbenchStateFile());
 
         try {
             // workaround for a bug in XPathFinderFactory on MacOS X
@@ -218,15 +199,10 @@ public class IntroPage implements LocationListener {
     }
 
     /**
-     * Shows the intro page. If the workbench configuration has been modified to show the page (see
-     * {@link #modifyWorkbenchState()}, then this method won't do anything as it assumes the intro page is already
-     * shown. If you want to force to show it, then pass <code>true</code> as parameter.
-     *
-     * @param force <code>true</code> if the page should be shown in any case, <code>false</code> if it should only be
-     *            shown if the workbench state has not been modified
+     * Shows the intro page.
      */
-    public void show(final boolean force) {
-        if ((m_introFile != null) && (force || !m_workbenchModified)) {
+    public void show() {
+        if (m_introFile != null) {
             try {
                 IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().createBrowser(BROWSER_ID);
                 if (browser instanceof SystemBrowserInstance) {
@@ -277,160 +253,6 @@ public class IntroPage implements LocationListener {
             browser.removeLocationListener(this);
             browser.addLocationListener(this);
         }
-    }
-
-    /**
-     * Modified the workbench state file (workbench.xml) to show the intro page editor as top-most editor. This prevents
-     * any previously open workflow to start loading immediately and delay KNIME startup.
-     */
-    public void modifyWorkbenchState() {
-        if (m_freshWorkspace || (m_introFile == null)) {
-            return; // we cannot modify the workbench state in this case
-        } else if (!WebBrowserUtil.canUseInternalWebBrowser()) {
-            return; // no internal browser available, opening an editor in this case will lead to errors
-        }
-
-        IPath path = WorkbenchPlugin.getDefault().getDataLocation();
-        if (path != null) {
-            path = path.append("workbench.xml");
-            File workbenchFile = path.toFile();
-            if (workbenchFile.canWrite()) {
-                try {
-                    DocumentBuilder parser = m_parserFactory.newDocumentBuilder();
-                    Document doc = parser.parse(workbenchFile);
-
-                    XPath xpath = m_xpathFactory.newXPath();
-
-                    NodeList editorList =
-                        (NodeList)xpath.evaluate("//page/editors/editor", doc.getDocumentElement(),
-                            XPathConstants.NODESET);
-                    if (editorList.getLength() > 0) {
-                        resortEditorList(editorList);
-                    }
-                    editorList =
-                        (NodeList)xpath.evaluate("//page/editors/editor", doc.getDocumentElement(),
-                            XPathConstants.NODESET);
-
-                    NodeList partList =
-                        (NodeList)xpath.evaluate("//editors//part", doc.getDocumentElement(), XPathConstants.NODESET);
-                    if (partList.getLength() > 0) {
-                        Node parent = partList.item(0).getParentNode();
-                        Element newPart = doc.createElement("part");
-                        newPart.setAttribute("id", Integer.toString(editorList.getLength() - 1));
-                        parent.insertBefore(newPart, parent.getFirstChild());
-                    }
-
-                    if (editorList.getLength() > 0) {
-                        serializeWorkbenchState(doc, workbenchFile);
-                    }
-                    // if no editor was open, the intro page will be opened by #show; it's too complicated to re-build
-                    // the editor list in the XML file and has no benefit
-                } catch (IOException | SAXException | ParserConfigurationException
-                        | TransformerFactoryConfigurationError | TransformerException | XPathExpressionException ex) {
-                    LOGGER.error("Could not modify workbench state to show intro page: " + ex.getMessage(), ex);
-                }
-            }
-        }
-    }
-
-    private void resortEditorList(final NodeList editorList) throws DOMException, MalformedURLException {
-        // find last active workflow editor
-        Deque<Node> newEditorList = new LinkedList<>();
-        for (int i = 0; i < editorList.getLength(); i++) {
-            Element editor = (Element)editorList.item(i);
-
-            if (!removeStaleIntroEditor(editor)) {
-                if ("true".equals(editor.getAttribute("activePart"))) {
-                    newEditorList.addFirst(editor);
-                } else {
-                    newEditorList.add(editor);
-                }
-
-                // "disable" all other (workflow) editors
-                editor.removeAttribute("activePart");
-                editor.removeAttribute("focus");
-            }
-        }
-
-        if (!newEditorList.isEmpty()) {
-            // move active editor to front so that it gets activated when the intro page is closed
-            Node parent = newEditorList.getFirst().getParentNode();
-            for (Node n : newEditorList) {
-                parent.removeChild(n);
-                parent.appendChild(n);
-            }
-
-            parent.appendChild(createIntroEditorNode(parent.getOwnerDocument(), m_introFile.toURI().toURL()));
-            m_workbenchModified = true;
-        }
-    }
-
-    /**
-     * Check for any entries from previous intro page editors and remove them (usually only happens if the workbench was
-     * not shut down properly).
-     *
-     * @param editor a single editor element from the editors list
-     * @return <code>true</code> if this was a stale editor that has been removed, <code>false</code> if it was any
-     *         other editor
-     */
-    private boolean removeStaleIntroEditor(final Element editor) {
-        NodeList inputList = editor.getElementsByTagName("input");
-        if (inputList.getLength() > 0) {
-            for (int j = 0; j < inputList.getLength(); j++) {
-                Element input = (Element)inputList.item(j);
-                if (BROWSER_ID.equals(input.getAttribute("id"))) {
-                    editor.getParentNode().removeChild(editor);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Writes the modified workbench state back into the workbench.xml. We first write into a temp file and then move it
-     * to the final destination so that we don't corrupt the file in case something goed wrong during serialization.
-     *
-     * @param doc the document
-     * @param workbenchFile the workbench file
-     */
-    private void serializeWorkbenchState(final Document doc, final File workbenchFile)
-        throws TransformerFactoryConfigurationError, TransformerException, IOException {
-        File temp = FileUtil.createTempFile("workbench", ".xml", true);
-        Transformer serializer = m_transformerFactory.newTransformer();
-
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(temp))) {
-            serializer.transform(new DOMSource(doc), new StreamResult(os));
-        }
-
-        Files.move(temp.toPath(), workbenchFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
-
-    /**
-     * Creates a new node for the intro page editor.
-     *
-     * @param doc the document in which the node will be inserted
-     * @param url the URL to the temporary intro file
-     * @return the new node
-     */
-    private static Node createIntroEditorNode(final Document doc, final URL url) {
-        Element introPageEditor = doc.createElement("editor");
-        introPageEditor.setAttribute("id", WebBrowserEditor.WEB_BROWSER_EDITOR_ID);
-        introPageEditor.setAttribute("name", "KNIME Intro");
-        introPageEditor.setAttribute("partName", "KNIME Intro");
-        introPageEditor.setAttribute("title", "Welcome to KNIME");
-        introPageEditor.setAttribute("tooltip", "Welcome to KNIME");
-        introPageEditor.setAttribute("workbook", "DefaultEditorWorkbook");
-        introPageEditor.setAttribute("activePart", "true");
-        introPageEditor.setAttribute("focus", "true");
-
-        Element introEditorInput = doc.createElement("input");
-        introPageEditor.appendChild(introEditorInput);
-        introEditorInput.setAttribute("factoryID", "org.eclipse.ui.browser.elementFactory");
-        introEditorInput.setAttribute("url", url.toExternalForm());
-        introEditorInput.setAttribute("id", BROWSER_ID);
-
-        return introPageEditor;
     }
 
     /**
