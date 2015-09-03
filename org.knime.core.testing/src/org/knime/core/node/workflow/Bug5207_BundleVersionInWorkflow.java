@@ -77,17 +77,17 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
         NativeNodeContainer tableCreatorNC = (NativeNodeContainer)getManager().getNodeContainer(m_tableCreator1);
         NodeAndBundleInformation tableBundleInfo = tableCreatorNC.getNodeAndBundleInformation();
         Bundle tableBundle = FrameworkUtil.getBundle(tableCreatorNC.getNodeModel().getClass());
-        assertEquals("1.1.1.20140523", tableBundleInfo.getBundleVersion().toString());
+        assertEquals("1.1.1.20140523", tableBundleInfo.getBundleVersion().get().toString());
         assertFalse(tableBundle.getVersion() == tableBundleInfo.getBundleVersion().orElse(null)); // must not be the same
-        assertEquals(tableBundle.getSymbolicName(), tableBundleInfo.getBundleSymbolicName());
+        assertEquals(tableBundle.getSymbolicName(), tableBundleInfo.getBundleSymbolicName().get());
 
         // col filter is not executed and has current bundle version as version information
         // (stored in workflow but ignored during load)
         NativeNodeContainer colFilterNC = (NativeNodeContainer)getManager().getNodeContainer(m_columnFilter2);
         NodeAndBundleInformation colFilterBundleInfo = colFilterNC.getNodeAndBundleInformation();
         Bundle colFilterBundle = FrameworkUtil.getBundle(colFilterNC.getNodeModel().getClass());
-        assertEquals(colFilterBundle.getVersion(), colFilterBundleInfo.getBundleVersion());
-        assertEquals(colFilterBundle.getSymbolicName(), colFilterBundleInfo.getBundleSymbolicName());
+        assertEquals(colFilterBundle.getVersion(), colFilterBundleInfo.getBundleVersion().get());
+        assertEquals(colFilterBundle.getSymbolicName(), colFilterBundleInfo.getBundleSymbolicName().get());
     }
 
     public void testBundleVersionAfterReexecute() throws Exception {
@@ -96,12 +96,12 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
         NativeNodeContainer tableCreatorNC = (NativeNodeContainer)getManager().getNodeContainer(m_tableCreator1);
         NodeAndBundleInformation tableBundleInfo = tableCreatorNC.getNodeAndBundleInformation();
         Bundle tableBundle = FrameworkUtil.getBundle(tableCreatorNC.getNodeModel().getClass());
-        assertEquals(tableBundle.getVersion(), tableBundleInfo.getBundleVersion());
-        assertEquals(tableBundle.getSymbolicName(), tableBundleInfo.getBundleSymbolicName());
+        assertEquals(tableBundle.getVersion(), tableBundleInfo.getBundleVersion().get());
+        assertEquals(tableBundle.getSymbolicName(), tableBundleInfo.getBundleSymbolicName().get());
 
         executeAndWait(m_tableCreator1);
         tableBundleInfo = tableCreatorNC.getNodeAndBundleInformation();
-        assertEquals(tableBundle.getVersion(), tableBundleInfo.getBundleVersion());
+        assertEquals(tableBundle.getVersion(), tableBundleInfo.getBundleVersion().get());
     }
 
     public void testBundleVersionAfterCopyPaste() throws Exception {
@@ -114,8 +114,8 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
         NativeNodeContainer copiedTableNC = (NativeNodeContainer)getManager().getNodeContainer(pasteID);
         NodeAndBundleInformation copiedTableBundleInfo = copiedTableNC.getNodeAndBundleInformation();
         Bundle tableBundle = FrameworkUtil.getBundle(copiedTableNC.getNodeModel().getClass());
-        assertEquals(tableBundle.getVersion(), copiedTableBundleInfo.getBundleVersion());
-        assertEquals(tableBundle.getSymbolicName(), copiedTableBundleInfo.getBundleSymbolicName());
+        assertEquals(tableBundle.getVersion(), copiedTableBundleInfo.getBundleVersion().get());
+        assertEquals(tableBundle.getSymbolicName(), copiedTableBundleInfo.getBundleSymbolicName().get());
     }
 
 }
