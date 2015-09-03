@@ -112,8 +112,8 @@ public class NodeDocuGenerator implements IApplication {
     private static final String NODE_REPOSITORY_TEMPLATE = "node_repository_template.html";
 
     private static final String[] FILES_TO_COPY = new String[]{"index.html", "empty_node_description.html",
-            "triangle.png", "knime_logo.png", "knime_default_icon.png"};
-
+        "plus-square-o.png", "minus-square.png", "knime_logo.png", "knime_default_icon.png"};
+    
     /* target directory */
     private File m_directory;
 
@@ -247,6 +247,18 @@ public class NodeDocuGenerator implements IApplication {
     }
 
     /**
+     * Cleans node template ID for file name, by replacing all non word characters with "_".
+     * @param nodeTemplate Node template with ID to clean.
+     * @return Cleaned ID of node template. All non word characters have been replaced with "_".
+     */
+    private String cleanNodeIdForFileName(final NodeTemplate nodeTemplate) {
+        String id = nodeTemplate.getID();
+        String cleanedId = id.replaceAll("/", "_");
+        cleanedId = cleanedId.replaceAll(":", "_");
+        return cleanedId;
+    }
+
+    /**
      * Recursively generates the nodes description documents and the menu entries.
      *
      * @param directory
@@ -280,7 +292,7 @@ public class NodeDocuGenerator implements IApplication {
                 }
             }
 
-            String nodeIdentifier = ((NodeTemplate)current).getID();
+            String nodeIdentifier = cleanNodeIdForFileName((NodeTemplate)current);//((NodeTemplate)current).getID();
 
             // write icon to disc
             URL iconURL = ((NodeTemplate)current).createFactoryInstance().getIcon();
@@ -304,7 +316,7 @@ public class NodeDocuGenerator implements IApplication {
             // create page with node description and return, as no more
             // children
             // are available
-            Writer nodeDoc = createDocumentWriter(current.getID() + ".html", directory);
+            Writer nodeDoc = createDocumentWriter(cleanNodeIdForFileName((NodeTemplate)current) + ".html", directory);
             String nodeDescription =
                     NodeFactoryHTMLCreator.instance.readFullDescription(((NodeTemplate)current).createFactoryInstance()
                             .getXMLDescription());
@@ -336,7 +348,8 @@ public class NodeDocuGenerator implements IApplication {
                 } else {
                     catIcon = "knime_default_icon.png";
                 }
-                m_nodeRepository.append("<li style=\"list-style-image: url(triangle.png);\" class=\"knime-category\">");
+                
+                m_nodeRepository.append("<li class=\"knime-category\">");
                 m_nodeRepository.append("<img width=\"16px\" src=\"");
                 m_nodeRepository.append(catIcon);
                 m_nodeRepository.append("\"/>&nbsp;");

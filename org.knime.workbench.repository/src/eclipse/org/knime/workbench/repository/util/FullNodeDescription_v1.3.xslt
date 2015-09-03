@@ -16,9 +16,10 @@
                 <style type="text/css"><xsl:value-of select="$css" /></style>
             </head>
             <body>
-                <h1>
+               <div class="fix-header" id="fix-header"><h1>
                     <xsl:value-of select="t:name" />
                 </h1>
+                </div>
                 
                 <xsl:if test="@deprecated = 'true'">
                     <h4 class="deprecated">Deprecated</h4>

@@ -10,9 +10,11 @@
     li.treeMenu_opened ul {
         display: block;
     }
+    
     li{
     	list-style-image: url(plus-square-o.png);
     }
+    
     li.treeMenu_opened{
     	list-style-image: url(minus-square.png);
     }
@@ -28,7 +30,7 @@
         list-style-type: none;
     }
 
-    ul ul {
+    ul  li {
       margin-left: 8px;
     }
   
@@ -37,8 +39,8 @@
         margin: 0em;
         margin-bottom: 0.4em;
         font-size: 1.1em;
- 
     }
+    
     #menu li {
            font-size: 14px;
     }
@@ -54,6 +56,7 @@
     a:link {
     	color: #7D7D7D;
     }
+    
     a:visited {
         color: #7D7D7D;
     }
@@ -69,17 +72,19 @@
  .container {
  	width: 100%;
  }
+ 
 .tabs {
   position: relative;   
-  /*min-height: 200px;  This part sucks */
-  min-height: 80%; /* This part sucks */
+  min-height: 80%;
   clear: both;
   margin: 25px 0;
 }
+
 .tab {
   float: left;
   width: 90%;
 }
+
 .tab label {
   background: #eee; 
   padding: 10px; 
@@ -88,9 +93,11 @@
   position: relative;
   left: 1px; 
 }
+
 .tab [type=radio] {
   display: none;   
 }
+
 .content {
 position: relative;
   top: 8px;
@@ -102,6 +109,7 @@ position: relative;
   border: 1px solid #ccc;
   width: 100%;
 }
+
 [type=radio]:checked ~ label {
   /*background: white;*/
   background: #f0f0f2;
@@ -110,6 +118,7 @@ position: relative;
   z-index: 2;
   color: #3e3a39;
 }
+
 [type=radio]:checked ~ label ~ .content {
   z-index: 1;
   border-top-right-radius: 5px;
@@ -120,7 +129,7 @@ p {
   margin: 5px;
   line-height: 1.2;
 }
-}
+
 body {
 	 font-family: "Roboto",sans-serif;
 	 font-size: 0.75em;

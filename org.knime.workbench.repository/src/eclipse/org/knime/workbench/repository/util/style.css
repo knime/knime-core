@@ -7,9 +7,9 @@ body.origin {
 	 padding: 0px;
 	 height: 100%;
 	 width: 100%;
+	 overflow-y: auto;
 	 background: #FFF none repeat scroll 0% 0%;
 	 border:0;
-	 overflow: visible;
 }
 
 body {
@@ -23,7 +23,7 @@ body {
 	 width: 100%;
 	 background: #FFF none repeat scroll 0% 0%;
 	 border:0;
-	 overflow: visible;
+	 overflow-y: auto;
 	 margin-top: 70px;
 }
 
@@ -62,15 +62,7 @@ body {
 	div#node-menu-div {
 		margin-left: 8px !important;
 	}
-	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
-	
+		
 }
 
 
@@ -206,13 +198,7 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
+
 
 }
 
@@ -225,7 +211,6 @@ body {
 	}
 	
 	div.node-main-div {
-		/*width: 74%;*/
 		width: 74%;
 	}
 	
@@ -237,13 +222,6 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
 
 }
 
@@ -261,13 +239,6 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
 
 }
 
@@ -290,13 +261,6 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
 
 }
 
@@ -318,14 +282,6 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
-
 }
 @media all and (min-width: 1024px) and (max-width: 1100px){
 	
@@ -345,14 +301,6 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
-
 }
 
 @media all and (min-width: 1100px) and (max-width: 1180px){
@@ -372,14 +320,6 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
-
 }
 
 @media all and (min-width: 1180px) and (max-width: 1210px){
@@ -400,14 +340,6 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
-
 }
 
 @media all and (min-width: 1210px) and (max-width: 1300px){
@@ -428,14 +360,6 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
-
 }
 
 @media all and (min-width: 1310px) and (max-width: 1400px){
@@ -456,14 +380,6 @@ body {
 		margin-left: 8px !important;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
-
 }
 
 @media all and (min-width: 288px) and (max-width: 800px){
@@ -486,15 +402,6 @@ body {
 		margin-right: 5px;
 	}
 	
-	#headerObj {
-		height: 15% !important;
-	}
-	
-	#node-description {
-		height: 85% !important;
-	}
-
-
 }
 
 
@@ -779,13 +686,6 @@ li.treeMenu_closed ul {
 	display: none;
 }
   
-ul {
-	padding: 0px;
-	padding-top: 0.4em;
-	padding-left: 0px;
-	list-style-type: none;
-}
-
 ul ul {
 	margin-left: 8px;
 }
@@ -864,9 +764,6 @@ div.footer-inner {
 	margin:0.5em 0;
 }
 
-#ffoter > ul.m-footer {
-	
-}
 
 .col1 h3, .col2 h3, .col3 h3, .col4 h3, .col-adress h3 {
 	text-transform: uppercase;
@@ -882,6 +779,13 @@ div.footer-inner {
 .col-adress {
 	float: right;
 	margin: 0 1.5em;
+}
+
+.m-footer {
+    padding: 0px !important;
+    padding-top: 0.4em !important;
+    padding-left: 0px !important;
+    list-style-type: none !important;
 } 
 
 .m-footer li {
