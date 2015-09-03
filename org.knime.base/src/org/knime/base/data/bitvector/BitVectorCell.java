@@ -64,6 +64,7 @@ import org.knime.core.node.config.Config;
  */
 @Deprecated
 public class BitVectorCell extends DataCell implements BitVectorValue {
+    private static final long serialVersionUID = 7897283665392975255L;
 
     /**
      * Convenience access member for
