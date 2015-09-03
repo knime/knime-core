@@ -181,8 +181,8 @@ public class SaveAsSubNodeTemplateAction extends AbstractNodeAction {
         final Shell shell = Display.getCurrent().getActiveShell();
         ContentObject defSel = getDefaultSaveLocation(wm);
         SpaceResourceSelectionDialog dialog = new SpaceResourceSelectionDialog(shell, validMountPoints, defSel);
-        dialog.setTitle("Save As Meta Node Template");
-        dialog.setHeader("Select destination workflow group for meta node template");
+        dialog.setTitle("Save As Subnode Template");
+        dialog.setHeader("Select destination workflow group for subnode template");
         dialog.setValidator(new Validator() {
             @Override
             public String validateSelectionValue(final AbstractExplorerFileStore selection, final String name) {
