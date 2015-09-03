@@ -64,6 +64,7 @@ import org.eclipse.equinox.p2.metadata.IRequirement;
 import org.eclipse.equinox.p2.query.IQueryResult;
 import org.eclipse.equinox.p2.query.QueryUtil;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.EclipseUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -135,6 +136,10 @@ public final class OSGIHelper {
     }
 
     private synchronized static IProfile getP2Profile() {
+        if (EclipseUtil.isRunFromSDK()) {
+            return null; // when started from the SDK there is no installation profile
+        }
+
         if (p2Profile == null) {
             BundleContext ctx = FrameworkUtil.getBundle(OSGIHelper.class).getBundleContext();
             ServiceReference<IProvisioningAgentProvider> ref = ctx.getServiceReference(IProvisioningAgentProvider.class);
@@ -157,8 +162,7 @@ public final class OSGIHelper {
                     (IProfileRegistry)provisioningAgent.getService(IProfileRegistry.SERVICE_NAME);
                 p2Profile = profileRegistry.getProfile(IProfileRegistry.SELF);
                 if (p2Profile == null) {
-                    NodeLogger.getLogger(OSGIHelper.class).debug("Couldn't get the p2 installation profile, very likely "
-                            + "because I'm started from the SDK");
+                    NodeLogger.getLogger(OSGIHelper.class).debug("Couldn't get the p2 installation profile");
                     return null; // happens when started from the SDK
                 }
             } catch (ProvisionException ex) {
