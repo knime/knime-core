@@ -26,6 +26,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
+import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -146,28 +147,31 @@ public class AbstractColumnTableSorterTest {
             new ColumnBufferedDataTableSorter(bt.getDataTableSpec(), bt.getRowCount(), bt.getDataTableSpec()
                 .getColumnNames());
 
-        MemoryAlertSystem.getInstance().setFractionUsageThreshold(0.02);
-        try {
-            dataTableSorter.setMemService(MemoryAlertSystem.getInstance());
-            dataTableSorter.setMaxOpenContainers(60);
+        MemoryActionIndicator memIndicator = new MemoryActionIndicator() {
+            @Override
+            public boolean lowMemoryActionRequired() {
+                MemoryAlertSystem.getInstance();
+                return MemoryAlertSystem.getUsage() > 0.02;
+            }
+        };
 
-            final Comparator<DataRow> ascendingOrderAssertion =
-                createAscendingOrderAssertingComparator(bt, bt.getDataTableSpec().getColumnNames());
+        dataTableSorter.setMemActionIndicator(memIndicator);
+        dataTableSorter.setMaxOpenContainers(60);
 
-            dataTableSorter.sort(bt, m_exec, new SortingConsumer() {
-                final AtomicReference<DataRow> lastRow = new AtomicReference<>();
+        final Comparator<DataRow> ascendingOrderAssertion =
+            createAscendingOrderAssertingComparator(bt, bt.getDataTableSpec().getColumnNames());
 
-                @Override
-                public void consume(final DataRow defaultRow) {
-                    if (lastRow.get() != null) {
-                        ascendingOrderAssertion.compare(defaultRow, lastRow.get());
-                    }
-                    lastRow.set(defaultRow);
+        dataTableSorter.sort(bt, m_exec, new SortingConsumer() {
+            final AtomicReference<DataRow> lastRow = new AtomicReference<>();
+
+            @Override
+            public void consume(final DataRow defaultRow) {
+                if (lastRow.get() != null) {
+                    ascendingOrderAssertion.compare(defaultRow, lastRow.get());
                 }
-            });
-        } finally {
-            MemoryAlertSystem.getInstance().setFractionUsageThreshold(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD);
-        }
+                lastRow.set(defaultRow);
+            }
+        });
     }
 
     private BufferedDataTable createRandomTable(final int cols, final int rows) {

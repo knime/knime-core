@@ -76,6 +76,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
+import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -658,13 +659,15 @@ public final class Joiner {
         Map <Integer, Set<Integer>> leftOuterJoins =
             new HashMap<Integer, Set<Integer>>();
 
+        MemoryActionIndicator memIndicator = MemoryAlertSystem.getInstance().newIndicator();
+
         int counter = 0;
         long rowsAdded = 0;
         CloseableRowIterator leftIter = leftTable.iterator();
         while (leftIter.hasNext()) {
             exec.checkCanceled();
             boolean saveToAddMoreRows =
-                !MemoryAlertSystem.getInstance().isMemoryLow()
+                !memIndicator.lowMemoryActionRequired()
                     && ((m_rowsAddedBeforeForcedOOM == 0)
                             || (rowsAdded % m_rowsAddedBeforeForcedOOM != (m_rowsAddedBeforeForcedOOM - 1)));
 

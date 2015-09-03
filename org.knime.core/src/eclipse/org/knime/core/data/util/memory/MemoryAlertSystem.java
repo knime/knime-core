@@ -78,12 +78,45 @@ import org.knime.core.node.workflow.NodeContext;
  * @since 2.12
  */
 public final class MemoryAlertSystem {
+    /**
+     * Interface for a simple stateful object that indicates if action because of low memory should be taken.
+     *
+     * @since 3.0
+     * @noimplement This interface is not intended to be implemented by clients.
+     * @noextend This interface is not intended to be extended by clients.
+     */
+    public interface MemoryActionIndicator {
+        /**
+         * Returns <code>true</code> if an action because of a low memory condition is required. Subsequent calls will
+         * return <code>false</code> until the next GC events, because it is assumed that the action freed memory.
+         *
+         * @return <code>true</code> if an action is required, <code>false</code> if no action is required
+         */
+        public boolean lowMemoryActionRequired();
+    }
+
+    private final class MemoryActionIndicatorImpl implements MemoryActionIndicator {
+        private long m_lastCheckTimestamp;
+
+        @Override
+        public boolean lowMemoryActionRequired() {
+            if (m_lastCheckTimestamp < m_lastGcTimestamp.get()) {
+                m_lastCheckTimestamp = m_lastGcTimestamp.get();
+                return m_lowMemory.get();
+            } else {
+                return false;
+            }
+        }
+    }
+
+
     private static final MemoryPoolMXBean OLD_GEN_POOL = findTenuredGenPool();
 
     /**
-     * The threshold of medium memory usage that triggers a memory event.
+     * The threshold of medium memory usage that triggers a memory event. The threshold is set to
+     * 90% of the total memory minus 128MB.
      */
-    public static final double DEFAULT_USAGE_THRESHOLD = 0.7;
+    public static final double DEFAULT_USAGE_THRESHOLD = 0.9 - (128 / getMaximumMemory()) ;
 
     private static final MemoryAlertSystem INSTANCE = new MemoryAlertSystem(DEFAULT_USAGE_THRESHOLD);
 
@@ -101,6 +134,8 @@ public final class MemoryAlertSystem {
     private final AtomicBoolean m_lowMemory = new AtomicBoolean();
 
     private final AtomicLong m_lastEventTimestamp = new AtomicLong();
+
+    private final AtomicLong m_lastGcTimestamp = new AtomicLong();
 
     /**
      * Creates a new memory alert system. <b>In almost all cases you should use the singleton instance via
@@ -158,6 +193,7 @@ public final class MemoryAlertSystem {
         // Only reset the low memory flag if the last (memory) event was earlier than this event.
         // the GC event and the Mem event have the same timestamp in case the threshold is exceeded.
 
+        m_lastGcTimestamp.set(not.getTimeStamp());
         long prev, next;
         do {
             prev = m_lastEventTimestamp.get();
@@ -212,6 +248,7 @@ public final class MemoryAlertSystem {
      * thrown. <b>Note that this changes a global value, therefore use with care!</b>
      *
      * @param percentage the fraction of used memory after garbage collection, a value between 0 and 1
+     * @noreference This method is not intended to be referenced by clients.
      */
     public void setFractionUsageThreshold(final double percentage) {
         if (percentage <= 0.0 || percentage > 1.0) {
@@ -364,6 +401,16 @@ public final class MemoryAlertSystem {
         } else {
             return true;
         }
+    }
+
+    /**
+     * Creates a new memory action indicator.
+     *
+     * @return a new indicator
+     * @since 3.0
+     */
+    public MemoryActionIndicator newIndicator() {
+        return new MemoryActionIndicatorImpl();
     }
 
     /**

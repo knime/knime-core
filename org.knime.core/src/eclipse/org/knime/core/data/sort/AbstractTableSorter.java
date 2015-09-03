@@ -74,6 +74,7 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
+import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -531,6 +532,8 @@ abstract class AbstractTableSorter {
         int chunkStartRow = 0;
         int rowsInCurrentChunk = 0;
 
+        MemoryActionIndicator memObservable = m_memService.newIndicator();
+
         exec.setMessage("Reading table");
         for (Iterator<DataRow> iter = dataTable.iterator(); iter.hasNext();) {
             counter++;
@@ -545,7 +548,7 @@ abstract class AbstractTableSorter {
             }
             DataRow row = iter.next();
             buffer.add(row);
-            if ((m_memService.isMemoryLow() && (rowsInCurrentChunk >= m_maxOpenContainers))
+            if ((memObservable.lowMemoryActionRequired() && (rowsInCurrentChunk >= m_maxOpenContainers))
                 || (counter % m_maxRows == 0)) {
                 LOGGER.debug("Writing chunk [" + chunkStartRow + ":" + counter + "] - mem usage: " + getMemUsage());
                 if (m_rowsInInputTable > 0) {

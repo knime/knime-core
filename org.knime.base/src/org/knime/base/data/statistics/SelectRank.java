@@ -73,6 +73,7 @@ import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
+import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -599,6 +600,8 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
             }
         }
 
+        MemoryActionIndicator memIndicator = MemoryAlertSystem.getInstance().newIndicator();
+
         for (int col = colAfter; col-- > startCol;) {
             exec.checkCanceled();
             for (int chunk = containers[col].length; chunk-- > 0;) {
@@ -611,8 +614,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                     for (Entry<Integer, Integer> entry : map.entrySet()) {
                         newKs[i++] = entry.getValue().intValue();
                     }
-                    if (!MemoryAlertSystem.getInstance().isMemoryLow()
-                        && addedRows[col][chunk] < MAX_CELLS_SORTED_IN_MEMORY) {
+                    if (!memIndicator.lowMemoryActionRequired() && addedRows[col][chunk] < MAX_CELLS_SORTED_IN_MEMORY) {
                         double[] values = new double[addedRows[col][chunk]];
                         int r = 0;
                         for (final DataRow row : container.getTable()) {
