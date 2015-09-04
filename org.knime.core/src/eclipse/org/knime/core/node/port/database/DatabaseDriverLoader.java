@@ -111,23 +111,23 @@ public final class DatabaseDriverLoader {
      * Creates a mapping from JDBC driver class names to the corresponding JDBC connection strings.
      */
     private static void createDriverProtocolMapping() {
-        DRIVER_TO_URL.put(JDBC_ODBC_DRIVER, "jdbc:odbc:");
-        DRIVER_TO_URL.put("com.ibm.db2.jcc.DB2Driver", "jdbc:db2:");
-        DRIVER_TO_URL.put("org.firebirdsql.jdbc.FBDriver", "jdbc:firebirdsql:");
-        DRIVER_TO_URL.put("com.mysql.jdbc.Driver", "jdbc:mysql:");
-        DRIVER_TO_URL.put("oracle.jdbc.OracleDriver", "jdbc:oracle:thin:");
-        DRIVER_TO_URL.put("oracle.jdbc.driver.OracleDriver", "jdbc:oracle:thin:");
-        DRIVER_TO_URL.put("org.postgresql.Driver", "jdbc:postgresql:");
-        DRIVER_TO_URL.put("com.microsoft.sqlserver.jdbc.SQLServerDriver", "jdbc:sqlserver:");
-        DRIVER_TO_URL.put("com.microsoft.jdbc.sqlserver.SQLServerDriver", "jdbc:microsoft:sqlserver:");
-        DRIVER_TO_URL.put("org.apache.derby.jdbc.ClientDriver", "jdbc:derby:");
-        DRIVER_TO_URL.put("jdbc.FrontBase.FBJDriver", "jdbc:FrontBase:");
-        DRIVER_TO_URL.put("org.hsqldb.jdbcDriver", "jdbc:hsqldb:hsql:");
-        DRIVER_TO_URL.put("com.ingres.jdbc.IngresDriver", "jdbc:ingres:");
-        DRIVER_TO_URL.put("com.openbase.jdbc.ObDriver", "jdbc:openbase:");
-        DRIVER_TO_URL.put("net.sourceforge.jtds.jdbc.Driver", "jdbc:jtds:sybase:");
-        DRIVER_TO_URL.put("com.sybase.jdbc3.jdbc.SybDriver", "jdbc:sybase:Tds:");
-        DRIVER_TO_URL.put("org.sqlite.JDBC", "jdbc:sqlite:");
+        DRIVER_TO_URL.put(JDBC_ODBC_DRIVER, "jdbc:odbc://");
+        DRIVER_TO_URL.put("com.ibm.db2.jcc.DB2Driver", "jdbc:db2://");
+        DRIVER_TO_URL.put("org.firebirdsql.jdbc.FBDriver", "jdbc:firebirdsql://");
+        DRIVER_TO_URL.put("com.mysql.jdbc.Driver", "jdbc:mysql://");
+        DRIVER_TO_URL.put("oracle.jdbc.OracleDriver", "jdbc:oracle:thin:@");
+        DRIVER_TO_URL.put("oracle.jdbc.driver.OracleDriver", "jdbc:oracle:thin:@");
+        DRIVER_TO_URL.put("org.postgresql.Driver", "jdbc:postgresql://");
+        DRIVER_TO_URL.put("com.microsoft.sqlserver.jdbc.SQLServerDriver", "jdbc:sqlserver://");
+        DRIVER_TO_URL.put("com.microsoft.jdbc.sqlserver.SQLServerDriver", "jdbc:microsoft:sqlserver://");
+        DRIVER_TO_URL.put("org.apache.derby.jdbc.ClientDriver", "jdbc:derby://");
+        DRIVER_TO_URL.put("jdbc.FrontBase.FBJDriver", "jdbc:FrontBase://");
+        DRIVER_TO_URL.put("org.hsqldb.jdbcDriver", "jdbc:hsqldb:hsql://");
+        DRIVER_TO_URL.put("com.ingres.jdbc.IngresDriver", "jdbc:ingres://");
+        DRIVER_TO_URL.put("com.openbase.jdbc.ObDriver", "jdbc:openbase://");
+        DRIVER_TO_URL.put("net.sourceforge.jtds.jdbc.Driver", "jdbc:jtds:sybase://");
+        DRIVER_TO_URL.put("com.sybase.jdbc3.jdbc.SybDriver", "jdbc:sybase:Tds://");
+        DRIVER_TO_URL.put("org.sqlite.JDBC", "jdbc:sqlite://");
     }
 
     private static final boolean ODBC_AVAILABLE;
@@ -323,7 +323,7 @@ public final class DatabaseDriverLoader {
         if (url == null) {
             return "<protocol>://<host>:<port>/<database_name>";
         }
-        return url + "//<host>:<port>/<database_name>";
+        return url + "<host>:<port>/<database_name>";
     }
 
     /**
