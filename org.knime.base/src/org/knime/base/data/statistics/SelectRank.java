@@ -75,6 +75,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.sort.MemoryService;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
@@ -644,7 +645,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                             new BufferedSelectRank((BufferedDataTable)container.getTable(),
                                 Collections.singletonList(SINGLE_DATA_TABLE_SPEC.getColumnSpec(0).getName()),
                                 new int[][]{newKs});
-                        DataTable resultTable = tmp.selectInternal(exec);
+                        DataTable resultTable = tmp.select((ExecutionContext)exec);
                         Iterator<Entry<Integer, Integer>> it = map.entrySet().iterator();
                         for (DataRow dataRow : resultTable) {
                             Entry<Integer, Integer> entry = it.next();
