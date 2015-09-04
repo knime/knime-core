@@ -46,6 +46,8 @@ package org.knime.workbench.ui.navigator.actions.selection;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -188,6 +190,17 @@ public class TreeSelectionControl {
                     }
 
                 });
+
+        m_treeViewer.addDoubleClickListener(new IDoubleClickListener() {
+            @Override
+            public void doubleClick(final DoubleClickEvent event) {
+                ISelection selection = event.getSelection();
+                if (selection instanceof IStructuredSelection && ((IStructuredSelection)selection).size() == 1) {
+                    Object selectionObj = ((IStructuredSelection)selection).getFirstElement();
+                    m_treeViewer.setExpandedState(selectionObj, !m_treeViewer.getExpandedState(selectionObj));
+                }
+            }
+        });
 
         return overall;
     }

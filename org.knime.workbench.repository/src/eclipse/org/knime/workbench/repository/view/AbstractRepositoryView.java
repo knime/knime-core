@@ -249,11 +249,12 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                     if (added) {
                         NodeUsageRegistry.addNode(tmplt);
                     }
-                }
-                if (o instanceof MetaNodeTemplate) {
+                } else if (o instanceof MetaNodeTemplate) {
                     MetaNodeTemplate mnt = (MetaNodeTemplate)o;
                     NodeID metaNode = mnt.getManager().getID();
                     NodeProvider.INSTANCE.addMetaNode(RepositoryFactory.META_NODE_ROOT, metaNode);
+                } else if (o instanceof Category) {
+                    m_viewer.setExpandedState(o, !m_viewer.getExpandedState(o));
                 }
             }
         });
@@ -355,7 +356,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
             if (object instanceof IAdaptable) {
                 IAdaptable adaptable = (IAdaptable)object;
 
-                return (IPropertySource)adaptable.getAdapter(IPropertySource.class);
+                return adaptable.getAdapter(IPropertySource.class);
             }
 
             // well, no :-(
