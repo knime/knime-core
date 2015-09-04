@@ -116,7 +116,7 @@ public final class MemoryAlertSystem {
      * The threshold of medium memory usage that triggers a memory event. The threshold is set to
      * 90% of the total memory minus 128MB.
      */
-    public static final double DEFAULT_USAGE_THRESHOLD = 0.9 - (128 / getMaximumMemory()) ;
+    public static final double DEFAULT_USAGE_THRESHOLD = 0.9 - ((128 << 20)  / getMaximumMemory()) ;
 
     private static final MemoryAlertSystem INSTANCE = new MemoryAlertSystem(DEFAULT_USAGE_THRESHOLD);
 
