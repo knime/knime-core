@@ -49,7 +49,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -134,7 +134,7 @@ public class NaiveBayesModel {
 
     private final boolean m_ignoreMissingVals;
 
-    private final Map<String, AttributeModel> m_modelByAttrName;
+    private final LinkedHashMap<String, AttributeModel> m_modelByAttrName;
 
     private final List<AttributeModel> m_skippedAttributes;
 
@@ -270,10 +270,10 @@ public class NaiveBayesModel {
         return m_statisticsTable;
     }
 
-    private static Map<String, AttributeModel> createModelMap(final DataTableSpec tableSpec, final String classColName,
+    private static LinkedHashMap<String, AttributeModel> createModelMap(final DataTableSpec tableSpec, final String classColName,
             final int maxNoOfNominalVals, final boolean skipMissingVals, final boolean pmmlCompatible) {
         final int numColumns = tableSpec.getNumColumns();
-        final Map<String, AttributeModel> modelMap = new HashMap<>(numColumns);
+        final LinkedHashMap<String, AttributeModel> modelMap = new LinkedHashMap<>(numColumns);
         for (int i = 0; i < numColumns; i++) {
             final DataColumnSpec colSpec = tableSpec.getColumnSpec(i);
             final AttributeModel model =
@@ -443,7 +443,7 @@ public class NaiveBayesModel {
         //load the valid models
         final Config modelConfigSect = predParams.getConfig(ATTRIBUTE_MODEL_SECTION);
         final int noOfAttrs = modelConfigSect.getInt(ATTRIBUTE_MODEL_COUNTER);
-        m_modelByAttrName = new HashMap<>(noOfAttrs);
+        m_modelByAttrName = new LinkedHashMap<>(noOfAttrs);
         for (int i = 0; i < noOfAttrs; i++) {
             final Config modelConfig = modelConfigSect.getConfig(ATTRIBUTE_MODEL_DATA + i);
             final AttributeModel model = AttributeModel.loadModel(modelConfig);
@@ -498,7 +498,7 @@ public class NaiveBayesModel {
         m_pmmlZeroProbThreshold = Double.valueOf(bayesModel.getThreshold());
         m_skippedAttributes = null;
         final BayesInputs inputs = bayesModel.getBayesInputs();
-        m_modelByAttrName = new HashMap<>(inputs.getBayesInputList().size() + 1);
+        m_modelByAttrName = new LinkedHashMap<>(inputs.getBayesInputList().size() + 1);
         for (BayesInput input : inputs.getBayesInputList()) {
             final AttributeModel attributeModel = AttributeModel.loadModel(input);
             m_modelByAttrName.put(attributeModel.getAttributeName(), attributeModel);

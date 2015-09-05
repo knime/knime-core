@@ -49,7 +49,8 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -285,9 +286,9 @@ class NominalAttributeModel extends AttributeModel {
      */
     private final int m_maxNoOfAttrVals;
 
-    private final Map<String, NominalClassValue> m_classValues = new HashMap<>();
+    private final Map<String, NominalClassValue> m_classValues = new LinkedHashMap<>();
 
-    private final Set<String> m_attributeVals = new HashSet<>();
+    private final Set<String> m_attributeVals = new LinkedHashSet<>();
 
     /**Constructor for class NominalRowValue.
      * @param attributeName the name of the attribute

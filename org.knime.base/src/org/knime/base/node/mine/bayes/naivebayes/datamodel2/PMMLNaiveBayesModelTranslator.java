@@ -53,7 +53,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -298,7 +298,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
         if (extensionList == null || extensionList.isEmpty()) {
             return Collections.EMPTY_MAP;
         }
-        final Map<String, String> extensionMap = new HashMap<>(extensionList.size());
+        final Map<String, String> extensionMap = new LinkedHashMap<>(extensionList.size());
         for (Extension extension : extensionList) {
             extensionMap.put(extension.getName(), extension.getValue());
         }

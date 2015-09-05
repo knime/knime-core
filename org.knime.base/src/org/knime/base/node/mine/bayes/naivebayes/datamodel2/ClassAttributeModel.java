@@ -46,7 +46,7 @@
 package org.knime.base.node.mine.bayes.naivebayes.datamodel2;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -129,7 +129,7 @@ class ClassAttributeModel extends AttributeModel {
             final boolean skipMissingVals, final int maxNoOfClassVals) {
         super(rowCaption, 0, skipMissingVals);
         m_maxNoOfClassVals = maxNoOfClassVals;
-        m_recsCounterByClassVal = new HashMap<>(maxNoOfClassVals);
+        m_recsCounterByClassVal = new LinkedHashMap<>(maxNoOfClassVals);
     }
 
     /**Constructor for class ClassModel.
@@ -153,7 +153,7 @@ class ClassAttributeModel extends AttributeModel {
             throw new InvalidSettingsException(
                     "Class names and counter must be of equal size");
         }
-        m_recsCounterByClassVal = new HashMap<>(classVals.length);
+        m_recsCounterByClassVal = new LinkedHashMap<>(classVals.length);
         for (int i = 0, length = classVals.length; i < length; i++) {
             m_recsCounterByClassVal.put(classVals[i],
                     new MutableInteger(recsCounter[i]));
@@ -194,7 +194,7 @@ class ClassAttributeModel extends AttributeModel {
         final TargetValueCounts targetValueCounts = out.getTargetValueCounts();
         m_maxNoOfClassVals = Integer.MAX_VALUE;
         final List<TargetValueCount> targetValueCountList = targetValueCounts.getTargetValueCountList();
-        m_recsCounterByClassVal = new HashMap<>(targetValueCountList.size());
+        m_recsCounterByClassVal = new LinkedHashMap<>(targetValueCountList.size());
         for (TargetValueCount targetValueCount : targetValueCountList) {
             final int count = (int)targetValueCount.getCount();
             m_totalNoOfRecs += count;

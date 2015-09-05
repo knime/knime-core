@@ -50,7 +50,7 @@ import java.io.Serializable;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -293,7 +293,7 @@ public class BitVectorAttributeModel extends AttributeModel {
     BitVectorAttributeModel(final String attributeName,
             final boolean skipMissingVals) {
         super(attributeName, 0, skipMissingVals);
-        m_classValues = new HashMap<>();
+        m_classValues = new LinkedHashMap<>();
     }
 
 
@@ -311,7 +311,7 @@ public class BitVectorAttributeModel extends AttributeModel {
             final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
         final int noOfClasses = config.getInt(CLASS_VALUE_COUNTER);
-        m_classValues = new HashMap<>(noOfClasses);
+        m_classValues = new LinkedHashMap<>(noOfClasses);
         final int noOfClassVals = config.getInt(CLASS_VALUE_COUNTER);
         for (int i = 0; i < noOfClassVals; i++) {
             final Config classConfig =
