@@ -68,13 +68,13 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestFailure;
 import junit.framework.TestListener;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 /**
  * Abstract base class for result writer that create JUnit compliant XML output. See the XSD in this package for details
@@ -154,9 +154,11 @@ public abstract class AbstractXMLResultWriter implements TestListener {
      *
      * @param result the result of a workflow test suite
      * @param doc the document from which the elements should be created
+     * @param includeStdouterr true if stdout and stderr should be included in the XML structure
      * @return a new XML element containing the test suite
      */
-    protected final Element createTestsuiteElement(final WorkflowTestResult result, final Document doc) {
+    protected final Element createTestsuiteElement(final WorkflowTestResult result, final Document doc,
+        final boolean includeStdouterr) {
         Element testSuite = doc.createElement("testsuite");
 
         testSuite.setAttribute("name", result.getSuite().getSuiteName());
@@ -177,11 +179,15 @@ public abstract class AbstractXMLResultWriter implements TestListener {
 
         Element sysout = doc.createElement("system-out");
         testSuite.appendChild(sysout);
-        sysout.appendChild(doc.createTextNode(result.getSystemOut()));
+        if (includeStdouterr) {
+            sysout.appendChild(doc.createTextNode(result.getSystemOut()));
+        }
 
         Element syserr = doc.createElement("system-err");
         testSuite.appendChild(syserr);
-        syserr.appendChild(doc.createTextNode(result.getSystemErr()));
+        if (includeStdouterr) {
+            syserr.appendChild(doc.createTextNode(result.getSystemErr()));
+        }
 
         return testSuite;
     }

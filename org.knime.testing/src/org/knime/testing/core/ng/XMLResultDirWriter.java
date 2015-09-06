@@ -48,7 +48,9 @@
 package org.knime.testing.core.ng;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Result;
@@ -68,16 +70,20 @@ import org.w3c.dom.Element;
  */
 public class XMLResultDirWriter extends AbstractXMLResultWriter {
     private final File m_rootDir;
+    private final boolean m_outputToSeparateFile;
 
     /**
      * Creates a new result writer.
      *
      * @param dir the destination directory
+     * @param outputToSeparateFile <code>true</code> if stdout/stderr should be sent to a separate file
      * @throws ParserConfigurationException if the document builder cannot be created
      * @throws TransformerConfigurationException if the serializer cannot be created
      */
-    public XMLResultDirWriter(final File dir) throws ParserConfigurationException, TransformerConfigurationException {
+    public XMLResultDirWriter(final File dir, final boolean outputToSeparateFile)
+        throws ParserConfigurationException, TransformerConfigurationException {
         m_rootDir = dir;
+        m_outputToSeparateFile = outputToSeparateFile;
     }
 
     /**
@@ -86,10 +92,10 @@ public class XMLResultDirWriter extends AbstractXMLResultWriter {
     @Override
     public void addResult(final WorkflowTestResult result) throws TransformerException, IOException {
         Document doc = m_docBuilder.newDocument();
-        Element testsuite = createTestsuiteElement(result, doc);
+        Element testsuite = createTestsuiteElement(result, doc, !m_outputToSeparateFile);
         doc.appendChild(testsuite);
 
-        File destFile = new File(m_rootDir, result.getSuite().getName() + ".xml");
+        File destFile = new File(m_rootDir, "TEST-" + result.getSuite().getName() + ".xml");
         if (!destFile.getParentFile().isDirectory() && !destFile.getParentFile().mkdirs()) {
             throw new IOException("Could not created directory for result file: "
                     + destFile.getParentFile().getAbsolutePath());
@@ -98,6 +104,14 @@ public class XMLResultDirWriter extends AbstractXMLResultWriter {
         Source source = new DOMSource(doc);
         Result res = new StreamResult(destFile);
         m_serializer.transform(source, res);
+
+        if (m_outputToSeparateFile) {
+            File outputFile = new File(m_rootDir, "TEST-" + result.getSuite().getName() + "-output.txt");
+            try (Writer out = new FileWriter(outputFile)) {
+                out.write(result.getSystemOut());
+            }
+        }
+
         m_startTimes.clear();
         m_endTimes.clear();
     }

@@ -112,7 +112,7 @@ public class XMLResultFileWriter extends AbstractXMLResultWriter {
         Document doc = m_docBuilder.newDocument();
         Element root;
         if (m_allResults.size() == 1) {
-            root = createTestsuiteElement(m_allResults.iterator().next(), doc);
+            root = createTestsuiteElement(m_allResults.iterator().next(), doc, false);
         } else {
             root = doc.createElement("testsuites");
 
@@ -124,7 +124,7 @@ public class XMLResultFileWriter extends AbstractXMLResultWriter {
                 errors += res.errorCount();
                 failures += res.failureCount();
 
-                root.appendChild(createTestsuiteElement(res, doc));
+                root.appendChild(createTestsuiteElement(res, doc, false));
 
             }
             root.setAttribute("name", "All tests");
