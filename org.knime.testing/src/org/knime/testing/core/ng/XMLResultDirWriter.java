@@ -95,7 +95,8 @@ public class XMLResultDirWriter extends AbstractXMLResultWriter {
         Element testsuite = createTestsuiteElement(result, doc, !m_outputToSeparateFile);
         doc.appendChild(testsuite);
 
-        File destFile = new File(m_rootDir, "TEST-" + result.getSuite().getName() + ".xml");
+        File destFile = new File(m_rootDir, result.getSuite().getName() + ".xml");
+        destFile = new File(destFile.getParentFile(), "TEST-" + destFile.getName());
         if (!destFile.getParentFile().isDirectory() && !destFile.getParentFile().mkdirs()) {
             throw new IOException("Could not created directory for result file: "
                     + destFile.getParentFile().getAbsolutePath());
@@ -106,7 +107,7 @@ public class XMLResultDirWriter extends AbstractXMLResultWriter {
         m_serializer.transform(source, res);
 
         if (m_outputToSeparateFile) {
-            File outputFile = new File(m_rootDir, "TEST-" + result.getSuite().getName() + "-output.txt");
+            File outputFile = new File(m_rootDir, result.getSuite().getName() + "-output.txt");
             try (Writer out = new FileWriter(outputFile)) {
                 out.write(result.getSystemOut());
             }

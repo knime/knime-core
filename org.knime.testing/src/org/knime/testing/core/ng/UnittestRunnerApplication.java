@@ -47,10 +47,10 @@ package org.knime.testing.core.ng;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.concurrent.Callable;
@@ -140,8 +140,7 @@ public class UnittestRunnerApplication implements IApplication {
     }
 
 
-    private void runAllTests(final Collection<Class<?>> allTests, final int maxNameLength) throws FileNotFoundException,
-        UnsupportedEncodingException, IOException {
+    private void runAllTests(final Collection<Class<?>> allTests, final int maxNameLength) throws IOException {
         final PrintStream sysout = System.out; // we save and use the copy because some test may re-assign it
         final PrintStream syserr = System.err;
         // run the tests
@@ -158,46 +157,16 @@ public class UnittestRunnerApplication implements IApplication {
             final JUnitTestRunner runner =
                     new JUnitTestRunner(junitTest, false, false, false, testClass.getClassLoader());
             XMLJUnitResultFormatter formatter = new XMLJUnitResultFormatter();
-            OutputStream out = new FileOutputStream(new File(m_destDir, testClass.getName() + ".xml"));
-            formatter.setOutput(out);
+            OutputStream xmlOut = new FileOutputStream(new File(m_destDir, "TEST-" + testClass.getName() + ".xml"));
+            Writer stdout = new FileWriter(new File(m_destDir, testClass.getName() + "-output.txt"));
+            formatter.setOutput(xmlOut);
             runner.addFormatter(formatter);
 
-            Writer stdout = new Writer() {
-                @Override
-                public void write(final char[] cbuf, final int off, final int len) throws IOException {
-                    runner.handleOutput(new String(cbuf, off, len));
-                }
-
-                @Override
-                public void flush() throws IOException {
-                }
-
-                @Override
-                public void close() throws IOException {
-                }
-            };
-            Writer stderr = new Writer() {
-
-                @Override
-                public void write(final char[] cbuf, final int off, final int len) throws IOException {
-                    runner.handleErrorOutput(new String(cbuf, off, len));
-                }
-
-                @Override
-                public void flush() throws IOException {
-                }
-
-                @Override
-                public void close() throws IOException {
-                }
-            };
-
             NodeLogger.addWriter(stdout, LEVEL.DEBUG, LEVEL.FATAL);
-            NodeLogger.addWriter(stderr, LEVEL.ERROR, LEVEL.FATAL);
 
             try {
                 System.setOut(new PrintStream(new WriterOutputStream(stdout), false, "UTF-8"));
-                System.setErr(new PrintStream(new WriterOutputStream(stderr), false, "UTF-8"));
+                System.setErr(new PrintStream(new WriterOutputStream(stdout), false, "UTF-8"));
                 runner.run();
                 System.out.flush();
                 System.err.flush();
@@ -205,10 +174,9 @@ public class UnittestRunnerApplication implements IApplication {
                 System.setOut(sysout);
                 System.setErr(syserr);
             }
-            NodeLogger.removeWriter(stderr);
             NodeLogger.removeWriter(stdout);
 
-            out.close();
+            xmlOut.close();
 
             long duration = System.currentTimeMillis() - startTime;
             long totalRuntime = System.currentTimeMillis() - globalStartTime;
