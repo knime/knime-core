@@ -294,6 +294,16 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         m_urlCombo.setToolTipText("Enter an URL of an ASCII data"
                 + "file, select from recent files, or browse");
 
+        flowVarBrowseModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent evt) {
+                FlowVariableModel wvm = (FlowVariableModel)evt.getSource();
+                m_urlCombo.setEnabled(!wvm.isVariableReplacementEnabled());
+                browse.setEnabled(!wvm.isVariableReplacementEnabled());
+            }
+        });
+
+
         fileBox.add(Box.createHorizontalGlue());
         fileBox.add(new JLabel("valid URL:"));
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
