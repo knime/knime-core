@@ -153,7 +153,6 @@ public final class FileAnalyzer {
         try {
             result.setDataFileLocationAndUpdateTableName(userSettings
                     .getDataFileLocation());
-            result.setTableName(userSettings.getTableName());
             result.setDecimalSeparator(userSettings.getDecimalSeparator());
             result.setThousandsSeparator(userSettings.getThousandsSeparator());
             result.setDecimalSeparatorUserSet(userSettings

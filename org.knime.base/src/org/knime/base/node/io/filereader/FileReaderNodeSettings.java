@@ -462,7 +462,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         // set our own defaults.
         setColumnProperties(new Vector<ColProperty>());
         setNumberOfColumns(1);
-        setTableName("");
 
         // now the filereader settings
         setDataFileLocationAndUpdateTableName(null);

@@ -88,9 +88,6 @@ public class FileReaderSettings extends TokenizerSettings {
 
     private URL m_dataFileLocation;
 
-    /* the table name (derived from the filename if not overridden) */
-    private String m_tableName;
-
     /*
      * in tokens read for a double column, this char gets replaced with a "."
      */
@@ -236,7 +233,6 @@ public class FileReaderSettings extends TokenizerSettings {
     public FileReaderSettings(final FileReaderSettings clonee) {
         super(clonee);
         m_dataFileLocation = clonee.m_dataFileLocation;
-        m_tableName = clonee.m_tableName;
 
         m_decimalSeparator = clonee.m_decimalSeparator;
         m_thousandsSeparator = clonee.m_thousandsSeparator;
@@ -264,7 +260,6 @@ public class FileReaderSettings extends TokenizerSettings {
     // initializes private members. Needs to be called from two constructors.
     private void init() {
         m_dataFileLocation = null;
-        m_tableName = null;
 
         m_decimalSeparator = '.';
 
@@ -319,13 +314,6 @@ public class FileReaderSettings extends TokenizerSettings {
                 throw new InvalidSettingsException("Illegal config object for "
                         + "file reader settings! Key '" + CFGKEY_DATAURL
                         + "' missing!", ice);
-            }
-            // see if we got a tablename. For backwardcompatibility reasons
-            // don't fail if its missing.
-            try {
-                setTableName(cfg.getString(CFGKEY_TABLENAME));
-            } catch (InvalidSettingsException ise) {
-                // when we set the data location (above) we already set a name
             }
             try {
                 m_fileHasColumnHeaders = cfg.getBoolean(CFGKEY_HASCOL);
@@ -458,7 +446,6 @@ public class FileReaderSettings extends TokenizerSettings {
 
         super.saveToConfiguration(cfg);
 
-        cfg.addString(CFGKEY_TABLENAME, m_tableName);
         cfg.addBoolean(CFGKEY_HASCOL, m_fileHasColumnHeaders);
         cfg.addBoolean(CFGKEY_HASROW, m_fileHasRowHeaders);
         cfg.addBoolean(CFGKEY_IGNOREEMPTY, m_ignoreEmptyLines);
@@ -662,18 +649,6 @@ public class FileReaderSettings extends TokenizerSettings {
      */
     public void setDataFileLocationAndUpdateTableName(
             final URL dataFileLocation) {
-        if (dataFileLocation == null) {
-            setTableName("");
-        } else {
-            /*
-             * don't override a (possibly user set) name if it's not a new
-             * location
-             */
-            if ((m_dataFileLocation == null) || !dataFileLocation.toExternalForm().equals(
-                    m_dataFileLocation.toExternalForm())) {
-                setTableName(getPureFileNameWithExtension(dataFileLocation));
-            }
-        }
         m_dataFileLocation = dataFileLocation;
     }
 
@@ -726,23 +701,12 @@ public class FileReaderSettings extends TokenizerSettings {
     }
 
     /**
-     * Sets a new name for the table created by this node.
-     *
-     *
-     * @param newName the new name to set.
-     *          Valid names are not <code>null</code>.
-     */
-    public void setTableName(final String newName) {
-        m_tableName = newName;
-    }
-
-    /**
      * @return the currently set name of the table created by this node. Valid
      *         names are not <code>null</code>, but the method could return
      *         null, if no name was set yet.
      */
     public String getTableName() {
-        return m_tableName;
+        return getPureFileNameWithExtension(m_dataFileLocation);
     }
 
     /**
@@ -760,7 +724,7 @@ public class FileReaderSettings extends TokenizerSettings {
             }
             return name.substring(firstIdx);
         }
-        return null;
+        return "";
     }
 
     /**
@@ -1288,10 +1252,6 @@ public class FileReaderSettings extends TokenizerSettings {
                     }
                 }
             }
-        }
-
-        if (m_tableName == null) {
-            status.addError("No table name set.");
         }
 
         // check the row headers.
