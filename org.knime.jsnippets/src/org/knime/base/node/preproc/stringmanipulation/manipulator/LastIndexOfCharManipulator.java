@@ -110,13 +110,13 @@ public class LastIndexOfCharManipulator implements Manipulator {
             + "<strong>Examples:</strong>"
             + "<br/>"
             + "<table>"
-            + "<tr><td>lastIndexOfChar(\"abcABCabc\", \"a\")</td>"
+            + "<tr><td>lastIndexOfChar(\"abcABCabc\", 'a')</td>"
             + "<td>=&nbsp;6</td></tr>"
 
-            + "<tr><td>lastIndexOfChar(\"abcABCabc\", \"A\")</td>"
+            + "<tr><td>lastIndexOfChar(\"abcABCabc\", 'A')</td>"
             + "<td>=&nbsp;3</td></tr>"
 
-            + "<tr><td>lastIndexOfChar(\"abcABCabc\", \"X\")</td>"
+            + "<tr><td>lastIndexOfChar(\"abcABCabc\", 'X')</td>"
             + "<td>=&nbsp;-1</td></tr>";
     }
 
