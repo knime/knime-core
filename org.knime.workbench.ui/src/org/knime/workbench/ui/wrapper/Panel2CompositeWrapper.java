@@ -89,6 +89,8 @@ public class Panel2CompositeWrapper extends Composite {
         final Frame awtFrame = SWT_AWT.new_Frame(this);
         // use panel as root
         awtFrame.add(panel);
+        // on some Linux systems tabs are not properly passed to AWT without the next line
+        awtFrame.setFocusTraversalKeysEnabled(false);
 
         // the size of the composite is 0x0 at this point. The above SWT_AWT.newFrame() determines the client
         // size BEFORE this constructor completes (via ViewUtils#invokeAndWaitInEDT - see below);
