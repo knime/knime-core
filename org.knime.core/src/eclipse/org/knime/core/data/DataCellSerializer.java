@@ -106,8 +106,12 @@ public interface DataCellSerializer<T extends DataCell> extends Serializer<T> {
             if (type instanceof ParameterizedType) {
                 Type rawType = ((ParameterizedType) type).getRawType();
                 Type typeArgument = ((ParameterizedType) type).getActualTypeArguments()[0];
-                if ((DataCellSerializer.class == rawType) && (typeArgument instanceof Class)) {
-                    return (Class<T>)((ParameterizedType) type).getActualTypeArguments()[0];
+                if (DataCellSerializer.class == rawType) {
+                    if (typeArgument instanceof Class) {
+                        return (Class<T>)typeArgument;
+                    } else if (typeArgument instanceof ParameterizedType) { // e.g. ImgPlusCell<T>
+                        return (Class<T>)((ParameterizedType) typeArgument).getRawType();
+                    }
                 }
             }
         }
@@ -115,8 +119,12 @@ public interface DataCellSerializer<T extends DataCell> extends Serializer<T> {
         for (Type type : ConvenienceMethods.getAllGenericSuperclasses(getClass())) {
             if (type instanceof ParameterizedType) {
                 Type typeArgument = ((ParameterizedType)type).getActualTypeArguments()[0];
-                if ((typeArgument instanceof Class) && DataCell.class.isAssignableFrom((Class<?>)typeArgument)) {
-                    return (Class<T>)typeArgument;
+                if (DataCell.class.isAssignableFrom((Class<?>)typeArgument)) {
+                    if (typeArgument instanceof Class) {
+                        return (Class<T>)typeArgument;
+                    } else if (typeArgument instanceof ParameterizedType) {
+                        return (Class<T>)((ParameterizedType) typeArgument).getRawType();
+                    }
                 }
             }
         }
