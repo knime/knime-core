@@ -50,6 +50,7 @@ package org.knime.core.node.port.database;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -106,6 +107,8 @@ public class DatabaseUtility {
     private final String m_dbIdentifier;
 
     private final StatementManipulator m_stmtManipulator;
+
+    private boolean m_supportsIsValid = true;
 
     /**
      * Returns a utility implementation for the given database type. If no specific implementation is available, a
@@ -331,6 +334,37 @@ public class DatabaseUtility {
             logger.debug(
                 "Got exception while checking for existence of table '" + tableName + "': " + ex.getMessage(), ex);
             return false; // we assume this is because the table does not exist; must be fixed!!!
+        }
+    }
+
+    /**
+     * Checks if the given connection is valid and can be re-used. If the database driver does not support
+     * {@link Connection#isValid(int)} then a <code>SELECT 1</code> statement is issued instead.
+     *
+     * @param conn any connection
+     * @return <code>true</code> if the connection is valid
+     * @throws SQLException if an SQL error occurs
+     * @since 2.12
+     */
+    public synchronized boolean isValid(final Connection conn) throws SQLException {
+        if (!m_supportsIsValid) {
+            try (Statement st = conn.createStatement()) {
+                try (ResultSet rs = st.executeQuery("SELECT 1")) {
+                    rs.next();
+                    return true;
+                }
+            } catch (SQLException e) {
+                return false;
+            }
+        } else {
+            try {
+                return conn.isValid(5);
+            } catch (final Throwable t) {
+                NodeLogger.getLogger(getClass()).debug("java.sql.Connection#isValid throws error: " + t.getMessage()
+                    + ". Executing simple \"SELECT 1\" statement to check validity from now on.", t);
+                m_supportsIsValid = false;
+                return isValid(conn);
+            }
         }
     }
 }
