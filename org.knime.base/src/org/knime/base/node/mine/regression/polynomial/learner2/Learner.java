@@ -163,12 +163,13 @@ final class Learner extends RegressionStatisticsLearner {
                 double[] parameter = row.getParameter().getArray()[0];
                 double[] params = new double[trainingData.getRegressorCount() * m_maxExponent];
                 for (int i = 0; i < trainingData.getRegressorCount(); i++) {
-                    double v = parameter[i];
+                    final double v = parameter[i];
+                    double value = v;
                     for (int n = 0; n < m_maxExponent; ++n) {
                         int index = i + n * trainingData.getRegressorCount();
-                        stats[index].addValue(v);
-                        params[index] = v;
-                        v *= v;
+                        stats[index].addValue(value);
+                        params[index] = value;
+                        value *= v;
                     }
                 }
                 regr.addObservation(params, row.getTarget() - m_offsetValue);

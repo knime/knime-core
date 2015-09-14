@@ -465,23 +465,7 @@ public class DatabaseConnectionSettings {
             // if connection already exists
             if (conn != null) {
                 try {
-                    // and is valid
-                    boolean isValid;
-                    try {
-                        isValid = conn.isValid(5);
-                    } catch (final Throwable t) {
-                        LOGGER.debug("java.sql.Connection#isValid(1) throws error: " + t.getMessage(), t);
-                        String msg = "Executing simple \"select 1\" statement to check validity ... ";
-                        try {
-                            conn.createStatement().executeQuery("select 1");
-                            isValid = true;
-                        } catch (SQLException e) {
-                            isValid = false;
-                        }
-                        LOGGER.debug(msg + (isValid ? "success" : "failure"));
-                    }
-                    // and is closed
-                    if (conn.isClosed() || !isValid) {
+                    if (conn.isClosed() || getUtility().isValid(conn)) {
                         CONNECTION_MAP.remove(databaseConnKey);
                     } else {
                         conn.clearWarnings();

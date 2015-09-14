@@ -930,7 +930,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     destWFM.configureNodesConnectedToPortInWFM(Collections.singleton(destPort));
                     Set<Integer> outPorts = destWFM.getWorkflow().connectedOutPorts(destPort);
                     configureNodeAndPortSuccessors(dest, outPorts,
-                        /* do not configure dest itself */false, true);
+                        /* do not configure dest itself */false, true, true);
                 } else {
                     assert m_workflow.containsNodeKey(dest);
                     // ...make sure the destination node is configured again (and
@@ -2345,7 +2345,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer(id);
             resetSuccessors(id);
-            configureNodeAndPortSuccessors(id, null, false, true);
+            configureNodeAndPortSuccessors(id, null, false, true, true);
             snc.markForReExecution(new ExecutionEnvironment(true, vc, useAsNewDefault));
             assert snc.getInternalState().equals(EXECUTED_MARKEDFOREXEC);
             queueIfQueuable(snc);
@@ -2992,7 +2992,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // may be SingleNodeContainer or WFM contained within this
                 // one but then it can be treated like a SNC
                 m_executionController.checkHaltingCriteria(nc.getID());
-                configureNodeAndSuccessors(nc.getID(), false);
+                configureNodeAndPortSuccessors(nc.getID(), null, false, true, false);
             }
             checkForNodeStateChanges(true);
         }
@@ -3094,7 +3094,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             //     do NOT configure start of loop because otherwise
             //     we will re-create the FlowObjectStack and
             //     remove the loop-object as well!
-            configureNodeAndSuccessors(headNode.getID(), false);
+            configureNodeAndPortSuccessors(headNode.getID(), null, false, true, false);
             // the tail node may have thrown an exception inside
             // configure, so we have to check here if the node
             // is really configured before. (Failing configures in
@@ -5850,7 +5850,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param configureMyself true if the node itself is to be configured
      */
     void configureNodeAndSuccessors(final NodeID nodeId, final boolean configureMyself) {
-        configureNodeAndPortSuccessors(nodeId, null, configureMyself, true);
+        configureNodeAndPortSuccessors(nodeId, null, configureMyself, true, true);
     }
 
     /**
@@ -5861,12 +5861,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param ports indices of output port successors are connected to (null if
      *   all are to be used).
      * @param configureMyself true if the node itself is to be configured
-     * @param configurePartent true also the parent is configured (if affected)
+     * @param configureParent true also the parent is configured (if affected)
+     * @param updateWFMState if to call {@link #checkForNodeStateChanges(boolean)}.
      */
     private void configureNodeAndPortSuccessors(final NodeID nodeId,
             final Set<Integer> ports,
             final boolean configureMyself,
-            final boolean configureParent) {
+            final boolean configureParent, final boolean updateWFMState) {
         // ensure we always configured ALL successors if we configure the node
         assert (!configureMyself) || (ports == null);
         // create list of properly ordered nodes (each one appears only once!)
@@ -5920,8 +5921,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
         }
-        // make sure internal status changes are properly reflected
-        checkForNodeStateChanges(true);
+        if (updateWFMState) {
+            // make sure internal status changes are properly reflected
+            checkForNodeStateChanges(true);
+        }
         // And finally clean up: if the WFM was part of the list of nodes
         // make sure we only configure nodes actually connected to ports
         // which are connected to nodes which we did configure!
@@ -5938,7 +5941,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             if (!portsToConf.isEmpty()) {
-                getParent().configureNodeAndPortSuccessors(this.getID(), portsToConf, false, configureParent);
+                getParent().configureNodeAndPortSuccessors(this.getID(), portsToConf, false, configureParent, updateWFMState);
             }
         }
     }

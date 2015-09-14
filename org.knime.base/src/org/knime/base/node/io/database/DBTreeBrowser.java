@@ -52,6 +52,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -223,7 +224,9 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
                 tableNames.add(tableName);
             }
         }
-        return tableNames.toArray(new String[tableNames.size()]);
+        final String[] array = tableNames.toArray(new String[tableNames.size()]);
+        Arrays.sort(array);
+        return array;
     }
 
     private String[] getColumnNames(final String tableName)

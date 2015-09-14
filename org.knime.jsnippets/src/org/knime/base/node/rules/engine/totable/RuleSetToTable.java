@@ -561,7 +561,8 @@ public class RuleSetToTable {
      * @return The converted {@code value}.
      */
     private static String asComparisonValue(final String value, final DataType dataType) {
-        return toString(convertToExpectedType(value, dataType));
+        return toString(dataType.isCompatible(DoubleValue.class) ? convertToExpectedType(value, DoubleCell.TYPE)
+            : convertToExpectedType(value, dataType));
     }
 
     /**

@@ -66,6 +66,7 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit;
@@ -250,7 +251,10 @@ public final class DecTreeNodeWidget
             getUserObject().getClassCounts();
 
         double totalClassCount = node.getEntireClassCount();
-        double myClassCount = classCounts.get(majorityClass);
+        // bug fix 6308: external PMML might not have ScoreDistribution so data is void
+        // try to handle gracefully
+        Double myClassCountDouble = classCounts.get(majorityClass);
+        double myClassCount = myClassCountDouble == null ? 0.0 : myClassCountDouble.doubleValue();
 
         label.append(majorityClass.toString());
         label.append(" (").append(convertCount(myClassCount));
@@ -279,9 +283,9 @@ public final class DecTreeNodeWidget
         c.gridwidth = 1;
         p.add(scaledLabel("Category", scale), c);
         c.gridx++;
-        p.add(scaledLabel("% ", scale, JLabel.RIGHT), c);
+        p.add(scaledLabel("% ", scale, SwingConstants.RIGHT), c);
         c.gridx++;
-        p.add(scaledLabel("n ", scale, JLabel.RIGHT), c);
+        p.add(scaledLabel("n ", scale, SwingConstants.RIGHT), c);
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = GridBagConstraints.REMAINDER;
@@ -298,11 +302,11 @@ public final class DecTreeNodeWidget
             double classFreq = classCounts.get(cell) / entireClassCounts;
             classFreqList.add(classFreq);
             p.add(scaledLabel(convertPercentage(classFreq), scale,
-                    JLabel.RIGHT), c);
+                    SwingConstants.RIGHT), c);
             c.gridx++;
             Double classCountValue = classCounts.get(cell);
             p.add(scaledLabel(convertCount(classCountValue), scale,
-                    JLabel.RIGHT), c);
+                    SwingConstants.RIGHT), c);
             if (cell.equals(majorityClass)) {
                 c.gridx = 0;
                 JComponent comp = new JPanel();
@@ -327,10 +331,10 @@ public final class DecTreeNodeWidget
             ? getGraphView().getRootNode().getEntireClassCount()
             : getUserObject().getEntireClassCount();
         double coverage = entireClassCounts / nominator;
-        p.add(scaledLabel(convertPercentage(coverage), scale, JLabel.RIGHT), c);
+        p.add(scaledLabel(convertPercentage(coverage), scale, SwingConstants.RIGHT), c);
         c.gridx++;
         p.add(scaledLabel(convertCount(entireClassCounts), scale,
-                JLabel.RIGHT), c);
+                SwingConstants.RIGHT), c);
         return p;
     }
 

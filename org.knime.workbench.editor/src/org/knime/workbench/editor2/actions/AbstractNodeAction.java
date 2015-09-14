@@ -105,11 +105,12 @@ public abstract class AbstractNodeAction extends SelectionAction {
      */
     public String getHotkey(final String commandID) {
         IBindingService bindingService = (IBindingService) PlatformUI.getWorkbench().getAdapter(IBindingService.class);
-        String hotkey = bindingService.getBestActiveBindingFormattedFor(commandID);
-        if (hotkey == null) {
-            hotkey = "";
+        if (bindingService == null) {
+            return "";
         }
-        return hotkey;
+
+        String hotkey = bindingService.getBestActiveBindingFormattedFor(commandID);
+        return (hotkey == null) ? "" : hotkey;
     }
 
     /**
