@@ -389,8 +389,9 @@ public final class NodeAndBundleInformation {
             "class \"%s\" [node name: \"%s\", " + "bundle-symbolic-name: %s, bundle-name: %s, "
                 + "bundle-vendor: %s, feature-symbolic-name: %s, feature-name: %s,"
                 + "feature-vendor: %s, feature-version: %s]",
-            getFactoryClass(), getNodeName(), getBundleSymbolicName(), getBundleName(), getBundleVendor(),
-            getFeatureSymbolicName().orElse("?"), getFeatureName().orElse("?"), getFeatureVendor().orElse("?"),
+            getFactoryClass(), getNodeName().orElse("?"), getBundleSymbolicName().orElse("?"),
+            getBundleName().orElse("?"), getBundleVendor().orElse("?"), getFeatureSymbolicName().orElse("?"),
+            getFeatureName().orElse("?"), getFeatureVendor().orElse("?"),
             getFeatureVersion().map(v -> v.toString()).orElse("?"));
     }
 
