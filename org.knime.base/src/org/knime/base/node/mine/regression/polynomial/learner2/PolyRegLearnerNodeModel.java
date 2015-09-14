@@ -55,11 +55,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.math3.stat.regression.ModelSpecificationException;
 import org.knime.base.data.append.column.AppendedColumnTable;
-import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.regression.MissingValueHandling;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator.NumericPredictor;
@@ -67,7 +67,6 @@ import org.knime.base.node.mine.regression.PMMLRegressionTranslator.RegressionTa
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
-import org.knime.base.util.math.MathUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -91,8 +90,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -104,6 +101,7 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.util.Pair;
 import org.xml.sax.SAXException;
 
 /**
@@ -114,7 +112,6 @@ import org.xml.sax.SAXException;
  * @since 2.10
  */
 public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
-    private static final NodeLogger m_logger = NodeLogger.getLogger(PolyRegLearnerNodeModel.class);
     private final PolyRegLearnerSettings m_settings = new PolyRegLearnerSettings();
 
     private double[] m_betas;
@@ -163,6 +160,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
         PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
         String[] selectedCols = computeSelectedColumns(tableSpec);
+        m_columnNames = selectedCols;
         for (String colName : selectedCols) {
             DataColumnSpec dcs = tableSpec.getColumnSpec(colName);
             if (dcs == null) {
@@ -230,155 +228,28 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         }
 
         final int rowCount = inTable.getRowCount();
-        final int independentVariables = selectedCols.length;
-        final int degree = m_settings.getDegree();
-        final int dependentIndex = inTable.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn());
-
-        double[][] xMat = new double[rowCount][1 + independentVariables * degree];
-        double[][] yMat = new double[rowCount][1];
-
-        int rowIndex = 0;
-        nextRow: for (DataRow row : inTable) {
-            exec.checkCanceled();
-            exec.setProgress(0.2 * rowIndex / rowCount);
-            xMat[rowIndex][0] = 1;
-            int colIndex = 1;
-            for (int i = 0; i < row.getNumCells(); i++) {
-                if ((m_colSelected[i] || (i == dependentIndex)) && row.getCell(i).isMissing()) {
-                    switch (m_settings.getMissingValueHandling()) {
-                        case fail:
-                            throw new IllegalArgumentException("Missing value support disabled,"
-                                + " see node configuration dialog.");
-                        case ignore:
-                            continue nextRow;
-                        default:
-                            throw new UnsupportedOperationException("Not supported strategy: "
-                                + m_settings.getMissingValueHandling());
-                    }
-                }
-
-                if (m_colSelected[i]) {
-                    double val = ((DoubleValue)row.getCell(i)).getDoubleValue();
-                    double poly = val;
-                    xMat[rowIndex][colIndex] = poly;
-                    colIndex++;
-
-                    for (int d = 2; d <= degree; d++) {
-                        poly *= val;
-                        xMat[rowIndex][colIndex] = poly;
-                        colIndex++;
-                    }
-                } else if (i == dependentIndex) {
-                    double val = ((DoubleValue)row.getCell(i)).getDoubleValue();
-                    yMat[rowIndex][0] = val;
-                }
-            }
-            rowIndex++;
-        }
-        if (rowIndex < rowCount) {
-            double[][] newXMat = new double[rowIndex][1 + independentVariables * degree];
-            System.arraycopy(xMat, 0, newXMat, 0, rowIndex);
-            xMat = newXMat;
-            double[][] newYMat = new double[rowIndex][1];
-            System.arraycopy(yMat, 0, newYMat, 0, rowIndex);
-            yMat = newYMat;
-        }
-
-        // compute X'
-        double[][] xTransMat = MathUtils.transpose(xMat);
-        exec.setProgress(0.24);
-        exec.checkCanceled();
-        // compute X'X
-        double[][] xxMat = MathUtils.multiply(xTransMat, xMat);
-        exec.setProgress(0.28);
-        exec.checkCanceled();
-        // compute X'Y
-        double[][] xyMat = MathUtils.multiply(xTransMat, yMat);
-        exec.setProgress(0.32);
-        exec.checkCanceled();
-
-        // compute (X'X)^-1
-        double[][] xxInverse;
-        try {
-            xxInverse = MathUtils.inverse(xxMat);
-            exec.setProgress(0.36);
-            exec.checkCanceled();
-        } catch (ArithmeticException ex) {
-            throw new ArithmeticException("The attributes of the data samples" + " are not mutually independent.");
-        }
-
-        // compute (X'X)^-1 * (X'Y)
-        final double[][] betas = MathUtils.multiply(xxInverse, xyMat);
-        exec.setProgress(0.4);
-
-        m_betas = new double[independentVariables * degree + 1];
-        for (int i = 0; i < betas.length; i++) {
-            m_betas[i] = betas[i][0];
-        }
-
-        m_columnNames = selectedCols;
-        String[] temp = new String[m_columnNames.length + 1];
-        System.arraycopy(m_columnNames, 0, temp, 0, m_columnNames.length);
-        temp[temp.length - 1] = m_settings.getTargetColumn();
-        FilterColumnTable filteredTable = new FilterColumnTable(inTable, temp);
-
-        DataArray rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
-        int ignore = rowContainer.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn());
-
-        m_meanValues = new double[independentVariables];
-        rows: for (DataRow row : rowContainer) {
-            exec.checkCanceled();
-            int k = 0;
-            switch (m_settings.getMissingValueHandling()) {
-                case ignore:
-                    for (int i = 0; i < row.getNumCells(); i++) {
-                        if (i != ignore) {
-                            if (row.getCell(i).isMissing()) {
-                                continue rows;
-                            }
-                        }
-                    }
-                    break;
-                case fail:
-                    //This should not happen, we failed earlier
-                    if (KNIMEConstants.ASSERTIONS_ENABLED) {
-                        for (int i = 0; i < row.getNumCells(); i++) {
-                            if (row.getCell(i).isMissing()) {
-                                throw new IllegalStateException("Execution should stopped earlier!");
-                            }
-                        }
-                    }
-                    break;
-                default:
-                    throw new UnsupportedOperationException("Not supported missing value strategy: "
-                        + m_settings.getMissingValueHandling().name());
-            }
-            for (int i = 0; i < row.getNumCells(); i++) {
-                if (i != ignore) {
-                    m_meanValues[k++] += ((DoubleValue)row.getCell(i)).getDoubleValue();
-                }
-            }
-        }
-        for (int i = 0; i < m_meanValues.length; i++) {
-            m_meanValues[i] /= rowIndex;
-        }
-
-        ColumnRearranger crea = new ColumnRearranger(inTable.getDataTableSpec());
-        crea.append(getCellFactory(inTable.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn())));
 
         // handle the optional PMML input
         PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
 
-        BufferedDataTable rearrangerTable = exec.createColumnRearrangeTable(inTable, crea, exec.createSubProgress(0.6));
-        PMMLPortObject model = createPMMLModel(inPMMLPort, inTable.getDataTableSpec());
-
-        Learner learner = new Learner(model.getSpec(), 0d, m_settings.getMissingValueHandling() == MissingValueHandling.fail, m_settings.getDegree());
+        PortObjectSpec[] outputSpec = configure(inData[1] == null ? new PortObjectSpec[] {inData[0].getSpec(), null} : new PortObjectSpec[] {inData[0].getSpec(), inData[1].getSpec()});
+        Learner learner = new Learner((PMMLPortObjectSpec)outputSpec[0], 0d, m_settings.getMissingValueHandling() == MissingValueHandling.fail, m_settings.getDegree());
         try {
             PolyRegContent polyRegContent = learner.perform(inTable, exec);
+            m_betas = fillBeta(polyRegContent);
+//            m_squaredError = polyRegContent.getRSquared();
+            m_meanValues = polyRegContent.getMeans();
+
+            ColumnRearranger crea = new ColumnRearranger(inTable.getDataTableSpec());
+            crea.append(getCellFactory(inTable.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn())));
+
             PortObject[] bdt =
-                new PortObject[]{model, rearrangerTable,
+                new PortObject[]{createPMMLModel(inPMMLPort, inSpec), exec.createColumnRearrangeTable(inTable, crea, exec.createSilentSubExecutionContext(.2)),
                     polyRegContent.createTablePortObject(exec.createSubExecutionContext(0.2))};
             m_squaredError /= rowCount;
+            if (polyRegContent.getWarningMessage() != null) {
+                setWarningMessage(polyRegContent.getWarningMessage());
+            }
 
             double[] stdErrors = PolyRegViewData.mapToArray(polyRegContent.getStandardErrors(), m_columnNames, m_settings.getDegree(), polyRegContent.getInterceptStdErr());
             double[] tValues = PolyRegViewData.mapToArray(polyRegContent.getTValues(), m_columnNames, m_settings.getDegree(), polyRegContent.getInterceptTValue());
@@ -386,7 +257,6 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             m_viewData =
                 new PolyRegViewData(m_meanValues, m_betas, stdErrors, tValues, pValues, m_squaredError, polyRegContent.getAdjustedRSquared(), m_columnNames, m_settings.getDegree(),
                     m_settings.getTargetColumn());
-            m_rowContainer = rowContainer;
             return bdt;
         } catch (ModelSpecificationException e) {
             final String origWarning = getWarningMessage();
@@ -410,11 +280,32 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             m_viewData =
                 new PolyRegViewData(m_meanValues, m_betas, nans, nans, nans, m_squaredError, Double.NaN, m_columnNames,
                     m_settings.getDegree(), m_settings.getTargetColumn());
-            m_rowContainer = rowContainer;
             empty.close();
+            ColumnRearranger crea = new ColumnRearranger(inTable.getDataTableSpec());
+            crea.append(getCellFactory(inTable.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn())));
+            BufferedDataTable rearrangerTable = exec.createColumnRearrangeTable(inTable, crea, exec.createSubProgress(0.6));
+            PMMLPortObject model = createPMMLModel(inPMMLPort, inTable.getDataTableSpec());
+
             PortObject[] bdt = new PortObject[]{model, rearrangerTable, empty.getTable()};
             return bdt;
         }
+    }
+
+    /**
+     * @param polyRegContent
+     * @return
+     */
+    private double[] fillBeta(final PolyRegContent polyRegContent) {
+        Map<Pair<String, Integer>, Double> coefficients = polyRegContent.getCoefficients();
+        double[] ret = new double[coefficients.size() + 1];
+        ret[0] = polyRegContent.getIntercept();
+        int deg = m_settings.getDegree();
+        for (int i = 0; i < m_columnNames.length; i++) {
+            for (int k = 1; k <= deg; k++) {
+                ret[i * deg + k] = coefficients.get(Pair.create(m_columnNames[i], k));
+            }
+        }
+        return ret;
     }
 
     private PMMLPortObject createPMMLModel(final PMMLPortObject inPMMLPort, final DataTableSpec inSpec)
