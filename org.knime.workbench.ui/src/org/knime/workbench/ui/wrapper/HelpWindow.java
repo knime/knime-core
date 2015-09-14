@@ -59,7 +59,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -87,7 +86,8 @@ public final class HelpWindow extends Window implements LocationListener {
     private Browser m_browser;
 
     private HelpWindow() {
-        super(new Shell(Display.getCurrent(), SWT.SHELL_TRIM));
+        super((Shell) null);
+        setShellStyle(getShellStyle() | SWT.SHELL_TRIM);
         setBlockOnOpen(false);
     }
 
