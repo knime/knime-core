@@ -49,6 +49,7 @@ package org.knime.workbench.editor2.figures;
 
 import java.util.List;
 
+import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Locator;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -62,10 +63,19 @@ public class NodeContainerLocator implements Locator {
 
     private final NodeContainerFigure m_container;
 
+    private final Figure m_warnPanel;
+
+    private final Figure m_statusFig;
+
+    private final Figure m_progressFig;
+
     /**
      * Distance (vertically) between the contained figures in the node figure.
      */
     public static final int GAP = 1;
+
+    // Pixel shift to move the triangle over the traffic light
+    private static final int TRIANGLE_SHIFT = 2;
 
     /**
      * Places the components in the node figure. (I.e. the Node Name, the icon
@@ -76,6 +86,9 @@ public class NodeContainerLocator implements Locator {
      */
     NodeContainerLocator(final NodeContainerFigure container) {
         m_container = container;
+        m_warnPanel = m_container.getInfoWarnErrorPanel();
+        m_statusFig = m_container.getStatusFigure();
+        m_progressFig = m_container.getProgressFigure();
     }
 
     /**
@@ -84,8 +97,26 @@ public class NodeContainerLocator implements Locator {
     @Override
     @SuppressWarnings("unchecked")
     public void relocate(final IFigure fig) {
-        // lets assume the figure above got layouted already
         Dimension pref = fig.getPreferredSize();
+        // warning/error icon is special: it sits next to the node icon
+        if (fig == m_warnPanel) {
+            Rectangle bounds;
+            if (m_container.getChildren().contains(m_progressFig)) {
+                bounds = m_progressFig.getBounds().getCopy();
+            } else {
+                bounds = m_statusFig.getBounds().getCopy();
+            }
+
+            // center position
+            bounds.x += bounds.width / 2 - pref.width / 2;
+
+            bounds.y += bounds.height - pref.height + TRIANGLE_SHIFT;
+            bounds.height = pref.height;
+            bounds.width = pref.width;
+            fig.setBounds(bounds);
+            return;
+        }
+        // lets assume the figure above got layouted already
         // place the figure one pixel below the above figure
         int y = 0;
         // as components change (status bar gets replaced by progress)
@@ -96,6 +127,10 @@ public class NodeContainerLocator implements Locator {
             if (f == fig) {
                 break;
             }
+            if (f == m_warnPanel) {
+                // warn icon is special...
+                continue;
+            }
             above = f;
         }
         Rectangle r = above.getBounds().getCopy();
@@ -103,7 +138,7 @@ public class NodeContainerLocator implements Locator {
             // we are the first component in the container
             y = r.y + GAP;
         } else {
-            y = r.y + r.height + GAP;
+            y = r.y + r.height + GAP - TRIANGLE_SHIFT;
         }
         // center it
         Rectangle contBounds = m_container.getBounds().getCopy();
@@ -121,3 +156,4 @@ public class NodeContainerLocator implements Locator {
         }
     }
 }
+

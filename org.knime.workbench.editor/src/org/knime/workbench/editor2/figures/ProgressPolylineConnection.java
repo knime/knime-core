@@ -112,6 +112,10 @@ public final class ProgressPolylineConnection extends PolylineConnection {
         } else {
             g.setLineDash(DASHES[m_state]);
         }
+
+        // set node connection color
+        g.setForegroundColor(new org.eclipse.swt.graphics.Color(Display.getCurrent(), 150, 150, 150));
+
         super.outlineShape(g);
     }
 

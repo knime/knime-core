@@ -260,8 +260,8 @@ public class NodeContainerFigure extends RectangleFigure {
         // the locators depend on the order!
         add(m_headingContainer);
         add(m_symbolFigure);
-        add(m_infoWarnErrorPanel);
         add(m_statusFigure);
+        add(m_infoWarnErrorPanel);
 
         // layout the components
         setConstraint(m_headingContainer, new NodeContainerLocator(this));
@@ -318,6 +318,13 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public StatusFigure getStatusFigure() {
         return m_statusFigure;
+    }
+
+    /**
+     * @return the figure showing the error and warning symbol (e.g. warning triangle)
+     */
+    public InfoWarnErrorPanel getInfoWarnErrorPanel() {
+        return m_infoWarnErrorPanel;
     }
 
     /**
@@ -478,7 +485,7 @@ public class NodeContainerFigure extends RectangleFigure {
         if (!isChild(m_progressFigure)) {
 
             // reset the progress first
-            addAtIndex(m_progressFigure, 3);
+            addAtIndex(m_progressFigure, 2);
             setConstraint(m_progressFigure, new NodeContainerLocator(this));
 
         } else {
@@ -526,7 +533,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // and set the progress bar
         if (!isChild(m_statusFigure)) {
-            addAtIndex(m_statusFigure, 3);
+            addAtIndex(m_statusFigure, 2);
             setConstraint(m_statusFigure, new NodeContainerLocator(this));
         }
     }
@@ -642,8 +649,8 @@ public class NodeContainerFigure extends RectangleFigure {
             prefHeight += m_statusFigure.getPreferredSize().height;
             compCount++;
         }
-        prefHeight += m_infoWarnErrorPanel.getPreferredSize().height;
-        prefHeight += (compCount * NodeContainerLocator.GAP);
+        // warning sign is painted over the status traffic light - don't account for it.
+        prefHeight += ((compCount - 1) * NodeContainerLocator.GAP);
         // make sure all ports fit in the figure (ports start below the label)
         int minPortsHeight = m_headingContainer.getPreferredSize().height + getMinimumPortsHeight();
         if (minPortsHeight > prefHeight) {
@@ -1042,8 +1049,8 @@ public class NodeContainerFigure extends RectangleFigure {
             // a line
 
             final FlowLayout layout = new FlowLayout(true);
-            layout.setMajorAlignment(OrderedLayout.ALIGN_CENTER);
-            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
+            layout.setMajorAlignment(OrderedLayout.ALIGN_TOPLEFT);
+            layout.setMinorAlignment(OrderedLayout.ALIGN_TOPLEFT);
             layout.setMajorSpacing(3);
             setLayoutManager(layout);
 
@@ -1180,7 +1187,6 @@ public class NodeContainerFigure extends RectangleFigure {
             add(m_label);
             setOpaque(false);
             setIcon(RED);
-
         }
 
         /**
@@ -1200,7 +1206,6 @@ public class NodeContainerFigure extends RectangleFigure {
         public Dimension getPreferredSize(final int wHint, final int hHint) {
             return new Dimension(ProgressFigure.WIDTH, ProgressFigure.HEIGHT);
         }
-
     }
 
     /**
