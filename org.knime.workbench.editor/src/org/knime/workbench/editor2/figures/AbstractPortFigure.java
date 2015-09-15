@@ -233,10 +233,6 @@ public abstract class AbstractPortFigure extends Shape {
                 color = getFlowVarPortColor();
             }
         }
-        if (getType().isOptional() && (this instanceof NodeInPortFigure)
-                && !isImplFlowVarPort()) {
-            color = lightenColor(color);
-        }
 
         return color;
     }
@@ -321,16 +317,15 @@ public abstract class AbstractPortFigure extends Shape {
     }
 
     /**
-     * Database ports and unconnected implicit FlowVariablePorts are not filled.
+     * Optional ports are not filled. Mandatory ports and FlowVar ports are filled.
      *
-     * @return true if port is supposed to be filled - false if it should be
-     *         outlined.
+     * @return true if port is filled (mandatory)
      */
     private boolean isFilled() {
-        if (getType().equals(BufferedDataTable.TYPE)) {
-            return false;
+        if (!getType().isOptional() || isImplFlowVarPort()) {
+            return true;
         }
-        return true;
+        return false;
     }
 
     protected boolean showFlowVarPorts() {
