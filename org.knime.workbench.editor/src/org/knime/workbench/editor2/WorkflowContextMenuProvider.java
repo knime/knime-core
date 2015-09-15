@@ -493,7 +493,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         final IMenuManager parentMenuManager) {
         if (metaNodeManagerOrNull == null) {
             MenuManager m = new MenuManager("Meta Node",
-                ImageRepository.getImageDescriptor("/icons/meta/meta_custom_preview.png"), null);
+                ImageRepository.getImageDescriptor("/icons/meta/meta_menu.png"), null);
             m.add(new Separator(GROUP_METANODE));
             m.add(new Separator(GROUP_METANODE_LINKS));
             parentMenuManager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, m);
@@ -505,8 +505,8 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
     private static IMenuManager getSubNodeMenuManager(final IMenuManager subNodeManagerOrNull,
         final IMenuManager parentMenuManager) {
         if (subNodeManagerOrNull == null) {
-            MenuManager m = new MenuManager("Sub Node",
-                ImageRepository.getImageDescriptor("/icons/meta/meta_custom_preview.png"), null);
+            MenuManager m = new MenuManager("Functional Unit",
+                ImageRepository.getImageDescriptor("/icons/meta/meta_menu.png"), null);
             m.add(new Separator(GROUP_SUBNODE));
             m.add(new Separator(GROUP_SUBNODE_LINKS));
             parentMenuManager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, m);
