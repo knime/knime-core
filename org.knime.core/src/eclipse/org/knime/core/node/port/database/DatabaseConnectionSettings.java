@@ -465,7 +465,7 @@ public class DatabaseConnectionSettings {
             // if connection already exists
             if (conn != null) {
                 try {
-                    if (conn.isClosed() || getUtility().isValid(conn)) {
+                    if (conn.isClosed() || !getUtility().isValid(conn)) {
                         CONNECTION_MAP.remove(databaseConnKey);
                     } else {
                         conn.clearWarnings();
