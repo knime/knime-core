@@ -10,10 +10,10 @@
 	<fullDescription>
 		<intro>		
     	Learns a Fuzzy Rule Model on labeled numeric data using 
-    	<a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2003/Bert03_mixedFR_ijar.pdf">
+    	<a href="http://www.uni-konstanz.de/bioml/bioml2/publications/Papers2003/Bert03_mixedFR_ijar.pdf">
     	Mixed Fuzzy Rule Formation</a> as the underlying training algorithm 
     	(also known as RecBF-DDA algorithm),
-    	see <a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2004/GaBe04_mixedFRappendix_ijar.pdf">
+    	see <a href="http://www.uni-konstanz.de/bioml/bioml2/publications/Papers2004/GaBe04_mixedFRappendix_ijar.pdf">
     	Influence of fuzzy norms and other heuristics on 
     	"Mixed Fuzzy Rule Formation"</a> for an extension of the algorithm.<br />
     	This algorithm generates rules based on numeric data, which are 
