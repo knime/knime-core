@@ -177,15 +177,13 @@ public abstract class AbstractXMLResultWriter implements TestListener {
 
         addTestcases(result, doc, testSuite);
 
-        Element sysout = doc.createElement("system-out");
-        testSuite.appendChild(sysout);
         if (includeStdouterr) {
+            Element sysout = doc.createElement("system-out");
+            testSuite.appendChild(sysout);
             sysout.appendChild(doc.createTextNode(result.getSystemOut()));
-        }
 
-        Element syserr = doc.createElement("system-err");
-        testSuite.appendChild(syserr);
-        if (includeStdouterr) {
+            Element syserr = doc.createElement("system-err");
+            testSuite.appendChild(syserr);
             syserr.appendChild(doc.createTextNode(result.getSystemErr()));
         }
 

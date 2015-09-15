@@ -99,6 +99,8 @@ public class TestflowRunnerApplication implements IApplication {
 
     private String m_xmlResultDir;
 
+    private boolean m_outputToSeparateFile;
+
     private final TestrunConfiguration m_runConfiguration = new TestrunConfiguration();
 
     private volatile boolean m_stopped = false;
@@ -134,7 +136,7 @@ public class TestflowRunnerApplication implements IApplication {
             if (!xmlResultDir.exists() && !xmlResultDir.mkdirs()) {
                 throw new IOException("Can not create directory for result files " + m_xmlResultDir);
             }
-            resultWriter = new XMLResultDirWriter(xmlResultDir, true);
+            resultWriter = new XMLResultDirWriter(xmlResultDir, m_outputToSeparateFile);
         } else {
             File xmlResultFile = new File(m_xmlResultFile);
             if (!xmlResultFile.getParentFile().exists() && !xmlResultFile.getParentFile().mkdirs()) {
@@ -383,6 +385,9 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_xmlResultDir = stringArgs[i++];
+            } else if (stringArgs[i].equals("-outputToSeparateFile")) {
+                i++;
+                m_outputToSeparateFile = true;
             } else if (stringArgs[i].equals("-save")) {
                 if (m_runConfiguration.getSaveLocation() != null) {
                     System.err.println("Multiple -save arguments not allowed");
@@ -494,6 +499,8 @@ public class TestflowRunnerApplication implements IApplication {
         System.err.println("    -xmlResultDir <directory_name>: specifies the directory "
                 + " into which each test result is written to as an XML files. Either -xmlResult or -xmlResultDir must"
                 + " be provided.");
+        System.err.println("    -outputToSeparateFile: optional, specifies that system out and system err are written "
+                + "to a separate text file instead of being included in the XML result file (similar to Surefire)");
         System.err.println("    -loadSaveLoad: optional, loads, saves, and loads the workflow before execution.");
         System.err.println("    -deprecated: optional, reports deprecated nodes in workflows as failures.");
         System.err.println("    -views: optional, opens all views during a workflow test.");

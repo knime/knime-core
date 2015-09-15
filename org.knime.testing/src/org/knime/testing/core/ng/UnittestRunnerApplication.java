@@ -78,11 +78,32 @@ import org.knime.core.node.workflow.BatchExecutor;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class UnittestRunnerApplication implements IApplication {
+    private static class NoSysoutFormatter extends XMLJUnitResultFormatter {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setSystemOutput(final String out) {
+            // do nothig
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setSystemError(final String out) {
+            // do nothing
+        }
+    }
+
+
     private volatile boolean m_stopped;
 
     private volatile boolean m_leftDispatchLoop = false;
 
     private File m_destDir;
+
+    private boolean m_outputToSeparateFile;
 
     private void dispatchLoop(final Display display) {
         while (!m_stopped) {
@@ -156,9 +177,30 @@ public class UnittestRunnerApplication implements IApplication {
             JUnitTest junitTest = new JUnitTest(testClass.getName());
             final JUnitTestRunner runner =
                     new JUnitTestRunner(junitTest, false, false, false, testClass.getClassLoader());
-            XMLJUnitResultFormatter formatter = new XMLJUnitResultFormatter();
+
+            XMLJUnitResultFormatter formatter;
+            Writer stdout;
+            if (m_outputToSeparateFile) {
+                formatter = new NoSysoutFormatter();
+                stdout = new FileWriter(new File(m_destDir, testClass.getName() + "-output.txt"));
+            } else {
+                formatter = new XMLJUnitResultFormatter();
+                stdout = new Writer() {
+                    @Override
+                    public void write(final char[] cbuf, final int off, final int len) throws IOException {
+                        runner.handleOutput(new String(cbuf, off, len));
+                    }
+
+                    @Override
+                    public void flush() throws IOException {
+                    }
+
+                    @Override
+                    public void close() throws IOException {
+                    }
+                };
+            }
             OutputStream xmlOut = new FileOutputStream(new File(m_destDir, "TEST-" + testClass.getName() + ".xml"));
-            Writer stdout = new FileWriter(new File(m_destDir, testClass.getName() + "-output.txt"));
             formatter.setOutput(xmlOut);
             runner.addFormatter(formatter);
 
@@ -256,6 +298,9 @@ public class UnittestRunnerApplication implements IApplication {
                 }
                 File prefsFile = new File(stringArgs[i++]);
                 BatchExecutor.setPreferences(prefsFile);
+            } else if (stringArgs[i].equals("-outputToSeparateFile")) {
+                i++;
+                m_outputToSeparateFile = true;
             } else {
                 System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
                 return false;
@@ -272,6 +317,8 @@ public class UnittestRunnerApplication implements IApplication {
                 + "written.");
         System.err.println("    -preferences <file_name>: optional, specifies an exported preferences file that should"
                 + " be used to initialize preferences");
+        System.err.println("    -outputToSeparateFile: optional, specifies that system out and system err are written "
+            + "to a separate text file instead of being included in the XML result file (similar to Surefire)");
     }
 
     private static class WriterOutputStream extends OutputStream {
