@@ -277,6 +277,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
                 new DoubleCell(0.0d), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell()));
             double[] nans = new double[m_columnNames.length * m_settings.getDegree() + 1];
             Arrays.fill(nans, Double.NaN);
+            m_betas = new double[nans.length];
             m_viewData =
                 new PolyRegViewData(m_meanValues, m_betas, nans, nans, nans, m_squaredError, Double.NaN, m_columnNames,
                     m_settings.getDegree(), m_settings.getTargetColumn());
