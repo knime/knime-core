@@ -716,7 +716,19 @@ public abstract class RegressionContent {
         for (int i = 0; i < m_beta.getColumnDimension(); i++) {
             if (Double.isNaN(m_beta.get(0, i))) {
                 m_beta.set(0, i, 0);
-                buf.append(m_outSpec.getLearningFields().get(i - 1)).append(", ");
+                //There are "size" columns
+                int size = m_outSpec.getLearningFields().size();
+                //In this context "- 1" is caused by the additional constant in the beginning of m_beta.
+                //The indexes above "size" are for higher exponents for the same columns in the same order
+                //So we use modulo to compute the column's index
+                int index = size < i - 1 ? (i - 1) % size : i - 1;
+                //The exponent is computed by dividing (and adding 1 as for the constant we do not have it).
+                int exponent = (i - 1) / size + 1;
+                buf.append(m_outSpec.getLearningFields().get(index));
+                if (exponent > 1) {
+                    buf.append("^" + exponent);
+                }
+                buf.append(", ");
             }
         }
         if (buf.length() > 0) {
