@@ -304,6 +304,8 @@ public abstract class NodeFactory<T extends NodeModel> {
                 imagePath = imagePath.replaceAll("[^./]+/\\.\\./", "");
                 m = ICON_PATH_PATTERN.matcher(imagePath);
             }
+        } else {
+            imagePath = p.toString();
         }
 
         URL iconURL = getClass().getClassLoader().getResource(imagePath);
