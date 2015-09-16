@@ -245,7 +245,7 @@ public final class NodeDescription28Proxy extends NodeDescription {
             return NodeType.valueOf(m_document.getKnimeNode().getType().toString());
         } catch (IllegalArgumentException ex) {
             logger.error("Unknown node type for " + m_document.getKnimeNode().getName() + ": "
-                + m_document.getKnimeNode().getType().toString(), ex);
+                    + m_document.getKnimeNode().getDomNode().getAttributes().getNamedItem("type").getNodeValue(), ex);
             return NodeType.Unknown;
         }
     }
