@@ -50,6 +50,7 @@ package org.knime.workbench.editor2.commands;
 import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.RootEditPart;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -62,6 +63,8 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  */
 public class ReplaceNodeCommand extends CreateNodeCommand {
     private NodeContainerEditPart m_node;
+
+    private final RootEditPart m_root;
 
     private DeleteCommand m_delete;
 
@@ -78,6 +81,7 @@ public class ReplaceNodeCommand extends CreateNodeCommand {
         final Point location, final boolean snapToGrid, final NodeContainerEditPart nodeToReplace) {
         super(manager, factory, location, snapToGrid);
         m_node = nodeToReplace;
+        m_root = nodeToReplace.getRoot();
         m_rh = new ReplaceHelper(manager, m_node.getNodeContainer());
 
         // delete command handles undo action (restoring connections and positions)
@@ -100,6 +104,9 @@ public class ReplaceNodeCommand extends CreateNodeCommand {
         m_delete.execute();
         super.execute();
         m_rh.reconnect(m_container);
+        // the connections are not always properly re-drawn after "unmark". (Eclipse bug.) Repaint here.
+        m_root.refresh();
+
     }
 
     /**

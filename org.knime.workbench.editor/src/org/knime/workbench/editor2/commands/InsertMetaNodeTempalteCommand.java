@@ -51,6 +51,7 @@ package org.knime.workbench.editor2.commands;
 import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.RootEditPart;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -63,6 +64,8 @@ import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 public class InsertMetaNodeTempalteCommand extends CreateMetaNodeTemplateCommand {
 
     private ConnectionContainer m_edge;
+
+    private final RootEditPart m_root;
 
     private DeleteCommand m_delete;
 
@@ -79,6 +82,7 @@ public class InsertMetaNodeTempalteCommand extends CreateMetaNodeTemplateCommand
         final Point location, final boolean snapToGrid, final ConnectionContainerEditPart edge) {
         super(manager, templateFolder, location, snapToGrid);
         m_edge = edge.getModel();
+        m_root = edge.getRoot();
         m_ih = new InsertHelper(getHostWFM(), m_edge);
 
         // delete command handles undo and restores all connections and node correctly
@@ -101,6 +105,8 @@ public class InsertMetaNodeTempalteCommand extends CreateMetaNodeTemplateCommand
         m_delete.execute();
         super.execute();
         m_ih.reconnect(m_container, m_snapToGrid, m_location.x, m_location.y);
+        // the connections are not always properly re-drawn after "unmark". (Eclipse bug.) Repaint here.
+        m_root.refresh();
     }
 
     /**
