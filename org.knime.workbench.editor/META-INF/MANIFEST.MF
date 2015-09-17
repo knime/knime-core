@@ -2,7 +2,9 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench Flow-Editor
 Bundle-SymbolicName: org.knime.workbench.editor;singleton:=true
-Bundle-Version: 2.12.0.qualifier
+Bundle-Version: 2.12.1.qualifier
+Bundle-ClassPath: editor.jar,
+ lib/WindowsDNDHelper.jar
 Bundle-Activator: org.knime.workbench.KNIMEEditorPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.workbench,
@@ -33,8 +35,6 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
  org.eclipse.core.resources;bundle-version="[3.6.0,4.0.0)",
  org.knime.workbench.explorer.view;bundle-version="[7.0.0,8.0.0)",
  org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)"
-Eclipse-RegisterBuddy: org.knime.base
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: editor.jar,
- lib/WindowsDNDHelper.jar
+Eclipse-RegisterBuddy: org.knime.base
