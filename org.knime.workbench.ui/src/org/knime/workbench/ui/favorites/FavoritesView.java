@@ -91,8 +91,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
      */
     @Override
     public void createPartControl(final Composite parent) {
-        m_viewer = new TreeViewer(parent,
-                SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL);
+        m_viewer = new TreeViewer(parent, SWT.SINGLE | SWT.V_SCROLL);
         this.getSite().setSelectionProvider(m_viewer);
         Transfer[] transfers = new Transfer[]{
                 LocalSelectionTransfer.getTransfer()};
