@@ -124,7 +124,7 @@ final class PolyRegContent extends RegressionContent {
      * @param covMat the covariance matrix
      * @param rSquared the r-square value
      * @param adjustedRSquared the adjusted r-quare value
-     * @param stats summary statistics of the parameters
+     * @param stats summary statistics of the parameters (for all powers)
      * @param maxExponent The maximal exponent in the model.
      */
     PolyRegContent(final PMMLPortObjectSpec outSpec, final int valueCount, final List<String> factorList,
@@ -141,8 +141,9 @@ final class PolyRegContent extends RegressionContent {
         m_beta = beta;
         m_offsetValue = offsetValue;
         m_covMat = covMat;
-        m_means = new double[stats.length];
-        for (int i = 0; i < stats.length; i++) {
+        //We computed the statistics for all powers, but we need the mean only for the linear tags
+        m_means = new double[stats.length / m_maxExponent];
+        for (int i = 0; i < m_means.length; i++) {
             m_means[i] = stats[i].getMean();
         }
         init();

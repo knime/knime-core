@@ -60,6 +60,7 @@ import java.util.Set;
 
 import org.apache.commons.math3.stat.regression.ModelSpecificationException;
 import org.knime.base.data.append.column.AppendedColumnTable;
+import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.regression.MissingValueHandling;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator.NumericPredictor;
@@ -229,6 +230,12 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
         final int rowCount = inTable.getRowCount();
 
+        String[] temp = new String[m_columnNames.length + 1];
+        System.arraycopy(m_columnNames, 0, temp, 0, m_columnNames.length);
+        temp[temp.length - 1] = m_settings.getTargetColumn();
+        FilterColumnTable filteredTable = new FilterColumnTable(inTable, temp);
+        m_rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
+
         // handle the optional PMML input
         PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
 
@@ -237,7 +244,6 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         try {
             PolyRegContent polyRegContent = learner.perform(inTable, exec);
             m_betas = fillBeta(polyRegContent);
-//            m_squaredError = polyRegContent.getRSquared();
             m_meanValues = polyRegContent.getMeans();
 
             ColumnRearranger crea = new ColumnRearranger(inTable.getDataTableSpec());
@@ -278,6 +284,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             double[] nans = new double[m_columnNames.length * m_settings.getDegree() + 1];
             Arrays.fill(nans, Double.NaN);
             m_betas = new double[nans.length];
+            //Mean only for the linear tags
+            m_meanValues = new double[nans.length / m_settings.getDegree()];
             m_viewData =
                 new PolyRegViewData(m_meanValues, m_betas, nans, nans, nans, m_squaredError, Double.NaN, m_columnNames,
                     m_settings.getDegree(), m_settings.getTargetColumn());
