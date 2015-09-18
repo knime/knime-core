@@ -93,8 +93,10 @@ public class Bug6339_LoopEndColAppend_PathTooLong extends WorkflowTestCase {
         checkState(getManager(), EXECUTED);
 
         m.save(m_tmpWorkflowDir, new ExecutionMonitor(), true);
-        m.shutdown();
-        m = loadWorkflow(m_tmpWorkflowDir, new ExecutionMonitor());
+        closeWorkflow();
+        assertNull(getManager());
+        loadAndSetWorkflow(m_tmpWorkflowDir);
+        m = getManager();
 
         checkState(m, EXECUTED);
         reset(m_javaSnippet_7);
