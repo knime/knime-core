@@ -290,6 +290,9 @@ public abstract class AbstractPortFigure extends Shape {
             return;
         }
 
+        // switch antialiasing on
+        graphics.setAntialias(SWT.ON);
+
         // Data ports and unconnected implicit flowVar ports are not filled.
         if (isFilled()) {
             Rectangle r = computePortShapeBounds(getBounds().getCopy());
@@ -305,7 +308,9 @@ public abstract class AbstractPortFigure extends Shape {
                     Rectangle p =
                             new Rectangle(points.getPoint(0),
                                     points.getPoint(2));
-                    graphics.fillOval(p);
+                    // to be able to draw the full circle one pixel has to be subtracted from the width and height
+                    Rectangle smallerP = new Rectangle(p.x, p.y, p.width - 1, p.height - 1);
+                    graphics.fillOval(smallerP);
                 } else {
                     graphics.fillPolygon(points);
                 }
@@ -379,6 +384,10 @@ public abstract class AbstractPortFigure extends Shape {
             // do not draw implicit flow ports if we are not supposed to
             return;
         }
+
+        // switch antialiasing on
+        graphics.setAntialias(SWT.ON);
+
         if (!isFilled()) {
             Rectangle r = computePortShapeBounds(getBounds().getCopy());
             PointList points = createShapePoints(r);
@@ -388,7 +397,9 @@ public abstract class AbstractPortFigure extends Shape {
                     Rectangle p =
                             new Rectangle(points.getPoint(0),
                                     points.getPoint(2));
-                    graphics.drawOval(p);
+                    // to be able to draw the full circle one pixel has to be subtracted from the width and height
+                    Rectangle smallerP = new Rectangle(p.x, p.y, p.width - 1, p.height - 1);
+                    graphics.drawOval(smallerP);
                 } else {
                     graphics.drawPolygon(points);
                 }
