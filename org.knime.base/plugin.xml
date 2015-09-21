@@ -343,7 +343,7 @@
             path="/">
       </category>
       <category
-            icon="icons/16x16/weka.ico"
+            icon="icons/16x16/weka.png"
             level-id="weka"
             name="Weka"
             path="/"/>
