@@ -44,6 +44,8 @@
  *
  * History
  *   04.06.2011 (hofer): created
+ *   30.07.2015 (sampson): modified to include left and right tailed and
+ *   static access to some methods.
  */
 package org.knime.base.node.viz.crosstable;
 
@@ -73,39 +75,46 @@ import org.knime.core.node.ExecutionContext;
  * Compute statistics for the crosstab node.
  *
  * @author Heiko Hofer
+ * @author Oliver Sampson, University of Konstanz
+ * @since 3.0
+ *
  */
-class CrosstabStatisticsCalculator {
+public class CrosstabStatisticsCalculator {
+    public static final int FISHERS_TWO_TAILED = 0;
+
+    public static final int FISHERS_LEFT_TAILED = 1;
+
+    public static final int FISHERS_RIGHT_TAILED = 2;
+
     private final BufferedDataTable m_freqTable;
+
     private final int m_freqIndex;
+
     private final int m_rowIndex;
+
     private final int m_colIndex;
+
     private final CrosstabTotals m_totals;
+
     private boolean m_isRun;
+
     private BufferedDataTable m_statTable;
+
     private CrosstabStatistics m_statistics;
 
     private final CrosstabProperties m_props;
 
     /**
-     * @param freqTable
-     *            table with at least three columns for the explanatory and
-     *            response variable and for the frequency.
-     * @param rowIndex
-     *            the column index of the explanatory variable
-     * @param colIndex
-     *            the column index of the response variable
-     * @param freqIndex
-     *            the column index of the frequency
-     * @param totals
-     *            the wrapper for the totals (row count total, column count
-     *            totals and total count)
-     * @param props
-     *            the crosstab properties which is a source for the column names
-     *            of the table return by getTable()
+     * @param freqTable table with at least three columns for the explanatory and response variable and for the
+     *            frequency.
+     * @param rowIndex the column index of the explanatory variable
+     * @param colIndex the column index of the response variable
+     * @param freqIndex the column index of the frequency
+     * @param totals the wrapper for the totals (row count total, column count totals and total count)
+     * @param props the crosstab properties which is a source for the column names of the table return by getTable()
      */
-    public CrosstabStatisticsCalculator(final BufferedDataTable freqTable,
-            final int rowIndex, final int colIndex, final int freqIndex,
-            final CrosstabTotals totals, final CrosstabProperties props) {
+    public CrosstabStatisticsCalculator(final BufferedDataTable freqTable, final int rowIndex, final int colIndex,
+        final int freqIndex, final CrosstabTotals totals, final CrosstabProperties props) {
         super();
         m_freqTable = freqTable;
         m_rowIndex = rowIndex;
@@ -117,11 +126,9 @@ class CrosstabStatisticsCalculator {
     }
 
     /**
-     * This method is not Thread-Safe. Call this method before calling any of
-     * the getter methods.
+     * This method is not Thread-Safe. Call this method before calling any of the getter methods.
      *
-     * @param exec
-     *            the execution context.
+     * @param exec the execution context.
      */
     void run(final ExecutionContext exec) {
         if (m_isRun) {
@@ -146,44 +153,37 @@ class CrosstabStatisticsCalculator {
         m_statTable = cont.getTable();
 
         // compute chi-square statistic
-        int chiSquareDF = (m_totals.getRowTotal().size() - 1)
-            * (m_totals.getColTotal().size() - 1);
+        int chiSquareDF = (m_totals.getRowTotal().size() - 1) * (m_totals.getColTotal().size() - 1);
         double chiSquarePValue = chiQuarePValue(chiSquare, chiSquareDF);
         // compute fisher's exact test
-        double fisherPValue = fisherExactPValue(m_freqTable,
-                m_rowIndex, m_colIndex,
-                m_freqIndex,
-                m_totals.getRowTotal().keySet(),
+        double fisherPValue =
+            fisherExactPValue(m_freqTable, m_rowIndex, m_colIndex, m_freqIndex, m_totals.getRowTotal().keySet(),
                 m_totals.getColTotal().keySet());
-        m_statistics = new CrosstabStatistics(chiSquare, chiSquareDF,
-                chiSquarePValue, fisherPValue);
+        m_statistics = new CrosstabStatistics(chiSquare, chiSquareDF, chiSquarePValue, fisherPValue);
         m_statistics.run(exec);
 
     }
 
     /**
      * Compute p-value of the chi-squared statistics.
+     *
      * @param x the value
      * @param df the degrees of freedom
      * @return the p-value of the chi-squared statistics
      */
-    private double chiQuarePValue(final double x, final int df) {
+    private static double chiQuarePValue(final double x, final int df) {
         try {
             return Gamma.regularizedGammaQ(df / 2.0, x / 2.0);
         } catch (MathException e) {
-            throw new IllegalStateException("Chi-square statistics cannot"
-                    + "be computed.");
+            throw new IllegalStateException("Chi-square statistics cannot" + "be computed.");
         }
     }
 
     /**
-     * Compute the cell chi-square, e.g. the contribution to the chi-square
-     * statistic of this cell.
+     * Compute the cell chi-square, e.g. the contribution to the chi-square statistic of this cell.
      */
-    private DoubleCell cellChiSquare(final DataCell rowVar,
-            final DataCell colVar, final DataCell freqCell) {
-        double nij = freqCell.isMissing() ? 0.0 : ((DoubleValue) freqCell)
-                .getDoubleValue();
+    private DoubleCell cellChiSquare(final DataCell rowVar, final DataCell colVar, final DataCell freqCell) {
+        double nij = freqCell.isMissing() ? 0.0 : ((DoubleValue)freqCell).getDoubleValue();
         // the row total
         double nidot = m_totals.getRowTotal().get(rowVar);
         // the column total
@@ -196,14 +196,11 @@ class CrosstabStatisticsCalculator {
         return new DoubleCell(cellChiSquare);
     }
 
-
     /**
-     * Compute the p-value of the Fisther's exact test.
+     * Compute the p-value of the Fisher's exact test.
      */
-    private double fisherExactPValue(final BufferedDataTable freqTable,
-            final int rowIndex, final int colIndex, final int freqIndex,
-            final Collection<DataCell> rowVars,
-            final Collection<DataCell> colVars) {
+    private static double fisherExactPValue(final BufferedDataTable freqTable, final int rowIndex, final int colIndex,
+        final int freqIndex, final Collection<DataCell> rowVars, final Collection<DataCell> colVars) {
         if (rowVars.size() != 2 || colVars.size() != 2) {
             return Double.NaN;
         }
@@ -213,7 +210,7 @@ class CrosstabStatisticsCalculator {
         colVarList.addAll(colVars);
 
         // The column of freqTable with index freqIndex holds the data of the
-        // contigency table. Fill crosstab with this data.
+        // contingency table. Fill crosstab with this data.
         int[][] crosstab = new int[2][2];
         for (DataRow row : freqTable) {
             DataCell cell = row.getCell(freqIndex);
@@ -234,6 +231,17 @@ class CrosstabStatisticsCalculator {
             crosstab[i][k] = intFreq;
         }
 
+        double x[] = exactPValue(crosstab);
+        return x[FISHERS_TWO_TAILED];
+    }
+
+    /**
+     * Given a 2x2 contingency table, this returns Fisher's exact p-values
+     *
+     * @param crosstab the contingency table [R][C]
+     * @return Fisher's two-tailed[0], left-tailed[1], right-tailed[2] p-values
+     */
+    public static double[] exactPValue(final int[][] crosstab) {
         int cutoffIndex = Math.min(crosstab[1][0], crosstab[0][1]);
         double cutoffPValue = fishExactCondMatProb(crosstab);
         // Test variations
@@ -242,16 +250,26 @@ class CrosstabStatisticsCalculator {
         crosstab[1][0] = crosstab[1][0] - cutoffIndex;
         crosstab[1][1] = crosstab[1][1] + cutoffIndex;
         int numVariations = Math.min(crosstab[0][0], crosstab[1][1]) + 1;
-        double pValue = 0;
+        double[] pValue = new double[]{0.0, 0.0, 0.0};
+
         for (int i = 0; i < numVariations; i++) {
-            if (i != cutoffIndex) {
-                double varPValue = fishExactCondMatProb(crosstab);
-                if (varPValue <= cutoffPValue) {
-                    pValue += varPValue;
+
+            if (i == cutoffIndex) {
+                pValue[FISHERS_TWO_TAILED] += cutoffPValue;
+                pValue[FISHERS_LEFT_TAILED] += cutoffPValue;
+                pValue[FISHERS_RIGHT_TAILED] += cutoffPValue;
+            } else if (i > cutoffIndex) {
+                double thisPValue = fishExactCondMatProb(crosstab);
+                pValue[FISHERS_LEFT_TAILED] += thisPValue;
+                if (thisPValue <= cutoffPValue) {
+                    pValue[FISHERS_TWO_TAILED] += thisPValue;
                 }
-            } else {
-                // This case has been calculated before
-                pValue += cutoffPValue;
+            } else { // (i < cutoffIndex)
+                double thisPValue = fishExactCondMatProb(crosstab);
+                pValue[FISHERS_RIGHT_TAILED] += thisPValue;
+                if (thisPValue <= cutoffPValue) {
+                    pValue[FISHERS_TWO_TAILED] += thisPValue;
+                }
             }
             nextNonnegativeVariation(crosstab);
         }
@@ -259,25 +277,16 @@ class CrosstabStatisticsCalculator {
     }
 
     /**
-     * Computes P_fisher an internal function used by fisherExactPValue
+     * Computes P_fisher an internal function used by fisherExactPValue.
      */
-    private double fishExactCondMatProb(final int[][] crosstab) {
+    private static double fishExactCondMatProb(final int[][] crosstab) {
         final double lowerBound = 0.00001;
         final double upperBound = 1;
 
-        int[] nom = new int[] {
-                crosstab[0][0] + crosstab[0][1],
-                crosstab[1][0] + crosstab[1][1],
-                crosstab[0][0] + crosstab[1][0],
-                crosstab[0][1] + crosstab[1][1],
-        };
-        int[] den = new int[] {
-                nom[0] + nom[1],
-                crosstab[0][0],
-                crosstab[0][1],
-                crosstab[1][0],
-                crosstab[1][1]
-        };
+        int[] nom =
+            new int[]{crosstab[0][0] + crosstab[0][1], crosstab[1][0] + crosstab[1][1],
+                crosstab[0][0] + crosstab[1][0], crosstab[0][1] + crosstab[1][1],};
+        int[] den = new int[]{nom[0] + nom[1], crosstab[0][0], crosstab[0][1], crosstab[1][0], crosstab[1][1]};
 
         checkZeros(nom);
         checkZeros(den);
@@ -309,7 +318,7 @@ class CrosstabStatisticsCalculator {
     /**
      * Determines the next variation. Returns P_v.
      */
-    private boolean nextNonnegativeVariation(final int[][] crosstab) {
+    private static boolean nextNonnegativeVariation(final int[][] crosstab) {
         if (crosstab[0][0] > 0 && crosstab[1][1] > 0) {
             crosstab[0][0] = crosstab[0][0] - 1;
             crosstab[0][1] = crosstab[0][1] + 1;
@@ -321,10 +330,9 @@ class CrosstabStatisticsCalculator {
     }
 
     /**
-     * Converts all zeros in vec to one which is done before caculating the
-     * factorial. 0! = 1 by definition.
+     * Converts all zeros in vec to one which is done before caculating the factorial. 0! = 1 by definition.
      */
-    private void checkZeros(final int[] vec) {
+    private static void checkZeros(final int[] vec) {
         for (int i = 0; i < vec.length; i++) {
             if (vec[i] == 0) {
                 vec[i] = 1;
@@ -333,20 +341,18 @@ class CrosstabStatisticsCalculator {
     }
 
     /**
-     * The table with statistics which is appended to the output of the crosstab
-     * node (contains e.g. the cell chi-square). Make sure the run() is finished
-     * before calling this method.
+     * The table with statistics which is appended to the output of the crosstab node (contains e.g. the cell
+     * chi-square). Make sure the run() is finished before calling this method.
      *
-     * @return row-wise statistics to be appended to the output of the crosstab
-     *         node
+     * @return row-wise statistics to be appended to the output of the crosstab node
      */
     BufferedDataTable getTable() {
         return m_statTable;
     }
 
     /**
-     * Get the statistics for the node.
-     * Make sure the run() is finished before calling this method.
+     * Get the statistics for the node. Make sure the run() is finished before calling this method.
+     *
      * @return the statistics
      */
     CrosstabStatistics getStatistics() {
@@ -359,10 +365,8 @@ class CrosstabStatisticsCalculator {
     private DataTableSpec createSpec() {
         List<DataColumnSpec> cspecs = new ArrayList<DataColumnSpec>();
         String cellChiSquare = m_props.getCellChiSquareName();
-        cspecs.add((new DataColumnSpecCreator(cellChiSquare, DoubleCell.TYPE))
-                .createSpec());
-        return new DataTableSpec(cspecs.toArray(new DataColumnSpec[cspecs
-                .size()]));
+        cspecs.add((new DataColumnSpecCreator(cellChiSquare, DoubleCell.TYPE)).createSpec());
+        return new DataTableSpec(cspecs.toArray(new DataColumnSpec[cspecs.size()]));
     }
 
     /**
@@ -372,15 +376,21 @@ class CrosstabStatisticsCalculator {
      */
     static class CrosstabStatistics {
         private static final String CHI_SQUARE = "Chi-Square";
+
         private static final String CHI_SQUARE_DF = "Chi-Square (DF)";
+
         private static final String CHI_SQUARE_PVALUE = "Chi-Square (Prop)";
-        private static final String FISHER_EXACT_PVALUE =
-            "Fisher's Excact Test (2-Tail) (Prop)";
+
+        private static final String FISHER_EXACT_PVALUE = "Fisher's Excact Test (2-Tail) (Prop)";
 
         private final double m_chiSquare;
+
         private final int m_chiSquareDF;
+
         private final double m_chiSquarePValue;
+
         private final double m_fisherExactPValue;
+
         private BufferedDataTable m_table;
 
         /**
@@ -389,10 +399,8 @@ class CrosstabStatisticsCalculator {
          * @param chiSquarePValue chi-squared test statistics - p-value
          * @param fisherExactPValue the p-value of Fisher's exact test
          */
-        CrosstabStatistics(final double chiSquare,
-                final int chiSquareDF,
-                final double chiSquarePValue,
-                final double fisherExactPValue) {
+        CrosstabStatistics(final double chiSquare, final int chiSquareDF, final double chiSquarePValue,
+            final double fisherExactPValue) {
             super();
             m_chiSquare = chiSquare;
             m_chiSquareDF = chiSquareDF;
@@ -402,6 +410,7 @@ class CrosstabStatisticsCalculator {
 
         /**
          * Retrieve statistics from the given table.
+         *
          * @param table the data table width the statistics
          */
         CrosstabStatistics(final BufferedDataTable table) {
@@ -415,8 +424,7 @@ class CrosstabStatisticsCalculator {
             m_fisherExactPValue = getValue(row, FISHER_EXACT_PVALUE, spec);
         }
 
-        private double getValue(final DataRow row, final String col,
-                final DataTableSpec spec) {
+        private static double getValue(final DataRow row, final String col, final DataTableSpec spec) {
             DataCell cell = row.getCell(spec.findColumnIndex(col));
             if (cell.isMissing()) {
                 return Double.NaN;
@@ -427,20 +435,16 @@ class CrosstabStatisticsCalculator {
 
         /**
          * Create the data table spec of the table return by getTable().
+         *
          * @return the data table spec
          */
         static DataTableSpec createSpec() {
             List<DataColumnSpec> cspecs = new ArrayList<DataColumnSpec>();
-            cspecs.add((new DataColumnSpecCreator(CHI_SQUARE,
-                    DoubleCell.TYPE)).createSpec());
-            cspecs.add((new DataColumnSpecCreator(CHI_SQUARE_DF,
-                    IntCell.TYPE)).createSpec());
-            cspecs.add((new DataColumnSpecCreator(CHI_SQUARE_PVALUE,
-                    DoubleCell.TYPE)).createSpec());
-            cspecs.add((new DataColumnSpecCreator(FISHER_EXACT_PVALUE,
-                    DoubleCell.TYPE)).createSpec());
-            return new DataTableSpec(cspecs.toArray(new DataColumnSpec[cspecs
-                    .size()]));
+            cspecs.add((new DataColumnSpecCreator(CHI_SQUARE, DoubleCell.TYPE)).createSpec());
+            cspecs.add((new DataColumnSpecCreator(CHI_SQUARE_DF, IntCell.TYPE)).createSpec());
+            cspecs.add((new DataColumnSpecCreator(CHI_SQUARE_PVALUE, DoubleCell.TYPE)).createSpec());
+            cspecs.add((new DataColumnSpecCreator(FISHER_EXACT_PVALUE, DoubleCell.TYPE)).createSpec());
+            return new DataTableSpec(cspecs.toArray(new DataColumnSpec[cspecs.size()]));
         }
 
         /**
@@ -460,8 +464,7 @@ class CrosstabStatisticsCalculator {
             } else {
                 cells.add(DataType.getMissingCell());
             }
-            cont.addRowToTable(new DefaultRow(RowKey.createRowKey(0),
-                    cells));
+            cont.addRowToTable(new DefaultRow(RowKey.createRowKey(0), cells));
             cont.close();
             m_table = cont.getTable();
         }
@@ -487,7 +490,7 @@ class CrosstabStatisticsCalculator {
         /**
          * Get the p-value for the Pearson chi-squared statistic.
          *
-         * @return the p-value for the  Pearson chi-squared statistic.
+         * @return the p-value for the Pearson chi-squared statistic.
          */
         double getChiSquaredPValue() {
             return m_chiSquarePValue;
