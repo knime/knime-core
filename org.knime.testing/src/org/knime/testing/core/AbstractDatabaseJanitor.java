@@ -62,6 +62,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseDriverLoader;
@@ -77,7 +78,7 @@ import org.knime.core.node.workflow.FlowVariable;
 public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
     private static final SecureRandom RAND = new SecureRandom();
 
-    private final DateFormat m_dateFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+    private final DateFormat m_dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
     private final String m_driverName;
 
@@ -113,7 +114,8 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
         m_port = port;
         m_username = username;
         m_password = password;
-        m_dbName = "knime_testing_" + m_dateFormat.format(new Date()) + "_" + Long.toHexString(RAND.nextLong());
+        m_dbName = "knime_testing_" + m_dateFormat.format(new Date()) + "_" + Long.toHexString(RAND.nextLong()) +
+                "_" + KNIMEConstants.VERSION.replace('.', '_');
     }
 
     /**
@@ -189,7 +191,9 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
             dropDatabase(m_initialDatabase, m_username, m_password, m_dbName);
         }
 
-        m_dbName = "knime_testing_" + m_dateFormat.format(new Date()) + "_" + Long.toHexString(RAND.nextLong());
+        m_dbName = "knime_testing_" + m_dateFormat.format(new Date()) + "_" + Long.toHexString(RAND.nextLong()) +
+                "_" + KNIMEConstants.VERSION.replace('.', '_');
+
     }
 
     /**
