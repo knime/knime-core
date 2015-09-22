@@ -175,26 +175,29 @@ final class ScorerViewData {
      * @since 2.9
      */
     double getCohenKappa() {
-        long nominator = 0L;
-        long denominator = 0L;
-        int[] rowSum = new int[m_scorerCount[0].length];
-        int[] colSum = new int[m_scorerCount.length];
-        for (int i = rowSum.length; i-- > 0;) {
-            for (int j = colSum.length; j-- > 0;) {
+        long[] rowSum = new long[m_scorerCount[0].length];
+        long[] colSum = new long[m_scorerCount.length];
+        //Based on: https://en.wikipedia.org/wiki/Cohen%27s_kappa#
+        long agreement = 0, sum = 0;
+        for (int i = 0; i < rowSum.length; i++) {
+            for (int j = 0; j < colSum.length; j++) {
                 rowSum[i] += m_scorerCount[i][j];
                 colSum[j] += m_scorerCount[i][j];
+                sum += m_scorerCount[i][j];
             }
+            //number of correct agreements
+            agreement += m_scorerCount[i][i];
         }
+        //relative observed agreement among raters
+        final double p0 = agreement * 1d / sum;
+        //hypothetical probability of chance agreement
+        double pe = 0;
         for (int i = 0; i < m_scorerCount.length; i++) {
-            for (int j = 0; j < m_scorerCount[i].length; j++) {
-                if (i != j) {
-                    nominator += m_scorerCount[i][j];
-                    denominator += rowSum[i] * colSum[j];
-                }
-            }
+            //Expected value that they agree by chance for possible value i
+            pe += 1d * rowSum[i] * colSum[i] / sum / sum;
         }
-
-        return 1.0 - nominator * (double)m_nrRows / denominator;
+        //kappa
+        return (p0 - pe) / (1 - pe);
     }
 
     int getTP(final int classIndex) {

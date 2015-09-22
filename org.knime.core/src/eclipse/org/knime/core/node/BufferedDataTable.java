@@ -434,7 +434,6 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @since 2.6 */
     private static final String TABLE_TYPE_REFERENCE_IN_SAME_NODE = "reference_from_same_node_table";
     private static final String TABLE_TYPE_EXTENSION = "extension_table";
-    private static final String TABLE_SUB_DIR = "reference";
     private static final String TABLE_FILE = "data.zip";
     private static final String TABLE_DESCRIPTION_FILE = "data.xml";
     private static final String TABLE_SPEC_FILE = "spec.xml";
@@ -483,7 +482,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 if (reference.getOwner() == getOwner()
                         && !savedTableIDs.contains(reference.getBufferedTableId())) {
                     int index = referenceDirs.size();
-                    String dirName = TABLE_SUB_DIR + "_" + index;
+                    String dirName = "r" + index;
                     File subDir = new File(dir, dirName);
                     if (!subDir.mkdir() && !subDir.isDirectory()) {
                         throw new IOException("Could not create directory " + subDir.getAbsolutePath());

@@ -132,28 +132,38 @@ public class InsertHelper {
         info.setIsDropLocation(false);
         container.setUIInformation(info);
 
-        int p = 0;
+        int p = (container instanceof WorkflowManager) ? 0 : 1; //skip fv port of nodes for now
         while (!hostWFM.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), p)) {
             // search for a valid connection of the source node to this node
             p++;
-            if (p > container.getNrInPorts()) {
+            if (p >= container.getNrInPorts()) {
                 break;
             }
         }
         if (p < container.getNrInPorts()) {
             hostWFM.addConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), p);
+        } else if (!(container instanceof WorkflowManager)) {
+            // try if the fv port of nodes would work
+            if (hostWFM.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), 0)) {
+                hostWFM.addConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), 0);
+            }
         }
 
-        int pout = 0;
+        int pout = (container instanceof WorkflowManager) ? 0 : 1; //skip fv port of nodes for now;
         while (!hostWFM.canAddConnection(container.getID(), pout, m_edge.getDest(), m_edge.getDestPort())) {
             // search for a valid connection of this node to the destination node of the edge
             pout++;
-            if (pout > container.getNrOutPorts()) {
+            if (pout >= container.getNrOutPorts()) {
                 break;
             }
         }
         if (pout < container.getNrOutPorts()) {
             hostWFM.addConnection(container.getID(), pout, m_edge.getDest(), m_edge.getDestPort());
+        } else if (!(container instanceof WorkflowManager)) {
+            // try if the fv port of nodes would work
+            if (hostWFM.canAddConnection(container.getID(), 0, m_edge.getDest(), m_edge.getDestPort())) {
+                hostWFM.addConnection(container.getID(), 0, m_edge.getDest(), m_edge.getDestPort());
+            }
         }
     }
 }
