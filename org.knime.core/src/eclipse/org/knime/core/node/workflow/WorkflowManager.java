@@ -2871,8 +2871,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (!success) {
                 disableNodeForExecution(nc.getID());
             }
-            // switch state from POSTEXECUTE to new state: EXECUTED/CONFIGURED
-            // in case of success (w/ or w/out loop) or IDLE in case of error.
+            // switch state from POSTEXECUTE to new state: EXECUTED resp. CONFIGURED
+            // in case of success (w/out resp. with loop) or IDLE in case of an error.
             nc.performStateTransitionEXECUTED(status);
             boolean canConfigureSuccessors = true;
             // remember previous message in case loop restart fails...
@@ -2896,7 +2896,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 LOGGER.debug("parallelizeLoop failed: " + e, e);
                             }
                             // make sure the start node is reset and
-                            // and approriate message is set.
+                            // and appropriate message is set.
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                     "Parallel Branch Start Failure: " + e.getMessage());
                             success = false;
@@ -2907,52 +2907,78 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                     // process loop context for "real" nodes:
                     if (nnc.isModelCompatibleTo(LoopStartNode.class)) {
-                        // if this was BEGIN, it's not anymore (until we do not
-                        // restart it explicitly!)
+                        // if this was BEGIN, it's not anymore (until we do not restart it explicitly!)
                         node.setLoopEndNode(null);
                     }
+                    if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
+                        // make sure entire loop body is executed. Trigger execution of rest if not.
+                        // (note that we do not worry about waiting for executing dangling branches, for those
+                        // we only need to wait when the loop is about to be restarted!)
+                        ArrayList<NodeAndInports> loopBodyNodes = new ArrayList<NodeAndInports>();
+                        try {
+                            NodeID endID = nnc.getID();
+                            NodeID startID = m_workflow.getMatchingLoopStart(endID);
+                            loopBodyNodes = m_workflow.findAllNodesConnectedToLoopBody(startID, endID);
+                        } catch (IllegalLoopException ile) {
+                            // loop is incorrectly wired. We can not restart potentially dangling branches
+                            latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
+                                "Loop Body wired incorrectly (" + ile.getMessage() + ").");
+                            success = false;
+                        }
+                        // check if any of those nodes can still be executed (configured but not yet executing)
+                        for (NodeAndInports nai : loopBodyNodes) {
+                            NodeID id = nai.getID();
+                            NodeContainer currNode = m_workflow.getNode(id);
+                            if (!currNode.getInternalState().equals(EXECUTED)) {
+                                // after this first simple & light-weight test we test true executability:
+                                if (this.canExecuteNodeDirectly(id)) {
+                                    // We missed some nodes that are part of "dangling branches"
+                                    // Mark them now and make sure they are also executed.
+                                    // Fixes Bug 2292 (dangling branches were not executed in 1-iteration loops)
+                                    if (currNode instanceof WorkflowManager) {
+                                        // FIXME: also here we need to execute...?
+                                    } else {
+                                        assert currNode instanceof SingleNodeContainer;
+                                        this.markAndQueueNodeAndPredecessors(id, -1);
+                                    }
+                                }
+                            }
+                        }
+                    }
                     if (node.getLoopContext() != null) {
+                        // we are supposed to execute this loop again.
                         assert nnc.isModelCompatibleTo(LoopEndNode.class);
-                        // we are supposed to execute this loop again!
-                        // first retrieve FlowLoopContext object
                         FlowLoopContext slc = node.getLoopContext();
-                        // first check if the loop is properly configured:
+                        // then check if the loop is properly configured:
                         if (m_workflow.getNode(slc.getHeadNode()) == null) {
                             // obviously not: origin of loop is not in this WFM!
-                            // nothing else to do: NC stays configured
-                            assert nc.getInternalState() == CONFIGURED;
-                            // and choke
+                            assert false : "Inconsistent loops should be caught earlier.";
+                            // nothing else to do: NC returns to being configured
+                            if (!InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC.equals(nnc.getInternalState())) {
+                                nnc.markForExecution(false);
+                            }
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                     "Loop nodes are not in the same workflow!");
                             success = false;
                         } else {
                             try {
-                                // make sure the end of the loop is properly
-                                // configured:
                                 slc.setTailNode(nc.getID());
-                                // and try to restart loop
                                 if (!nnc.getNode().getPauseLoopExecution()) {
                                     restartLoop(slc);
                                 } else {
-                                    // do nothing - leave successors marked...
-//                                    disableNodeForExecution(snc.getID());
-                                    // and leave flag for now (will be reset
-                                    // when execution is resumed).
-//                                   snc.getNode().setPauseLoopExecution(false);
+                                    // do nothing - leave successors marked. Cancel execution to stop paused loop.
                                 }
                             } catch (IllegalLoopException ile) {
                                 LOGGER.error(ile.getMessage(), ile);
                                 latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR, ile.getMessage());
                                 success = false;
                             }
-                            // make sure we do not accidentally configure the
-                            // remainder of this node since we are not yet done
-                            // with the loop
+                            // make sure we do not accidentally configure the remainder of this node
+                            // since we are not yet done with the loop
                             canConfigureSuccessors = false;
                         }
                         if (!success) {
-                            // make sure any marks are removed
-                            // (only for loop ends!)
+                            // make sure any marks are removed (only for loop ends!)
                             disableNodeForExecution(nnc.getID());
                             nnc.getNode().clearLoopContext();
                         }
@@ -3017,8 +3043,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // (1) find all intermediate node, the loop's "body"
         ArrayList<NodeAndInports> loopBodyNodes = m_workflow.findAllNodesConnectedToLoopBody(
                                             headNode.getID(), tailNode.getID());
-        // (2) check if any of those nodes are still waiting to be
-        //     executed or currently executing
+        // (2) check if any of those nodes are currently executing (note that since 3.0 we are already
+        //     marking/queuing those nodes already in doAfterExecute to fix bug 2292!)
         for (NodeAndInports nai : loopBodyNodes) {
             NodeID id = nai.getID();
             NodeContainer currNode = m_workflow.getNode(id);
@@ -3026,24 +3052,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // stop right here - loop can not yet be restarted!
                 currNode.addWaitingLoop(slc);
                 return;
-            }
-            if (this.canExecuteNodeDirectly(id)) {
-                // we missed some nodes during the initial marking - because
-                // these are part of untouched branches which
-                // were not selected to be executed initially.
-                // Mark them now and make sure they are already executed
-                // during the first iteration (later executions will
-                // then execute them automatically).
-                // FIXME: (Bug 2292)
-                //  - when only 1 iteration is run, this node never executes
-                if (currNode instanceof WorkflowManager) {
-                    // FIXME: also here we need to execute...?
-                } else {
-                    assert currNode instanceof SingleNodeContainer;
-                    this.markAndQueueNodeAndPredecessors(id, -1);
-                    currNode.addWaitingLoop(slc);
-                    return;
-                }
             }
         }
         // (3) mark the origin of the loop to be executed again

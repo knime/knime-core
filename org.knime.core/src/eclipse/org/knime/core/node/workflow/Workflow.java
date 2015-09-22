@@ -1518,6 +1518,28 @@ class Workflow {
         return output;
     }
 
+    /**
+     * @param id of node.
+     * @return set of graph annotations for the given SingleNodeContainer.
+     * @throws IllegalArgumentException if node is not a SingleNodeContainer
+     * @since 3.0
+     */
+    public NodeGraphAnnotation getSingleNodeGraphAnnotation(final NodeID id)
+    throws IllegalArgumentException {
+        if (!(m_nodes.get(id) instanceof SingleNodeContainer)) {
+            throw new IllegalArgumentException(id + " is not a SingleNodeContainer!");
+        }
+        if (m_nodeAnnotationCache == null) {
+            updateGraphAnnotationCache();
+        }
+        for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+            if (nga.getID().equals(id)) {
+                return nga;
+            }
+        }
+        throw new IllegalArgumentException("No NodeGraphAnnotation found for " + id);
+    }
+
     /** hold graph based annotations for all nodes. */
     private ArrayList<NodeGraphAnnotation> m_nodeAnnotationCache = null;
 
