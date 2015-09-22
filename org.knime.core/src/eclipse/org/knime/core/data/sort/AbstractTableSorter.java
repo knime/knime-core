@@ -73,6 +73,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -93,16 +94,11 @@ abstract class AbstractTableSorter {
         DataType.getType(StringCell.class)).createSpec();
 
     /**
-     * Default memory threshold. If this relative amount of memory is filled, the chunk is sorted and flushed to disk.
-     */
-    public static final double DEF_MEM_THRESHOLD = 0.8;
-
-    /**
      * The maximum number of open containers. See {@link #setMaxOpenContainers(int)} for details.
      */
     public static final int DEF_MAX_OPENCONTAINER = 40;
 
-    private MemoryService m_memService = new MemoryService(DEF_MEM_THRESHOLD);
+    private MemoryAlertSystem m_memService = MemoryAlertSystem.getInstance();
 
     private final DataTable m_inputTable;
 
@@ -324,7 +320,7 @@ abstract class AbstractTableSorter {
      *
      * @param memService the memService to set
      */
-    void setMemService(final MemoryService memService) {
+    void setMemService(final MemoryAlertSystem memService) {
         m_memService = memService;
     }
 

@@ -75,7 +75,7 @@ import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.sort.MemoryService;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -133,9 +133,6 @@ public final class Joiner {
 
     private int m_numBits;
     private int m_bitMask;
-
-    /** The memory service used to detect the low memory condition. */
-    private MemoryService m_memService;
 
     /** The initial number of partitions the rows are read in. If not all
      * partitions fit in main memory, they are joined subsequently using as
@@ -521,10 +518,6 @@ public final class Joiner {
                 rightTable.getDataTableSpec(),
                 rightSurvivors);
 
-        if (null == m_memService) {
-            m_memService = new MemoryService();
-        }
-
         /* numBits -> numPartitions
          * 0 -> 1
          * 1 -> 2
@@ -697,97 +690,86 @@ public final class Joiner {
                 progress += inc;
                 exec.getProgressMonitor().setProgress(progress);
             } else {
-                if (tryToFreeMemory) {
-                    // Force full gc to be sure that there is not to much
-                    // garbage
-                    Runtime.getRuntime().gc();
-                    tryToFreeMemory = false;
-                    LOGGER.debug("Forced gc() while reading inner table.");
-                    continue;
-                } else {
-                    rowsAdded++;
-                        tryToFreeMemory = true;
+                rowsAdded++;
 
-                    // Build list of partitions that are not empty
-                    List<Integer> nonEmptyPartitions = new ArrayList<Integer>();
-                    for (Integer i : currParts) {
-                        if (null != leftTableHashed.get(i)) {
-                            nonEmptyPartitions.add(i);
+                // Build list of partitions that are not empty
+                List<Integer> nonEmptyPartitions = new ArrayList<Integer>();
+                for (Integer i : currParts) {
+                    if (null != leftTableHashed.get(i)) {
+                        nonEmptyPartitions.add(i);
+                    }
+                }
+                int numNonEmpty = nonEmptyPartitions.size();
+                if (numNonEmpty > 1) {
+                    // remove input partitions to free memory
+                    List<Integer> removeParts = new ArrayList<Integer>();
+                    for (int i = 0; i < numNonEmpty / 2; i++) {
+                        removeParts.add(nonEmptyPartitions.get(i));
+                    }
+                    // remove collected data of the no longer processed
+                    for (int i : removeParts) {
+                        leftTableHashed.remove(i);
+                        if (m_retainLeft && !m_matchAny) {
+                            leftOuterJoins.remove(i);
                         }
                     }
-                    int numNonEmpty = nonEmptyPartitions.size();
-                    if (numNonEmpty > 1) {
-                        // remove input partitions to free memory
-                        List<Integer> removeParts = new ArrayList<Integer>();
-                        for (int i = 0; i < numNonEmpty / 2; i++) {
-                            removeParts.add(nonEmptyPartitions.get(i));
+                    currParts.removeAll(removeParts);
+                    LOGGER.debug("Skip partitions while "
+                            + "reading inner table. Currently Processed: "
+                            + currParts + ". Skip: " + removeParts);
+                    // update increment for reporting progress
+                    numRows += leftTable.getRowCount()
+                    + rightTable.getRowCount();
+                    inc = (progressDiff - progress) / numRows;
+
+                    setMessage("Read", exec, pendingParts, currParts);
+                } else if (nonEmptyPartitions.size() == 1) {
+                    if (m_numBits < m_numBitsMaximal) {
+                        LOGGER.debug("Increase number of partitions while "
+                                + "reading inner table. Currently "
+                                + "Processed: " + nonEmptyPartitions);
+
+                        // increase number of partitions
+                        m_numBits = m_numBits + 1;
+                        m_bitMask = m_bitMask | (0x0001 << (m_numBits - 1));
+                        Set<Integer> pending = new TreeSet<Integer>();
+                        pending.addAll(pendingParts);
+                        pendingParts.clear();
+                        for (int i : pending) {
+                            pendingParts.add(i);
+                            int ii = i | (0x0001 << (m_numBits - 1));
+                            pendingParts.add(ii);
                         }
-                        // remove collected data of the no longer processed
-                        for (int i : removeParts) {
-                            leftTableHashed.remove(i);
-                            if (m_retainLeft && !m_matchAny) {
-                                leftOuterJoins.remove(i);
-                            }
-                        }
-                        currParts.removeAll(removeParts);
-                        LOGGER.debug("Skip partitions while "
-                                + "reading inner table. Currently Processed: "
-                                + currParts + ". Skip: " + removeParts);
+
+                        int currPart = nonEmptyPartitions.iterator().next();
+                        currParts.clear();
+                        currParts.add(currPart);
+                        // update chunk size
+                        retainPartitions(leftTableHashed, leftOuterJoins,
+                                currPart);
                         // update increment for reporting progress
                         numRows += leftTable.getRowCount()
                         + rightTable.getRowCount();
                         inc = (progressDiff - progress) / numRows;
 
                         setMessage("Read", exec, pendingParts, currParts);
-                    } else if (nonEmptyPartitions.size() == 1) {
-                        if (m_numBits < m_numBitsMaximal) {
-                            LOGGER.debug("Increase number of partitions while "
-                                    + "reading inner table. Currently "
-                                    + "Processed: " + nonEmptyPartitions);
-
-                            // increase number of partitions
-                            m_numBits = m_numBits + 1;
-                            m_bitMask = m_bitMask | (0x0001 << (m_numBits - 1));
-                            Set<Integer> pending = new TreeSet<Integer>();
-                            pending.addAll(pendingParts);
-                            pendingParts.clear();
-                            for (int i : pending) {
-                                pendingParts.add(i);
-                                int ii = i | (0x0001 << (m_numBits - 1));
-                                pendingParts.add(ii);
-                            }
-
-                            int currPart = nonEmptyPartitions.iterator().next();
-                            currParts.clear();
-                            currParts.add(currPart);
-                            // update chunk size
-                            retainPartitions(leftTableHashed, leftOuterJoins,
-                                    currPart);
-                            // update increment for reporting progress
-                            numRows += leftTable.getRowCount()
-                            + rightTable.getRowCount();
-                            inc = (progressDiff - progress) / numRows;
-
-                            setMessage("Read", exec, pendingParts, currParts);
-                        } else {
-                            // We have now 2^32 partitions.
-                            // We can only keep going and hope that other nodes
-                            // may free some memory.
-                            LOGGER.warn("Memory is low. "
-                                + "I have no chance to free memory. This may "
-                                + "cause an endless loop.");
-                        }
-                    } else if (nonEmptyPartitions.size() < 1) {
-                        // We have only empty partitions.
-                        // Other node consume to much memory,
-                        // we cannot free more memory
+                    } else {
+                        // We have now 2^32 partitions.
+                        // We can only keep going and hope that other nodes
+                        // may free some memory.
                         LOGGER.warn("Memory is low. "
-                                + "I have no chance to free memory. This may "
-                                + "cause an endless loop.");
+                            + "I have no chance to free memory. This may "
+                            + "cause an endless loop.");
                     }
+                } else if (nonEmptyPartitions.size() < 1) {
+                    // We have only empty partitions.
+                    // Other node consume to much memory,
+                    // we cannot free more memory
+                    LOGGER.warn("Memory is low. "
+                            + "I have no chance to free memory. This may "
+                            + "cause an endless loop.");
                 }
             }
-
         }
 
         setMessage("Join", exec, pendingParts, currParts);
