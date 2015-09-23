@@ -71,11 +71,11 @@ public final class ConsoleViewAppender extends Writer {
 
     /** Color: fatal error. * */
     public static final Color COLOR_FATAL_ERROR =
-            new Color(Display.getDefault(), 0x80, 0, 0);
+            new Color(Display.getDefault(), 0xFF, 0, 0);
 
     /** Color: error. * */
     public static final Color COLOR_ERROR =
-            new Color(Display.getDefault(), 0xFF, 0, 0);
+            new Color(Display.getDefault(), 0x80, 0, 0);
 
     /** Color: warning. * */
     public static final Color COLOR_WARN =
@@ -113,6 +113,11 @@ public final class ConsoleViewAppender extends Writer {
     public static final ConsoleViewAppender DEBUG_APPENDER =
             new ConsoleViewAppender(COLOR_DEBUG, "Debug",
                     NodeLogger.LEVEL.DEBUG);
+
+
+    /** Appender: Forced always logs to the console independent of the log level. */
+    public static final ConsoleViewAppender FORCED_APPENDER =
+            new ConsoleViewAppender(COLOR_INFO, "Msg", NodeLogger.LEVEL.ALL);
 
     private final String m_name;
 
