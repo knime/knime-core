@@ -79,15 +79,15 @@ public final class ConsoleViewAppender extends Writer {
 
     /** Color: warning. * */
     public static final Color COLOR_WARN =
-            new Color(Display.getDefault(), 0, 0, 0xFF);
+            new Color(Display.getDefault(), 115, 23, 255);
 
     /** Color: info. * */
     public static final Color COLOR_INFO =
-            new Color(Display.getDefault(), 0, 0x80, 0);
+            new Color(Display.getDefault(), 62, 58, 57);
 
     /** Color: debug. * */
     public static final Color COLOR_DEBUG =
-            new Color(Display.getDefault(), 0x80, 0x80, 0x80);
+            new Color(Display.getDefault(), 125, 125, 125);
 
     private final Color m_color;
 

@@ -238,9 +238,9 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                 pStore.getString(P_LOGLEVEL_CONSOLE);
             if (!Boolean.getBoolean("java.awt.headless") && PlatformUI.isWorkbenchRunning()) {
                 try {
-                    ConsoleViewAppender.WARN_APPENDER.write(
+                    ConsoleViewAppender.INFO_APPENDER.write(
                             KNIMEConstants.WELCOME_MESSAGE);
-                    ConsoleViewAppender.WARN_APPENDER.write(
+                    ConsoleViewAppender.INFO_APPENDER.write(
                     "Log file is located at: "
                     + KNIMEConstants.getKNIMEHomeDir() + File.separator
                     + NodeLogger.LOG_FILE + "\n");
