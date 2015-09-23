@@ -81,6 +81,22 @@ public class DataCellSerializerTest {
             final Class<? extends DataValue>[] valueClasses) {
             super(valueCell, predefinedAdapters, valueClasses);
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean equalsDataCell(final DataCell dc) {
+            return getAdapterMap().equals(((MyAdapterCell) dc).getAdapterMap());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 0;
+        }
     }
 
     /**

@@ -83,9 +83,6 @@ public class DenseBitVector implements BitVector {
      */
     private final long m_length;
 
-    // lazy hashcode
-    private int m_hash;
-
     /**
      * Creates a new vector of the specified length, with no bits set.
      *
@@ -222,7 +219,6 @@ public class DenseBitVector implements BitVector {
         m_length = clone.m_length;
         m_firstAddr = clone.m_firstAddr;
         m_lastAddr = clone.m_lastAddr;
-        m_hash = clone.m_hash;
         assert checkConsistency() == null;
     }
 
@@ -991,16 +987,21 @@ public class DenseBitVector implements BitVector {
     @Override
     public int hashCode() {
         assert (checkConsistency() == null);
-        if (m_hash == 0) {
-            long h = 1234;
-            if (m_firstAddr > -1) {
-                for (int i = m_lastAddr; i >= m_firstAddr; i--) {
-                    h ^= m_storage[i] * (i + 1);
+        long hash = 0;
+        if (m_firstAddr > -1) {
+            for (int storageAddr = m_firstAddr; storageAddr <= m_lastAddr; storageAddr++) {
+                for (int storageIdx = 0; storageIdx < STORAGE_BITS; storageIdx++) {
+                    long index = (storageAddr << STORAGE_ADDRBITS) + storageIdx;
+                    if (index >= m_length) {
+                        break;
+                    }
+                    if ((m_storage[storageAddr] & (1L << storageIdx)) != 0) {
+                        hash = hash * 524287 + (index + 1);
+                    }
                 }
             }
-            m_hash = (int)((h >> 32) ^ h);
         }
-        return m_hash;
+        return (int) (hash ^ (hash >> 32));
     }
 
     /**

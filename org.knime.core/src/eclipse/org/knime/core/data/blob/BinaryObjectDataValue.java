@@ -51,6 +51,7 @@ import java.io.InputStream;
 
 import javax.swing.Icon;
 
+import org.apache.commons.io.IOUtils;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
@@ -118,6 +119,21 @@ public interface BinaryObjectDataValue extends DataValue {
         @Override
         public String getName() {
             return "Binary objects";
+        }
+    }
+
+    /**
+     * Returns whether the two data values have the same content.
+     *
+     * @param v1 the first data value
+     * @param v2 the second data value
+     * @return <code>true</code> if both values are equal, <code>false</code> otherwise
+     * @throws IOException if an I/O error occurs while opening the binary input streams
+     * @since 3.0
+     */
+    static boolean equalContent(final BinaryObjectDataValue v1, final BinaryObjectDataValue v2) throws IOException {
+        try (InputStream is1 = v1.openInputStream(); InputStream is2 = v2.openInputStream()) {
+            return IOUtils.contentEquals(is1, is2);
         }
     }
 }

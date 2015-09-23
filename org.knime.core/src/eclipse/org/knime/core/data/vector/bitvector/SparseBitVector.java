@@ -780,12 +780,11 @@ public class SparseBitVector implements BitVector {
      */
     @Override
     public int hashCode() {
-        int hash = (int)(m_length ^ (m_length >>> 32));
+        long hash = 0;
         for (int i = 0; i <= m_lastIdx; i++) {
-            long idx = m_idxStorage[i];
-            hash = 31 * hash + ((int)(idx ^ (idx >>> 32)));
+            hash = hash * 524287 + (m_idxStorage[i] + 1);
         }
-        return hash;
+        return (int) (hash ^ (hash >> 32));
     }
 
     /**

@@ -46,10 +46,14 @@ package org.knime.core.data.vector.bytevector;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+
+import java.util.Arrays;
+
+import org.hamcrest.core.Is;
+import org.knime.core.data.vector.bitvector.DenseBitVector;
+
 import junit.framework.Assert;
 import junit.framework.TestCase;
-
-import org.knime.core.data.vector.bitvector.DenseBitVector;
 
 /**
  * Tests the {@link DenseBitVector} class.
@@ -817,5 +821,31 @@ public class DenseByteVectorTest extends TestCase {
         } catch (IllegalArgumentException ex) {
             // OK
         }
+    }
+
+
+    /**
+     * Checks that the hashCode of dense and sparse byte vectors are identical.
+     *
+     * @throws Exception if an error occurs
+     */
+    public void testHashCode() throws Exception {
+        checkHashCode(new byte[0]);
+        checkHashCode(new byte[] { 31 });
+        checkHashCode(new byte[] { 31, 5, 7, 8, 9 });
+        checkHashCode(new byte[] { 0, 0, 7, 0, 0 });
+        checkHashCode(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
+    }
+
+    private void checkHashCode(final byte[] counts) {
+        long[] indices = new long[counts.length];
+        for (int i = 0; i < indices.length; i++) {
+            indices[i] = i;
+        }
+
+        SparseByteVector sparse = new SparseByteVector(counts.length, indices, counts);
+        DenseByteVector dense = new DenseByteVector(counts);
+
+        assertThat("Hashcode for " + Arrays.toString(counts) + " not equal", sparse.hashCode(), Is.is(dense.hashCode()));
     }
 }

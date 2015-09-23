@@ -275,18 +275,6 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
 
     /** {@inheritDoc} */
     @Override
-    protected boolean equalsDataCell(final DataCell dc) {
-        return m_adapterMap.equals(((AdapterCell)dc).m_adapterMap);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        return m_adapterMap.hashCode();
-    }
-
-    /** {@inheritDoc} */
-    @Override
     protected AdapterCell clone() {
         try {
             return (AdapterCell)super.clone();

@@ -58,6 +58,7 @@ import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
 
 /**
  * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
@@ -113,6 +114,14 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         return ((SparseBitVectorCell)dc).m_bitVector.equals(m_bitVector);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean equalContent(final DataValue otherValue) {
+        return BitVectorValue.equalContent(this, (BitVectorValue) otherValue);
     }
 
     /**

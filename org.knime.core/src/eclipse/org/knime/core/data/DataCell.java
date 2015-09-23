@@ -180,20 +180,36 @@ public abstract class DataCell implements DataValue, Serializable {
             otherDelegate = ((BlobWrapperDataCell)otherDelegate).getCell();
         }
 
+        // if both cells are missing they are equal
+        if (thisDelegate.isMissing() && otherDelegate.isMissing()) {
+            return true;
+        }
+
+        // if only one of both cells is missing they can not be equal
+        if (thisDelegate.isMissing() || otherDelegate.isMissing()) {
+            return false;
+        }
+
         // only cells of identical classes can possibly be equal
         if (thisDelegate.getClass().equals(otherDelegate.getClass())) {
-            // if both cells are missing they are equal
-            if (thisDelegate.isMissing() && otherDelegate.isMissing()) {
-                return true;
-            }
-            // if only one of both cells is missing they can not be equal
-            if (thisDelegate.isMissing() || otherDelegate.isMissing()) {
-                return false;
-            }
             // now call the datacell class specific equals method
-            return thisDelegate.equalsDataCell(otherDelegate);
+            boolean b = thisDelegate.equalsDataCell(otherDelegate);
+            assert(!b || thisDelegate.hashCode() == otherDelegate.hashCode()) : "\"hashCode\" implementation of "
+                + thisDelegate.getClass() + " and " + otherDelegate.getClass()
+                + " behave differently. Please check the implementations!";
+            return b;
+        } else if (thisDelegate.getType().getPreferredValueClass()
+            .equals(otherDelegate.getType().getPreferredValueClass())) {
+            // Unequal cell classes but the preferred value class is identical. This happens e.g. for blob and non-blob
+            // cells or for normal and adapter cells.
+            assert thisDelegate.equalContent(otherDelegate) == otherDelegate
+                .equalContent(otherDelegate) : "\"equalContent\" implementation of " + thisDelegate.getClass() + " and "
+                    + otherDelegate.getClass() + " behave differently. Please check the implementations!";
+            return thisDelegate.equalContent(otherDelegate);
+
         }
-        // not of the same class
+
+        // not of the same class or content
         return false;
     }
 
@@ -209,8 +225,26 @@ public abstract class DataCell implements DataValue, Serializable {
     protected abstract boolean equalsDataCell(final DataCell dc);
 
     /**
+     * This method is called when two cell of different classes but with the same preferred value are compared (e.g.
+     * SdfCell and SdfAdapterCell or MolCell and MolBlobCell). All such cell classes should override this method
+     * with the same implementation, usually by comparing both preferred values. You can assume the this cell and the
+     * other cell have the same preferred value class, i.e. you can cast the argument to the preferred value.
+     * <br />
+     * The default implementation returns <code>false</code>.
+     *
+     * @param otherValue the other data value
+     * @return <code>true</code> if the content of both cells is the same, <code>false</code> otherwise
+     * @since 3.0
+     */
+    protected boolean equalContent(final DataValue otherValue) {
+        return false;
+    }
+
+    /**
      * This method must be implemented in order to ensure that two equal
-     * <code>DataCell</code> objects return the same hash code.
+     * <code>DataCell</code> objects return the same hash code. Note that two cells can be equal according to
+     * {@link #equalsDataCell(DataCell)} and {@link #equalContent(DataValue)} so two different cells implementations
+     * with the same preferred value must have the same hash code.
      *
      * @return the hash code of your specific <code>DataCell</code>
      *

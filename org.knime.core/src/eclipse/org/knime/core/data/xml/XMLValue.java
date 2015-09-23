@@ -51,6 +51,7 @@ import javax.swing.Icon;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.data.xml.util.XmlDomComparer;
 import org.w3c.dom.Document;
 
 
@@ -73,6 +74,29 @@ public interface XMLValue extends DataValue {
      * @see DataValue#UTILITY
      */
     UtilityFactory UTILITY = new XMLUtilityFactory();
+
+    /**
+     * Returns whether the two data values have the same content.
+     *
+     * @param v1 the first data value
+     * @param v2 the second data value
+     * @return <code>true</code> if both values are equal, <code>false</code> otherwise
+     * @since 3.0
+     */
+    static boolean equalContent(final XMLValue v1, final XMLValue v2) {
+        return XmlDomComparer.equals(v1.getDocument(), v2.getDocument());
+    }
+
+    /**
+     * Returns a hash code for the given data value.
+     *
+     * @param v a data value
+     * @return the hashcode
+     * @since 3.0
+     */
+    static int hashCode(final XMLValue v) {
+        return XmlDomComparer.hashCode(v.getDocument());
+    }
 
     /** Implementations of the meta information of this value class. */
     class XMLUtilityFactory extends ExtensibleUtilityFactory {

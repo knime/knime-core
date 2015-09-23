@@ -421,7 +421,13 @@ public class DenseByteVector {
      */
     @Override
     public int hashCode() {
-        return Arrays.hashCode(m_storage);
+        long hash = 0;
+        for (int i = 0; i < m_storage.length; i++) {
+            if (m_storage[i] != 0) {
+                hash = hash * 524287 + i * 31 + (m_storage[i] + 256);
+            }
+        }
+        return (int) (hash ^ (hash >> 32));
     }
 
     /**

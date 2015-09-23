@@ -56,11 +56,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeSettings;
+
+import junit.framework.Assert;
 
 /**
  * Testcases for {@link AdapterCell}.
@@ -80,6 +80,22 @@ public class AdapterCellTest {
 
         public MyAdapterCell(final DataCellDataInput input) throws IOException {
             super(input);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean equalsDataCell(final DataCell dc) {
+            return getAdapterMap().equals(((MyAdapterCell) dc).getAdapterMap());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 0;
         }
     }
 
@@ -114,7 +130,7 @@ public class AdapterCellTest {
         assertThat("No missing value found for StringValue", m2, is(not(nullValue())));
         assertThat("Unexpected error message in missing value", m2.getError(), is("Something went wrong"));
     }
-    
+
     /** Test for bug 5061. */
     @Test
     public void testAdapterTypeSaveLoad_Bug5061() throws Exception {

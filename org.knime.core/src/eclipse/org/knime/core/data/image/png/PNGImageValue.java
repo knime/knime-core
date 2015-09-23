@@ -45,6 +45,8 @@
  */
 package org.knime.core.data.image.png;
 
+import java.util.Objects;
+
 import javax.swing.Icon;
 
 import org.knime.core.data.DataValue;
@@ -67,6 +69,18 @@ public interface PNGImageValue extends ImageValue {
      * @see DataValue#UTILITY
      */
     public static final UtilityFactory UTILITY = new ImageCellUtilityFactory();
+
+    /**
+     * Returns whether the two data values have the same content.
+     *
+     * @param v1 the first data value
+     * @param v2 the second data value
+     * @return <code>true</code> if both values are equal, <code>false</code> otherwise
+     * @since 3.0
+     */
+    static boolean equalContent(final PNGImageValue v1, final PNGImageValue v2) {
+        return Objects.equals(v1.getImageContent(), v2.getImageContent());
+    }
 
     /** Implementations of the meta information of this value class. */
     public static class ImageCellUtilityFactory extends ExtensibleUtilityFactory {

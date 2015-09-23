@@ -55,6 +55,7 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.vector.bitvector.SparseBitVectorCellFactory;
 
 /**
@@ -102,6 +103,14 @@ public class SparseByteVectorCell extends DataCell implements ByteVectorValue {
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         return ((SparseByteVectorCell)dc).m_byteVector.equals(m_byteVector);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean equalContent(final DataValue otherValue) {
+        return ByteVectorValue.equalContent(this, (ByteVectorValue) otherValue);
     }
 
     /**

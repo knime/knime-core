@@ -135,6 +135,29 @@ public interface ByteVectorValue extends DataValue {
      */
     long nextCountIndex(final long startIdx);
 
+    /**
+     * Returns whether the two data values have the same content.
+     *
+     * @param v1 the first data value
+     * @param v2 the second data value
+     * @return <code>true</code> if both values are equal, <code>false</code> otherwise
+     * @since 3.0
+     */
+    static boolean equalContent(final ByteVectorValue v1, final ByteVectorValue v2) {
+        if ((v1.length() != v2.length()) || (v1.cardinality() != v2.cardinality())) {
+            return false;
+        }
+
+        for (long i = 0; i < v1.length(); i++) {
+            if (v1.get(i) != v2.get(i)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
     /** Implementations of the meta information of this value class. */
     class ByteVectorUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */

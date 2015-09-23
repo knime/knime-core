@@ -52,6 +52,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
 
 
 /** Default implementation of a PNG image cell.
@@ -120,6 +121,14 @@ public class PNGImageCell extends DataCell implements PNGImageValue {
     protected boolean equalsDataCell(final DataCell dc) {
         PNGImageCell ic = (PNGImageCell) dc;
         return m_content.equals(ic.m_content);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean equalContent(final DataValue otherValue) {
+        return PNGImageValue.equalContent(this, (PNGImageValue)otherValue);
     }
 
     /**

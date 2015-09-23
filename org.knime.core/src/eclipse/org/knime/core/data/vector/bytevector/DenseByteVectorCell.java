@@ -57,6 +57,7 @@ import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
 
 /**
@@ -104,6 +105,14 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         return ((DenseByteVectorCell)dc).m_byteVector.equals(m_byteVector);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean equalContent(final DataValue otherValue) {
+        return ByteVectorValue.equalContent(this, (ByteVectorValue) otherValue);
     }
 
     /**

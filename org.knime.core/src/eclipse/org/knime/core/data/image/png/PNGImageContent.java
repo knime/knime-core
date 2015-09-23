@@ -273,4 +273,11 @@ public class PNGImageContent implements ImageContent {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(m_imageBytes);
+    }
 }

@@ -57,8 +57,10 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.node.NodeLogger;
 
 /** Cell implementation of {@link BinaryObjectDataValue} that keeps the binary content in a KNIME file store object.
  *
@@ -172,5 +174,18 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
      */
     String getFilePath() {
         return getFileStore().getFile().getAbsolutePath();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean equalContent(final DataValue otherValue) {
+        try {
+            return BinaryObjectDataValue.equalContent(this, (BinaryObjectDataValue)otherValue);
+        } catch (IOException ex) {
+            NodeLogger.getLogger(getClass()).error("I/O error while comparing contents: " + ex.getMessage(), ex);
+            return false;
+        }
     }
 }

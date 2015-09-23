@@ -56,6 +56,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.BlobDataCell;
 import org.w3c.dom.Document;
@@ -166,8 +167,16 @@ public class XMLBlobCell extends BlobDataCell implements XMLValue, StringValue {
      * {@inheritDoc}
      */
     @Override
+    protected boolean equalContent(final DataValue otherValue) {
+        return XMLValue.equalContent(this, (XMLValue)otherValue);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int hashCode() {
-        return m_content.hashCode();
+        return XMLValue.hashCode(this);
     }
 
 }

@@ -44,6 +44,10 @@
  */
 package org.knime.core.data.vector.bitvector;
 
+import static org.junit.Assert.assertThat;
+
+import org.hamcrest.core.Is;
+
 import junit.framework.TestCase;
 
 /**
@@ -984,32 +988,32 @@ public class DenseBitVectorTest extends TestCase {
         assertEquals("{length=" + length + ", set bits=18, 700, 7645, 381966}", bv.toString());
 
     }
-    
+
     public void testSubsequence(){
     	try {
     		new DenseBitVector("10f0").subSequence(-1, 0);
-    		fail("Exception Expected");			
+    		fail("Exception Expected");
 		} catch (IllegalArgumentException e) {
 		}
-    	
+
     	try {
     		new DenseBitVector("10f0").subSequence(0, -2);
-    		fail("Exception Expected");			
+    		fail("Exception Expected");
 		} catch (IllegalArgumentException e) {
 		}
-    	
+
        	try {
     		new DenseBitVector("10f0").subSequence(0, 17);
-    		fail("Exception Expected");			
+    		fail("Exception Expected");
 		} catch (IllegalArgumentException e) {
 		}
-       	
+
        	try {
     		new DenseBitVector("10f0").subSequence(5, 4);
-    		fail("Exception Expected");			
+    		fail("Exception Expected");
 		} catch (IllegalArgumentException e) {
 		}
-    	
+
       	assertEquals("", new DenseBitVector("").subSequence(0, 0).toHexString());
       	assertEquals("", new DenseBitVector("10f0").subSequence(0, 0).toHexString());
        	assertEquals("F0", new DenseBitVector("10f0").subSequence(0, 8).toHexString());
@@ -1017,17 +1021,17 @@ public class DenseBitVectorTest extends TestCase {
        	assertEquals("043", new DenseBitVector("10f0").subSequence(6, 16).toHexString());
        	assertEquals("3", new DenseBitVector("10f0").subSequence(4, 6).toHexString());
     }
-    
+
     public void testBug5077(){
     	DenseBitVector denseBit = new DenseBitVector("1000000000000000001");
 		DenseBitVector denseBit2 = new DenseBitVector("101");
-		
+
 		assertEquals("1000000000000000101", denseBit.or(denseBit2).toHexString());
 		assertEquals("1000000000000000101", denseBit2.or(denseBit).toHexString());
-		
+
 		assertEquals("0000000000000000001", denseBit.and(denseBit2).toHexString());
 		assertEquals("0000000000000000001", denseBit2.and(denseBit).toHexString());
-		
+
 		assertEquals("1000000000000000100", denseBit.xor(denseBit2).toHexString());
 		assertEquals("1000000000000000100", denseBit2.xor(denseBit).toHexString());
     }
@@ -1070,5 +1074,27 @@ public class DenseBitVectorTest extends TestCase {
         		"502004031204000812483400000898010";
         bv = new DenseBitVector(hex);
         assertEquals(hex, bv.toHexString());
+    }
+
+    /**
+     * Checks that the hashCode of dense and sparse bit vectors are identical.
+     *
+     * @throws Exception if an error occurs
+     */
+    public void testHashCode() throws Exception {
+        checkHashCode("0");
+        checkHashCode("1");
+        checkHashCode("101");
+        checkHashCode("01101");
+        checkHashCode("110011001100110011001100110011001"); // 65 bits
+        checkHashCode("000000000000000000001000000000000"); // 65 bits
+        checkHashCode("0000000000000000000000000000000001000000000000000000000000000000000");
+    }
+
+    private void checkHashCode(final String bits) {
+        SparseBitVector sparse = new SparseBitVector(bits);
+        DenseBitVector dense = new DenseBitVector(bits);
+
+        assertThat("Hashcode for " + bits + " not equal", sparse.hashCode(), Is.is(dense.hashCode()));
     }
 }

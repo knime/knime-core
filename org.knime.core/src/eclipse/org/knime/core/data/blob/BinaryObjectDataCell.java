@@ -57,6 +57,8 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.NodeLogger;
 
 /** Cell implementation of {@link BinaryObjectDataValue} that keeps the binary content in a byte array.
  *
@@ -171,4 +173,16 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
         return new ByteArrayInputStream(m_bytes);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean equalContent(final DataValue otherValue) {
+        try {
+            return BinaryObjectDataValue.equalContent(this, (BinaryObjectDataValue)otherValue);
+        } catch (IOException ex) {
+            NodeLogger.getLogger(getClass()).error("I/O error while comparing contents: " + ex.getMessage(), ex);
+            return false;
+        }
+    }
 }

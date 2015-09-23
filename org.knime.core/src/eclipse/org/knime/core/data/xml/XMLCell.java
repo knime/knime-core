@@ -57,6 +57,7 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -162,8 +163,16 @@ public class XMLCell extends DataCell implements XMLValue, StringValue {
      * {@inheritDoc}
      */
     @Override
+    protected boolean equalContent(final DataValue otherValue) {
+        return XMLValue.equalContent(this, (XMLValue)otherValue);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int hashCode() {
-        return m_content.hashCode();
+        return XMLValue.hashCode(this);
     }
 
     /**
