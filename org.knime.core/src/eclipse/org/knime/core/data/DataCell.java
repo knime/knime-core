@@ -203,7 +203,7 @@ public abstract class DataCell implements DataValue, Serializable {
             // Unequal cell classes but the preferred value class is identical. This happens e.g. for blob and non-blob
             // cells or for normal and adapter cells.
             assert thisDelegate.equalContent(otherDelegate) == otherDelegate
-                .equalContent(otherDelegate) : "\"equalContent\" implementation of " + thisDelegate.getClass() + " and "
+                .equalContent(thisDelegate) : "\"equalContent\" implementation of " + thisDelegate.getClass() + " and "
                     + otherDelegate.getClass() + " behave differently. Please check the implementations!";
             return thisDelegate.equalContent(otherDelegate);
 
