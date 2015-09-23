@@ -91,6 +91,8 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -182,7 +184,7 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     protected void configureShell(final Shell newShell) {
         super.configureShell(newShell);
-        Image img = KNIMEUIPlugin.getDefault().getImageRegistry().get("knime");
+        Image img = ImageRepository.getIconImage(SharedImages.KNIME);
         newShell.setImage(img);
         Menu menuBar = new Menu(newShell, SWT.BAR);
         newShell.setMenuBar(menuBar);

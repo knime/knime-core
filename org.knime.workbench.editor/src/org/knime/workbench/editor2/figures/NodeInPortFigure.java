@@ -117,7 +117,7 @@ public class NodeInPortFigure extends AbstractPortFigure {
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
-        return new Dimension(NODE_PORT_SIZE, NODE_PORT_SIZE);
+        return new Dimension(AbstractPortFigure.getPortSizeNode(), AbstractPortFigure.getPortSizeNode());
     }
 
     /**

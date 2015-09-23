@@ -57,7 +57,8 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
@@ -68,7 +69,6 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
@@ -77,7 +77,7 @@ import org.knime.workbench.editor2.figures.NodeContainerFigure;
  * of the move.
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
- * @since 2.12 
+ * @since 2.12
  */
 public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
 
@@ -106,7 +106,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/move.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move.png");
     }
 
     /**
@@ -114,7 +114,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/move_dis.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/move_dis.png");
     }
 
     /**

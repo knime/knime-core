@@ -50,7 +50,8 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -100,7 +101,7 @@ public class OpenSubNodeEditorAction extends Action {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/meta/metanode.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode.png");
     }
 
     /**

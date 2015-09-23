@@ -51,7 +51,8 @@ import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 
 
 /**
@@ -62,17 +63,17 @@ import org.knime.workbench.editor2.ImageRepository;
 public class SubworkflowFigure extends NodeContainerFigure {
 
     // load images
-    private static final Image IDLE_STATE = ImageRepository.getImage(
+    private static final Image IDLE_STATE = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID,
             "icons/meta/meta_idle2.png");
 
-    private static final Image EXECUTING_STATE = ImageRepository.getImage(
+    private static final Image EXECUTING_STATE = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID,
             "icons/meta/meta_executing5.png");
 
-    private static final Image EXECUTED_STATE = ImageRepository.getImage(
+    private static final Image EXECUTED_STATE = ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID,
             "icons/meta/meta_executed.png");
 
 
-    private static final Image BACKGROUND_ICON = ImageRepository.getImage(
+    private static final Image BACKGROUND_ICON = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
             "icons/meta/meta_node.png");
 
     /**

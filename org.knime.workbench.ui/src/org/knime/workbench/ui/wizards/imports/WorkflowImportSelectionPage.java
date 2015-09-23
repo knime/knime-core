@@ -183,8 +183,7 @@ public class WorkflowImportSelectionPage extends WizardPage {
         super(NAME);
         setTitle("Workflow Import Selection");
         setDescription("Select the workflows to import.");
-        setImageDescriptor(ImageRepository
-                .getImageDescriptor(SharedImages.ImportBig));
+        setImageDescriptor(ImageRepository.getImageDescriptor(SharedImages.ImportBig));
         m_btnData = new GridData();
         m_btnData.widthHint = 70;
         m_btnData.horizontalAlignment = SWT.RIGHT;

@@ -58,7 +58,8 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.DisconnectSubNodeLinkCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -111,8 +112,7 @@ public class DisconnectSubNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/meta/metanode_link_disconnect.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_disconnect.png");
     }
 
     /**

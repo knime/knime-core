@@ -51,7 +51,8 @@ import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.MarginBorder;
 import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.jface.resource.JFaceResources;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 
 /**
  * Figure for displaying tool tips on warning/error signs.
@@ -86,9 +87,9 @@ public class WarnErrorToolTip extends Figure {
         m_tooltip = new Label("???");
 
         if (type == WARNING) {
-            m_tooltip.setIcon(ImageRepository.getImage("icons/warning.gif"));
+            m_tooltip.setIcon(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/warning.gif"));
         } else {
-            m_tooltip.setIcon(ImageRepository.getImage("icons/error.png"));
+            m_tooltip.setIcon(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/error.png"));
         }
         m_tooltip.setBorder(TOOL_TIP_BORDER);
         m_tooltip.setFont(JFaceResources.getDefaultFont());

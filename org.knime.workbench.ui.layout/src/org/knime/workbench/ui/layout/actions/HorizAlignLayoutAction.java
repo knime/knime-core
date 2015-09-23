@@ -49,10 +49,11 @@
 package org.knime.workbench.ui.layout.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.ui.layout.Activator;
 import org.knime.workbench.ui.layout.commands.HorizAlignCommand;
 
 /**
@@ -86,7 +87,7 @@ public class HorizAlignLayoutAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/halign.png");
+        return ImageRepository.getImageDescriptor(Activator.PLUGIN_ID, "icons/halign.png");
     }
 
     /**
@@ -94,7 +95,7 @@ public class HorizAlignLayoutAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/halign_disabled.png");
+        return ImageRepository.getImageDescriptor(Activator.PLUGIN_ID, "icons/halign_disabled.png");
     }
 
     /**

@@ -158,7 +158,9 @@ public class ProgressFigure extends RectangleFigure implements
      * Creates a new node figure.
      */
     public ProgressFigure() {
-        setBounds(new Rectangle(0, 0, WIDTH, HEIGHT));
+        // progress bar must have exact same dimensions as status figure
+        Dimension d = NodeContainerFigure.getStatusBarDimension();
+        setBounds(new Rectangle(0, 0, d.width, d.height));
         setOpaque(true);
         setFill(true);
         setOutline(true);
@@ -185,7 +187,7 @@ public class ProgressFigure extends RectangleFigure implements
      */
     @Override
     public Dimension getMaximumSize() {
-        return getPreferredSize(WIDTH, HEIGHT);
+        return getPreferredSize();
     }
 
     /**
@@ -193,8 +195,7 @@ public class ProgressFigure extends RectangleFigure implements
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
-
-        return new Dimension(WIDTH, HEIGHT);
+        return NodeContainerFigure.getStatusBarDimension();
     }
 
     /**

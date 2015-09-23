@@ -349,6 +349,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         installEditPolicy(EditPolicy.LAYOUT_ROLE,
                 new NewWorkflowXYLayoutPolicy());
 
+//        installEditPolicy(EditPolicy.SELECTION_FEEDBACK_ROLE, new WorkflowSelectionFeedbackPolicy());
     }
 
     private final AtomicBoolean m_workflowChangedOngoingBoolean = new AtomicBoolean();

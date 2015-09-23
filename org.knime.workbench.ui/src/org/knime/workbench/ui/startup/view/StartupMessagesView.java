@@ -76,7 +76,7 @@ public class StartupMessagesView extends ViewPart {
      */
     public StartupMessagesView() {
         setPartName("Startup Messages");
-        setTitleImage(ImageRepository.getImage(SharedImages.StartupMessages));
+        setTitleImage(ImageRepository.getIconImage(SharedImages.StartupMessages));
     }
 
     /**

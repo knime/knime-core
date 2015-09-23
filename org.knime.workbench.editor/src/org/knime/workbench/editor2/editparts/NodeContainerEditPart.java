@@ -129,7 +129,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
@@ -171,18 +171,19 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         });
 
     private static final Image META_NODE_LINK_GREEN_ICON = ImageRepository
-        .getImage("icons/meta/metanode_link_green_decorator.png");
+        .getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_green_decorator.png");
 
     private static final Image META_NODE_LINK_RED_ICON = ImageRepository
-        .getImage("icons/meta/metanode_link_red_decorator.png");
+        .getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_red_decorator.png");
 
     private static final Image META_NODE_LINK_PROBLEM_ICON = ImageRepository
-        .getImage("icons/meta/metanode_link_problem_decorator.png");
+        .getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_link_problem_decorator.png");
 
-    private static final Image META_NODE_LOCK_ICON = ImageRepository.getImage("icons/meta/metanode_lock_decorator.png");
+    private static final Image META_NODE_LOCK_ICON =
+            ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_lock_decorator.png");
 
     private static final Image META_NODE_UNLOCK_ICON = ImageRepository
-        .getImage("icons/meta/metanode_unlock_decorator.png");
+        .getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_unlock_decorator.png");
 
     /**
      * true, if the figure was initialized from the node extra info object.
@@ -612,10 +613,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         String description = getNodeContainer().getCustomDescription();
 
         // get the icon
-        Image icon = ImageRepository.getScaledImage(getNodeContainer().getIcon(), 16, 16);
+        Image icon = org.knime.workbench.core.util.ImageRepository.getUnscaledIconImage(getNodeContainer().getIcon());
         // get default image if null
         if (icon == null) {
-            icon = ImageRepository.getScaledImage(NodeFactory.getDefaultIcon(), 16, 16);
+            icon = org.knime.workbench.core.util.ImageRepository.getUnscaledIconImage(NodeFactory.getDefaultIcon());
         }
         if (icon != null) {
             f.setIcon(icon);

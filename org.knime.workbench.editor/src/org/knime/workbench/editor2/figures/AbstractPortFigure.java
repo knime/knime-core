@@ -105,12 +105,13 @@ public abstract class AbstractPortFigure extends Shape {
 
     private final boolean m_isMetaNodePort;
 
-    /** Size constant for the workflow ports. */
-    public static final int WF_PORT_SIZE = 20;
+    public static int getPortSizeWorkflow() {
+        return 20;
+    }
 
-    /** Size constant for node ports. */
-    public static final int NODE_PORT_SIZE = 9;
-
+    public static int getPortSizeNode() {
+        return 9;
+    }
     /**
      *
      * @param type port type

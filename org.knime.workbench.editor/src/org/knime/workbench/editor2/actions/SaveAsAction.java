@@ -48,12 +48,13 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.actions.ActionFactory;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to save-as a workflow. Unable to find the proper eclipse class to do it so that needs to 
+ * Action to save-as a workflow. Unable to find the proper eclipse class to do it so that needs to
  * serve as a workaround.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
@@ -96,7 +97,7 @@ public class SaveAsAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/knime.png"); // not shown anywhere
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/knime.png"); // not shown anywhere
     }
 
     /**

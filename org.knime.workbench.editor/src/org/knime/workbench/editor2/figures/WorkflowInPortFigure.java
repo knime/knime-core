@@ -148,7 +148,7 @@ public class WorkflowInPortFigure extends AbstractPortFigure {
      */
     @Override
     public Dimension getPreferredSize(final int hint, final int hint2) {
-        return new Dimension(WF_PORT_SIZE, WF_PORT_SIZE);
+        return new Dimension(getPortSizeWorkflow(), getPortSizeWorkflow());
     }
 
 }

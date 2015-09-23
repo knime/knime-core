@@ -66,7 +66,7 @@ public class ExecuteWorkflowAction extends AbstractWorkflowAction {
 
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor(SharedImages.Execute);
+        return ImageRepository.getIconDescriptor(SharedImages.Execute);
     }
 
     /**

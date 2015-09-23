@@ -123,8 +123,7 @@ public class WorkflowExportPage extends WizardPage {
         super("wizardPage");
         setTitle("Export KNIME workflows");
         setDescription("Exports a KNIME workflow.");
-        setImageDescriptor(ImageRepository
-                .getImageDescriptor(SharedImages.ExportBig));
+        setImageDescriptor(ImageRepository.getImageDescriptor(SharedImages.ExportBig));
         this.m_selection = selection;
     }
 

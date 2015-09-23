@@ -44,16 +44,18 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
-import org.knime.workbench.editor2.figures.AnnotationFigure3;
+import org.knime.workbench.editor2.figures.NodeAnnotationFigure;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -79,7 +81,7 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
             public void run() {
                 WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
                 NodeAnnotation anno = (NodeAnnotation)getModel();
-                AnnotationFigure3 annoFig = (AnnotationFigure3)getFigure();
+                NodeAnnotationFigure annoFig = (NodeAnnotationFigure)getFigure();
                 annoFig.newContent(anno);
                 // node annotation ignores its x/y ui info and hooks itself to its node
                 NodeContainer node = anno.getNodeContainer();
@@ -151,6 +153,16 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
                 refreshVisuals();
             }
         });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected IFigure createFigure() {
+        Annotation anno = getModel();
+        NodeAnnotationFigure f = new NodeAnnotationFigure(anno);
+        return f;
     }
 
 

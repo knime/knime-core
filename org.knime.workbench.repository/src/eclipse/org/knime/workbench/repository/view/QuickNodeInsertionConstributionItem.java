@@ -87,8 +87,8 @@ final class QuickNodeInsertionConstributionItem extends ControlContribution {
     @Override
     protected Control createControl(final Composite parent) {
 
-        ICommandService commandService = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
-        IBindingService bindingService = (IBindingService)PlatformUI.getWorkbench().getService(IBindingService.class);
+        ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
+        IBindingService bindingService = PlatformUI.getWorkbench().getService(IBindingService.class);
 
         Command command = commandService.getCommand(QuickNodeInsertionHandler.COMMAND_ID);
 
@@ -101,13 +101,13 @@ final class QuickNodeInsertionConstributionItem extends ControlContribution {
         String keySequence = getBindingSequence(bindingService);
 
         Button button = new Button(parent, SWT.NONE);
-        button.setImage(ImageRepository.getScaledImage(SharedImages.Search, 16, 16));
+        button.setImage(ImageRepository.getIconImage(SharedImages.Search));
         button.addSelectionListener(new SelectionAdapter() {
 
             @Override
             public void widgetSelected(final SelectionEvent e) {
                 IHandlerService handlerService =
-                    (IHandlerService)PlatformUI.getWorkbench().getService(IHandlerService.class);
+                    PlatformUI.getWorkbench().getService(IHandlerService.class);
                 try {
                     handlerService.executeCommand(QuickNodeInsertionHandler.COMMAND_ID, null);
                 } catch (Exception ex) {

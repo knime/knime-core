@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 georg : renewed
  */
@@ -53,12 +53,12 @@ import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.MarginBorder;
 import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.jface.resource.JFaceResources;
-
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 
 /**
  * Figure for displaying tool tips, e.g. on ports
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class NewToolTipFigure extends Figure {
@@ -68,14 +68,14 @@ public class NewToolTipFigure extends Figure {
 
     /**
      * Creates a new ToolTip.
-     * 
+     *
      * @param text The text to display
      */
     public NewToolTipFigure(final String text) {
         this.setLayoutManager(new ToolbarLayout(true));
 
         m_tooltip = new Label("???");
-        m_tooltip.setIcon(ImageRepository.getImage("icons/info.gif"));
+        m_tooltip.setIcon(ImageRepository.getIconImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/info.gif"));
         m_tooltip.setBorder(TOOL_TIP_BORDER);
         m_tooltip.setFont(JFaceResources.getDefaultFont());
         this.add(m_tooltip);
@@ -85,7 +85,7 @@ public class NewToolTipFigure extends Figure {
 
     /**
      * Sets the text to be shown as a tooltip.
-     * 
+     *
      * @param text The text to show
      */
     public void setText(final String text) {

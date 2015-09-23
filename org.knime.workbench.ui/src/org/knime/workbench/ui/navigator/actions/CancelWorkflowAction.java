@@ -78,7 +78,7 @@ public class CancelWorkflowAction extends AbstractWorkflowAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor(SharedImages.CancelExecution);
+        return ImageRepository.getIconDescriptor(SharedImages.CancelExecution);
     }
 
     /**

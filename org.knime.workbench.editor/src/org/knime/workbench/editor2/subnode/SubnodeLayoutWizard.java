@@ -55,14 +55,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 
 /**
  *
@@ -88,7 +88,8 @@ public class SubnodeLayoutWizard extends Wizard {
     @Override
     public void addPages() {
         setWindowTitle("Layout Subnode Wizard");
-        setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(ImageRepository.getImage("icons/layout_55.png")));
+        setDefaultPageImageDescriptor(
+            ImageRepository.getImageDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_55.png"));
         WorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();
         Map<NodeID, SubNodeContainer> nestedSubnodes = wfManager.findNodes(SubNodeContainer.class, false);
         Map<NodeID, WizardNode> viewNodes = wfManager.findNodes(WizardNode.class, false);

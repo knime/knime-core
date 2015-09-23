@@ -67,9 +67,7 @@ import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
@@ -81,7 +79,9 @@ import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditManager;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditPolicy;
 import org.knime.workbench.editor2.directannotationedit.StyledTextEditorLocator;
-import org.knime.workbench.editor2.figures.AnnotationFigure3;
+import org.knime.workbench.editor2.editparts.policy.WorkflowSelectionFeedbackPolicy;
+import org.knime.workbench.editor2.figures.NodeAnnotationFigure;
+import org.knime.workbench.editor2.figures.WorkflowAnnotationFigure;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -100,12 +100,6 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
 
     /** White. */
     public static final Color DEFAULT_BG_NODE = new Color(null, 255, 255, 255);
-
-    /**
-     * Fonts used in the figure or the style editor must go through this.
-     */
-    public static final FontStore FONT_STORE = new FontStore(Display
-            .getCurrent().getSystemFont());
 
     /**
      * If no foreground color is set, this one should be used.
@@ -228,7 +222,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      */
     public static Font getWorkflowAnnotationDefaultFont() {
         // its the system default font.
-        return FONT_STORE.getDefaultFont();
+        return FontStore.INSTANCE.getDefaultFont(FontStore.getFontSizeFromKNIMEPrefPage());
     }
 
     /**
@@ -239,22 +233,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     * @return the default font for node annotation
     */
    public static Font getNodeAnnotationDefaultFont() {
-       int fontSize =
-           KNIMEUIPlugin
-                   .getDefault()
-                   .getPreferenceStore().getInt(
-                           PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
-       Font defFont = FONT_STORE.getDefaultFont();
-       FontData[] fontData = defFont.getFontData();
-       if (fontData != null && fontData.length > 0) {
-           FontData fd = fontData[0];
-           if (fd.getHeight() != fontSize) {
-               fd.setHeight(fontSize);
-                defFont =
-                        FONT_STORE.getFont(fd.getName(), fd.getHeight(),
-                                fd.getStyle());
-           }
-       }
+       Font defFont = FontStore.INSTANCE.getDefaultFont(FontStore.getFontSizeFromKNIMEPrefPage());
        return defFont;
    }
 
@@ -271,7 +250,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     @Override
     protected IFigure createFigure() {
         Annotation anno = getModel();
-        AnnotationFigure3 f = new AnnotationFigure3(anno);
+        NodeAnnotationFigure f = new WorkflowAnnotationFigure(anno);
         if (anno instanceof WorkflowAnnotation) {
             f.setBounds(new Rectangle(anno.getX(), anno.getY(), anno.getWidth(),
                     anno.getHeight()));
@@ -315,8 +294,9 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     protected void createEditPolicies() {
         // Installs the edit policy to directly edit the annotation in its
         // editpart (through the StyledTextEditor) after clicking it twice.
-        installEditPolicy(EditPolicy.DIRECT_EDIT_ROLE,
-                new AnnotationEditPolicy());
+        installEditPolicy(EditPolicy.DIRECT_EDIT_ROLE, new AnnotationEditPolicy());
+        installEditPolicy(EditPolicy.SELECTION_FEEDBACK_ROLE, new WorkflowSelectionFeedbackPolicy());
+        installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE, null);
     }
 
     /**
@@ -325,7 +305,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
         Annotation anno = getModel();
-        AnnotationFigure3 annoFig = (AnnotationFigure3)getFigure();
+        NodeAnnotationFigure annoFig = (NodeAnnotationFigure)getFigure();
         annoFig.newContent(anno);
         WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
         parent.setLayoutConstraint(this, getFigure(), new Rectangle(
@@ -339,7 +319,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void propertyChange(final PropertyChangeEvent p) {
         if (p.getProperty().equals(PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
-            AnnotationFigure3 fig = (AnnotationFigure3)getFigure();
+            NodeAnnotationFigure fig = (NodeAnnotationFigure)getFigure();
             fig.newContent(getModel());
         }
     }
@@ -383,8 +363,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
                 new ArrayList<StyleRange>(knimeStyleRanges.length);
         for (AnnotationData.StyleRange knimeSR : knimeStyleRanges) {
             StyleRange swtStyle = new StyleRange();
-            Font f = FONT_STORE.getAnnotationFont(knimeSR, defaultFont);
-            if (!FONT_STORE.isDefaultFont(f)) {
+            Font f = FontStore.INSTANCE.getAnnotationFont(knimeSR, defaultFont);
+            if (!FontStore.INSTANCE.isDefaultFont(f)) {
                 swtStyle.font = f;
             }
             if (knimeSR.getFgColor() >= 0) {
@@ -474,7 +454,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
             m_directEditManager =
                     new AnnotationEditManager(this,
                             new StyledTextEditorLocator(
-                                    (AnnotationFigure3)getFigure()));
+                                    (NodeAnnotationFigure)getFigure()));
         }
 
         m_directEditManager.show();

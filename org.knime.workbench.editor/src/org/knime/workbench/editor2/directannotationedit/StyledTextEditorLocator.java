@@ -54,7 +54,7 @@ import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
-import org.knime.workbench.editor2.figures.AnnotationFigure3;
+import org.knime.workbench.editor2.figures.NodeAnnotationFigure;
 
 /**
  *
@@ -62,11 +62,11 @@ import org.knime.workbench.editor2.figures.AnnotationFigure3;
  */
 public class StyledTextEditorLocator implements CellEditorLocator {
 
-    private final AnnotationFigure3 m_figure;
+    private final NodeAnnotationFigure m_figure;
 
     private AnnotationEditPart m_editPart = null;
 
-    public StyledTextEditorLocator(final AnnotationFigure3 figure) {
+    public StyledTextEditorLocator(final NodeAnnotationFigure figure) {
         figure.getClass(); // must not be null
         m_figure = figure;
     }

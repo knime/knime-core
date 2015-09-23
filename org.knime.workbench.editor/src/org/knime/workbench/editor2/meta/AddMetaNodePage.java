@@ -78,7 +78,8 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 
 /**
@@ -712,8 +713,7 @@ public class AddMetaNodePage extends WizardPage {
             private static final int IMAGE_HEIGHT = 30;
             private static final int IMAGE_WIDTH = 30;
             private static final int PORT_BAR_HEIGHT = 40;
-            private static final int PORT_SIZE
-                = AbstractPortFigure.NODE_PORT_SIZE;
+            private final int PORT_SIZE = AbstractPortFigure.getPortSizeNode();
 
             private int m_top;
 
@@ -725,7 +725,7 @@ public class AddMetaNodePage extends WizardPage {
                     - (PORT_SIZE / 2);
                 drawInPorts(gc);
                 drawOutPorts(gc);
-                gc.drawImage(ImageRepository.getImage(
+                gc.drawImage(ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                     "/icons/meta/meta_custom_preview.png"),
                     (bounds.width / 2) - (IMAGE_WIDTH / 2),
                     (bounds.height / 2) - (IMAGE_HEIGHT / 2));

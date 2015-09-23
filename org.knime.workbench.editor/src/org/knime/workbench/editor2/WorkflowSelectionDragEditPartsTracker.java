@@ -112,6 +112,15 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Request createTargetRequest() {
+        // TODO Auto-generated method stub
+        return super.createTargetRequest();
+    }
+
+    /**
      * Asks each edit part in the
      * {@link org.eclipse.gef.tools.AbstractTool#getOperationSet() operation set}
      * to contribute to a {@link CompoundCommand} after first setting the

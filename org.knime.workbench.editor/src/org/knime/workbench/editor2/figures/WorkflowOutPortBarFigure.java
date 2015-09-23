@@ -85,7 +85,7 @@ public class WorkflowOutPortBarFigure extends AbstractWorkflowPortBarFigure {
     public void paint(final Graphics graphics) {
         Rectangle parent = getParent().getBounds().getCopy();
         if (!isInitialized()) {
-            int barWidth = WIDTH + AbstractPortFigure.WF_PORT_SIZE + OFFSET;
+            int barWidth = WIDTH + AbstractPortFigure.getPortSizeWorkflow() + OFFSET;
             int xLoc;
             if (parent.width - barWidth - 50 <= m_minXCoord) {
                 // the parent size is determined by the workflow parts (and not the window/view port size)
@@ -96,7 +96,8 @@ public class WorkflowOutPortBarFigure extends AbstractWorkflowPortBarFigure {
                 xLoc = parent.width - barWidth - OFFSET;
             }
             Rectangle newBounds =
-                    new Rectangle(xLoc, OFFSET, WIDTH + AbstractPortFigure.WF_PORT_SIZE, parent.height - (2 * OFFSET));
+                    new Rectangle(xLoc, OFFSET, WIDTH + AbstractPortFigure.getPortSizeWorkflow(),
+                        parent.height - (2 * OFFSET));
             setInitialized(true);
             setBounds(newBounds);
         }
@@ -106,9 +107,9 @@ public class WorkflowOutPortBarFigure extends AbstractWorkflowPortBarFigure {
     @Override
     protected void fillShape(final Graphics graphics) {
         graphics.fillRectangle(
-                getBounds().x + AbstractPortFigure.WF_PORT_SIZE,
+                getBounds().x + AbstractPortFigure.getPortSizeWorkflow(),
                 getBounds().y,
-                getBounds().width - AbstractPortFigure.WF_PORT_SIZE,
+                getBounds().width - AbstractPortFigure.getPortSizeWorkflow(),
                 getBounds().height);
     }
 
@@ -116,8 +117,8 @@ public class WorkflowOutPortBarFigure extends AbstractWorkflowPortBarFigure {
     @Override
     protected void outlineShape(final Graphics graphics) {
         Rectangle r = getBounds().getCopy();
-        r.x += AbstractPortFigure.WF_PORT_SIZE;
-        r.width -= AbstractPortFigure.WF_PORT_SIZE;
+        r.x += AbstractPortFigure.getPortSizeWorkflow();
+        r.width -= AbstractPortFigure.getPortSizeWorkflow();
         int x = r.x + lineWidth / 2;
         int y = r.y + lineWidth / 2;
         int w = r.width - Math.max(1, lineWidth);

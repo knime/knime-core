@@ -69,6 +69,8 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
@@ -493,7 +495,8 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         final IMenuManager parentMenuManager) {
         if (metaNodeManagerOrNull == null) {
             MenuManager m = new MenuManager("Meta Node",
-                ImageRepository.getImageDescriptor("/icons/meta/meta_menu.png"), null);
+                ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "/icons/meta/meta_menu.png"),
+                null);
             m.add(new Separator(GROUP_METANODE));
             m.add(new Separator(GROUP_METANODE_LINKS));
             parentMenuManager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, m);
@@ -506,7 +509,8 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         final IMenuManager parentMenuManager) {
         if (subNodeManagerOrNull == null) {
             MenuManager m = new MenuManager("Functional Unit",
-                ImageRepository.getImageDescriptor("/icons/meta/meta_menu.png"), null);
+                ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "/icons/meta/meta_menu.png"),
+                null);
             m.add(new Separator(GROUP_SUBNODE));
             m.add(new Separator(GROUP_SUBNODE_LINKS));
             parentMenuManager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, m);

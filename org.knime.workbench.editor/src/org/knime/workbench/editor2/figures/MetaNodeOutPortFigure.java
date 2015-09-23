@@ -55,7 +55,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateEvent;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
 
 /**
@@ -66,15 +67,15 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
 
     /** Red traffic light. * */
     public static final Image RED =
-            ImageRepository.getImage("icons/ports/port_idle.png");
+            ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/ports/port_idle.png");
 
     /** Yellow traffic light. * */
     public static final Image YELLOW =
-            ImageRepository.getImage("icons/ports/port_configured.png");
+            ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/ports/port_configured.png");
 
     /** Green traffic light. * */
     public static final Image GREEN =
-            ImageRepository.getImage("icons/ports/port_executed.png");
+            ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/ports/port_executed.png");
 
     private NodeContainerState m_currentState;
     private Image m_currentImage;

@@ -69,7 +69,7 @@ public class ResetWorkflowAction extends AbstractWorkflowAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor(SharedImages.Reset);
+        return ImageRepository.getIconDescriptor(SharedImages.Reset);
     }
 
     /**

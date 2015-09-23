@@ -357,4 +357,114 @@ public final class ViewUtils {
             };
         }
     }
+
+    /**
+     * Return a zoom factor depending on the display's dpi resolution. Currently 3 values are returned: 0-143 dpi: 100%,
+     * 144-191: 150%, 192-higher: 200%. Call in SWT Display Thread!
+     *
+     * @return a value representing the display zoom factor. 100 equals 100%, 150 is 150%, etc.
+     * @since 3.0
+     */
+    public static int getDisplayZoom() {
+        if (!DISPLAY_AVAILABLE) {
+            return 100;
+        }
+        /* Eclipse knows (currently) 3 zoom levels depending on the display's dpi.
+         * They use 100% up until 143 dpi, 150% for 144-191dpi and 200% for more than 191 dpi.
+         * also see
+         * https://wiki.eclipse.org/Bug_421383_-_Graphics_Scaling_issues_on_high_DPI_displays
+         * org.eclipse.swt.graphics.DPIUtil implements some highDPI API - but is package private :(
+         */
+        Display defDisplay = Display.getDefault();
+        int x_dpi = defDisplay.getDPI().x;
+        if (x_dpi < 144) {
+            return 100;
+        } else if (x_dpi < 192) {
+            return 150;
+        } else {
+            return 200;
+        }
+    }
+
+    /** filenames of image of original size should (optionally) end on this. */
+    private static final String IMAGE_100_EXTENSION = "@1x";
+
+    /** filenames of image of 150% size should end on this. */
+    private static final String IMAGE_150_EXTENSION = "@1.5x";
+
+    /** filenames of image of 200% size should end on this. */
+    private static final String IMAGE_200_EXTENSION = "@2x";
+
+    /**
+     * @param path full path to the icon file without size extension
+     * @return the path with the extension for the 100% image (@1x) appended (before the file extension)
+     * @since 3.0
+     */
+    public static String getImageFile100(final String path) {
+        return getBaseName(path) + IMAGE_100_EXTENSION + getExtension(path);
+    }
+
+    /**
+     * @param path100 full path to the icon file with or without the 100% extension
+     * @return the path with the extension for the 150% image (@1.5x) appended (before the file extension)
+     * @since 3.0
+     */
+    public static String getImageFile150(final String path100) {
+        return getImageFileNameWithoutSize(path100) + IMAGE_150_EXTENSION + getExtension(path100);
+    }
+
+    /**
+     * @param path100 full path to the icon file with or without the 100% extension
+     * @return the path with the extension for the 200% image (@2x) appended (before the file extension)
+     * @since 3.0
+     */
+    public static String getImageFile200(final String path100) {
+        return getImageFileNameWithoutSize(path100) + IMAGE_200_EXTENSION + getExtension(path100);
+    }
+
+    /**
+     * @return filename without zoom/size extension and without size extension
+     */
+    private static String getImageFileNameWithoutSize(final String fileName) {
+        String ext = getExtension(fileName);
+        int cutoff = ext.length();
+        int length = fileName.length();
+        if (fileName.endsWith(IMAGE_100_EXTENSION + ext)) {
+            cutoff += IMAGE_100_EXTENSION.length();
+        } else if (fileName.endsWith(IMAGE_150_EXTENSION + ext)) {
+            cutoff += IMAGE_150_EXTENSION.length();
+        } else if (fileName.endsWith(IMAGE_200_EXTENSION + ext)) {
+            cutoff += IMAGE_200_EXTENSION.length();
+        }
+        if (length > cutoff) {
+            return fileName.substring(0, length - cutoff);
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * @param fileName to strip extension off
+     * @return the full file path without extension.
+     */
+    private static String getBaseName(final String fileName) {
+        int dot = fileName.lastIndexOf('.');
+        if (dot < 1) {
+            return fileName;
+        }
+        return fileName.substring(0, dot);
+    }
+
+    /**
+     * @param fileName to get extension from
+     * @return the extension of the file name provided. Including the dot. "/tmp/foo.png" will return ".png"
+     */
+    protected static String getExtension(final String fileName) {
+        int dot = fileName.lastIndexOf('.');
+        if (dot < 1) {
+            return "";
+        }
+        return fileName.substring(dot);
+    }
+
 }

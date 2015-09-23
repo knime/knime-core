@@ -3,16 +3,6 @@
 <plugin>
    <extension-point id="multipleInstanceViews" name="KNIME multiple instances views" schema="schema/multipleInstanceViews.exsd"/>
    <extension-point id="startupMessages" name="StartupMessages" schema="schema/startupMessages.exsd"/>
-<extension
-         point="org.eclipse.ui.views">
-      <view
-            category="org.knime.workbench.ui.category"
-            class="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
-            icon="icons/workflow_projects.png"
-            id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
-            name="Workflow Projects"/>
-   </extension>
-
      <extension
          point="org.eclipse.ui.perspectives">
       <perspective
@@ -36,11 +26,6 @@
                relationship="left"
                relative="org.eclipse.ui.editorss">
          </view>
-         <view
-               id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
-               relationship="stack"
-               relative="org.knime.workbench.explorer.view"
-               visible="false"/>
          <view
                closeable="false"
                id="org.knime.workbench.repository.view.RepositoryView"

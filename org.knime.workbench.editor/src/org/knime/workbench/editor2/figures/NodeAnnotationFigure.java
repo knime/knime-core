@@ -69,24 +69,26 @@ import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.FontStore;
 
 /**
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class AnnotationFigure3 extends Figure {
+public class NodeAnnotationFigure extends Figure {
 
     private final FlowPage m_page;
 
     /**
      * @param annotation the annotation to display
      */
-    public AnnotationFigure3(final Annotation annotation) {
+    public NodeAnnotationFigure(final Annotation annotation) {
         setLayoutManager(new BorderLayout());
         Color bg = AnnotationEditPart.getWorkflowAnnotationDefaultBackgroundColor();
         m_page = new FlowPage();
         m_page.setLayoutManager(new PageFlowLayout(m_page));
         m_page.setBackgroundColor(bg);
+
         add(m_page);
         setConstraint(m_page, BorderLayout.CENTER);
         setBackgroundColor(bg);
@@ -225,8 +227,7 @@ public class AnnotationFigure3 extends Figure {
     private TextFlow getStyled(final String text,
             final AnnotationData.StyleRange style, final Color bg,
             final Font defaultFont) {
-        Font styledFont = AnnotationEditPart.FONT_STORE.getAnnotationFont(
-                style, defaultFont);
+        Font styledFont = FontStore.INSTANCE.getAnnotationFont(style, defaultFont);
         TextFlow styledText = new TextFlow(text);
         styledText.setFont(styledFont);
         styledText.setForegroundColor(new Color(null, AnnotationEditPart

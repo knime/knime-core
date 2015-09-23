@@ -88,9 +88,11 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.NodeAnnotation;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.commands.AddAnnotationCommand;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.FontStore;
 
 /**
  *
@@ -355,11 +357,11 @@ public class StyledTextEditor extends CellEditor {
         Image img;
 
         // background color
-        img = ImageRepository.getImage("icons/annotations/bgcolor_10.png");
+        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/bgcolor_10.png");
         addMenuItem(menu, "bg", SWT.PUSH, "Background", img);
 
         // alignment
-        img = ImageRepository.getImage("icons/annotations/alignment_10.png");
+        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/alignment_10.png");
 
         MenuItem alignmentMenuItem = addMenuItem(menu, "alignment", SWT.CASCADE, "Alignment", img);
 
@@ -378,33 +380,33 @@ public class StyledTextEditor extends CellEditor {
         MenuItem action;
 
         // font/style button
-        img = ImageRepository.getImage("icons/annotations/font_10.png");
+        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/font_10.png");
         action = addMenuItem(menu, "style", SWT.PUSH, "Font", img);
         m_enableOnSelectedTextMenuItems.add(action);
 
         // foreground color button
-        img = ImageRepository.getImage("icons/annotations/color_10.png");
+        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/color_10.png");
         action = addMenuItem(menu, "color", SWT.PUSH, "Color", img);
         m_enableOnSelectedTextMenuItems.add(action);
 
         // bold button
-        img = ImageRepository.getImage("icons/annotations/bold_10.png");
+        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/bold_10.png");
         action = addMenuItem(menu, "bold", SWT.PUSH, "Bold", img);
         m_enableOnSelectedTextMenuItems.add(action);
 
         // italic button
-        img = ImageRepository.getImage("icons/annotations/italic_10.png");
+        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/italic_10.png");
         action = addMenuItem(menu, "italic", SWT.PUSH, "Italic", img);
         m_enableOnSelectedTextMenuItems.add(action);
 
         new MenuItem(menu, SWT.SEPARATOR);
 
         // ok button
-        img = ImageRepository.getImage("icons/annotations/ok_10.png");
+        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/ok_10.png");
         addMenuItem(menu, "ok", SWT.PUSH, "OK (commit)", img);
 
         // cancel button
-        img = ImageRepository.getImage("icons/annotations/cancel_10.png");
+        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/cancel_10.png");
         addMenuItem(menu, "cancel", SWT.PUSH, "Cancel (discard)", img);
 
         parent.setMenu(menu);
@@ -688,9 +690,9 @@ public class StyledTextEditor extends CellEditor {
         }
         for (StyleRange s : styles) {
             if (setAttr) {
-                s.font = AnnotationEditPart.FONT_STORE.addStyleToFont(s.font, swtStyle);
+                s.font = FontStore.INSTANCE.addStyleToFont(s.font, swtStyle);
             } else {
-                s.font = AnnotationEditPart.FONT_STORE.removeStyleFromFont(s.font, swtStyle);
+                s.font =FontStore.INSTANCE.removeStyleFromFont(s.font, swtStyle);
             }
             m_styledText.setStyleRange(s);
         }
@@ -859,8 +861,7 @@ public class StyledTextEditor extends CellEditor {
         Color newCol = newRGB == null ? null : AnnotationEditPart.RGBtoColor(newRGB);
         for (StyleRange style : sel) {
             style.font =
-                AnnotationEditPart.FONT_STORE.getFont(newFontData.getName(), newFontData.getHeight(),
-                    newFontData.getStyle());
+                FontStore.INSTANCE.getFont(newFontData.getName(), newFontData.getHeight(), newFontData.getStyle());
             if (newCol != null) {
                 style.foreground = newCol;
             }

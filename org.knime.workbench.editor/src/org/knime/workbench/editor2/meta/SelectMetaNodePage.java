@@ -59,7 +59,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 
 
 /**
@@ -104,6 +105,7 @@ public class SelectMetaNodePage extends WizardPage {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void createControl(final Composite parent) {
         Composite overall = new Composite(parent, SWT.NONE);
         overall.setLayout(new GridLayout(1, true));
@@ -130,11 +132,11 @@ public class SelectMetaNodePage extends WizardPage {
         }
 
 		Button btnZeroOne = new Button(buttonGrid, buttonStyle);
-        btnZeroOne.setImage(ImageRepository.getImage(
+        btnZeroOne.setImage(ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_0_1_inactive.png"));
-        m_inactiveIconMap.put(btnZeroOne, ImageRepository.getImage(
+        m_inactiveIconMap.put(btnZeroOne, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
             "/icons/meta/meta_0_1_inactive.png"));
-        m_activeIconMap.put(btnZeroOne, ImageRepository.getImage(
+        m_activeIconMap.put(btnZeroOne, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
             "/icons/meta/meta_0_1.png"));
         btnZeroOne.setLayoutData(buttonGD);
         btnZeroOne.addSelectionListener(new SelectionListener() {
@@ -152,11 +154,11 @@ public class SelectMetaNodePage extends WizardPage {
 
         });
         Button btnOneOne = new Button(buttonGrid, buttonStyle);
-        btnOneOne.setImage(ImageRepository.getImage(
+        btnOneOne.setImage(ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_1_1_inactive.png"));
-        m_inactiveIconMap.put(btnOneOne, ImageRepository.getImage(
+        m_inactiveIconMap.put(btnOneOne, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_1_1_inactive.png"));
-        m_activeIconMap.put(btnOneOne, ImageRepository.getImage(
+        m_activeIconMap.put(btnOneOne, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_1_1.png"));
         btnOneOne.setLayoutData(buttonGD);
         btnOneOne.addSelectionListener(new SelectionListener() {
@@ -173,12 +175,12 @@ public class SelectMetaNodePage extends WizardPage {
             }
         });
         Button btnOneTwo = new Button(buttonGrid, buttonStyle);
-        btnOneTwo.setImage(ImageRepository.getImage(
+        btnOneTwo.setImage(ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_1_2_inactive.png"));
-        m_inactiveIconMap.put(btnOneTwo, ImageRepository.getImage(
+        m_inactiveIconMap.put(btnOneTwo, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_1_2_inactive.png"));
         m_activeIconMap.put(btnOneTwo,
-                ImageRepository.getImage("/icons/meta/meta_1_2.png"));
+                ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "/icons/meta/meta_1_2.png"));
         btnOneTwo.setLayoutData(buttonGD);
         btnOneTwo.addSelectionListener(new SelectionListener() {
             @Override
@@ -193,12 +195,12 @@ public class SelectMetaNodePage extends WizardPage {
             }
         });
         Button btnTwoOne = new Button(buttonGrid, buttonStyle);
-        btnTwoOne.setImage(ImageRepository.getImage(
+        btnTwoOne.setImage(ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_2_1_inactive.png"));
 
-        m_activeIconMap.put(btnTwoOne, ImageRepository.getImage(
+        m_activeIconMap.put(btnTwoOne, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_2_1.png"));
-        m_inactiveIconMap.put(btnTwoOne, ImageRepository.getImage(
+        m_inactiveIconMap.put(btnTwoOne, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_2_1_inactive.png"));
         btnTwoOne.setLayoutData(buttonGD);
         btnTwoOne.addSelectionListener(new SelectionListener() {
@@ -215,11 +217,11 @@ public class SelectMetaNodePage extends WizardPage {
 
         });
         Button btnTwoTwo = new Button(buttonGrid, buttonStyle);
-        btnTwoTwo.setImage(ImageRepository.getImage(
+        btnTwoTwo.setImage(ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_2_2_inactive.png"));
-        m_activeIconMap.put(btnTwoTwo, ImageRepository.getImage(
+        m_activeIconMap.put(btnTwoTwo, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_2_2.png"));
-        m_inactiveIconMap.put(btnTwoTwo, ImageRepository.getImage(
+        m_inactiveIconMap.put(btnTwoTwo, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/meta_2_2_inactive.png"));
         btnTwoTwo.setLayoutData(buttonGD);
         btnTwoTwo.addSelectionListener(new SelectionListener() {
@@ -238,11 +240,11 @@ public class SelectMetaNodePage extends WizardPage {
 
         });
         Button btnCustom = new Button(buttonGrid, buttonStyle);
-        btnCustom.setImage(ImageRepository.getImage(
+        btnCustom.setImage(ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/custom_meta_inactive.png"));
-        m_activeIconMap.put(btnCustom, ImageRepository.getImage(
+        m_activeIconMap.put(btnCustom, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/custom_meta.png"));
-        m_inactiveIconMap.put(btnCustom, ImageRepository.getImage(
+        m_inactiveIconMap.put(btnCustom, ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID,
                 "/icons/meta/custom_meta_inactive.png"));
         btnCustom.setLayoutData(buttonGD);
         btnCustom.addSelectionListener(new SelectionListener() {

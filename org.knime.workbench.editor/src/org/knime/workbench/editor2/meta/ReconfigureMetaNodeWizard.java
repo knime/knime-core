@@ -57,7 +57,8 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.commands.ReconfigureMetaNodeCommand;
 
 /**
@@ -110,7 +111,7 @@ public class ReconfigureMetaNodeWizard extends Wizard {
         String name = m_metaNode != null ? "Meta Node" : "Sub Node";
         setWindowTitle("Reconfigure " + name + " Wizard");
         setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
-                ImageRepository.getImage("icons/meta/meta_node_wizard2.png")));
+                ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/meta_node_wizard2.png")));
         m_addPage = new AddMetaNodePage("Change the " + name + " configuration");
         if (m_metaNode != null) {
             m_addPage.setMetaNode(m_metaNode);

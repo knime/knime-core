@@ -57,7 +57,8 @@ import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.AddNewMetaNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -98,7 +99,7 @@ public class AddMetaNodeWizard extends Wizard {
         // add the one and only page to enter the in- and out ports
         setWindowTitle("Add Meta Node Wizard");
         setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
-                ImageRepository.getImage("icons/meta/meta_node_wizard2.png")));
+                ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/meta_node_wizard2.png")));
         m_selectPage = new SelectMetaNodePage();
         m_addPage = new AddMetaNodePage("Create a new Meta Node");
         addPage(m_selectPage);

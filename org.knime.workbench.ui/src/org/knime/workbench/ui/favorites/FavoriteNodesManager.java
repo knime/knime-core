@@ -152,19 +152,19 @@ public final class FavoriteNodesManager {
         m_root = new Root();
         m_root.setSortChildren(false);
         m_favNodes = new CopyingCategory(FAV_CAT_ID, FAV_TITLE, pluginID);
-        m_favNodes.setIcon(ImageRepository.getImage(SharedImages.FavoriteNodesFolder));
+        m_favNodes.setIcon(ImageRepository.getIconImage(SharedImages.FavoriteNodesFolder));
         m_favNodes.setAfterID("");
         m_favNodes.setSortChildren(true);
         m_root.addChild(m_favNodes);
 
         m_freqNodes = new CopyingCategory("freq", "Most frequently used nodes", pluginID);
-        m_freqNodes.setIcon(ImageRepository.getImage(SharedImages.FavoriteNodesFrequentlyUsed));
+        m_freqNodes.setIcon(ImageRepository.getIconImage(SharedImages.FavoriteNodesFrequentlyUsed));
         m_freqNodes.setAfterID("fav");
         m_freqNodes.setSortChildren(false);
         m_root.addChild(m_freqNodes);
 
         m_lastNodes = new CopyingCategory("last", "Last used nodes", pluginID);
-        m_lastNodes.setIcon(ImageRepository.getImage(SharedImages.FavoriteNodesLastUsed));
+        m_lastNodes.setIcon(ImageRepository.getIconImage(SharedImages.FavoriteNodesLastUsed));
         m_lastNodes.setAfterID("freq");
         m_lastNodes.setSortChildren(false);
         m_root.addChild(m_lastNodes);

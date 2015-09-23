@@ -56,7 +56,8 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
 
 /**
  * Figure for displaying a <code>NodeOutPort</code> inside a node.
@@ -67,7 +68,7 @@ public class NodeOutPortFigure extends AbstractPortFigure {
 
     /** Red traffic light. * */
     private static final Image INACTIVE =
-            ImageRepository.getImage("icons/ports/port_inactive.png");
+            ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/ports/port_inactive.png");
 
     private boolean m_isInactive = false;
 
@@ -123,7 +124,7 @@ public class NodeOutPortFigure extends AbstractPortFigure {
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
-        return new Dimension(NODE_PORT_SIZE, NODE_PORT_SIZE);
+        return new Dimension(AbstractPortFigure.getPortSizeNode(), AbstractPortFigure.getPortSizeNode());
     }
 
     /**

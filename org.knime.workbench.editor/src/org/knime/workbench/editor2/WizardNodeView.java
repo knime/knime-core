@@ -73,7 +73,6 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.DefaultReexecutionCallback;
@@ -82,6 +81,8 @@ import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardViewCreator;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.editor2.ElementRadioSelectionDialog.RadioItem;
 
 /**
@@ -166,9 +167,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         m_shell = new Shell(display, SWT.SHELL_TRIM);
         m_shell.setText(m_title);
 
-        if (KNIMEConstants.KNIME16X16_SWT != null) {
-            m_shell.setImage(KNIMEConstants.KNIME16X16_SWT);
-        }
+        m_shell.setImage(ImageRepository.getIconImage(SharedImages.KNIME));
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
         m_shell.setLayout(layout);

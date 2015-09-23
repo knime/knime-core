@@ -184,6 +184,7 @@ import org.knime.core.util.Pointer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.core.nodeprovider.NodeProvider.EventListener;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
@@ -1202,7 +1203,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         Image image;
         if (url != null) {
-            image = ImageRepository.getImage(url);
+            image = ImageRepository.getUnscaledImage(url);
         } else {
             image = null;
         }

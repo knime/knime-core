@@ -94,7 +94,7 @@ public class NodePortLocator extends PortLocator {
         // try not to cover the node's symbol (that's used to move node)
         // we need like 7 pixels for the icon at a MetaNodeOutPortFigure
         int width = (parentBounds.width - symbolBounds.width) / 2 + 7;
-        int height = AbstractPortFigure.NODE_PORT_SIZE;
+        int height = AbstractPortFigure.getPortSizeNode();
         int x = 0;
         if (isInPort()) {
             x = parentBounds.x;
@@ -149,7 +149,7 @@ public class NodePortLocator extends PortLocator {
         if (isMetaNodePort()) {
             numOfPorts++; // for the (not existing) flow variable port
         }
-        return numOfPorts * (AbstractPortFigure.NODE_PORT_SIZE + 1);
+        return numOfPorts * (AbstractPortFigure.getPortSizeNode() + 1);
     }
 
     private boolean isImplVariablePort() {

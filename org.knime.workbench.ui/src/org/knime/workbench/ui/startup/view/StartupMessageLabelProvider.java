@@ -100,11 +100,11 @@ class StartupMessageLabelProvider implements ITableLabelProvider {
         if ((element instanceof StartupMessage) && (columnIndex == 0)) {
             switch (((StartupMessage) element).getType()) {
                 case StartupMessage.ERROR:
-                    return ImageRepository.getImage(SharedImages.Error);
+                    return ImageRepository.getIconImage(SharedImages.Error);
                 case StartupMessage.WARNING:
-                    return ImageRepository.getImage(SharedImages.Warning);
+                    return ImageRepository.getIconImage(SharedImages.Warning);
                 case StartupMessage.INFO:
-                    return ImageRepository.getImage(SharedImages.Info);
+                    return ImageRepository.getIconImage(SharedImages.Info);
                 default:
                     return null;
             }

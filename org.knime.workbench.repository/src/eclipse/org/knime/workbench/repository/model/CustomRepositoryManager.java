@@ -173,8 +173,7 @@ public class CustomRepositoryManager {
                 newCategory.setSortChildren(false);
                 newCategory.setParent(parent);
                 parent.addChild(newCategory);
-                newCategory.setIcon(ImageRepository
-                        .getImage(SharedImages.DefaultCategoryIcon));
+                newCategory.setIcon(ImageRepository.getIconImage(SharedImages.DefaultCategoryIcon));
 
                 processCategory(newCategory, cat, nodeMap);
             } else {

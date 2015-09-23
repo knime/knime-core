@@ -151,6 +151,15 @@ public class WorkflowSelectionTool extends SelectionTool {
      * {@inheritDoc}
      */
     @Override
+    protected void createHoverRequest() {
+        // TODO Auto-generated method stub
+        super.createHoverRequest();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     protected boolean handleFocusLost() {
         setState(STATE_INITIAL);
         return super.handleFocusLost();

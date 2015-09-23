@@ -61,8 +61,6 @@ import org.eclipse.draw2d.ToolbarLayout;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -78,10 +76,10 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.KNIMEEditorPlugin;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.editor2.editparts.FontStore;
 import org.knime.workbench.editor2.figures.ProgressFigure.ProgressMode;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Figure displaying a <code>NodeContainer</code> in a workflow. This serves as
@@ -102,77 +100,55 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  */
 public class NodeContainerFigure extends RectangleFigure {
 
+    // default plugin ID to get icons/images from
+    private static final String EDITOR_PLUGIN_ID = KNIMEEditorPlugin.PLUGIN_ID;
+
     /** absolute width of this figure. */
     public static final int WIDTH = SymbolFigure.SYMBOL_FIG_WIDTH
-            + (2 * AbstractPortFigure.NODE_PORT_SIZE);
+            + (2 * AbstractPortFigure.getPortSizeNode());
 
     /** absolute height of this figure. */
     public static final int HEIGHT = 48;
 
     /** Red traffic light. */
-    public static final Image RED = ImageRepository
-            .getImage("icons/ampel_red.png");
+    public static final Image RED = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/ampel_red.png");
 
     /** Yellow traffic light. * */
-    public static final Image YELLOW = ImageRepository
-            .getImage("icons/ampel_yellow.png");
+    public static final Image YELLOW = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/ampel_yellow.png");
 
     /** Green traffic light. */
-    public static final Image GREEN = ImageRepository
-            .getImage("icons/ampel_green.png");
+    public static final Image GREEN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/ampel_green.png");
 
     /** Inactive traffic light. */
-    public static final Image INACTIVE = ImageRepository
-            .getImage("icons/ampel_inactive.png");
+    public static final Image INACTIVE =
+        ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/ampel_inactive.png");
 
     /** Info sign. */
-    public static final Image INFO_SIGN = ImageRepository
-            .getImage("icons/roundInfo.jpg");
+    public static final Image INFO_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/roundInfo.jpg");
 
     /** Warning sign. */
-    public static final Image WARNING_SIGN = ImageRepository
-            .getImage("icons/warning.gif");
+    public static final Image WARNING_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/warning.gif");
 
     /** Error sign. */
-    public static final Image ERROR_SIGN = ImageRepository
-            .getImage("icons/error.png");
+    public static final Image ERROR_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/error.png");
 
     /** Delete sign. */
-    public static final Image DELETE_SIGN = ImageRepository
-            .getImage("icons/delete.png");
+    public static final Image DELETE_SIGN = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/delete.png");
 
     /** Loop End Node extra icon: In Progress. */
-    public static final Image LOOP_IN_PROGRESS_SIGN = ImageRepository
-            .getImage("icons/loop_in_progress.png");
+    public static final Image LOOP_IN_PROGRESS_SIGN =
+        ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/loop_in_progress.png");
 
     /** Loop End Node extra icon: Done. */
-    public static final Image LOOP_DONE_SIGN = ImageRepository
-            .getImage("icons/loop_done.png");
+    public static final Image LOOP_DONE_SIGN =
+        ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/loop_done.png");
 
     /** Loop End Node extra icon: No Status. */
-    public static final Image LOOP_NO_STATUS = ImageRepository
-            .getImage("icons/loop_nostatus.png");
+    public static final Image LOOP_NO_STATUS =
+        ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, "icons/loop_nostatus.png");
 
     /** State: Node not configured. */
     public static final int STATE_NOT_CONFIGURED = 0;
-
-    /** Default node font for the status figure. */
-    private static final Font NODE_FONT = new Font(Display.getCurrent(),
-            fontName(), 2, SWT.NORMAL);
-
-    /** Get font name either from the system, or default "Arial". */
-    private static String fontName() {
-        // I (Bernd) had problem using the hardcoded font "Arial" -
-        // this static block derives the fonts from the system font.
-        final Display current = Display.getCurrent();
-        final Font systemFont = current.getSystemFont();
-        final FontData[] systemFontData = systemFont.getFontData();
-        String name = "Arial"; // fallback
-        if (systemFontData.length >= 1) {
-            name = systemFontData[0].getName();
-        }
-        return name;
-    }
 
     /** content pane, contains the port visuals and the icon. */
     private final SymbolFigure m_symbolFigure;
@@ -211,6 +187,9 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private boolean m_showFlowVarPorts;
 
+    /** dummy font for status figure. Needs a "small" font... */
+    private static final Font NODE_FONT = FontStore.INSTANCE.getDefaultFont(3);
+
     /**
      * Creates a new node figure.
      *
@@ -228,13 +207,7 @@ public class NodeContainerFigure extends RectangleFigure {
         // add sub-figures
         setLayoutManager(new DelegatingLayout());
 
-
-        final IPreferenceStore store =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
-        final int height = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
-        final String fontName = fontName();
-        Font normalFont = new Font(Display.getDefault(), fontName, height, SWT.NORMAL);
-        super.setFont(normalFont);
+        super.setFont(FontStore.INSTANCE.getDefaultFont(FontStore.getFontSizeFromKNIMEPrefPage()));
 
 
         // Heading (Label)
@@ -320,6 +293,10 @@ public class NodeContainerFigure extends RectangleFigure {
         return m_statusFigure;
     }
 
+    public static Dimension getStatusBarDimension() {
+        return StatusFigure.getDimension();
+    }
+
     /**
      * @return the figure showing the error and warning symbol (e.g. warning triangle)
      */
@@ -377,13 +354,7 @@ public class NodeContainerFigure extends RectangleFigure {
         // needed, otherwise labels disappear after font size has changed
         m_headingContainer.setBounds(new Rectangle(0, 0, 0, 0));
 
-        final IPreferenceStore store =
-                KNIMEUIPlugin.getDefault().getPreferenceStore();
-        final int fontSize =
-                store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
-        final String fontName = fontName();
-        final Display current = Display.getDefault();
-        Font boldFont = new Font(current, fontName, fontSize, SWT.BOLD);
+        Font boldFont = FontStore.INSTANCE.getDefaultFontBold(FontStore.getFontSizeFromKNIMEPrefPage());
         m_headingContainer.setFont(boldFont);
 
         int width = 0;
@@ -395,7 +366,6 @@ public class NodeContainerFigure extends RectangleFigure {
             Dimension size = l.getPreferredSize();
             width = Math.max(width, size.width);
         }
-
         int height = 0;
         for (IFigure child : (List<IFigure>)m_headingContainer.getChildren()) {
             Dimension size = child.getPreferredSize();
@@ -820,13 +790,6 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private final Label m_backgroundIcon;
 
-        /**
-         * The base icon without overlays.
-         *
-         * Is used once the overlay has to be undone
-         */
-        private Image m_baseIcon;
-
         private Label m_jobExecutorLabel;
 
         private Label m_metaNodeLinkedLabel;
@@ -972,10 +935,9 @@ public class NodeContainerFigure extends RectangleFigure {
             } else {
                 str = BACKGROUND_UNKNOWN;
             }
-            final Image img = ImageRepository.getImage(str);
+            final Image img = ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, str);
 
-            return img == null ? ImageRepository.getImage(BACKGROUND_OTHER)
-                    : img;
+            return img == null ? ImageRepository.getUnscaledImage(EDITOR_PLUGIN_ID, BACKGROUND_OTHER) : img;
         }
 
         /**
@@ -994,11 +956,6 @@ public class NodeContainerFigure extends RectangleFigure {
          * @param icon Image to display as icon
          */
         void setIcon(final Image icon) {
-
-            if (m_baseIcon == null) {
-                m_baseIcon = icon;
-            }
-
             m_iconFigure.setIcon(icon);
             m_iconFigure.revalidate();
         }
@@ -1014,7 +971,6 @@ public class NodeContainerFigure extends RectangleFigure {
         public Dimension getPreferredSize(final int wHint, final int hHint) {
             return new Dimension(SYMBOL_FIG_WIDTH, SYMBOL_FIG_HEIGHT);
         }
-
     }
 
     /**
@@ -1168,8 +1124,8 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         public StatusFigure() {
             // status figure must have exact same dimensions as progress bar
-            setBounds(new Rectangle(0, 0, ProgressFigure.WIDTH,
-                    ProgressFigure.HEIGHT));
+            Dimension d = getDimension();
+            setBounds(new Rectangle(0, 0, d.width, d.height));
             final ToolbarLayout layout = new ToolbarLayout(false);
             layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
@@ -1204,7 +1160,14 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
-            return new Dimension(ProgressFigure.WIDTH, ProgressFigure.HEIGHT);
+            return getDimension();
+        }
+        /**
+         * @return the size of the StatusFigure - which is the size of the traffic lights
+         */
+        public static Dimension getDimension() {
+            org.eclipse.swt.graphics.Rectangle r = RED.getBounds();
+            return new Dimension(r.width, r.height);
         }
     }
 
@@ -1293,14 +1256,13 @@ public class NodeContainerFigure extends RectangleFigure {
         setLabelText(m_label);
 
         // apply new font for node label
-        final Font font2 = super.getFont();
-        final FontData fontData2 = font2.getFontData()[0];
-        fontData2.setHeight(fontSize);
-        final Font newFont2 = new Font(Display.getDefault(), fontData2);
+        Font font2 = super.getFont();
+        FontData fontData2 = font2.getFontData()[0];
+        Font newFont2 = FontStore.INSTANCE.getFont(fontData2.getName(), fontSize, fontData2.getStyle());
         // apply the standard node label font also to its parent figure to allow
         // editing the node label with the same font (size)
         super.setFont(newFont2);
-        font2.dispose();
+        FontStore.INSTANCE.releaseFont(font2);
     }
 
     /**

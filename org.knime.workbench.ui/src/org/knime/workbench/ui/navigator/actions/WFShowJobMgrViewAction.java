@@ -75,7 +75,7 @@ public class WFShowJobMgrViewAction extends AbstractWorkflowAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor(SharedImages.OpenNodeView);
+        return ImageRepository.getIconDescriptor(SharedImages.OpenNodeView);
     }
 
     /**

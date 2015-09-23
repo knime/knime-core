@@ -91,7 +91,7 @@ public final class ContextAwareNodeFactoryMapper {
                         Image icon = null;
                         if (!Boolean.getBoolean("java.awt.headless")) {
                             // Load images from declaring plugin
-                            icon = ImageRepository.getScaledImage(o, 16, 16);
+                            icon = ImageRepository.getIconImage(o);
                         }
                         EXTENSION_REGISTRY.put(extension,
                                                new Pair<Class<? extends ContextAwareNodeFactory>, Image>(clazz, icon));

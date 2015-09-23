@@ -69,7 +69,7 @@ public class ConfigureWorkflowAction extends AbstractWorkflowAction {
 
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor(SharedImages.ConfigureNode);
+        return ImageRepository.getIconDescriptor(SharedImages.ConfigureNode);
     }
 
     @Override

@@ -82,16 +82,13 @@ public class WorkflowPortLocator extends PortLocator {
         Rectangle parent = target.getParent().getBounds().getCopy();
 
         int xPos = parent.x;
+        int wfPortSize = AbstractPortFigure.getPortSizeWorkflow();
         if (isInPort()) {
-            xPos += parent.width - AbstractPortFigure.WF_PORT_SIZE;
+            xPos += parent.width - wfPortSize;
         }
-        int yPos = (int)(parent.y + (((double)parent.height
-                / (double) (getNrPorts() + 1)) * (getPortIndex() + 1)));
-        yPos -= (AbstractPortFigure.WF_PORT_SIZE / 2);
-        Rectangle portBounds = new Rectangle(new Point(xPos, yPos),
-                new Dimension(
-                        AbstractPortFigure.WF_PORT_SIZE,
-                        AbstractPortFigure.WF_PORT_SIZE));
+        int yPos = (int)(parent.y + (((double)parent.height / (double)(getNrPorts() + 1)) * (getPortIndex() + 1)));
+        yPos -= (wfPortSize / 2);
+        Rectangle portBounds = new Rectangle(new Point(xPos, yPos), new Dimension(wfPortSize, wfPortSize));
 
         LOGGER.debug("workflow port locator#relocate " + portBounds);
         target.setBounds(portBounds);

@@ -151,7 +151,7 @@ public final class RepositoryFactory {
 
         if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin
-            Image icon = ImageRepository.getScaledImage(factory, 16, 16);
+            Image icon = ImageRepository.getIconImage(factory);
             node.setIcon(icon);
         }
 
@@ -195,14 +195,12 @@ public final class RepositoryFactory {
             // Load images from declaring plugin
             Image icon = null;
             if (iconPath != null) {
-                icon = ImageRepository.getScaledImage(pluginId, iconPath, 16, 16);
+                icon = ImageRepository.getIconImage(pluginId, iconPath);
             }
             if (icon == null) {
                 LOGGER.coding("Icon '" + iconPath + "' for metanode "
                         + categoryPath + "/" + name + " does not exist");
-                icon =
-                        ImageRepository
-                                .getImage(SharedImages.DefaultMetaNodeIcon);
+                icon = ImageRepository.getIconImage(SharedImages.DefaultMetaNodeIcon);
             }
             template.setIcon(icon);
         }
@@ -273,19 +271,14 @@ public final class RepositoryFactory {
             String iconPath = element.getAttribute("icon");
             Image img;
             if (iconPath == null) {
-                img =
-                        ImageRepository
-                                .getImage(SharedImages.DefaultCategoryIcon);
+                img = ImageRepository.getIconImage(SharedImages.DefaultCategoryIcon);
 
             } else {
-                img = ImageRepository.getScaledImage(pluginID, iconPath, 16, 16);
+                img = ImageRepository.getIconImage(pluginID, iconPath);
                 if (img == null) {
-                    LOGGER.coding("Icon '" + element.getAttribute("icon")
-                            + "' for category " + cat.getPath() + "/"
-                            + cat.getName() + " does not exist");
-                    img =
-                            ImageRepository
-                                    .getImage(SharedImages.DefaultCategoryIcon);
+                    LOGGER.coding("Icon '" + element.getAttribute("icon") + "' for category " + cat.getPath() + "/"
+                        + cat.getName() + " does not exist");
+                    img = ImageRepository.getIconImage(SharedImages.DefaultCategoryIcon);
                 }
             }
             cat.setIcon(img);
@@ -408,7 +401,7 @@ public final class RepositoryFactory {
             node.setAfterID(nodeSet.getAfterID(factoryId));
 
             if (!Boolean.getBoolean("java.awt.headless")) {
-                Image icon = ImageRepository.getScaledImage(factory, 16, 16);
+                Image icon = ImageRepository.getIconImage(factory);
                 node.setIcon(icon);
             }
 
@@ -469,18 +462,13 @@ public final class RepositoryFactory {
         if (!Boolean.getBoolean("java.awt.headless")) {
             Image img;
             if (icon == null) {
-                img =
-                        ImageRepository
-                                .getImage(SharedImages.DefaultCategoryIcon);
+                img = ImageRepository.getIconImage(SharedImages.DefaultCategoryIcon);
             } else {
-                img = ImageRepository.getImage(pluginID, icon);
+                img = ImageRepository.getIconImage(pluginID, icon);
                 if (img == null) {
-                    LOGGER.coding("Icon '" + icon + "' for category "
-                            + cat.getPath() + "/" + cat.getName()
-                            + " does not exist");
-                    img =
-                            ImageRepository
-                                    .getImage(SharedImages.DefaultCategoryIcon);
+                    LOGGER.coding(
+                        "Icon '" + icon + "' for category " + cat.getPath() + "/" + cat.getName() + " does not exist");
+                    img = ImageRepository.getIconImage(SharedImages.DefaultCategoryIcon);
                 }
             }
             cat.setIcon(img);

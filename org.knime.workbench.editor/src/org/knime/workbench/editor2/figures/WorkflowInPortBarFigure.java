@@ -83,15 +83,16 @@ public class WorkflowInPortBarFigure extends AbstractWorkflowPortBarFigure {
     public void paint(final Graphics graphics) {
         Rectangle parent = getParent().getBounds().getCopy();
         if (!isInitialized()) {
-            int barWidth = WIDTH + AbstractPortFigure.WF_PORT_SIZE + OFFSET;
+            int WfPortSize = AbstractPortFigure.getPortSizeWorkflow();
+            int barWidth = WIDTH + WfPortSize + OFFSET;
             int xLoc;
             if (barWidth + 10 >= m_maxXcord) {
-                xLoc = m_maxXcord - 50 - WIDTH - AbstractPortFigure.WF_PORT_SIZE;
+                xLoc = m_maxXcord - 50 - WIDTH - WfPortSize;
             } else {
                 xLoc = OFFSET;
             }
             Rectangle newBounds =
-                    new Rectangle(xLoc, OFFSET, WIDTH + AbstractPortFigure.WF_PORT_SIZE, parent.height - (2 * OFFSET));
+                    new Rectangle(xLoc, OFFSET, WIDTH + WfPortSize, parent.height - (2 * OFFSET));
             setInitialized(true);
             setBounds(newBounds);
         }
@@ -101,7 +102,7 @@ public class WorkflowInPortBarFigure extends AbstractWorkflowPortBarFigure {
     @Override
     protected void fillShape(final Graphics graphics) {
         graphics.fillRectangle(getBounds().x, getBounds().y,
-                getBounds().width - AbstractPortFigure.WF_PORT_SIZE,
+                getBounds().width - AbstractPortFigure.getPortSizeWorkflow(),
                 getBounds().height);
     }
 
@@ -109,7 +110,7 @@ public class WorkflowInPortBarFigure extends AbstractWorkflowPortBarFigure {
     @Override
     protected void outlineShape(final Graphics graphics) {
         Rectangle r = getBounds().getCopy();
-        r.width -= AbstractPortFigure.WF_PORT_SIZE;
+        r.width -= AbstractPortFigure.getPortSizeWorkflow();
         int x = r.x + lineWidth / 2;
         int y = r.y + lineWidth / 2;
         int w = r.width - Math.max(1, lineWidth);

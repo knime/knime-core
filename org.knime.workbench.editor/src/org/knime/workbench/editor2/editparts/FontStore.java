@@ -51,23 +51,40 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTError;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.AnnotationData;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
- * Used by the annotations, annotation editor and figure to create or reuse a
- * font according to user set name and attributes or reusing a default font.
+ * Used by the workflow editor, annotations, annotation editor and figure to create or reuse a font according to user
+ * set name and attributes or reusing a default font. This class scales the font according to the system zoom level
+ * (for high dpi displays) - that is, it downscales (!) the size by the corresponding factor!
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
 public class FontStore {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FontStore.class);
+
     private final Map<StoreKey, StoreValue> m_fontMap =
             new HashMap<StoreKey, StoreValue>();
 
-    private final Font m_defaultFont;
+    private final String m_defFontName;
+
+    private final int m_defFontStyle;
+
+    public static final FontStore INSTANCE = new FontStore();
 
     /**
      * Creates a new font store with a default font (which is used in case no
@@ -75,12 +92,64 @@ public class FontStore {
      *
      * @param defaultFont
      */
-    public FontStore(final Font defaultFont) {
-        if (defaultFont == null) {
-            throw new IllegalArgumentException("Default font must not be null");
+    private FontStore() {
+        Font defaultFont = defaultFont();
+        FontData defaultFontData = defaultFont.getFontData()[0];
+        m_defFontName = defaultFontData.getName();
+        m_defFontStyle = defaultFontData.getStyle();
+    }
+
+    private static Font defaultFont() {
+        /* We want to use "Arial" as THE font.
+         * Fallback on Windows is:
+         *     Microsoft Sans Serif, Trebuchet MS
+         * Fallback on Mac:
+         *     Trebuchet MS
+         * Fallback on Linux:
+         *     Nimbus Sans L
+         */
+        int defFontSize = getFontSizeFromKNIMEPrefPage();
+        Font defFont = null;
+        try {
+            defFont = new Font(Display.getDefault(), "Arial", defFontSize, SWT.NORMAL);
+        } catch (SWTError e) {
+            LOGGER.warn("Font 'Arial' is not available on your system. "
+                    + "Try to install it, if you want workflows to look the same on different computers.", e);
         }
-        m_defaultFont = defaultFont;
-        m_fontMap.put(new StoreKey(defaultFont), new StoreValue(defaultFont));
+        if (defFont == null) {
+            // Fall back to "common" fonts similar to Arial
+                if (Platform.OS_MACOSX.equals(Platform.getOS())) {
+                    try {
+                        defFont = new Font(Display.getDefault(), "Trebuchet MS", defFontSize, SWT.NORMAL);
+                    } catch (SWTError e) {
+                        LOGGER.warn("Unable to use fallback font 'Trebuchet MS'. ", e);
+                    }
+                } else if (Platform.OS_LINUX.equals(Platform.getOS())) {
+                    try {
+                        defFont = new Font(Display.getDefault(), "Nimbus Sans L", defFontSize, SWT.NORMAL);
+                    } catch (SWTError e) {
+                        LOGGER.warn("Unable to use fallback font 'Nimbus Sans L'. ", e);
+                    }
+                } else {
+                    try {
+                        defFont = new Font(Display.getDefault(), "Microsoft Sans Serif", defFontSize, SWT.NORMAL);
+                    } catch (SWTError e) {
+                        LOGGER.warn("Unable to use fallback font 'Microsoft Sans Serif'. ", e);
+                    }
+                    if (defFont == null) {
+                        try {
+                            defFont = new Font(Display.getDefault(), "Trebuchet MS", defFontSize, SWT.NORMAL);
+                        } catch (SWTError e) {
+                            LOGGER.warn("Unable to use fallback font 'Trebuchet MS'. ", e);
+                        }
+                    }
+                }
+            }
+        if (defFont == null) {
+            // last resort: use system default font. May look totally different on different systems.
+            defFont = Display.getDefault().getSystemFont();
+        }
+        return defFont;
     }
 
     /**
@@ -97,12 +166,21 @@ public class FontStore {
      *         after usage
      */
     public Font getFont(final String name, final int size, final int style) {
-        StoreKey key = new StoreKey(name, size, style);
+        int pt = size;
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_HIGH_DPI_SUPPORT)) {
+            int z = ViewUtils.getDisplayZoom();
+            if (z != 100) {
+                // the editor scales fonts with the display zoom. But the rest is unscaled!
+                // Thus we scale down! So the editor can scale it up again.
+                pt = pt * 100 / z;
+            }
+        }
+        StoreKey key = new StoreKey(name, pt, style);
         StoreValue value = m_fontMap.get(key);
         if (value != null) {
             value.incrUseCount();
         } else {
-            value = new StoreValue(name, size, style);
+            value = new StoreValue(name, pt, style);
             m_fontMap.put(key, value);
         }
         return value.getFont();
@@ -169,14 +247,10 @@ public class FontStore {
      * @return the specified font with the specified style(s) set
      */
     public Font addStyleToFont(final Font font, final int swtStyle) {
-        Font f = font;
-        if (f == null) {
-            f = m_defaultFont;
-        }
-        FontData fd = f.getFontData()[0];
+        FontData fd = font.getFontData()[0];
         if ((fd.getStyle() & swtStyle) == swtStyle) {
             // already has all styles set
-            return f;
+            return font;
         }
         return getFont(fd.getName(), fd.getHeight(), fd.getStyle() | swtStyle);
     }
@@ -190,38 +264,65 @@ public class FontStore {
      * @return the specified font with the specified style(s) cleared.
      */
     public Font removeStyleFromFont(final Font font, final int swtStyle) {
-        Font f = font;
-        if (f == null) {
-            f = m_defaultFont;
-        }
-        FontData fd = f.getFontData()[0];
+        FontData fd = font.getFontData()[0];
         if ((fd.getStyle() & swtStyle) == 0) {
             // doesn't have the styles
-            return f;
+            return font;
         }
-        return getFont(fd.getName(), fd.getHeight(), fd.getStyle()
-                & (~swtStyle));
+        return getFont(fd.getName(), fd.getHeight(), fd.getStyle() & (~swtStyle));
     }
 
     /**
-     * Returns the font initially set as default font.
-     *
-     * @return the font initially set as default font
+     * Returns the font. Which is Arial or a fallback font if Arial is not available. Font must be released if not
+     * needed anymore.
+     * @param size desired size (@see {@link #getFontSizeFromKNIMEPrefPage()}).
+     *  @see #releaseFont(Font)
+     * @return the font.
      */
-    public Font getDefaultFont() {
-        return m_defaultFont;
+    public Font getDefaultFont(final int size) {
+        int pt = size;
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_HIGH_DPI_SUPPORT)) {
+            int z = ViewUtils.getDisplayZoom();
+            if (z != 100) {
+                // the editor scales fonts with the display zoom. But the rest is unscaled! Thus we scale down!
+                pt = pt * 100 / z;
+                if (pt <= 0) {
+                    pt = 1;
+                }
+            }
+        }
+        return getFont(m_defFontName, pt, m_defFontStyle);
     }
 
     /**
-     * Returns true if the argument is the default font specified at creation
-     * time. (Does a pointer compare only.)
+     * Returns the font in bold. Font must be released if not needed anymore.
+     * @param size desired size (@see {@link #getFontSizeFromKNIMEPrefPage()}).
+     *  @see #releaseFont(Font)
+     * @return the font in bold
+     */
+    public Font getDefaultFontBold(final int size) {
+        int pt = size;
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_HIGH_DPI_SUPPORT)) {
+            int z = ViewUtils.getDisplayZoom();
+            if (z != 100) {
+                // the editor scales fonts with the display zoom. But the rest is unscaled! Thus we scale down!
+                pt = pt * 100 / z;
+            }
+        }
+        return getFont(m_defFontName, pt, m_defFontStyle | SWT.BOLD);
+    }
+
+    /**
+     * Returns true if the argument is the default font.
      *
      * @param font
-     * @return true if the argument is the default font specified at creation
-     *         time.
+     * @return true if the argument is the default font.
      */
     public boolean isDefaultFont(final Font font) {
-        return font.equals(m_defaultFont);
+        Font defaultFont = getFont(m_defFontName, getFontSizeFromKNIMEPrefPage(), m_defFontStyle);
+        boolean result = font.equals(defaultFont);
+        releaseFont(defaultFont);
+        return result;
     }
 
     /**
@@ -239,11 +340,7 @@ public class FontStore {
         int usage = val.decrUseCount();
         if (usage == 0) {
             m_fontMap.remove(key);
-            Font f = val.getFont();
-            if (!f.equals(m_defaultFont)) {
-                // default font SHOULD never have ref count zero...
-                val.getFont().dispose();
-            }
+            val.getFont().dispose();
         }
         return usage;
     }
@@ -266,12 +363,12 @@ public class FontStore {
             if (name != null && !name.isEmpty()) {
                 m_name = name;
             } else {
-                m_name = m_defaultFont.getFontData()[0].getName();
+                m_name = m_defFontName;
             }
             if (height > 0) {
                 m_height = height;
             } else {
-                m_height = m_defaultFont.getFontData()[0].getHeight();
+                m_height = getFontSizeFromKNIMEPrefPage();
             }
             m_style = style;
         }
@@ -312,11 +409,11 @@ public class FontStore {
         private StoreValue(final String name, final int height, final int style) {
             String fName = name;
             if (fName == null || fName.isEmpty()) {
-                fName = m_defaultFont.getFontData()[0].getName();
+                fName = m_defFontName;
             }
             int fHeight = height;
             if (fHeight <= 0) {
-                fHeight = m_defaultFont.getFontData()[0].getHeight();
+                fHeight = getFontSizeFromKNIMEPrefPage();
             }
 
             m_font = new Font(null, fName, fHeight, style);
@@ -343,4 +440,18 @@ public class FontStore {
             return m_useCount.decrementAndGet();
         }
     }
+
+    /**
+     * Returns the font size value entered by the user in the pref page. Fonts usually size with the system zoom
+     * factor (high dpi display). Depending on where you use this, you may need to scale the returned value.</br>
+     * @return currently set preference value for the font size in the workflow editor (at the node)
+     */
+    public static int getFontSizeFromKNIMEPrefPage() {
+        IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        int fontSize = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
+        return fontSize;
+    }
+
+
+
 }

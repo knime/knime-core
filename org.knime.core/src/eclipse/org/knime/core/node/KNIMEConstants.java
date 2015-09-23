@@ -301,6 +301,10 @@ public final class KNIMEConstants {
     */
    public static final String PROPERTY_DIALOG_IN_EDT = "knime.core.dialog.edt";
 
+   /** enables display of icons in different sizes (if available).
+    * @since 3.0 */
+   public static final String PROPERTY_HIGH_DPI_SUPPORT = "knime.highdpi.support";
+
     /** KNIME home directory. */
     private static File knimeHomeDir;
 

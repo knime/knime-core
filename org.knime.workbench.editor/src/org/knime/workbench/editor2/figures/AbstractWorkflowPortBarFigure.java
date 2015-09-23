@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2008 (Fabian Dill): created
  */
@@ -58,21 +58,21 @@ import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortBarEditPart;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class AbstractWorkflowPortBarFigure extends RectangleFigure {
-    
+
     /** Default width for the port bar. */
     protected static final int WIDTH = 30;
     /** Default offset from the workflow borders. */
     protected static final int OFFSET = 10;
-    
+
     private boolean m_isInitialized = false;
 
-    
+
     /**
-     * 
+     *
      */
     public AbstractWorkflowPortBarFigure() {
         super();
@@ -81,11 +81,11 @@ public abstract class AbstractWorkflowPortBarFigure extends RectangleFigure {
         setBackgroundColor(Display.getCurrent().getSystemColor(
                 SWT.COLOR_GRAY));
     }
-    
+
     /**
-     * 
+     *
      * @param initialized true if the ui info was set to the model
-     * 
+     *
      * @see WorkflowOutPortBarFigure#paint(org.eclipse.draw2d.Graphics)
      * @see WorkflowInPortBarFigure#paint(org.eclipse.draw2d.Graphics)
      * @see WorkflowOutPortBarEditPart
@@ -97,26 +97,26 @@ public abstract class AbstractWorkflowPortBarFigure extends RectangleFigure {
             revalidate();
         }
     }
-    
+
     /**
-     * 
-     * @return true if the ui info was set to the model (first time painted 
-     *  or loaded from {@link WorkflowManager}) 
+     *
+     * @return true if the ui info was set to the model (first time painted
+     *  or loaded from {@link WorkflowManager})
      */
     public boolean isInitialized() {
         return m_isInitialized;
     }
-    
+
     /**
-     * 
+     *
      * @see ChangeWorkflowPortBarCommand#canExecute()
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public Dimension getMinimumSize(final int hint, final int hint2) {
-        return new Dimension(AbstractPortFigure.WF_PORT_SIZE + 10, 
-                AbstractPortFigure.WF_PORT_SIZE + 10);
+        return new Dimension(AbstractPortFigure.getPortSizeWorkflow() + 10,
+                AbstractPortFigure.getPortSizeWorkflow() + 10);
     }
 
 }
