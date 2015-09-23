@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.knime.core.data.AdapterValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -65,6 +66,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.RWAdapterValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.BufferedDataTable;
@@ -316,8 +318,21 @@ class DifferenceCheckerNodeModel extends NodeModel {
                         + " in test table");
             }
             if (!refColSpec.getType().equals(testColSpec.getType())) {
-                throw new IllegalStateException("Expected type '" + refColSpec.getType() + "' for column "
-                        + refColSpec.getName() + " in test table");
+                List<Class<? extends DataValue>> refValueClasses =
+                    new ArrayList<>(refColSpec.getType().getValueClasses());
+                // ignore AdapterValue in value interfaces
+                refValueClasses.remove(AdapterValue.class);
+                refValueClasses.remove(RWAdapterValue.class);
+
+                List<Class<? extends DataValue>> testValueClasses =
+                    new ArrayList<>(testColSpec.getType().getValueClasses());
+                testValueClasses.remove(AdapterValue.class);
+                testValueClasses.remove(RWAdapterValue.class);
+
+                if (!refValueClasses.equals(testValueClasses)) {
+                    throw new IllegalStateException("Expected type '" + refColSpec.getType() + "' for column "
+                        + refColSpec.getName() + " in test table but is '" + testColSpec.getType() + "'");
+                }
             }
 
             checkDomain(testColSpec, refColSpec);
