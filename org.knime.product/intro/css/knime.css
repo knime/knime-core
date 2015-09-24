@@ -1,19 +1,52 @@
+* {
+	font-family: 'Roboto',sans-serif !important;
+}
+
 body {
-	color: #575757;
-	font-family: Roboto, Arial, Helvetica, sans-serif;
-	font-size: 10.5pt;
+	 font-size: 0.75em;
+	 color: #606060;
+	 margin: 0px;
+	 padding: 0px;
+	 width: 100%;
+	 overflow-y: auto;
+	 background: #FFF none repeat scroll 0% 0%;
 }
 
 h1 {
-	font-style: normal;
+	text-align: center;
+	font-size: 1.5em;
+	color: #575757;
 }
 
 h2 {
-	font-size: 120%;
+	font-size: 1.2em;
+}
+
+h3 {
+	font-size: 1em;
+}
+
+#intro p {
+	font-size: 1em;
+	text-align: justify;
+	line-height: 1.6em;
+	margin: 8px;
+}
+
+#welcome-knime {
+	background-color: #EEEEEE;
+	padding: 0.5em;
+}
+
+.sub-heading {
+	margin-top: 0;
+	text-align: center;
+	background-color: #EEEEEE;
+	padding: 0.3em;
 }
 
 a {
-    color: #FFB600;
+    color: #ff9f00;
     text-decoration: none;
 }
 
@@ -30,16 +63,16 @@ body > h2 {
 #intro {
 	margin: 0 auto 10px auto;
 	padding-top: 13px;
-	max-width: 1000px;
+	width:100%;
 }
 
 #update {
-	max-width: 1000px;
+	width: 100%;
 	font-weight: bold;
 	padding: 0.6em;
 	margin: 1em auto 1em auto;
-	background-color: #EEFFEE;
-	border-radius: 6px;
+	background-color: #f0f0f2;
+	border-radius: 5px;
 }
 
 #checking-updates {
@@ -49,6 +82,7 @@ body > h2 {
 div#links-and-mru {
 	max-width: 1000px;
 	margin: 10px auto 20px auto;
+	
 }
 
 
@@ -56,14 +90,15 @@ div#links {
     float: left;
     width: 45%;
 	overflow: hidden;
-	padding-right: 20px;
-	margin: 0 auto;
+	margin: 0 3px 0 0;
+	border: solid 2px #ffd600;
+	border-radius: 5px;
 }
 
+
+
 a .link-label {
-	padding-left: 40px;
-	font-size: 120%;
-	font-weight: bold;
+	padding-left: 5px;
 	vertical-align: middle;
 }
 
@@ -72,11 +107,11 @@ a .text {
 }
 
 div#mru {
-    min-width: 45%;
-    float: left;
-    margin: 10px auto 30px auto;
-    overflow: hidden;
-    margin: 0 auto;
+    width: 50%;
+     overflow-y: auto;
+    margin-left: 490px;
+    border: solid 2px #ffd600;
+	border-radius: 5px;
 }
 
 div#mruScrollBox {
@@ -99,12 +134,12 @@ ul#mruList li a {
 
 
 div#news h2 {
-    border-bottom: 1px solid #888;
+    border-bottom: 1px solid #ccc;
 }
 
 
 div#tips h2 {
-	border-bottom: 1px solid #888;
+	border-bottom: 1px solid #ccc;
 }
 
 span.field-content {
@@ -113,24 +148,32 @@ span.field-content {
 }
 
 div.floating-link {
-    max-width: 400px;
-    min-width: 250px;
-    padding-right: 20px;
+    width: 100%;
+    margin-bottom: 9px;
 }
 
-.floating-link a {
-    height: 24px;
-	vertical-align: middle;
-	padding-top: 8px;
-    background: url(img/arrow.png) no-repeat 5px center;
-    color: #666;
-    display: block;
+.floating-link  a {
+    font-weight: bold;
+    font-size: 1em !important;
+    color: #7D7D7D;
+    display:block;
+    vertical-align: middle;
+    padding-top: 9px;
     text-decoration: none;
 }
 
-.floating-link > a:hover {
-    background: #eee url(img/arrow.png) no-repeat 5px center;
+.floating-link > a:link {
+	color: #7D7D7D;
 }
+
+.floating-link > a:visited {
+	color: #7D7D7D;
+}
+
+.floating-link > a:hover {
+    color: #ff9000;
+}
+
 
 
 #news {
@@ -139,7 +182,7 @@ div.floating-link {
     margin: 20px auto;
 	padding: 5px 5px;
 	background: #f0f0f0;
-	border-radius: 6px;
+	border-radius: 5px;
 }
 
 #news > h2 {
@@ -152,7 +195,7 @@ div.floating-link {
     margin: 20px auto;
     padding: 5px 5px;
     background: #f0f0f0;
-    border-radius: 6px;
+    border-radius: 5px;
 }
 
 #tips > h2 {
@@ -164,10 +207,17 @@ div.floating-link {
 	clear: both;
 	color: #666;
 	margin-top: 1em;
-	border-top: 1px solid grey;
+	border-top: 1px solid #ccc;
 }
 
+/* Checkbox style */
 
+
+#properties > input[type=checkbox] {
+	border-radius: 3px;
+}
+
+/* end */
 .hide-button {
     float: right;
     display: none;
@@ -194,7 +244,26 @@ div.floating-link {
 }
 
 #links-and-mru .hide-button {
+ 	margin-right: -6px;
 }
 #links-and-mru:hover .hide-button {
+ 	margin-right: -6px;
 	display: block;
+}
+
+/* Fontello Icons Styles*/
+
+
+
+.icon-wrench, .icon-book-open, .icon-chart-line, .icon-download, .icon-angle-circled-right {
+	    margin-right: 0.7em !important;
+}
+
+/* Media Queries */
+
+@media all and (max-width: 180px) {
+  #links, #mru {
+    float: none !important;
+    width: 100% !important;
+  }
 }

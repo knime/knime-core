@@ -27,7 +27,9 @@ body {
 	 margin-top: 70px;
 }
 
-
+iframe {
+	border: none;
+}
 
 
 /* Media Queries */
@@ -436,6 +438,7 @@ h1 {
 	font-size: 1.5em;
 	text-align: center;
 	color: #575757;
+	margin: 10px 15px 10px 15px;
  }
 
 h2{

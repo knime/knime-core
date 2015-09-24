@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html id="begin">
 <head>
 <meta charset="utf-8">
@@ -10,6 +10,23 @@
 <link rel="stylesheet" type="text/css" href="ie.css">
 <![endif]-->
 <script>
+	navigator.sayswho= (function(){
+	    var ua= navigator.userAgent, tem,
+	    M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+	    if(/trident/i.test(M[1])){
+	        tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
+	        return 'IE '+(tem[1] || '');
+	    }
+	    if(M[1]=== 'Chrome'){
+	        tem= ua.match(/\b(OPR|Edge)\/(\d+)/);
+	        if(tem!= null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+	    }
+	    M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+	    if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
+	    return M.join(' ');
+	})();
+
+
 	function node_loader(){
 		var footerHeight = document.getElementById('k-footer').offsetHeight;
 		var bodyHeight = window.innerHeight || document.documentElement.clientHeight; //document.getElementById('origin').offsetHeight;
@@ -31,9 +48,20 @@
             document.getElementById('node-content-div').style.height = (nodeRepositoryHeight-120) + 'px'; 
    		}
    		
-		document.getElementById('node-header-div').innerHTML = '<object type="text/html" data="header.html" style="width: 100%;" name="KNIME Node Reference" id="headerObj"></object>';
-		document.getElementById('node-menu-div').innerHTML = '<object type="text/html" data="node_repository.html" style="width: 100%; height: 100%; max-height:100%;" name="Node Repository"></object>';
-		document.getElementById('node-content-div').innerHTML = '<object type="text/html" data="empty_node_description.html" style="width: 100%; height: 100%; max-height:100%;" name="Node Description" id="node-description"></object>';
+   		if( navigator.sayswho.substring(0,4) === "MSIE")
+   		{
+   		 			document.getElementById('node-header-div').innerHTML = '<object type="text/html" data="header.html" style="width: 100%;" name="KNIME Node Reference" id="headerObj"></object>';
+			document.getElementById('node-menu-div').innerHTML = '<object type="text/html" data="node_repository.html" style="width: 100%; height: 100%; max-height:100%;" name="Node Repository"></object>';
+			document.getElementById('node-content-div').innerHTML = '<iframe  type="text/html" src="empty_node_description.html" style="width: 100%; height: 100%; max-height:100%;" name="Node Description" id="Node Description"></iframe>';
+   		
+   		}else
+   		{
+   			document.getElementById('node-header-div').innerHTML = '<object type="text/html" data="header.html" style="width: 100%;" name="KNIME Node Reference" id="headerObj"></object>';
+			document.getElementById('node-menu-div').innerHTML = '<object type="text/html" data="node_repository.html" style="width: 100%; height: 100%; max-height:100%;" name="Node Repository"></object>';
+			document.getElementById('node-content-div').innerHTML = '<object type="text/html" data="empty_node_description.html" style="width: 100%; height: 100%; max-height:100%;" name="Node Description" id="Node Description"></object>';
+   		
+   		}
+   		
 }	
 		
 		/* Load Content */
@@ -46,6 +74,11 @@
 	<div id="node-menu-div"></div>
 	<div class="node-main-div" id="node-main-div">
 		<div id="node-header-div"></div>
+		<!--[if IE ]>
+		<div id="node-content-div">
+			<iframe src="empty_node_description.html" style="width: 100%; height: 100%; max-height:100%;" name="Node Description"></iframe>
+		</div>
+		<![endif]-->
 		<div id="node-content-div"></div>
 	</div>
 		<div class="k-footer" id="k-footer">
