@@ -83,8 +83,11 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
     public void testSingleIterationExecuteUpToHere() throws Exception {
         executeAndWait(m_loopEnd4);
         checkState(m_loopEnd4, EXECUTED);
+        // this used to be configured before 3.0 - fixed as part of the bug fix
+        NodeContainerState jsState = getManager().getNodeContainer(m_javaSnippet7).getNodeContainerState();
+        assertTrue("Not executing, nor executed: " + jsState, jsState.isExecutionInProgress() || jsState.isExecuted());
         waitWhileInExecution();
-        checkState(m_javaSnippet7, EXECUTED); // this used to be configured before 3.0 - fixed as part of the bug fix
+        checkState(m_javaSnippet7, EXECUTED);
     }
 
     /** Execute bottom loop (many iterations) - the is executed (and has always been). */
