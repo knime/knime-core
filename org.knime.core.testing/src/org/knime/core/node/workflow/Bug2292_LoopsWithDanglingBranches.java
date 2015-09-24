@@ -83,9 +83,7 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
     public void testSingleIterationExecuteUpToHere() throws Exception {
         executeAndWait(m_loopEnd4);
         checkState(m_loopEnd4, EXECUTED);
-        // TODO Michael if you comment out the sleep it will work - there is some asynchronous state change problem
-        System.out.println(getManager().getNodeContainer(m_javaSnippet7).getNodeContainerState());
-//        Thread.sleep(500);
+        waitWhileInExecution();
         checkState(m_javaSnippet7, EXECUTED); // this used to be configured before 3.0 - fixed as part of the bug fix
     }
 
