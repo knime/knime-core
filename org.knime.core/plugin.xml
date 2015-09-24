@@ -260,8 +260,7 @@
          </serializer>
       </DataType>
       <DataType
-            cellClass="org.knime.core.data.date.DateAndTimeCell"
-            factoryClass="org.knime.core.data.date.DateAndTimeCellFactory">
+            cellClass="org.knime.core.data.date.DateAndTimeCell">
          <serializer
                cellClass="org.knime.core.data.date.DateAndTimeCell"
                serializerClass="org.knime.core.data.date.DateAndTimeCellSerializer">
@@ -358,7 +357,8 @@
                cellClass="org.knime.core.data.image.png.PNGImageBlobCell"
                serializerClass="org.knime.core.data.image.png.PNGImageBlobCell$PNGSerializer">
          </serializer>
-      </DataType> <DataType
+      </DataType>
+      <DataType
             cellClass="org.knime.core.data.blob.BinaryObjectDataCell"
             factoryClass="org.knime.core.data.blob.BinaryObjectCellFactory">
          <serializer
@@ -369,6 +369,7 @@
                cellClass="org.knime.core.data.blob.BinaryObjectFileStoreDataCell"
                serializerClass="org.knime.core.data.blob.BinaryObjectFileStoreDataCell$BinaryObjectFileStoreCellSerializer">
          </serializer>
+      </DataType>
       <DataType
             cellClass="org.knime.core.data.xml.PMMLCell"
             factoryClass="org.knime.core.data.xml.PMMLCellFactory">
@@ -380,7 +381,6 @@
                cellClass="org.knime.core.data.xml.PMMLBlobCell"
                serializerClass="org.knime.core.data.xml.PMMLBlobCell$PMMLSerializer">
          </serializer>
-      </DataType>
       </DataType>
       <DataType
             cellClass="org.knime.core.data.vector.bytevector.DenseByteVectorCell"
