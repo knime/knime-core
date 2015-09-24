@@ -8195,6 +8195,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
+    InternalNodeContainerState getInternalState() {
+        // synchronize state retrieval even if that's just a field.
+        // think of a different class that locks the workflow and then retrieves the state of a contained node
+        // (say marked_for_exec) and then of the wfm. The latter could still be configured only as the
+        // checkForNodeStateChanges hasn't been called yet
+        synchronized (m_workflowMutex) {
+            return super.getInternalState();
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public int getNrInPorts() {
         return m_inPorts.length;
     }
