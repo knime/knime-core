@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
@@ -88,11 +89,14 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.NodeAnnotation;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.commands.AddAnnotationCommand;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.FontStore;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  *
@@ -115,10 +119,10 @@ public class StyledTextEditor extends CellEditor {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(StyledTextEditor.class);
 
     private static final RGB[] DEFAULT_COLORS = new RGB[]{//
-        fromHex("CDE280"), fromHex("D8D37B"), //
-        fromHex("93DDD2"), fromHex("D0D2B5"), //
-        fromHex("ADDF9E"), fromHex("E8AFA7"), //
-        fromHex("C4CBE0"), fromHex("E3B67D")};
+        fromHex("E4E4E4"), fromHex("F2D3D9"), //
+        fromHex("FFF2B3"), fromHex("B3E0D7"), //
+        fromHex("C8EAC3"), fromHex("C5DEED"), //
+        fromHex("EDD7BE"), fromHex("CFCFE5")};
 
     private static RGB[] lastColors = null;
 
@@ -152,6 +156,8 @@ public class StyledTextEditor extends CellEditor {
     private MenuItem m_centerAlignMenuItem;
 
     private MenuItem m_leftAlignMenuItem;
+
+    private MenuItem m_backgroundMenuItem;
 
     /**
      * Creates a workflow annotation editor (with the font set to workflow annotations default font - see
@@ -358,7 +364,7 @@ public class StyledTextEditor extends CellEditor {
 
         // background color
         img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/bgcolor_10.png");
-        addMenuItem(menu, "bg", SWT.PUSH, "Background", img);
+        m_backgroundMenuItem = addMenuItem(menu, "bg", SWT.PUSH, "Background", img);
 
         // alignment
         img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/alignment_10.png");
@@ -590,6 +596,17 @@ public class StyledTextEditor extends CellEditor {
         } else {
             text = wa.getText();
             m_selectAllUponFocusGain = AddAnnotationCommand.INITIAL_FLOWANNO_TEXT.equals(text);
+            
+            // get workflow annotation border size from preferences
+            IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+            int annotationBorderSize = store.getInt(PreferenceConstants.P_ANNOTATION_BORDER_SIZE);
+
+            // set margins as borders
+            m_styledText.setMargins(annotationBorderSize, annotationBorderSize, annotationBorderSize,
+                annotationBorderSize);
+
+            // set "Border Color" instead of "Background"
+            m_backgroundMenuItem.setText("Border Color");
         }
         m_styledText.setAlignment(alignment);
         m_styledText.setText(text);

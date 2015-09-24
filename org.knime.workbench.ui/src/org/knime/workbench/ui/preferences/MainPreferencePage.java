@@ -207,6 +207,8 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         addField(new HorizontalLineField(parent));
         addField(new BooleanFieldEditor(PreferenceConstants.P_WRAP_TABLE_HEADER,
                                         "Wrap Column Header in Table Views", parent));
+        addField(new IntegerFieldEditor(PreferenceConstants.P_ANNOTATION_BORDER_SIZE,
+            "Workflow Annotation boder size (in px)", parent));
         addField(new HorizontalLineField(parent));
 
         ComboFieldEditor updateMetaNodeLinkOnLoadEditor = new ComboFieldEditor(

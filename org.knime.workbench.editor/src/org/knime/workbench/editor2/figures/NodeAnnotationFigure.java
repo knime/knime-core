@@ -77,7 +77,7 @@ import org.knime.workbench.editor2.editparts.FontStore;
  */
 public class NodeAnnotationFigure extends Figure {
 
-    private final FlowPage m_page;
+    protected final FlowPage m_page;
 
     /**
      * @param annotation the annotation to display

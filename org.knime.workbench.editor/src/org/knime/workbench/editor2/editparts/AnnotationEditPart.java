@@ -318,7 +318,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     /** {@inheritDoc} */
     @Override
     public void propertyChange(final PropertyChangeEvent p) {
-        if (p.getProperty().equals(PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
+        if (p.getProperty().equals(PreferenceConstants.P_DEFAULT_NODE_LABEL)
+                || p.getProperty().equals(PreferenceConstants.P_ANNOTATION_BORDER_SIZE)) {
             NodeAnnotationFigure fig = (NodeAnnotationFigure)getFigure();
             fig.newContent(getModel());
         }

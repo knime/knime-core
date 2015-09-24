@@ -49,12 +49,19 @@
 package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.LineBorder;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  *
@@ -80,4 +87,20 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
         m_editIcon.setVisible(showit);
     }
 
+    @Override
+    public void newContent(final Annotation annotation) {
+        super.newContent(annotation);
+
+        Color bg = new Color(Display.getCurrent(), 255, 255, 255);
+        setBackgroundColor(bg);
+        m_page.setBackgroundColor(bg);
+
+        // get workflow annotation border size from preferences
+        IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        int annotationBorderSize = store.getInt(PreferenceConstants.P_ANNOTATION_BORDER_SIZE);
+
+        // set border with specified annotation color
+        Color col = AnnotationEditPart.RGBintToColor(annotation.getBgColor());
+        m_page.setBorder(new LineBorder(col, annotationBorderSize));
+    }
 }

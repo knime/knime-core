@@ -147,6 +147,11 @@ public interface PreferenceConstants {
     /** Default to {@link #P_WRAP_TABLE_HEADER} ({@value #P_WRAP_TABLE_HEADER_DEFAULT}). */
     public static final boolean P_WRAP_TABLE_HEADER_DEFAULT = false;
 
+    /** Pref key for annotation border size in pixel. */
+    public static final String P_ANNOTATION_BORDER_SIZE = "knime.workflow.annotation.bordersize";
+    /** Default to {@link #P_ANNOTATION_BORDER_SIZE} ({@value #P_ANNOTATION_BORDER_SIZE_DEFAULT}). */
+    public static final int P_ANNOTATION_BORDER_SIZE_DEFAULT = 10;
+
     /** Preference constant for omitting the missing browser warning during startup. */
     public static final String P_OMIT_MISSING_BROWSER_WARNING = "knime.ui.omit-missing-browser-warning";
 }
