@@ -82,14 +82,15 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FontDialog;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.NodeAnnotation;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.commands.AddAnnotationCommand;
@@ -360,6 +361,19 @@ public class StyledTextEditor extends CellEditor {
 
     private void addMenu(final Composite parent) {
         Menu menu = new Menu(parent);
+        // On some Linux systems the right click triggers focus loss, we need to disable this while the menu is open
+        menu.addListener(SWT.Show, new Listener() {
+            @Override
+            public void handleEvent(final Event event) {
+                m_allowFocusLost.set(false);
+            }
+        });
+        menu.addListener(SWT.Hide, new Listener() {
+            @Override
+            public void handleEvent(final Event event) {
+                m_allowFocusLost.set(true);
+            }
+        });
         Image img;
 
         // background color
