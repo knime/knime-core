@@ -234,7 +234,13 @@ public abstract class AbstractCellFactory implements CellFactory {
         // no op, possibly overwritten
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     *
+     * @deprecated use {@link #setProgress(long, long, RowKey, ExecutionMonitor)} instead which supports more than
+     *             {@link Integer#MAX_VALUE} rows
+     */
+    @Deprecated
     @Override
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
@@ -242,4 +248,14 @@ public abstract class AbstractCellFactory implements CellFactory {
                 + curRowNr + "/" + rowCount + " (\"" + lastKey + "\")");
     }
 
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
+        exec.setProgress(curRowNr / (double)rowCount,
+            "Processed row " + curRowNr + "/" + rowCount + " (\"" + lastKey + "\")");
+    }
 }

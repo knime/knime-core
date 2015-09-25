@@ -307,8 +307,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
     /** {@inheritDoc} */
     @Override
     public String getSummary() {
-        return "Rows: " + getRowCount()
-            + ", Cols: " + getSpec().getNumColumns();
+        return "Rows: " + size() + ", Cols: " + getSpec().getNumColumns();
     }
 
     /** {@inheritDoc} */
@@ -329,7 +328,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * clearing the table may occur concurrently, specifically if used in fast
      * executing loops. An iterator returned by this method will ensure that
      * (invalid = missing) data is returned and that there are as many rows as
-     * suggested by the {@link #getRowCount()} method.
+     * suggested by the {@link #size()} method.
      *
      * <p>
      * Client implementations should generally use the {@link #iterator()}
@@ -357,10 +356,24 @@ public final class BufferedDataTable implements DataTable, PortObject {
     /**
      * Get the row count of the this table.
      * @return Number of rows in the table.
+     * @since 3.0
+     * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
      */
+    @Deprecated
     public int getRowCount() {
-        return m_delegate.getRowCount();
+        return KnowsRowCountTable.checkRowCount(size());
     }
+
+    /**
+     * Returns the number of rows in this table.
+     *
+     * @return the number of rows
+     * @since 3.0
+     */
+    public long size() {
+        return m_delegate.size();
+    }
+
 
     /** Method being used internally, not interesting for the implementor of
      * a new node model. It will return a unique ID to identify the table
@@ -375,14 +388,14 @@ public final class BufferedDataTable implements DataTable, PortObject {
         extends CloseableRowIterator {
 
         private final int m_cellCount;
-        private final int m_maxRows;
+        private final long m_maxRows;
         private final CloseableRowIterator m_it;
-        private int m_rowIndex;
+        private long m_rowIndex;
 
         private CloseableFailProveRowIterator(final CloseableRowIterator it) {
             m_it = it;
             m_cellCount = getDataTableSpec().getNumColumns();
-            m_maxRows = getRowCount();
+            m_maxRows = size();
         }
 
         @Override
@@ -783,14 +796,29 @@ public final class BufferedDataTable implements DataTable, PortObject {
         m_delegate.ensureOpen();
     }
 
-    /** Internally used interface. You won't have any benefit by implementing
+    /**
+     * Internally used interface. You won't have any benefit by implementing
      * this interface! It's used for selected classes in the KNIME core.
+     *
+     * @noimplement This interface is not intended to be implemented by clients.
      */
     public static interface KnowsRowCountTable extends DataTable {
-        /** Row count of the table.
+        /**
+         * ow count of the table.
          * @return The row count.
+         * @since 3.0
+         * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
          */
+        @Deprecated
         int getRowCount();
+
+        /**
+         * Returns the number of rows in this table.
+         *
+         * @return the number of rows
+         * @since 3.0
+         */
+        long size();
 
         /** Save the table to a file.
          * @param f To write to.
@@ -840,6 +868,22 @@ public final class BufferedDataTable implements DataTable, PortObject {
         boolean removeFromTableRepository(
                 final HashMap<Integer, ContainerTable> rep);
 
+        /**
+         * Checks if the row count is greater than {@link Integer#MAX_VALUE}. If this is the case an exception is
+         * thrown, otherwise the number of rows is returned as an int.
+         *
+         * @param count the number of rows
+         * @return the number of rows
+         * @throws IllegalStateException if the number of rows is greater than {@link Integer#MAX_VALUE}
+         * @since 3.0
+         */
+        static int checkRowCount(final long count) {
+            if (count > Integer.MAX_VALUE) {
+                throw new IllegalStateException("Row count is greater than " + Integer.MAX_VALUE + ". The current node "
+                    + "cannot handle more than this number. Please ask the vendor to update the implementation.");
+            }
+            return (int) count;
+        }
     }
 
     /**

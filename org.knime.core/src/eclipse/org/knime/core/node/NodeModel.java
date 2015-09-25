@@ -635,7 +635,7 @@ public abstract class NodeModel {
                     bdtPortCount += 1;
                     BufferedDataTable outDataTable =
                         (BufferedDataTable)outData[i];
-                    if (outDataTable.getRowCount() > 0) {
+                    if (outDataTable.size() > 0) {
                         hasData = true;
                     } else {
                         m_logger.info("The result table at port " + i

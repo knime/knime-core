@@ -54,6 +54,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -231,4 +232,17 @@ public final class ConvenienceMethods {
         getAllGenericInterfaces(clazz.getSuperclass(), types);
     }
 
+    /**
+     * Checks if the number of rows is greater than {@link Integer#MAX_VALUE} and throws an exception in this case.
+     *
+     * @param table any buffered data table
+     * @throws UnsupportedOperationException if the number of rows is greater than {@link Integer#MAX_VALUE}
+     * @since 3.0
+     */
+    public static void checkTableSize(final BufferedDataTable table) {
+        if (table.size() > Integer.MAX_VALUE) {
+            throw new UnsupportedOperationException(
+                "This node does not support more than " + Integer.MAX_VALUE + " rows.");
+        }
+    }
 }

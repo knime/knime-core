@@ -66,17 +66,16 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class ConcatenateTable implements KnowsRowCountTable {
-
     private static final String CFG_INTERNAL_META = "meta_internal";
     private static final String CFG_REFERENCE_IDS = "table_reference_IDS";
     private static final String CFG_ROW_COUNT = "table_rowcount";
+    private static final String CFG_ROW_COUNT_L = "table_rowcount_long";
 
     private final BufferedDataTable[] m_tables;
     private final DataTableSpec m_spec;
-    private final int m_rowCount;
+    private final long m_rowCount;
 
-    private ConcatenateTable(final BufferedDataTable[] tables,
-            final DataTableSpec spec, final int rowCount) {
+    private ConcatenateTable(final BufferedDataTable[] tables, final DataTableSpec spec, final long rowCount) {
         m_tables = tables;
         m_spec = spec;
         m_rowCount = rowCount;
@@ -106,9 +105,21 @@ public final class ConcatenateTable implements KnowsRowCountTable {
 
     /**
      * {@inheritDoc}
+     *
+     * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
      */
     @Override
+    @Deprecated
     public int getRowCount() {
+        return KnowsRowCountTable.checkRowCount(size());
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public long size() {
         return m_rowCount;
     }
 
@@ -152,7 +163,11 @@ public final class ConcatenateTable implements KnowsRowCountTable {
             referenceIDs[i] = m_tables[i].getBufferedTableId();
         }
         subSettings.addIntArray(CFG_REFERENCE_IDS, referenceIDs);
-        subSettings.addInt(CFG_ROW_COUNT, m_rowCount);
+        if (m_rowCount <= Integer.MAX_VALUE) {
+            subSettings.addInt(CFG_ROW_COUNT, (int) m_rowCount);
+        } else {
+            subSettings.addLong(CFG_ROW_COUNT_L, m_rowCount);
+        }
     }
 
     /** Restore table form node settings object.
@@ -186,10 +201,10 @@ public final class ConcatenateTable implements KnowsRowCountTable {
             final ExecutionMonitor mon, final BufferedDataTable... tables)
             throws CanceledExecutionException {
         DataTableSpec[] specs = new DataTableSpec[tables.length];
-        int rowCount = 0;
+        long rowCount = 0;
         for (int i = 0; i < tables.length; i++) {
             specs[i] = tables[i].getDataTableSpec();
-            rowCount += tables[i].getRowCount();
+            rowCount += tables[i].size();
         }
         DataTableSpec finalSpec = createSpec(specs);
         HashSet<RowKey> hash = new HashSet<RowKey>();

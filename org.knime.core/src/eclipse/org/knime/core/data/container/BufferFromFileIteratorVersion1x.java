@@ -81,7 +81,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
     private final Buffer m_buffer;
 
     /** Row pointer. */
-    private int m_pointer;
+    private long m_pointer;
 
     /** If an exception has been thrown while reading from this buffer (only
      * if it has been written to disc). If so, further error messages are
@@ -115,6 +115,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
                 in = bufferedStream;
                 break;
             default:
+                bufferedStream.close();
                 throw new IOException("Unsupported compression format: " + buffer.getBinFileCompressionFormat());
         }
         m_inStream = new DCObjectInputStream(in);

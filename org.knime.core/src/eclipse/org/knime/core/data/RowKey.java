@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   01.03.2005 (mb): created
  *   23.05.2006 (mb): eliminated member holding ColorAttr
@@ -54,7 +54,7 @@ package org.knime.core.data;
 
 /**
  * Key for a specific row which holds an identifier of type {@link String}.
- * 
+ *
  * @see DataRow
  * @author Michael Berthold, University of Konstanz
  */
@@ -62,10 +62,10 @@ public final class RowKey {
 
     /** Private member holding non-null row id. */
     private final String m_id;
-    
+
     /**
-     * Creates a row key based on a {@link String}. 
-     * 
+     * Creates a row key based on a {@link String}.
+     *
      * @param id identifier for this key
      * @throws NullPointerException if argument is <code>null</code>
      */
@@ -75,7 +75,7 @@ public final class RowKey {
         }
         m_id = id;
     }
-    
+
     /** @return Underlying string of this row key. */
     public String getString() {
         return m_id;
@@ -106,7 +106,7 @@ public final class RowKey {
     public int hashCode() {
         return m_id.hashCode();
     }
-    
+
     /**
      * Converts the given array of <code>RowKey</code>s to an array of
      * <code>String</code> elements by calling {@link RowKey#getString()}.
@@ -123,7 +123,7 @@ public final class RowKey {
         }
         return strs;
     }
-    
+
     /**
      * Converts the given array of <code>String</code>s to an array of
      * <code>RowKey</code> elements by calling {@link #RowKey(String)}.
@@ -140,19 +140,39 @@ public final class RowKey {
         }
         return rowKeys;
     }
-    
-    /** Factory method to create "default" row IDs based on the row index. This
+
+    /**
+     * Factory method to create "default" row IDs based on the row index. This
      * method should be used in all cases where row keys are auto-generated
      * (e.g. they are not read from a file) in order to comply to standard
-     * naming conventions. The returned key will be in the form of 
+     * naming conventions. The returned key will be in the form of
      * <code>"Row" + rowIndex</code>.
-     * @param rowIndex The index of the row, for which to generate a key. 
-     * The first row has index 0. Note that non-negative values for 
+     *
+     * @param rowIndex The index of the row, for which to generate a key.
+     * The first row has index 0. Note that non-negative values for
      * <code>rowIndex</code> are perfectly legal but not encouraged.
      * @return A new key of the form <code>"Row" + rowIndex</code>
+     * @deprecated use {@link #createRowKey(long)} instead, which supports more than {@link Integer#MAX_VALUE} rows
      */
+    @Deprecated
     public static RowKey createRowKey(final int rowIndex) {
         return new RowKey("Row" + rowIndex);
     }
-    
+
+    /**
+     * Factory method to create "default" row IDs based on the row index. This
+     * method should be used in all cases where row keys are auto-generated
+     * (e.g. they are not read from a file) in order to comply to standard
+     * naming conventions. The returned key will be in the form of
+     * <code>"Row" + rowIndex</code>.
+     *
+     * @param rowIndex The index of the row, for which to generate a key.
+     * The first row has index 0. Note that non-negative values for
+     * <code>rowIndex</code> are perfectly legal but not encouraged.
+     * @return A new key of the form <code>"Row" + rowIndex</code>
+     * @since 3.0
+     */
+    public static RowKey createRowKey(final long rowIndex) {
+        return new RowKey("Row" + rowIndex);
+    }
 }

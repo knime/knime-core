@@ -414,7 +414,7 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
     private static void calcNewColsSynchronously(final BufferedDataTable table, final ExecutionMonitor subProgress,
         final NewColumnsProducerMapping newColsProducerMapping, final DataContainer container)
         throws CanceledExecutionException {
-        int finalRowCount = table.getRowCount();
+        long finalRowCount = table.size();
         Set<CellFactory> newColsFactories = newColsProducerMapping.getUniqueCellFactoryMap().keySet();
         final int factoryCount = newColsFactories.size();
         int r = 0;
@@ -439,7 +439,7 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
     private static void calcNewColsASynchronously(final BufferedDataTable table, final ExecutionMonitor subProgress,
         final NewColumnsProducerMapping newColsProducerMapping, final DataContainer container)
         throws CanceledExecutionException {
-        int finalRowCount = table.getRowCount();
+        long finalRowCount = table.size();
         CellFactory facForProgress = null;
         int workers = Integer.MAX_VALUE;
         int queueSize = Integer.MAX_VALUE;
@@ -588,10 +588,21 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
 
     /**
      * {@inheritDoc}
+     * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
      */
     @Override
+    @Deprecated
     public int getRowCount() {
-        return m_reference.getRowCount();
+        return KnowsRowCountTable.checkRowCount(size());
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public long size() {
+        return m_reference.size();
     }
 
     /**
@@ -691,7 +702,7 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
 
         private DataContainer m_container;
 
-        private final int m_totalRowCount;
+        private final long m_totalRowCount;
 
         private final CellFactory m_facForProgress;
 
@@ -705,7 +716,7 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
          * @param container
          */
         private ConcurrentNewColCalculator(final int maxQueueSize, final int maxActiveInstanceSize,
-            final DataContainer container, final ExecutionMonitor subProgress, final int totalRowCount,
+            final DataContainer container, final ExecutionMonitor subProgress, final long totalRowCount,
             final NewColumnsProducerMapping reducedList, final CellFactory facForProgress) {
             super(maxQueueSize, maxActiveInstanceSize);
             m_container = container;

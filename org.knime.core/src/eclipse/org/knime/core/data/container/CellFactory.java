@@ -49,6 +49,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -62,9 +63,10 @@ import org.knime.core.node.ExecutionMonitor;
  * @see org.knime.core.data.container.ColumnRearranger
  * @see org.knime.core.data.container.ColumnRearranger#append(CellFactory)
  * @author Bernd Wiswedel, University of Konstanz
+ * @noimplement This interface is not intended to be implemented by clients, use {@link AbstractCellFactory} or
+ *              {@link SingleCellFactory} instead
  */
 public interface CellFactory {
-
     /**
      * Get the new cells for a given row. These cells are incorporated into the existing row. The way it is done is
      * defined through the ColumnRearranger using this object.
@@ -96,7 +98,26 @@ public interface CellFactory {
      * @param rowCount The total number of rows.
      * @param lastKey The row's key.
      * @param exec The execution monitor to report progress to.
+     * @deprecated use/implement {@link #setProgress(long, long, RowKey, ExecutionMonitor)} instead which supports more
+     *             than {@link Integer#MAX_VALUE} rows
      */
+    @Deprecated
     void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey, final ExecutionMonitor exec);
 
+    /**
+     * This method is called when a row has been processed. It allows the implementor to set progress in the execution
+     * monitor and also some meaningful progress message.
+     * <p>
+     * Note, you don't need to check <code>exec.checkCanceled()</code> in the implementation as this is done in the
+     * calling class.
+     *
+     * @param curRowNr The number of the row just processed
+     * @param rowCount The total number of rows.
+     * @param lastKey The row's key.
+     * @param exec The execution monitor to report progress to.
+     * @since 3.0
+     */
+    default void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
+        setProgress((int) curRowNr, KnowsRowCountTable.checkRowCount(rowCount), lastKey, exec);
+    }
 }

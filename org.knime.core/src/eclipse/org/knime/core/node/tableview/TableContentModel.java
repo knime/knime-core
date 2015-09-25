@@ -67,6 +67,7 @@ import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
@@ -385,17 +386,23 @@ public class TableContentModel extends AbstractTableModel
             // assume that there are rows, may change in cacheNextRow() below
             m_isMaxRowCountFinal = false;
             m_isRowCountOfInterestFinal = false;
-            final int rowCountFromTable;
+            final long rowCountFromTable;
             if (data instanceof BufferedDataTable) {
-                rowCountFromTable = ((BufferedDataTable)data).getRowCount();
+                rowCountFromTable = ((BufferedDataTable)data).size();
             } else if (data instanceof ContainerTable) {
-                rowCountFromTable = ((ContainerTable)data).getRowCount();
+                rowCountFromTable = ((ContainerTable)data).size();
             } else {
                 rowCountFromTable = -1; // unknown
             }
             if (rowCountFromTable >= 0) {
                 m_isMaxRowCountFinal = true;
-                m_maxRowCount = rowCountFromTable;
+                if (rowCountFromTable > Integer.MAX_VALUE) {
+                    NodeLogger.getLogger(getClass()).warn("Table view will show only the first " + Integer.MAX_VALUE
+                        + " rows of " + rowCountFromTable + ".");
+                    m_maxRowCount = Integer.MAX_VALUE;
+                } else {
+                    m_maxRowCount = (int) rowCountFromTable;
+                }
                 if (!m_tableFilter.performsFiltering()) {
                     m_rowCountOfInterest = m_maxRowCount;
                     m_isRowCountOfInterestFinal = true;

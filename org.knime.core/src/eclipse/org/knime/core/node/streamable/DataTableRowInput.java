@@ -72,7 +72,7 @@ public class DataTableRowInput extends RowInput {
         m_tableSpec = table.getDataTableSpec();
         m_iterator = table.iterator();
         if (table instanceof BufferedDataTable) {
-            m_rowCount = ((BufferedDataTable)table).getRowCount();
+            m_rowCount = ((BufferedDataTable)table).size();
         } else {
             m_rowCount = -1;
         }

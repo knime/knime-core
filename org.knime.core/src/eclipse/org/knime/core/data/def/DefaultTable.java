@@ -431,6 +431,7 @@ public class DefaultTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_tableSpec;
     }
@@ -438,6 +439,7 @@ public class DefaultTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
         return new DefaultRowIterator(m_rowList);
     }
@@ -490,7 +492,7 @@ public class DefaultTable implements DataTable {
                 b.append("\n... ");
                 if (table instanceof BufferedDataTable) {
                     b.append("<");
-                    b.append(((BufferedDataTable)table).getRowCount() - 100);
+                    b.append(((BufferedDataTable)table).size() - 100);
                     b.append(" more>");
                 }
             }

@@ -112,7 +112,7 @@ public class BufferedDataTableView extends JComponent {
             result.append("");
         }
         if (m_table instanceof BufferedDataTable) {
-            result.append(" - Rows: " + ((BufferedDataTable) m_table).getRowCount());
+            result.append(" - Rows: " + ((BufferedDataTable) m_table).size());
         }
         return result.toString();
     }

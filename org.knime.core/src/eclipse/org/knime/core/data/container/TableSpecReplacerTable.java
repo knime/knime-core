@@ -149,12 +149,13 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
             final File f, final NodeSettingsRO s,
             final Map<Integer, BufferedDataTable> tblRep)
         throws IOException, InvalidSettingsException {
-        ZipFile zipFile = new ZipFile(f);
-        InputStream in = new BufferedInputStream(
-                zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_SPEC)));
-        NodeSettingsRO specSettings = NodeSettings.loadFromXML(in);
-        DataTableSpec newSpec = DataTableSpec.load(specSettings);
-        return load(s, newSpec, tblRep);
+
+        try (ZipFile zipFile = new ZipFile(f);
+                InputStream in = new BufferedInputStream(zipFile.getInputStream(new ZipEntry(ZIP_ENTRY_SPEC)))) {
+            NodeSettingsRO specSettings = NodeSettings.loadFromXML(in);
+            DataTableSpec newSpec = DataTableSpec.load(specSettings);
+            return load(s, newSpec, tblRep);
+        }
     }
 
     /**
@@ -208,10 +209,21 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
 
     /**
      * {@inheritDoc}
+     * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
      */
     @Override
+    @Deprecated
     public int getRowCount() {
-        return m_reference.getRowCount();
+        return KnowsRowCountTable.checkRowCount(size());
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public long size() {
+        return m_reference.size();
     }
 
     /**

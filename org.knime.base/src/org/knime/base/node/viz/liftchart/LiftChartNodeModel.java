@@ -78,6 +78,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * The node model of a lift chart.
@@ -185,7 +186,7 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-
+        ConvenienceMethods.checkTableSize(inData[0]);
         int predColIndex =
                 inData[0].getDataTableSpec().findColumnIndex(
                         m_responseColumn.getStringValue());
@@ -308,10 +309,8 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
         cont.close();
         responseCont.close();
 
-        m_dataArray[0] = new DefaultDataArray(cont.getTable(), 1, cont.size());
-        m_dataArray[1] =
-                new DefaultDataArray(responseCont.getTable(), 1, responseCont
-                        .size());
+        m_dataArray[0] = new DefaultDataArray(cont.getTable(), 1, (int)cont.size());
+        m_dataArray[1] = new DefaultDataArray(responseCont.getTable(), 1, (int)responseCont.size());
 
         return new BufferedDataTable[]{st.getBufferedDataTable()};
     }
@@ -328,12 +327,8 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
         ContainerTable dataCont1 = DataContainer.readFromZip(dataFile1);
         ContainerTable dataCont2 = DataContainer.readFromZip(dataFile2);
         m_dataArray = new DataArray[2];
-        m_dataArray[0] =
-                new DefaultDataArray(dataCont1, 1, dataCont1.getRowCount(),
-                        exec.createSubProgress(0.5));
-        m_dataArray[1] =
-                new DefaultDataArray(dataCont2, 1, dataCont2.getRowCount(),
-                        exec.createSubProgress(0.5));
+        m_dataArray[0] = new DefaultDataArray(dataCont1, 1, (int)dataCont1.size(), exec.createSubProgress(0.5));
+        m_dataArray[1] = new DefaultDataArray(dataCont2, 1, (int)dataCont2.size(), exec.createSubProgress(0.5));
     }
 
     /**

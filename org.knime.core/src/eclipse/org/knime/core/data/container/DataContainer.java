@@ -686,8 +686,9 @@ public class DataContainer implements RowAppender {
      *
      * @return The number of rows in the container.
      * @throws IllegalStateException If container is not open.
+     * @since 3.0
      */
-    public int size() {
+    public long size() {
         if (isClosed()) {
             return m_table.getBuffer().size();
         }

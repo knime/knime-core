@@ -133,7 +133,8 @@ final class BootstrapNodeModel extends NodeModel {
                 chunkSize = unprocessedRows;
                 // Generate the rest of the samples
                 // (this will take care of rounding errors that may occur in the relative calculation)
-                numberOfChunkSamples = numberOfSamples - bootstrap.size();
+                // we never put more than 2^31 rows in the bootstrap container, therefore it's safe to cast to int
+                numberOfChunkSamples = numberOfSamples - (int) bootstrap.size();
             }
             // Sample this chunk
             sampleChunk(iterator, chunkSize, numberOfChunkSamples, bootstrap, holdout, random, progress);

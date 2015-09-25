@@ -90,7 +90,7 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
      */
     public BufferedDataTableSorter(final BufferedDataTable inputTable, final Collection<String> inclList,
         final boolean[] sortAscending) {
-        super(inputTable, inputTable.getRowCount(), inclList, sortAscending);
+        super(inputTable, inputTable.size(), inclList, sortAscending);
     }
 
     /**
@@ -106,7 +106,7 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
      */
     public BufferedDataTableSorter(final BufferedDataTable inputTable, final Collection<String> inclList,
         final boolean[] sortAscending, final boolean sortMissingsToEnd) {
-        super(inputTable, inputTable.getRowCount(), inclList, sortAscending, sortMissingsToEnd);
+        super(inputTable, inputTable.size(), inclList, sortAscending, sortMissingsToEnd);
     }
 
     /**
@@ -116,7 +116,7 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
      * @param rowComparator Passed to {@link #setRowComparator(Comparator)}.
      */
     public BufferedDataTableSorter(final BufferedDataTable inputTable, final Comparator<DataRow> rowComparator) {
-        super(inputTable, inputTable.getRowCount(), rowComparator);
+        super(inputTable, inputTable.size(), rowComparator);
     }
 
     /**

@@ -289,6 +289,7 @@ public class DataTableDomainCreator {
         }
     }
 
+
     /**
      * Updates the domain values by scanning a whole table. Note that the table's structure must match the table spec
      * that has been provided to the constructor.
@@ -298,14 +299,33 @@ public class DataTableDomainCreator {
      *            needed.
      * @param rowCount the number of rows in the data table
      * @throws CanceledExecutionException when execution is cancelled
+     * @deprecated use {@link #updateDomain(DataTable, ExecutionMonitor, long)} instead which supports more than
+     *             {@link Integer#MAX_VALUE} rows
      */
+    @Deprecated
     public void updateDomain(final DataTable table, final ExecutionMonitor exec, final int rowCount)
+        throws CanceledExecutionException {
+        updateDomain(table, exec, (long) rowCount);
+    }
+
+    /**
+     * Updates the domain values by scanning a whole table. Note that the table's structure must match the table spec
+     * that has been provided to the constructor.
+     *
+     * @param table the table to be processed
+     * @param exec an execution monitor to check for cancellation and report progress. Might be <code>null</code> if not
+     *            needed.
+     * @param rowCount the number of rows in the data table
+     * @throws CanceledExecutionException when execution is cancelled
+     * @since 3.0
+     */
+    public void updateDomain(final DataTable table, final ExecutionMonitor exec, final long rowCount)
         throws CanceledExecutionException {
         if (!m_inputSpec.equalStructure(table.getDataTableSpec())) {
             throw new IllegalArgumentException("Spec of table to scan does not match spec given in constructor");
         }
 
-        int row = 0;
+        long row = 0;
         for (RowIterator it = table.iterator(); it.hasNext(); row++) {
             if (exec != null) {
                 exec.checkCanceled();
@@ -339,6 +359,6 @@ public class DataTableDomainCreator {
      */
     public void updateDomain(final BufferedDataTable table, final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        updateDomain(table, exec, table.getRowCount());
+        updateDomain(table, exec, table.size());
     }
 }

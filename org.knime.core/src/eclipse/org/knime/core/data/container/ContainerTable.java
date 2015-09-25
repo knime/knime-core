@@ -128,12 +128,24 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
 
     /**
      * {@inheritDoc}
+     * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
      */
     @Override
+    @Deprecated
     public int getRowCount() {
+        return KnowsRowCountTable.checkRowCount(size());
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public long size() {
         ensureBufferOpen();
         return m_buffer.size();
     }
+
 
     /** Get reference to buffer.
      * @return The buffer backing this object.

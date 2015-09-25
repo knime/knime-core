@@ -152,10 +152,21 @@ public final class JoinedTable implements KnowsRowCountTable {
 
     /**
      * {@inheritDoc}
+     * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
      */
     @Override
+    @Deprecated
     public int getRowCount() {
-        return m_leftTable.getRowCount();
+        return KnowsRowCountTable.checkRowCount(size());
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public long size() {
+        return m_leftTable.size();
     }
 
     /**
@@ -228,11 +239,11 @@ public final class JoinedTable implements KnowsRowCountTable {
     public static JoinedTable create(final BufferedDataTable left,
             final BufferedDataTable right, final ExecutionMonitor prog)
             throws CanceledExecutionException {
-        int cnt = left.getRowCount();
-        if (cnt != right.getRowCount()) {
+        long cnt = left.size();
+        if (cnt != right.size()) {
             throw new IllegalArgumentException("Tables can't be joined, non "
                     + "matching row counts: " + cnt + " vs. "
-                    + right.getRowCount());
+                    + right.size());
         }
         // throws exception when duplicates encountered.
         DataTableSpec joinSpec = new DataTableSpec(

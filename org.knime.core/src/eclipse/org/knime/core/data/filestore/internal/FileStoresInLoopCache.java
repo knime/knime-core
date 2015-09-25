@@ -258,7 +258,7 @@ final class FileStoresInLoopCache {
     @Override
     public String toString() {
         if (m_createdFileStoresTable != null) {
-            return "Closed - " + m_createdFileStoresTable.getRowCount() + " element(s):\n"
+            return "Closed - " + m_createdFileStoresTable.size() + " element(s):\n"
                     + DefaultTable.toString(m_createdFileStoresTable);
         } else {
             return "Open - currently " + m_createdFileStoresContainer.size() + " element(s)";

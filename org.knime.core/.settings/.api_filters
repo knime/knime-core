@@ -28,15 +28,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/data/container/DataContainer.java" type="org.knime.core.data.container.DataContainer">
-        <filter id="388194388">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.container.DataContainer"/>
-                <message_argument value="DEF_MAX_CELLS_IN_MEMORY"/>
-                <message_argument value="100000"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryWarningSystem.java" type="org.knime.core.data.util.memory.MemoryWarningSystem">
         <filter id="338792546">
             <message_arguments>

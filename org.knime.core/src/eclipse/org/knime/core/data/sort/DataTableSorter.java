@@ -74,19 +74,82 @@ import org.knime.core.node.NodeLogger;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class DataTableSorter extends AbstractTableSorter {
-
-    /** Inits sorter on argument table with given row comparator.
+    /**
+     * Inits sorter on argument table with given row comparator.
+     *
      * @param inputTable Table to sort.
-     * @param rowsCount The number of rows in the table, if known. Specify
-     * -1 if you don't know the table row count. This field is only used
-     * to report progress upon {@link #sort(ExecutionMonitor)}.
-     * @param rowComparator Passed to {@link #setRowComparator(Comparator)}. */
+     * @param rowsCount The number of rows in the table, if known. Specify -1 if you don't know the table row count.
+     *            This field is only used to report progress upon {@link #sort(ExecutionMonitor)}.
+     * @param rowComparator Passed to {@link #setRowComparator(Comparator)}.
+     * @deprecated use {@link #DataTableSorter(DataTable, long, Comparator)} instead which supports more than
+     *             {@link Integer#MAX_VALUE} rows
+     */
+    @Deprecated
     public DataTableSorter(final DataTable inputTable, final int rowsCount,
             final Comparator<DataRow> rowComparator) {
         super(inputTable, rowsCount, rowComparator);
     }
 
-    /** Inits table sorter using the sorting according to
+    /**
+     * Inits table sorter using the sorting according to {@link #setSortColumns(Collection, boolean[])}.
+     *
+     * @param inputTable The table to sort
+     * @param rowsCount The number of rows in the table, if known. Specify -1 if you don't know the table row count.
+     *            This field is only used to report progress upon {@link #sort(ExecutionMonitor)}.
+     * @param inclList Passed on to {@link #setSortColumns(Collection, boolean[])}.
+     * @param sortAscending Passed on to {@link #setSortColumns(Collection, boolean[])}.
+     * @throws NullPointerException If any argument is null.
+     * @throws IllegalArgumentException If arguments are inconsistent.
+     * @deprecated use {@link #DataTableSorter(DataTable, int, Collection, boolean[])} instead which supports more than
+     *             {@link Integer#MAX_VALUE} rows
+     */
+    @Deprecated
+    public DataTableSorter(final DataTable inputTable, final int rowsCount,
+            final Collection<String> inclList, final boolean[] sortAscending) {
+        super(inputTable, rowsCount, inclList, sortAscending);
+    }
+
+    /**
+     * Inits table sorter using the sorting according to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     *
+     * @param inputTable The table to sort
+     * @param rowsCount The number of rows in the table, if known. Specify -1 if you don't know the table row count.
+     *            This field is only used to report progress upon {@link #sort(ExecutionMonitor)}.
+     * @param inclList Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortAscending Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortMissingToEnd Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}
+     * @throws NullPointerException If any argument is null.
+     * @throws IllegalArgumentException If arguments are inconsistent.
+     * @since 2.6
+     * @deprecated use {@link #DataTableSorter(DataTable, long, Collection, boolean[], boolean)} instead which supports
+     *             more than {@link Integer#MAX_VALUE} rows
+     */
+    @Deprecated
+    public DataTableSorter(final DataTable inputTable, final int rowsCount,
+            final Collection<String> inclList, final boolean[] sortAscending,
+            final boolean sortMissingToEnd) {
+        super(inputTable, rowsCount, inclList, sortAscending);
+    }
+
+
+
+    /**
+     * Inits sorter on argument table with given row comparator.
+     *
+     * @param inputTable Table to sort.
+     * @param rowsCount The number of rows in the table, if known. Specify
+     * -1 if you don't know the table row count. This field is only used
+     * to report progress upon {@link #sort(ExecutionMonitor)}.
+     * @param rowComparator Passed to {@link #setRowComparator(Comparator)}.
+     * @since 3.0
+     */
+    public DataTableSorter(final DataTable inputTable, final long rowsCount,
+            final Comparator<DataRow> rowComparator) {
+        super(inputTable, rowsCount, rowComparator);
+    }
+
+    /**
+     * Inits table sorter using the sorting according to
      * {@link #setSortColumns(Collection, boolean[])}.
      *
      * @param inputTable The table to sort
@@ -99,13 +162,15 @@ public class DataTableSorter extends AbstractTableSorter {
      * {@link #setSortColumns(Collection, boolean[])}.
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
+     * @since 3.0
      */
-    public DataTableSorter(final DataTable inputTable, final int rowsCount,
+    public DataTableSorter(final DataTable inputTable, final long rowsCount,
             final Collection<String> inclList, final boolean[] sortAscending) {
         super(inputTable, rowsCount, inclList, sortAscending);
     }
 
-    /** Inits table sorter using the sorting according to
+    /**
+     * Inits table sorter using the sorting according to
      * {@link #setSortColumns(Collection, boolean[], boolean)}.
      *
      * @param inputTable The table to sort
@@ -120,14 +185,13 @@ public class DataTableSorter extends AbstractTableSorter {
      * {@link #setSortColumns(Collection, boolean[], boolean)}
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
-     * @since 2.6
+     * @since 3.0
      */
-    public DataTableSorter(final DataTable inputTable, final int rowsCount,
+    public DataTableSorter(final DataTable inputTable, final long rowsCount,
             final Collection<String> inclList, final boolean[] sortAscending,
             final boolean sortMissingToEnd) {
         super(inputTable, rowsCount, inclList, sortAscending);
     }
-
     /**
      * Package default constructor for the {@link AbstractColumnTableSorter}.
      *

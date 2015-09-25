@@ -150,11 +150,11 @@ final class TableSorterWorker extends SwingWorker<DataTable, NodeProgress> {
     /** {@inheritDoc} */
     @Override
     protected DataTable doInBackground() throws Exception {
-        int rowCount; // passed to table sorter for progress
+        long rowCount; // passed to table sorter for progress
         if (m_inputTable instanceof BufferedDataTable) {
-            rowCount = ((BufferedDataTable)m_inputTable).getRowCount();
+            rowCount = ((BufferedDataTable)m_inputTable).size();
         } else if (m_inputTable instanceof ContainerTable) {
-            rowCount = ((ContainerTable)m_inputTable).getRowCount();
+            rowCount = ((ContainerTable)m_inputTable).size();
         } else {
             rowCount = -1; // unknown, no progress
         }

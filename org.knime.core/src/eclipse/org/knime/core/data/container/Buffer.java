@@ -190,8 +190,16 @@ class Buffer implements KNIMEStreamConstants {
     /**
      * Config entries when writing the spec to the file (uses NodeSettings object, which uses key-value pairs. Here:
      * size of the table (#rows).
+     * @deprecated because it's only an int
      */
+    @Deprecated
     private static final String CFG_SIZE = "table.size";
+
+    /**
+     * Config entries when writing the spec to the file (uses NodeSettings object, which uses key-value pairs. Here:
+     * size of the table (#rows).
+     */
+    private static final String CFG_SIZE_L = "table.size.long";
 
     /** Config entry for compression format.
      * @since 2.8
@@ -403,7 +411,7 @@ class Buffer implements KNIMEStreamConstants {
     private int m_maxRowsInMem;
 
     /** the current row count (how often has addRow been called). */
-    private int m_size;
+    private long m_size;
 
     /** the list that keeps up to m_maxRowsInMem in memory. */
     private List<BlobSupportDataRow> m_list;
@@ -901,7 +909,7 @@ class Buffer implements KNIMEStreamConstants {
 
     /** Increments the row counter by one, used in addRow.
      * @return previous size (before incrementing it). */
-    private int getAndIncrementSize() {
+    private long getAndIncrementSize() {
         return m_size++;
     }
 
@@ -1009,7 +1017,11 @@ class Buffer implements KNIMEStreamConstants {
         NodeSettings settings = new NodeSettings("Table Meta Information");
         NodeSettingsWO subSettings = settings.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addString(CFG_VERSION, getVersion());
-        subSettings.addInt(CFG_SIZE, size());
+        if (size() < Integer.MAX_VALUE) {
+            subSettings.addInt(CFG_SIZE, (int) size());
+        } else {
+            subSettings.addLong(CFG_SIZE_L, size());
+        }
         subSettings.addString(CFG_COMPRESSION, m_compressionFormat.name());
         subSettings.addBoolean(CFG_CONTAINS_BLOBS, m_containsBlobs);
         // added between version 8 and 9 - no increment of version number
@@ -1054,7 +1066,11 @@ class Buffer implements KNIMEStreamConstants {
             NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
             String version = subSettings.getString(CFG_VERSION);
             m_version = validateVersion(version);
-            m_size = subSettings.getInt(CFG_SIZE);
+            if (subSettings.containsKey(CFG_SIZE_L)) {
+                m_size = subSettings.getLong(CFG_SIZE_L);
+            } else {
+                m_size = subSettings.getInt(CFG_SIZE);
+            }
             if (m_size < 0) {
                 throw new IOException("Table size must not be < 0: " + m_size);
             }
@@ -1218,7 +1234,7 @@ class Buffer implements KNIMEStreamConstants {
      *
      * @return How often has addRow() been called.
      */
-    public int size() {
+    public long size() {
         return m_size;
     }
 
@@ -1643,7 +1659,8 @@ class Buffer implements KNIMEStreamConstants {
                 // the order of the following lines is very important!
                 m_useBackIntoMemoryIterator = false;
                 m_backIntoMemoryIterator = iterator();
-                m_list = new ArrayList<BlobSupportDataRow>(size());
+                // we never store more than 2^31 rows in memory, therefore it's safe to cast to int
+                m_list = new ArrayList<BlobSupportDataRow>((int) size());
                 return new FromListIterator();
             }
             FromFileIterator f;
@@ -2049,7 +2066,7 @@ class Buffer implements KNIMEStreamConstants {
         /** {@inheritDoc} */
         @Override
         public void close() {
-            m_nextIndex = size();
+            m_nextIndex = (int) size();
         }
     }
 

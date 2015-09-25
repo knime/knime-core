@@ -99,10 +99,23 @@ public final class WrappedTable implements KnowsRowCountTable {
         return new BufferedDataTable[]{m_table};
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
+     */
     @Override
+    @Deprecated
     public int getRowCount() {
-        return m_table.getRowCount();
+        return KnowsRowCountTable.checkRowCount(size());
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public long size() {
+        return m_table.size();
     }
 
     /** {@inheritDoc} */

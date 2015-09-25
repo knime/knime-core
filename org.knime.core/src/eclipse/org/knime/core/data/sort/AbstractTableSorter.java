@@ -104,7 +104,7 @@ abstract class AbstractTableSorter {
 
     private final DataTableSpec m_dataTableSpec;
 
-    private final int m_rowsInInputTable;
+    private final long m_rowsInInputTable;
 
     /**
      * The maximal number of open containers. This has an effect when many containers must be merged.
@@ -112,9 +112,9 @@ abstract class AbstractTableSorter {
     private int m_maxOpenContainers = DEF_MAX_OPENCONTAINER;
 
     /**
-     * Maximum number of rows. Only used in unit test. Defaults to {@link Integer#MAX_VALUE}.
+     * Maximum number of rows. Only changed in unit test. Defaults to {@link Integer#MAX_VALUE}.
      */
-    private int m_maxRows = Integer.MAX_VALUE;
+    private int m_maxRowsPerChunk = Integer.MAX_VALUE;
 
     private boolean m_sortInMemory = false;
 
@@ -129,7 +129,7 @@ abstract class AbstractTableSorter {
 
     private double m_incProgress;
 
-    private int m_itemCount;
+    private long m_itemCount;
 
     /**
      * Private constructor. Assigns input table, checks argument.
@@ -138,7 +138,7 @@ abstract class AbstractTableSorter {
      * @param rowsCount The number of rows in the table
      * @throws NullPointerException If arg is null.
      */
-    private AbstractTableSorter(final DataTable inputTable, final int rowsCount) {
+    private AbstractTableSorter(final DataTable inputTable, final long rowsCount) {
         if (inputTable == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -160,7 +160,7 @@ abstract class AbstractTableSorter {
      * @param dataTableSpec the data table spec
      * @param rowComparator the comparator
      */
-    AbstractTableSorter(final int rowsCount, final DataTableSpec dataTableSpec,
+    AbstractTableSorter(final long rowsCount, final DataTableSpec dataTableSpec,
         final Comparator<DataRow> rowComparator) {
         m_dataTableSpec = dataTableSpec;
         m_rowComparator = rowComparator;
@@ -174,7 +174,10 @@ abstract class AbstractTableSorter {
      * @param inputTable Table to sort.
      * @param rowsCount The number of rows in the table
      * @param rowComparator Passed to {@link #setRowComparator(Comparator)}.
+     * @deprecated use {@link #AbstractTableSorter(long, DataTableSpec, Comparator)} instead which supports more than
+     *             {@link Integer#MAX_VALUE} rows
      */
+    @Deprecated
     public AbstractTableSorter(final DataTable inputTable, final int rowsCount,
         final Comparator<DataRow> rowComparator) {
         this(inputTable, rowsCount);
@@ -190,7 +193,10 @@ abstract class AbstractTableSorter {
      * @param sortAscending Passed on to {@link #setSortColumns(Collection, boolean[])}.
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
+     * @deprecated use {@link #AbstractTableSorter(DataTable, long, Collection, boolean[])} instead which supports more
+     *             than {@link Integer#MAX_VALUE} rows
      */
+    @Deprecated
     public AbstractTableSorter(final DataTable inputTable, final int rowsCount, final Collection<String> inclList,
         final boolean[] sortAscending) {
         this(inputTable, rowsCount);
@@ -208,8 +214,59 @@ abstract class AbstractTableSorter {
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
      * @since 2.6
+     * @deprecated use {@link #AbstractTableSorter(DataTable, long, Collection, boolean[], boolean)} instead which
+     *             supports more than {@link Integer#MAX_VALUE} rows
      */
+    @Deprecated
     public AbstractTableSorter(final DataTable inputTable, final int rowsCount, final Collection<String> inclList,
+        final boolean[] sortAscending, final boolean sortMissingsToEnd) {
+        this(inputTable, rowsCount);
+        setSortColumns(inclList, sortAscending, sortMissingsToEnd);
+    }
+
+
+    /**
+     * Inits sorter on argument table with given row comparator.
+     *
+     * @param inputTable Table to sort.
+     * @param rowsCount The number of rows in the table
+     * @param rowComparator Passed to {@link #setRowComparator(Comparator)}.
+     */
+    public AbstractTableSorter(final DataTable inputTable, final long rowsCount,
+        final Comparator<DataRow> rowComparator) {
+        this(inputTable, rowsCount);
+        setRowComparator(rowComparator);
+    }
+
+    /**
+     * Inits table sorter using the sorting according to {@link #setSortColumns(Collection, boolean[])}.
+     *
+     * @param inputTable The table to sort
+     * @param rowsCount The number of rows in the table
+     * @param inclList Passed on to {@link #setSortColumns(Collection, boolean[])}.
+     * @param sortAscending Passed on to {@link #setSortColumns(Collection, boolean[])}.
+     * @throws NullPointerException If any argument is null.
+     * @throws IllegalArgumentException If arguments are inconsistent.
+     */
+    public AbstractTableSorter(final DataTable inputTable, final long rowsCount, final Collection<String> inclList,
+        final boolean[] sortAscending) {
+        this(inputTable, rowsCount);
+        setSortColumns(inclList, sortAscending);
+    }
+
+    /**
+     * Inits table sorter using the sorting according to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     *
+     * @param inputTable The table to sort
+     * @param rowsCount The number of rows in the table
+     * @param inclList Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortAscending Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortMissingsToEnd Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @throws NullPointerException If any argument is null.
+     * @throws IllegalArgumentException If arguments are inconsistent.
+     * @since 2.6
+     */
+    public AbstractTableSorter(final DataTable inputTable, final long rowsCount, final Collection<String> inclList,
         final boolean[] sortAscending, final boolean sortMissingsToEnd) {
         this(inputTable, rowsCount);
         setSortColumns(inclList, sortAscending, sortMissingsToEnd);
@@ -312,7 +369,7 @@ abstract class AbstractTableSorter {
      * @param maxRows the maxRows to set
      */
     void setMaxRows(final int maxRows) {
-        m_maxRows = maxRows;
+        m_maxRowsPerChunk = maxRows;
     }
 
     /**
@@ -357,9 +414,12 @@ abstract class AbstractTableSorter {
      */
     DataTable sortInternal(final ExecutionMonitor exec) throws CanceledExecutionException {
         DataTable result;
-        if (m_sortInMemory) {
+        if (m_sortInMemory && (m_rowsInInputTable <= Integer.MAX_VALUE)) {
             result = sortInMemory(exec);
         } else {
+            if (m_rowsInInputTable > Integer.MAX_VALUE) {
+                LOGGER.info("Not sorting table in memory, because it has more than " + Integer.MAX_VALUE + " rows.");
+            }
             result = sortOnDisk(exec);
         }
         exec.setProgress(1.0);
@@ -371,7 +431,7 @@ abstract class AbstractTableSorter {
         List<DataRow> rowList = new ArrayList<DataRow>();
 
         int progress = 0;
-        final int rowCount = m_rowsInInputTable;
+        final long rowCount = m_rowsInInputTable;
         exec.setMessage("Reading data");
         ExecutionMonitor readExec = exec.createSubProgress(0.5);
         for (final DataRow r : dataTable) {
@@ -441,7 +501,7 @@ abstract class AbstractTableSorter {
 
         m_progress = 0.0;
         m_incProgress = m_rowsInInputTable <= 0 ? -1.0 : 1.0 / (2.0 * m_rowsInInputTable);
-        int counter = createInitialChunks(exec, dataTable);
+        long counter = createInitialChunks(exec, dataTable);
         // no or one row only in input table, can exit immediately
         // (can't rely on global rowCount - might not be set)
         if (counter <= 1) {
@@ -518,18 +578,12 @@ abstract class AbstractTableSorter {
         throw new RuntimeException("Merging iterator should never been already returned");
     }
 
-    /**
-     * @param exec
-     * @param dataTable
-     * @return
-     * @throws CanceledExecutionException
-     */
-    private int createInitialChunks(final ExecutionMonitor exec, final DataTable dataTable)
+    private long createInitialChunks(final ExecutionMonitor exec, final DataTable dataTable)
         throws CanceledExecutionException {
-        int outerCounter;
-        int counter = 0;
+        long outerCounter;
+        long counter = 0;
         ArrayList<DataRow> buffer = new ArrayList<DataRow>();
-        int chunkStartRow = 0;
+        long chunkStartRow = 0;
         int rowsInCurrentChunk = 0;
 
         MemoryActionIndicator memObservable = m_memService.newIndicator();
@@ -549,10 +603,10 @@ abstract class AbstractTableSorter {
             DataRow row = iter.next();
             buffer.add(row);
             if ((memObservable.lowMemoryActionRequired() && (rowsInCurrentChunk >= m_maxOpenContainers))
-                || (counter % m_maxRows == 0)) {
+                || (counter % m_maxRowsPerChunk == 0)) {
                 LOGGER.debug("Writing chunk [" + chunkStartRow + ":" + counter + "] - mem usage: " + getMemUsage());
                 if (m_rowsInInputTable > 0) {
-                    int estimatedIncrements = m_rowsInInputTable - counter + buffer.size();
+                    long estimatedIncrements = m_rowsInInputTable - counter + buffer.size();
                     m_incProgress = (0.5 - m_progress) / estimatedIncrements;
                 }
                 exec.setMessage("Sorting temporary buffer");
