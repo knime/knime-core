@@ -111,15 +111,18 @@ ColorDefinition#org-eclipse-ui-workbench-INACTIVE_TAB_TEXT_COLOR {
 /*additional tab settings such as border and corners*/
 CTabFolder {
 	swt-simple: true;
-	swt-corner-radius: 6; /* is the minimum radius we can use*/
+	/*swt-corner-radius: 6;*/ /* 6 is the minimum radius the default renderer supports*/
+	swt-corner-radius: 6;
 	swt-shadow-visible: false;
 	border-visible: false;
 	/*swt-selected-tab-fill: #FF0000;*/ 
 	/*swt-tab-outline: #FF0000;*/
+	 /*swt-tab-renderer: url('bundleclass://org.knime.product/org.knime.product.KNIMECTabRenderer');*/
 }
 
 .MPartStack {
-	swt-tab-renderer: url('bundleclass://org.eclipse.e4.ui.workbench.renderers.swt/org.eclipse.e4.ui.workbench.renderers.swt.CTabRendering');
+	swt-tab-renderer: url('bundleclass://org.knime.product/org.knime.product.renderer.KNIMECTabFolderRenderer');
+	/*swt-tab-renderer: url('bundleclass://org.eclipse.e4.ui.workbench.renderers.swt/org.eclipse.e4.ui.workbench.renderers.swt.CTabRendering');*/
 	swt-selected-tab-fill: #FFFFFF #FFFFFF 100% 100%;
 	padding: 5px 5px 5px; /*border around the content of a CTab*/
 	swt-shadow-visible: false;
