@@ -48,9 +48,9 @@
             document.getElementById('node-content-div').style.height = (nodeRepositoryHeight-120) + 'px'; 
    		}
    		
-   		if( navigator.sayswho.substring(0,4) === "MSIE")
+   		if( navigator.sayswho.substring(0,4) === "MSIE" || navigator.sayswho.substring(0,2) === "IE")
    		{
-   		 			document.getElementById('node-header-div').innerHTML = '<object type="text/html" data="header.html" style="width: 100%;" name="KNIME Node Reference" id="headerObj"></object>';
+   		 	document.getElementById('node-header-div').innerHTML = '<object type="text/html" data="header.html" style="width: 100%;" name="KNIME Node Reference" id="headerObj"></object>';
 			document.getElementById('node-menu-div').innerHTML = '<object type="text/html" data="node_repository.html" style="width: 100%; height: 100%; max-height:100%;" name="Node Repository"></object>';
 			document.getElementById('node-content-div').innerHTML = '<iframe  type="text/html" src="empty_node_description.html" style="width: 100%; height: 100%; max-height:100%;" name="Node Description" id="Node Description"></iframe>';
    		
