@@ -91,8 +91,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -2531,7 +2529,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 checkForNodeStateChanges(true);
             }
         }
-        waitWhileInExecution(predecessorOutPorts, 0L, TimeUnit.MILLISECONDS);
+        waitWhileInExecution(m_workflowMutex, predecessorOutPorts, 0L, TimeUnit.MILLISECONDS);
     }
 
     /** Find all nodes which are connected to a specific inport of a node
@@ -5033,11 +5031,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public boolean waitWhileInExecution(final long time, final TimeUnit unit)
     throws InterruptedException {
-        return waitWhileInExecution(new NodeContainer[] {this}, time, unit);
+        return waitWhileInExecution(m_workflowMutex, new NodeContainer[] {this}, time, unit);
     }
 
     /** Causes the current thread to wait until the the workflow has reached
      * a non-executing state unless a given timeout elapsed.
+     * @param mutex The lock to sleep on (m_workflowMutex of the nodes/wfm to be waited for)
      * @param time the maximum time to wait
      *       (0 or negative for waiting infinitely)
      * @param unit the time unit of the {@code time} argument
@@ -5046,47 +5045,42 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *         {@code true} if the time argument is 0 or negative.
      * @throws InterruptedException if the current thread is interrupted
      */
-    private static boolean waitWhileInExecution(final NodeContainerStateObservable[] ncs,
-            final long time, final TimeUnit unit)
+    private static boolean waitWhileInExecution(final Object mutex,
+            final NodeContainerStateObservable[] ncs, final long time, final TimeUnit unit)
         throws InterruptedException {
         // lock supporting timeout
-        final ReentrantLock lock = new ReentrantLock();
-        final Condition condition = lock.newCondition();
+        // temporarily(?) using a global workflow lock - trying to identify unforeseeable problem of synchronizing
+        // state retrieval on workflow
+//        final ReentrantLock lock = new ReentrantLock();
+//        final Condition condition = lock.newCondition();
         NodeStateChangeListener listener = new NodeStateChangeListener() {
             @Override
             public void stateChanged(final NodeStateEvent stateEvent) {
-                lock.lock();
-                try {
-                    if (!containsExecutingNode(ncs)) {
-                        condition.signalAll();
-                    }
-                } finally {
-                    lock.unlock();
+                synchronized (mutex) {
+                    mutex.notifyAll();
                 }
             }
-
         };
-        lock.lockInterruptibly();
-        for (NodeContainerStateObservable nc : ncs) {
-            if (nc != null) {
-                nc.addNodeStateChangeListener(listener);
-            }
-        }
-        try {
-            if (!containsExecutingNode(ncs)) {
-                return true;
-            }
-            if (time > 0) {
-                return condition.await(time, unit);
-            } else {
-                condition.await();
-                return true;
-            }
-        } finally {
-            lock.unlock();
+        synchronized (mutex) {
             for (NodeContainerStateObservable nc : ncs) {
                 if (nc != null) {
-                    nc.removeNodeStateChangeListener(listener);
+                    nc.addNodeStateChangeListener(listener);
+                }
+            }
+            try {
+                // max time to wait - decremented with each wakeup - wait infinitely long if time arg is <= 0
+                long delay = time > 0 ? unit.toMillis(time) : Long.MAX_VALUE;
+                while (delay > 0L && containsExecutingNode(ncs)) {
+                    final long start = System.currentTimeMillis();
+                    mutex.wait(delay);
+                    delay -= System.currentTimeMillis() - start;
+                }
+                return delay > 0L;
+            } finally {
+                for (NodeContainerStateObservable nc : ncs) {
+                    if (nc != null) {
+                        nc.removeNodeStateChangeListener(listener);
+                    }
                 }
             }
         }
