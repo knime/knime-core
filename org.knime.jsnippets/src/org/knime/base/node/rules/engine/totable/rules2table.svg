@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 19.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 16 16" style="enable-background:new 0 0 16 16;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#CBCBCB;}
+	.st1{fill:#FFFFFF;}
+</style>
+<g>
+	<rect id="XMLID_158_" x="11" y="11" class="st0" width="4" height="4"/>
+	<path id="XMLID_153_" d="M16,16V0l-6,0v11v5H16z M11,6h4v4h-4V6z M11,1h4v4h-4V1z M11,11h4v4h-4V11z"/>
+	<rect id="XMLID_152_" x="11" y="6" class="st0" width="4" height="4"/>
+	<rect id="XMLID_149_" x="11" y="1" class="st1" width="4" height="4"/>
+</g>
+<polygon id="XMLID_19_" points="5.2,12.3 2.1,12.3 2.1,12.3 2,12.3 2,9.1 2.8,9.1 2.8,11.6 5.2,11.6 5.2,10.3 8,11.9 5.2,13.6 "/>
+<g>
+	<path d="M8.5,0H0v1h2.5v4H0v1h8.5V0z M7.5,5h-4V1h4V5z"/>
+	<rect y="1" class="st1" width="2.5" height="4"/>
+	<rect x="3.5" y="1" class="st1" width="4" height="4"/>
+</g>
+</svg>
