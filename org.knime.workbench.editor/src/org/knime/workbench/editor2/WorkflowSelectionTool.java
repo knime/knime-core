@@ -147,14 +147,6 @@ public class WorkflowSelectionTool extends SelectionTool {
         return super.handleDrag();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void createHoverRequest() {
-        // TODO Auto-generated method stub
-        super.createHoverRequest();
-    }
 
     /**
      * {@inheritDoc}

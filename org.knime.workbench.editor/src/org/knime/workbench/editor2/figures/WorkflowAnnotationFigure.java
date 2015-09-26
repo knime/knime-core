@@ -87,6 +87,18 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
         m_editIcon.setVisible(showit);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean containsPoint(final int x, final int y) {
+        return m_editIcon.containsPoint(x, y);
+    }
+
+    public Rectangle getEditIconBounds() {
+        return m_editIcon.getBounds();
+    }
+
     @Override
     public void newContent(final Annotation annotation) {
         super.newContent(annotation);

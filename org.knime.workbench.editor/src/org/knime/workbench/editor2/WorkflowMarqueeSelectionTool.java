@@ -42,7 +42,9 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.figures.WorkflowAnnotationFigure;
 
 /**
  * A Tool which selects multiple objects inside a rectangular area of a
@@ -225,6 +227,13 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                 included =
                         ((PolylineConnection)figure).getPoints().intersects(
                                 relMarqueeRect);
+            } else if (child instanceof AnnotationEditPart && !(child instanceof NodeAnnotationEditPart)) {
+                // select WorkflowAnnotations only if the editor icon is included in the selection
+                if (figure instanceof WorkflowAnnotationFigure) {
+                    r = ((WorkflowAnnotationFigure)figure).getEditIconBounds().getCopy();
+                    included = marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED ? marqueeRect.intersects(r)
+                        : marqueeRect.contains(r);
+                }
             } else if (marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED) {
                 included = marqueeRect.intersects(r);
             } else {
