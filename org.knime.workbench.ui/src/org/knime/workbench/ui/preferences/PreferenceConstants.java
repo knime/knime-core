@@ -125,9 +125,9 @@ public interface PreferenceConstants {
     /** Pref constant for grid size (number of pixels). */
     public static final String P_GRID_SIZE_Y = "knime.gridsize.y";
     /** Default grid distance. */
-    public static final int P_GRID_DEFAULT_SIZE_X = 90;
+    public static final int P_GRID_DEFAULT_SIZE_X = 20;
     /** Default grid distance. */
-    public static final int P_GRID_DEFAULT_SIZE_Y = 120;
+    public static final int P_GRID_DEFAULT_SIZE_Y = 20;
 
     /** Pref constant whether to enable auto save for workflows. */
     public static final String P_AUTO_SAVE_ENABLE = "knime.autosave.enable";
