@@ -42,7 +42,6 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
-import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.figures.WorkflowAnnotationFigure;
 
@@ -227,7 +226,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                 included =
                         ((PolylineConnection)figure).getPoints().intersects(
                                 relMarqueeRect);
-            } else if (child instanceof AnnotationEditPart && !(child instanceof NodeAnnotationEditPart)) {
+            } else if (child instanceof AnnotationEditPart) {
+                // don't include node annotations at all
                 // select WorkflowAnnotations only if the editor icon is included in the selection
                 if (figure instanceof WorkflowAnnotationFigure) {
                     r = ((WorkflowAnnotationFigure)figure).getEditIconBounds().getCopy();
