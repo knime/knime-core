@@ -51,7 +51,6 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 
 /**
@@ -59,9 +58,6 @@ import org.knime.core.node.port.PortType;
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowPortLocator extends PortLocator {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            WorkflowPortLocator.class);
 
     /**
      * @param type port type
@@ -90,7 +86,6 @@ public class WorkflowPortLocator extends PortLocator {
         yPos -= (wfPortSize / 2);
         Rectangle portBounds = new Rectangle(new Point(xPos, yPos), new Dimension(wfPortSize, wfPortSize));
 
-        LOGGER.debug("workflow port locator#relocate " + portBounds);
         target.setBounds(portBounds);
         target.repaint();
     }

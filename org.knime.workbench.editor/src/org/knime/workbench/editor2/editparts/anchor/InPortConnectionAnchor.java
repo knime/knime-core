@@ -93,6 +93,8 @@ public class InPortConnectionAnchor extends ChopboxAnchor {
         Point point = getBox().getLeft().getCopy();
         // needed for zoomed views
         getOwner().translateToAbsolute(point);
+        // let the connection end outside the figure (causes a gap in zoomed views :( )
+        point.x--;
         return point;
     }
 }

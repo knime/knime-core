@@ -96,7 +96,7 @@ public class NodeInPortFigure extends AbstractPortFigure {
         if (getType().equals(BufferedDataTable.TYPE)) {
             PointList points = new PointList(3);
             points.addPoint(new Point(r.x, r.y));
-            points.addPoint(new Point(r.x + r.width - 1, r.y + (r.height / 2)));
+            points.addPoint(new Point(r.x + r.width - 1, r.y + (r.height / 2) - 1));
             points.addPoint(new Point(r.x, r.y + r.height - 1));
             return points;
         }
