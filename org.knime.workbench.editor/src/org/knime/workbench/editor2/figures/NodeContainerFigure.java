@@ -359,7 +359,18 @@ public class NodeContainerFigure extends RectangleFigure {
 
         int width = 0;
         for (String s : wrapText(text).split("\n")) {
-            Label l = new Label(s);
+            Label l = new Label(s) {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public Dimension getPreferredSize(final int wHint, final int hHint) {
+                    Dimension d = super.getPreferredSize(wHint, hHint).getCopy();
+                    // headings labels are too small when the editor is zoomed.
+                    d.width = (int)(d.width * 1.1);
+                    return d;
+                }
+            };
             l.setForegroundColor(ColorConstants.black);
             l.setFont(boldFont);
             m_headingContainer.add(l);
