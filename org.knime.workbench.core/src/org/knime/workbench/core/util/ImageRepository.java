@@ -70,9 +70,9 @@ import org.knime.workbench.core.KNIMECorePlugin;
  * plug-in is deactivated (which it probably never will). </ p>
  * The methods distinguish between IconImages and Images. IconImages are returned in a 16x16px size. Images as they are.
  * IconImages may be scaled if the file content is of different size. Both images (icon and "normal") are zoomed if
- * system zoom requires (high dpi) - but only if the corresponding SystemProperty is set. Icons can be provided in 
+ * system zoom requires (high dpi) - but only if the corresponding SystemProperty is set. Icons can be provided in
  * different sizes in different files with different names. The size must be appended (like foo.png -> foo_24x24.png and
- * foo_32x32.png). Images are also scaled. If they are provided in different sizes their file names must be appended 
+ * foo_32x32.png). Images are also scaled. If they are provided in different sizes their file names must be appended
  * with @1.5x and @2x.
  *
  * <b>This class is experimental API, please do not use it for now.</b>
@@ -106,8 +106,10 @@ public final class ImageRepository {
         /** the KNIME triangle. */
         KNIME("icons/knime.png"),
 
-        /** edit icon when cursor hovers over annotations. */
-        AnnotationHover("icons/hover.png"),
+        /** edit icon when cursor moves over annotations. */
+        AnnotationEditHover("icons/anno_edit.png"),
+        /** move icon when cursor moves over annotation top left corner. */
+        AnnotationMoveHover("icons/anno_move.png"),
         /** Small icon for export wizards. */
         ExportSmall("icons/knime_export16.png"),
         /** Big icon for export wizards. */

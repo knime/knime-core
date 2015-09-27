@@ -79,6 +79,7 @@ import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditManager;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditPolicy;
 import org.knime.workbench.editor2.directannotationedit.StyledTextEditorLocator;
+import org.knime.workbench.editor2.editparts.policy.AnnotationSelectionEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.WorkflowSelectionFeedbackPolicy;
 import org.knime.workbench.editor2.figures.NodeAnnotationFigure;
 import org.knime.workbench.editor2.figures.WorkflowAnnotationFigure;
@@ -297,6 +298,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         installEditPolicy(EditPolicy.DIRECT_EDIT_ROLE, new AnnotationEditPolicy());
         installEditPolicy(EditPolicy.SELECTION_FEEDBACK_ROLE, new WorkflowSelectionFeedbackPolicy());
         installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE, null);
+        installEditPolicy(EditPolicy.COMPONENT_ROLE, new AnnotationSelectionEditPolicy());
     }
 
     /**

@@ -44,84 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.09.2015 (ohl): created
+ *   27.09.2015 (ohl): created
  */
-package org.knime.workbench.editor2.figures;
+package org.knime.workbench.editor2.editparts.policy;
 
-import org.eclipse.draw2d.Label;
-import org.eclipse.draw2d.LineBorder;
-import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.workflow.Annotation;
-import org.knime.workbench.core.util.ImageRepository;
-import org.knime.workbench.core.util.ImageRepository.SharedImages;
-import org.knime.workbench.editor2.editparts.AnnotationEditPart;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
+import org.eclipse.draw2d.IFigure;
+import org.eclipse.gef.EditPart;
+import org.eclipse.gef.Request;
+import org.eclipse.gef.editpolicies.SelectionEditPolicy;
+import org.knime.workbench.editor2.figures.WorkflowAnnotationFigure;
 
 /**
  *
  * @author ohl
+ * @since 3.0
  */
-public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
-
-    private final Label m_editIcon;
-
-    private static final Image EDIT_ICON = ImageRepository.getImage(SharedImages.AnnotationEditHover);
-
-    private static final Image MOVE_ICON = ImageRepository.getImage(SharedImages.AnnotationMoveHover);
-
-    public WorkflowAnnotationFigure(final Annotation anno) {
-        super(anno);
-        ImageData d = MOVE_ICON.getImageData();
-        m_editIcon = new Label(MOVE_ICON);
-        m_editIcon.setBounds(new Rectangle(0, 0, d.width, d.height));
-        m_editIcon.setVisible(false); // visible only when mouse enters
-        add(m_editIcon);
-    }
-
-    public void showEditIcon(final boolean showit) {
-        m_editIcon.setVisible(showit);
-    }
-
-    public void setMoveIcon() {
-        m_editIcon.setIcon(MOVE_ICON);
-    }
-
-    public void setEditIcon() {
-        m_editIcon.setIcon(EDIT_ICON);
-    }
+public class AnnotationSelectionEditPolicy extends SelectionEditPolicy {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean containsPoint(final int x, final int y) {
-        return m_editIcon.containsPoint(x, y);
+    protected void hideSelection() {
+        IFigure figure = getHostFigure();
+        if (figure instanceof WorkflowAnnotationFigure) {
+            WorkflowAnnotationFigure f = (WorkflowAnnotationFigure)figure;
+            f.setMoveIcon();
+        }
     }
-
-    public Rectangle getEditIconBounds() {
-        return m_editIcon.getBounds();
-    }
-
+    
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void newContent(final Annotation annotation) {
-        super.newContent(annotation);
-
-        Color bg = new Color(Display.getCurrent(), 255, 255, 255);
-        setBackgroundColor(bg);
-        m_page.setBackgroundColor(bg);
-
-        // get workflow annotation border size from preferences
-        IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
-        int annotationBorderSize = store.getInt(PreferenceConstants.P_ANNOTATION_BORDER_SIZE);
-
-        // set border with specified annotation color
-        Color col = AnnotationEditPart.RGBintToColor(annotation.getBgColor());
-        m_page.setBorder(new LineBorder(col, annotationBorderSize));
+    protected void showSelection() {
+        IFigure figure = getHostFigure();
+        if (figure instanceof WorkflowAnnotationFigure) {
+            WorkflowAnnotationFigure f = (WorkflowAnnotationFigure)figure;
+            f.setEditIcon();
+        }
     }
+
 }
