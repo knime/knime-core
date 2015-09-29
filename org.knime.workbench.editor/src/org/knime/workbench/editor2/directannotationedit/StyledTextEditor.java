@@ -120,10 +120,10 @@ public class StyledTextEditor extends CellEditor {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(StyledTextEditor.class);
 
     private static final RGB[] DEFAULT_COLORS = new RGB[]{//
-        fromHex("E4E4E4"), fromHex("F2D3D9"), //
-        fromHex("FFF2B3"), fromHex("B3E0D7"), //
-        fromHex("C8EAC3"), fromHex("C5DEED"), //
-        fromHex("EDD7BE"), fromHex("CFCFE5")};
+        fromHex("CDE280"), fromHex("D8D37B"), //
+        fromHex("93DDD2"), fromHex("D0D2B5"), //
+        fromHex("ADDF9E"), fromHex("E8AFA7"), //
+        fromHex("C4CBE0"), fromHex("E3B67D")};
 
     private static RGB[] lastColors = null;
 
@@ -610,7 +610,7 @@ public class StyledTextEditor extends CellEditor {
         } else {
             text = wa.getText();
             m_selectAllUponFocusGain = AddAnnotationCommand.INITIAL_FLOWANNO_TEXT.equals(text);
-            
+
             // get workflow annotation border size from preferences
             IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
             int annotationBorderSize = store.getInt(PreferenceConstants.P_ANNOTATION_BORDER_SIZE);
