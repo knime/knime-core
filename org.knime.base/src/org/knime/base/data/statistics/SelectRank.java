@@ -72,7 +72,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.sort.MemoryService;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.BufferedDataTable;
@@ -115,8 +114,6 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
      * The maximum number of open containers. See {@link #setMaxOpenContainers(int)} for details.
      */
     public static final int DEF_MAX_OPENCONTAINER = 40;
-
-    private MemoryService m_memService = new MemoryService(DEF_MEM_THRESHOLD);
 
     private final T m_inputTable;
 
@@ -265,15 +262,6 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
             throw new IllegalArgumentException("Invalid open container count: " + value);
         }
         m_maxOpenContainers = value;
-    }
-
-    /**
-     * Set memory service. Used in unit test.
-     *
-     * @param memService the memService to set
-     */
-    void setMemService(final MemoryService memService) {
-        m_memService = memService;
     }
 
     /**
