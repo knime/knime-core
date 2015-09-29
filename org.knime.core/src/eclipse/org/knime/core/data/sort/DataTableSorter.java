@@ -199,8 +199,7 @@ public class DataTableSorter extends AbstractTableSorter {
      * @param dataTableSpec the data table spec
      * @param rowComparator the row comparator
      */
-    DataTableSorter(final int rowCount, final DataTableSpec dataTableSpec,
-        final Comparator<DataRow> rowComparator) {
+    DataTableSorter(final long rowCount, final DataTableSpec dataTableSpec, final Comparator<DataRow> rowComparator) {
         super(rowCount, dataTableSpec, rowComparator);
     }
 

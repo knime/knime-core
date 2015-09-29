@@ -116,7 +116,7 @@ abstract class AbstractColumnTableSorter {
 
     private int m_maxOpenContainers = DEF_MAX_OPENCONTAINER;
 
-    private int m_rowCount;
+    private long m_rowCount;
 
     private final DataTableSpec m_dataTableSpec;
 
@@ -129,7 +129,7 @@ abstract class AbstractColumnTableSorter {
      * @throws InvalidSettingsException if arguments are inconsistent.
      * @throws NullPointerException if any argument is null.
      */
-    AbstractColumnTableSorter(final DataTableSpec spec, final int rowsCount) throws InvalidSettingsException {
+    AbstractColumnTableSorter(final DataTableSpec spec, final long rowsCount) throws InvalidSettingsException {
         this(spec, rowsCount, spec.getColumnNames());
     }
 
@@ -143,7 +143,7 @@ abstract class AbstractColumnTableSorter {
      * @throws InvalidSettingsException if arguments are inconsistent.
      * @throws NullPointerException if any argument is null.
      */
-    AbstractColumnTableSorter(final DataTableSpec spec, final int rowsCount, final String... columnToSort)
+    AbstractColumnTableSorter(final DataTableSpec spec, final long rowsCount, final String... columnToSort)
         throws InvalidSettingsException {
         this(spec, rowsCount, toSortDescriptions(spec, columnToSort));
     }
@@ -156,7 +156,7 @@ abstract class AbstractColumnTableSorter {
      * @param descriptions the defined descriptions
      * @throws InvalidSettingsException If arguments are inconsistent.
      */
-    AbstractColumnTableSorter(final DataTableSpec spec, final int rowsCount, final SortingDescription... descriptions)
+    AbstractColumnTableSorter(final DataTableSpec spec, final long rowsCount, final SortingDescription... descriptions)
         throws InvalidSettingsException {
         checkNotNullAndNotEmpty(descriptions);
         m_dataTableSpec = checkNotNull(spec);
@@ -175,7 +175,7 @@ abstract class AbstractColumnTableSorter {
      * @param rowComparator the comparator to use
      * @return a concrete TableSorter
      */
-    abstract AbstractTableSorter createTableSorter(int rowCount, DataTableSpec spec, Comparator<DataRow> rowComparator);
+    abstract AbstractTableSorter createTableSorter(long rowCount, DataTableSpec spec, Comparator<DataRow> rowComparator);
 
     /**
      * @param dataTable the table to sort

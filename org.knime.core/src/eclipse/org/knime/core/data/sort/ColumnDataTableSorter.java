@@ -125,7 +125,7 @@ public class ColumnDataTableSorter extends AbstractColumnTableSorter {
      * {@inheritDoc}
      */
     @Override
-    AbstractTableSorter createTableSorter(final int rowCount, final DataTableSpec spec,
+    AbstractTableSorter createTableSorter(final long rowCount, final DataTableSpec spec,
         final Comparator<DataRow> rowComparator) {
         return new DataTableSorter(rowCount, spec, rowComparator);
     }

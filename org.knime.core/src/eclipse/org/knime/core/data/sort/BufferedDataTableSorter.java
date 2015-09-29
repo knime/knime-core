@@ -127,7 +127,7 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
      * @param rowComparator the row comparator
      * @param ctx for creating the buffered data table instances
      */
-    BufferedDataTableSorter(final int rowCount, final DataTableSpec dataTableSpec,
+    BufferedDataTableSorter(final long rowCount, final DataTableSpec dataTableSpec,
         final Comparator<DataRow> rowComparator, final ExecutionContext ctx) {
         super(rowCount, dataTableSpec, rowComparator);
         m_execContext = ctx;

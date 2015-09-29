@@ -77,7 +77,9 @@ public class ColumnBufferedDataTableSorter extends AbstractColumnTableSorter {
      * @param rowsCount the amount of rows of the data table, if known -1 otherwise
      * @throws InvalidSettingsException if arguments are inconsistent.
      * @throws NullPointerException if any argument is null.
+     * @deprecated use {@link #ColumnBufferedDataTableSorter(DataTableSpec, long)} instead
      */
+    @Deprecated
     public ColumnBufferedDataTableSorter(final DataTableSpec spec, final int rowsCount) //
         throws InvalidSettingsException {
         this(spec, rowsCount, spec.getColumnNames());
@@ -90,7 +92,9 @@ public class ColumnBufferedDataTableSorter extends AbstractColumnTableSorter {
      * @param rowsCount the row count
      * @param columnsToSort the columns to sort
      * @throws InvalidSettingsException thrown the spec and the columns to sort are incompatible
+     * @deprecated use {@link #ColumnBufferedDataTableSorter(DataTableSpec, int, String...)} instead
      */
+    @Deprecated
     public ColumnBufferedDataTableSorter(final DataTableSpec spec, final int rowsCount, final String... columnsToSort)
         throws InvalidSettingsException {
         super(spec, rowsCount, columnsToSort);
@@ -101,8 +105,51 @@ public class ColumnBufferedDataTableSorter extends AbstractColumnTableSorter {
      * @param rowsCount the row count
      * @param columnsToSort the columns to sort
      * @throws InvalidSettingsException thrown the spec and the columns to sort are incompatible
+     * @deprecated use {@link #ColumnBufferedDataTableSorter(DataTableSpec, int, SortingDescription...)} instead
      */
+    @Deprecated
     public ColumnBufferedDataTableSorter(final DataTableSpec spec, final int rowsCount,
+        final SortingDescription... columnsToSort) throws InvalidSettingsException {
+        super(spec, rowsCount, columnsToSort);
+    }
+
+    /**
+     * The constructor is identical to {@link #ColumnBufferedDataTableSorter(DataTableSpec, int, String...)} with
+     * {@link DataTableSpec#getColumnNames()} as the last input.
+     *
+     * @param spec the spec
+     * @param rowsCount the amount of rows of the data table, if known -1 otherwise
+     * @throws InvalidSettingsException if arguments are inconsistent.
+     * @throws NullPointerException if any argument is null.
+     * @since 3.0
+     */
+    public ColumnBufferedDataTableSorter(final DataTableSpec spec, final long rowsCount) //
+        throws InvalidSettingsException {
+        this(spec, rowsCount, spec.getColumnNames());
+    }
+
+    /**
+     *
+     *
+     * @param spec the spec
+     * @param rowsCount the row count
+     * @param columnsToSort the columns to sort
+     * @throws InvalidSettingsException thrown the spec and the columns to sort are incompatible
+     * @since 3.0
+     */
+    public ColumnBufferedDataTableSorter(final DataTableSpec spec, final long rowsCount, final String... columnsToSort)
+        throws InvalidSettingsException {
+        super(spec, rowsCount, columnsToSort);
+    }
+
+    /**
+     * @param spec the spec
+     * @param rowsCount the row count
+     * @param columnsToSort the columns to sort
+     * @throws InvalidSettingsException thrown the spec and the columns to sort are incompatible
+     * @since 3.0
+     */
+    public ColumnBufferedDataTableSorter(final DataTableSpec spec, final long rowsCount,
         final SortingDescription... columnsToSort) throws InvalidSettingsException {
         super(spec, rowsCount, columnsToSort);
     }
@@ -122,7 +169,7 @@ public class ColumnBufferedDataTableSorter extends AbstractColumnTableSorter {
     }
 
     @Override
-    AbstractTableSorter createTableSorter(final int rowCount, final DataTableSpec spec,
+    AbstractTableSorter createTableSorter(final long rowCount, final DataTableSpec spec,
         final Comparator<DataRow> rowComparator) {
         return new BufferedDataTableSorter(rowCount, spec, rowComparator, m_executionContext);
     }
