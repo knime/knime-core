@@ -240,9 +240,22 @@ public final class ConvenienceMethods {
      * @since 3.0
      */
     public static void checkTableSize(final BufferedDataTable table) {
-        if (table.size() > Integer.MAX_VALUE) {
+        checkTableSize(table.size());
+    }
+
+    /**
+     * Checks if the number of rows is greater than {@link Integer#MAX_VALUE} and throws an exception in this case.
+     *
+     * @param rowCount the row count
+     * @return the row count as int (if below {@link Integer#MAX_VALUE})
+     * @throws UnsupportedOperationException if the number of rows is greater than {@link Integer#MAX_VALUE}
+     * @since 3.0
+     */
+    public static int checkTableSize(final long rowCount) {
+        if (rowCount > Integer.MAX_VALUE) {
             throw new UnsupportedOperationException(
                 "This node does not support more than " + Integer.MAX_VALUE + " rows.");
         }
+        return (int) rowCount;
     }
 }
