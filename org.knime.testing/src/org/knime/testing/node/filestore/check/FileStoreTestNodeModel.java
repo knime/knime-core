@@ -72,7 +72,7 @@ import org.knime.testing.data.filestore.LargeFileStoreValue;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class FileStoreTestNodeModel extends NodeModel {
-    
+
     private final SettingsModelBoolean m_allowMissingModel = createAllowMissingModel();
 
     /**
@@ -97,8 +97,8 @@ final class FileStoreTestNodeModel extends NodeModel {
         BufferedDataTable data = inData[0];
         DataTableSpec spec = data.getDataTableSpec();
         int[] fsColumns = getFSColumns(spec);
-        final int rowcount = data.getRowCount();
-        int index = 0;
+        final long rowcount = data.size();
+        long index = 0;
         for (DataRow r : data) {
             for (int i = 0; i < fsColumns.length; i++) {
                 DataCell c = r.getCell(fsColumns[i]);
@@ -187,7 +187,7 @@ final class FileStoreTestNodeModel extends NodeModel {
         // TODO Auto-generated method stub
 
     }
-    
+
     static final SettingsModelBoolean createAllowMissingModel() {
         return new SettingsModelBoolean("allowMissings", false);
     }
