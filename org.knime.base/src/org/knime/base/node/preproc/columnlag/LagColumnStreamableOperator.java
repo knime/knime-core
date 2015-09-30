@@ -79,7 +79,7 @@ final class LagColumnStreamableOperator extends StreamableOperator {
     private final LagColumnConfiguration m_configuration;
     private final DataTableSpec m_outSpec;
     private final int m_columnIndex;
-    private int m_maxRows = -1; // stays -1 if used only during configure or if used in real streaming
+    private long m_maxRows = -1; // stays -1 if used only during configure or if used in real streaming
 
     /**
      * @param inSpecs
@@ -117,7 +117,7 @@ final class LagColumnStreamableOperator extends StreamableOperator {
     }
 
     BufferedDataTable execute(final BufferedDataTable table, final ExecutionContext exec) throws Exception {
-        int maxRows = table.getRowCount();
+        long maxRows = table.size();
         int maxLag = m_configuration.getLag() * m_configuration.getLagInterval();
         if (m_configuration.isSkipInitialIncompleteRows()) {
             maxRows -= maxLag;
@@ -138,7 +138,7 @@ final class LagColumnStreamableOperator extends StreamableOperator {
     @Override
     public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
                          final ExecutionContext exec) throws Exception {
-        int counter = 0;
+        long counter = 0;
         int maxLag = m_configuration.getLagInterval() * m_configuration.getLag();
         RingBuffer ringBuffer = new RingBuffer(maxLag);
 
@@ -201,7 +201,7 @@ final class LagColumnStreamableOperator extends StreamableOperator {
         return result;
     }
 
-    private void setProgress(final ExecutionContext exec, final int counter, final DataRow row)
+    private void setProgress(final ExecutionContext exec, final long counter, final DataRow row)
             throws CanceledExecutionException {
         StringBuilder progMessageBuilder = new StringBuilder("Added row ");
         progMessageBuilder.append(counter + 1);

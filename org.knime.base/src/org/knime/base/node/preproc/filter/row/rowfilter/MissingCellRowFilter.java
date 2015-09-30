@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   11.07.2008 (thiel): created
  */
@@ -57,13 +57,11 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * A simple {@link org.knime.base.node.preproc.filter.row.rowfilter.RowFilter}
- * implementation that filters rows containing missing cells.
- * 
+ * A simple {@link IRowFilter} implementation that filters rows containing missing cells.
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class MissingCellRowFilter extends RowFilter {
-
     /**
      * {@inheritDoc}
      */
@@ -84,22 +82,27 @@ public class MissingCellRowFilter extends RowFilter {
 
     /**
      * {@inheritDoc}
+     * @since 3.0
      */
     @Override
-    public boolean matches(final DataRow row, final int rowIndex)
-            throws EndOfTableException, IncludeFromNowOn {
-        if (!hasMissingCells(row)) {
-            return true;
-        }
-        return false;
+    public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
+        return !hasMissingCells(row);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(final DataRow row, final int rowIndex) throws EndOfTableException, IncludeFromNowOn {
+        return matches(row, (long) rowIndex);
     }
 
     /**
      * Checks if given row contains missing cells and returns <code>true</code>,
      * otherwise <code>false</code>.
-     * 
+     *
      * @param row The row to check for missing cells
-     * @return <code>true</code> if row contains missing cells, otherwise 
+     * @return <code>true</code> if row contains missing cells, otherwise
      * <code>false</code>
      */
     public static final boolean hasMissingCells(final DataRow row) {
@@ -111,7 +114,7 @@ public class MissingCellRowFilter extends RowFilter {
         }
         return false;
     }
-    
+
     /**
      * {@inheritDoc}
      */

@@ -69,7 +69,7 @@ final class JoinContainer {
 
     private DataTableSpec m_spec;
 
-    private int m_rowCount;
+    private long m_rowCount;
 
     /**
      * Create a new instance.
@@ -85,7 +85,7 @@ final class JoinContainer {
     /**
      * @return the rowCount
      */
-    int getRowCount() {
+    long getRowCount() {
         return m_rowCount;
     }
 

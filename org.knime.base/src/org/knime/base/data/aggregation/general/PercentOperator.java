@@ -112,7 +112,7 @@ public class PercentOperator extends CountOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        final int rowCount = getGlobalSettings().getNoOfRows();
+        final long rowCount = getGlobalSettings().getNoOfRows();
         if (rowCount == 0) {
             return ZERO_PERCENTAGE;
         }

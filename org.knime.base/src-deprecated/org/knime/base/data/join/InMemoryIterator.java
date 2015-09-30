@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.data.join;
 
@@ -54,6 +54,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.JoinedRow;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.util.ConvenienceMethods;
 
 
 /**
@@ -61,7 +62,7 @@ import org.knime.core.node.BufferedDataTable;
  * {@link JoinedTable}) in memory and is therfore
  * magnituded faster than the standard joiner. However, it needs more memory,
  * depending on the number and size of the data rows in the smaller table.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 class InMemoryIterator extends RowIterator {
@@ -75,19 +76,21 @@ class InMemoryIterator extends RowIterator {
 
     /**
      * Creates a new iterator for an in memory join of two tables.
-     * 
+     *
      * @param table the JoinedTable
      */
     public InMemoryIterator(final JoinedTable table) {
-        final int left;
-        final int right;
+        final long left;
+        final long right;
         if (table.getLeftTable() instanceof BufferedDataTable) {
-            left = ((BufferedDataTable)table.getLeftTable()).getRowCount();
+            ConvenienceMethods.checkTableSize((BufferedDataTable)table.getLeftTable());
+            left = ((BufferedDataTable)table.getLeftTable()).size();
         } else {
             left = -1;
         }
         if (table.getRightTable() instanceof BufferedDataTable) {
-            right = ((BufferedDataTable)table.getRightTable()).getRowCount();
+            ConvenienceMethods.checkTableSize((BufferedDataTable)table.getRightTable());
+            right = ((BufferedDataTable)table.getRightTable()).size();
         } else {
             right = -1;
         }

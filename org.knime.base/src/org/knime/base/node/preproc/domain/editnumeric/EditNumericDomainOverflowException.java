@@ -58,9 +58,6 @@ import org.knime.core.data.RowKey;
  * @author Marcel Hanser
  */
 public class EditNumericDomainOverflowException extends RuntimeException {
-    /**
-     *
-     */
     private static final long serialVersionUID = 8530230947466500182L;
 
     /**
@@ -74,7 +71,7 @@ public class EditNumericDomainOverflowException extends RuntimeException {
      * @param rowKey the row key
      */
     public EditNumericDomainOverflowException(final String columnName, final double value, final double expectedMin,
-        final double expectedMax, final int rowIndex, final RowKey rowKey) {
+        final double expectedMax, final long rowIndex, final RowKey rowKey) {
         super(String.format(Locale.US,
             "Column '%s' contains values outside the user-defined domain: %f not in [%f, %f] (row %d, id '%s')",
             columnName, value, expectedMin, expectedMax, rowIndex, rowKey.getString()));

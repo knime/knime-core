@@ -124,14 +124,14 @@ public final class MissingValueHandling2Table implements DataTable {
      * Tries to retrieve the number of rows in the underlying table.
      * @return The number of rows or -1 if not possible.
      */
-    int getNrRowsInReference() {
+    long getNrRowsInReference() {
         if (m_table instanceof BufferedDataTable) {
-            return ((BufferedDataTable)m_table).getRowCount();
+            return ((BufferedDataTable)m_table).size();
         } else if (m_table instanceof MyStatisticsTable) {
             DataTable underlying =
                 ((MyStatisticsTable)m_table).getUnderlyingTable();
             if (underlying instanceof BufferedDataTable) {
-                return ((BufferedDataTable)underlying).getRowCount();
+                return ((BufferedDataTable)underlying).size();
             }
         }
         return -1;

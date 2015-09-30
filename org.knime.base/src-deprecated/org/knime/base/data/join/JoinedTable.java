@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -62,13 +62,13 @@ import org.knime.core.data.RowIterator;
  * Creates new table by appending all columns from <i>right</i> table to the
  * <i>left</i> table. This, of course, only if both table agree on the row
  * keys.
- * 
+ *
  * <p>
  * What is worth to notice about the order: Ideally, the order in both tables is
  * the same. If that is not the case, the order of the <i>left</i> table is the
  * one that counts, followed by the ones that are in the <i>right</i> table but
  * not in the <i>left</i> one.
- * 
+ *
  * <p>
  * If any table contains row keys that the other does not, the columns provided
  * by the respectively other table are filled with missing cells. If the column
@@ -79,9 +79,11 @@ import org.knime.core.data.RowIterator;
  * value). Otherwise, this implementation will throw an exception during the
  * iteration, saying that it cannot instantiate a missing cell. (If it could do
  * so, it would still violate the column type given in table spec.)
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated don't use this class because it joins in memory which doesn't work for large tables
  */
+@Deprecated
 public class JoinedTable implements DataTable {
     /** Method on how to treat duplicate column names: fail execution. */
     public static final String METHOD_FAIL = "exception";
@@ -116,7 +118,7 @@ public class JoinedTable implements DataTable {
      * Creates new table with the left part defined by <code>left</code> and
      * the appended right part given by <code>right</code>. If duplicate
      * column names occur, an exception is thrown
-     * 
+     *
      * @param left the left part of the this table
      * @param right and the corresponding right part
      * @throws IllegalArgumentException if the tables contain the same column
@@ -139,7 +141,7 @@ public class JoinedTable implements DataTable {
      * <li> {@link #METHOD_APPEND_SUFFIX} append a suffix given by the
      * <code>suffix</code> argument to occuring duplicates</li>
      * </ul>
-     * 
+     *
      * @param left the left part of the this table
      * @param right and the corresponding right part
      * @param duplicateMethod the method on how to treat duplicates
@@ -174,6 +176,7 @@ public class JoinedTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
@@ -181,6 +184,7 @@ public class JoinedTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
         if (m_inMemory) {
             return new InMemoryIterator(this);
@@ -191,7 +195,7 @@ public class JoinedTable implements DataTable {
 
     /**
      * Get reference to underlying left table.
-     * 
+     *
      * @return the reference
      */
     protected DataTable getLeftTable() {
@@ -200,7 +204,7 @@ public class JoinedTable implements DataTable {
 
     /**
      * Get reference to underlying right table.
-     * 
+     *
      * @return the reference
      */
     protected DataTable getRightTable() {
@@ -211,7 +215,7 @@ public class JoinedTable implements DataTable {
      * Creates a new DataTableSpec as an result of merging a <code>left</code>
      * and a <code>right</code> table. The method fails with an exception when
      * there are duplicate column names
-     * 
+     *
      * @param left the left part of the this table
      * @param right the corresponding right part
      * @return the spec as result of merging both table specs
@@ -234,7 +238,7 @@ public class JoinedTable implements DataTable {
      * <li> {@link #METHOD_APPEND_SUFFIX} append a suffix given by the
      * <code>suffix</code> argument to occuring duplicates</li>
      * </ul>
-     * 
+     *
      * @param left the left part of the this table
      * @param right and the corresponding right part
      * @param duplicateMethod the method on how to treat duplicates
@@ -262,7 +266,7 @@ public class JoinedTable implements DataTable {
             for (int i = 0; i < right.getNumColumns(); i++) {
                 rightCols[i] = right.getColumnSpec(i);
                 if (hash.contains(rightCols[i].getName())) {
-                    throw new IllegalArgumentException("Duplicate column: " 
+                    throw new IllegalArgumentException("Duplicate column: "
                             + rightCols[i].getName());
                 }
             }
@@ -353,7 +357,7 @@ public class JoinedTable implements DataTable {
                 rightCols[i] = c.createSpec();
             }
         }
-        DataColumnSpec[] sp = 
+        DataColumnSpec[] sp =
             new DataColumnSpec[leftCols.length + rightCols.length];
         System.arraycopy(leftCols, 0, sp, 0, leftCols.length);
         System.arraycopy(rightCols, 0, sp, leftCols.length, rightCols.length);
@@ -379,10 +383,10 @@ public class JoinedTable implements DataTable {
         }
         return survivers.toArray(new String[0]);
     }
-    
+
     /**
      * Requested by iterated.
-     * 
+     *
      * @return the printedErrorOnMissing
      */
     boolean isPrintedErrorOnMissing() {
@@ -398,7 +402,7 @@ public class JoinedTable implements DataTable {
 
     /**
      * Requested by iterated.
-     * 
+     *
      * @return the printedErrorOnSorting
      */
     boolean isPrintedErrorOnSorting() {
@@ -414,7 +418,7 @@ public class JoinedTable implements DataTable {
 
     /**
      * Fills an array with missing values according to the spec.
-     * 
+     *
      * @param spec the spec of the table
      * @return an array of missing cells with the appropriate length and types
      * @throws IllegalStateException if no missing cell can be instantiated

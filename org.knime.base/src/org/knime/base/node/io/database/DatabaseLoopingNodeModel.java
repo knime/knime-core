@@ -201,7 +201,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         final BufferedDataTable inputTable = (BufferedDataTable)inData[0];
-        final int rowCount = inputTable.getRowCount();
+        final long rowCount = inputTable.size();
 
         final String column = m_columnModel.getStringValue();
         final DataTableSpec spec = inputTable.getDataTableSpec();

@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.06.2005 (ohl): created
  */
@@ -55,18 +55,17 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * A row filter for the row filter data table ANDing two other row filters.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class AndRowFilter extends RowFilter {
-
     private static final String CFG_FILTER1 = "ConfigFilter1";
 
     private static final String CFG_FILTER2 = "ConfigFilter2";
 
-    private RowFilter m_in1;
+    private IRowFilter m_in1;
 
-    private RowFilter m_in2;
+    private IRowFilter m_in2;
 
     // flags indicating a "IncludeFromNowOn" from the corresp. filter.
     private boolean m_in1True;
@@ -74,22 +73,40 @@ public class AndRowFilter extends RowFilter {
     private boolean m_in2True;
 
     /**
-     * Implements a {@link RowFilter} that takes two other
+     * Implements a {@link IRowFilter} that takes two other
      * {@link RowFilter}s and combines their results with a logical AND. If
      * filter <code>in1</code> returns a no match the
-     * {@link RowFilter#matches(DataRow, int)} method of filter <code>in2</code>
+     * {@link RowFilter#matches(DataRow, long)} method of filter <code>in2</code>
      * will not be invoked!
-     * 
+     *
      * @param in1 row filter as first input into the AND result
      * @param in2 row filter for the second input of the AND result; might be
      *            short cutted
+     * @deprecated use {@link #AndRowFilter(IRowFilter, IRowFilter)} instead
      */
+    @Deprecated
     public AndRowFilter(final RowFilter in1, final RowFilter in2) {
+        this((IRowFilter) in1, (IRowFilter) in2);
+    }
+
+
+    /**
+     * Implements a {@link IRowFilter} that takes two other
+     * {@link IRowFilter}s and combines their results with a logical AND. If
+     * filter <code>in1</code> returns a no match the
+     * {@link IRowFilter#matches(DataRow, long)} method of filter <code>in2</code>
+     * will not be invoked!
+     *
+     * @param in1 row filter as first input into the AND result
+     * @param in2 row filter for the second input of the AND result; might be shortcut
+     * @since 3.0
+     */
+    public AndRowFilter(final IRowFilter in1, final IRowFilter in2) {
         if (in1 == null) {
-            throw new NullPointerException("RowFilter in1 must not be null");
+            throw new IllegalArgumentException("RowFilter in1 must not be null");
         }
         if (in2 == null) {
-            throw new NullPointerException("RowFilter in2 must not be null");
+            throw new IllegalArgumentException("RowFilter in2 must not be null");
         }
         m_in1 = in1;
         m_in2 = in2;
@@ -109,28 +126,12 @@ public class AndRowFilter extends RowFilter {
     }
 
     /**
-     * @return the row filter connected to one of the inputs of the logical AND.
-     *         Returns the one that is not short cutted.
-     */
-    public RowFilter getInput1() {
-        return m_in1;
-    }
-
-    /**
-     * @return the row filter connected to one of the inputs of the logical AND.
-     *         Returns the one that could be short cutted.
-     */
-    public RowFilter getInput2() {
-        return m_in2;
-    }
-
-    /**
      * {@inheritDoc}
+     * @since 3.0
      */
     @Override
-    public boolean matches(final DataRow row, final int rowIndex)
+    public boolean matches(final DataRow row, final long rowIndex)
             throws EndOfTableException, IncludeFromNowOn {
-
         /*
          * note: if one of these filters throws an EOTexception, we can let that
          * go through. If that filter will not match any rows anymore, we won't
@@ -238,13 +239,22 @@ public class AndRowFilter extends RowFilter {
     public Object clone() {
         AndRowFilter arf = (AndRowFilter)super.clone();
         if (m_in1 != null) {
-            arf.m_in1 = (RowFilter)m_in1.clone();
+            arf.m_in1 = (IRowFilter)m_in1.clone();
         }
         if (m_in2 != null) {
-            arf.m_in2 = (RowFilter)m_in2.clone();
+            arf.m_in2 = (IRowFilter)m_in2.clone();
         }
         arf.m_in1True = false;
         arf.m_in2True = false;
         return arf;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(final DataRow row, final int rowIndex) throws EndOfTableException, IncludeFromNowOn {
+        return matches(row, (long) rowIndex);
     }
 }

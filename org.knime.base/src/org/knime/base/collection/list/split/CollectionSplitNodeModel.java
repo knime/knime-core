@@ -173,14 +173,14 @@ final class CollectionSplitNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws InvalidSettingsException,
             CanceledExecutionException {
         DataTableSpec spec = table.getDataTableSpec();
-        int i = 0;
-        int rowCount = table.getRowCount();
-        int max = 0;
+        long i = 0;
+        long rowCount = table.size();
+        int maxColumns = 0;
         int targetColIndex = getTargetColIndex(spec);
         for (DataRow row : table) {
             DataCell c = row.getCell(targetColIndex);
             if (!c.isMissing()) {
-                max = Math.max(((CollectionDataValue)c).size(), max);
+                maxColumns = Math.max(((CollectionDataValue)c).size(), maxColumns);
             }
             exec.setProgress((i++) / (double)rowCount,
                     "Determining maximum element count, row \"" + row.getKey()
@@ -196,7 +196,7 @@ final class CollectionSplitNodeModel extends NodeModel {
         }
         DataType elementType = spec.getColumnSpec(
                 targetColIndex).getType().getCollectionElementType();
-        DataColumnSpec[] newColSpec = new DataColumnSpec[max];
+        DataColumnSpec[] newColSpec = new DataColumnSpec[maxColumns];
         for (int j = 0; j < newColSpec.length; j++) {
             String baseName = "Split Value " + (j + 1);
             String newName = baseName;

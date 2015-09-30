@@ -113,12 +113,12 @@ final class CrossJoinerNodeModel extends NodeModel {
         DataContainer dc = exec.createDataContainer(
             createSpec(inData[0].getDataTableSpec(), inData[1].getDataTableSpec(), showLeft, showRight));
 
-        int numOutRows = inData[0].getRowCount() * inData[1].getRowCount();
-        int rowcounter = 0;
+        long numOutRows = inData[0].size() * inData[1].size();
+        long rowcounter = 0;
 
         CloseableRowIterator leftit = inData[0].iterator();
         // iterate over all possible chunks of left table
-        for (int chunkcount = 0; chunkcount < Math.ceil(inData[0].getRowCount() * 1.0 / chunksize); chunkcount++) {
+        for (long chunkcount = 0; chunkcount < Math.ceil(inData[0].size() * 1.0 / chunksize); chunkcount++) {
             // read one chunk of left table
             List<DataRow> rowsleft = new LinkedList<DataRow>();
             for (int i = 0; i < chunksize && leftit.hasNext(); i++) {
@@ -127,8 +127,7 @@ final class CrossJoinerNodeModel extends NodeModel {
             }
             // iterate over all possible chunks of right table
             CloseableRowIterator rightit = inData[1].iterator();
-            for (int chunkcount2 = 0; chunkcount2 < Math.ceil(inData[1].getRowCount() * 1.0 / chunksize);
-                                            chunkcount2++) {
+            for (long chunkcount2 = 0; chunkcount2 < Math.ceil(inData[1].size() * 1.0 / chunksize); chunkcount2++) {
                 // read  one chunk of right table
                 List<DataRow> rowsright = new LinkedList<DataRow>();
                 for (int i = 0; i < chunksize && rightit.hasNext(); i++) {
@@ -140,7 +139,7 @@ final class CrossJoinerNodeModel extends NodeModel {
                         DataRow newRow = joinRow(left, right, showLeft, showRight, sep);
                         dc.addRowToTable(newRow);
                         exec.checkCanceled();
-                        exec.setProgress(1d * rowcounter++ / numOutRows, "Generating Row "
+                        exec.setProgress(rowcounter++ / (double) numOutRows, "Generating Row "
                                                     + newRow.getKey().toString());
                     }
                 }

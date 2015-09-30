@@ -46,7 +46,9 @@ package org.knime.base.node.preproc.filter.row;
 
 import java.util.NoSuchElementException;
 
+import org.knime.base.node.preproc.filter.row.rowfilter.AbstractRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataRow;
@@ -59,7 +61,7 @@ import org.knime.core.node.ExecutionMonitor;
 /**
  * Row iterator of the row filter table. Wraps a given row iterator and forwards
  * only rows that are approved by a given
- * {@link RowFilter}. Also a
+ * {@link IRowFilter}. Also a
  * range of row numbers can be specified and a flag to only include or exclude
  * rows within that range. (The range feature is ANDed to the filter match
  * result. If another operation on the row number is required an appropreate
@@ -71,18 +73,18 @@ import org.knime.core.node.ExecutionMonitor;
  * restrictions. (This should speed up the atEnd() check as we don't have to
  * traverse through the entire input table - which is actually the reason we
  * handle the row number range not in a filter.)
- * 
+ *
  * <p>
  * Note: Iterating may be slow as the iterator must potentially skip many rows
  * until it encounters a row to be returned. This iterator does also support
  * cancelation/progress information using an
  * {@link org.knime.core.node.ExecutionMonitor}.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class RowFilterIterator extends RowIterator {
     // the filter
-    private final RowFilter m_filter;
+    private final IRowFilter m_filter;
 
     // the original row iterator we are wrapping
     private final RowIterator m_orig;
@@ -92,7 +94,7 @@ public class RowFilterIterator extends RowIterator {
 
     // the number of rows read from the original. If m_nextRow is not null it
     // is the row number of that row in the original table.
-    private int m_rowNumber;
+    private long m_rowNumber;
 
     // If true the filter will not be asked - every row will be included in the
     // result.
@@ -102,25 +104,59 @@ public class RowFilterIterator extends RowIterator {
     private final ExecutionMonitor m_exec;
 
     // the row count in the original table
-    private final int m_totalCountInOrig;
+    private final long m_totalCountInOrig;
 
     /**
      * Creates a new row iterator wrapping an existing one and delivering only
      * rows that match the specified conditions.
-     * 
+     *
      * @param origTable the original table from which we get the iterator and
      *            the row count, if any
      * @param filter a filter object that will decide whether rows are included
      *            in the result or filtered out
      * @param exec to report progress to and to check for cancel status
+     * @deprecated use {@link #RowFilterIterator(DataTable, AbstractRowFilter, ExecutionMonitor)} instead
      */
+    @Deprecated
     public RowFilterIterator(final DataTable origTable, final RowFilter filter,
             final ExecutionMonitor exec) {
+        this(origTable, (IRowFilter) filter, exec);
+    }
+
+    /**
+     * Creates a new row iterator wrapping an existing one and delivering only
+     * rows that match the specified conditions. No progress info or canceled
+     * status is available.
+     *
+     * @param orig the original table from which we get the iterator and the row
+     *            count, if any
+     * @param filter a filter object that will decide whether rows are included
+     *            in the result or filtered out
+     * @deprecated use {@link #RowFilterIterator(DataTable, AbstractRowFilter)} instead
+     */
+    @Deprecated
+    public RowFilterIterator(final DataTable orig, final RowFilter filter) {
+        this(orig, (IRowFilter) filter, null);
+    }
+
+
+    /**
+     * Creates a new row iterator wrapping an existing one and delivering only
+     * rows that match the specified conditions.
+     *
+     * @param origTable the original table from which we get the iterator and
+     *            the row count, if any
+     * @param filter a filter object that will decide whether rows are included
+     *            in the result or filtered out
+     * @param exec to report progress to and to check for cancel status
+     * @since 3.0
+     */
+    public RowFilterIterator(final DataTable origTable, final IRowFilter filter, final ExecutionMonitor exec) {
         m_filter = filter;
         m_orig = origTable.iterator();
-        int count = -1;
+        long count = -1;
         if (origTable instanceof BufferedDataTable) {
-            count = ((BufferedDataTable)origTable).getRowCount();
+            count = ((BufferedDataTable)origTable).size();
         }
         m_totalCountInOrig = count;
         m_exec = exec == null ? new ExecutionMonitor() : exec;
@@ -131,22 +167,22 @@ public class RowFilterIterator extends RowIterator {
 
         // get the next row to return - for the next call to next()
         m_nextRow = getNextMatch();
-
     }
+
 
     /**
      * Creates a new row iterator wrapping an existing one and delivering only
      * rows that match the specified conditions. No progress info or canceled
      * status is available.
-     * 
+     *
      * @param orig the original table from which we get the iterator and the row
      *            count, if any
      * @param filter a filter object that will decide whether rows are included
      *            in the result or filtered out
+     * @since 3.0
      */
-    public RowFilterIterator(final DataTable orig, final RowFilter filter) {
+    public RowFilterIterator(final DataTable orig, final AbstractRowFilter filter) {
         this(orig, filter, null);
-
     }
 
     /**
@@ -160,7 +196,7 @@ public class RowFilterIterator extends RowIterator {
     /**
      * This implementation may throw an RuntimeCanceledExecutionException
      * if this class has been initialized with a non-null execution monitor.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -232,7 +268,7 @@ public class RowFilterIterator extends RowIterator {
 
         /**
          * Inits object.
-         * 
+         *
          * @param cee The exception to wrap.
          */
         private RuntimeCanceledExecutionException(
@@ -242,7 +278,7 @@ public class RowFilterIterator extends RowIterator {
 
         /**
          * Get reference to causing exception.
-         * 
+         *
          * {@inheritDoc}
          */
         @Override

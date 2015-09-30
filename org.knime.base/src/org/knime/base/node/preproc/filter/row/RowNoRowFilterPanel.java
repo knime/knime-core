@@ -67,7 +67,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowNoRowFilter;
 import org.knime.core.node.InvalidSettingsException;
 
@@ -101,7 +101,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
         m_errText.setMaximumSize(new Dimension(350, 100));
         m_errText.setForeground(Color.RED);
 
-        m_first = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+        m_first = new JSpinner(new SpinnerNumberModel(1, (Comparable) Long.valueOf(1), Long.MAX_VALUE, 1));
         m_first.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -115,7 +115,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
                 tilEOTChanged();
             }
         });
-        m_last = new JSpinner(new SpinnerNumberModel(1000, 1, Integer.MAX_VALUE, 1));
+        m_last = new JSpinner(new SpinnerNumberModel(1000, (Comparable) Long.valueOf(1), Long.MAX_VALUE, 1));
         m_last.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -180,8 +180,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
      * {@inheritDoc}
      */
     @Override
-    public void loadSettingsFromFilter(final RowFilter filter)
-            throws InvalidSettingsException {
+    public void loadSettingsFromFilter(final IRowFilter filter) throws InvalidSettingsException {
         if (!(filter instanceof RowNoRowFilter)) {
             throw new InvalidSettingsException("Range filter can only load "
                     + "settings from a RowNumberFilter");
@@ -189,8 +188,8 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
 
         RowNoRowFilter rowNumberFilter = (RowNoRowFilter)filter;
         // do some consistency checks
-        int first = rowNumberFilter.getFirstRow();
-        int last = rowNumberFilter.getLastRow();
+        long first = rowNumberFilter.getFirstRow();
+        long last = rowNumberFilter.getLastRow();
         if (first < 0) {
             throw new InvalidSettingsException("The RowNumberFilter range "
                     + "cannot start at a row number less than 1.");
@@ -202,11 +201,11 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
 
         // the filter contains index values (starting from 0)
         // the spinner show the numbers, so we need to add 1 here.
-        m_first.setValue(Integer.valueOf(first + 1));
+        m_first.setValue(Long.valueOf(first + 1));
         m_tilEOT.setSelected(last == RowNoRowFilter.EOT); // en/disables
         // m_last
         if (last != RowNoRowFilter.EOT) {
-            m_last.setValue(Integer.valueOf(last + 1));
+            m_last.setValue(Long.valueOf(last + 1));
         }
         updateErrText();
     }
@@ -215,8 +214,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
      * {@inheritDoc}
      */
     @Override
-    public RowFilter createFilter(final boolean include)
-            throws InvalidSettingsException {
+    public IRowFilter createFilter(final boolean include) throws InvalidSettingsException {
         // just in case, because the err text is the indicator for err existence
         updateErrText();
 
@@ -224,10 +222,10 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
             throw new InvalidSettingsException(m_errText.getText());
         }
 
-        int start = readIntSpinner(m_first) - 1;
-        int last = RowNoRowFilter.EOT;
+        long start = readSpinnerValue(m_first) - 1;
+        long last = RowNoRowFilter.EOT;
         if (!m_tilEOT.isSelected()) {
-            last = readIntSpinner(m_last) - 1;
+            last = readSpinnerValue(m_last) - 1;
         }
         return new RowNoRowFilter(start, last, include);
     }
@@ -236,8 +234,8 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
      * sets a message in the error label if settings are not valid
      */
     private void updateErrText() {
-        int first = readIntSpinner(m_first);
-        int last = readIntSpinner(m_last);
+        long first = readSpinnerValue(m_first);
+        long last = readSpinnerValue(m_last);
 
         m_errText.setText("");
 
@@ -268,16 +266,16 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
     }
 
     /*
-     * read the current value from the spinner assuming it contains Integers
+     * read the current value from the spinner assuming it contains Longs
      */
-    private int readIntSpinner(final JSpinner intSpinner) {
+    private long readSpinnerValue(final JSpinner spinner) {
         try {
-            intSpinner.commitEdit();
+            spinner.commitEdit();
         } catch (ParseException e) {
             // if the spinner has the focus, the currently edited value
             // might not be commited. Now it is!
         }
-        SpinnerNumberModel snm = (SpinnerNumberModel)intSpinner.getModel();
-        return snm.getNumber().intValue();
+        SpinnerNumberModel snm = (SpinnerNumberModel)spinner.getModel();
+        return snm.getNumber().longValue();
     }
 }

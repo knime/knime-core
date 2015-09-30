@@ -60,8 +60,8 @@ import org.knime.base.node.mine.mds.distances.DistanceManager;
 import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
 import org.knime.base.node.mine.mds.distances.RowDistanceManager;
 import org.knime.base.node.preproc.filter.row.RowFilterTable;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.MissingCellRowFilter;
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -293,7 +293,7 @@ public class MDSProjectionManager {
         m_fixedDataPoints = new FilterColumnTable(m_fixedDataPoints, false,
                         fixedDataMdsIndices);
 
-        RowFilter rf = new MissingCellRowFilter();
+        IRowFilter rf = new MissingCellRowFilter();
         m_inData = new RowFilterTable(inData, rf);
 
         m_points = new Hashtable<RowKey, DataPoint>();

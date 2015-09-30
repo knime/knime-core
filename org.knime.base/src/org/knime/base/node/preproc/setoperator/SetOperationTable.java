@@ -75,6 +75,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.util.ThreadPool;
 
 
@@ -93,7 +94,7 @@ public class SetOperationTable {
 
         private final int m_colIdx;
 
-        private final int m_rowCount;
+        private final long m_rowCount;
 
         /**Constructor for class CellIterator.
          * @param table
@@ -110,7 +111,7 @@ public class SetOperationTable {
                 throw new IllegalArgumentException("Invalid column index");
             }
             m_iterator = table.iterator();
-            m_rowCount = table.getRowCount();
+            m_rowCount = table.size();
             m_useRowID = useRowID;
             m_colIdx = colIdx;
         }
@@ -119,7 +120,7 @@ public class SetOperationTable {
         /**
          * @return the total number of rows
          */
-        public int getRowCount() {
+        public long getRowCount() {
             return m_rowCount;
         }
 
@@ -158,12 +159,12 @@ public class SetOperationTable {
 
     private final BufferedDataTable m_resultTable;
 
-    private int m_duplicateCounter = 0;
-    private int m_missingCounter = 0;
+    private long m_duplicateCounter = 0;
+    private long m_missingCounter = 0;
 
     private final boolean m_skipMisssing;
 
-    private int m_rowId;
+    private long m_rowId;
 
     private final boolean m_enableHilite;
 
@@ -243,8 +244,15 @@ public class SetOperationTable {
         }
         m_enableHilite = enableHilite;
         if (m_enableHilite) {
-            m_hiliteMapping0 = new HashMap<RowKey, Set<RowKey>>();
-            m_hiliteMapping1 = new HashMap<RowKey, Set<RowKey>>();
+            if ((table1.size() > Integer.MAX_VALUE) || (table2.size() > Integer.MAX_VALUE)) {
+                NodeLogger.getLogger(getClass()).warn("Disabling hilite mapping because row count is greater than "
+                    + Integer.MAX_VALUE);
+                m_hiliteMapping0 = null;
+                m_hiliteMapping1 = null;
+            } else {
+                m_hiliteMapping0 = new HashMap<RowKey, Set<RowKey>>();
+                m_hiliteMapping1 = new HashMap<RowKey, Set<RowKey>>();
+            }
         } else {
             m_hiliteMapping0 = null;
             m_hiliteMapping1 = null;
@@ -370,10 +378,8 @@ public class SetOperationTable {
         //reset the rowid to minus 1 to use the ++m_rowId
         m_rowId = -1;
         final BufferedDataContainer dc = exec.createDataContainer(resultSpec);
-        final int rowCount =
-            iter1.getRowCount() + iter2.getRowCount();
-        int rowCounter = 0;
-        final double progressPerRow = 1.0 / rowCount;
+        final long rowCount = iter1.getRowCount() + iter2.getRowCount();
+        long rowCounter = 0;
         RowKeyCellMap cell1 = null;
         RowKeyCellMap cell2 = null;
         RowKeyCellMap oldCell1 = null;
@@ -399,8 +405,7 @@ public class SetOperationTable {
                         rowCounter++;
                         compResult = comp.compare(cell1.getCell(),
                                 cell2.getCell());
-                        reportProgress(exec, rowCount, rowCounter,
-                                progressPerRow);
+                        reportProgress(exec, rowCount, rowCounter);
                     } else {
                         break;
                     }
@@ -415,8 +420,7 @@ public class SetOperationTable {
                         rowCounter++;
                         compResult = comp.compare(cell1.getCell(),
                                 cell2.getCell());
-                        reportProgress(exec, rowCount, rowCounter,
-                                progressPerRow);
+                        reportProgress(exec, rowCount, rowCounter);
                     } else {
                         break;
                     }
@@ -431,7 +435,7 @@ public class SetOperationTable {
                 cell1 = null;
                 oldCell2 = cell2;
                 cell2 = null;
-                reportProgress(exec, rowCount, rowCounter, progressPerRow);
+                reportProgress(exec, rowCount, rowCounter);
             }
         }
         //that's only the case if all elements of set2 are less than all
@@ -447,8 +451,7 @@ public class SetOperationTable {
             rowCounter++;
             oldResult = computeResult(op, dc, oldResult, cell1, null,
                     oldCell1, oldCell2, differentType);
-            reportProgress(exec, rowCount, rowCounter,
-                    progressPerRow);
+            reportProgress(exec, rowCount, rowCounter);
         }
       //that's only the case if all elements of set1 are less than all
         //elements of set2
@@ -462,20 +465,17 @@ public class SetOperationTable {
             rowCounter++;
             oldResult = computeResult(op, dc, oldResult, null, cell2,
                     oldCell1, oldCell2, differentType);
-            reportProgress(exec, rowCount, rowCounter,
-                    progressPerRow);
+            reportProgress(exec, rowCount, rowCounter);
         }
         dc.close();
         return dc.getTable();
     }
 
     private static void reportProgress(final ExecutionContext exec,
-            final int rowCount, final int rowCounter,
-            final double progressPerRow)
+            final long rowCount, final long rowCounter)
             throws CanceledExecutionException {
         exec.checkCanceled();
-        exec.setProgress(progressPerRow * rowCounter, "Processing row "
-                + rowCounter + " of " + rowCount);
+        exec.setProgress(rowCounter / (double)rowCount, "Processing row " + rowCounter + " of " + rowCount);
     }
 
     private DataCell computeResult(final SetOperation op,
@@ -554,16 +554,18 @@ public class SetOperationTable {
 
     /**
      * @return the number of duplicates
+     * @since 3.0
      */
-    public int getDuplicateCounter() {
+    public long getDuplicateCounter() {
         return m_duplicateCounter;
     }
 
 
     /**
      * @return the number of missing values
+     * @since 3.0
      */
-    public int getMissingCounter() {
+    public long getMissingCounter() {
         return m_missingCounter;
     }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,13 +41,14 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.sample;
 
 import java.util.BitSet;
 
 import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataRow;
@@ -59,7 +60,7 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * RowFilter implementation that fiters out rows according to a
  * {@link java.util.BitSet} where each bit represents a row number.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class RandomNumberRowFilter extends RowFilter {
@@ -68,7 +69,7 @@ public class RandomNumberRowFilter extends RowFilter {
 
     /**
      * Creates new filter according to filter.
-     * 
+     *
      * @param bitSet the set from which to retrieve the information which row is
      *            to filter out. Bits set to one will let the corresponding row
      *            "survive".
@@ -94,8 +95,8 @@ public class RandomNumberRowFilter extends RowFilter {
 
     /**
      * Throws exception, not supported.
-     * 
-     * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
+     *
+     * @see IRowFilter#loadSettingsFrom(NodeSettingsRO)
      */
     @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
@@ -105,8 +106,8 @@ public class RandomNumberRowFilter extends RowFilter {
 
     /**
      * Throws exception, not supported.
-     * 
-     * @see RowFilter#saveSettings(NodeSettingsWO)
+     *
+     * @see IRowFilter#saveSettings(NodeSettingsWO)
      */
     @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
@@ -115,8 +116,8 @@ public class RandomNumberRowFilter extends RowFilter {
 
     /**
      * Throws exception, not supported.
-     * 
-     * @see RowFilter#configure(org.knime.core.data.DataTableSpec)
+     *
+     * @see IRowFilter#configure(org.knime.core.data.DataTableSpec)
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)

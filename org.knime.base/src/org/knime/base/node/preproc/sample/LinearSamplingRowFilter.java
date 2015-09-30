@@ -63,9 +63,9 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class LinearSamplingRowFilter extends RowFilter {
-    private final int m_rowCount;
+    private final long m_rowCount;
     private final double m_rowWeight;
-    private int m_count;
+    private long m_count;
     private double m_sum;
 
     /**
@@ -73,8 +73,35 @@ public class LinearSamplingRowFilter extends RowFilter {
      *
      * @param rowCount the total number of rows in the input table.
      * @param count the number of rows that should be selected
+     * @deprecated use {@link #LinearSamplingRowFilter(long, long)} instead
      */
+    @Deprecated
     public LinearSamplingRowFilter(final int rowCount, final int count) {
+        this((long) rowCount, (long) count);
+    }
+
+
+    /**
+     * Creates a new row filter that selects a certain fraction of rows.
+     *
+     * @param rowCount the total number of rows in the input table.
+     * @param fraction the fraction of rows that should be selected (0 to 1)
+     * @deprecated use {@link #LinearSamplingRowFilter(long, double)} instead
+     */
+    @Deprecated
+    public LinearSamplingRowFilter(final int rowCount, final double fraction) {
+        this((long) rowCount, fraction);
+    }
+
+
+    /**
+     * Creates a new row filter that selects a certain absolute number of rows.
+     *
+     * @param rowCount the total number of rows in the input table.
+     * @param count the number of rows that should be selected
+     * @since 3.0
+     */
+    public LinearSamplingRowFilter(final long rowCount, final long count) {
         m_rowCount = rowCount;
         m_rowWeight = count / (double) rowCount;
         m_count = count;
@@ -86,12 +113,12 @@ public class LinearSamplingRowFilter extends RowFilter {
      *
      * @param rowCount the total number of rows in the input table.
      * @param fraction the fraction of rows that should be selected (0 to 1)
+     * @since 3.0
      */
-    public LinearSamplingRowFilter(final int rowCount, final double fraction) {
+    public LinearSamplingRowFilter(final long rowCount, final double fraction) {
         m_rowCount = rowCount;
         m_rowWeight = fraction;
         m_count = (int) Math.round(rowCount * fraction);
-
     }
 
     /**
@@ -116,9 +143,15 @@ public class LinearSamplingRowFilter extends RowFilter {
      * {@inheritDoc}
      */
     @Override
-    public boolean matches(final DataRow row, final int rowIndex)
-            throws EndOfTableException, IncludeFromNowOn {
+    public boolean matches(final DataRow row, final int rowIndex) throws EndOfTableException, IncludeFromNowOn {
+        return matches(row, (long) rowIndex);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
         m_sum += m_rowWeight;
         if ((rowIndex == 0) || (rowIndex == m_rowCount - 1)) {
             m_count--;

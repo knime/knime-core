@@ -58,14 +58,13 @@ import org.knime.core.node.NodeSettingsWO;
  * @author ohl, University of Konstanz
  */
 public class OrRowFilter extends RowFilter {
-
     private static final String CFG_FILTER1 = "ConfigFilter1";
 
     private static final String CFG_FILTER2 = "ConfigFilter2";
 
-    private RowFilter m_in1;
+    private IRowFilter m_in1;
 
-    private RowFilter m_in2;
+    private IRowFilter m_in2;
 
     private boolean m_eotIn1;
 
@@ -74,14 +73,32 @@ public class OrRowFilter extends RowFilter {
     /**
      * Implements a RowFilter that takes two other RowFilters and combines their
      * results with a logical OR. If filter <code>in1</code> returns a match
-     * the {@link RowFilter#matches(DataRow, int)} method of filter
+     * the {@link RowFilter#matches(DataRow, long)} method of filter
      * <code>in2</code> is not invoked!
      *
      * @param in1 row filter as first input into the OR result
      * @param in2 row filter for the second input of the OR result; might be
      *            short cut.
+     * @deprecated use {@link #OrRowFilter(IRowFilter, IRowFilter)} instead
      */
+    @Deprecated
     public OrRowFilter(final RowFilter in1, final RowFilter in2) {
+        this((IRowFilter) in1, (IRowFilter) in2);
+    }
+
+
+    /**
+     * Implements a RowFilter that takes two other RowFilters and combines their
+     * results with a logical OR. If filter <code>in1</code> returns a match
+     * the {@link IRowFilter#matches(DataRow, long)} method of filter
+     * <code>in2</code> is not invoked!
+     *
+     * @param in1 row filter as first input into the OR result
+     * @param in2 row filter for the second input of the OR result; might be
+     *            short cut.
+     * @since 3.0
+     */
+    public OrRowFilter(final IRowFilter in1, final IRowFilter in2) {
         if (in1 == null) {
             throw new NullPointerException("RowFilter in1 must not be null");
         }
@@ -106,27 +123,18 @@ public class OrRowFilter extends RowFilter {
     }
 
     /**
-     * @return the row filter connected to one of the inputs of the logical OR.
-     *         Returns the one that is not short cut.
+     * {@inheritDoc}
      */
-    public RowFilter getInput1() {
-        return m_in1;
-    }
-
-    /**
-     * @return the row filter connected to one of the inputs of the logical OR.
-     *         Returns the one that could be short cut.
-     */
-    public RowFilter getInput2() {
-        return m_in2;
+    @Override
+    public boolean matches(final DataRow row, final int rowIndex) throws EndOfTableException, IncludeFromNowOn {
+        return matches(row, (long) rowIndex);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean matches(final DataRow row, final int rowIndex)
-            throws EndOfTableException, IncludeFromNowOn {
+    public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
         /*
          * we must keep flags storing which of the filters threw an eot. Only
          * after both filters are at the eot we can also indicate an eot. But a
@@ -243,10 +251,10 @@ public class OrRowFilter extends RowFilter {
     public Object clone() {
         OrRowFilter orf = (OrRowFilter)super.clone();
         if (m_in1 != null) {
-            orf.m_in1 = (RowFilter)m_in1.clone();
+            orf.m_in1 = (IRowFilter)m_in1.clone();
         }
         if (m_in2 != null) {
-            orf.m_in2 = (RowFilter)m_in2.clone();
+            orf.m_in2 = (IRowFilter)m_in2.clone();
         }
         orf.m_eotIn1 = false;
         orf.m_eotIn2 = false;

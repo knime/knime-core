@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,13 +41,14 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.sample;
 
 import java.util.Random;
 
 import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataRow;
@@ -61,12 +62,12 @@ import org.knime.core.node.NodeSettingsWO;
  * implementation of the {@link #matches(DataRow, int)} method only tests if a
  * random number is less or equal to the fraction argument and if so it will
  * return <code>true</code>, i.e. will accept the row currently requested.
- * 
+ *
  * <p>
  * The implementation ensures that cloned objects from this object have the same
  * behaviour (presuming that the {@link #matches(DataRow, int)} method is called
  * in the same sequence)
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class RandomFractionRowFilter extends RowFilter {
@@ -82,7 +83,7 @@ public class RandomFractionRowFilter extends RowFilter {
     /**
      * Creates new Filter that filters out (1-fraction) * 100 percent of the
      * rows.
-     * 
+     *
      * @param fraction the fraction of the rows to surive
      */
     public RandomFractionRowFilter(final double fraction) {
@@ -106,8 +107,8 @@ public class RandomFractionRowFilter extends RowFilter {
 
     /**
      * Throws exception, not supported.
-     * 
-     * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
+     *
+     * @see IRowFilter#loadSettingsFrom(NodeSettingsRO)
      */
     @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
@@ -117,8 +118,8 @@ public class RandomFractionRowFilter extends RowFilter {
 
     /**
      * Throws exception, not supported.
-     * 
-     * @see RowFilter#saveSettings(NodeSettingsWO)
+     *
+     * @see IRowFilter#saveSettings(NodeSettingsWO)
      */
     @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
@@ -127,8 +128,8 @@ public class RandomFractionRowFilter extends RowFilter {
 
     /**
      * Throws exception, not supported.
-     * 
-     * @see RowFilter#configure(org.knime.core.data.DataTableSpec)
+     *
+     * @see IRowFilter#configure(org.knime.core.data.DataTableSpec)
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)

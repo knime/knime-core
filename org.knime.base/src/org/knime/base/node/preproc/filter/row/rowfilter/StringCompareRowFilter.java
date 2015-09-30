@@ -265,8 +265,7 @@ public class StringCompareRowFilter extends AttrValueRowFilter {
      * {@inheritDoc}
      */
     @Override
-    public boolean matches(final DataRow row, final int rowIndex)
-            throws EndOfTableException, IncludeFromNowOn {
+    public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
         // if this goes off, configure was probably not called after
         // loading filter's settings
         assert getColIdx() >= 0;

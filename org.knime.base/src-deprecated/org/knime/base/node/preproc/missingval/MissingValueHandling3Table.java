@@ -132,8 +132,8 @@ public final class MissingValueHandling3Table implements DataTable {
      *
      * @return The number of rows or -1 if not possible.
      */
-    int getNrRowsInReference() {
-        return m_table.getRowCount();
+    long getNrRowsInReference() {
+        return m_table.size();
     }
 
     /** {@inheritDoc} */

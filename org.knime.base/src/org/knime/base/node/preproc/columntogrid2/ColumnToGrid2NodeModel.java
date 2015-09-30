@@ -159,9 +159,9 @@ final class ColumnToGrid2NodeModel extends org.knime.core.node.NodeModel {
         }
         final DataCell[] cells = new DataCell[cellCount];
         PushBackRowIterator it = new PushBackRowIterator(inputTable.iterator());
-        int currentRow = 0;
-        int totalRows = inputTable.getRowCount();
-        int currentOutRow = 0;
+        long currentRow = 0;
+        long totalRows = inputTable.size();
+        long currentOutRow = 0;
         DataCell curGroupValue = null;
         while (it.hasNext()) {
             Arrays.fill(cells, DataType.getMissingCell());

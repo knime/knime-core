@@ -51,8 +51,8 @@ import java.io.File;
 import java.io.IOException;
 
 import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilterFactory;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -75,7 +75,7 @@ import org.knime.core.node.NodeSettingsWO;
 public class RowFilter2PortNodeModel extends NodeModel {
 
     // the row filter
-    private RowFilter m_rowFilter;
+    private IRowFilter m_rowFilter;
 
     /** key for storing settings in config object. */
     static final String CFGFILTER = "rowFilter";
@@ -124,7 +124,7 @@ public class RowFilter2PortNodeModel extends NodeModel {
     private void loadOrValidateSettingsFrom(final NodeSettingsRO settings,
             final boolean verifyOnly) throws InvalidSettingsException {
 
-        RowFilter tmpFilter = null;
+        IRowFilter tmpFilter = null;
 
         if (settings.containsKey(CFGFILTER)) {
             NodeSettingsRO filterCfg = settings.getNodeSettings(CFGFILTER);
@@ -164,8 +164,8 @@ public class RowFilter2PortNodeModel extends NodeModel {
 
         try {
 
-            int rowIdx = -1;
-            int rows = in.getRowCount();
+            long rowIdx = -1;
+            long rows = in.size();
             boolean allMatch = false;
             boolean allMiss = false;
 

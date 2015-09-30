@@ -220,9 +220,8 @@ public class TableToVariableNodeModel extends NodeModel {
             row = r;
             break;
         }
-        final int rowCount = variables.getRowCount();
-        if (rowCount > 1) {
-            setWarningMessage("Table has " + rowCount + " rows, ignored all rows except the first one");
+        if (variables.size() > 1) {
+            setWarningMessage("Table has " + variables.size() + " rows, ignored all rows except the first one");
         }
         pushVariables(variables.getDataTableSpec(), row);
         return new PortObject[]{FlowVariablePortObject.INSTANCE};

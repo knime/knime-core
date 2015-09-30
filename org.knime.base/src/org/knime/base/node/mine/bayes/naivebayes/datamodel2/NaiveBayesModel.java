@@ -319,22 +319,15 @@ public class NaiveBayesModel {
     private void createModel(final BufferedDataTable data, final ExecutionMonitor exec, final int classColIdx)
             throws InvalidSettingsException, CanceledExecutionException {
         final DataTableSpec tableSpec = data.getDataTableSpec();
-        final int noOfRows = data.getRowCount();
-        final double progressPerRow;
-        if (noOfRows != 0) {
-            progressPerRow = 1.0 / noOfRows;
-        } else {
-            progressPerRow = 1;
-        }
-        double progress = 0.0;
+        final double noOfRows = data.size();
+        long progress = 0;
         //start to proceed row by row
         for (final DataRow row : data) {
             updateModel(row, tableSpec, classColIdx);
             if (exec != null) {
-                exec.setProgress(progress);
+                exec.setProgress(progress / noOfRows);
                 exec.checkCanceled();
             }
-            progress += progressPerRow;
         }
         if (exec != null) {
             exec.setProgress(1.0, "\'Naive Bayesian\' created ");

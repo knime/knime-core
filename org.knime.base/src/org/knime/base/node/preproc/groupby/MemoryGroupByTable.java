@@ -153,8 +153,8 @@ public class MemoryGroupByTable extends GroupByTable {
         m_vals = new LinkedHashMap<>();
         final ExecutionMonitor groupExec = exec.createSubProgress(0.7);
         final DataTableSpec spec = dataTable.getDataTableSpec();
-        final int rowCount = dataTable.getRowCount();
-        int rowCounter = 0;
+        final long rowCount = dataTable.size();
+        long rowCounter = 0;
         for (final DataRow row : dataTable) {
             groupExec.checkCanceled();
             groupExec.setProgress(rowCounter++ / (double) rowCount,

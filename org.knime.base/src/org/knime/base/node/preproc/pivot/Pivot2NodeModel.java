@@ -324,8 +324,8 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         exec.setProgress("Determining pivots...");
         ExecutionContext fillExec = groupAndPivotExec.createSubExecutionContext(
                 progMainTableGetPivots / progMainTotal);
-        final int groupTableSize = groupTable.getRowCount();
-        int groupIndex = 0;
+        final long groupTableSize = groupTable.size();
+        long groupIndex = 0;
         for (final DataRow row : groupTable) {
             for (int i = 0; i < pivotIdx.length; i++) {
                 if (combPivots[i] == null) {
@@ -378,7 +378,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                 groupAndPivotExec.createSubExecutionContext(
                         progMainTableReplaceRowKey / progMainTotal).
                         createDataContainer(pivotTable.getSpec());
-            int rowIndex = 0;
+            long rowIndex = 0;
             for (DataRow row : pivotTable) {
                 rowkeyBuf.addRowToTable(new DefaultRow(
                         RowKey.createRowKey(rowIndex++), row));
@@ -455,7 +455,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                     new DataTableSpec(pivotsRowsSpec, totalGroupSpec);
             final BufferedDataContainer buf = exec.createDataContainer(
                     overallTotalSpec);
-            if (pivotRowsTable.getRowCount() > 0) {
+            if (pivotRowsTable.size() > 0) {
                 final List<DataCell> pivotTotalsCells =
                     new ArrayList<DataCell>();
                 final DataRow pivotsRow = pivotRowsTable.iterator().next();
@@ -546,8 +546,8 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         final DataTableSpec groupSpec = groupTable.getSpec();
         final int colCount = groupSpec.getNumColumns();
         final DataCell[] outcells = new DataCell[pivotSpec.getNumColumns()];
-        final int totalRowCount = groupTable.getRowCount();
-        int rowIndex = 0;
+        final long totalRowCount = groupTable.size();
+        long rowIndex = 0;
         for (final DataRow row : groupTable) {
             final RowKey origRowKey = row.getKey();
             String pivotColumn = null;

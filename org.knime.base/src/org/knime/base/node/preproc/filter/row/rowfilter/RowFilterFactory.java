@@ -107,10 +107,30 @@ public final class RowFilterFactory {
      *         {@link #createRowFilter(NodeSettingsRO)} method will recreate the
      *         filter. If <code>null</code> is returned the row filter type
      *         was not properly added to this factory - which should not happen.
+     * @deprecated use {@link #prepareConfigFor(NodeSettingsWO, AbstractRowFilter)} instead
      */
-    public static NodeSettingsWO prepareConfigFor(final NodeSettingsWO cfg,
-            final RowFilter filter) {
+    @Deprecated
+    public static NodeSettingsWO prepareConfigFor(final NodeSettingsWO cfg, final RowFilter filter) {
+        return prepareConfigFor(cfg, (IRowFilter) filter);
+    }
 
+
+    /**
+     * @param filter the filter for which the config object will be used to
+     *            store the settings
+     * @param cfg will be modified to be able to recreate the corresponding
+     *            filter type from it
+     * @return the config object passed in, modified in a way the
+     *         {@link #createRowFilter(NodeSettingsRO)} method will be able to
+     *         recreate the row filter object (with the corresponding type) from
+     *         it. The method adds a row filter type identifier to the config.
+     *         Passing the returned object to the
+     *         {@link #createRowFilter(NodeSettingsRO)} method will recreate the
+     *         filter. If <code>null</code> is returned the row filter type
+     *         was not properly added to this factory - which should not happen.
+     * @since 3.0
+     */
+    public static NodeSettingsWO prepareConfigFor(final NodeSettingsWO cfg, final IRowFilter filter) {
         /*
          * CHANGE HERE: Add a new "else if" branch to test for your new Row
          * Filter type and add a String to the cfg object with key
@@ -118,8 +138,7 @@ public final class RowFilterFactory {
          * above.
          */
         if (filter == null) {
-            throw new NullPointerException("Cannot create config for null"
-                    + " filter object");
+            throw new IllegalArgumentException("Cannot create config for null filter object");
         } else if (filter instanceof AndRowFilter) {
             cfg.addString(ROWFILTER_TYPEID, ROWFILTER_AND);
         } else if (filter instanceof OrRowFilter) {
@@ -163,8 +182,9 @@ public final class RowFilterFactory {
      *             the type is not registered at all or the type was added to
      *             the method above but not to this method, of if it contains
      *             invalid/inconsistent settings.
+     * @since 3.0
      */
-    public static RowFilter createRowFilter(final NodeSettingsRO cfg)
+    public static IRowFilter createRowFilter(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
         /*
          * CHANGE HERE: Add a new "else if" branch testing the type ID to be
@@ -183,7 +203,7 @@ public final class RowFilterFactory {
                     + "in config object");
         }
 
-        RowFilter newFilter = null;
+        IRowFilter newFilter = null;
 
         if (typeID == null) {
             throw new InvalidSettingsException("Invalid row filter type in"

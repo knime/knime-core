@@ -167,8 +167,8 @@ public final class CorrelationComputer {
         HalfIntMatrix validCountMatrix =
             new HalfIntMatrix(numericColCount, true);
         final DataCell[] cells = new DataCell[m_tableSpec.getNumColumns()];
-        int rowIndex = 0;
-        final int rowCount = table.getRowCount();
+        long rowIndex = 0;
+        final long rowCount = table.size();
         for (DataRow r : table) {
             // getCell may be an expensive operation and we may access a cell
             // multiple times, so we buffer it
@@ -280,9 +280,9 @@ public final class CorrelationComputer {
         HalfDoubleMatrix nominatorMatrix = new HalfDoubleMatrix(
                 numColumns, /*includeDiagonal=*/false);
         nominatorMatrix.fill(Double.NaN);
-        int rowIndex = 0;
+        long rowIndex = 0;
         DataCell[] cells = new DataCell[numColumns];
-        final int rowCount = table.getRowCount();
+        final long rowCount = table.size();
         for (int i = 0; i < m_numericColIndexMap.length; i++) {
             final double stdDevI = m_numericStdDevMatrix[i][i];
             if (stdDevI == 0.0) {

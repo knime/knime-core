@@ -56,6 +56,7 @@ import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Super class for all row filters that test an attribute value (like
@@ -205,8 +206,18 @@ public abstract class AttrValueRowFilter extends RowFilter {
      * filtering to work they MUST overwrite the default implementation of {@link #matches(DataCell)}!
      */
     @Override
-    public abstract boolean matches(DataRow row, int rowIndex) throws EndOfTableException, IncludeFromNowOn;
+    public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
+        return matches(row, ConvenienceMethods.checkTableSize(rowIndex));
+    }
 
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(final DataRow row, final int rowIndex) throws EndOfTableException, IncludeFromNowOn {
+        return matches(row, (long) rowIndex);
+    }
 
     /**
      * @param theCell {@link CollectionDataValue} to process

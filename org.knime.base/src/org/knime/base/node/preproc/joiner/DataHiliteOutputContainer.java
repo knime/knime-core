@@ -92,7 +92,7 @@ class DataHiliteOutputContainer {
     private CloseableRowIterator m_leftIter;
 
     private DataRow m_left;
-    private int m_leftIndex;
+    private long m_leftIndex;
     private DataRow m_leftMissing;
 
 
@@ -157,7 +157,7 @@ class DataHiliteOutputContainer {
     private void addRow(final DataRow row) {
         // get left input row
         DataRow left = null;
-        int leftIndex = OutputRow.getLeftIndex(row);
+        long leftIndex = OutputRow.getLeftIndex(row);
         if (leftIndex >= 0) {
             if (m_leftIndex > leftIndex) {
                 m_leftIter.close();
@@ -246,6 +246,7 @@ class DataHiliteOutputContainer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public RowKey getKey() {
             return null;
         }
@@ -253,6 +254,7 @@ class DataHiliteOutputContainer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataCell getCell(final int index) {
             return m_cells[index];
         }
@@ -260,6 +262,7 @@ class DataHiliteOutputContainer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getNumCells() {
             return m_cells.length;
         }
@@ -267,6 +270,7 @@ class DataHiliteOutputContainer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Iterator<DataCell> iterator() {
             return Arrays.asList(m_cells).iterator();
         }
@@ -287,8 +291,8 @@ class DataHiliteOutputContainer {
         if (null == table) {
             return;
         }
-        double progress = 0;
-        double inc = 1.0 / table.getRowCount();
+        long count = 1;
+        final double maxRows = table.size();
 
         Comparator<DataRow> joinComp = OutputRow.createRowComparator();
         Iterator<DataRow> iter = table.iterator();
@@ -296,13 +300,11 @@ class DataHiliteOutputContainer {
             return;
         }
         DataRow prev = iter.next();
-        progress += inc;
-        exec.setProgress(progress);
+        exec.setProgress(count++ / maxRows);
         addRow(prev);
         while (iter.hasNext()) {
             DataRow next = iter.next();
-            progress += inc;
-            exec.setProgress(progress);
+            exec.setProgress(count++ / maxRows);
             // There might be equal rows in the case of match any option.
             if (joinComp.compare(prev, next) != 0) {
                 prev = next;

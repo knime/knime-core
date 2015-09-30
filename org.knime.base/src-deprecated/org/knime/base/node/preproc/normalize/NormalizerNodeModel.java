@@ -302,7 +302,7 @@ public class NormalizerNodeModel extends NodeModel {
         updateNumericColumnSelection(inSpec);
         Normalizer ntable = new Normalizer(inTable, m_columns);
 
-        int rowcount = inTable.getRowCount();
+        long rowcount = inTable.size();
         ExecutionMonitor prepareExec = exec.createSubProgress(0.3);
         AffineTransTable outTable;
         boolean fixDomainBounds = false;
@@ -360,7 +360,7 @@ public class NormalizerNodeModel extends NodeModel {
         }
         ExecutionMonitor normExec = exec.createSubProgress(.7);
         BufferedDataContainer container = exec.createDataContainer(spec);
-        int count = 1;
+        long count = 1;
         for (DataRow row : outTable) {
             normExec.checkCanceled();
             normExec.setProgress(count / (double)rowcount,

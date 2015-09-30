@@ -75,8 +75,8 @@ class MissingValueHandling3TableIterator extends RowIterator {
     private final RowIterator m_internIt;
     private final MissingValueHandling3Table m_table;
     private final ExecutionMonitor m_exec;
-    private final int m_finalCount;
-    private int m_count;
+    private final long m_finalCount;
+    private long m_count;
     // since we don't know if to skip the next row in the underlying table
     // (ColSetting.METHOD_IGNORE_ROWS), we save the next to return
     private DataRow m_next;

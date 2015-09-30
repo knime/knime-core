@@ -215,7 +215,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         }
 
         BufferedDataTable inputData = data[0];
-        if (inputData.getRowCount() > 65500) {
+        if (inputData.size() > 65500) {
             throw new RuntimeException("At most 65,500 patterns can be clustered");
         }
 
@@ -238,13 +238,13 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
 
         final HalfFloatMatrix cache;
         if (m_cacheDistances.getBooleanValue()) {
-            cache = new HalfFloatMatrix(inputData.getRowCount(), false);
+            cache = new HalfFloatMatrix((int) inputData.size(), false);
             cache.fill(Float.NaN);
         } else {
             cache = null;
         }
 
-        double max = inputData.getRowCount();
+        double max = inputData.size();
         // the number of clusters at the beginning is equal to the number
         // of data rows (each row is a cluster)
         int numberDataRows = clusters.size();
@@ -334,8 +334,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         if (outputData == null) {
             outputData = createResultTable(inputData, clusters, exec);
         }
-        m_dataArray = new DefaultDataArray(
-                inputData, 1, inputData.getRowCount());
+        m_dataArray = new DefaultDataArray(inputData, 1, (int)inputData.size());
         m_fusionTable = new DefaultDataArray(
                 fusionCont.getTable(), 1, iterationStep);
 

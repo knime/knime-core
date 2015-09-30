@@ -46,7 +46,7 @@
 package org.knime.base.node.preproc.sample;
 
 import org.knime.base.node.preproc.filter.row.RowFilterIterator;
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataContainer;
@@ -79,7 +79,7 @@ public class SamplingNodeModel extends AbstractSamplingNodeModel {
         // only used when the table is traversed in order to count the rows.
         // This is done only if "in" does not support getRowCount().
         // But the argument in the execute method surely does!
-        RowFilter filter = getSamplingRowFilter(in, exec);
+        IRowFilter filter = getSamplingRowFilter(in, exec);
         BufferedDataContainer container = exec.createDataContainer(in
                 .getDataTableSpec());
         try {

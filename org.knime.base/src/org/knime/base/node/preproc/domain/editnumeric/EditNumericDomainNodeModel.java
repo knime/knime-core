@@ -120,8 +120,8 @@ final class EditNumericDomainNodeModel extends NodeModel {
 
         List<String> includedColumnNames = Arrays.asList(filterResult.getIncludes());
 
-        int currentRowIndex = 0;
-        int size = inData[0].getRowCount();
+        long currentRowIndex = 0;
+        long size = inData[0].size();
         String[] tableNames = originalTableSpec.getColumnNames();
 
         Map<Integer, DataColumnSpec> map = new HashMap<Integer, DataColumnSpec>();
@@ -133,7 +133,7 @@ final class EditNumericDomainNodeModel extends NodeModel {
             }
         }
         CloseableRowIterator rowIterator = inData[0].iterator();
-        int rowIndex = 0;
+        long rowIndex = 0;
         try {
             while (rowIterator.hasNext()) {
                 DataRow currentRow = rowIterator.next();

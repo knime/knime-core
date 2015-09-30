@@ -58,6 +58,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 
@@ -228,8 +229,21 @@ public class SortedTable implements DataTable {
 
     /**
      * @return the number of rows of this table
+     *
+     * @deprecated use {@link #size()} instead which supports more than {@link Integer#MAX_VALUE} rows
      */
+    @Deprecated
     public int getRowCount() {
-        return m_sortedTable.getRowCount();
+        return KnowsRowCountTable.checkRowCount(size());
+    }
+
+    /**
+     * Returns the number of rows in this table.
+     *
+     * @return the number of rows
+     * @since 3.0
+     */
+    public long size() {
+        return m_sortedTable.size();
     }
 }

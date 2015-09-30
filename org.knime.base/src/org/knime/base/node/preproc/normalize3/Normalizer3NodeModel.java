@@ -168,7 +168,7 @@ public class Normalizer3NodeModel extends NodeModel {
         String[] includedColumns = getIncludedComlumns(inSpec);
         Normalizer2 ntable = new Normalizer2(inTable, includedColumns);
 
-        int rowcount = inTable.getRowCount();
+        long rowcount = inTable.size();
         ExecutionContext prepareExec = exec.createSubExecutionContext(0.3);
         AffineTransTable outTable;
         boolean fixDomainBounds = false;
@@ -220,7 +220,7 @@ public class Normalizer3NodeModel extends NodeModel {
         }
         ExecutionMonitor normExec = exec.createSubProgress(.7);
         BufferedDataContainer container = exec.createDataContainer(spec);
-        int count = 1;
+        long count = 1;
         for (DataRow row : outTable) {
             normExec.checkCanceled();
             normExec.setProgress(count / (double)rowcount, "Normalizing row no. " + count + " of " + rowcount + " (\""

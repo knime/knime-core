@@ -144,7 +144,7 @@ public class UngroupOperation {
     public BufferedDataTable compute(final ExecutionContext exec) throws Exception {
         final BufferedDataContainer dc = exec.createDataContainer(m_newSpec);
         final Map<RowKey, Set<RowKey>> hiliteMapping = new HashMap<RowKey, Set<RowKey>>();
-        if (m_table.getRowCount() == 0) {
+        if (m_table.size() == 0) {
             dc.close();
             return dc.getTable();
         }
@@ -152,13 +152,12 @@ public class UngroupOperation {
         Iterator<DataCell>[] iterators = new Iterator[m_colIndices.length];
         final DataCell[] missingCells = new DataCell[m_colIndices.length];
         Arrays.fill(missingCells, DataType.getMissingCell());
-        final int totalRowCount = m_table.getRowCount();
-        final double progressPerRow = 1.0 / totalRowCount;
-        int rowCounter = 0;
+        final long totalRowCount = m_table.size();
+        long rowCounter = 0;
         for (final DataRow row : m_table) {
             rowCounter++;
             exec.checkCanceled();
-            exec.setProgress(rowCounter * progressPerRow, "Processing row " + rowCounter + " of " + totalRowCount);
+            exec.setProgress(rowCounter / (double) totalRowCount, "Processing row " + rowCounter + " of " + totalRowCount);
             boolean allMissing = true;
             for (int i = 0, length = m_colIndices.length; i < length; i++) {
                 final DataCell cell = row.getCell(m_colIndices[i]);
@@ -189,7 +188,7 @@ public class UngroupOperation {
                 }
                 continue;
             }
-            int counter = 1;
+            long counter = 1;
             final Set<RowKey> keys;
             if (m_enableHilite) {
                 keys = new HashSet<RowKey>();

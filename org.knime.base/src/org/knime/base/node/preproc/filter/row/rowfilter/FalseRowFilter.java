@@ -73,6 +73,14 @@ public class FalseRowFilter extends RowFilter {
      * {@inheritDoc}
      */
     @Override
+    public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
+        throw new EndOfTableException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
             throws InvalidSettingsException {
         // no settings to load.

@@ -237,7 +237,7 @@ public class NaiveBayesModel {
             final ExecutionMonitor exec, final int classColIdx)
             throws InvalidSettingsException, CanceledExecutionException {
         final DataTableSpec tableSpec = data.getDataTableSpec();
-        final int noOfRows = data.getRowCount();
+        final long noOfRows = data.size();
         final double progressPerRow;
         if (noOfRows != 0) {
             progressPerRow = 1.0 / noOfRows;

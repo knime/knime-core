@@ -46,7 +46,7 @@ package org.knime.base.node.preproc.pmml.xml2pmml;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
@@ -156,7 +156,7 @@ public class XML2PMMLNodeModel extends NodeModel {
 
     private SettingsModelBoolean m_failOnInvalid = createFailOnInvalidSettingsMode();
 
-    private final AtomicInteger m_failCounter = new AtomicInteger();
+    private final AtomicLong m_failCounter = new AtomicLong();
 
     /**
      * {@inheritDoc}
@@ -168,7 +168,7 @@ public class XML2PMMLNodeModel extends NodeModel {
         ColumnRearranger colRe = createColRearranger(inData[0].getDataTableSpec());
         BufferedDataTable resultTable = exec.createColumnRearrangeTable(inData[0], colRe, exec);
 
-        int rowCount = resultTable.getRowCount();
+        long rowCount = resultTable.size();
 
         if ((rowCount > 0) && (m_failCounter.get() == rowCount)) {
             setWarningMessage("Failed to convert all documents");

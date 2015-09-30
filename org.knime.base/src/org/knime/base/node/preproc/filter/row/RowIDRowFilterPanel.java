@@ -65,7 +65,7 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowIDRowFilter;
 import org.knime.core.node.InvalidSettingsException;
 
@@ -194,8 +194,7 @@ public class RowIDRowFilterPanel extends RowFilterPanel {
      * {@inheritDoc}
      */
     @Override
-    public void loadSettingsFromFilter(final RowFilter filter)
-            throws InvalidSettingsException {
+    public void loadSettingsFromFilter(final IRowFilter filter) throws InvalidSettingsException {
         if (!(filter instanceof RowIDRowFilter)) {
             throw new InvalidSettingsException("RegExpr filter panel can only "
                     + "load settings from a RegExprRowFilter");
@@ -213,8 +212,7 @@ public class RowIDRowFilterPanel extends RowFilterPanel {
      * {@inheritDoc}
      */
     @Override
-    public RowFilter createFilter(final boolean include)
-            throws InvalidSettingsException {
+    public IRowFilter createFilter(final boolean include) throws InvalidSettingsException {
         // just in case, because the err text is the indicator for err existence
         updateErrText();
 

@@ -262,8 +262,8 @@ public class AutoBinner {
     private static double[] createEdgesFromQuantiles(final BufferedDataTable data, final ExecutionContext exec,
         final double[] sampleQuantiles) throws CanceledExecutionException {
         double[] edges = new double[sampleQuantiles.length];
-        int n = data.getRowCount();
-        int c = 0;
+        long n = data.size();
+        long c = 0;
         int cc = 0;
         RowIterator iter = data.iterator();
         DataRow rowQ = null;

@@ -55,9 +55,10 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 
 
@@ -87,8 +88,8 @@ final class OutputRow {
      * @return New instance of {@link DataRow} populated with the given
      * information.
      */
-    static DataRow createDataRow(final int index,
-            final int leftIndex, final int rightIndex,
+    static DataRow createDataRow(final long index,
+            final long leftIndex, final long rightIndex,
             final DataRow rightDataRow,
             final OutputRow.Settings settings) {
 
@@ -103,10 +104,10 @@ final class OutputRow {
         }
         cells[c] = new StringCell(rightDataRow.getKey().getString());
         c++;
-        cells[c] = new IntCell(leftIndex);
+        cells[c] = new LongCell(leftIndex);
         c++;
-        cells[c] = new IntCell(rightIndex);
-        RowKey rowID = new RowKey(Integer.toString(index));
+        cells[c] = new LongCell(rightIndex);
+        RowKey rowID = new RowKey(Long.toString(index));
         return  new DefaultRow(rowID, cells);
     }
 
@@ -120,8 +121,8 @@ final class OutputRow {
      * @return New instance of {@link DataRow} populated with the given
      * information.
      */
-    static DataRow createDataRow(final int index,
-            final int leftIndex, final int rightIndex,
+    static DataRow createDataRow(final long index,
+            final long leftIndex, final long rightIndex,
             final OutputRow.Settings settings) {
 
         int[] survivors = settings.getSurvivors();
@@ -135,10 +136,10 @@ final class OutputRow {
         }
         cells[c] = DataType.getMissingCell();
         c++;
-        cells[c] = new IntCell(leftIndex);
+        cells[c] = new LongCell(leftIndex);
         c++;
-        cells[c] = new IntCell(rightIndex);
-        RowKey rowID = new RowKey(Integer.toString(index));
+        cells[c] = new LongCell(rightIndex);
+        RowKey rowID = new RowKey(Long.toString(index));
         return new DefaultRow(rowID, cells);
     }
 
@@ -148,9 +149,9 @@ final class OutputRow {
      * class.
      * @return The index of the left row.
      */
-    static int getLeftIndex(final DataRow row) {
-        IntCell cell = (IntCell)row.getCell(row.getNumCells() - 2);
-        return cell.getIntValue();
+    static long getLeftIndex(final DataRow row) {
+        LongValue cell = (LongValue)row.getCell(row.getNumCells() - 2);
+        return cell.getLongValue();
     }
 
     /**
@@ -158,9 +159,9 @@ final class OutputRow {
      * class.
      * @return The index of the right row.
      */
-    static int getRightIndex(final DataRow row) {
-        IntCell cell = (IntCell)row.getCell(row.getNumCells() - 1);
-        return cell.getIntValue();
+    static long getRightIndex(final DataRow row) {
+        LongValue cell = (LongValue)row.getCell(row.getNumCells() - 1);
+        return cell.getLongValue();
     }
 
     /**
@@ -186,13 +187,11 @@ final class OutputRow {
         return new Comparator<DataRow>() {
             @Override
             public int compare(final DataRow o1, final DataRow o2) {
-                int diff = OutputRow.getLeftIndex(o1)
-                    - OutputRow.getLeftIndex(o2);
+                int diff = Long.compare(OutputRow.getLeftIndex(o1), OutputRow.getLeftIndex(o2));
                 if (diff != 0) {
                     return diff;
                 } else {
-                    return OutputRow.getRightIndex(o1)
-                            - OutputRow.getRightIndex(o2);
+                    return Long.compare(OutputRow.getRightIndex(o1), OutputRow.getRightIndex(o2));
                 }
             }
         };
@@ -225,14 +224,11 @@ final class OutputRow {
                         rightTableSurvivors[i]).getType()).createSpec();
                 c++;
             }
-            cspec[c] = new DataColumnSpecCreator(c.toString(),
-                    StringCell.TYPE).createSpec();
+            cspec[c] = new DataColumnSpecCreator(c.toString(), StringCell.TYPE).createSpec();
             c++;
-            cspec[c] = new DataColumnSpecCreator(c.toString(),
-                    IntCell.TYPE).createSpec();
+            cspec[c] = new DataColumnSpecCreator(c.toString(), LongCell.TYPE).createSpec();
             c++;
-            cspec[c] = new DataColumnSpecCreator(c.toString(),
-                    IntCell.TYPE).createSpec();
+            cspec[c] = new DataColumnSpecCreator(c.toString(), LongCell.TYPE).createSpec();
 
             m_spec = new DataTableSpec(cspec);
         }

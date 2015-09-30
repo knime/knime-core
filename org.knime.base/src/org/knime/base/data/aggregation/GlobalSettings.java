@@ -81,7 +81,7 @@ public class GlobalSettings {
 
     private final DataTableSpec m_spec;
 
-    private final int m_noOfRows;
+    private final long m_noOfRows;
 
     /**This key value map allows the storing of arbitrary objects associated
      * with a unique key which are accessible in the
@@ -150,12 +150,12 @@ public class GlobalSettings {
      * @param valueDelimiter the delimiter to use for value separation
      * @param spec the {@link DataTableSpec} of the table to process
      * @param noOfRows the number of rows of the input table
-     * @since 2.6
+     * @since 3.0
      */
     public GlobalSettings(final FileStoreFactory fileStoreFactory,
             final List<String> groupColNames, final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
-            final int noOfRows) {
+            final long noOfRows) {
         this(fileStoreFactory, groupColNames, maxUniqueValues, valueDelimiter,
                 spec, noOfRows, new HashMap<String, Object>());
     }
@@ -172,7 +172,7 @@ public class GlobalSettings {
     private GlobalSettings(final FileStoreFactory fileStoreFactory,
             final List<String> groupColNames, final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
-            final int noOfRows, final Map<String, Object> keyValueMap) {
+            final long noOfRows, final Map<String, Object> keyValueMap) {
         if (groupColNames == null) {
             throw new NullPointerException("groupColNames must not be null");
         }
@@ -219,8 +219,9 @@ public class GlobalSettings {
 
     /**
      * @return the total number of rows of the input table
+     * @since 3.0
      */
-    public int getNoOfRows() {
+    public long getNoOfRows() {
         return m_noOfRows;
     }
 
@@ -362,7 +363,7 @@ public class GlobalSettings {
         result = prime * result + ((m_groupColNames == null) ? 0 : m_groupColNames.hashCode());
         result = prime * result + ((m_keyValueMap == null) ? 0 : m_keyValueMap.hashCode());
         result = prime * result + m_maxUniqueValues;
-        result = prime * result + m_noOfRows;
+        result = prime * result + (int) m_noOfRows;
         result = prime * result + ((m_spec == null) ? 0 : m_spec.hashCode());
         result = prime * result + ((m_valueDelimiter == null) ? 0 : m_valueDelimiter.hashCode());
         return result;

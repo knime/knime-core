@@ -59,7 +59,7 @@ import javax.swing.JRadioButton;
 
 import org.knime.base.node.preproc.filter.row.rowfilter.AttrValueRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.ColValFilterOldObsolete;
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilterFactory;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowIDRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowNoRowFilter;
@@ -236,7 +236,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
          * RowIDFilter, AttrValfilter, and RowNumberFilter. But only one at a
          * time.
          */
-        RowFilter filter = null;
+        IRowFilter filter = null;
         try {
             // get the filter
             filter = RowFilterFactory.createRowFilter(settings
@@ -328,7 +328,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
 
-        RowFilter theFilter = null;
+        IRowFilter theFilter = null;
         if (m_rangeInclRadio.isSelected()) {
             theFilter = m_rangePanel.createFilter(true);
         }

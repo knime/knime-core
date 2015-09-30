@@ -65,26 +65,26 @@ import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class NumericRowSplitterNodeModel extends NodeModel {
-    
+
     private final SettingsModelString m_columnSelection =
         NumericRowSplitterNodeDialogPane.createColumnSelectionModel();
-    
-    private final SettingsModelBoolean m_lowerBoundCheck = 
+
+    private final SettingsModelBoolean m_lowerBoundCheck =
         NumericRowSplitterNodeDialogPane.createLowerBoundCheckBoxModel();
-    private final SettingsModelDouble m_lowerBoundValue = 
+    private final SettingsModelDouble m_lowerBoundValue =
         NumericRowSplitterNodeDialogPane.createLowerBoundTextfieldModel();
-    private final SettingsModelString m_lowerBound = 
+    private final SettingsModelString m_lowerBound =
         NumericRowSplitterNodeDialogPane.createLowerBoundModel();
-    
-    private final SettingsModelBoolean m_upperBoundCheck = 
+
+    private final SettingsModelBoolean m_upperBoundCheck =
         NumericRowSplitterNodeDialogPane.createUpperBoundCheckBoxModel();
-    private final SettingsModelDouble m_upperBoundValue = 
+    private final SettingsModelDouble m_upperBoundValue =
         NumericRowSplitterNodeDialogPane.createUpperBoundTextfieldModel();
-    private final SettingsModelString m_upperBound = 
+    private final SettingsModelString m_upperBound =
         NumericRowSplitterNodeDialogPane.createUpperBoundModel();
 
     /**
@@ -101,7 +101,7 @@ public class NumericRowSplitterNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         if (!inSpecs[0].containsName(m_columnSelection.getStringValue())) {
-            throw new InvalidSettingsException("Column '" 
+            throw new InvalidSettingsException("Column '"
                     + m_columnSelection.getStringValue());
         }
         DataTableSpec outSpec = inSpecs[0];
@@ -117,10 +117,10 @@ public class NumericRowSplitterNodeModel extends NodeModel {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         BufferedDataContainer buf1 = exec.createDataContainer(inSpec);
         BufferedDataContainer buf2 = exec.createDataContainer(inSpec);
-        final int columnIndex = 
-            inSpec.findColumnIndex(m_columnSelection.getStringValue()); 
-        int count = 0;
-        final int nrRows = inData[0].getRowCount();
+        final int columnIndex =
+            inSpec.findColumnIndex(m_columnSelection.getStringValue());
+        long count = 0;
+        final long nrRows = inData[0].size();
         for (DataRow row : inData[0]) {
             if (matches(row.getCell(columnIndex))) {
                 buf1.addRowToTable(row);
@@ -128,8 +128,8 @@ public class NumericRowSplitterNodeModel extends NodeModel {
                 buf2.addRowToTable(row);
             }
             exec.checkCanceled();
-            exec.setProgress(count / (double) nrRows, 
-                    "Added row " + (++count) + "/" + nrRows + " (\"" 
+            exec.setProgress(count / (double) nrRows,
+                    "Added row " + (++count) + "/" + nrRows + " (\""
                     + row.getKey() + "\")");
         }
         buf1.close();
@@ -138,7 +138,7 @@ public class NumericRowSplitterNodeModel extends NodeModel {
         BufferedDataTable outData2 = buf2.getTable();
         return new BufferedDataTable[]{outData1, outData2};
     }
-    
+
     private boolean matches(final DataCell cell) {
         if (cell.isMissing()) {
             return false;
@@ -165,7 +165,7 @@ public class NumericRowSplitterNodeModel extends NodeModel {
             if ((upper == value) && !inclUpper) {
                 return false;
             }
-        }   
+        }
         return true;
     }
 
@@ -173,7 +173,7 @@ public class NumericRowSplitterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
 
@@ -206,7 +206,7 @@ public class NumericRowSplitterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
 
@@ -239,12 +239,12 @@ public class NumericRowSplitterNodeModel extends NodeModel {
         m_upperBound.validateSettings(settings);
         m_upperBoundCheck.validateSettings(settings);
         m_upperBoundValue.validateSettings(settings);
-        
-        SettingsModelBoolean lowerBoundCheck = 
+
+        SettingsModelBoolean lowerBoundCheck =
             m_lowerBoundCheck.createCloneWithValidatedValue(settings);
-        SettingsModelBoolean upperBoundCheck = 
+        SettingsModelBoolean upperBoundCheck =
             m_upperBoundCheck.createCloneWithValidatedValue(settings);
-        if (lowerBoundCheck.getBooleanValue() 
+        if (lowerBoundCheck.getBooleanValue()
                 && upperBoundCheck.getBooleanValue()) {
             SettingsModelDouble lowerBoundValue =
                 m_lowerBoundValue.createCloneWithValidatedValue(settings);
@@ -257,11 +257,11 @@ public class NumericRowSplitterNodeModel extends NodeModel {
                         + "bound values: " + low + " > " + upp);
             }
             if (low == upp) {
-                SettingsModelString lowerBound = 
+                SettingsModelString lowerBound =
                     m_lowerBound.createCloneWithValidatedValue(settings);
                 boolean inclLow = NumericRowSplitterNodeDialogPane.
                         includeLowerBound(lowerBound);
-                SettingsModelString upperBound = 
+                SettingsModelString upperBound =
                     m_upperBound.createCloneWithValidatedValue(settings);
                 boolean inclUpp = NumericRowSplitterNodeDialogPane.
                         includeUpperBound(upperBound);

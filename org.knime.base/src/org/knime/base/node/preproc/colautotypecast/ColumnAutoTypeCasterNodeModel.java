@@ -140,7 +140,7 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
         BufferedDataTable outTable = inData[0];
         final String[] incls = m_conf.applyTo(data.getDataTableSpec()).getIncludes();
         final DataType[] types = new DataType[incls.length];
-        final double max = incls.length + data.getRowCount();
+        final double max = incls.length + data.size();
 
         final String[] colNames = {"Column name", "Final column type", "Row determining final column type"};
         final DataType[] colTypes = new DataType[]{StringCell.TYPE, StringCell.TYPE, StringCell.TYPE};
@@ -149,11 +149,11 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
 
         setReasons(new String[incls.length][3]);
 
-        if (data.getRowCount() > 0) {
+        if (data.size() > 0) {
             // empty table check
             SimpleDateFormat dateFormat = new SimpleDateFormat(m_dateFormat);
 
-            int numberOfRows = m_quickScan ? Math.min(m_numberOfRows, data.getRowCount()) : data.getRowCount();
+            long numberOfRows = m_quickScan ? Math.min(m_numberOfRows, data.size()) : data.size();
             for (DataRow row : data) {
                 if (!(0 < numberOfRows--)) {
                     data.iterator().close();
@@ -224,7 +224,7 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
                 for (int j = 0; j < m_reasons[i].length; j++) {
                     row[j] = new StringCell(m_reasons[i][j]);
                 }
-                reasonsCon.addRowToTable(new DefaultRow(RowKey.createRowKey(i), row));
+                reasonsCon.addRowToTable(new DefaultRow(RowKey.createRowKey((long) i), row));
             }
         }
 

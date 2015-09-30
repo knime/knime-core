@@ -41,12 +41,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.06.2005 (ohl): created
  */
 package org.knime.base.node.preproc.filter.row;
 
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -55,25 +56,27 @@ import org.knime.core.data.RowIterator;
 /**
  * A {@link org.knime.core.data.DataTable} which "contains" only rows that
  * don't fall through the specified filter. The table wrapps the original table
- * and forwards only rows that meet the filter criteria. Any {@link RowFilter}
+ * and forwards only rows that meet the filter criteria. Any {@link IRowFilter}
  * can be passed. It will decide whether a row is part of this table or not.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class RowFilterTable implements DataTable {
 
     private final DataTable m_table;
 
-    private final RowFilter m_filter;
+    private final IRowFilter m_filter;
 
     /**
      * Creates a new data table which contains only rows that are not filtered
      * out by the specified filter.
-     * 
+     *
      * @param origTable the table to filter the rows from
      * @param filter a row filter that will be consulted for each row to decide
      *            whether to include it or not
+     * @deprecated use {@link #RowFilterTable(DataTable, IRowFilter)} instead
      */
+    @Deprecated
     public RowFilterTable(final DataTable origTable, final RowFilter filter) {
         if (origTable == null) {
             throw new NullPointerException("Source table can't be null");
@@ -86,8 +89,30 @@ public class RowFilterTable implements DataTable {
     }
 
     /**
+     * Creates a new data table which contains only rows that are not filtered
+     * out by the specified filter.
+     *
+     * @param origTable the table to filter the rows from
+     * @param filter a row filter that will be consulted for each row to decide
+     *            whether to include it or not
+     * @since 3.0
+     */
+    public RowFilterTable(final DataTable origTable, final IRowFilter filter) {
+        if (origTable == null) {
+            throw new NullPointerException("Source table can't be null");
+        }
+        if (filter == null) {
+            throw new NullPointerException("The row filter can't be null");
+        }
+        m_table = origTable;
+        m_filter = filter;
+    }
+
+
+    /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_table.getDataTableSpec();
     }
@@ -95,7 +120,8 @@ public class RowFilterTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
-        return new RowFilterIterator(m_table, (RowFilter)m_filter.clone());
+        return new RowFilterIterator(m_table, (IRowFilter)m_filter.clone(), null);
     }
 }

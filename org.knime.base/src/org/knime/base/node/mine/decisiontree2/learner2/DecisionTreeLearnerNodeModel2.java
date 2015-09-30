@@ -444,7 +444,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             }
         }
         // the data table must have more than 2 records
-        if (inData.getRowCount() <= 1) {
+        if (inData.size() <= 1) {
             throw new IllegalArgumentException(
                     "Input data table must have at least 2 records!");
         }
@@ -464,7 +464,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
                 tableCreator.createInMemoryTable(exec
                         .createSubExecutionContext(0.05));
         int removedRows = tableCreator.getRemovedRowsDueToMissingClassValue();
-        if (removedRows == inData.getRowCount()) {
+        if (removedRows == inData.size()) {
             throw new IllegalArgumentException("Class column contains only "
                     + "missing values");
         }

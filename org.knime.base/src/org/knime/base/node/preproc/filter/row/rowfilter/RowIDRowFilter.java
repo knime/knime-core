@@ -59,7 +59,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 
 /**
- * A {@link RowFilter} that matches the row ID against a regular expression. It
+ * A {@link IRowFilter} that matches the row ID against a regular expression. It
  * allows for including or excluding matching rows, supports case sensitivity,
  * and supports entire row ID matches vs. starts with.
  *
@@ -178,7 +178,15 @@ public class RowIDRowFilter extends RowFilter {
      * {@inheritDoc}
      */
     @Override
-    public boolean matches(final DataRow row, final int rowIndex) {
+    public boolean matches(final DataRow row, final int rowIndex) throws EndOfTableException, IncludeFromNowOn {
+        return matches(row, (long) rowIndex);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(final DataRow row, final long rowIndex) {
         assert row != null;
         Matcher matcher = m_pattern.matcher(row.getKey().getString());
 

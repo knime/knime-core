@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.sample;
 
@@ -49,20 +49,28 @@ import java.util.BitSet;
 import java.util.Random;
 
 import org.knime.base.node.preproc.filter.row.RowFilterTable;
+import org.knime.base.node.preproc.filter.row.rowfilter.AbstractRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
 import org.knime.base.node.preproc.filter.row.rowfilter.FalseRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowNoRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.TrueRowFilter;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Utility class that allows to create row filters for sampling.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class Sampler {
@@ -73,14 +81,14 @@ public final class Sampler {
     /**
      * Convenience method that creates a new {@link DataTable} that samples rows
      * according to a given row filter.
-     * 
+     *
      * @param table the table to wrap, i.e. to sample from
      * @param filter the filter to use
      * @return a new {@link RowFilterTable}
      * @see RowFilterTable#RowFilterTable(DataTable, RowFilter)
+     * @since 3.0
      */
-    public static final DataTable createSamplingTable(final DataTable table,
-            final RowFilter filter) {
+    public static final DataTable createSamplingTable(final DataTable table, final IRowFilter filter) {
         return new RowFilterTable(table, filter);
     }
 
@@ -88,18 +96,19 @@ public final class Sampler {
      * Creates a filter that to filter the first <code>100 * fraction</code>
      * rows from a table. The row counter is determined based on the row number
      * of <code>table</code>.
-     * 
+     *
      * @param table the table from which to get the final row count
      * @param fraction the fraction of the row count that shall survive
      * @param exec an execution monitor to check for cancelation
      * @return a row filter for this purpose
      * @throws CanceledExecutionException if exec cancels the row counting
+     * @since 3.0
      */
-    public static final RowFilter createRangeFilter(final DataTable table,
+    public static final IRowFilter createRangeFilter(final DataTable table,
             final double fraction, final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        int rowCount = countRows(table, exec);
-        int count = (int)(Math.round(fraction * rowCount));
+        long rowCount = countRows(table, exec);
+        long count = (int)(Math.round(fraction * rowCount));
         if (count == 0) {
             return new FalseRowFilter();
         } else {
@@ -109,11 +118,12 @@ public final class Sampler {
 
     /**
      * Creates a filter that passes only the first <code>count</code> rows.
-     * 
+     *
      * @param count the number of rows that survive (starting from top)
      * @return a filter that only filter the first <code>count</code> rows
+     * @since 3.0
      */
-    public static final RowFilter createRangeFilter(final int count) {
+    public static final IRowFilter createRangeFilter(final long count) {
         if (count <= 0) {
             throw new IllegalArgumentException("Count must be > 0: " + count);
         }
@@ -123,12 +133,13 @@ public final class Sampler {
     /**
      * Creates row filter that randomly samples about
      * <code>100 * fraction</code> percent from a table.
-     * 
+     *
      * @param fraction the fraction being used, must be in [0, 1]
      * @return such a filter
      * @see RandomFractionRowFilter#RandomFractionRowFilter(double)
+     * @since 3.0
      */
-    public static final RowFilter createSampleFilter(final double fraction) {
+    public static final IRowFilter createSampleFilter(final double fraction) {
         return new RandomFractionRowFilter(fraction);
     }
 
@@ -136,14 +147,15 @@ public final class Sampler {
      * Creates row filter that samples precisely a given fraction of rows. This
      * requires a scan on the table in order to count the rows and determine the
      * right number of sampled rows.
-     * 
+     *
      * @param table to count rows on
      * @param fraction the fraction to be sampled, must be in [0, 1]
      * @param exec to check canceled status on and report progress
      * @return such a filter
      * @throws CanceledExecutionException if canceled
+     * @since 3.0
      */
-    public static final RowFilter createSampleFilter(final DataTable table,
+    public static final IRowFilter createSampleFilter(final DataTable table,
             final double fraction, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         return createSampleFilter(table, fraction, null, exec);
@@ -154,7 +166,7 @@ public final class Sampler {
      * requires a scan on the table in order to count the rows and determine the
      * right number of sampled rows. A given Random object makes the sampling
      * &quot;deterministic&quot;.
-     * 
+     *
      * @param table to count rows on
      * @param fraction the fraction to be sampled, must be in [0, 1]
      * @param rand the random object for controlled sampling. (If
@@ -162,28 +174,30 @@ public final class Sampler {
      * @param exec to check canceled status on and report progress.
      * @return such a filter
      * @throws CanceledExecutionException if canceled
+     * @since 3.0
      */
-    public static final RowFilter createSampleFilter(final DataTable table,
+    public static final IRowFilter createSampleFilter(final DataTable table,
             final double fraction, final Random rand,
             final ExecutionMonitor exec) throws CanceledExecutionException {
-        int rowCount = countRows(table, exec);
-        int count = (int)(Math.round(fraction * rowCount));
+        long rowCount = countRows(table, exec);
+        long count = (int)(Math.round(fraction * rowCount));
         return createRandomNumberRowFilter(count, rowCount, rand);
     }
 
     /**
      * Creates row filter that samples arbitrary <code>count</code> rows from
      * <code>table</code>.
-     * 
+     *
      * @param table the table from which to create the sample
      * @param count the number of rows the should go "through" the filter
      * @param exec an execution monitor to check for cancelation (this method
      *            requires an iteration over table - which might take long)
      * @return a row ilter to be used for this kind of sampling.
      * @throws CanceledExecutionException if exec was canceled
+     * @since 3.0
      */
-    public static final RowFilter createSampleFilter(final DataTable table,
-            final int count, final ExecutionMonitor exec)
+    public static final IRowFilter createSampleFilter(final DataTable table,
+            final long count, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         return createSampleFilter(table, count, null, exec);
     }
@@ -192,7 +206,7 @@ public final class Sampler {
      * Creates row filter that samples arbitrary <code>count</code> rows from
      * <code>table</code>. A given Random object makes the sampling
      * &quot;deterministic&quot;.
-     * 
+     *
      * @param table the table from which to create the sample
      * @param count the number of rows the should go "through" the filter
      * @param rand the random object for controlled sampling. (If
@@ -201,31 +215,31 @@ public final class Sampler {
      *            requires an iteration over table - which might take long)
      * @return a row filter to be used for this kind of sampling
      * @throws CanceledExecutionException if exec was canceled
+     * @since 3.0
      */
-    public static final RowFilter createSampleFilter(final DataTable table,
-            final int count, final Random rand, final ExecutionMonitor exec)
+    public static final IRowFilter createSampleFilter(final DataTable table,
+            final long count, final Random rand, final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        final int rowCount = countRows(table, exec);
+        final long rowCount = countRows(table, exec);
         return createRandomNumberRowFilter(count, rowCount, rand);
     }
 
     /*
      * Counts rows in table.
-     * 
+     *
      * If the table is of type
      * {@link org.knime.core.node.BufferedDataTable} the row count is
      * retreived directly.
      */
-    private static final int countRows(final DataTable table,
+    private static final long countRows(final DataTable table,
             final ExecutionMonitor exec) throws CanceledExecutionException {
-
         // if buffered table
         if (table instanceof BufferedDataTable) {
-            return ((BufferedDataTable)table).getRowCount();
+            return ((BufferedDataTable)table).size();
         }
 
         // determine row count
-        int rowCount = 0;
+        long rowCount = 0;
         for (RowIterator it = table.iterator(); it.hasNext(); rowCount++) {
             DataRow row = it.next();
             if (exec != null) {
@@ -241,27 +255,61 @@ public final class Sampler {
      * Creates random number row filter that samples count rows from a table
      * with overall allCount rows.
      */
-    private static final RowFilter createRandomNumberRowFilter(final int count,
-            final int allCount, final Random rand) {
+    private static final IRowFilter createRandomNumberRowFilter(final long count,
+            final long allCount, final Random rand) {
         Random random = rand != null ? rand : new Random();
         if (allCount <= count) {
             return new TrueRowFilter();
         }
-        BitSet bitset = new BitSet(allCount);
-        // hm, I'm sure there is a better way to draw arbitrary bits
-        int[] vals = new int[allCount];
-        for (int i = 0; i < vals.length; i++) {
-            vals[i] = i;
+
+        if (allCount <= Integer.MAX_VALUE) {
+            BitSet bitset = new BitSet((int) allCount);
+            // hm, I'm sure there is a better way to draw arbitrary bits
+            int[] vals = new int[(int) allCount];
+            for (int i = 0; i < vals.length; i++) {
+                vals[i] = i;
+            }
+            for (int i = vals.length; --i >= 0;) {
+                int swapIndex = random.nextInt(i + 1);
+                int swap = vals[swapIndex];
+                vals[swapIndex] = vals[i];
+                vals[i] = swap;
+            }
+            for (int i = 0; i < count; i++) {
+                bitset.set(vals[i]);
+            }
+            return new RandomNumberRowFilter(bitset);
+        } else {
+            // Sampling based on Fan's selection rejection algorithm (1962)
+            return new AbstractRowFilter() {
+                private long m_i;
+
+                @Override
+                public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
+                    double p = (count - m_i) / (double) (allCount - rowIndex + 1);
+                    if (random.nextDouble() <= p) {
+                        m_i++;
+                        return true;
+                    }
+
+                    return false;
+                }
+
+                @Override
+                protected void saveSettings(final NodeSettingsWO cfg) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public void loadSettingsFrom(final NodeSettingsRO cfg) throws InvalidSettingsException {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public DataTableSpec configure(final DataTableSpec inSpec) throws InvalidSettingsException {
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
-        for (int i = vals.length; --i >= 0;) {
-            int swapIndex = random.nextInt(i + 1);
-            int swap = vals[swapIndex];
-            vals[swapIndex] = vals[i];
-            vals[i] = swap;
-        }
-        for (int i = 0; i < count; i++) {
-            bitset.set(vals[i]);
-        }
-        return new RandomNumberRowFilter(bitset);
     }
 }

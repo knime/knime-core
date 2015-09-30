@@ -55,7 +55,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -168,8 +168,9 @@ public abstract class RowFilterPanel extends JPanel {
      * @param filter containing specs for filter properties
      * @throws InvalidSettingsException if the filter passed is not the one
      *             represented by this panel
+     * @since 3.0
      */
-    public abstract void loadSettingsFromFilter(final RowFilter filter)
+    public abstract void loadSettingsFromFilter(final IRowFilter filter)
             throws InvalidSettingsException;
 
     /**
@@ -178,7 +179,8 @@ public abstract class RowFilterPanel extends JPanel {
      * @return a filter object from the current settings of the panel
      * @throws InvalidSettingsException if settings were invalid and no filter
      *             could be created.
+     * @since 3.0
      */
-    public abstract RowFilter createFilter(final boolean include)
+    public abstract IRowFilter createFilter(final boolean include)
             throws InvalidSettingsException;
 }

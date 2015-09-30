@@ -261,10 +261,10 @@ public final class DecTreePredictorNodeModel extends NodeModel {
                 inPorts[0].getSpec(), inPorts[1].getSpec() };
         DataTableSpec outSpec = createOutTableSpec(inSpecs);
         BufferedDataContainer outData = exec.createDataContainer(outSpec);
-        int coveredPattern = 0;
-        int nrPattern = 0;
-        int rowCount = 0;
-        int numberRows = inData.getRowCount();
+        long coveredPattern = 0;
+        long nrPattern = 0;
+        long rowCount = 0;
+        final long numberRows = inData.size();
         exec.setMessage("Classifying...");
         List<String> predictionValues = getPredictionStrings((PMMLPortObjectSpec)inPorts[INMODELPORT].getSpec());
         for (DataRow thisRow : inData) {

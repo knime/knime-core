@@ -424,8 +424,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         int maxPos = Integer.MIN_VALUE;
         int cellIdx = data.getDataTableSpec().findColumnIndex(
                 m_stringColumn.getStringValue());
-        int nrRows = data.getRowCount();
-        int currRow = 0;
+        long nrRows = data.size();
+        long currRow = 0;
         for (DataRow row : data) {
             currRow++;
             exec.setProgress((double)currRow / (double)nrRows,

@@ -58,6 +58,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.mutable.MutableLong;
 import org.knime.base.data.statistics.calculation.Mean;
 import org.knime.base.data.statistics.calculation.Variance;
 import org.knime.core.data.DataCell;
@@ -71,7 +72,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.util.MutableInteger;
 
 /**
  * A utility class for calculating several statistical moments, such as the {@link Variance}, {@link Mean} or others.
@@ -150,7 +150,7 @@ public class StatisticCalculator {
     public String evaluate(final BufferedDataTable dataTable, final ExecutionContext exec)
         throws CanceledExecutionException {
         for (Statistic stat : m_statistics) {
-            stat.beforeEvaluation(dataTable.getRowCount());
+            stat.beforeEvaluation(dataTable.size());
         }
 
         if (!m_colToSortOn.isEmpty()) {
@@ -158,7 +158,7 @@ public class StatisticCalculator {
             ColumnBufferedDataTableSorter columnDataTableSorter;
             try {
                 columnDataTableSorter =
-                    new ColumnBufferedDataTableSorter(dataTable.getDataTableSpec(), dataTable.getRowCount(),
+                    new ColumnBufferedDataTableSorter(dataTable.getDataTableSpec(), dataTable.size(),
                         m_colToSortOn.toArray(new String[m_colToSortOn.size()]));
             } catch (InvalidSettingsException e) {
                 throw new RuntimeException("Error on initialize the sorting", e);
@@ -167,7 +167,7 @@ public class StatisticCalculator {
             exec.setMessage("Sorting Data.");
 
             final Iterator<DataRow> it = dataTable.iterator();
-            final MutableInteger count = new MutableInteger(0);
+            final MutableLong count = new MutableLong();
             final ExecutionContext evalProgress = exec.createSubExecutionContext(0.3);
 
             final int[] specMapping =
@@ -178,8 +178,9 @@ public class StatisticCalculator {
                 @Override
                 public void consume(final DataRow defaultRow) {
                     DataRow next = it.next();
-                    evalProgress.setProgress(count.inc() / (double)dataTable.getRowCount(),
+                    evalProgress.setProgress(count.longValue() / (double)dataTable.size(),
                         "Processing Row: " + next.getKey());
+                    count.increment();
                     for (Statistic stat : m_statistics) {
                         stat.consumeRow(new OverwritingRow(next, defaultRow, specMapping));
                     }
@@ -187,9 +188,9 @@ public class StatisticCalculator {
             });
         } else {
             exec.setMessage("Evaluating statistics.");
-            int count = 0;
+            long count = 0;
             for (DataRow currRow : dataTable) {
-                exec.setProgress(count++ / (double)dataTable.getRowCount(), "Processing Row: " + currRow.getKey());
+                exec.setProgress(count++ / (double)dataTable.size(), "Processing Row: " + currRow.getKey());
                 for (Statistic stat : m_statistics) {
                     stat.consumeRow(currRow);
                 }

@@ -46,8 +46,8 @@
 package org.knime.base.node.preproc.partition;
 
 import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.sample.AbstractSamplingNodeModel;
 import org.knime.base.node.preproc.sample.StratifiedSamplingRowFilter;
 import org.knime.core.data.DataRow;
@@ -85,10 +85,10 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
             Exception {
         BufferedDataTable in = inData[0];
         BufferedDataTable[] outs = new BufferedDataTable[2];
-        RowFilter filter = getSamplingRowFilter(in, exec);
-        BufferedDataContainer firstOutCont = 
+        IRowFilter filter = getSamplingRowFilter(in, exec);
+        BufferedDataContainer firstOutCont =
             exec.createDataContainer(in.getDataTableSpec());
-        BufferedDataContainer secondOutCont = 
+        BufferedDataContainer secondOutCont =
             exec.createDataContainer(in.getDataTableSpec());
         double rowCount = in.getRowCount(); // floating point op. below
         // one of the flags will be set if one of the exceptions below
@@ -129,7 +129,7 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
         outs[0] = firstOutCont.getTable();
         outs[1] = secondOutCont.getTable();
         if (filter instanceof StratifiedSamplingRowFilter) {
-            int classCount = 
+            int classCount =
                 ((StratifiedSamplingRowFilter)filter).getClassCount();
             if (classCount > outs[0].getRowCount()) {
                 setWarningMessage("Class column contains more classes ("

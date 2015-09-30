@@ -115,9 +115,9 @@ final class EditNominalDomainDicNodeModel extends NodeModel {
         Map<Integer, Set<DataCell>> doCreateSpec =
             createNewSpec(orgSpec, valueSpec, new NewDomainValuesAdder<CanceledExecutionException>() {
 
-                private int m_currentRowIndex = 0;
+                private long m_currentRowIndex = 0;
 
-                private int m_size = additionalValues.getRowCount();
+                private final long m_size = additionalValues.size();
 
                 @Override
                 void addNewDomainValues(final Map<Integer, String> orgIndexToColNameMap,

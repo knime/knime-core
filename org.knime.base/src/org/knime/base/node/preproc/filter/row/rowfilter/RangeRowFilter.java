@@ -230,8 +230,7 @@ public class RangeRowFilter extends AttrValueRowFilter {
      * {@inheritDoc}
      */
     @Override
-    public boolean matches(final DataRow row, final int rowIndex)
-            throws EndOfTableException, IncludeFromNowOn {
+    public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
         // if one of these goes off, configure was probably not called after
         // loading filter's settings
         assert getColIdx() >= 0;
@@ -242,7 +241,6 @@ public class RangeRowFilter extends AttrValueRowFilter {
 
         if (theCell.isMissing()) {
             match = false;
-
         } else {
             if (getDeepFiltering() && (theCell instanceof CollectionDataValue)) {
                 match = performDeepFiltering((CollectionDataValue) theCell);

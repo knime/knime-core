@@ -20,6 +20,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  *
@@ -91,9 +92,19 @@ public abstract class Statistic {
 
     /**
      * @param amountOfRows the amount of data points
+     * @deprecated use {@link #beforeEvaluation(long)} instead
      */
+    @Deprecated
     protected void beforeEvaluation(final int amountOfRows) {
 
+    }
+
+    /**
+     * @param amountOfRows the amount of data points
+     * @since 3.0
+     */
+    protected void beforeEvaluation(final long amountOfRows) {
+        beforeEvaluation(ConvenienceMethods.checkTableSize(amountOfRows));
     }
 
     /**

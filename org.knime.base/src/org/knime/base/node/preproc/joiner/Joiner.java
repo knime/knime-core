@@ -567,13 +567,10 @@ public final class Joiner {
         joinCont.close();
 
         // numbers are needed to report progress more precisely
-        int totalNumJoins = joinCont.getRowCount();
-        int numMatches = null != joinCont.getMatches()
-        ? joinCont.getMatches().getRowCount() : 0;
-        int numLeftOuter = null != joinCont.getLeftOuter()
-        ? joinCont.getLeftOuter().getRowCount() : 0;
-        int numRightOuter = null != joinCont.getRightOuter()
-        ? joinCont.getRightOuter().getRowCount() : 0;
+        long totalNumJoins = joinCont.getRowCount();
+        long numMatches = null != joinCont.getMatches() ? joinCont.getMatches().size() : 0;
+        long numLeftOuter = null != joinCont.getLeftOuter() ? joinCont.getLeftOuter().size() : 0;
+        long numRightOuter = null != joinCont.getRightOuter() ? joinCont.getRightOuter().size() : 0;
 
         exec.setMessage("Sort Joined Partitions");
         Comparator<DataRow> joinComp = OutputRow.createRowComparator();
@@ -966,7 +963,7 @@ public final class Joiner {
 
 
             if (m_retainRight && !matchFoundForRightRow && !deferMatch) {
-                int outRowIndex = outputCont.getRowCount();
+                long outRowIndex = outputCont.getRowCount();
                 // add right outer join
                 DataRow outRow = OutputRow.createDataRow(outRowIndex,
                         -1, rightRow.getIndex(),

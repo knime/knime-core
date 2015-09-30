@@ -51,7 +51,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.Random;
 
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.sample.SamplingNodeSettings.SamplingMethods;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -165,8 +165,9 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
      * @return a row filter for sampling according to current settings
      * @throws CanceledExecutionException if exec request canceling
      * @throws InvalidSettingsException if current settings are invalid
+     * @since 3.0
      */
-    protected RowFilter getSamplingRowFilter(final BufferedDataTable in,
+    protected IRowFilter getSamplingRowFilter(final BufferedDataTable in,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             InvalidSettingsException {
         Random rand;
@@ -188,7 +189,7 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
             rowCount = m_settings.count();
         }
 
-        RowFilter rowFilter;
+        IRowFilter rowFilter;
         if (m_settings.samplingMethod().equals(SamplingMethods.Random)) {
             rowFilter = Sampler.createSampleFilter(in, rowCount, rand, exec);
         } else if (m_settings.samplingMethod().equals(

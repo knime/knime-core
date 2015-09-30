@@ -92,7 +92,7 @@ public class AddEmptyRowsNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable in = inData[0];
-        int nrRowsToAdd;
+        long nrRowsToAdd;
         if (m_config.isAtLeastMode()) {
             if (in.getRowCount() < m_config.getRowCount()) {
                 nrRowsToAdd = m_config.getRowCount() - in.getRowCount();
@@ -139,7 +139,7 @@ public class AddEmptyRowsNodeModel extends NodeModel {
     }
 
     private BufferedDataTable createNewRowsTable(final DataTableSpec inSpec,
-            final int rowCount, final ExecutionContext subExec)
+            final long rowCount, final ExecutionContext subExec)
             throws CanceledExecutionException {
         DataCell[] cells = new DataCell[inSpec.getNumColumns()];
         for (int c = 0; c < cells.length; c++) {
@@ -167,7 +167,7 @@ public class AddEmptyRowsNodeModel extends NodeModel {
             }
         }
         BufferedDataContainer cont = subExec.createDataContainer(inSpec);
-        for (int i = 0; i < rowCount; i++) {
+        for (long i = 0; i < rowCount; i++) {
             RowKey key = new RowKey(m_config.getNewRowKeyPrefix() + i);
             subExec.setProgress(i / (double)rowCount, "Creating row \"" + key
                     + "\", " + i + "/" + rowCount);

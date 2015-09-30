@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,93 +44,71 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.02.2008 (ohl): created
+ *   25.09.2015 (thor): created
  */
 package org.knime.base.node.preproc.filter.row.rowfilter;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Filters rows with a missing value in a certain column.<br>
- * NOTE: Before the filter instance is applied it must be configured to find the
- * column index to the specified column name.
+ * Used by the {@link org.knime.base.node.preproc.filter.row.RowFilterIterator}
+ * to determine whether a row should be filtered or not. <br>
+ * New row filter implementations MUST also modify the
+ * {@link org.knime.base.node.preproc.filter.row.rowfilter.RowFilterFactory} in
+ * order to get load and save work.
  *
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
+ * @since 3.0
  */
-public class MissingValueRowFilter extends AttrValueRowFilter {
+public abstract class AbstractRowFilter implements Cloneable, IRowFilter {
     /**
-     * Creates a row filter that includes or excludes (depending on the
-     * corresponding argument) rows with a missing value in the specified
-     * column.
-     *
-     *
-     * @param colName the column name of the cell to match
-     * @param include if true, matching rows are included, if false, they are
-     *            excluded.
-     *
+     * {@inheritDoc}
      */
-    public MissingValueRowFilter(final String colName, final boolean include) {
-        this(colName, include, false);
-    }
-    /**
-     * Creates a row filter that includes or excludes (depending on the
-     * corresponding argument) rows with a missing value in the specified
-     * column.
-     *
-     *
-     * @param colName the column name of the cell to match
-     * @param include if true, matching rows are included, if false, they are
-     *            excluded.
-     * @param deepFiltering if true, the filtering is applied to the elements of a collection cell, if false,
-     *            the filter is applied to the collection cell as a whole
-     * @since 2.10
-     *
-     */
-    public MissingValueRowFilter(final String colName, final boolean include, final boolean deepFiltering) {
-        super(colName, include, deepFiltering);
-    }
-
-    /**
-     * Don't use created filter without loading settings before.
-     */
-    MissingValueRowFilter() {
-        super();
-    }
+    @Override
+    public abstract void loadSettingsFrom(final NodeSettingsRO cfg)
+            throws InvalidSettingsException;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
-        // if this goes off, configure was probably not called after
-        // loading filter's settings
-        assert getColIdx() >= 0;
+    public final void saveSettingsTo(final NodeSettingsWO cfg) {
+        RowFilterFactory.prepareConfigFor(cfg, this);
+        saveSettings(cfg);
+    }
 
-        DataCell theCell = row.getCell(getColIdx());
-        boolean match = matches(theCell);
-        if (!match && getDeepFiltering() && (theCell instanceof CollectionDataValue)) {
-            match = performDeepFiltering((CollectionDataValue) theCell);
+    /**
+     * Do not call this function - rather call
+     * {@link #saveSettingsTo(NodeSettingsWO)}. This is just a helper function
+     * for {@link #saveSettingsTo(NodeSettingsWO)}. Row filters implement this
+     * and do the work usually done in {@link #saveSettingsTo(NodeSettingsWO)}.
+     * The passed config is prepared in a way that the factory will be able to
+     * recreate this object from it.
+     *
+     * @param cfg object to add the current internal settings to
+     */
+    protected abstract void saveSettings(final NodeSettingsWO cfg);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract DataTableSpec configure(final DataTableSpec inSpec)
+            throws InvalidSettingsException;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object clone() {
+        try {
+            return super.clone();
+        } catch (CloneNotSupportedException cnse) {
+            // this shouldn't happen, since we are cloneable
+            throw new InternalError();
         }
-        return ((getInclude() && match) || (!getInclude() && !match));
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean matches(final DataCell theCell) {
-        return theCell.isMissing();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return "MissingValueFilter: ColName='" + getColName()
-                + (getInclude() ? " includes" : "excludes") + " rows.";
-    }
-
 }

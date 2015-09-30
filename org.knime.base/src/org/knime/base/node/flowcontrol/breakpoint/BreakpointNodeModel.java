@@ -116,8 +116,7 @@ implements InactiveBranchConsumer {
         }
         if (m_choice.getStringValue().equals(BreakpointNodeDialog.EMTPYTABLE)) {
             if (inData[0] instanceof BufferedDataTable) {
-                int rowCount = ((BufferedDataTable)inData[0]).getRowCount();
-                if (rowCount == 0) {
+                if (((BufferedDataTable)inData[0]).size() == 0) {
                     throw new Exception("Breakpoint halted "
                             + "execution (table is empty)");
                 }

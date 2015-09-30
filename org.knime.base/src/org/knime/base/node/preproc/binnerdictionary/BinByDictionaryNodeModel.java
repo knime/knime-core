@@ -191,8 +191,8 @@ final class BinByDictionaryNodeModel extends NodeModel {
             lowerBoundComparator, isLowerBoundInclusive,
             upperBoundComparator, isUpperBoundInclusive, c.isUseBinarySearch());
         if (port1Table != null) { // in execute
-            int rowCount = port1Table.getRowCount();
-            int current = 1;
+            long rowCount = port1Table.size();
+            long current = 1;
             for (DataRow r : port1Table) {
                 DataCell lower = lowerBoundColIndex < 0 ? null
                         : r.getCell(lowerBoundColIndex);

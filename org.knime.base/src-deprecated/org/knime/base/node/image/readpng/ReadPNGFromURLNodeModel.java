@@ -49,7 +49,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -93,8 +93,7 @@ final class ReadPNGFromURLNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        ColumnRearranger rearranger = createColumnRearranger(
-                inSpecs[0], new AtomicInteger());
+        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0], new AtomicLong());
         DataTableSpec out = rearranger.createSpec();
         return new DataTableSpec[] {out};
     }
@@ -104,12 +103,12 @@ final class ReadPNGFromURLNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTableSpec spec = inData[0].getDataTableSpec();
-        AtomicInteger failCount = new AtomicInteger();
+        AtomicLong failCount = new AtomicLong();
         ColumnRearranger rearranger = createColumnRearranger(spec, failCount);
         BufferedDataTable out = exec.createColumnRearrangeTable(
                 inData[0], rearranger, exec);
-        int rowCount = out.getRowCount();
-        int fail = failCount.get();
+        long rowCount = out.size();
+        long fail = failCount.get();
         if (rowCount > 0 && rowCount == fail) {
             throw new Exception("None of the URLs could be read "
                     + "as PNG (see log for details)");
@@ -121,7 +120,7 @@ final class ReadPNGFromURLNodeModel extends NodeModel {
     }
 
     private ColumnRearranger createColumnRearranger(
-            final DataTableSpec in, final AtomicInteger failCounter)
+            final DataTableSpec in, final AtomicLong failCounter)
         throws InvalidSettingsException {
         String colName = m_config.getUrlColName();
         if (colName == null) {

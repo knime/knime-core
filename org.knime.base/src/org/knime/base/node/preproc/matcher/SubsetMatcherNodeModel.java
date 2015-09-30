@@ -45,6 +45,19 @@
 
 package org.knime.base.node.preproc.matcher;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -74,19 +87,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.util.ThreadPool;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
@@ -121,13 +121,13 @@ public class SubsetMatcherNodeModel extends NodeModel {
     private BufferedDataContainer m_dc;
 
     /**The row id variable that is used in the analysis threads.*/
-    private final AtomicInteger m_rowId = new AtomicInteger(0);
+    private final AtomicLong m_rowId = new AtomicLong(0);
 
     /**The number of skipped rows.*/
-    private final AtomicInteger m_skipCounter = new AtomicInteger(0);
+    private final AtomicLong m_skipCounter = new AtomicLong(0);
 
     /**The number of processed sets.*/
-    private final AtomicInteger m_setCounter = new AtomicInteger(0);
+    private final AtomicLong m_setCounter = new AtomicLong(0);
 
     /**Constructor for class ItemSetMatcherNodeModel.*/
     public SubsetMatcherNodeModel() {
@@ -266,13 +266,13 @@ public class SubsetMatcherNodeModel extends NodeModel {
                     subsetTableSpec.getColumnSpec(subsetColIdx), appendSetCol);
         m_dc = exec.createDataContainer(resultSpec);
 
-        final int subsetRowCount = subsetTable.getRowCount();
+        final long subsetRowCount = subsetTable.size();
         if (subsetRowCount == 0) {
             setWarningMessage("Empty subset table found");
             m_dc.close();
             return new BufferedDataTable[] {m_dc.getTable()};
         }
-        final int setRowCount = setTable.getRowCount();
+        final long setRowCount = setTable.size();
         if (setRowCount == 0) {
             setWarningMessage("Empty set table found");
             m_dc.close();
@@ -348,7 +348,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
 
 
     private Runnable createRunnable(final ExecutionMonitor exec,
-            final int noOfSets, final DataCell setIDCell,
+            final long noOfSets, final DataCell setIDCell,
             final CollectionDataValue setCell, final boolean appendSetCol,
             final Comparator<DataCell> comparator,
             final SubsetMatcher[] sortedMatcher, final int maxMismatches) {
@@ -358,8 +358,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
                 try {
                     //check cancel prior updating the global counter!!!
                     exec.checkCanceled();
-                    final int transCounter =
-                        m_setCounter.incrementAndGet();
+                    final long transCounter = m_setCounter.incrementAndGet();
                     exec.setMessage(setIDCell.toString() + " ("
                             + transCounter + " of "
                             + noOfSets + ")");
@@ -452,11 +451,11 @@ public class SubsetMatcherNodeModel extends NodeModel {
     throws CanceledExecutionException {
         final Map<DataCell, SubsetMatcher> map =
             new HashMap<DataCell, SubsetMatcher>();
-        final int rowCount = table.getRowCount();
+        final long rowCount = table.size();
         if (rowCount < 1) {
             return new SubsetMatcher[0];
         }
-        int counter = 1;
+        long counter = 1;
         for (final DataRow row : table) {
             exec.checkCanceled();
             exec.setProgress(counter / (double) rowCount,

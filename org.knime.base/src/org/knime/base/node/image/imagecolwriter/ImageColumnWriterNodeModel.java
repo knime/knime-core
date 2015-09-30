@@ -148,7 +148,7 @@ public class ImageColumnWriterNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         CheckUtils.checkDestinationDirectory(m_directory.getStringValue());
 
-        int max = inData[0].getRowCount();
+        final long max = inData[0].size();
 
         URL remoteBaseUrl = FileUtil.toURL(m_directory.getStringValue());
         Path localDir = FileUtil.resolveToPath(remoteBaseUrl);
@@ -157,8 +157,8 @@ public class ImageColumnWriterNodeModel extends NodeModel {
                 inData[0].getDataTableSpec().findColumnIndex(
                         m_imageColumn.getStringValue());
 
-        int count = 0;
-        int missingCellCount = 0;
+        long count = 0;
+        long missingCellCount = 0;
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
             exec.setProgress(count++ / (double) max);

@@ -789,7 +789,7 @@ public class CreateBitVectorNodeModel extends NodeModel {
             subExec = exec;
         }
         final BufferedDataTable out = exec.createColumnRearrangeTable(data, c, subExec);
-        if (!factory.wasSuccessful() && data.getRowCount() > 0) {
+        if (!factory.wasSuccessful() && data.size() > 0) {
             final String errorMessage = factory.getNoOfPrintedErrors() + " errors found. Last message: "
                     + factory.getLastErrorMessage() + ". See log file for details on all errors.";
             setWarningMessage(errorMessage);
@@ -856,8 +856,8 @@ public class CreateBitVectorNodeModel extends NodeModel {
         final int[] colIndices)
             throws CanceledExecutionException {
         double[] meanValues = new double[input.getDataTableSpec().getNumColumns()];
-        int nrOfRows = 0;
-        final int rowCount = input.getRowCount();
+        long nrOfRows = 0;
+        final long rowCount = input.size();
         for (DataRow row : input) {
             exec.setProgress(nrOfRows / (double) rowCount, "Computing mean value. Processing row "
                     + nrOfRows + " of " + rowCount);
@@ -885,8 +885,8 @@ public class CreateBitVectorNodeModel extends NodeModel {
             throws CanceledExecutionException {
         int maxPos = Integer.MIN_VALUE;
         int cellIdx = data.getDataTableSpec().findColumnIndex(m_singleColumn.getStringValue());
-        int nrRows = data.getRowCount();
-        int currRow = 0;
+        long nrRows = data.size();
+        long currRow = 0;
         for (DataRow row : data) {
             currRow++;
             exec.setProgress((double)currRow / (double)nrRows, "processing row " + currRow + " of " + nrRows);
@@ -973,8 +973,8 @@ public class CreateBitVectorNodeModel extends NodeModel {
                 scanExec.setMessage("preparing");
                 final List<String> elementNames = new ArrayList<>();
                 idxMap = new HashMap<>();
-                int nrRows = data.getRowCount();
-                int currRow = 0;
+                long nrRows = data.size();
+                long currRow = 0;
                 for (DataRow row : data) {
 
                     currRow++;

@@ -78,9 +78,9 @@ import javax.swing.event.DocumentListener;
 
 import org.knime.base.node.preproc.filter.row.rowfilter.AttrValueRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.ColValFilterOldObsolete;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.MissingValueRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RangeRowFilter;
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.StringCompareRowFilter;
 import org.knime.base.util.WildcardMatcher;
 import org.knime.core.data.DataCell;
@@ -682,7 +682,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
      * {@inheritDoc}
      */
     @Override
-    public void loadSettingsFromFilter(final RowFilter filter)
+    public void loadSettingsFromFilter(final IRowFilter filter)
             throws InvalidSettingsException {
         // accept ColValFilterOldObsolete for backward compatibility
         if (filter instanceof ColValFilterOldObsolete) {
@@ -773,7 +773,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
      * {@inheritDoc}
      */
     @Override
-    public RowFilter createFilter(final boolean include)
+    public IRowFilter createFilter(final boolean include)
             throws InvalidSettingsException {
         if (hasErrors()) {
             throw new InvalidSettingsException(getErrMsg());

@@ -54,8 +54,8 @@ import org.knime.base.node.mine.mds.distances.DistanceManager;
 import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
 import org.knime.base.node.mine.mds.distances.RowDistanceManager;
 import org.knime.base.node.preproc.filter.row.RowFilterTable;
+import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.MissingCellRowFilter;
-import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.RowIterator;
@@ -143,13 +143,13 @@ public class MDSManager {
         this(dimension, DistanceManagerFactory.createDistanceManager(
                 distance, fuzzy), fuzzy, inData, exec);
     }
-    
+
     /**
      * Creates a new instance of <code>MDSManager</code> with the given
      * dimension, distance metric (manager), and in data to use. If the
      * dimension is less or equals zero a <code>IllegalArgumentException</code>
      * is thrown. The fuzzy flag is set to <code>false</code> be default.
-     * 
+     *
      * @param dimension The output MDS dimension
      * @param distManager The distance metric (manager) to use.
      * @param inData The in data to use.
@@ -164,11 +164,11 @@ public class MDSManager {
     throws IllegalArgumentException {
         this(dimension, distManager, false, inData, exec);
     }
-    
+
     /**
      * Creates a new instance of <code>MDSManager</code> with the given
-     * dimension, distance metric (manager), fuzzy flag and in data to use. 
-     * If the dimension is less or equals zero a 
+     * dimension, distance metric (manager), fuzzy flag and in data to use.
+     * If the dimension is less or equals zero a
      * <code>IllegalArgumentException</code> is thrown.
      *
      * @param dimension The output MDS dimension
@@ -195,7 +195,7 @@ public class MDSManager {
                 DistanceManagerFactory.EUCLIDEAN_DIST, fuzzy);
 
 
-        RowFilter rf = new MissingCellRowFilter();
+        IRowFilter rf = new MissingCellRowFilter();
         m_inData = new RowFilterTable(inData, rf);
         m_exec = exec.createSubExecutionContext(0.9);
 

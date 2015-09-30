@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -64,7 +64,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Creates a model that caches the entire input data.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class CacheNodeModel extends NodeModel {
@@ -89,8 +89,8 @@ final class CacheNodeModel extends NodeModel {
         // slow.
         BufferedDataContainer con = exec.createDataContainer(data[0]
                 .getDataTableSpec());
-        final int totalCount = data[0].getRowCount();
-        int row = 1;
+        final long totalCount = data[0].size();
+        long row = 1;
         try {
             for (RowIterator it = data[0].iterator(); it.hasNext(); row++) {
                 DataRow next = it.next();

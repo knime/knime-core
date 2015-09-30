@@ -62,7 +62,7 @@ public class NegRowFilter extends RowFilter {
 
     private static final String CFG_INFILTER = "ConfigFilterIn";
 
-    private RowFilter m_inFilter;
+    private IRowFilter m_inFilter;
 
     /**
      * Default constructor of the NegFilter. Don't use it until you've loaded
@@ -76,20 +76,25 @@ public class NegRowFilter extends RowFilter {
      * Creates a new row filter negating the match results of the input filter.
      *
      * @param inFilter the input filter to negate
+     * @deprecated use {@link #NegRowFilter(IRowFilter)} instead
      */
+    @Deprecated
     public NegRowFilter(final RowFilter inFilter) {
+        this((IRowFilter) inFilter);
+    }
+
+    /**
+     * Creates a new row filter negating the match results of the input filter.
+     *
+     * @param inFilter the input filter to negate
+     * @since 3.0
+     */
+    public NegRowFilter(final IRowFilter inFilter) {
         if (inFilter == null) {
             throw new NullPointerException("Can't use null filter as "
                     + "input row filter.");
         }
         m_inFilter = inFilter;
-    }
-
-    /**
-     * @return the row filter connected to the input of this
-     */
-    public RowFilter getInput() {
-        return m_inFilter;
     }
 
     /**
@@ -168,7 +173,7 @@ public class NegRowFilter extends RowFilter {
     public Object clone() {
         NegRowFilter nrf = (NegRowFilter)super.clone();
         if (m_inFilter != null) {
-            nrf.m_inFilter = (RowFilter)m_inFilter.clone();
+            nrf.m_inFilter = (IRowFilter)m_inFilter.clone();
         }
         return nrf;
     }

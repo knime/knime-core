@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,10 +41,10 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   29.06.2005 (ohl): created
+ *   29.09.2015 (thor): created
  */
 package org.knime.base.node.preproc.filter.row.rowfilter;
 
@@ -52,29 +53,16 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.ConvenienceMethods;
 
 /**
- * Used by the {@link org.knime.base.node.preproc.filter.row.RowFilterIterator}
- * to determine whether a row should be filtered or not. <br>
- * New row filter implementations MUST also modify the
- * {@link org.knime.base.node.preproc.filter.row.rowfilter.RowFilterFactory} in
- * order to get load and save work.
+ * Internal interface used by row filter nodes. Not to be used by other plug-ins!
  *
- * @author Peter Ohl, University of Konstanz
- * @deprecated extend {@link AbstractRowFilter} instead which supports more than {@link Integer#MAX_VALUE} rows
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @noimplement This interface is not intended to be implemented by clients, extend {@link AbstractRowFilter} instead
+ * @noextend This interface is not intended to be extended by clients.
+ * @since 3.0
  */
-@Deprecated
-public abstract class RowFilter implements IRowFilter {
-    /**
-     * {@inheritDoc}
-     * @since 3.0
-     */
-    @Override
-    public boolean matches(final DataRow row, final long rowIndex) throws EndOfTableException, IncludeFromNowOn {
-        return matches(row, ConvenienceMethods.checkTableSize(rowIndex));
-    }
-
+public interface IRowFilter extends Cloneable {
     /**
      * Return <code>true</code> if the specified row matches the criteria set in the filter. Can throw a
      * {@link EndOfTableException} if the filter can tell that no more rows of the table will be able to fulfill the
@@ -84,59 +72,48 @@ public abstract class RowFilter implements IRowFilter {
      * @param rowIndex the row index of the passed row in the original table
      * @return <code>true</code> if the row matches the criteria set in the filter, <code>false</code> if not
      * @throws EndOfTableException if there is no chance that any of the rows coming (including the current
-     *             <code>rowIndex</code>) will fulfill the criteria, thus no further row in the original table will be a
-     *             match to this filter. (In general this is hard to tell, but a row number filter can certainly use
-     *             it.) If the exception is received the row filter table iterator will flag an end of table.
+     *             <code>rowIndex</code>) will fulfill the criteria, thus no further row in the original table will
+     *             be a match to this filter. (In general this is hard to tell, but a row number filter can
+     *             certainly use it.) If the exception is received the row filter table iterator will flag an end of
+     *             table.
      * @throws IncludeFromNowOn if the current and all following rows from now on are to be included into the result
      *             table
      */
-    public abstract boolean matches(DataRow row, int rowIndex) throws EndOfTableException, IncludeFromNowOn;
+    boolean matches(DataRow row, long rowIndex) throws EndOfTableException, IncludeFromNowOn;
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public abstract void loadSettingsFrom(final NodeSettingsRO cfg)
-            throws InvalidSettingsException;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public final void saveSettingsTo(final NodeSettingsWO cfg) {
-        RowFilterFactory.prepareConfigFor(cfg, this);
-        saveSettings(cfg);
-    }
-
-    /**
-     * Do not call this function - rather call
-     * {@link #saveSettingsTo(NodeSettingsWO)}. This is just a helper function
-     * for {@link #saveSettingsTo(NodeSettingsWO)}. Row filters implement this
-     * and do the work usually done in {@link #saveSettingsTo(NodeSettingsWO)}.
-     * The passed config is prepared in a way that the factory will be able to
-     * recreate this object from it.
+     * Load your internal settings from the configuration object. Throw an exception if the config is
+     * invalid/incorrect/inconsistent.
      *
-     * @param cfg object to add the current internal settings to
+     * @param cfg the object holding the settings to load
+     * @throws InvalidSettingsException if cfg contains invalid/incorrect/inconsistent settings
      */
-    protected abstract void saveSettings(final NodeSettingsWO cfg);
+    void loadSettingsFrom(NodeSettingsRO cfg) throws InvalidSettingsException;
+
+    /**
+     * Save your internal settings into the specified configuration object. Passing the object then to the
+     * loadSettingsFrom method should flawlessly work.
+     *
+     * @param cfg the object to add the current internal settings to
+     */
+    void saveSettingsTo(NodeSettingsWO cfg);
+
+    /**
+     * Called when a new {@link DataTableSpec} is available. The filters can grab whatever they need from that new
+     * config (e.g. a comparator), should do some error checking (e.g. col number against number of columns) - throw an
+     * {@link InvalidSettingsException} if settings are invalid, and can return a new table spec according to their
+     * settings - if they can. If a filter cannot tell how it would modify the spec, it should return null. (Returned
+     * table specs are not used right now anyway.)
+     *
+     * @param inSpec the new spec propagated into the row filter node. Could be null or empty!
+     * @return a new table spec, if you can
+     * @throws InvalidSettingsException if the settings in the row filter are not compatible with the table spec coming
+     *             in
+     */
+    DataTableSpec configure(DataTableSpec inSpec) throws InvalidSettingsException;
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    public abstract DataTableSpec configure(final DataTableSpec inSpec)
-            throws InvalidSettingsException;
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object clone() {
-        try {
-            return super.clone();
-        } catch (CloneNotSupportedException cnse) {
-            // this shouldn't happen, since we are cloneable
-            throw new InternalError();
-        }
-    }
+    Object clone();
 }
