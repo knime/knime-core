@@ -79,6 +79,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeFactory;
 
@@ -368,7 +369,7 @@ public class JoinerJoinAnyTest {
      * @return the data as an integer array
      */
     private Integer[][] toIntegerArray(final BufferedDataTable dataTable) {
-        int rowCount = dataTable.getRowCount();
+        int rowCount = ConvenienceMethods.checkTableSize(dataTable.size());
         int colCount = dataTable.getDataTableSpec().getNumColumns();
         Integer[][] data = new Integer[rowCount][colCount];
         RowIterator iter = dataTable.iterator();
