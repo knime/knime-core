@@ -2,7 +2,7 @@ body.origin {
      
      font-family: 'Roboto',sans-serif;
 	 font-size: 0.75em;
-	 color: #606060;
+	 color: #3E3A39;
 	 margin: 0px;
 	 padding: 0px;
 	 height: 100%;
@@ -16,7 +16,7 @@ body {
      
      font-family: 'Roboto',sans-serif;
 	 font-size: 0.75em;
-	 color: #606060;
+	 color: #3E3A39;
 	 margin: 0px;
 	 padding: 0px;
 	 height: 80%;
@@ -419,7 +419,7 @@ div.container {
 tt, pre {
 	font-family: "Roboto",sans-serif; 
 	font-size: 1em;
-	color: #606060;
+	color: #3E3A39;
 }
 
 .node-content-div p {
@@ -547,7 +547,7 @@ div.group-description {
 
 
 div#origin-bundle {
-	color: #606060;
+	color: #3E3A39;
     font-size: 83.03%;
     margin-top: 2em;
     padding-top: 0.5em;
@@ -562,7 +562,7 @@ span#source_info {
 
 span#node_provider {
 	font-style: italic;
-	color: #606060;
+	color: #3E3A39;
 }
 
 /* Styles for Header Div*/

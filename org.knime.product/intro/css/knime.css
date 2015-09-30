@@ -4,7 +4,7 @@
 
 body {
 	 font-size: 0.75em;
-	 color: #606060;
+	 color: #3E3A39;
 	 margin: 0px;
 	 padding: 0px;
 	 width: 100%;
@@ -155,7 +155,7 @@ div.floating-link {
 .floating-link  a {
     font-weight: bold;
     font-size: 1em !important;
-    color: #7D7D7D;
+    color: #3E3A39;
     display:block;
     vertical-align: middle;
     padding-top: 9px;
@@ -163,11 +163,11 @@ div.floating-link {
 }
 
 .floating-link > a:link {
-	color: #7D7D7D;
+	color: #3E3A39;
 }
 
 .floating-link > a:visited {
-	color: #7D7D7D;
+	color: #3E3A39;
 }
 
 .floating-link > a:hover {
