@@ -20,9 +20,6 @@
         For a more general description and suggested default parameters see the node description of the classification 
         <i>Tree Ensemble Learner</i>.
       </p>
-      <p><b>Note:</b> The node is currently under development; models used with the current version are 
-        likely not backward compatible.
-      </p>
     </intro>
     <tab name="Attribute Selection">
       <option name="Target Column">

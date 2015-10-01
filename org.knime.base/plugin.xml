@@ -145,8 +145,8 @@
       <category
             after="row"
             icon="icons/16x16/matrix.png"
-            level-id="matrix"
-            name="Matrix"
+            level-id="table"
+            name="Table"
             path="/manipulation"/>
       <category
             after="dtree"
@@ -199,7 +199,7 @@
             path="/mining/modeleval">
       </category>
       <category
-            after="mining"
+            after="scripting"
             description="miscellaneous nodes"
             icon="icons/16x16/category_misc.png"
             level-id="misc"
@@ -210,7 +210,7 @@
             icon="icons/missing.gif"
             level-id="java-snippet"
             name="Java Snippet"
-            path="/misc"/>
+            path="/scripting"/>
       <category
             icon="icons/missing.gif"
             level-id="column-split+combine"
@@ -275,10 +275,23 @@
             path="/">
       </category>
       <category
+            icon="icons/16x16/category_automatization.png"
+            level-id="automation"
+            name="Automation"
+            path="/flowcontrol">
+      </category>
+      <category
+            icon="icons/16x16/category_quickform.png"
+            level-id="quickforms"
+            name="Quickforms"
+            path="/flowcontrol">
+      </category>
+      <category
             icon="icons/16x16/variables.png"
             level-id="variables"
             name="Variables"
-            path="/flowcontrol">
+            path="/flowcontrol"
+            after="quickforms">
       </category>
       <category
             after="variables"
@@ -294,13 +307,6 @@
             icon="icons/16x16/switches.png"
             level-id="switches"
             name="Switches"
-            path="/flowcontrol">
-      </category>
-      <category
-            description="Nodes for waiting"
-            icon="icons/16x16/sleep.png"
-            level-id="wait"
-            name="Wait"
             path="/flowcontrol">
       </category>
       <category
@@ -354,15 +360,6 @@
             path="/">
       </category>
       <category
-            after="_last_"
-            description="Uncategorized nodes"
-            icon="icons/16x16/category_uncategorized.png"
-            level-id="uncategorized"
-            locked="false"
-            name="Uncategorized"
-            path="/">
-      </category>
-      <category
             icon="icons/missing.gif"
             level-id="mining-pmml"
             locked="true"
@@ -399,6 +396,47 @@
             name="Utility"
             path="/database">
       </category>            
+      <category
+            icon="icons/16x16/category_structured_data.png"
+            level-id="applications"
+            locked="true"
+            name="Applications"
+            after="mining"
+            path="/">
+      </category>            
+      <category
+            icon="icons/16x16/category_social_media.png"
+            level-id="social-media"
+            locked="true"
+            name="Social Media"
+            after="applications"
+            path="/">
+      </category>            
+      <category
+            icon="icons/16x16/category_structured_data.png"
+            level-id="struct-data"
+            locked="true"
+            name="Structured Data"
+            after="social-media"
+            path="/">
+      </category>            
+      <category
+            icon="icons/16x16/category_scripting.png"
+            level-id="scripting"
+            locked="true"
+            name="Scripting"
+            after="struct-data"
+            path="/">
+      </category>            
+      <category
+            after="_last_"
+            description="Uncategorized nodes"
+            icon="icons/16x16/category_uncategorized.png"
+            level-id="uncategorized"
+            locked="false"
+            name="Uncategorized"
+            path="/">
+      </category>
    </extension>
             
      <extension
@@ -493,10 +531,6 @@
             category-path="/mining/nn/pnn"
             factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"
             id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"/-->
-      <node
-            factory-class="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
-            category-path="/io/io-other"
-            id="org.knime.base.node.util.sampledata.SampleDataNodeFactory"/>
       <node
             category-path="/io/write"
             factory-class="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"
@@ -653,19 +687,22 @@
             factory-class="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"
             id="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"/-->
       <node
-            after="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
-            category-path="/io/write"
-            factory-class="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"
-            id="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"/>
-      <node
             after="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
             category-path="/io/read"
             factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"
             id="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
       <node
-            category-path="/manipulation/matrix"
+            category-path="/manipulation/table"
             factory-class="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"
             id="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"/>
+      <node
+            category-path="/manipulation/table"
+            factory-class="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory"
+            id="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory" />
+      <node
+            category-path="/manipulation/table"
+            factory-class="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"
+            id="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"/>
       <node
             category-path="/mining/dtree"
             factory-class="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeFactory"
@@ -1119,6 +1156,23 @@
             id="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory">
       </node>
       <node
+            after="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
+            category-path="/io/write"
+            factory-class="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"
+            id="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"/>
+      <node
+            after="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"
+            category-path="/io/write"
+            factory-class="org.knime.base.node.image.writeimage.WriteImageNodeFactory"
+            id="org.knime.base.node.image.writemage.WriteImageNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.image.writemage.WriteImageNodeFactory"
+            category-path="/io/write"
+            factory-class="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory"
+            id="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory">
+      </node>
+      <node
             category-path="/view"
             factory-class="org.knime.base.node.viz.liftchart.LiftChartNodeFactory"
             id="org.knime.base.node.viz.liftchart.LiftChartNodeFactory">
@@ -1261,11 +1315,6 @@
             id="org.knime.base.node.flowcontrol.breakpoint.BreakpointNodeFactory">
       </node>
       <node
-            category-path="/flowcontrol/wait"
-            factory-class="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory"
-            id="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory">
-      </node>
-      <node
             after="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"
             category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.unpivot2.Unpivot2NodeFactory"
@@ -1392,11 +1441,6 @@
             id="org.knime.base.node.preproc.columntogrid2.ColumnToGrid2NodeFactory">
       </node>
       <node
-            category-path="/io/io-other"
-            factory-class="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"
-            id="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory">
-      </node>
-      <node
             category-path="/manipulation/row/row-other"
             factory-class="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory"
             id="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory">
@@ -1406,12 +1450,6 @@
             factory-class="org.knime.base.node.preproc.columnheaderinsert.ColumnHeaderInsertNodeFactory"
             id="org.knime.base.node.preproc.columnheaderinsert.ColumnHeaderInsertNodeFactory"
             after="org.knime.base.node.preproc.columnheaderextract.ColumnHeaderExtractorNodeFactory">
-      </node>
-      <node
-            after="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
-            category-path="/io/io-other"
-            factory-class="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory"
-            id="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory">
       </node>
       <node
             category-path="/manipulation/row/row-other"
@@ -1434,24 +1472,52 @@
             id="org.knime.base.node.preproc.autobinner.apply.AutoBinnerApplyNodeFactory">
       </node>        
       <node
-            category-path="/io/io-other"
-            factory-class="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory"
-            id="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory">
-      </node>
-      <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.LoopEndJoinNodeFactory"
             id="org.knime.base.node.meta.looper.LoopEndJoinNodeFactory">
       </node>  
       <node
-            category-path="/io/io-other"
+            category-path="/io/read"
             factory-class="org.knime.base.node.io.listfiles2.ListFilesNodeFactory"
             id="org.knime.base.node.io.listfiles2.ListFilesNodeFactory">
       </node>
       <node
-            category-path="/misc"
+            category-path="/io/io-other"
+            factory-class="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory"
+            id="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.io.tablecreator.TableCreator2NodeFactory"
+            factory-class="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
+            category-path="/io/io-other"
+            id="org.knime.base.node.util.sampledata.SampleDataNodeFactory"/>
+      <node
+            after="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
+            category-path="/io/io-other"
+            factory-class="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory"
+            id="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory"/>
+      <node
+            after="org.knime.base.node.preproc.createtablestructure.CreateTableStructureNodeFactory"
+            category-path="/io/io-other"
             factory-class="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"
-            id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory">
+            id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"/>
+      <node
+            after="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"
+            category-path="/io/io-other"
+            factory-class="org.knime.base.node.util.sendmail.SendMailNodeFactory"
+            id="org.knime.base.node.util.sendmail.SendMailNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.util.sendmail.SendMailNodeFactory"
+            category-path="/io/io-other"
+            factory-class="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"
+            id="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"
+            category-path="/io/io-other"
+            factory-class="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory"
+            id="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory">
       </node>
       <node
             category-path="/manipulation/pmml"
@@ -1462,16 +1528,6 @@
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.normalize.NormalizerDeNodeFactory"
             id="org.knime.base.node.preproc.normalize.NormalizerDeNodeFactory">
-      </node>
-      <node
-            category-path="/io/io-other"
-            factory-class="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory"
-            id="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory">
-      </node>
-      <node
-            category-path="/io/io-other"
-            factory-class="org.knime.base.node.image.writeimage.WriteImageNodeFactory"
-            id="org.knime.base.node.image.writemage.WriteImageNodeFactory">
       </node>
       <node
             category-path="/view/property"
@@ -1520,16 +1576,6 @@
             after="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory">
       </node>
       <node
-            category-path="/misc"
-            factory-class="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory"
-            id="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory">
-      </node>
-      <node
-            category-path="/misc"
-            factory-class="org.knime.base.node.util.sendmail.SendMailNodeFactory"
-            id="org.knime.base.node.util.sendmail.SendMailNodeFactory">
-      </node>
-      <node
             category-path="/manipulation/column/"
             factory-class="org.knime.base.node.preproc.datavalidator.DataValidatorNodeFactory"
             id="org.knime.base.node.preproc.datavalidator.DataValidatorNodeFactory">
@@ -1539,11 +1585,6 @@
             factory-class="org.knime.base.node.preproc.datavalidator.DataValidatorSpecNodeFactory"
             id="org.knime.base.node.preproc.datavalidator.DataValidatorSpecNodeFactory">
       </node>
-      <node
-            category-path="/misc"
-            factory-class="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"
-            id="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory">
-      </node>      
       <node
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.util.mergevariables.MergeVariablesNodeFactory"
@@ -1616,17 +1657,28 @@
             factory-class="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory"
             id="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory">
       </node>      
-      <!-- new ones -->
       <node
-            after="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"
-            category-path="/io/io-other"
-            factory-class="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory"
-            id="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory">
+            category-path="/flowcontrol/automation"
+            factory-class="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory"
+            id="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory">
       </node>
       <node
-            category-path="/misc"
+            after="org.knime.base.node.flowcontrol.sleep.SleepNodeFactory"
+            category-path="/flowcontrol/automation"
             factory-class="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory"
             id="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory"
+            category-path="/flowcontrol/automation"
+            factory-class="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory"
+            id="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory"
+            category-path="/flowcontrol/automation"
+            factory-class="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory"
+            id="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory">
       </node>
       <node
             category-path="/flowcontrol/loopsupport"
@@ -1721,16 +1773,6 @@
       		category-path="/database/database-manipulation" 
       		factory-class="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory" 
       		id="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory"/>
-      <node
-            category-path="/misc"
-            factory-class="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory"
-            id="org.knime.base.node.util.timerinfo.TimerinfoNodeFactory">
-      </node>
-      <node
-            category-path="/misc"
-            factory-class="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory"
-            id="org.knime.base.node.util.globaltimerinfo.GlobalTimerinfoNodeFactory">
-      </node>
    </extension>
    
       

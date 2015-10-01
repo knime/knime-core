@@ -43,9 +43,6 @@
       <p>
         The decision tree construction takes place in main memory (all data and all models are kept in memory).
       </p>
-      <p><b>Note:</b> The node is currently under development; models used with the current version are 
-        likely not backward compatible.
-      </p>
     </intro>
     <tab name="Attribute Selection">
       <option name="Target Column">

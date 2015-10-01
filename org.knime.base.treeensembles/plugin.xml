@@ -4,37 +4,37 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/labs/treeensemble"
+            category-path="/mining/treeensemble"
             factory-class="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory"
-            category-path="/labs/treeensemble"
+            category-path="/mining/treeensemble"
             factory-class="org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory"
-            category-path="/labs/treeensemble"
+            category-path="/mining/treeensemble"
             factory-class="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory"
-            category-path="/labs/treeensemble"
+            category-path="/mining/treeensemble"
             factory-class="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory"
-            category-path="/labs/treeensemble"
+            category-path="/mining/treeensemble"
             factory-class="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory">
       </node>
 <!--      <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
-            category-path="/labs/treeensemble"
+            category-path="/mining/treeensemble"
             factory-class="org.knime.base.node.mine.treeensemble.node.shrinker.TreeEnsembleShrinkerNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.shrinker.TreeEnsembleShrinkerNodeFactory">
       </node>-->
@@ -43,10 +43,12 @@
          point="org.knime.workbench.repository.categories">
       <category
             description="tree ensembles, including random forest"
-            icon="icons/treeensemble.png"
+            icon="icons/missing.gif"
             level-id="treeensemble"
             name="Decision Tree Ensemble"
-            path="/labs">
+            path="/mining"
+            after="dtree"
+            locked="true">
       </category>
    </extension>
    <extension

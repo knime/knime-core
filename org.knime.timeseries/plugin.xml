@@ -4,68 +4,66 @@
    <extension
          point="org.knime.workbench.repository.nodes">
        <node
-            category-path="/timeseries"
+            category-path="/applications/timeseries"
             factory-class="org.knime.timeseries.node.filter.extract.ExtractTimeWindowNodeFactory"
             id="org.knime.timeseries.node.filter.extract.ExtractFromToNodeFactory"/>
       <node
-            category-path="/timeseries"
+            category-path="/applications/timeseries"
             factory-class="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"
             id="org.knime.timeseries.node.movavg.MovingAverageNodeFactory"/>
       <node
-            category-path="/timeseries"
+            category-path="/applications/timeseries"
             factory-class="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory"
             id="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory">
       </node>
       <node
-            category-path="/timeseries"
+            category-path="/applications/timeseries"
             factory-class="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory"
             id="org.knime.timeseries.node.diff.TimeDifferenceNodeFactory">
       </node>
       <node
-            category-path="timeseries"
+            category-path="/applications/timeseries"
             factory-class="org.knime.timeseries.node.generator.DateGeneratorNodeFactory"
             id="org.knime.timeseries.node.generator.DateGeneratorNodeFactory">
       </node>
-            <node
-                  after="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory"
-                  category-path="timeseries"
-                  factory-class="org.knime.timeseries.node.extract.time.TimeFieldExtractorNodeFactory"
-                  id="org.knime.timeseries.node.extract.TimeFieldExtractorNodeFactory">
-      </node>
-            <node
-                  category-path="/timeseries"
-                  factory-class="org.knime.timeseries.node.time2string.Time2StringNodeFactory"
-                  id="org.knime.timeseries.node.time2string.Time2StringNodeFactory">
-            </node>
-            <node
-                  category-path="/timeseries"
-                  factory-class="org.knime.timeseries.node.preset.TimePresetNodeFactory"
-                  id="org.knime.timeseries.node.preset.TimePresetNodeFactory">
-            </node>
-            <node
-                  category-path="/timeseries"
-                  factory-class="org.knime.timeseries.node.mask.MaskTimeNodeFactory"
-                  id="org.knime.timeseries.node.mask.MaskTimeNodeFactory">
-            </node>
-            <node
-                  category-path="timeseries"
-                  factory-class="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory"
-                  id="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory">
-            </node>
-            <node
-                  category-path="/timeseries"
-                  factory-class="org.knime.timeseries.node.movagg.MovingAggregationNodeFactory"
-                  id="org.knime.timeseries.node.movagg.MovingAggregationNodeFactory">
-            </node>
-            
       <node
-            category-path="/timeseries"
+            after="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory"
+            category-path="/applications/timeseries"
+            factory-class="org.knime.timeseries.node.extract.time.TimeFieldExtractorNodeFactory"
+            id="org.knime.timeseries.node.extract.TimeFieldExtractorNodeFactory">
+      </node>
+      <node
+            category-path="/applications/timeseries"
+            factory-class="org.knime.timeseries.node.time2string.Time2StringNodeFactory"
+            id="org.knime.timeseries.node.time2string.Time2StringNodeFactory">
+      </node>
+      <node
+            category-path="/applications/timeseries"
+            factory-class="org.knime.timeseries.node.preset.TimePresetNodeFactory"
+            id="org.knime.timeseries.node.preset.TimePresetNodeFactory">
+      </node>
+      <node
+            category-path="/applications/timeseries"
+            factory-class="org.knime.timeseries.node.mask.MaskTimeNodeFactory"
+            id="org.knime.timeseries.node.mask.MaskTimeNodeFactory">
+      </node>
+      <node
+            category-path="/applications/timeseries"
+            factory-class="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory"
+            id="org.knime.timeseries.node.extract.date.DateFieldExtractorNodeFactory">
+      </node>
+      <node
+            category-path="/applications/timeseries"
+            factory-class="org.knime.timeseries.node.movagg.MovingAggregationNodeFactory"
+            id="org.knime.timeseries.node.movagg.MovingAggregationNodeFactory">
+      </node>
+      <node
+            category-path="/applications/timeseries"
             factory-class="org.knime.timeseries.node.dateshift.DateShiftNodeFactory"
             id="org.knime.timeseries.node.converter.DateShiftNodeFactory">
       </node>
-      
       <!--node deprecated
-            category-path="/timeseries"
+            category-path="/applications/timeseries"
             factory-class="org.knime.timeseries.node.timemissvaluehandler.TimeMissValueNodeFactory"
             id="org.knime.timeseries.node.timemissvaluehandler.TimeMissValueNodeFactory"/-->
    </extension>
@@ -73,25 +71,24 @@
    <extension
          point="org.knime.workbench.repository.categories">
       <category
-            after="mining"
             description="Time Series Utilities"
             icon="icons/category_time.png"
             level-id="timeseries"
             name="Time Series"
-            path="/"/>
+            path="/applications"/>
       <category
             description="Meta Nodes for time series analysis"
             icon="icons/metanode.png"
             level-id="meta"
             locked="true"
             name="Meta Nodes"
-            path="/timeseries">
+            path="/applications/timeseries">
       </category>
    </extension>
    <extension
          point="org.knime.workbench.repository.metanode">
       <PersistedMetaNode
-            category-path="/timeseries/meta"
+            category-path="/applications/timeseries/meta"
             description="Removes the seasonality from the selected time series.  This metanode selects one time series column, optionally one datetime column, and an interval lag. Then it performs x(t) – x(t-interval lag) to correct the seasonality.  Note: It does not find automatically the optimal interval lag. The interval lag has to be supplied by the user. (Optimal Interval Lag can be found via the linear correlation node, by knowledge, or by some specific formulas)."
             icon="icons/category_time.png"
             id="SeasonalityCorrection"
@@ -99,7 +96,7 @@
             workflowDir="metanode_templates/Seasonality Correction/">
       </PersistedMetaNode>
       <PersistedMetaNode
-            category-path="/timeseries/meta"
+            category-path="/applications/timeseries/meta"
             description="This node  selects a time series column, optionally a datetime column, and a lag. Then it trains a model (linear regression or neural network or whatever has a numerical output). The model can be changed (like in the cross-validation node)."
             icon="icons/category_time.png"
             id="Time-SeriesAuto-PredictionTraining"
@@ -108,7 +105,7 @@
       </PersistedMetaNode>
       <PersistedMetaNode
             after="Time-SeriesAuto-PredictionTraining"
-            category-path="/timeseries/meta"
+            category-path="/applications/timeseries/meta"
             description="This metanode applies all previously selected variables (time series column, lag and datetime column) to the predictor node. Note that the predictor node has to be consistent with the training node ion the time series training metanode."
             icon="icons/category_time.png"
             id="Time-SeriesAuto-PredictionPredictor"
