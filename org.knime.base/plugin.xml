@@ -352,7 +352,7 @@
             icon="icons/16x16/weka.png"
             level-id="weka"
             name="Weka"
-            path="/"/>
+            path="/mining"/>
       <category
             icon="icons/16x16/report.png"
             level-id="report"
