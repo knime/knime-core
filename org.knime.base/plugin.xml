@@ -127,11 +127,6 @@
             name="Scoring"
             path="/mining"/>
       <category
-            icon="icons/missing.gif"
-            level-id="artificial"
-            name="Artificial Data"
-            path="/io"/>
-      <category
             after="write"
             icon="icons/missing.gif"
             level-id="io-other"
