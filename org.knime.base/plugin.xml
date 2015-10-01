@@ -1545,16 +1545,6 @@
             id="org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory">
       </node> 
       <node
-            category-path="/misc"
-            factory-class="org.knime.base.node.preproc.urltofilepath.UrlToFilePathNodeFactory"
-            id="org.knime.base.node.preproc.urltofilepath.UrlToFilePathNodeFactory">
-      </node>
-      <node
-            category-path="/misc"
-            factory-class="org.knime.base.node.preproc.urltofilepathvariable.UrlToFilePathVariableNodeFactory"
-            id="org.knime.base.node.preproc.urltofilepathvariable.UrlToFilePathVariableNodeFactory">
-      </node>
-      <node
             category-path="//manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.rounddouble.RoundDoubleNodeFactory"
             id="org.knime.base.node.preproc.rounddouble.RoundDoubleNodeFactory">
