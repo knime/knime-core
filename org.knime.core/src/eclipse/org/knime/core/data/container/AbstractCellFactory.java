@@ -52,6 +52,7 @@ import java.util.Arrays;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.FileStoreFactory;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -73,6 +74,10 @@ public abstract class AbstractCellFactory implements CellFactory {
     private int m_maxParallelWorkers = -1;
     private int m_maxQueueSize = -1;
 
+    /** True if the deprecatd {@link #setProgress(int, int, RowKey, ExecutionMonitor)} method is overridden. If so,
+     * it will be called by the default implementation of the (new) setProgress method. */
+    private final boolean m_isSetProgressWithIntOverridden;
+
     private FileStoreFactory m_factory;
 
     /** Creates instance, which will produce content for the columns as
@@ -86,6 +91,7 @@ public abstract class AbstractCellFactory implements CellFactory {
                     + "contain null elements");
         }
         m_colSpecs = colSpecs;
+        m_isSetProgressWithIntOverridden = isSetProgressWithIntOverridden();
     }
 
     /** Called by the framework to set the file store factory prior execution.
@@ -255,7 +261,28 @@ public abstract class AbstractCellFactory implements CellFactory {
      */
     @Override
     public void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
-        exec.setProgress(curRowNr / (double)rowCount,
-            "Processed row " + curRowNr + "/" + rowCount + " (\"" + lastKey + "\")");
+        if (m_isSetProgressWithIntOverridden) {
+            setProgress((int)curRowNr, KnowsRowCountTable.checkRowCount(rowCount), lastKey, exec);
+        } else {
+            exec.setProgress(curRowNr / (double)rowCount,
+                "Processed row " + curRowNr + "/" + rowCount + " (\"" + lastKey + "\")");
+        }
+    }
+
+    /** See {@link #m_isSetProgressWithIntOverridden}.
+     * @return that flag
+     */
+    private boolean isSetProgressWithIntOverridden() {
+        Class<?> cl = getClass();
+        do {
+            try {
+                cl.getDeclaredMethod("setProgress", Integer.TYPE, Integer.TYPE, RowKey.class, ExecutionMonitor.class);
+                return true;
+            } catch (Exception e) {
+                // ignore, check superclass
+            }
+            cl = cl.getSuperclass();
+        } while (!AbstractCellFactory.class.equals(cl));
+        return false;
     }
 }
