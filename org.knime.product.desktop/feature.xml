@@ -759,6 +759,18 @@ propagated with or for interoperation with KNIME.
          id="org.knime.features.base.treeensembles"
          version="0.0.0"/>
 
+   <includes
+         id="org.knime.features.json"
+         version="0.0.0"/>
+
+   <includes
+         id="org.knime.features.xml"
+         version="0.0.0"/>
+
+   <includes
+         id="org.knime.features.js"
+         version="0.0.0"/>
+
    <requires>
       <import feature="org.eclipse.equinox.p2.user.ui" version="2.0.1" match="greaterOrEqual"/>
    </requires>
