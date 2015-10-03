@@ -263,7 +263,7 @@
             path="/"/>
       <category
             description="Java Snippet nodes"
-            icon="icons/missing.gif"
+            icon="icons/16x16/category_javasnippet.png"
             level-id="java-snippet"
             name="Java Snippet"
             path="/scripting"/>
@@ -293,7 +293,7 @@
             path="/view">
       </category>
       <category
-            after="misc"
+            after="toolintegration"
             description="Nodes provided on labs.knime.org"
             icon="icons/16x16/category_knime_labs.png"
             level-id="labs"
@@ -301,7 +301,7 @@
             path="/">
       </category>
       <category
-            after="misc"
+            after="toolintegration"
             description="Nodes provided by the KNIME community"
             icon="icons/16x16/category_community_nodes.png"
             level-id="community"
@@ -340,7 +340,7 @@
             path="/database">
       </category>            
       <category
-            icon="icons/16x16/category_social_media.png"
+            icon="icons/16x16/category_socialmedia.png"
             level-id="social-media"
             locked="true"
             name="Social Media"
@@ -355,13 +355,13 @@
             path="/">
       </category>
       <category
-            after="reporting"
+            after="report"
             icon="icons/16x16/category_chemistry.png"
             level-id="chemistry"
             name="Chemistry"
             path="/"/>
       <category
-            icon="icons/16x16/category_structured_data.png"
+            icon="icons/16x16/category_applications.png"
             level-id="applications"
             locked="true"
             name="Misc Object Representation (Jay, help!)"
