@@ -24,15 +24,9 @@
             path="/io"/>
       <category
             after="io"
-            icon="icons/16x16/category_database.png"
-            level-id="database"
-            name="Database"
-            path="/"/>
-      <category
-            after="database"
             icon="icons/16x16/manipulation.png"
             level-id="manipulation"
-            name="Data Manipulation"
+            name="Manipulation"
             path="/"/>
       <category
             icon="icons/16x16/column.png"
@@ -46,166 +40,23 @@
             name="Row"
             path="/manipulation"/>
       <category
-            icon="icons/missing.gif"
-            level-id="row-other"
-            after="row-transform"
-            name="Other"
-            path="/manipulation/row"/>
-      <category
-            after="statistics"
-            icon="icons/16x16/category_mining.png"
-            level-id="mining"
-            name="Mining"
-            path="/"/>
-      <category
-            icon="icons/missing.gif"
-            level-id="basisfunction"
-            name="Fuzzy Rules"
-            path="/mining/rules"/>
-      <category
-            icon="icons/missing.gif"
-            level-id="clustering"
-            name="Clustering"
-            path="/mining"/>
-      <category
-            after="manipulation"
-            icon="icons/16x16/category_visualize.png"
-            level-id="view"
-            name="Data Views"
-            path="/"/>
-      <category
-            level-id="property"
-            icon="icons/16x16/category_properties.png"
-            description="View Properties"
-            path="/view"
-            name="Property"/>
-      <category
-            level-id="nn"
-            icon="icons/missing.gif"
-            description="Learning of Neural Networks"
-            path="/mining"
-            after="rules"
-            name="Neural Network"/>
-      <category
-            after="view"
-            icon="icons/16x16/category_statistics.png"
-            level-id="statistics"
-            name="Statistics"
-            path="/"/>
-       <category
-            icon="icons/16x16/regression.png"
-            level-id="regression"
-            name="Regression"
-            path="/statistics"/>
-      <category
-            after="clustering"
-            icon="icons/missing.gif"
-            level-id="rules"
-            name="Rule Induction"
-            path="/mining"/>
-      <category
-            icon="icons/missing.gif"
-            level-id="mlp"
-            name="MLP"
-            path="/mining/nn"/>
-      <category
-            after="mlp"
-            icon="icons/missing.gif"
-            level-id="pnn"
-            name="PNN"
-            path="/mining/nn"/>
-      <category
-            after="nn"
-            icon="icons/missing.gif"
-            level-id="dtree"
-            name="Decision Tree"
-            path="/mining"/>
-      <category
-            after="featureselection"
-            icon="icons/missing.gif"
-            level-id="modeleval"
-            name="Scoring"
-            path="/mining"/>
-      <category
-            after="write"
-            icon="icons/missing.gif"
-            level-id="io-other"
-            name="Other"
-            path="/io"/>
-      <category
-            icon="icons/missing.gif"
-            level-id="subgroup"
-            name="Item Sets / Association Rules"
-            path="/mining"/>
-      <category
             after="row"
             icon="icons/16x16/matrix.png"
             level-id="table"
             name="Table"
             path="/manipulation"/>
       <category
-            after="dtree"
-            description="miscellaneous classifiers"
             icon="icons/missing.gif"
-            level-id="miscClass"
-            name="Misc Classifiers"
-            path="/mining"/>
+            level-id="row-other"
+            after="row-transform"
+            name="Other"
+            path="/manipulation/row"/>
       <category
-            icon="icons/missing.gif"
-            level-id="bayes"
-            name="Bayes"
-            path="/mining"/>
-      <category
-            icon="icons/missing.gif"
-            level-id="mds"
-            name="MDS"
-            path="/mining"/>
-      <category
-            icon="icons/missing.gif"
-            level-id="svm"
-            name="SVM"
-            path="/mining">
-      </category>
-      <category
-            after="svm"
-            icon="icons/missing.gif"
-            level-id="featureselection"
-            name="Feature Selection"
-            path="/mining">
-      </category>
-      <category
-            icon="icons/16x16/meta.png"
-            level-id="meta"
-            name="Meta Nodes"
-            path="/mining/featureselection">
-      </category>
-      <category
-            description="Nodes necessary for cross validation"
-            icon="icons/16x16/category_cross_validation.png"
-            level-id="crossvalidation"
-            name="Cross Validation"
-            path="/mining/modeleval">
-      </category>
-      <category
-            description="Meta Nodes for Model Evaluation"
-            icon="icons/16x16/meta.png"
-            level-id="meta"
-            name="Meta Nodes"
-            path="/mining/modeleval">
-      </category>
-      <category
-            after="scripting"
-            description="miscellaneous nodes"
-            icon="icons/16x16/category_misc.png"
-            level-id="misc"
-            name="Misc"
+            after="analytics"
+            icon="icons/16x16/category_database.png"
+            level-id="database"
+            name="Database"
             path="/"/>
-      <category
-            description="Java Snippet nodes"
-            icon="icons/missing.gif"
-            level-id="java-snippet"
-            name="Java Snippet"
-            path="/scripting"/>
       <category
             icon="icons/missing.gif"
             level-id="column-split+combine"
@@ -256,13 +107,285 @@
             path="/manipulation">
       </category>
       <category
+            after="manipulation"
+            icon="icons/16x16/category_visualize.png"
+            level-id="view"
+            name="Views"
+            path="/"/>
+      <category
+            level-id="property"
+            icon="icons/16x16/category_properties.png"
+            description="View Properties"
+            path="/view"
+            name="Property"/>
+      <category
+            after="view"
+            icon="icons/16x16/category_mining.png"
+            level-id="analytics"
+            name="Analytics"
+            path="/"/>
+      <category
+            icon="icons/16x16/category_mining.png"
+            level-id="mining"
+            name="Mining"
+            path="/analytics"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="basisfunction"
+            name="Fuzzy Rules"
+            path="/analytics/mining/rules"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="clustering"
+            name="Clustering"
+            path="/analytics/mining"/>
+      <category
+            level-id="nn"
+            icon="icons/missing.gif"
+            description="Learning of Neural Networks"
+            path="/analytics/mining"
+            after="rules"
+            name="Neural Network"/>
+      <category
+            after="mining"
+            icon="icons/16x16/category_statistics.png"
+            level-id="statistics"
+            name="Statistics"
+            path="/analytics"/>
+       <category
+            icon="icons/16x16/regression.png"
+            level-id="regression"
+            name="Regression"
+            path="/analytics/statistics"/>
+      <category
+            after="clustering"
+            icon="icons/missing.gif"
+            level-id="rules"
+            name="Rule Induction"
+            path="/analytics/mining"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="mlp"
+            name="MLP"
+            path="/analytics/mining/nn"/>
+      <category
+            after="mlp"
+            icon="icons/missing.gif"
+            level-id="pnn"
+            name="PNN"
+            path="/analytics/mining/nn"/>
+      <category
+            after="nn"
+            icon="icons/missing.gif"
+            level-id="dtree"
+            name="Decision Tree"
+            path="/analytics/mining"/>
+      <category
+            after="featureselection"
+            icon="icons/missing.gif"
+            level-id="modeleval"
+            name="Scoring"
+            path="/analytics/mining"/>
+      <category
+            after="write"
+            icon="icons/missing.gif"
+            level-id="io-other"
+            name="Other"
+            path="/io"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="subgroup"
+            name="Item Sets / Association Rules"
+            path="/analytics/mining"/>
+      <category
+            after="dtree"
+            description="miscellaneous classifiers"
+            icon="icons/missing.gif"
+            level-id="miscClass"
+            name="Misc Classifiers"
+            path="/analytics/mining"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="bayes"
+            name="Bayes"
+            path="/analytics/mining"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="mds"
+            name="MDS"
+            path="/analytics/mining"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="svm"
+            name="SVM"
+            path="/analytics/mining">
+      </category>
+      <category
+            after="svm"
+            icon="icons/missing.gif"
+            level-id="featureselection"
+            name="Feature Selection"
+            path="/analytics/mining">
+      </category>
+      <category
+            icon="icons/16x16/meta.png"
+            level-id="meta"
+            name="Meta Nodes"
+            path="/analytics/mining/featureselection">
+      </category>
+      <category
+            description="Nodes necessary for cross validation"
+            icon="icons/16x16/category_cross_validation.png"
+            level-id="crossvalidation"
+            name="Cross Validation"
+            path="/analytics/mining/modeleval">
+      </category>
+      <category
+            description="Meta Nodes for Model Evaluation"
+            icon="icons/16x16/meta.png"
+            level-id="meta"
+            name="Meta Nodes"
+            path="/analytics/mining/modeleval">
+      </category>
+      <category
+            after="scripting"
+            description="external tools and tool integrations"
+            icon="icons/16x16/category_misc.png"
+            level-id="toolintegration"
+            name="Tool Integration"
+            path="/"/>
+      <category
+            after="toolintegration"
+            description="miscellaneous nodes"
+            icon="icons/16x16/category_misc.png"
+            level-id="misc"
+            name="Misc"
+            path="/"/>
+      <category
+            description="Java Snippet nodes"
+            icon="icons/missing.gif"
+            level-id="java-snippet"
+            name="Java Snippet"
+            path="/scripting"/>
+      <category
             icon="icons/missing.gif"
             level-id="pca"
             name="PCA"
-            path="/mining">
+            path="/analytics/mining">
+      </category>
+      <category
+            icon="icons/16x16/weka.png"
+            level-id="weka"
+            name="Weka"
+            path="/analytics/mining"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="mining-pmml"
+            locked="true"
+            name="PMML"
+            path="/analytics/mining">
+      </category>
+      <category
+            description="Utility nodes supporting visualizations in KNIME"
+            icon="icons/16x16/category_view-util.png"
+            level-id="view-util"
+            name="Utility"
+            path="/view">
       </category>
       <category
             after="misc"
+            description="Nodes provided on labs.knime.org"
+            icon="icons/16x16/category_knime_labs.png"
+            level-id="labs"
+            name="KNIME Labs"
+            path="/">
+      </category>
+      <category
+            after="misc"
+            description="Nodes provided by the KNIME community"
+            icon="icons/16x16/category_community_nodes.png"
+            level-id="community"
+            locked="false"
+            name="Community Nodes"
+            path="/">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="database-io"
+            locked="true"
+            name="Read/Write"
+            path="/database">
+      </category>
+      <category
+            after="database-io"
+            icon="icons/missing.gif"
+            level-id="database-manipulation"
+            locked="true"
+            name="Manipulation"
+            path="/database">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="database-connector"
+            locked="true"
+            name="Connector"
+            path="/database"
+            after="database-io">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="database-utility"
+            locked="true"
+            name="Utility"
+            path="/database">
+      </category>            
+      <category
+            icon="icons/16x16/category_social_media.png"
+            level-id="social-media"
+            locked="true"
+            name="Social Media"
+            after="database"
+            path="/">
+      </category>            
+      <category
+            after="social-media"
+            icon="icons/16x16/report.png"
+            level-id="report"
+            name="Reporting"
+            path="/">
+      </category>
+      <category
+            after="reporting"
+            icon="icons/16x16/category_chemistry.png"
+            level-id="chemistry"
+            name="Chemistry"
+            path="/"/>
+      <category
+            icon="icons/16x16/category_structured_data.png"
+            level-id="applications"
+            locked="true"
+            name="Misc Object Representation (Jay, help!)"
+            after="chemistry"
+            path="/">
+      </category>            
+      <category
+            icon="icons/16x16/category_structured_data.png"
+            level-id="struct-data"
+            locked="true"
+            name="Structured Data"
+            after="applications"
+            path="/">
+      </category>            
+      <category
+            icon="icons/16x16/category_scripting.png"
+            level-id="scripting"
+            locked="true"
+            name="Scripting"
+            after="struct-data"
+            path="/">
+      </category>            
+      <category
+            after="scripting"
             description="nodes for loops, switches and other flow control operations"
             icon="icons/16x16/flow_control.png"
             level-id="flowcontrol"
@@ -319,110 +442,6 @@
             name="Meta Nodes"
             path="/flowcontrol">
       </category>
-      <category
-            description="Utility nodes supporting visualizations in KNIME"
-            icon="icons/16x16/category_view-util.png"
-            level-id="view-util"
-            name="Utility"
-            path="/view">
-      </category>
-      <category
-            after="misc"
-            description="Nodes provided on labs.knime.org"
-            icon="icons/16x16/category_knime_labs.png"
-            level-id="labs"
-            name="KNIME Labs"
-            path="/">
-      </category>
-      <category
-            after="misc"
-            description="Nodes provided by the KNIME community"
-            icon="icons/16x16/category_community_nodes.png"
-            level-id="community"
-            locked="false"
-            name="Community Nodes"
-            path="/">
-      </category>
-      <category
-            icon="icons/16x16/weka.png"
-            level-id="weka"
-            name="Weka"
-            path="/mining"/>
-      <category
-            icon="icons/16x16/report.png"
-            level-id="report"
-            name="Reporting"
-            path="/">
-      </category>
-      <category
-            icon="icons/missing.gif"
-            level-id="mining-pmml"
-            locked="true"
-            name="PMML"
-            path="/mining">
-      </category>
-      <category
-            icon="icons/missing.gif"
-            level-id="database-io"
-            locked="true"
-            name="Read/Write"
-            path="/database">
-      </category>
-      <category
-            after="database-io"
-            icon="icons/missing.gif"
-            level-id="database-manipulation"
-            locked="true"
-            name="Manipulation"
-            path="/database">
-      </category>
-      <category
-            icon="icons/missing.gif"
-            level-id="database-connector"
-            locked="true"
-            name="Connector"
-            path="/database"
-            after="database-io">
-      </category>
-      <category
-            icon="icons/missing.gif"
-            level-id="database-utility"
-            locked="true"
-            name="Utility"
-            path="/database">
-      </category>            
-      <category
-            icon="icons/16x16/category_structured_data.png"
-            level-id="applications"
-            locked="true"
-            name="Applications"
-            after="mining"
-            path="/">
-      </category>            
-      <category
-            icon="icons/16x16/category_social_media.png"
-            level-id="social-media"
-            locked="true"
-            name="Social Media"
-            after="applications"
-            path="/">
-      </category>            
-      <category
-            icon="icons/16x16/category_structured_data.png"
-            level-id="struct-data"
-            locked="true"
-            name="Structured Data"
-            after="social-media"
-            path="/">
-      </category>            
-      <category
-            icon="icons/16x16/category_scripting.png"
-            level-id="scripting"
-            locked="true"
-            name="Scripting"
-            after="struct-data"
-            path="/">
-      </category>            
       <category
             after="_last_"
             description="Uncategorized nodes"
@@ -499,31 +518,31 @@
             factory-class="org.knime.base.node.util.cache.CacheNodeFactory"
             id="org.knime.base.node.util.cache.CacheNodeFactory"/>
       <node
-            category-path="/mining/clustering"
+            category-path="/analytics/mining/clustering"
             factory-class="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"
             id="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"/>
       <node
-            category-path="/mining/rules/basisfunction"
+            category-path="/analytics/mining/rules/basisfunction"
             factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionLearnerNodeFactory"
             id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionLearnerNodeFactory"/>
       <node
-            category-path="/mining/rules/basisfunction"
+            category-path="/analytics/mining/rules/basisfunction"
             factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictor2NodeFactory"
             id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictor2NodeFactory"/>
       <!--node deprecated
-            category-path="/mining/rules/basisfunction"
+            category-path="/analytics/mining/rules/basisfunction"
             factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"
             id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"/-->
       <node
-            category-path="/mining/nn/pnn"
+            category-path="/analytics/mining/nn/pnn"
             factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionLearnerNodeFactory"
             id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionLearnerNodeFactory"/>
       <node
-            category-path="/mining/nn/pnn"
+            category-path="/analytics/mining/nn/pnn"
             factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictor2NodeFactory"
             id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictor2NodeFactory"/>
       <!--node
-            category-path="/mining/nn/pnn"
+            category-path="/analytics/mining/nn/pnn"
             factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"
             id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"/-->
       <node
@@ -574,12 +593,12 @@
             id="org.knime.base.node.io.linereader.LineReaderNodeFactory">
       </node>
       <node
-            category-path="/statistics"
+            category-path="/analytics/statistics"
             factory-class="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
             id="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
             after="org.knime.base.node.stats.viz.extended.ExtendedStatisticsNodeFactory"/>
       <node
-            category-path="/statistics"
+            category-path="/analytics/statistics"
             factory-class="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
             id="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
             after="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"/>
@@ -662,7 +681,7 @@
             category-path="/manipulation/row/row-transform"
             id="org.knime.base.node.preproc.partition.PartitionNodeFactory"/>
       <node
-            category-path="/mining/clustering"
+            category-path="/analytics/mining/clustering"
             factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"
             id="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"/>
       <!--node deprecated
@@ -670,15 +689,15 @@
             category-path="/manipulation/column/column-transform"
             id="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"/-->
       <node
-            category-path="/mining/nn/mlp"
+            category-path="/analytics/mining/nn/mlp"
             factory-class="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"
             id="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"/>
       <node
-            category-path="/mining/nn/mlp"
+            category-path="/analytics/mining/nn/mlp"
             factory-class="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeFactory"
             id="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeFactory"/>
       <!--node deprecated
-            category-path="/mining/nn/mlp"
+            category-path="/analytics/mining/nn/mlp"
             factory-class="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"
             id="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"/-->
       <node
@@ -699,19 +718,19 @@
             factory-class="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"
             id="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"/>
       <node
-            category-path="/mining/dtree"
+            category-path="/analytics/mining/dtree"
             factory-class="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeFactory"
             id="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeFactory"/>
       <!--node deprecated
-            category-path="/mining/dtree"
+            category-path="/analytics/mining/dtree"
             factory-class="org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeFactory"
             id="org.knime.base.node.mine.decisiontreenew.predictor.DecTreePredictorNodeFactory"/-->
       <node
-            category-path="/mining/dtree"
+            category-path="/analytics/mining/dtree"
             factory-class="org.knime.base.node.mine.decisiontree2.image.DecTreeToImageNodeFactory"
             id="org.knime.base.node.mine.decisiontree2.image.DecTreeToImageNodeFactory"/>
       <node
-            category-path="/mining/clustering"
+            category-path="/analytics/mining/clustering"
             factory-class="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"
             id="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"/>
       <node
@@ -728,29 +747,29 @@
             factory-class="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory"
             id="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory" />
       <node
-            category-path="/mining/subgroup"
+            category-path="/analytics/mining/subgroup"
             factory-class="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"
             id="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"/>
       <node
-            category-path="/mining/subgroup"
+            category-path="/analytics/mining/subgroup"
             factory-class="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"
             id="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"/>
        <node
-             category-path="/statistics/regression"
+             category-path="/analytics/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"
              id="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
-            category-path="/statistics/regression"
+            category-path="/analytics/statistics/regression"
             factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
             id="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
             after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
-             category-path="/statistics/regression"
+             category-path="/analytics/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
              id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
              after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"/>
        <node
-             category-path="/statistics/regression"
+             category-path="/analytics/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"
              id="org.knime.base.node.mine.regression.linear2.predict.GeneralRegressionPredictorNodeFactory"
              after="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"/> 
@@ -824,15 +843,15 @@
          category-path="/manipulation/row/row-other"
          id="org.knime.base.node.preproc.rowkey2.RowKeyNodeFactory2"/>
       <node
-            category-path="/mining/miscClass"
+            category-path="/analytics/mining/miscClass"
             factory-class="org.knime.base.node.mine.knn.KnnNodeFactory"
             id="org.knime.base.node.mine.knn.KnnNodeFactory"/>  
    <node
-         category-path="/mining/clustering"
+         category-path="/analytics/mining/clustering"
          factory-class="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"
          id="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"/>
    <node
-         category-path="/mining/clustering"
+         category-path="/analytics/mining/clustering"
          factory-class="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"
          id="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"/>         
       <node
@@ -846,7 +865,7 @@
             id="org.knime.base.node.viz.pie.node.interactive.InteractivePieNodeFactory">
       </node>
       <node
-            category-path="/mining/dtree"
+            category-path="/analytics/mining/dtree"
             factory-class="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2"
             id="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2">
       </node>
@@ -864,55 +883,55 @@
             factory-class="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"
             id="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"/>
       <node
-            category-path="/mining/bayes"
+            category-path="/analytics/mining/bayes"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor3.NaiveBayesPredictorNodeFactory2"
             id="org.knime.base.node.mine.bayes.naivebayes.predictor3.NaiveBayesPredictorNodeFactory2"/>
       <!--node deprecated
-            category-path="/mining/bayes"
+            category-path="/analytics/mining/bayes"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"
             id="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"/-->
       <node
-            category-path="/mining/bayes"
+            category-path="/analytics/mining/bayes"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2"
             id="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2"/>
       <node
-            category-path="/statistics"
+            category-path="/analytics/statistics"
             factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
             id="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"/>
       <node
-            category-path="/mining/featureselection"
+            category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
             id="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"/>
       <node
             after="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
-            category-path="/mining/featureselection"
+            category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"
             id="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
       <node
-            category-path="/mining/featureselection"
+            category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"
             id="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"
             after="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
       <node
-            category-path="/mining/mds"
+            category-path="/analytics/mining/mds"
             factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"
             id="org.knime.base.node.mine.mds.MDSNodeFactory"/>
       <node
-            category-path="/mining/mds"
+            category-path="/analytics/mining/mds"
             factory-class="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"
             id="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"/>
       <node
-            category-path="/mining/svm"
+            category-path="/analytics/mining/svm"
             factory-class="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory"
             id="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory">
       </node>
       <node
-            category-path="/mining/svm"
+            category-path="/analytics/mining/svm"
             factory-class="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeFactory"
             id="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeFactory">
       </node>
       <!--node
-            category-path="/mining/svm"
+            category-path="/analytics/mining/svm"
             factory-class="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory"
             id="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory">
       </node-->
@@ -995,34 +1014,34 @@
             after="org.knime.base.node.preproc.colcombine2.ColCombine2NodeFactory">
       </node>
       <node
-            category-path="/mining/clustering"
+            category-path="/analytics/mining/clustering"
             factory-class="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory"
             id="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory">
       </node>
       <node
-            category-path="/mining/modeleval"
+            category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory"
             id="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory">
       </node>
       <node
-            category-path="/mining/modeleval"
+            category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
             id="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
             after="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory"/>
       <node
             after="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
-            category-path="/mining/modeleval"
+            category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"
             id="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"/>
       <node
             after="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"
-            category-path="/mining/modeleval"
+            category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.viz.roc.ROCNodeFactory"
             id="org.knime.base.node.viz.roc.ROCNodeFactory">
       </node>
       <node
             after="org.knime.base.node.viz.roc.ROCNodeFactory"
-            category-path="/mining/modeleval"
+            category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.viz.enrichment.EnrichmentPlotterFactory"
             id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>
        <node
@@ -1178,13 +1197,13 @@
             id="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory">
       </node>
       <node
-            category-path="/mining/modeleval/crossvalidation"
+            category-path="/analytics/mining/modeleval/crossvalidation"
             factory-class="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
             id="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory">
       </node>
       <node
             after="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
-            category-path="/mining/modeleval/crossvalidation"
+            category-path="/analytics/mining/modeleval/crossvalidation"
             factory-class="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory"
             id="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory">
       </node>
@@ -1242,26 +1261,26 @@
             id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory">
       </node>
       <node
-            category-path="/mining/featureselection"
+            category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
             after="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
-            category-path="/mining/featureselection"
+            category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
-            category-path="/mining/featureselection"
+            category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
-            category-path="/mining/featureselection"
+            category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
       </node>
@@ -1317,25 +1336,25 @@
       </node>
 
       <node
-            category-path="/mining/pca"
+            category-path="/analytics/mining/pca"
             factory-class="org.knime.base.node.mine.pca.PCANodeFactory"
             id="org.knime.base.node.mine.pca.PCANodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.pca.PCANodeFactory"
-            category-path="/mining/pca"
+            category-path="/analytics/mining/pca"
             factory-class="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
             id="org.knime.base.node.mine.pca.PCAComputeNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.pca.PCAComputeNodeFactory"
-            category-path="/mining/pca"
+            category-path="/analytics/mining/pca"
             factory-class="org.knime.base.node.mine.pca.PCAApplyNodeFactory"
             id="org.knime.base.node.mine.pca.PCAApplyNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.pca.PCAApplyNodeFactory"
-            category-path="/mining/pca"
+            category-path="/analytics/mining/pca"
             factory-class="org.knime.base.node.mine.pca.PCAReverseNodeFactory"
             id="org.knime.base.node.mine.pca.PCAReverseNodeFactory">
       </node>
@@ -1356,7 +1375,7 @@
             id="org.knime.exp.node.meta.looper.LoopEnd2NodeFactory">
       </node>
       <node
-            category-path="/mining/subgroup"
+            category-path="/analytics/mining/subgroup"
             factory-class="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory"
             id="org.knime.base.node.preproc.matcher.SubsetMatcherNodeFactory">
       </node>
@@ -1735,7 +1754,7 @@
             factory-class="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"
             id="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"/>
       <!-- <node
-            category-path="/mining/miscClass"
+            category-path="/analytics/mining/miscClass"
             factory-class="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory"
             id="org.knime.base.node.mine.knn.pmml.PMMLKNNNodeFactory">
       </node> -->
@@ -1763,7 +1782,7 @@
       
    <extension point="org.knime.workbench.repository.metanode">
        <PersistedMetaNode
-             category-path="/mining/modeleval/meta"
+             category-path="/analytics/mining/modeleval/meta"
              description="Provides a skeleton of nodes necessary for cross validation"
              icon="icons/meta_nodes/cross_validation_flow.png"
              id="cross_validation"
@@ -1771,7 +1790,7 @@
              workflowDir="metanode_templates/Cross Validation/">
        </PersistedMetaNode>
        <PersistedMetaNode
-             category-path="/mining/featureselection/meta"
+             category-path="/analytics/mining/featureselection/meta"
              description="Backward Feature Elimination"
              icon="icons/meta_nodes/feature_elimination_flow.png"
              id="feature_elimination"

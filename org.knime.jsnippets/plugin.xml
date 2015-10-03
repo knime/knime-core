@@ -17,7 +17,7 @@
       <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeFactory" id="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeFactory" />
       <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeFactory" id="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeFactory" />
       <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.rules.engine.totable.RulesToTableNodeFactory" id="org.knime.base.node.rules.engine.totable.RulesToTableNodeFactory"/>
-      <node category-path="/mining/dtree" factory-class="org.knime.base.node.rules.engine.decisiontree.FromDecisionTreeNodeFactory" id="org.knime.base.node.rules.engine.decisiontree.FromDecisionTreeNodeFactory"/>
+      <node category-path="/analytics/mining/dtree" factory-class="org.knime.base.node.rules.engine.decisiontree.FromDecisionTreeNodeFactory" id="org.knime.base.node.rules.engine.decisiontree.FromDecisionTreeNodeFactory"/>
    </extension>
    <extension point="org.knime.jsnippets.templaterepository">
          <template-repository id="org.knime.base.node.jsnippet.template.JavaSnippetFileTemplateRepositoryProvider" provider-class="org.knime.base.node.jsnippet.template.JavaSnippetFileTemplateRepositoryProvider" />

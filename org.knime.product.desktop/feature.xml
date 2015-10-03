@@ -756,10 +756,6 @@ propagated with or for interoperation with KNIME.
          version="0.0.0"/>
 
    <includes
-         id="org.knime.features.base.treeensembles"
-         version="0.0.0"/>
-
-   <includes
          id="org.knime.features.json"
          version="0.0.0"/>
 
