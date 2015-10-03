@@ -48,6 +48,7 @@ package org.knime.base.node.mine.regression.polynomial.learner2;
 
 import java.util.Map;
 
+import org.knime.base.node.util.DataArray;
 import org.knime.core.util.Pair;
 
 /**
@@ -70,11 +71,14 @@ class PolyRegViewData {
 
     final String targetColumn;
 
+    private final DataArray m_rowContainer;
+
     @SuppressWarnings("hiding")
     PolyRegViewData(final double[] meanValues, final double[] betas, final double[] stdErrs, final double[] tValues, final double[] pValues, final double squaredError, final double adjustedR2,
-        final String[] columnNames, final int degree, final String targetColumn) {
+        final String[] columnNames, final int degree, final String targetColumn, final DataArray rowContainer) {
         this.meanValues = meanValues;
         this.betas = betas;
+        m_rowContainer = rowContainer;
         this.m_stdErrs = stdErrs.clone();
         this.m_tValues = tValues.clone();
         this.m_pValues = pValues.clone();
@@ -95,5 +99,12 @@ class PolyRegViewData {
         }
         ret[ret.length - 1] = constant;
         return ret;
+    }
+
+    /**
+     * @return the rowContainer
+     */
+    final DataArray getRowContainer() {
+        return m_rowContainer;
     }
 }

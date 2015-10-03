@@ -116,7 +116,7 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
             public void itemStateChanged(final ItemEvent e) {
                 reset();
 
-                DataTable table = m_model.getDataArray(0);
+                DataTable table = m_viewData.getRowContainer();
                 if (table != null) {
                     m_xColumnSpec = table.getDataTableSpec()
                             .getColumnSpec(props.m_xColumn.getSelectedColumn());
@@ -139,8 +139,8 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
      * plotter to show the new model's values.
      */
     public void modelChanged() {
-        DataTable data = m_model.getDataArray(0);
         m_viewData = m_model.getViewData();
+        DataTable data = m_viewData.getRowContainer();
         if (data != null) {
             final DataTableSpec origSpec = data.getDataTableSpec();
             final MyProperties props = (MyProperties)getProperties();

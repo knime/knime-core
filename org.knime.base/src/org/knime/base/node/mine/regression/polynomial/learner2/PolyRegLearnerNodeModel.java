@@ -121,14 +121,12 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
     private String[] m_columnNames;
 
-    private DataArray m_rowContainer;
-
     private double[] m_meanValues;
 
     private boolean[] m_colSelected;
 
     private PolyRegViewData m_viewData = new PolyRegViewData(new double[0], new double[0], new double[0], new double[0], new double[0], Double.NaN, Double.NaN, new String[0],
-        0, "N/A");
+        0, "N/A", null);
 
     /** Statistics (third) output table specification. */
     private static final DataTableSpec STATS_SPEC;
@@ -234,7 +232,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         System.arraycopy(m_columnNames, 0, temp, 0, m_columnNames.length);
         temp[temp.length - 1] = m_settings.getTargetColumn();
         FilterColumnTable filteredTable = new FilterColumnTable(inTable, temp);
-        m_rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
+        final DataArray rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
 
         // handle the optional PMML input
         PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
@@ -262,7 +260,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             double[] pValues = PolyRegViewData.mapToArray(polyRegContent.getPValues(), m_columnNames, m_settings.getDegree(), polyRegContent.getInterceptPValue());
             m_viewData =
                 new PolyRegViewData(m_meanValues, m_betas, stdErrors, tValues, pValues, m_squaredError, polyRegContent.getAdjustedRSquared(), m_columnNames, m_settings.getDegree(),
-                    m_settings.getTargetColumn());
+                    m_settings.getTargetColumn(), rowContainer);
             return bdt;
         } catch (ModelSpecificationException e) {
             final String origWarning = getWarningMessage();
@@ -288,7 +286,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             m_meanValues = new double[nans.length / m_settings.getDegree()];
             m_viewData =
                 new PolyRegViewData(m_meanValues, m_betas, nans, nans, nans, m_squaredError, Double.NaN, m_columnNames,
-                    m_settings.getDegree(), m_settings.getTargetColumn());
+                    m_settings.getDegree(), m_settings.getTargetColumn(), rowContainer);
             empty.close();
             ColumnRearranger crea = new ColumnRearranger(inTable.getDataTableSpec());
             crea.append(getCellFactory(inTable.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn())));
@@ -414,7 +412,16 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
-        File f = new File(nodeInternDir, "internals.xml");
+        File f = new File(nodeInternDir, "data.zip");
+        final DataArray rowContainer;
+        if (f.exists()) {
+            ContainerTable t = DataContainer.readFromZip(f);
+            int rowCount = t.getRowCount();
+            rowContainer = new DefaultDataArray(t, 1, rowCount, exec);
+        } else {
+            throw new FileNotFoundException("Internals do not exist");
+        }
+        f = new File(nodeInternDir, "internals.xml");
         if (f.exists()) {
             NodeSettingsRO internals = NodeSettings.loadFromXML(new BufferedInputStream(new FileInputStream(f)));
             try {
@@ -430,7 +437,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
                 double[] pValues = internals.getDoubleArray("pValues", emptyArray);
                 m_viewData =
                     new PolyRegViewData(meanValues, betas, stdErrs, tValues, pValues, squaredError, adjustedR2, columnNames, m_settings.getDegree(),
-                        m_settings.getTargetColumn());
+                        m_settings.getTargetColumn(), rowContainer);
             } catch (InvalidSettingsException ex) {
                 throw new IOException("Old or corrupt internals", ex);
             }
@@ -438,14 +445,6 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             throw new FileNotFoundException("Internals do not exist");
         }
 
-        f = new File(nodeInternDir, "data.zip");
-        if (f.exists()) {
-            ContainerTable t = DataContainer.readFromZip(f);
-            int rowCount = t.getRowCount();
-            m_rowContainer = new DefaultDataArray(t, 1, rowCount, exec);
-        } else {
-            throw new FileNotFoundException("Internals do not exist");
-        }
     }
 
     /**
@@ -462,11 +461,10 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
     @Override
     protected void reset() {
         double[] noData = new double[0];
-        m_viewData = new PolyRegViewData(noData, noData, noData, noData, noData, Double.NaN, Double.NaN, new String[0], 0, "N/A");
+        m_viewData = new PolyRegViewData(noData, noData, noData, noData, noData, Double.NaN, Double.NaN, new String[0], 0, "N/A", null);
         m_betas = null;
         m_columnNames = null;
         m_squaredError = 0;
-        m_rowContainer = null;
         m_meanValues = null;
         m_colSelected = null;
     }
@@ -492,7 +490,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
                 .saveToXML(new BufferedOutputStream(new FileOutputStream(new File(nodeInternDir, "internals.xml"))));
 
             File dataFile = new File(nodeInternDir, "data.zip");
-            DataContainer.writeToZip(m_rowContainer, dataFile, exec);
+            DataContainer.writeToZip(m_viewData.getRowContainer(), dataFile, exec);
         }
     }
 
@@ -564,10 +562,13 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * {@inheritDoc}
+     * @deprecated Use {@link #getViewData()} {@link PolyRegViewData#getRowContainer()} instead as this might cause inconsistencies!
      */
+    @SuppressWarnings("javadoc")
     @Override
+    @Deprecated
     public DataArray getDataArray(final int index) {
-        return m_rowContainer;
+        return m_viewData != null ? m_viewData.getRowContainer() : null;
     }
 
     /**

@@ -392,15 +392,21 @@ public final class NodeTimer {
          * shutdown flag set.
          */
         public void performShutdown() {
-            Thread t = asyncWriteToFile(true);
+            Thread writeThread = asyncWriteToFile(true);
             try {
-                t.join(5000);
-            } catch (InterruptedException ex) { /* silently ignore to not block shutdown */ }
-            t = asyncSendToServer(true);
-            if (t != null) {
-                try {
-                    t.join(5000);
-                } catch (InterruptedException ex) { /* silently ignore to not block shutdown */ }
+                writeThread.join(5000);
+            } catch (InterruptedException ex) {
+                return;
+            }
+
+            if (!writeThread.isAlive()) {
+                // don't send when the file has not properly written yet
+                Thread sendThread = asyncSendToServer(true);
+                if (sendThread != null) {
+                    try {
+                        sendThread.join(5000);
+                    } catch (InterruptedException ex) { /* silently ignore to not block shutdown */ }
+                }
             }
         }
 
