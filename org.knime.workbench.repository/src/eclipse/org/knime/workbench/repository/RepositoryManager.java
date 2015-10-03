@@ -366,7 +366,8 @@ public final class RepositoryManager {
                 // If parent category is illegal, log an error and append
                 // the node to the repository root.
                 if (parentContainer == null) {
-                    LOGGER.coding("Unknown category for node " + node.getID() + ": " + node.getCategoryPath()
+                    LOGGER.coding("Unknown category for node " + node.getID() + " (plugin: "
+                            + node.getContributingPlugin() + "): " + node.getCategoryPath()
                             + ". Node will be added to 'Uncategorized' instead");
                     uncategorized.addChild(node);
                 } else {

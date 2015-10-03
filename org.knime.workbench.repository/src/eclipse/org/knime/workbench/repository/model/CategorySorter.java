@@ -212,7 +212,8 @@ final class CategorySorter {
                     if (predecessor != null) {
                         predecessor.successors.add(item);
                     } else {
-                        LOGGER.coding("After-ID '" + afterId + "' of [" + item.repositoryObject + "] does not exist");
+                        LOGGER.coding("After-ID '" + afterId + "' of [" + item.repositoryObject
+                            + "] does not exist - in plug-in " + item.repositoryObject.getContributingPlugin());
                         last.successors.add(item);
                     }
                 } else {
