@@ -49,8 +49,8 @@ package org.knime.core.data;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -326,7 +326,7 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
         return new DefaultBlobSupportDataCellIterator(iterator);
     }
 
-    private static final class BlobWrapperHashMap extends HashMap<Class<? extends DataValue>, DataCell> {
+    private static final class BlobWrapperHashMap extends LinkedHashMap<Class<? extends DataValue>, DataCell> {
 
         BlobWrapperHashMap() {
             super(4);
