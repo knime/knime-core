@@ -49,7 +49,6 @@ package org.knime.base.node.preproc.colconvert.categorytonumber;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -154,7 +153,7 @@ public class CategoryToNumberApplyNodeModel extends NodeModel {
         // The map values in the model if present
         Map<String, DerivedField> mapValues = null != model
                 ? getMapValues(model)
-                : new HashMap<String, DerivedField>();
+                : new LinkedHashMap<String, DerivedField>();
         // Create rearranger
         ColumnRearranger rearranger = new ColumnRearranger(spec);
         for (String col : mapValues.keySet()) {
