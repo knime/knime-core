@@ -46,7 +46,7 @@
 package org.knime.base.node.mine.svm.kernel;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -82,7 +82,7 @@ public final class KernelFactory {
      * this is what needs to be modified (and the getType function).
      */
     private KernelFactory() {
-        m_kernels = new HashMap<KernelType, Kernel>();
+        m_kernels = new LinkedHashMap<KernelType, Kernel>();
         m_kernels.put(KernelType.Polynomial, new PolynomialKernel());
         m_kernels.put(KernelType.HyperTangent, new HyperTangentKernel());
         m_kernels.put(KernelType.RBF, new RBFKernel());

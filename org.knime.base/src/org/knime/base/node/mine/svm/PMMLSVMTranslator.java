@@ -50,7 +50,7 @@ package org.knime.base.node.mine.svm;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -208,7 +208,7 @@ public class PMMLSVMTranslator implements PMMLTranslator {
      */
     private void initSVMs(final SupportVectorMachineModel svmModel) {
         final Map<String, ArrayList<Double>> vectors =
-                new HashMap<String, ArrayList<Double>>();
+                new LinkedHashMap<String, ArrayList<Double>>();
         for (VectorInstance vectorInstance : svmModel.getVectorDictionary()
                 .getVectorInstanceArray()) {
             REALSparseArray sparseArray = vectorInstance.getREALSparseArray1();

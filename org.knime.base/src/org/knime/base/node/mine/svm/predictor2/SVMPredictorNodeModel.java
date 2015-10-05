@@ -49,7 +49,7 @@ package org.knime.base.node.mine.svm.predictor2;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -215,7 +215,7 @@ public final class SVMPredictorNodeModel extends NodeModel {
      */
     private void adjustOrder(final DataColumnSpec targetSpec) {
         if (targetSpec.getDomain() != null) {
-            Map<String, Svm> map = new HashMap<>();
+            Map<String, Svm> map = new LinkedHashMap<>();
             for (Svm svm : m_svms) {
                 map.put(svm.getPositive(), svm);
             }

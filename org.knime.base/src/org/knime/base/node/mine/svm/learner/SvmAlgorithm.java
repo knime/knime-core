@@ -45,7 +45,7 @@
  */
 package org.knime.base.node.mine.svm.learner;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.commons.math.MaxIterationsExceededException;
@@ -552,11 +552,11 @@ public class SvmAlgorithm {
         m_fcache[m_iLow] = 1;
         m_fcache[m_iUp] = -1;
 
-        m_i0 = new HashSet<Integer>();
-        m_i1 = new HashSet<Integer>();
-        m_i2 = new HashSet<Integer>();
-        m_i3 = new HashSet<Integer>();
-        m_i4 = new HashSet<Integer>();
+        m_i0 = new LinkedHashSet<Integer>();
+        m_i1 = new LinkedHashSet<Integer>();
+        m_i2 = new LinkedHashSet<Integer>();
+        m_i3 = new LinkedHashSet<Integer>();
+        m_i4 = new LinkedHashSet<Integer>();
 
         for (int i = 0; i < m_alpha.length; ++i) {
             if (target(i) == 1.0) {
@@ -593,7 +593,7 @@ public class SvmAlgorithm {
                         }
                     }
                 } else {
-                    Set<Integer> i0 = new HashSet<Integer>(m_i0);
+                    Set<Integer> i0 = new LinkedHashSet<Integer>(m_i0);
                     for (int i : i0) {
                         exec.checkCanceled();
                         if (examineExample(i)) {
