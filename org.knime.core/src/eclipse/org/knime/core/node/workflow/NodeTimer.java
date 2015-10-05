@@ -257,12 +257,28 @@ public final class NodeTimer {
             result.close();
             return result.getTable();
         }
+        /**
+         * @return the average up time of this KNIME instance
+         */
         public long getAvgUpTime() {
-            return (m_avgUpTime * m_launches + (System.currentTimeMillis() - m_currentInstanceLaunchTime)) / (m_launches + 1);
+            return (m_avgUpTime * m_launches + getCurrentInstanceUpTime()) / (m_launches + 1);
         }
+        /**
+         * @return the time since the last launch
+         * @since 3.0
+         */
+        public long getCurrentInstanceUpTime() {
+            return System.currentTimeMillis() - m_currentInstanceLaunchTime;
+        }
+        /**
+         * @return the number of KNIME launches
+         */
         public int getNrLaunches() {
             return m_launches + 1;
         }
+        /**
+         * @return the number of KNIME crashes
+         */
         public int getNrCrashes() {
             return m_crashes;
         }
@@ -288,6 +304,7 @@ public final class NodeTimer {
             job.add("nodestats", job2);
             job.add("uptime", getAvgUpTime());
             job.add("launches", getNrLaunches());
+            job.add("timeSinceLastStart", getCurrentInstanceUpTime());
             job.add("crashes", getNrCrashes());
             job.add("properlyShutDown", properShutdown);
             JsonObject jo = job.build();
@@ -475,7 +492,12 @@ public final class NodeTimer {
     private static String getCanonicalName(final NodeContainer nc) {
         String cname = "NodeContainer";
         if (nc instanceof NativeNodeContainer) {
-            cname = ((NativeNodeContainer)nc).getNodeModel().getClass().getName();
+            NativeNodeContainer node = (NativeNodeContainer)nc;
+            //added in 3.0: name consists of class name + node name
+            String className = node.getNodeModel().getClass().getName();
+            String nodeName = node.getName();
+            cname = className + ":" + nodeName;
+            ((NativeNodeContainer)nc).getName();
         } else if (nc instanceof SubNodeContainer) {
             cname = nc.getClass().getName();
         }
