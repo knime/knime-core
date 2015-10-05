@@ -53,6 +53,7 @@ import java.util.List;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.TextUtilities;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPart;
@@ -68,6 +69,7 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
@@ -75,12 +77,12 @@ import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.workbench.editor2.WorkflowMarqueeSelectionTool;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
+import org.knime.workbench.editor2.WorkflowSelectionTool;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditManager;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditPolicy;
 import org.knime.workbench.editor2.directannotationedit.StyledTextEditorLocator;
-import org.knime.workbench.editor2.editparts.policy.AnnotationSelectionEditPolicy;
-import org.knime.workbench.editor2.editparts.policy.WorkflowSelectionFeedbackPolicy;
 import org.knime.workbench.editor2.figures.NodeAnnotationFigure;
 import org.knime.workbench.editor2.figures.WorkflowAnnotationFigure;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -296,9 +298,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         // Installs the edit policy to directly edit the annotation in its
         // editpart (through the StyledTextEditor) after clicking it twice.
         installEditPolicy(EditPolicy.DIRECT_EDIT_ROLE, new AnnotationEditPolicy());
-        installEditPolicy(EditPolicy.SELECTION_FEEDBACK_ROLE, new WorkflowSelectionFeedbackPolicy());
         installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE, null);
-        installEditPolicy(EditPolicy.COMPONENT_ROLE, new AnnotationSelectionEditPolicy());
     }
 
     /**
@@ -431,12 +431,10 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
 
     @Override
     public void performRequest(final Request request) {
-        if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
-            // enter edit mode only after a double-click
-            performEdit();
-        } else if (request.getType() == RequestConstants.REQ_OPEN) {
+        if (request.getType() == RequestConstants.REQ_OPEN) {
             // caused by a double click on this edit part
             performEdit();
+            // we ignore REQ_DIRECT_EDIT as we want to allow editing only after a double-click
         } else {
             super.performRequest(request);
         }
@@ -481,12 +479,68 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         return annoList.toArray(new WorkflowAnnotation[annoList.size()]);
     }
 
+
     /**
      * {@inheritDoc}
      */
     @Override
+    public void setSelected(final int value) {
+        super.setSelected(value);
+        if (value != SELECTED_NONE) {
+            // remove the icon if the annotation is selected (the erase target feedback removes it only when the
+            // mouse is moved outside the figure - which is too late)
+            IFigure f = getFigure();
+            if (f instanceof WorkflowAnnotationFigure) {
+                ((WorkflowAnnotationFigure)f).showEditIcon(false);
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void showTargetFeedback(final Request request) {
+        if (getSelected() == SELECTED_NONE && request.getType().equals(REQ_SELECTION)) {
+            IFigure f = getFigure();
+            if (f instanceof WorkflowAnnotationFigure) {
+                ((WorkflowAnnotationFigure)f).showEditIcon(true);
+            }
+        }
+        super.showTargetFeedback(request);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void eraseTargetFeedback(final Request request) {
+        if (request.getType().equals(REQ_SELECTION)) {
+            IFigure f = getFigure();
+            if (f instanceof WorkflowAnnotationFigure) {
+                ((WorkflowAnnotationFigure)f).showEditIcon(false);
+            }
+        }
+        super.eraseTargetFeedback(request);
+    }
+
+    /**
+     * {@inheritDoc}
+     * If dragging started on the "move" icon (top left corner) return the normal edit part dragger tool, otherwise
+     * return the marquee selection tool.
+     */
+    @Override
     public DragTracker getDragTracker(final Request request) {
-        // in case the annotation is moved (in a chunk with nodes) we need to include bend points
+        Object object = request.getExtendedData().get(WorkflowSelectionTool.DRAG_START_LOCATION);
+        IFigure f = getFigure();
+        if (object instanceof Point && f instanceof WorkflowAnnotationFigure && getSelected() == SELECTED_NONE) {
+            PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor().getEditorSite();
+            Rectangle iconBounds = ((WorkflowAnnotationFigure)f).getEditIconBounds().getCopy();
+            if (!iconBounds.contains((Point)object)) {
+                return new WorkflowMarqueeSelectionTool();
+            }
+        }
+        // "normal" edit part dragging
         return new WorkflowSelectionDragEditPartsTracker(this);
     }
 

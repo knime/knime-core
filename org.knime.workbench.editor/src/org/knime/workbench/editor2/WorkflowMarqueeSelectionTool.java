@@ -120,6 +120,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     public WorkflowMarqueeSelectionTool() {
         setDefaultCursor(Cursors.CROSS);
         setUnloadWhenFinished(false);
+        setMarqueeBehavior(WorkflowMarqueeSelectionTool.BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED);
     }
 
     /**
@@ -228,11 +229,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                                 relMarqueeRect);
             } else if (child instanceof AnnotationEditPart) {
                 // don't include node annotations at all
-                // select WorkflowAnnotations only if the editor icon is included in the selection
+                // select WorkflowAnnotations only if they are fully included in the selection
                 if (figure instanceof WorkflowAnnotationFigure) {
-                    r = ((WorkflowAnnotationFigure)figure).getEditIconBounds().getCopy();
-                    included = marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED ? marqueeRect.intersects(r)
-                        : marqueeRect.contains(r);
+                    included = marqueeRect.contains(r);
                 }
             } else if (marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED) {
                 included = marqueeRect.intersects(r);

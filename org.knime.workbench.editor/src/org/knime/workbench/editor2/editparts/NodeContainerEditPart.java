@@ -325,11 +325,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             }
             // simple dbl-click, no modifier key
             openDialog();
-        } else if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
-            NodeAnnotationEditPart nodeAnnotationEditPart = getNodeAnnotationEditPart();
-            if (nodeAnnotationEditPart != null) {
-                nodeAnnotationEditPart.performEdit();
-            }
         }
     }
 

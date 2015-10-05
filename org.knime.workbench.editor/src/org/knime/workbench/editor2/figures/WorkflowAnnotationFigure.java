@@ -71,8 +71,6 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
 
     private final Label m_editIcon;
 
-    private static final Image EDIT_ICON = ImageRepository.getImage(SharedImages.AnnotationEditHover);
-
     private static final Image MOVE_ICON = ImageRepository.getImage(SharedImages.AnnotationMoveHover);
 
     public WorkflowAnnotationFigure(final Annotation anno) {
@@ -86,22 +84,6 @@ public class WorkflowAnnotationFigure extends NodeAnnotationFigure {
 
     public void showEditIcon(final boolean showit) {
         m_editIcon.setVisible(showit);
-    }
-
-    public void setMoveIcon() {
-        m_editIcon.setIcon(MOVE_ICON);
-    }
-
-    public void setEditIcon() {
-        m_editIcon.setIcon(EDIT_ICON);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean containsPoint(final int x, final int y) {
-        return m_editIcon.containsPoint(x, y);
     }
 
     public Rectangle getEditIconBounds() {

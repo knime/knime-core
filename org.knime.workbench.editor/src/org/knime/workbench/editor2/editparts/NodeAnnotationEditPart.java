@@ -48,6 +48,8 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.DragTracker;
+import org.eclipse.gef.Request;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Annotation;
@@ -55,6 +57,7 @@ import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
+import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.figures.NodeAnnotationFigure;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -165,6 +168,13 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
         return f;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DragTracker getDragTracker(final Request request) {
+        return new WorkflowSelectionDragEditPartsTracker(this);
+    }
 
     /**
      * @return the minimum width of a node annotation.

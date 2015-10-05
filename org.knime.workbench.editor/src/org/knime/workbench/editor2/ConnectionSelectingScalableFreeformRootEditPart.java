@@ -74,9 +74,6 @@ public class ConnectionSelectingScalableFreeformRootEditPart extends
          */
         WorkflowMarqueeSelectionTool tracker =
                 new WorkflowMarqueeSelectionTool();
-        tracker
-                .setMarqueeBehavior(WorkflowMarqueeSelectionTool.BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED);
-
         return tracker;
     }
 

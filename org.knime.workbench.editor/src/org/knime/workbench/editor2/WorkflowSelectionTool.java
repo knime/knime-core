@@ -51,6 +51,8 @@ import org.eclipse.draw2d.Cursors;
 import org.eclipse.draw2d.FigureCanvas;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
+import org.eclipse.gef.Request;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.tools.SelectionTool;
 import org.eclipse.swt.events.MouseEvent;
 
@@ -62,6 +64,10 @@ public class WorkflowSelectionTool extends SelectionTool {
 
     /** button for panning the editor contents with the mouse. */
     public static final int PAN_BUTTON = 2; // middle mouse button dragging scrolls the viewport
+
+    /** key we use in the extended data map of a request to store the location of the drag start. (Not adapted to
+     * zoom level nor viewport.) */
+    public static final String DRAG_START_LOCATION = "knime.drag.start.location";
 
     private int m_xLocation;
 
@@ -111,6 +117,20 @@ public class WorkflowSelectionTool extends SelectionTool {
             }
         }
         return super.handleButtonDown(button);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Request getTargetRequest() {
+        Request targetRequest = super.getTargetRequest();
+        Point start = new Point(m_xLocation, m_yLocation);
+        ZoomManager zm = (ZoomManager)getCurrentViewer().getProperty(ZoomManager.class.toString());
+        WorkflowEditor.adaptZoom(zm, start, true);
+        targetRequest.getExtendedData().put(DRAG_START_LOCATION, start);
+        return targetRequest;
     }
 
     /**

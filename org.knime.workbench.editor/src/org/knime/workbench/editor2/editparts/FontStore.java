@@ -148,6 +148,7 @@ public class FontStore {
         if (defFont == null) {
             // last resort: use system default font. May look totally different on different systems.
             defFont = Display.getDefault().getSystemFont();
+            LOGGER.warn("Using the system default font for annotations: " + defFont);
         }
         return defFont;
     }
