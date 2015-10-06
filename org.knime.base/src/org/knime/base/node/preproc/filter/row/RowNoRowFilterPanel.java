@@ -101,7 +101,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
         m_errText.setMaximumSize(new Dimension(350, 100));
         m_errText.setForeground(Color.RED);
 
-        m_first = new JSpinner(new SpinnerNumberModel(1, (Comparable) Long.valueOf(1), Long.MAX_VALUE, 1));
+        m_first = new JSpinner(new SpinnerNumberModel(1L, (Comparable) Long.valueOf(1L), Long.MAX_VALUE, 1L));
         m_first.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -115,7 +115,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
                 tilEOTChanged();
             }
         });
-        m_last = new JSpinner(new SpinnerNumberModel(1000, (Comparable) Long.valueOf(1), Long.MAX_VALUE, 1));
+        m_last = new JSpinner(new SpinnerNumberModel(1000L, (Comparable) Long.valueOf(1L), Long.MAX_VALUE, 1L));
         m_last.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
