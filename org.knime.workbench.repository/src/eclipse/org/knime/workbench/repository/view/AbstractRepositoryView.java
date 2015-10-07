@@ -220,6 +220,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         Root repository = RepositoryManager.INSTANCE.getRoot(monitor);
 
         updateRepositoryView(repository);
+
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
@@ -310,14 +311,14 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
      * @param manager the toolbar manager
      */
     protected void fillLocalToolBar(final IToolBarManager manager) {
+        manager.add(new QuickNodeInsertionAction());
+        manager.add(new Separator());
+
         // create the combo contribution item that can filter our view
-        //        manager.
-        manager.add(new QuickNodeInsertionConstributionItem());
         m_toolbarFilterCombo =
             new FilterViewContributionItem(m_viewer, new RepositoryViewFilter(), !NON_INSTANT_SEARCH);
         manager.add(m_toolbarFilterCombo);
         manager.add(new Separator());
-        //        manager.
     }
 
     /**

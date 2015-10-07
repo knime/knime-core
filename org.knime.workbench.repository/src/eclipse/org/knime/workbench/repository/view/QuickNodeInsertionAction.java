@@ -44,21 +44,15 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   21.08.2014 (Marcel Hanser): created
+ *   Oct 7, 2015 (albrecht): created
  */
 package org.knime.workbench.repository.view;
 
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.commands.common.NotDefinedException;
-import org.eclipse.jface.action.ControlContribution;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.bindings.Binding;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -68,64 +62,53 @@ import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
 /**
  *
- * A item for a tool bar which comprises a search button which performs the {@link QuickNodeInsertionHandler} action.
- *
- * @author Marcel Hanser
+ * @author Christian Albrecht
  */
-final class QuickNodeInsertionConstributionItem extends ControlContribution {
+public class QuickNodeInsertionAction extends Action {
+
+    private final IBindingService m_bindingService;
+
+    private final String m_description;
 
     /**
-     * Constructor.
+     *
      */
-    QuickNodeInsertionConstributionItem() {
-        super("org.knime.workbench.repository.view.QuickNodeInsertionConstributionItem");
+    public QuickNodeInsertionAction() {
+        setImageDescriptor(ImageRepository.getIconDescriptor(SharedImages.Search));
+        ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
+        m_bindingService = PlatformUI.getWorkbench().getService(IBindingService.class);
+
+        Command command = commandService.getCommand(QuickNodeInsertionHandler.COMMAND_ID);
+
+        try {
+            m_description = command.getDescription();
+        } catch (NotDefinedException e1) {
+            throw new RuntimeException("Command: " + QuickNodeInsertionHandler.COMMAND_ID + " not defined!", e1);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected Control createControl(final Composite parent) {
-
-        ICommandService commandService = PlatformUI.getWorkbench().getService(ICommandService.class);
-        IBindingService bindingService = PlatformUI.getWorkbench().getService(IBindingService.class);
-
-        Command command = commandService.getCommand(QuickNodeInsertionHandler.COMMAND_ID);
-
-        final String description;
+    public void run() {
+        IHandlerService handlerService = PlatformUI.getWorkbench().getService(IHandlerService.class);
         try {
-            description = command.getDescription();
-        } catch (NotDefinedException e1) {
-            throw new RuntimeException("Command: " + QuickNodeInsertionHandler.COMMAND_ID + " not defined!", e1);
+            handlerService.executeCommand(QuickNodeInsertionHandler.COMMAND_ID, null);
+        } catch (Exception ex) {
+            throw new RuntimeException("fast selection command not found");
         }
-        String keySequence = getBindingSequence(bindingService);
-
-        Button button = new Button(parent, SWT.NONE);
-        button.setImage(ImageRepository.getIconImage(SharedImages.Search));
-        button.addSelectionListener(new SelectionAdapter() {
-
-            @Override
-            public void widgetSelected(final SelectionEvent e) {
-                IHandlerService handlerService =
-                    PlatformUI.getWorkbench().getService(IHandlerService.class);
-                try {
-                    handlerService.executeCommand(QuickNodeInsertionHandler.COMMAND_ID, null);
-                } catch (Exception ex) {
-                    throw new RuntimeException("fast selection command not found");
-                }
-
-            }
-        });
-
-        button.setToolTipText(description + keySequence);
-        return button;
     }
 
     /**
-     * @param bindingService
-     * @param shortCut
-     * @return
+     * {@inheritDoc}
      */
+    @Override
+    public String getToolTipText() {
+        String keySequence = getBindingSequence(m_bindingService);
+        return m_description + keySequence;
+    }
+
     private String getBindingSequence(final IBindingService bindingService) {
         String systemBinding = "";
         for (Binding bind : bindingService.getBindings()) {
@@ -145,4 +128,5 @@ final class QuickNodeInsertionConstributionItem extends ControlContribution {
         }
         return systemBinding;
     }
+
 }

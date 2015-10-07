@@ -87,6 +87,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.util.KNIMEJob;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.RepositoryFactory;
 import org.knime.workbench.repository.RepositoryManager;
@@ -146,6 +148,7 @@ public class QuickNodeInsertionHandler extends AbstractHandler {
                 public void create() {
                     setShellStyle(getShellStyle() | SWT.RESIZE);
                     super.create();
+                    getShell().setImage(ImageRepository.getIconImage(SharedImages.Search));
                     getShell().setText("Node Repository");
                     setTitle("Quick Node Insertion");
                     setMessage("Type in the node name", IMessageProvider.INFORMATION);
