@@ -195,8 +195,7 @@ public abstract class DataCell implements DataValue, Serializable {
             // now call the datacell class specific equals method
             boolean b = thisDelegate.equalsDataCell(otherDelegate);
             assert(!b || thisDelegate.hashCode() == otherDelegate.hashCode()) : "\"hashCode\" implementation of "
-                + thisDelegate.getClass() + " and " + otherDelegate.getClass()
-                + " behave differently. Please check the implementations!";
+                + thisDelegate.getClass() + " is not compatible with equalsDataCell. Please check the implementations!";
             return b;
         } else if (thisDelegate.getType().getPreferredValueClass()
             .equals(otherDelegate.getType().getPreferredValueClass())) {
