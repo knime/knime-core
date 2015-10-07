@@ -48,11 +48,16 @@
 package org.knime.core.node.port;
 
 import java.io.IOException;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 import javax.swing.JComponent;
 
 import org.knime.core.internal.SerializerMethodLoader.Serializer;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * General interface for object specifications that are passed along node
@@ -121,6 +126,60 @@ public interface PortObjectSpec {
         public abstract T loadPortObjectSpec(
                 final PortObjectSpecZipInputStream in)
             throws IOException;
+
+        /**
+         * Returns the port object süec class that this serializer reads and writes. The class is determined from the
+         * generic argument.
+         *
+         * @return a port object spec class
+         * @since 3.0
+         */
+        @SuppressWarnings("unchecked")
+        final Class<T> getSpecClass() {
+             for (Type type : ConvenienceMethods.getAllGenericInterfaces(getClass())) {
+                if (type instanceof ParameterizedType) {
+                    Type rawType = ((ParameterizedType) type).getRawType();
+                    Type typeArgument = ((ParameterizedType) type).getActualTypeArguments()[0];
+                    if (PortObjectSpecSerializer.class == rawType) {
+                        if (typeArgument instanceof Class) {
+                            return (Class<T>)typeArgument;
+                        } else if (typeArgument instanceof ParameterizedType) { // e.g. ImgPlusCell<T>
+                            return (Class<T>)((ParameterizedType) typeArgument).getRawType();
+                        }
+                    }
+                }
+            }
+
+            for (Type type : ConvenienceMethods.getAllGenericSuperclasses(getClass())) {
+                if (type instanceof ParameterizedType) {
+                    Type typeArgument = ((ParameterizedType)type).getActualTypeArguments()[0];
+                    if (PortObjectSpec.class.isAssignableFrom((Class<?>)typeArgument)) {
+                        if (typeArgument instanceof Class) {
+                            return (Class<T>)typeArgument;
+                        } else if (typeArgument instanceof ParameterizedType) {
+                            return (Class<T>)((ParameterizedType) typeArgument).getRawType();
+                        }
+                    }
+                }
+            }
+
+            try {
+                Class<T> c = (Class<T>)getClass()
+                    .getMethod("loadPortObjectSpec", PortObjectSpecZipInputStream.class).getGenericReturnType();
+                if (!PortObjectSpec.class.isAssignableFrom(c) || ((c.getModifiers() & Modifier.ABSTRACT) != 0)) {
+                    NodeLogger.getLogger(getClass())
+                        .coding(getClass().getName() + " does not use generics properly, the type of the created port "
+                            + "object spec is '" + c.getName() + "'. Please fix your implementation by specifying a "
+                            + "non-abstract port object spec type in the extended PortObjectSpecSerializer class.");
+                    return (Class<T>)PortObjectSpec.class;
+                } else {
+                    return c;
+                }
+            } catch (NoSuchMethodException ex) {
+                // this is not possible
+                throw new AssertionError("Someone removed the 'loadPortObjectSpec' method from this class");
+            }
+        }
     }
 
     /**

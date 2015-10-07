@@ -53,21 +53,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
-import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 
@@ -80,78 +76,7 @@ import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class PortUtil {
-
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(PortUtil.class);
-
-    private static final Map<Class<? extends PortObjectSpec>,
-    PortObjectSpecSerializer<?>> PORT_SPEC_SERIALIZER_MAP = new ConcurrentHashMap<>();
-
-    private static final Map<Class<? extends PortObject>,
-    PortObjectSerializer<?>> PORT_OBJECT_SERIALIZER_MAP = new ConcurrentHashMap<>();
-
     private PortUtil() {
-    }
-
-    /**
-     * Get the globally used serializer for {@link PortObjectSpec} objects
-     * represented by the class argument.
-     *
-     * @param <T> The specific PortObjectSpec class of interest.
-     * @param cl Class argument.
-     * @return The serializer to be used. Will throw an undeclared runtime
-     * exception if retrieving the type causes problems (suggests a coding
-     * problem)
-     */
-    @SuppressWarnings("unchecked")
-    // access to CLASS_TO_SERIALIZER_MAP
-    public static <T extends PortObjectSpec> PortObjectSpecSerializer<T>
-    getPortObjectSpecSerializer(final Class<T> cl) {
-        if (PORT_SPEC_SERIALIZER_MAP.containsKey(cl)) {
-            return PortObjectSpecSerializer.class.cast(PORT_SPEC_SERIALIZER_MAP
-                    .get(cl));
-        }
-        PortObjectSpecSerializer<T> result;
-        try {
-            result = SerializerMethodLoader.getSerializer(cl,
-                    PortObjectSpecSerializer.class,
-                            "getPortObjectSpecSerializer", true);
-        } catch (NoSuchMethodException e) {
-            LOGGER.coding("Errors while accessing serializer object", e);
-            throw new RuntimeException(e);
-        }
-        PORT_SPEC_SERIALIZER_MAP.put(cl, result);
-        return result;
-    }
-
-    /**
-     * Get the globally used serializer for {@link PortObject} objects
-     * represented by the class argument.
-     *
-     * @param <T> The specific PortObject class of interest.
-     * @param cl Class argument.
-     * @return The serializer to be used. Will throw an undeclared runtime
-     * exception if retrieving the type causes problems (suggests a coding
-     * problem)
-     */
-    @SuppressWarnings("unchecked")
-    // access to CLASS_TO_SERIALIZER_MAP
-    public static <T extends PortObject> PortObjectSerializer<T>
-    getPortObjectSerializer(final Class<T> cl) {
-        if (PORT_OBJECT_SERIALIZER_MAP.containsKey(cl)) {
-            return PortObjectSerializer.class.cast(PORT_OBJECT_SERIALIZER_MAP
-                    .get(cl));
-        }
-        PortObjectSerializer<T> result;
-        try {
-            result = SerializerMethodLoader.getSerializer(cl, PortObjectSerializer.class,
-                            "getPortObjectSerializer", true);
-        } catch (NoSuchMethodException e) {
-            LOGGER.coding("Errors while accessing serializer object", e);
-            throw new RuntimeException(e);
-        }
-        PORT_OBJECT_SERIALIZER_MAP.put(cl, result);
-        return result;
     }
 
     public static PortObjectSpecZipOutputStream getPortObjectSpecZipOutputStream(
@@ -238,13 +163,13 @@ public final class PortUtil {
 
         zipOut.putNextEntry(new ZipEntry("objectSpec.file"));
         PortObjectSpecZipOutputStream specOut = getPortObjectSpecZipOutputStream(new NonClosableOutputStream.Zip(zipOut));
-        PortObjectSpecSerializer specSer = getPortObjectSpecSerializer(spec.getClass());
+        PortObjectSpecSerializer specSer = PortObjectRegistry.getInstance().getSpecSerializer(spec.getClass()).get();
         specSer.savePortObjectSpec(spec, specOut);
         specOut.close(); // will propagate as closeEntry
 
         zipOut.putNextEntry(new ZipEntry("object.file"));
         PortObjectZipOutputStream objOut = getPortObjectZipOutputStream(new NonClosableOutputStream.Zip(zipOut));
-        PortObjectSerializer objSer = getPortObjectSerializer(po.getClass());
+        PortObjectSerializer objSer = PortObjectRegistry.getInstance().getObjectSerializer(po.getClass()).get();
         objSer.savePortObject(po, objOut, exec);
         objOut.close(); // will propagate as closeEntry
         zipOut.finish();
@@ -303,8 +228,7 @@ public final class PortUtil {
             PortUtil.getPortObjectZipInputStream(
                     new NonClosableInputStream.Zip(in));
         PortObjectSerializer<?> objSer =
-            PortUtil.getPortObjectSerializer(cl
-                    .asSubclass(PortObject.class));
+            PortObjectRegistry.getInstance().getObjectSerializer(cl.asSubclass(PortObject.class)).get();
         PortObject po = objSer.loadPortObject(objIn, spec, exec);
         in.close();
         return po;
@@ -372,8 +296,7 @@ public final class PortUtil {
             PortUtil.getPortObjectSpecZipInputStream(
                     new NonClosableInputStream.Zip(in));
         PortObjectSpecSerializer<?> serializer =
-            PortUtil.getPortObjectSpecSerializer(cl
-                    .asSubclass(PortObjectSpec.class));
+            PortObjectRegistry.getInstance().getSpecSerializer(cl.asSubclass(PortObjectSpec.class)).get();
         PortObjectSpec spec = serializer.loadPortObjectSpec(specIn);
         specIn.close();
         return spec;

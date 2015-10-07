@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 14, 2008 (wiswedel): created
  */
@@ -57,34 +57,36 @@ import org.knime.core.node.NodeLogger;
 /**
  * Utility class to invoke static methods on classes to retrieve a serializer
  * factory. This class is outsourced as it is used in different places,
- * for instance {@link org.knime.core.data.DataType} and 
+ * for instance {@link org.knime.core.data.DataType} and
  * {@link org.knime.core.node.NodePersistorVersion200}
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated don't use this class any more it will be removed in the next major release. Use extension points instead.
  */
+@Deprecated
 public final class SerializerMethodLoader {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(SerializerMethodLoader.class);
 
     private SerializerMethodLoader() {
     }
 
     /**
-     * Invokes a static method named <code>methodName</code> on class 
+     * Invokes a static method named <code>methodName</code> on class
      * <code>encapsulatingClass</code>, which is supposed to have no arguments
      * and whose return type is <code>V&lt;T&gt;</code>. One example is:
      * <pre>
      *    DataCellSerializer&lt;FooCell&gt; getCellSerializer() { ... }
-     * </pre> 
+     * </pre>
      * defined on class <code>FooCell</code>.
      * @param <T> Class type, which defines the method (also the parameterized
      * return type.
      * @param <V> The inherited class of class Serializer.
-     * @param encapsulatingClass The class defining this method. 
-     * @param desiredReturnType The expected return type, implementing 
+     * @param encapsulatingClass The class defining this method.
+     * @param desiredReturnType The expected return type, implementing
      *        interface {@link Serializer}
      * @param allowSuperClass Whether to allow the definition of the method
-     * in a super class of <code>encapsulatingClass</code>. 
+     * in a super class of <code>encapsulatingClass</code>.
      * @param methodName The name of the method.
      * @return The return value of that method.
      * @throws NoSuchMethodException If this method can't be found or invoked
@@ -93,7 +95,7 @@ public final class SerializerMethodLoader {
     @SuppressWarnings("unchecked") // access to CLASS_TO_SERIALIZER_MAP
     public static <T, V extends Serializer<T>> V getSerializer(
             final Class<T> encapsulatingClass, final Class<V> desiredReturnType,
-            final String methodName, final boolean allowSuperClass) 
+            final String methodName, final boolean allowSuperClass)
         throws NoSuchMethodException {
         if (encapsulatingClass == null || desiredReturnType == null) {
             throw new NullPointerException(
@@ -112,7 +114,7 @@ public final class SerializerMethodLoader {
                 method = encapsulatingClass.getDeclaredMethod(methodName);
             }
             Class rType = method.getReturnType();
-            /* The following test realizes 
+            /* The following test realizes
              * PortObjectSerializer<T>.class.isAssignableFrom(rType).
              * Unfortunately one can't check the generic(!) return type as
              * above since the type information is lost at compile time. We
@@ -122,12 +124,12 @@ public final class SerializerMethodLoader {
              * accept the implementation of the superclass as we lose
              * information of the more specialized class when we use the
              * superclass' serializer.
-             */ 
+             */
             boolean isAssignable = Serializer.class.isAssignableFrom(rType);
             boolean hasRType = false;
             if (isAssignable) {
                 Type genType = method.getGenericReturnType();
-                hasRType = isSerializer(rType, encapsulatingClass, 
+                hasRType = isSerializer(rType, encapsulatingClass,
                         allowSuperClass) || isSerializer(
                                 genType, encapsulatingClass, allowSuperClass);
                 if (!hasRType) {
@@ -139,12 +141,12 @@ public final class SerializerMethodLoader {
                 }
             }
             if (!hasRType) {
-                throw new NoSuchMethodException("Class \"" 
+                throw new NoSuchMethodException("Class \""
                         + encapsulatingClass.getSimpleName()
                         + "\" defines method \"" + methodName + "\" "
                         + "but the method has the wrong return type (\""
                         + method.getGenericReturnType() + "\", expected \""
-                        + desiredReturnType.getName() 
+                        + desiredReturnType.getName()
                         + "<" + encapsulatingClass.getName() + ">\").");
             } else {
                 Object typeObject = method.invoke(null);
@@ -167,16 +169,16 @@ public final class SerializerMethodLoader {
         }
         return result;
     }
-    
+
     /**
      * Helper method that checks if the passed Type is a parameterized
-     * type (like <code>DataCellSerializer&lt;someType&gt;</code> and that it 
-     * is assignable from the given {@link org.knime.core.data.DataCell} class. 
-     * This method is used to check if the return class of 
-     * <code>getCellSerializer()</code> in a 
+     * type (like <code>DataCellSerializer&lt;someType&gt;</code> and that it
+     * is assignable from the given {@link org.knime.core.data.DataCell} class.
+     * This method is used to check if the return class of
+     * <code>getCellSerializer()</code> in a
      * {@link org.knime.core.data.DataCell} has the correct signature.
      */
-    private static <T, V> boolean isSerializer(final Type c, 
+    private static <T, V> boolean isSerializer(final Type c,
             final Class<T> cellClass, final boolean allowSuperClass) {
         boolean b = c instanceof ParameterizedType;
         if (b) {
@@ -192,7 +194,7 @@ public final class SerializerMethodLoader {
         }
         return b;
     }
-    
+
     /**
      * Creates new static serializer object.
      * @param <T> the type of serializer
