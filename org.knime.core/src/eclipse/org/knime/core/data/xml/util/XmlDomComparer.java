@@ -196,10 +196,11 @@ public final class XmlDomComparer {
                 hash += hashAttributes(expectedElement.getAttributes(), customizer);
 
                 NodeList expectedChildren = expectedElement.getChildNodes();
+                int includedChildren = 0;
                 for (int i = 0; i < expectedChildren.getLength(); i++) {
-
                     Node item = expectedChildren.item(i);
                     if (customizer.include(item)) {
+                        includedChildren++;
                         switch (customizer.determineCompareStrategy(item)) {
                             case UNORDERED:
                                 hash = hash + hashCode(item, customizer);
@@ -207,7 +208,7 @@ public final class XmlDomComparer {
                             case ORDERED:
                             default:
                                 // take also the sequence of the elements into account
-                                hash = hash * (i + 1) * PRIME + hashCode(item, customizer);
+                                hash = hash * includedChildren * PRIME + hashCode(item, customizer);
                                 break;
                         }
                     }
