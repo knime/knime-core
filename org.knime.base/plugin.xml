@@ -265,7 +265,7 @@
             description="Java Snippet nodes"
             icon="icons/16x16/category_javasnippet.png"
             level-id="java-snippet"
-            name="Java Snippet"
+            name="Java"
             path="/scripting"/>
       <category
             icon="icons/missing.gif"
@@ -364,7 +364,7 @@
             icon="icons/16x16/category_applications.png"
             level-id="applications"
             locked="true"
-            name="Misc Object Representation (Jay, help!)"
+            name="Misc Object Representation"
             after="chemistry"
             path="/">
       </category>            
