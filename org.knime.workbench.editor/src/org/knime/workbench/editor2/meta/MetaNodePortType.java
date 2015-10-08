@@ -45,11 +45,7 @@
  */
 package org.knime.workbench.editor2.meta;
 
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabasePortObject;
-import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /** Represents a port type available in the meta node wizard. This class
  * is registered in the contributions to the meta node port type
@@ -58,8 +54,11 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
  * <p>Derived class must provide a node-arg constructor, see
  * {@link #MetaNodePortType(PortType, String)} for details.
  *
+ * @deprecated register your {@link PortType} at the extension point <tt>org.knime.core.PortType</tt> instead
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 public abstract class MetaNodePortType {
 
     private final PortType m_type;
@@ -121,45 +120,4 @@ public abstract class MetaNodePortType {
     public final int hashCode() {
         return m_name.hashCode();
     };
-
-    /** Data port type. */
-    public static final class DataMetaNodePortType extends MetaNodePortType {
-
-        /** Instance to be used. */
-        public static final DataMetaNodePortType INSTANCE =
-            new DataMetaNodePortType();
-
-        /** Calls super constructor with corresponding types. */
-        public DataMetaNodePortType() {
-            super(BufferedDataTable.TYPE, "Data");
-        }
-    }
-
-    /** DataBase port type. */
-    public static final class DBMetaNodePortType extends MetaNodePortType {
-
-        /** Calls super constructor with corresponding types. */
-        public DBMetaNodePortType() {
-            super(DatabasePortObject.TYPE, "Database");
-        }
-    }
-
-    /** PMML port type. */
-    public static final class PMMLMetaNodePortType extends MetaNodePortType {
-
-        /** Calls super constructor with corresponding types. */
-        public PMMLMetaNodePortType() {
-            super(PMMLPortObject.TYPE, "PMML");
-        }
-    }
-
-    /** PMML port type. */
-    public static final class FlowVarMetaNodePortType extends MetaNodePortType {
-
-        /** Calls super constructor with corresponding types. */
-        public FlowVarMetaNodePortType() {
-            super(FlowVariablePortObject.TYPE, "FlowVariable");
-        }
-    }
-
 }

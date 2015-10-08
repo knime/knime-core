@@ -48,6 +48,11 @@
 package org.knime.workbench.editor2.meta;
 
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
@@ -65,6 +70,13 @@ import org.eclipse.swt.widgets.Dialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.port.database.DatabaseConnectionPortObject;
+import org.knime.core.node.port.database.DatabasePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
  * Dialog to enter the port name and type.
@@ -77,11 +89,44 @@ public class MetaPortDialog extends Dialog {
     private Label m_error;
     private Combo m_type;
 
-    private static final int WIDTH = 220;
-    private static final int HEIGHT = 150;
+    private static final int WIDTH = 280;
+    private static final int HEIGHT = 120;
 
-    private Port m_port = null;
+    private PortType m_port = null;
 
+    private static final Comparator<PortType> PORT_TYPE_COMPARATOR = new Comparator<PortType>() {
+        @Override
+        public int compare(final PortType o1, final PortType o2) {
+            if (o1.equals(o2)) {
+                return 0;
+            } else if (o1.equals(BufferedDataTable.TYPE)) {
+                return -1;
+            } else if (o2.equals(BufferedDataTable.TYPE)) {
+                return 1;
+            } else if (o1.equals(FlowVariablePortObject.TYPE)) {
+                return -1;
+            } else if (o2.equals(FlowVariablePortObject.TYPE)) {
+                return 1;
+            } else if (o1.equals(PMMLPortObject.TYPE)) {
+                return -1;
+            } else if (o2.equals(PMMLPortObject.TYPE)) {
+                return 1;
+            } else if (o1.equals(DatabaseConnectionPortObject.TYPE)) {
+                return -1;
+            } else if (o2.equals(DatabaseConnectionPortObject.TYPE)) {
+                return 1;
+            } else if (o1.equals(DatabasePortObject.TYPE)) {
+                return -1;
+            } else if (o2.equals(DatabasePortObject.TYPE)) {
+                return 1;
+            } else {
+                return o1.getName().compareTo(o2.getName());
+            }
+        }
+    };
+
+    private static final List<PortType> PORT_TYPES = PortTypeRegistry.getInstance().availablePortTypes().stream()
+        .filter(pt -> !pt.isHidden()).sorted(PORT_TYPE_COMPARATOR).collect(Collectors.toList());
 
     /**
      *
@@ -97,7 +142,7 @@ public class MetaPortDialog extends Dialog {
      *
      * @return the entered port (with name and type)
      */
-    public Port open() {
+    public PortType open() {
         Shell parent = getParent();
         m_shell = new Shell(parent, SWT.DIALOG_TRIM
                 | SWT.APPLICATION_MODAL);
@@ -116,7 +161,6 @@ public class MetaPortDialog extends Dialog {
                 display.sleep();
             }
         }
-        // TODO: grab the selected port type
         return m_port;
     }
 
@@ -133,12 +177,10 @@ public class MetaPortDialog extends Dialog {
         label2.setText("Port Type:");
         m_type = new Combo(composite,
                 SWT.DROP_DOWN | SWT.SIMPLE | SWT.READ_ONLY | SWT.BORDER);
-        AddMetaNodePortTypeCollector instance =
-            AddMetaNodePortTypeCollector.getInstance();
-        MetaNodePortType[] types = instance.getTypes();
-        String[] names = new String[types.length];
-        for (int i = 0; i < names.length; i++) {
-            names[i] = types[i].getName();
+        String[] names = new String[PORT_TYPES.size()];
+        int i = 0;
+        for (PortType pt : PORT_TYPES) {
+            names[i++] = pt.getName();
         }
         m_type.setItems(names);
         m_type.addFocusListener(new FocusAdapter() {
@@ -164,20 +206,9 @@ public class MetaPortDialog extends Dialog {
                 }
                 resetError();
                 String selected = m_type.getItem(m_type.getSelectionIndex());
-                MetaNodePortType type = null;
-                for (MetaNodePortType t
-                        : AddMetaNodePortTypeCollector.
-                        getInstance().getTypes()) {
-                    if (t.getName().equals(selected)) {
-                        type = t;
-                        break;
-                    }
-                }
-                if (type == null) {
-                    throw new IllegalStateException(
-                            "Unknown port type: " + selected);
-                }
-                m_port = new Port(type.getType(), type.getName());
+
+                Optional<PortType> pt = PORT_TYPES.stream().filter(p -> p.getName().equals(selected)).findFirst();
+                m_port = pt.orElseThrow(() -> new IllegalStateException("Unknown port type: " + selected));
                 m_shell.dispose();
             }
 

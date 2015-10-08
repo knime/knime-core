@@ -73,6 +73,7 @@ import org.eclipse.swt.widgets.Text;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.pmml.PMMLPortObject;
@@ -274,16 +275,7 @@ public class AddMetaNodePage extends WizardPage {
         selList.removeAll();
         for (int i = m_offset; i < infoList.size(); i++) {
             MetaPortInfo info = infoList.get(i);
-
-            String typeName = info.getType().getPortObjectClass().getSimpleName();
-            // see if we find a nicer name
-            for (MetaNodePortType t :AddMetaNodePortTypeCollector.getInstance().getTypes()) {
-                if (t.getType().equals(info.getType())) {
-                    typeName = t.getName();
-                    break;
-                }
-            }
-            String listEntry = namePrefix + i + " (" + typeName + ")";
+            String listEntry = namePrefix + i + " (" + info.getType().getName() + ")";
             selList.add(listEntry);
         }
     }
@@ -615,9 +607,9 @@ public class AddMetaNodePage extends WizardPage {
         java.util.List<MetaPortInfo> infoList = inPort ? m_inPortList : m_outPortList;
         List portList = inPort ? m_inPorts : m_outPorts;
         MetaPortDialog dialog = new MetaPortDialog(Display.getDefault().getActiveShell());
-        Port port = dialog.open();
+        PortType port = dialog.open();
         if (port != null) {
-            MetaPortInfo info = new MetaPortInfo(port.getType(), infoList.size());
+            MetaPortInfo info = new MetaPortInfo(port, infoList.size());
             infoList.add(info);
             populateSelectionlistFromInfolist(portList, infoList, inPort ? "in_" : "out_");
             portList.select(portList.getItemCount() - 1);

@@ -113,16 +113,16 @@ public final class PortType {
         m_objectClass = objectClass;
         m_specClass = getPortObjectSpecClass(objectClass);
         m_isOptional = isOptional;
-        m_name = name;
+        m_name = name != null ? name : objectClass.getSimpleName();
         m_color = color;
         m_isHidden = isHidden;
     }
 
     /**
-     * Returns a human-readable name for this port type. The name may be <code>null</code> if the port type is not
-     * registered at the extension point yet.
+     * Returns a human-readable name for this port type. In case the port type is not registered at the extension point
+     * the port object's class name is returned.
      *
-     * @return a human-readable name or <code>null</code>
+     * @return a human-readable name, never <code>null</code>
      * @since 3.0
      */
     public String getName() {
@@ -152,6 +152,16 @@ public final class PortType {
      */
     public boolean isOptional() {
         return m_isOptional;
+    }
+
+    /**
+     * Returns whether this port type should be shown to the user in e.g. dialogs.
+     *
+     * @return <code>true</code> if this type should be hidden, <code>false</code> otherwise
+     * @since 3.0
+     */
+    public boolean isHidden() {
+        return m_isHidden;
     }
 
     /** Determines if the argument type is a sub type of this type.
