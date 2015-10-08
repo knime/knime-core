@@ -234,6 +234,8 @@ public final class ImageRepository {
         Error("icons/error.png"),
         /** busy cursor (hour glass). */
         Busy("icons/busy.png"),
+        /** a question mark icon. */
+        Help("icons/help.png"),
         /** ServerSpace Explorer Icon: server logo, 55px.*/
         ServerSpaceServerLogo("icons/server_space/server_logo_55.png"),
         /** ServerSpace Explorer Icon: server root. */

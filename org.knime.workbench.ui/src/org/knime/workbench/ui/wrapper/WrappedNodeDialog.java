@@ -80,7 +80,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -311,9 +310,7 @@ public class WrappedNodeDialog extends Dialog {
 
         ((GridLayout)parent.getLayout()).numColumns++;
         final Button btnHelp = new Button(parent, SWT.PUSH | SWT.FLAT);
-        Image img =
-                PlatformUI.getWorkbench().getSharedImages()
-                        .getImage(ISharedImages.IMG_LCL_LINKTO_HELP);
+        Image img = ImageRepository.getIconImage(SharedImages.Help);
         btnHelp.setImage(img);
 
 
