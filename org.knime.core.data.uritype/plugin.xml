@@ -25,7 +25,7 @@
    <extension
          point="org.knime.core.PortType">
       <portType
-            color="#1e69af"
+            color="#1eb9dc"
             name="URI"
             objectClass="org.knime.core.data.uri.URIPortObject"
             objectSerializer="org.knime.core.data.uri.URIPortObject$Serializer"

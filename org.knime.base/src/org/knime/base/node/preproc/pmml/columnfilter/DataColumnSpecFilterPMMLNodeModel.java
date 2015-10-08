@@ -92,8 +92,8 @@ public class DataColumnSpecFilterPMMLNodeModel extends DataColumnSpecFilterNodeM
 
     /** The default constructor for the <code>DataColumnSpecFilterPMMLNodeModel</code> class. */
     public DataColumnSpecFilterPMMLNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, new PortType(PMMLPortObject.class)},
-              new PortType[]{BufferedDataTable.TYPE, new PortType(PMMLPortObject.class)});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE},
+              new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
      /** {@inheritDoc} */

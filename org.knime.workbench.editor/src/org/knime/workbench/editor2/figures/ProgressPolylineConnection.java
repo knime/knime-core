@@ -58,6 +58,7 @@ import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.ConnectionProgress;
 
@@ -93,6 +94,8 @@ public final class ProgressPolylineConnection extends PolylineConnection {
         {0x1, 0x4, 0x4}
     };
 
+    private static final Color DEFAULT_COLOR = new Color(Display.getCurrent(), 150, 150, 150);
+
     /**
      * Creates a new connection.
      */
@@ -102,6 +105,7 @@ public final class ProgressPolylineConnection extends PolylineConnection {
         locator.setGap(5);
         this.m_label = new Label("");
         add(m_label, locator);
+        setForegroundColor(DEFAULT_COLOR);
     }
 
     /** {@inheritDoc} */
@@ -114,7 +118,7 @@ public final class ProgressPolylineConnection extends PolylineConnection {
         }
 
         // set node connection color
-        g.setForegroundColor(new org.eclipse.swt.graphics.Color(Display.getCurrent(), 150, 150, 150));
+        g.setForegroundColor(getForegroundColor());
 
         super.outlineShape(g);
     }

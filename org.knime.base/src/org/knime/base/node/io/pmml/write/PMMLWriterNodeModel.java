@@ -91,8 +91,7 @@ public class PMMLWriterNodeModel extends NodeModel {
      *
      */
     public PMMLWriterNodeModel() {
-        super(new PortType[] {new PortType(PMMLPortObject.class)},
-                new PortType[] {});
+        super(new PortType[] {PMMLPortObject.TYPE}, new PortType[] {});
     }
 
     /**

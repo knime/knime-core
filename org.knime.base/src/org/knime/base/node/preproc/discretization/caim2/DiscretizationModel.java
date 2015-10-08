@@ -62,6 +62,7 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.port.AbstractSimplePortObject;
+import org.knime.core.node.port.PortObjectRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
@@ -80,7 +81,7 @@ public class DiscretizationModel extends AbstractSimplePortObject {
     /**
      * Convenience method to get the type of this port object.
      */
-    public static final PortType TYPE = new PortType(DiscretizationModel.class);
+    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(DiscretizationModel.class);
 
     private static final String CONFIG_KEY_SCHEMES = "DiscretizationSchemes";
 

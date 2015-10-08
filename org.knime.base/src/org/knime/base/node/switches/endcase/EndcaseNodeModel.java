@@ -128,7 +128,7 @@ public class EndcaseNodeModel extends NodeModel implements InactiveBranchConsume
 
     private static PortType[] createInTypes(final int nrIns) {
         PortType[] types = new PortType[nrIns];
-        Arrays.fill(types, new PortType(BufferedDataTable.class, true));
+        Arrays.fill(types, BufferedDataTable.TYPE_OPTIONAL);
         types[0] = BufferedDataTable.TYPE;
         return types;
     }

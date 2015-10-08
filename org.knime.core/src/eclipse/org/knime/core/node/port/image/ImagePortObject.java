@@ -63,6 +63,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.AbstractPortObject;
+import org.knime.core.node.port.PortObjectRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
@@ -81,13 +82,14 @@ public class ImagePortObject extends AbstractPortObject {
     public static final class Serializer extends AbstractPortObjectSerializer<ImagePortObject> {}
 
     /** Convenience accessor for the port type. */
-    public static final PortType TYPE = new PortType(ImagePortObject.class);
+    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(ImagePortObject.class);
 
     /**
      * Convenience accessor for the optional port type.
      * @since 2.12
      **/
-    public static final PortType TYPE_OPTIONAL = new PortType(ImagePortObject.class, true);
+    public static final PortType TYPE_OPTIONAL =
+        PortObjectRegistry.getInstance().getPortType(ImagePortObject.class, true);
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ImagePortObject.class);

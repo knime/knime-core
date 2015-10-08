@@ -188,7 +188,7 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
      * Constructor.
      */
     protected NaiveBayesLearnerNodeModel2() {
-        super(new PortType[]{BufferedDataTable.TYPE, new PortType(PMMLPortObject.class, true)},
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
             new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE});
         m_pmmlCompatible.addChangeListener(new ChangeListener() {
             @Override

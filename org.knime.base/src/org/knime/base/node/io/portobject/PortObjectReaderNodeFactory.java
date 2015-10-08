@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   30.10.2005 (mb): created
  */
@@ -55,14 +55,14 @@ import org.knime.core.node.port.PortType;
 
 /** Node that connects to arbitrary model ports and reads the model as
  * ModelContent from a chosen file.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
-public class PortObjectReaderNodeFactory 
+public class PortObjectReaderNodeFactory
         extends NodeFactory<PortObjectReaderNodeModel> {
 
     private final PortType m_type;
-    
+
     /** @param type Type of output. */
     public PortObjectReaderNodeFactory(final PortType type) {
         if (type == null) {
@@ -70,12 +70,12 @@ public class PortObjectReaderNodeFactory
         }
         m_type = type;
     }
-    
+
     /** Uses generic output port. */
     public PortObjectReaderNodeFactory() {
-        this(new PortType(PortObject.class));
+        this(PortObject.TYPE);
     }
-    
+
     /**
      * {@inheritDoc}
      */

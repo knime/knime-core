@@ -58,13 +58,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabaseConnectionPortObject;
-import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.port.image.ImagePortObject;
-import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
  *
@@ -93,7 +88,12 @@ public abstract class AbstractPortFigure extends Shape {
         }
     }
 
-    private static Color colorFlowvarPort = null;
+    private static final Color COLOR_FLOW_VAR_PORT;
+
+    static {
+        int c = FlowVariablePortObject.TYPE.getColor();
+        COLOR_FLOW_VAR_PORT = new Color(Display.getCurrent(), (c & 0xff0000) >> 16, (c & 0x00ff00) >> 8, (c & 0x0000ff));
+    }
 
     private int m_nrOfPorts;
 
@@ -200,39 +200,14 @@ public abstract class AbstractPortFigure extends Shape {
     @Override
     public Color getBackgroundColor() {
         // the colors set here get lightened up, if the port is optional
-        Color color = new Color(Display.getCurrent(), 155, 155, 155);
-        if (PMMLPortObject.TYPE.isSuperTypeOf(getType())) {
-            // model
-            color = new Color(Display.getCurrent(), 20, 105, 175);
-        } else if (AbstractSimplePortObject.class.isAssignableFrom(getType()
-                .getPortObjectClass())) {
-            // model
-            color = new Color(Display.getCurrent(), 30, 185, 220);
-        } else if (getType().equals(BufferedDataTable.TYPE)) {
-            // data
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
-        } else if (getType().equals(DatabaseConnectionPortObject.TYPE)) {
-            // database connection
-            color = new Color(Display.getCurrent(), 255, 75, 75);
-        } else if (getType().equals(DatabasePortObject.TYPE)) {
-            // database
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
-        } else if (getType().equals(ImagePortObject.TYPE)) {
-            // image
-            color = new Color(Display.getCurrent(), 65, 190, 120);
-        } else if ("org.knime.network.core.knime.port.GraphPortObject".equals(
-                getType().getPortObjectClass().getName())) {
-            // network / graph
-            color = new Color(Display.getCurrent(), 200, 230, 50);
-        } else if (getType().equals(FlowVariablePortObject.TYPE)) {
+        int c = getType().getColor();
+        Color color = new Color(Display.getCurrent(), (c & 0xff0000) >> 16, (c & 0x00ff00) >> 8, (c & 0x0000ff));
+
+        if (getType().equals(FlowVariablePortObject.TYPE) && !m_isMetaNodePort && (m_portIdx == 0) && !m_isConnected
+                && !showFlowVarPorts()) {
             // variable ports created by the framework are of different color
             // as long as they are not connected
-            if (!m_isMetaNodePort && m_portIdx == 0 && !m_isConnected
-                    && !showFlowVarPorts()) {
-                color = Display.getCurrent().getSystemColor(SWT.COLOR_WHITE);
-            } else {
-                color = getFlowVarPortColor();
-            }
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_WHITE);
         }
 
         return color;
@@ -243,11 +218,8 @@ public abstract class AbstractPortFigure extends Shape {
      *
      * @return the color used to color flow variable ports.
      */
-    public static synchronized Color getFlowVarPortColor() {
-        if (colorFlowvarPort == null) {
-            colorFlowvarPort = new Color(Display.getCurrent(), 255, 75, 75);
-        }
-        return colorFlowvarPort;
+    public static Color getFlowVarPortColor() {
+        return COLOR_FLOW_VAR_PORT;
     }
 
     /**
@@ -275,7 +247,7 @@ public abstract class AbstractPortFigure extends Shape {
      * Fills the shape, the points of the actual shape are set in
      * {@link NodeInPortFigure#createShapePoints(Rectangle)} and
      * {@link NodeOutPortFigure#createShapePoints(Rectangle)}. Only data ports
-     * (ports of type {@link BufferedDataTable#TYPE})are outlined, all other
+     * (ports of type {@link BufferedDataTable#TYPE}) are outlined, all other
      * port types are filled.
      *
      * {@inheritDoc}

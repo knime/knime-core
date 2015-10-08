@@ -97,6 +97,7 @@ import org.knime.core.data.xml.PMMLCellFactory;
 import org.knime.core.data.xml.PMMLValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectRegistry;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 import org.knime.core.pmml.PMMLFormatter;
@@ -119,7 +120,14 @@ public final class PMMLPortObject implements PortObject {
         NodeLogger.getLogger(PMMLPortObject.class);
 
     /** Convenience accessor for the port type. */
-    public static final PortType TYPE = new PortType(PMMLPortObject.class);
+    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(PMMLPortObject.class);
+
+    /**
+     * Convenience accessor for the optional port type.
+     * @since 3.0
+     */
+    public static final PortType TYPE_OPTIONAL =
+        PortObjectRegistry.getInstance().getPortType(PMMLPortObject.class, true);
 
     /** Constant for CDATA. */
     public static final String CDATA = "CDATA";

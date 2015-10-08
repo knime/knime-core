@@ -89,7 +89,8 @@ public final class PortType {
     /**
      * @param objectClass compatible port objects
      * @param isOptional indicates that this port does not need to be connected
-     * @deprecated use {@link PortObjectRegistry#getPortType(Class, boolean)} instead
+     * @deprecated use {@link PortObjectRegistry#getPortType(Class, boolean)} or the static constant in the concrete
+     *             port object class (if available) instead
      */
     @Deprecated
     public PortType(final Class<? extends PortObject> objectClass,
@@ -99,7 +100,8 @@ public final class PortType {
 
     /**
      * @param objectClass compatible port objects. Non-optional port!
-     * @deprecated user {@link PortObjectRegistry#getPortType(Class)} instead
+     * @deprecated use {@link PortObjectRegistry#getPortType(Class)} or the static constant in the concrete port object
+     *             class (if available) instead
      */
     @Deprecated
     public PortType(final Class<? extends PortObject> objectClass) {
@@ -252,7 +254,7 @@ public final class PortType {
                     + objectClassString + "\" does not extend "
                     + PortObject.class.getSimpleName());
         }
-        return new PortType(obClass.asSubclass(PortObject.class));
+        return PortObjectRegistry.getInstance().getPortType(obClass.asSubclass(PortObject.class));
     }
 
     public static Class<? extends PortObjectSpec> getPortObjectSpecClass(

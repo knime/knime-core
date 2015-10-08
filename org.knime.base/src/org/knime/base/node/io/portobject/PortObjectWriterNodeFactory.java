@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.10.2005 (mb): created
  */
@@ -55,14 +55,14 @@ import org.knime.core.node.port.PortType;
 
 /** Node that connects to arbitrary model ports and writes the model as
  * ModelContent to a chosen file.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
-public class PortObjectWriterNodeFactory 
+public class PortObjectWriterNodeFactory
         extends NodeFactory<PortObjectWriterNodeModel> {
-    
+
     private final PortType m_type;
-    
+
     /** @param type The type of input port. */
     public PortObjectWriterNodeFactory(final PortType type) {
         if (type == null) {
@@ -70,12 +70,12 @@ public class PortObjectWriterNodeFactory
         }
         m_type = type;
     }
-    
+
     /**
-     * 
+     *
      */
     public PortObjectWriterNodeFactory() {
-        this(new PortType(PortObject.class));
+        this(PortObject.TYPE);
     }
 
     /**

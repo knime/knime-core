@@ -119,10 +119,8 @@ public class DecTreeToImageNodeModel extends NodeModel {
      * Create a new instance.
      */
     public DecTreeToImageNodeModel() {
-        super(new PortType[] {PMMLPortObject.TYPE,
-                new PortType(BufferedDataTable.class, true)
-                },
-                new PortType[] {ImagePortObject.TYPE});
+        super(new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE_OPTIONAL},
+            new PortType[]{ImagePortObject.TYPE});
         m_settings = new DecTreeToImageNodeSettings();
     }
 

@@ -377,9 +377,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * port. In addition it has an optional model input.
      */
     public DecisionTreeLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)},
-                new PortType[]{PMMLPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+            new PortType[]{PMMLPortObject.TYPE});
     }
 
     /**

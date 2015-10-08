@@ -50,7 +50,6 @@ package org.knime.base.node.switches.caseswitch.model;
 
 import org.knime.base.node.switches.caseswitch.CaseStartNodeFactory;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
 
 /**
  *
@@ -62,7 +61,7 @@ public final class CaseStartModelNodeFactory extends CaseStartNodeFactory {
      * Constructor.
      */
     public CaseStartModelNodeFactory() {
-        super(new PortType(PortObject.class));
+        super(PortObject.TYPE);
     }
 
 }

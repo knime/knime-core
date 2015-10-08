@@ -464,7 +464,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                             // keep type
                         } else {
                             // this shouldn't really happen - someone changed port types between versions
-                            type = new PortType(PortObject.class);
+                            type = PortObject.TYPE;
                         }
                     }
                     outPortTypes[i] = type;

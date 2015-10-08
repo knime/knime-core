@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   30.10.2005 (mb): created
  */
@@ -49,19 +49,18 @@ package org.knime.base.node.io.predictor;
 
 import org.knime.base.node.io.portobject.PortObjectReaderNodeFactory;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
 
 /** Node that connects to arbitrary model ports and reads the model as
  * ModelContent from a chosen file.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class PredictorReaderNodeFactory extends PortObjectReaderNodeFactory {
 
-    /** 
-     * 
+    /**
+     *
      */
     public PredictorReaderNodeFactory() {
-        super(new PortType(PortObject.class));
+        super(PortObject.TYPE);
     }
 }

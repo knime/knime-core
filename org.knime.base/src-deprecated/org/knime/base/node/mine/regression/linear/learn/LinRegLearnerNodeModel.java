@@ -165,9 +165,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /** Inits a new node model, it will have 1 data input, 1 optional
      * model input and 1 model output. */
     public LinRegLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)},
-                new PortType[]{PMMLPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+            new PortType[]{PMMLPortObject.TYPE});
     }
 
     /**

@@ -105,9 +105,8 @@ final class BinnerNodeModel extends NodeModel {
 
     /** Creates a new binner. */
     BinnerNodeModel() {
-        super(new PortType[] {BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)},
-                new PortType[] {BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
     /**

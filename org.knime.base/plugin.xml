@@ -1931,7 +1931,7 @@
      <extension
            point="org.knime.core.PortType">
         <portType
-              color="#1e69af"
+              color="#1eb9dc"
               hidden="true"
               name="PMML Discretization"
               objectClass="org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizePreprocPortObject"
@@ -1940,7 +1940,7 @@
               specSerializer="org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizePreprocPortObjectSpec$Serializer">
         </portType>
         <portType
-              color="#1e69af"
+              color="#1eb9dc"
               name="Fuzzy Basis Function"
               objectClass="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPortObject"
               objectSerializer="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPortObject$Serializer"
@@ -1954,7 +1954,7 @@
               specSerializer="org.knime.base.node.meta.feature.backwardelim.BWElimModel$SpecSerializer">
         </portType>
         <portType
-              color="#1e69af"
+              color="#1eb9dc"
               name="Sota"
               objectClass="org.knime.base.node.mine.sota.SotaPortObject"
               objectSerializer="org.knime.base.node.mine.sota.SotaPortObject$Serializer"
@@ -1962,7 +1962,7 @@
               specSerializer="org.knime.base.node.mine.sota.SotaPortObjectSpec$Serializer">
         </portType>
         <portType
-              color="#1e69af"
+              color="#1eb9dc"
               name="PCA"
               objectClass="org.knime.base.node.mine.pca.PCAModelPortObject"
               objectSerializer="org.knime.base.node.mine.pca.PCAModelPortObject$Serializer"
@@ -1970,14 +1970,14 @@
               specSerializer="org.knime.base.node.mine.pca.PCAModelPortObjectSpec$Serializer">
         </portType>
         <portType
-              color="#1e69af"
+              color="#1eb9dc"
               name="Normalizer"
               objectClass="org.knime.base.data.normalize.NormalizerPortObject"
               objectSerializer="org.knime.base.data.normalize.NormalizerPortObject$Serializer"
               specClass="org.knime.core.data.DataTableSpec">
         </portType>
         <portType
-              color="#1e69af"
+              color="#1eb9dc"
               hidden="true"
               name="Naive Bayes"
               objectClass="org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject"
@@ -1992,7 +1992,7 @@
               specClass="org.knime.core.data.DataTableSpec">
         </portType>
         <portType
-              color="#1e69af"
+              color="#1eb9dc"
               name="Radial Basis Function"
               objectClass="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPortObject"
               objectSerializer="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPortObject$Serializer"

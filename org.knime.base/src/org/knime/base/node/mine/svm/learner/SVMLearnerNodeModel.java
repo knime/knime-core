@@ -198,9 +198,8 @@ public class SVMLearnerNodeModel extends NodeModel {
      *
      */
     public SVMLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)},
-                new PortType[]{PMMLPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+            new PortType[]{PMMLPortObject.TYPE});
         m_kernelParameters = createKernelParams();
     }
 

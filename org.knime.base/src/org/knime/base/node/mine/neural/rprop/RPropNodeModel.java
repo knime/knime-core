@@ -242,9 +242,8 @@ public class RPropNodeModel extends NodeModel {
      *
      */
     public RPropNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)},
-                new PortType[]{PMMLPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+            new PortType[]{PMMLPortObject.TYPE});
         m_architecture = new Architecture();
         m_mlp = new MultiLayerPerceptron();
     }

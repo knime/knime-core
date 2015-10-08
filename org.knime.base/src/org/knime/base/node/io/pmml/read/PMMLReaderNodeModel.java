@@ -84,8 +84,7 @@ public class PMMLReaderNodeModel extends NodeModel {
      * Create a new PMML reader node model with optional PMML in port.
      */
     public PMMLReaderNodeModel() {
-        super(new PortType[]{new PortType(PMMLPortObject.class, true)},
-                new PortType[]{new PortType(PMMLPortObject.class)});
+        super(new PortType[]{PMMLPortObject.TYPE_OPTIONAL}, new PortType[]{PMMLPortObject.TYPE});
     }
 
     /**

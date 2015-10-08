@@ -99,10 +99,8 @@ public final class LinReg2LearnerNodeModel extends NodeModel implements LinReg2D
     /** Inits a new node model, it will have 1 data input, and optional PMML
      * model inport, 1 model and 1 data output. */
     public LinReg2LearnerNodeModel() {
-        super(new PortType[] {BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true) },
-                    new PortType[] {PMMLPortObject.TYPE,
-                            BufferedDataTable.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+            new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE});
         m_settings = new LinReg2LearnerSettings();
     }
 

@@ -163,9 +163,8 @@ public class ClusterNodeModel extends NodeModel {
      * Constructor, remember parent and initialize status.
      */
     ClusterNodeModel() {
-        super(new PortType[] {BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)},
-                new PortType[] {BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
     /**

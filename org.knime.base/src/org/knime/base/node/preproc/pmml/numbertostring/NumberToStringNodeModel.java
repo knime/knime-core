@@ -110,10 +110,8 @@ public class NumberToStringNodeModel extends NodeModel {
      * PMML inport and outport.
      */
     public NumberToStringNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)},
-                new PortType[]{BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL});
     }
 
     /**

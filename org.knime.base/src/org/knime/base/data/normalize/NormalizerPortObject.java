@@ -56,6 +56,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObject;
+import org.knime.core.node.port.PortObjectRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
@@ -73,8 +74,7 @@ public final class NormalizerPortObject extends AbstractSimplePortObject {
     public static final class Serializer extends AbstractSimplePortObjectSerializer<NormalizerPortObject> {}
 
     /** Convenience accessor for the port type. */
-    public static final PortType TYPE =
-        new PortType(NormalizerPortObject.class);
+    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(NormalizerPortObject.class);
 
     private DataTableSpec m_spec;
     private AffineTransConfiguration m_configuration;

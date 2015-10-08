@@ -105,9 +105,9 @@ public class Normalizer3NodeModel extends NodeModel {
      * @param modelPortType the port type of the model
      */
     protected Normalizer3NodeModel(final PortType modelPortType) {
-        super(PMMLPortObject.TYPE.equals(modelPortType) ? new PortType[]{BufferedDataTable.TYPE,
-            new PortType(PMMLPortObject.class, true)} : new PortType[]{BufferedDataTable.TYPE}, new PortType[]{
-            BufferedDataTable.TYPE, modelPortType});
+        super(PMMLPortObject.TYPE.equals(modelPortType)
+            ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
+            : new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, modelPortType});
     }
 
     /**

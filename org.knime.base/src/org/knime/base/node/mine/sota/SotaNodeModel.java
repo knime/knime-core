@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 16, 2005 (Kilian Thiel): created
  */
@@ -74,11 +74,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaNodeModel extends NodeModel {
@@ -92,12 +93,12 @@ public class SotaNodeModel extends NodeModel {
      * The default value for the usage of out data.
      */
     public static final boolean DEFAULT_USE_OUTDATA = true;
-    
+
     /**
      * The configuration key for the internal model of SOTA.
      */
     public static final String INTERNAL_MODEL = "SotaModel";
-    
+
     /**
      * The file to save the internal structire of SOTA.
      */
@@ -111,23 +112,23 @@ public class SotaNodeModel extends NodeModel {
     /**
      * The file to save the original data for SOTA.
      */
-    private static final String ORIG_DATA_FILE = "origdata.sota";    
-    
-    
+    private static final String ORIG_DATA_FILE = "origdata.sota";
+
+
     private SotaManager m_sota;
 
     private String m_hierarchieLevelCell;
-   
+
     private boolean m_withOutPort = false;
-    
+
     private SettingsModelString m_classCol =
         new SettingsModelString(SotaConfigKeys.CFGKEY_CLASSCOL, "");
-    
+
     private SettingsModelBoolean m_useOutData =
-        new SettingsModelBoolean(SotaConfigKeys.CFGKEY_USE_CLASS_DATA, 
-                SotaNodeModel.DEFAULT_USE_OUTDATA);    
-    
-    
+        new SettingsModelBoolean(SotaConfigKeys.CFGKEY_USE_CLASS_DATA,
+                SotaNodeModel.DEFAULT_USE_OUTDATA);
+
+
     /**
      * Constructor of SoteNodeModel. Creates new instance of SotaNodeModel, with
      * default settings and one out port by default.
@@ -140,7 +141,7 @@ public class SotaNodeModel extends NodeModel {
      * Constructor of SoteNodeModel. Creates new instance of SotaNodeModel, with
      * default settings. If <code>withOutPort</code> is set true one out port
      * will be created otherwise no out port will be created.
-     * 
+     *
      * @param withOutPort If set true one out port will be created otherwise
      * not.
      */
@@ -149,15 +150,15 @@ public class SotaNodeModel extends NodeModel {
         m_sota = new SotaManager();
         m_withOutPort = withOutPort;
     }
-    
+
     private static final PortType[] outPorts(final boolean withOutPort) {
         if (withOutPort) {
-            return new PortType[]{new PortType(SotaPortObject.class)};
+            return new PortType[]{PortObjectRegistry.getInstance().getPortType(SotaPortObject.class)};
         }
         return new PortType[]{null};
     }
-    
-    
+
+
     /**
      * {@inheritDoc}
      */
@@ -165,9 +166,9 @@ public class SotaNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
     throws InvalidSettingsException {
         assert inSpecs.length == 1;
-        
+
         DataTableSpec inDataSpec = (DataTableSpec)inSpecs[SotaNodeModel.INPORT];
-        
+
         int numberCells = 0;
         int fuzzyCells = 0;
         for (int i = 0; i < inDataSpec.getNumColumns(); i++) {
@@ -206,11 +207,11 @@ public class SotaNodeModel extends NodeModel {
 
         int classColIndex = inDataSpec.findColumnIndex(
                 m_classCol.getStringValue());
-        return new PortObjectSpec[]{new SotaPortObjectSpec(inDataSpec, 
+        return new PortObjectSpec[]{new SotaPortObjectSpec(inDataSpec,
                 classColIndex)};
-    }    
-    
-    
+    }
+
+
 
     /**
      * {@inheritDoc}
@@ -221,12 +222,12 @@ public class SotaNodeModel extends NodeModel {
             Exception {
 
         if (!(inData[SotaNodeModel.INPORT] instanceof BufferedDataTable)) {
-            throw new IllegalArgumentException("Given indata port object is " 
+            throw new IllegalArgumentException("Given indata port object is "
                     + " no BufferedDataTable!");
         }
-        
+
         BufferedDataTable bdt = (BufferedDataTable)inData[SotaNodeModel.INPORT];
-        
+
         final DataArray origRowContainer = new DefaultDataArray(
                 bdt, 1, Integer.MAX_VALUE);
         DataTable dataTableToUse = bdt;
@@ -234,13 +235,13 @@ public class SotaNodeModel extends NodeModel {
         // get index of column containing class information
         indexOfClassCol = dataTableToUse.getDataTableSpec().findColumnIndex(
                 m_classCol.getStringValue());
-            
-            m_sota.initializeTree(dataTableToUse, origRowContainer, exec, 
+
+            m_sota.initializeTree(dataTableToUse, origRowContainer, exec,
                     indexOfClassCol);
             m_sota.doTraining();
 
         if (m_withOutPort) {
-            return new PortObject[]{new SotaPortObject(m_sota, 
+            return new PortObject[]{new SotaPortObject(m_sota,
                     dataTableToUse.getDataTableSpec(), indexOfClassCol)};
         }
         return new PortObject[]{};
@@ -261,10 +262,10 @@ public class SotaNodeModel extends NodeModel {
         return m_sota;
     }
 
-    
-    
-    
-    
+
+
+
+
 
     /**
      * {@inheritDoc}
@@ -278,7 +279,7 @@ public class SotaNodeModel extends NodeModel {
                 m_sota.isUseHierarchicalFuzzyData());
         settings.addString(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_LEVEL,
                 m_hierarchieLevelCell);
-        
+
         m_classCol.saveSettingsTo(settings);
         m_useOutData.saveSettingsTo(settings);
     }
@@ -290,7 +291,7 @@ public class SotaNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         readSettings(settings, /* validateOnly= */true);
-        
+
         m_classCol.validateSettings(settings);
         m_useOutData.validateSettings(settings);
     }
@@ -302,11 +303,11 @@ public class SotaNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         readSettings(settings, /* validateOnly= */false);
-        
+
         m_classCol.loadSettingsFrom(settings);
         m_useOutData.loadSettingsFrom(settings);
     }
-    
+
     private void readSettings(final NodeSettingsRO settings,
             final boolean validateOnly) throws InvalidSettingsException {
         m_sota.readSettings(settings, validateOnly);
@@ -331,20 +332,20 @@ public class SotaNodeModel extends NodeModel {
             m_sota.setUseHierarchicalFuzzyData(useHFD);
         }
     }
-    
-    
-    
-    
+
+
+
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
-        
+
         File file = new File(internDir, TREE_FILE);
         FileInputStream fis = new FileInputStream(file);
-        ModelContentRO modelContent = ModelContent.loadFromXML(fis);        
+        ModelContentRO modelContent = ModelContent.loadFromXML(fis);
 
         // Load settings
         int inDataSize = 0;
@@ -359,13 +360,13 @@ public class SotaNodeModel extends NodeModel {
             origDataSize = modelContent.getInt(
                     SotaPortObject.CFG_KEY_ORIGDATA_SIZE);
         } catch (InvalidSettingsException e1) {
-            IOException ioe = new IOException("Could not load settings," 
+            IOException ioe = new IOException("Could not load settings,"
                     + "due to invalid settings in model content !");
             ioe.initCause(e1);
             fis.close();
             throw ioe;
         }
-        
+
         // Load in data
         DataTable table = DataContainer.readFromZip(new File(internDir,
                 IN_DATA_FILE));
@@ -377,7 +378,7 @@ public class SotaNodeModel extends NodeModel {
         final DataArray origData = new DefaultDataArray(table, 1, origDataSize);
         m_sota.setOriginalData(origData);
 
-        
+
         // Load tree
         SotaTreeCell root = new SotaTreeCell(0, false);
         try {
@@ -390,7 +391,7 @@ public class SotaNodeModel extends NodeModel {
             throw ioe;
         }
         m_sota.setRoot(root);
-        
+
         fis.close();
     }
 
@@ -399,7 +400,7 @@ public class SotaNodeModel extends NodeModel {
      */
     @Override
     protected void saveInternals(final File internDir,
-            final ExecutionMonitor exec) 
+            final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
 
         // Save in data container
@@ -415,16 +416,16 @@ public class SotaNodeModel extends NodeModel {
         m_sota.getRoot().saveTo(modelContent, 0);
 
         // Save settings
-        modelContent.addBoolean(SotaPortObject.CFG_KEY_USE_FUZZY_HIERARCHY, 
+        modelContent.addBoolean(SotaPortObject.CFG_KEY_USE_FUZZY_HIERARCHY,
                 m_sota.isUseHierarchicalFuzzyData());
-        modelContent.addInt(SotaPortObject.CFG_KEY_MAX_FUZZY_LEVEL, 
+        modelContent.addInt(SotaPortObject.CFG_KEY_MAX_FUZZY_LEVEL,
                 m_sota.getMaxHierarchicalLevel());
         modelContent.addInt(SotaPortObject.CFG_KEY_INDATA_SIZE,
                 m_sota.getInDataContainer().size());
         modelContent.addInt(SotaPortObject.CFG_KEY_ORIGDATA_SIZE,
                 m_sota.getOriginalData().size());
-        
-        
+
+
         File file = new File(internDir, TREE_FILE);
         FileOutputStream fos = new FileOutputStream(file);
         modelContent.saveToXML(fos);

@@ -218,7 +218,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private static final String CFG_AUTHOR_INFORMATION = "authorInformation";
 
-    private static final PortType FALLBACK_PORTTYPE = new PortType(PortObject.class);
+    private static final PortType FALLBACK_PORTTYPE = PortObject.TYPE;
 
     private static final NodeSettingsRO EMPTY_SETTINGS = new NodeSettings("<<empty>>");
 

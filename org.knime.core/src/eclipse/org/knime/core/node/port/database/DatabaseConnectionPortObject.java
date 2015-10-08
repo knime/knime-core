@@ -55,6 +55,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
@@ -77,13 +78,13 @@ public class DatabaseConnectionPortObject implements PortObject {
     /**
      * Database port type.
      */
-    public static final PortType TYPE = new PortType(DatabaseConnectionPortObject.class);
+    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(DatabaseConnectionPortObject.class);
 
     /**
      * Database type for optional ports.
      */
-    public static final PortType TYPE_OPTIONAL = new PortType(DatabaseConnectionPortObject.class, true);
-
+    public static final PortType TYPE_OPTIONAL =
+        PortObjectRegistry.getInstance().getPortType(DatabaseConnectionPortObject.class, true);
 
     /**
      * {@inheritDoc}

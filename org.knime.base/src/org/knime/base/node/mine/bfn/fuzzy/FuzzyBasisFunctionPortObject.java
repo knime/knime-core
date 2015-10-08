@@ -49,6 +49,7 @@ import org.knime.base.node.mine.bfn.BasisFunctionPortObject;
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorRow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.port.PortObjectRegistry;
 import org.knime.core.node.port.PortType;
 
 /**
@@ -64,8 +65,7 @@ public final class FuzzyBasisFunctionPortObject
     public static final class Serializer extends AbstractSimplePortObjectSerializer<FuzzyBasisFunctionPortObject> {}
 
     /** The <code>PortType</code> for basisfunction models. */
-    public static final PortType TYPE = new PortType(
-            FuzzyBasisFunctionPortObject.class);
+    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(FuzzyBasisFunctionPortObject.class);
 
     /**
      *

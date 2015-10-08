@@ -456,7 +456,7 @@
    <extension
          point="org.knime.core.PortType">
       <portType
-            color="#415a78"
+            color="#41be78"
             name="Image"
             objectClass="org.knime.core.node.port.image.ImagePortObject"
             objectSerializer="org.knime.core.node.port.image.ImagePortObject$Serializer"
@@ -472,21 +472,21 @@
             specSerializer="org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObjectSpec$Serializer">
       </portType>
       <portType
-            color="#1e69af"
+            color="#1eb9dc"
             name="Color"
             objectClass="org.knime.core.node.port.viewproperty.ColorHandlerPortObject"
             objectSerializer="org.knime.core.node.port.viewproperty.ColorHandlerPortObject$Serializer"
             specClass="org.knime.core.data.DataTableSpec">
       </portType>
       <portType
-            color="#1e69af"
+            color="#1eb9dc"
             name="Size"
             objectClass="org.knime.core.node.port.viewproperty.SizeHandlerPortObject"
             objectSerializer="org.knime.core.node.port.viewproperty.SizeHandlerPortObject$Serializer"
             specClass="org.knime.core.data.DataTableSpec">
       </portType>
       <portType
-            color="#1e69af"
+            color="#1eb9dc"
             name="Shape"
             objectClass="org.knime.core.node.port.viewproperty.ShapeHandlerPortObject"
             objectSerializer="org.knime.core.node.port.viewproperty.ShapeHandlerPortObject$Serializer"

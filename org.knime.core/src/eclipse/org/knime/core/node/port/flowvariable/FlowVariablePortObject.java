@@ -54,6 +54,7 @@ import javax.swing.JComponent;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
@@ -71,12 +72,11 @@ import org.knime.core.node.port.PortType;
 public class FlowVariablePortObject implements PortObject {
 
     /** Type representing this port object. */
-    public static final PortType TYPE =
-        new PortType(FlowVariablePortObject.class);
+    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(FlowVariablePortObject.class);
 
     /** Type representing this port object as optional. */
     public static final PortType TYPE_OPTIONAL =
-        new PortType(FlowVariablePortObject.class, true);
+        PortObjectRegistry.getInstance().getPortType(FlowVariablePortObject.class, true);
 
     /** Singleton instance to be used. */
     public static final FlowVariablePortObject INSTANCE = new FlowVariablePortObject();

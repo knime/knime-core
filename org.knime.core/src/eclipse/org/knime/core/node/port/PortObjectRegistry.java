@@ -65,6 +65,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.SerializerMethodLoader;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
@@ -87,9 +88,9 @@ public final class PortObjectRegistry {
 
     private final Map<String, Class<? extends PortObjectSpec>> m_specClassMap = new ConcurrentHashMap<>();
 
-    private Map<Class<? extends PortObject>, PortType> m_allPortTypes;
+    private final Map<Class<? extends PortObject>, PortType> m_allPortTypes = new HashMap<>();
 
-    private Map<Class<? extends PortObject>, PortType> m_allOptionalPortTypes;
+    private final Map<Class<? extends PortObject>, PortType> m_allOptionalPortTypes = new HashMap<>();
 
     private static final PortObjectRegistry INSTANCE = new PortObjectRegistry();
 
@@ -113,7 +114,17 @@ public final class PortObjectRegistry {
 
         m_specClassMap.put(DataTableSpec.class.getName(), DataTableSpec.class);
         m_specSerializers.put(DataTableSpec.class, new DataTableSpec.Serializer());
+
+        m_allPortTypes.put(PortObject.class, new PortType(PortObject.class, false, null, PortType.DEFAULT_COLOR, true));
+        m_allOptionalPortTypes.put(PortObject.class,
+            new PortType(PortObject.class, true, null, PortType.DEFAULT_COLOR, true));
+
+        m_allPortTypes.put(BufferedDataTable.class, new PortType(BufferedDataTable.class, false, "Data", 0, false));
+        m_allOptionalPortTypes.put(BufferedDataTable.class,
+            new PortType(BufferedDataTable.class, true, "Data", 0, false));
     }
+
+    private boolean m_allPortTypesRead;
 
     /**
      * Returns a collection with all known data types (that registered at the extension point
@@ -123,32 +134,36 @@ public final class PortObjectRegistry {
      */
     public synchronized Collection<PortType> availablePortTypes() {
         // perform lazy initialization
-        if (m_allPortTypes != null) {
-            return m_allPortTypes.values();
-
+        if (!m_allPortTypesRead) {
+            IExtensionRegistry registry = Platform.getExtensionRegistry();
+            IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
+            Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
+                .filter(e -> getObjectClass(e.getAttribute("objectClass")).isPresent())
+                .forEach(e -> createPortTypes(e));
+            m_allPortTypesRead = true;
         }
 
-        readAllPortTypes();
         return m_allPortTypes.values();
     }
 
-    private void readAllPortTypes() {
-        m_allPortTypes = new HashMap<>();
-        m_allOptionalPortTypes = new HashMap<>();
-
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
-        Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
-            .filter(e -> getObjectClass(e.getAttribute("objectClass")).isPresent()).forEach(e -> createPortTypes(e));
-    }
-
     private void createPortTypes(final IConfigurationElement e) {
+        int color;
+        try {
+            color =e.getAttribute("color") != null ? Integer.parseInt(e.getAttribute("color").substring(1), 16)
+            : PortType.DEFAULT_COLOR;
+        } catch (NumberFormatException ex) {
+            NodeLogger.getLogger(getClass()).coding(
+                "Illegal color in port type extension for '" + e.getAttribute("name") + "': " + e.getAttribute("color"),
+                ex);
+            color = PortType.DEFAULT_COLOR;
+        }
+
         PortType pt = new PortType(getObjectClass(e.getAttribute("objectClass")).get(), false, e.getAttribute("name"),
-            Integer.parseInt(e.getAttribute("color").substring(1), 16), Boolean.parseBoolean(e.getAttribute("hidden")));
+            color, Boolean.parseBoolean(e.getAttribute("hidden")));
         m_allPortTypes.put(pt.getPortObjectClass(), pt);
 
-        pt = new PortType(getObjectClass(e.getAttribute("objectClass")).get(), true, e.getAttribute("name"),
-            Integer.parseInt(e.getAttribute("color").substring(1), 16), Boolean.parseBoolean(e.getAttribute("hidden")));
+        pt = new PortType(getObjectClass(e.getAttribute("objectClass")).get(), true, e.getAttribute("name"), color,
+            Boolean.parseBoolean(e.getAttribute("hidden")));
         m_allOptionalPortTypes.put(pt.getPortObjectClass(), pt);
     }
 
@@ -170,18 +185,24 @@ public final class PortObjectRegistry {
      * @return a port type, never <code>null</code>
      */
     public synchronized PortType getPortType(final Class<? extends PortObject> portClass, final boolean isOptional) {
-        if (m_allPortTypes == null) {
-            readAllPortTypes();
-        }
-
         Map<Class<? extends PortObject>, PortType> map = isOptional ? m_allOptionalPortTypes : m_allPortTypes;
 
         PortType pt = map.get(portClass);
         if (pt == null) {
-            NodeLogger.getLogger(getClass()).coding("Port object class '" + portClass.getName() + "' is not "
-                + "registered at the extension point org.knime.core.PortType.");
-            pt = new PortType(portClass, isOptional, null, PortType.DEFAULT_COLOR, true);
-            map.put(portClass, pt);
+            IExtensionRegistry registry = Platform.getExtensionRegistry();
+            IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
+            Optional<IConfigurationElement> configElement =
+                Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
+                    .filter(e -> portClass.getName().equals(e.getAttribute("objectClass"))).findFirst();
+            if (configElement.isPresent()) {
+                createPortTypes(configElement.get());
+                pt = map.get(portClass);
+            } else {
+                NodeLogger.getLogger(getClass()).coding("Port object class '" + portClass.getName() + "' is not "
+                    + "registered at the extension point org.knime.core.PortType.");
+                pt = new PortType(portClass, isOptional, null, PortType.DEFAULT_COLOR, true);
+                map.put(portClass, pt);
+            }
         }
         return pt;
     }

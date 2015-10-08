@@ -529,7 +529,7 @@ public class FileNodePersistor implements NodePersistor {
                         loadResult.addError(msg);
                         cl = PortObject.class;
                     }
-                    outTypes[index] = new PortType(cl.asSubclass(PortObject.class));
+                    outTypes[index] = PortObjectRegistry.getInstance().getPortType(cl.asSubclass(PortObject.class));
                 }
             }
             return outTypes;

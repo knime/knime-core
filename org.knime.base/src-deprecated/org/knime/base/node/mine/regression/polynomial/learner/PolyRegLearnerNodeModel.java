@@ -124,8 +124,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
      * Creates a new model for the polynomial regression learner node.
      */
     public PolyRegLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, new PortType(PMMLPortObject.class, true)}, new PortType[]{
-            BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
     /**

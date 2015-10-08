@@ -103,7 +103,7 @@ implements ScopeEndNode, InactiveBranchConsumer {
     /** Generic constructor.
      */
     protected GenericCatchNodeModel() {
-        this(new PortType(PortObject.class));
+        this(PortObject.TYPE);
     }
 
     /**

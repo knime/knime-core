@@ -280,8 +280,7 @@ public final class Node implements NodeModelWarningListener {
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
         // create an extra input port (index: 0) for the optional variables.
         m_inputs = new Input[m_model.getNrInPorts() + 1];
-        m_inputs[0] = new Input("Variable Inport",
-                new PortType(FlowVariablePortObject.class, true));
+        m_inputs[0] = new Input("Variable Inport", FlowVariablePortObject.TYPE_OPTIONAL);
         for (int i = 1; i < m_inputs.length; i++) {
             m_inputs[i] = new Input(m_factory.getInportName(i - 1),
                     m_model.getInPortType(i - 1));
@@ -290,7 +289,7 @@ public final class Node implements NodeModelWarningListener {
         // create an extra output port (index: 0) for the variables.
         m_outputs = new Output[m_model.getNrOutPorts() + 1];
         m_outputs[0] = new Output();
-        m_outputs[0].type = new PortType(FlowVariablePortObject.class, true);
+        m_outputs[0].type = FlowVariablePortObject.TYPE_OPTIONAL;
         m_outputs[0].name = "Variable Outport";
         m_outputs[0].spec = null;
         m_outputs[0].object = null;
