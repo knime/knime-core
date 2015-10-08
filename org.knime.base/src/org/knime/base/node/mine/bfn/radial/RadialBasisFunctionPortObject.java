@@ -49,7 +49,7 @@ import org.knime.base.node.mine.bfn.BasisFunctionPortObject;
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorRow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortType;
 
 /**
@@ -65,7 +65,7 @@ public final class RadialBasisFunctionPortObject
     public static final class Serializer extends AbstractSimplePortObjectSerializer<RadialBasisFunctionPortObject> {}
 
     /** The <code>PortType</code> for basisfunction models. */
-    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(RadialBasisFunctionPortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(RadialBasisFunctionPortObject.class);
 
     /**
      *

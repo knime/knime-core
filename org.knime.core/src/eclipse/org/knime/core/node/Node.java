@@ -86,7 +86,7 @@ import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectHolder;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
@@ -1268,7 +1268,7 @@ public final class Node implements NodeModelWarningListener {
         // first copy the spec, then copy the object
         final PortObjectSpec s = portObject.getSpec();
         PortObjectSpec.PortObjectSpecSerializer ser =
-            PortObjectRegistry.getInstance().getSpecSerializer(s.getClass()).get();
+            PortTypeRegistry.getInstance().getSpecSerializer(s.getClass()).get();
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream(10 * 1024);
         PortObjectSpecZipOutputStream specOut =
@@ -1287,7 +1287,7 @@ public final class Node implements NodeModelWarningListener {
                 /* 10 MB */10 * 1024 * 1024, "knime-portobject-copy-", ".bin",
                 new File(KNIMEConstants.getKNIMETempDir()));
         PortObject.PortObjectSerializer obSer =
-            PortObjectRegistry.getInstance().getObjectSerializer(portObject.getClass()).get();
+            PortTypeRegistry.getInstance().getObjectSerializer(portObject.getClass()).get();
         PortObjectZipOutputStream objOut = PortUtil.getPortObjectZipOutputStream(deferredOutputStream);
         objOut.setLevel(0);
         obSer.savePortObject(portObject, objOut, exec);

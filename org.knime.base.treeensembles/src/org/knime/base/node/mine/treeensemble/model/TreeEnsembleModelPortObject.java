@@ -58,7 +58,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.AbstractPortObject;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
@@ -74,7 +74,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 public class TreeEnsembleModelPortObject extends AbstractPortObject {
     public static final class Serializer extends AbstractPortObjectSerializer<TreeEnsembleModelPortObject> {}
 
-    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(TreeEnsembleModelPortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(TreeEnsembleModelPortObject.class);
 
     private TreeEnsembleModelPortObjectSpec m_spec;
 

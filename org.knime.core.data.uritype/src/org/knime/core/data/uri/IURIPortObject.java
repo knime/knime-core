@@ -50,7 +50,7 @@ package org.knime.core.data.uri;
 import java.util.List;
 
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortType;
 
 /**
@@ -62,7 +62,7 @@ public interface IURIPortObject extends PortObject {
     /**
      * Type of this port.
      */
-    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(IURIPortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(IURIPortObject.class);
 
     /** @return The non-null uriContent of this object. */
     public List<URIContent> getURIContents();

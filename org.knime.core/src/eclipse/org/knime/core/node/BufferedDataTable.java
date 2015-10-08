@@ -85,7 +85,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.BufferedDataTableView;
 import org.knime.core.util.MutableBoolean;
@@ -112,13 +112,13 @@ public final class BufferedDataTable implements DataTable, PortObject {
 
     /** Define port type of objects of this class when used as PortObjects.
      */
-    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(BufferedDataTable.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(BufferedDataTable.class);
 
     /** A port type representing an optional input table (as used, for instance
      * in the Concatenate node).
      * @since 2.6 */
     public static final PortType TYPE_OPTIONAL =
-        PortObjectRegistry.getInstance().getPortType(BufferedDataTable.class, true);
+        PortTypeRegistry.getInstance().getPortType(BufferedDataTable.class, true);
 
     /** internal ID for any generated table. */
     private static final AtomicInteger LAST_ID = new AtomicInteger(0);

@@ -72,9 +72,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 
 /**
  *
@@ -106,7 +106,7 @@ public class SotaPredictorNodeModel extends NodeModel {
      */
     public SotaPredictorNodeModel() {
         super(
-            new PortType[]{PortObjectRegistry.getInstance().getPortType(SotaPortObject.class), BufferedDataTable.TYPE},
+            new PortType[]{PortTypeRegistry.getInstance().getPortType(SotaPortObject.class), BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
     }
 

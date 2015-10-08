@@ -57,7 +57,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObject;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
@@ -84,7 +84,7 @@ public class PCAModelPortObject extends AbstractSimplePortObject {
     /**
      * Define port type of objects of this class when used as PortObjects.
      */
-    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(PCAModelPortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(PCAModelPortObject.class);
 
     private String[] m_inputColumnNames;
 

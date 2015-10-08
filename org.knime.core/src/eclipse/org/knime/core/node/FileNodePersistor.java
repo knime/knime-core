@@ -72,7 +72,7 @@ import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
@@ -390,7 +390,7 @@ public class FileNodePersistor implements NodePersistor {
                 PortObjectSpecZipInputStream in =
                     PortUtil.getPortObjectSpecZipInputStream(new BufferedInputStream(new FileInputStream(specFile)));
                 PortObjectSpecSerializer<?> serializer =
-                    PortObjectRegistry.getInstance().getSpecSerializer(cl.asSubclass(PortObjectSpec.class)).get();
+                    PortTypeRegistry.getInstance().getSpecSerializer(cl.asSubclass(PortObjectSpec.class)).get();
                 spec = serializer.loadPortObjectSpec(in);
                 in.close();
                 if (spec == null) {
@@ -428,7 +428,7 @@ public class FileNodePersistor implements NodePersistor {
                     PortObjectZipInputStream in =
                         PortUtil.getPortObjectZipInputStream(new BufferedInputStream(new FileInputStream(objectFile)));
                     PortObjectSerializer<?> serializer =
-                        PortObjectRegistry.getInstance().getObjectSerializer(cl.asSubclass(PortObject.class)).get();
+                        PortTypeRegistry.getInstance().getObjectSerializer(cl.asSubclass(PortObject.class)).get();
                     object = serializer.loadPortObject(in, spec, exec);
                     if (object instanceof FileStorePortObject) {
                         File fileStoreXML = new File(objectFile.getParent(), "filestore.xml");
@@ -529,7 +529,7 @@ public class FileNodePersistor implements NodePersistor {
                         loadResult.addError(msg);
                         cl = PortObject.class;
                     }
-                    outTypes[index] = PortObjectRegistry.getInstance().getPortType(cl.asSubclass(PortObject.class));
+                    outTypes[index] = PortTypeRegistry.getInstance().getPortType(cl.asSubclass(PortObject.class));
                 }
             }
             return outTypes;
@@ -1399,7 +1399,7 @@ public class FileNodePersistor implements NodePersistor {
                             specFile)));
                     settings.addString("port_spec_location", specPath);
                     PortObjectSpecSerializer serializer =
-                        PortObjectRegistry.getInstance().getSpecSerializer(spec.getClass()).get();
+                        PortTypeRegistry.getInstance().getSpecSerializer(spec.getClass()).get();
                     serializer.savePortObjectSpec(spec, out);
                     out.close();
                 }
@@ -1422,7 +1422,7 @@ public class FileNodePersistor implements NodePersistor {
                     PortObjectZipOutputStream out =
                         PortUtil.getPortObjectZipOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
                     PortObjectSerializer serializer =
-                        PortObjectRegistry.getInstance().getObjectSerializer(object.getClass()).get();
+                        PortTypeRegistry.getInstance().getObjectSerializer(object.getClass()).get();
                     serializer.savePortObject(object, out, exec);
                     if (object instanceof FileStorePortObject) {
                         List<FileStoreKey> fileStoreKeys = FileStoreUtil.translateToLocal((FileStorePortObject)object);

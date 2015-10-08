@@ -75,7 +75,7 @@ import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 3.0
  */
-public final class PortObjectRegistry {
+public final class PortTypeRegistry {
     private static final String EXT_POINT_ID = "org.knime.core.PortType";
 
     private final Map<Class<? extends PortObject>, PortObjectSerializer<? extends PortObject>> m_objectSerializers =
@@ -92,18 +92,18 @@ public final class PortObjectRegistry {
 
     private final Map<Class<? extends PortObject>, PortType> m_allOptionalPortTypes = new HashMap<>();
 
-    private static final PortObjectRegistry INSTANCE = new PortObjectRegistry();
+    private static final PortTypeRegistry INSTANCE = new PortTypeRegistry();
 
     /**
      * Returns the singleton instance.
      *
      * @return the singlet data type registry
      */
-    public static PortObjectRegistry getInstance() {
+    public static PortTypeRegistry getInstance() {
         return INSTANCE;
     }
 
-    private PortObjectRegistry() {
+    private PortTypeRegistry() {
         // read all parser at once, because simply traversing the extension point is quite cheap
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);

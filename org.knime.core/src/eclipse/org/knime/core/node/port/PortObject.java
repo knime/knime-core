@@ -95,13 +95,13 @@ public interface PortObject {
      * Type for generic ports.
      * @since 3.0
      */
-    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(PortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(PortObject.class);
 
     /**
      * Type for generic optional ports.
      * @since 3.0
      */
-    public static final PortType TYPE_OPTIONAL = PortObjectRegistry.getInstance().getPortType(PortObject.class, true);
+    public static final PortType TYPE_OPTIONAL = PortTypeRegistry.getInstance().getPortType(PortObject.class, true);
 
     /** Factory class that's used for writing and loading objects of class
      * denoted by <code>T</code>. See description of class {@link PortObject}

@@ -77,7 +77,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
@@ -146,7 +146,7 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
     }
 
     /** Convenience access field for the port type. */
-    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(PMCCPortObjectAndSpec.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(PMCCPortObjectAndSpec.class);
 
     private final String[] m_colNames;
     private final HalfDoubleMatrix m_correlations;

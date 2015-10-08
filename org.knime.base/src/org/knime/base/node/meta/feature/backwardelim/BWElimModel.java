@@ -64,7 +64,7 @@ import javax.swing.JComponent;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
@@ -85,7 +85,7 @@ import org.knime.core.util.Pair;
  */
 public class BWElimModel implements PortObject, PortObjectSpec {
     /** The type of ports that create or consume such a model. */
-    public static final PortType TYPE =PortObjectRegistry.getInstance().getPortType(BWElimModel.class);
+    public static final PortType TYPE =PortTypeRegistry.getInstance().getPortType(BWElimModel.class);
 
     private final Collection<Pair<Double, Collection<String>>> m_featureLevels =
             new ArrayList<Pair<Double, Collection<String>>>();

@@ -163,13 +163,13 @@ public final class PortUtil {
 
         zipOut.putNextEntry(new ZipEntry("objectSpec.file"));
         PortObjectSpecZipOutputStream specOut = getPortObjectSpecZipOutputStream(new NonClosableOutputStream.Zip(zipOut));
-        PortObjectSpecSerializer specSer = PortObjectRegistry.getInstance().getSpecSerializer(spec.getClass()).get();
+        PortObjectSpecSerializer specSer = PortTypeRegistry.getInstance().getSpecSerializer(spec.getClass()).get();
         specSer.savePortObjectSpec(spec, specOut);
         specOut.close(); // will propagate as closeEntry
 
         zipOut.putNextEntry(new ZipEntry("object.file"));
         PortObjectZipOutputStream objOut = getPortObjectZipOutputStream(new NonClosableOutputStream.Zip(zipOut));
-        PortObjectSerializer objSer = PortObjectRegistry.getInstance().getObjectSerializer(po.getClass()).get();
+        PortObjectSerializer objSer = PortTypeRegistry.getInstance().getObjectSerializer(po.getClass()).get();
         objSer.savePortObject(po, objOut, exec);
         objOut.close(); // will propagate as closeEntry
         zipOut.finish();
@@ -228,7 +228,7 @@ public final class PortUtil {
             PortUtil.getPortObjectZipInputStream(
                     new NonClosableInputStream.Zip(in));
         PortObjectSerializer<?> objSer =
-            PortObjectRegistry.getInstance().getObjectSerializer(cl.asSubclass(PortObject.class)).get();
+            PortTypeRegistry.getInstance().getObjectSerializer(cl.asSubclass(PortObject.class)).get();
         PortObject po = objSer.loadPortObject(objIn, spec, exec);
         in.close();
         return po;
@@ -296,7 +296,7 @@ public final class PortUtil {
             PortUtil.getPortObjectSpecZipInputStream(
                     new NonClosableInputStream.Zip(in));
         PortObjectSpecSerializer<?> serializer =
-            PortObjectRegistry.getInstance().getSpecSerializer(cl.asSubclass(PortObjectSpec.class)).get();
+            PortTypeRegistry.getInstance().getSpecSerializer(cl.asSubclass(PortObjectSpec.class)).get();
         PortObjectSpec spec = serializer.loadPortObjectSpec(specIn);
         specIn.close();
         return spec;

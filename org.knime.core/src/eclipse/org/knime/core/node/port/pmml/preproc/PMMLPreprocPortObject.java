@@ -71,7 +71,7 @@ import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.AbstractPortObject;
-import org.knime.core.node.port.PortObjectRegistry;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
@@ -94,7 +94,7 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
     public static final class Serializer extends AbstractPortObjectSerializer<PMMLPreprocPortObject> {}
 
     /** Convenience accessor for the port type. */
-    public static final PortType TYPE = PortObjectRegistry.getInstance().getPortType(PMMLPreprocPortObject.class);
+    public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(PMMLPreprocPortObject.class);
 
     protected static final String LOCAL_TRANS = "LocalTransformations";
     /** Constant for CDATA. */
