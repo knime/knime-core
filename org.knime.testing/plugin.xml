@@ -206,4 +206,14 @@
          </serializer>
       </DataType>
    </extension>
+   <extension
+         point="org.knime.core.PortType">
+      <portType
+            name="Large Filestore"
+            objectClass="org.knime.testing.data.filestore.LargeFileStorePortObject"
+            objectSerializer="org.knime.testing.data.filestore.LargeFileStorePortObject$Serializer"
+            specClass="org.knime.testing.data.filestore.LargeFileStorePortObjectSpec"
+            specSerializer="org.knime.testing.data.filestore.LargeFileStorePortObjectSpec$Serializer">
+      </portType>
+   </extension>
 </plugin>

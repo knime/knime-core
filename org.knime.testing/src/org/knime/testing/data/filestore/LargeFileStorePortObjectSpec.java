@@ -55,6 +55,7 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class LargeFileStorePortObjectSpec extends AbstractSimplePortObjectSpec {
+    public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<LargeFileStorePortObjectSpec> {}
 
     public static final LargeFileStorePortObjectSpec INSTANCE = new LargeFileStorePortObjectSpec();
 
