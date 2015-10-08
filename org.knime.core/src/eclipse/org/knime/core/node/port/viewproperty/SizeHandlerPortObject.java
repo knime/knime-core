@@ -48,8 +48,8 @@ import javax.swing.JComponent;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.ModelContent;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.ModelContentOutPortView;
 
 /**
@@ -63,7 +63,7 @@ public class SizeHandlerPortObject extends ViewPropertyPortObject {
      * @noreference This class is not intended to be referenced by clients.
      * @since 3.0
      */
-    public static final class Serializer extends AbstractSimplePortObjectSerializer<ShapeHandlerPortObject> {}
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<SizeHandlerPortObject> {}
 
     /** Convenience access method for port type. */
     public static final PortType TYPE = PortTypeRegistry.getInstance().getPortType(SizeHandlerPortObject.class);
