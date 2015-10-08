@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   March 10, 2007 (sieb): created
  */
@@ -65,18 +65,16 @@ import org.knime.testing.node.differNode.TestEvaluationException;
 
 /**
  * Checks two models for equality.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class DiffModelContentModel extends NodeModel {
 
-    private static final PortType PORTTYPE = new PortType(PortObject.class);
-    
     /**
      * Creates a model with two model inports.
      */
     public DiffModelContentModel() {
-        super(new PortType[]{PORTTYPE, PORTTYPE}, new PortType[0]);
+        super(new PortType[]{PortObject.TYPE, PortObject.TYPE}, new PortType[0]);
     }
 
     /**
