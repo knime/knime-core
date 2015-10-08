@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./rowfilter.png" type="Manipulator">
+<knimeNode icon="./rowfilter.gif" type="Manipulator">
 	<name>Row Filter</name>
 	<shortDescription>
 		Allows filtering of data rows by certain criteria, such as row ID, 
