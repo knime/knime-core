@@ -74,6 +74,11 @@ import org.knime.core.node.port.PortType;
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
 public class ImagePortObject extends AbstractPortObject {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractPortObjectSerializer<ImagePortObject> {}
 
     /** Convenience accessor for the port type. */
     public static final PortType TYPE = new PortType(ImagePortObject.class);

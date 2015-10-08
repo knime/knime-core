@@ -91,60 +91,57 @@ import org.knime.core.node.port.PortType;
  */
 public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
 
-    /** Serializer required by the {@link PortObject} interface.
-     * @return Such a serializer.
+    /**
+     * Serializer for {@link PMCCPortObjectAndSpec}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSerializer<PMCCPortObjectAndSpec>
-        getPortObjectSerializer() {
-        return new PortObjectSerializer<PMCCPortObjectAndSpec>() {
+    public static final class ModelSerializer extends PortObjectSerializer<PMCCPortObjectAndSpec> {
+        @Override
+        public PMCCPortObjectAndSpec loadPortObject(
+                final PortObjectZipInputStream in,
+                final PortObjectSpec spec,
+                final ExecutionMonitor exec) throws IOException,
+                CanceledExecutionException {
+            return (PMCCPortObjectAndSpec)spec;
+        }
 
-            @Override
-            public PMCCPortObjectAndSpec loadPortObject(
-                    final PortObjectZipInputStream in,
-                    final PortObjectSpec spec,
-                    final ExecutionMonitor exec) throws IOException,
-                    CanceledExecutionException {
-                return (PMCCPortObjectAndSpec)spec;
-            }
-
-            @Override
-            public void savePortObject(final PMCCPortObjectAndSpec portObject,
-                    final PortObjectZipOutputStream out,
-                    final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
-            }
-        };
+        @Override
+        public void savePortObject(final PMCCPortObjectAndSpec portObject,
+                final PortObjectZipOutputStream out,
+                final ExecutionMonitor exec)
+                throws IOException, CanceledExecutionException {
+        }
     }
 
-    /** Serializer required by the {@link PortObjectSpec} interface.
-     * @return Such a serializer.
+    /**
+     * Serializer for {@link PMCCPortObjectAndSpec}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSpecSerializer<PMCCPortObjectAndSpec>
-        getPortObjectSpecSerializer() {
-        return new PortObjectSpecSerializer<PMCCPortObjectAndSpec>() {
-
-            @Override
-            public PMCCPortObjectAndSpec loadPortObjectSpec(
-                    final PortObjectSpecZipInputStream in) throws IOException {
-                ModelContentRO cont = ModelContent.loadFromXML(in);
-                try {
-                    return load(cont);
-                } catch (InvalidSettingsException e) {
-                    throw new IOException("Can't parse content", e);
-                }
+    public static final class SpecSerializer extends PortObjectSpecSerializer<PMCCPortObjectAndSpec> {
+        @Override
+        public PMCCPortObjectAndSpec loadPortObjectSpec(
+                final PortObjectSpecZipInputStream in) throws IOException {
+            ModelContentRO cont = ModelContent.loadFromXML(in);
+            try {
+                return load(cont);
+            } catch (InvalidSettingsException e) {
+                throw new IOException("Can't parse content", e);
             }
+        }
 
-            @Override
-            public void savePortObjectSpec(
-                    final PMCCPortObjectAndSpec portObjectSpec,
-                    final PortObjectSpecZipOutputStream out)
-                throws IOException {
-                ModelContent cont = new ModelContent("correlation");
-                portObjectSpec.save(cont);
-                cont.saveToXML(out);
-            }
-
-        };
+        @Override
+        public void savePortObjectSpec(
+                final PMCCPortObjectAndSpec portObjectSpec,
+                final PortObjectSpecZipOutputStream out)
+            throws IOException {
+            ModelContent cont = new ModelContent("correlation");
+            portObjectSpec.save(cont);
+            cont.saveToXML(out);
+        }
     }
 
     /** Convenience access field for the port type. */

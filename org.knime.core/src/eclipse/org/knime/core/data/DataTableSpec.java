@@ -133,44 +133,43 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DataTableSpec.class);
 
-    /** Method required by the interface {@link PortObjectSpec}. Not meant
-     * for public use.
-     * @return A new serializer responsible for loading/saving.
+    /**
+     * Serializer for {@link DataTableSpec}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSpecSerializer<DataTableSpec>
-            getPortObjectSpecSerializer() {
-        return new PortObjectSpecSerializer<DataTableSpec>() {
-            private static final String FILENAME = "spec.xml";
+    public static final class Serializer extends PortObjectSpecSerializer<DataTableSpec> {
+        private static final String FILENAME = "spec.xml";
 
-            /** {@inheritDoc} */
-            @Override
-            public DataTableSpec loadPortObjectSpec(
-                    final PortObjectSpecZipInputStream in)
-                throws IOException {
-                ZipEntry entry = in.getNextEntry();
-                if (!FILENAME.equals(entry.getName())) {
-                    throw new IOException("Expected '" + FILENAME
-                            + "' zip entry, got " + entry.getName());
-                }
-                ModelContentRO cnt = ModelContent.loadFromXML(in);
-                try {
-                    return DataTableSpec.load(cnt);
-                } catch (InvalidSettingsException e) {
-                    throw new IOException(e.getMessage(), e);
-                }
+        /** {@inheritDoc} */
+        @Override
+        public DataTableSpec loadPortObjectSpec(
+                final PortObjectSpecZipInputStream in)
+            throws IOException {
+            ZipEntry entry = in.getNextEntry();
+            if (!FILENAME.equals(entry.getName())) {
+                throw new IOException("Expected '" + FILENAME
+                        + "' zip entry, got " + entry.getName());
             }
+            ModelContentRO cnt = ModelContent.loadFromXML(in);
+            try {
+                return DataTableSpec.load(cnt);
+            } catch (InvalidSettingsException e) {
+                throw new IOException(e.getMessage(), e);
+            }
+        }
 
-            /** {@inheritDoc} */
-            @Override
-            public void savePortObjectSpec(final DataTableSpec spec,
-                    final PortObjectSpecZipOutputStream out)
-                throws IOException {
-                ModelContent cnt = new ModelContent(FILENAME);
-                spec.save(cnt);
-                out.putNextEntry(new ZipEntry(FILENAME));
-                cnt.saveToXML(out);
-            }
-        };
+        /** {@inheritDoc} */
+        @Override
+        public void savePortObjectSpec(final DataTableSpec spec,
+                final PortObjectSpecZipOutputStream out)
+            throws IOException {
+            ModelContent cnt = new ModelContent(FILENAME);
+            spec.save(cnt);
+            out.putNextEntry(new ZipEntry(FILENAME));
+            cnt.saveToXML(out);
+        }
     }
 
     private static DataColumnSpec[] appendTableSpecs(final DataTableSpec spec1, final DataTableSpec spec2) {

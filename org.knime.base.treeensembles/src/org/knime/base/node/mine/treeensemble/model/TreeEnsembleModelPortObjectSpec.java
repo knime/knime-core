@@ -65,10 +65,11 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObjectSpec {
+    public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<TreeEnsembleModelPortObjectSpec> {}
 
     private DataTableSpec m_learnSpec;
 
@@ -79,7 +80,7 @@ public final class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObj
 
     /**
      * Constructor for class TreeEnsembleModelPortObjectSpec.
-     * 
+     *
      * @param learnSpec the {@link DataTableSpec} of the training data table
      */
     public TreeEnsembleModelPortObjectSpec(final DataTableSpec learnSpec) {
@@ -108,7 +109,7 @@ public final class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObj
     /**
      * Get the spec of the training data. The last column is nominal and represent the target column (does not need to
      * be present in the test set)
-     * 
+     *
      * @return the learn spec, rearranged such that it only contains the relevant columns and the target column at the
      *         last column index.
      */
@@ -123,11 +124,11 @@ public final class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObj
     /**
      * A map containing the possible values of the target column (training set), whereby the map key is the toString()
      * representation of the value.
-     * 
+     *
      * <p>
      * Used in the learner to ensure there are no duplicates in the target column (learner is using plain strings, not
      * DataCell) and in the predictor to return DataCells of the correct type.
-     * 
+     *
      * @return Such a map or null if there are no possible values.
      * @throws InvalidSettingsException If duplicates in the toString representation are encountered.
      */

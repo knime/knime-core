@@ -52,23 +52,28 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class FuzzyBasisFunctionPortObject 
+public final class FuzzyBasisFunctionPortObject
         extends BasisFunctionPortObject {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<FuzzyBasisFunctionPortObject> {}
 
     /** The <code>PortType</code> for basisfunction models. */
     public static final PortType TYPE = new PortType(
             FuzzyBasisFunctionPortObject.class);
-    
+
     /**
-     * 
+     *
      */
     public FuzzyBasisFunctionPortObject() {
-        
+
     }
-    
+
     /**
      * Creates a new basis function model object.
      * @param cont basisfunction model content containing rules and spec
@@ -85,7 +90,7 @@ public final class FuzzyBasisFunctionPortObject
             final BasisFunctionModelContent content) {
         return new FuzzyBasisFunctionPortObject(content);
     }
-    
+
     /**
      * Used to create PNN predictor rows.
      */
@@ -93,13 +98,14 @@ public final class FuzzyBasisFunctionPortObject
         /**
          * {@inheritDoc}
          */
+        @Override
         public BasisFunctionPredictorRow createPredictorRow(
                 final ModelContentRO pp)
                 throws InvalidSettingsException {
             return new FuzzyBasisFunctionPredictorRow(pp);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -107,5 +113,5 @@ public final class FuzzyBasisFunctionPortObject
     public Creator getCreator() {
         return new FuzzyCreator();
     }
-    
+
 }

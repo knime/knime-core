@@ -67,10 +67,11 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeEnsembleModelPortObject extends AbstractPortObject {
+    public static final class Serializer extends AbstractPortObjectSerializer<TreeEnsembleModelPortObject> {}
 
     public static final PortType TYPE = new PortType(TreeEnsembleModelPortObject.class);
 

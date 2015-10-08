@@ -61,6 +61,7 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
  */
 @Deprecated
 public class NaiveBayesPortObjectSpec extends AbstractSimplePortObjectSpec {
+    public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<NaiveBayesPortObjectSpec> {}
 
     private static final String CNFG_CLASS_COL = "classCol";
 

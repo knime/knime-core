@@ -96,21 +96,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
 
     private List<DataColumnSpec> m_preprocCols;
 
-    private static PortObjectSpecSerializer<PMMLPortObjectSpec> serializer;
-
-    /**
-     *
-     * @see PortObjectSpec
-     * @return the serializer
-     */
-    public static PortObjectSpecSerializer<PMMLPortObjectSpec>
-            getPortObjectSpecSerializer() {
-        if (serializer == null) {
-            serializer = new PMMLPortObjectSpecSerializer();
-        }
-        return serializer;
-    }
-
     /**
      * PMMLPortObjectSpec should only be created by
      * {@link PMMLPortObjectSpecCreator}.

@@ -61,26 +61,26 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
  */
 public final class FlowVariablePortObjectSpec implements PortObjectSpec {
 
-    /** Serializer as required by {@link PortObjectSpec} super class.
-     * @return Serializer.
+    /**
+     * Serializer for {@link FlowVariablePortObjectSpec}s.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSpecSerializer<FlowVariablePortObjectSpec>
-    getPortObjectSpecSerializer() {
-        return new PortObjectSpecSerializer<FlowVariablePortObjectSpec>() {
+    public static final class Serializer extends PortObjectSpecSerializer<FlowVariablePortObjectSpec> {
 
-            @Override
-            public FlowVariablePortObjectSpec loadPortObjectSpec(
-                    final PortObjectSpecZipInputStream in) {
-                return INSTANCE;
-            }
+        @Override
+        public FlowVariablePortObjectSpec loadPortObjectSpec(
+                final PortObjectSpecZipInputStream in) {
+            return INSTANCE;
+        }
 
-            @Override
-            public void savePortObjectSpec(
-                    final FlowVariablePortObjectSpec portObjectSpec,
-                    final PortObjectSpecZipOutputStream out) {
-                // no op
-            }
-        };
+        @Override
+        public void savePortObjectSpec(
+                final FlowVariablePortObjectSpec portObjectSpec,
+                final PortObjectSpecZipOutputStream out) {
+            // no op
+        }
     }
 
     /** Singleton instance to be used. */

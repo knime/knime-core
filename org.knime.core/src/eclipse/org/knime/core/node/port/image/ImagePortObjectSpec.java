@@ -61,6 +61,11 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
 public final class ImagePortObjectSpec extends AbstractSimplePortObjectSpec {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<ImagePortObjectSpec> {}
 
     private DataType m_type;
 

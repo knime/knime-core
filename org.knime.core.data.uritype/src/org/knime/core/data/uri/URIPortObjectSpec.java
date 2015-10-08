@@ -66,6 +66,11 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class URIPortObjectSpec extends AbstractSimplePortObjectSpec {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<URIPortObjectSpec> {}
     
     private final List<String> m_fileExtensions;
 

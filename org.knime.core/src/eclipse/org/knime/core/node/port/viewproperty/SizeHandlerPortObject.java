@@ -54,21 +54,26 @@ import org.knime.core.node.workflow.ModelContentOutPortView;
 /**
  * <code>PortObject</code> implementation for {@link SizeHandlerPortObject}
  * which are part of a <code>DataTableSpec</code>.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class SizeHandlerPortObject extends ViewPropertyPortObject {
-    
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<ShapeHandlerPortObject> {}
+
     /** Convenience access method for port type. */
-    public static final PortType TYPE = 
+    public static final PortType TYPE =
         new PortType(SizeHandlerPortObject.class);
 
-    /** Public no arg constructor required by super class. 
+    /** Public no arg constructor required by super class.
      * <p>
      * <b>This constructor should only be used by the framework.</b> */
     public SizeHandlerPortObject() {
     }
-    
+
     /** Constructor used to instantiate this object during a node's execute
      * method.
      * @param spec The accompanying spec
@@ -80,17 +85,17 @@ public class SizeHandlerPortObject extends ViewPropertyPortObject {
             final DataTableSpec spec, final String portSummary) {
         super(spec, portSummary);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public JComponent[] getViews() {
-        ModelContent model = new ModelContent("Size"); 
+        ModelContent model = new ModelContent("Size");
         getSpec().getColumnSpec(0).getSizeHandler().save(model);
         return new JComponent[] {new ModelContentOutPortView(model)};
     }
-    
+
 
 }

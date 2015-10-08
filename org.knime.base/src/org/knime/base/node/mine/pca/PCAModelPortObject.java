@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.10.2006 (uwe): created
  */
@@ -62,10 +62,15 @@ import org.knime.core.node.port.PortType;
 
 /**
  * Port model object transporting the pca transformation.
- * 
+ *
  * @author uwe, University of Konstanz
  */
 public class PCAModelPortObject extends AbstractSimplePortObject {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<PCAModelPortObject> {}
 
     private static final String EIGENVECTOR_ROW_KEYPREFIX = "eigenvectorRow";
 
@@ -97,7 +102,7 @@ public class PCAModelPortObject extends AbstractSimplePortObject {
 
     /**
      * construct port model object with values.
-     * 
+     *
      * @param eigenVectors eigenvectors of pca matrix
      * @param eigenvalues eigenvalues of pca matrix
      * @param inputColumnNames names of input columns
@@ -116,7 +121,7 @@ public class PCAModelPortObject extends AbstractSimplePortObject {
 
     /**
      * get center of input data (for centering test data).
-     * 
+     *
      * @return center
      */
     public double[] getCenter() {
@@ -125,7 +130,7 @@ public class PCAModelPortObject extends AbstractSimplePortObject {
 
     /**
      * get names of input columns.
-     * 
+     *
      * @return names of input columns
      */
     public String[] getInputColumnNames() {

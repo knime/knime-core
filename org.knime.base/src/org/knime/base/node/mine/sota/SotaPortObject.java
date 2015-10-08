@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   16.09.2008 (thiel): created
  */
@@ -59,26 +59,31 @@ import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaPortObject extends AbstractSimplePortObject {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<SotaPortObject> {}
 
     /**
      * The configuration key for the usage of hierarchical fuzzy data.
      */
     static final String CFG_KEY_USE_FUZZY_HIERARCHY = "FuzzyHierarchy";
-    
+
     /**
      * The configuration key for the maximal fuzzy hierarchy level.
      */
     static final String CFG_KEY_MAX_FUZZY_LEVEL = "MaxFuzzyLevel";
-    
+
     /**
      * The configuration key for the size of the in data container.
      */
     static final String CFG_KEY_INDATA_SIZE = "InDataContainerSize";
-    
+
     /**
      * The configuration key for the size of the original data container.
      */
@@ -87,37 +92,37 @@ public class SotaPortObject extends AbstractSimplePortObject {
     /**
      * The configuration key for the distance to use.
      */
-    static final String CFG_KEY_DIST = "Distance";     
+    static final String CFG_KEY_DIST = "Distance";
 
     /**
      * The configuration key for the object spec.
      */
     static final String CFG_KEY_SPEC = "Sota-PortObjectSpec";
-    
+
     /**
      * The configuration key for the index of the class column.
      */
     static final String CFG_KEY_CLASSCOL_INDEX = "ClassColIndex";
-    
-    
+
+
     private SotaManager m_sota;
-    
+
     private SotaTreeCell m_sotaRoot;
-    
+
     private String m_distance;
-    
+
     private PortObjectSpec m_spec;
-    
+
     /**
      * Creates empty instance of <code>SotaPortObject</code>.
      */
     public SotaPortObject() { }
-    
+
     /**
-     * Creates new instance of <code>SotaPortObject</code> with given 
-     * <code>SotaManager</code>, <code>DataTableSpec</code> and index of the 
+     * Creates new instance of <code>SotaPortObject</code> with given
+     * <code>SotaManager</code>, <code>DataTableSpec</code> and index of the
      * class column to store.
-     * 
+     *
      * @param sota The <code>SotaManager</code> to store.
      * @param spec The data table spec to store.
      * @param indexOfClassCol The index of the class column.
@@ -127,7 +132,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
         this();
         setSota(sota);
         m_spec = new SotaPortObjectSpec(spec, indexOfClassCol);
-    }   
+    }
 
     /**
      * {@inheritDoc}
@@ -148,7 +153,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
                 ioe.initCause(e);
                 throw ioe;
             }
-            
+
             m_distance = model.getString(CFG_KEY_DIST);
         } else {
             m_sotaRoot = null;
@@ -184,7 +189,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
 
     /**
      * Sets the given <code>SotaManager</code>.
-     * 
+     *
      * @param sota The <code>SotaManager</code> to set.
      */
     public void setSota(final SotaManager sota) {
@@ -194,7 +199,7 @@ public class SotaPortObject extends AbstractSimplePortObject {
             m_distance = m_sota.getDistance();
         }
     }
-    
+
     /**
      * @return the sota
      */

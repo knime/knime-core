@@ -73,26 +73,68 @@ import org.knime.core.node.config.ConfigWO;
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public final class PortType {
+    /**
+     * The default color for ports: {@value}.
+     * @since 3.0
+     */
+    public static final int DEFAULT_COLOR = 0xff9b9b9b;
+
     private final Class<? extends PortObjectSpec> m_specClass;
     private final Class<? extends PortObject> m_objectClass;
-    private boolean m_isOptional;
+    private final boolean m_isOptional;
+    private final String m_name;
+    private final int m_color;
+    private final boolean m_isHidden;
 
     /**
      * @param objectClass compatible port objects
      * @param isOptional indicates that this port does not need to be connected
+     * @deprecated use {@link PortObjectRegistry#getPortType(Class, boolean)} instead
      */
+    @Deprecated
     public PortType(final Class<? extends PortObject> objectClass,
             final boolean isOptional) {
-        m_objectClass = objectClass;
-        m_specClass = getPortObjectSpecClass(objectClass);
-        m_isOptional = isOptional;
+        this(objectClass, isOptional, null, DEFAULT_COLOR, true);
     }
 
     /**
      * @param objectClass compatible port objects. Non-optional port!
+     * @deprecated user {@link PortObjectRegistry#getPortType(Class)} instead
      */
+    @Deprecated
     public PortType(final Class<? extends PortObject> objectClass) {
         this(objectClass, false);
+    }
+
+    PortType(final Class<? extends PortObject> objectClass, final boolean isOptional, final String name, final int color,
+        final boolean isHidden) {
+        m_objectClass = objectClass;
+        m_specClass = getPortObjectSpecClass(objectClass);
+        m_isOptional = isOptional;
+        m_name = name;
+        m_color = color;
+        m_isHidden = isHidden;
+    }
+
+    /**
+     * Returns a human-readable name for this port type. The name may be <code>null</code> if the port type is not
+     * registered at the extension point yet.
+     *
+     * @return a human-readable name or <code>null</code>
+     * @since 3.0
+     */
+    public String getName() {
+        return m_name;
+    }
+
+    /**
+     * Returns a color for the port type.
+     *
+     * @return a color, never <code>null</code>
+     * @since 3.0
+     */
+    public int getColor() {
+        return m_color;
     }
 
     public Class<? extends PortObjectSpec> getPortObjectSpecClass() {

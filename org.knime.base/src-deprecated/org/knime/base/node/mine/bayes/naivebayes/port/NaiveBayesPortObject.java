@@ -64,6 +64,7 @@ import org.knime.core.node.port.PortType;
  */
 @Deprecated
 public class NaiveBayesPortObject extends AbstractSimplePortObject {
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<NaiveBayesPortObject> {}
 
     /**The {@link PortType}.*/
     public static final PortType TYPE =

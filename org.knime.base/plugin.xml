@@ -1927,5 +1927,84 @@
                  serializerClass="org.knime.base.data.bitvector.BitVectorCell$Serializer">
            </serializer>
         </DataType>
+     </extension>
+     <extension
+           point="org.knime.core.PortType">
+        <portType
+              color="#1e69af"
+              hidden="true"
+              name="PMML Discretization"
+              objectClass="org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizePreprocPortObject"
+              objectSerializer="org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizePreprocPortObject$Serializer"
+              specClass="org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizePreprocPortObjectSpec"
+              specSerializer="org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizePreprocPortObjectSpec$Serializer">
+        </portType>
+        <portType
+              color="#1e69af"
+              name="Fuzzy Basis Function"
+              objectClass="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPortObject"
+              objectSerializer="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPortObject$Serializer"
+              specClass="org.knime.core.data.DataTableSpec">
+        </portType>
+        <portType
+              name="Feature Elimination"
+              objectClass="org.knime.base.node.meta.feature.backwardelim.BWElimModel"
+              objectSerializer="org.knime.base.node.meta.feature.backwardelim.BWElimModel$ModelSerializer"
+              specClass="org.knime.base.node.meta.feature.backwardelim.BWElimModel"
+              specSerializer="org.knime.base.node.meta.feature.backwardelim.BWElimModel$SpecSerializer">
+        </portType>
+        <portType
+              color="#1e69af"
+              name="Sota"
+              objectClass="org.knime.base.node.mine.sota.SotaPortObject"
+              objectSerializer="org.knime.base.node.mine.sota.SotaPortObject$Serializer"
+              specClass="org.knime.base.node.mine.sota.SotaPortObjectSpec"
+              specSerializer="org.knime.base.node.mine.sota.SotaPortObjectSpec$Serializer">
+        </portType>
+        <portType
+              color="#1e69af"
+              name="PCA"
+              objectClass="org.knime.base.node.mine.pca.PCAModelPortObject"
+              objectSerializer="org.knime.base.node.mine.pca.PCAModelPortObject$Serializer"
+              specClass="org.knime.base.node.mine.pca.PCAModelPortObjectSpec"
+              specSerializer="org.knime.base.node.mine.pca.PCAModelPortObjectSpec$Serializer">
+        </portType>
+        <portType
+              color="#1e69af"
+              name="Normalizer"
+              objectClass="org.knime.base.data.normalize.NormalizerPortObject"
+              objectSerializer="org.knime.base.data.normalize.NormalizerPortObject$Serializer"
+              specClass="org.knime.core.data.DataTableSpec">
+        </portType>
+        <portType
+              color="#1e69af"
+              hidden="true"
+              name="Naive Bayes"
+              objectClass="org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject"
+              objectSerializer="org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject$Serializer"
+              specClass="org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec"
+              specSerializer="org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec$Serializer">
+        </portType>
+        <portType
+              name="CAIM"
+              objectClass="org.knime.base.node.preproc.discretization.caim2.DiscretizationModel"
+              objectSerializer="org.knime.base.node.preproc.discretization.caim2.DiscretizationModel$Serializer"
+              specClass="org.knime.core.data.DataTableSpec">
+        </portType>
+        <portType
+              color="#1e69af"
+              name="Radial Basis Function"
+              objectClass="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPortObject"
+              objectSerializer="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPortObject$Serializer"
+              specClass="org.knime.core.data.DataTableSpec">
+        </portType>
+        <portType
+              hidden="false"
+              name="Correlation"
+              objectClass="org.knime.base.node.preproc.correlation.pmcc.PMCCPortObjectAndSpec"
+              objectSerializer="org.knime.base.node.preproc.correlation.pmcc.PMCCPortObjectAndSpec$ModelSerializer"
+              specClass="org.knime.base.node.preproc.correlation.pmcc.PMCCPortObjectAndSpec"
+              specSerializer="org.knime.base.node.preproc.correlation.pmcc.PMCCPortObjectAndSpec$SpecSerializer">
+        </portType>
      </extension>   
 </plugin>

@@ -79,45 +79,36 @@ public class FlowVariablePortObject implements PortObject {
         new PortType(FlowVariablePortObject.class, true);
 
     /** Singleton instance to be used. */
-    public static final FlowVariablePortObject INSTANCE =
-        new FlowVariablePortObject();
+    public static final FlowVariablePortObject INSTANCE = new FlowVariablePortObject();
 
-    /** Constructor, not to be used.
-     * @deprecated There is only one
-     * {@link FlowVariablePortObject#INSTANCE instance} to this class. Future
-     * versions of KNIME will reduce the scope of this constructor and declare
-     * this class final.
-     */
-    @Deprecated
-    public FlowVariablePortObject() {
-        // declared deprecated in v2.3
+    private FlowVariablePortObject() {
     }
 
-    /** Serializer for this port object. It will return the singleton upon
-     * read.
-     * @return The serializer as required by the PortObject class.
+    /**
+     * Serializer for this port object.
+     *
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSerializer<FlowVariablePortObject>
-    getPortObjectSerializer() {
-        return new PortObjectSerializer<FlowVariablePortObject>() {
+    public static final class Serializer extends PortObjectSerializer<FlowVariablePortObject> {
+        /**
+         * @since 3.0
+         */
+        @Override
+        public FlowVariablePortObject loadPortObject(
+                final PortObjectZipInputStream in,
+                final PortObjectSpec spec, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+            return INSTANCE;
+        }
 
-            @Override
-            public FlowVariablePortObject loadPortObject(
-                    final PortObjectZipInputStream in,
-                    final PortObjectSpec spec, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-                return INSTANCE;
-            }
-
-            @Override
-            public void savePortObject(final FlowVariablePortObject portObject,
-                    final PortObjectZipOutputStream out,
-                    final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
-                // no op
-            }
-
-        };
+        @Override
+        public void savePortObject(final FlowVariablePortObject portObject,
+                final PortObjectZipOutputStream out,
+                final ExecutionMonitor exec)
+                throws IOException, CanceledExecutionException {
+            // no op
+        }
     }
 
     /** {@inheritDoc} */

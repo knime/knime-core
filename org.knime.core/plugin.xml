@@ -453,4 +453,85 @@
          </serializer>
       </DataType>
    </extension>
+   <extension
+         point="org.knime.core.PortType">
+      <portType
+            color="#415a78"
+            name="Image"
+            objectClass="org.knime.core.node.port.image.ImagePortObject"
+            objectSerializer="org.knime.core.node.port.image.ImagePortObject$Serializer"
+            specClass="org.knime.core.node.port.image.ImagePortObjectSpec"
+            specSerializer="org.knime.core.node.port.image.ImagePortObjectSpec$Serializer">
+      </portType>
+      <portType
+            hidden="true"
+            name="PMML Preprocessing"
+            objectClass="org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObject"
+            objectSerializer="org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObject$Serializer"
+            specClass="org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObjectSpec"
+            specSerializer="org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#1e69af"
+            name="Color"
+            objectClass="org.knime.core.node.port.viewproperty.ColorHandlerPortObject"
+            objectSerializer="org.knime.core.node.port.viewproperty.ColorHandlerPortObject$Serializer"
+            specClass="org.knime.core.data.DataTableSpec">
+      </portType>
+      <portType
+            color="#1e69af"
+            name="Size"
+            objectClass="org.knime.core.node.port.viewproperty.SizeHandlerPortObject"
+            objectSerializer="org.knime.core.node.port.viewproperty.SizeHandlerPortObject$Serializer"
+            specClass="org.knime.core.data.DataTableSpec">
+      </portType>
+      <portType
+            color="#1e69af"
+            name="Shape"
+            objectClass="org.knime.core.node.port.viewproperty.ShapeHandlerPortObject"
+            objectSerializer="org.knime.core.node.port.viewproperty.ShapeHandlerPortObject$Serializer"
+            specClass="org.knime.core.data.DataTableSpec">
+      </portType>
+      <portType
+            color="#ff4b4b"
+            name="Database Connection"
+            objectClass="org.knime.core.node.port.database.DatabaseConnectionPortObject"
+            objectSerializer="org.knime.core.node.port.database.DatabaseConnectionPortObject$Serializer"
+            specClass="org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec"
+            specSerializer="org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            hidden="true"
+            name="Inactive branch"
+            objectClass="org.knime.core.node.port.inactive.InactiveBranchPortObject"
+            objectSerializer="org.knime.core.node.port.inactive.InactiveBranchPortObject$Serializer"
+            specClass="org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec"
+            specSerializer="org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#ff4b4b"
+            name="Flowvariable"
+            objectClass="org.knime.core.node.port.flowvariable.FlowVariablePortObject"
+            objectSerializer="org.knime.core.node.port.flowvariable.FlowVariablePortObject$Serializer"
+            specClass="org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec"
+            specSerializer="org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#800000"
+            name="Database Query"
+            objectClass="org.knime.core.node.port.database.DatabasePortObject"
+            objectSerializer="org.knime.core.node.port.database.DatabasePortObject$Serializer"
+            specClass="org.knime.core.node.port.database.DatabasePortObjectSpec"
+            specSerializer="org.knime.core.node.port.database.DatabasePortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#1469af"
+            hidden="false"
+            name="PMML"
+            objectClass="org.knime.core.node.port.pmml.PMMLPortObject"
+            objectSerializer="org.knime.core.node.port.pmml.PMMLPortObjectSerializer"
+            specClass="org.knime.core.node.port.pmml.PMMLPortObjectSpec"
+            specSerializer="org.knime.core.node.port.pmml.PMMLPortObjectSpecSerializer">
+      </portType>
+   </extension>
 </plugin>

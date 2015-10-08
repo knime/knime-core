@@ -31,11 +31,30 @@
    </element>
 
    <element name="portType">
+      <annotation>
+         <documentation>
+            Registeres a custom port type including its serializers.
+         </documentation>
+      </annotation>
       <complexType>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Human readable name for this port type, e.g. &quot;Data&quot;, &quot;Database connection&quot;, or &quot;PMML&quot;.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="color" type="string">
+            <annotation>
+               <documentation>
+                  Optional color for the port icon in the workflow editor. The color must be given as a standrd six-digit hexadecimal RGB value, e.g. #FF0000 (for red).
+               </documentation>
+            </annotation>
+         </attribute>
          <attribute name="objectClass" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  The concrete port object class.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.knime.core.node.port.PortObject"/>
@@ -45,7 +64,7 @@
          <attribute name="objectSerializer" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  The serializer for the concrete port object.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn="org.knime.core.node.port.PortObject$PortObjectSerializer:"/>
@@ -55,21 +74,28 @@
          <attribute name="specClass" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  The port object&apos;s spec class.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.knime.core.node.port.PortObjectSpec"/>
                </appInfo>
             </annotation>
          </attribute>
-         <attribute name="specSerializer" type="string" use="required">
+         <attribute name="specSerializer" type="string">
             <annotation>
                <documentation>
-                  
+                  Serializer for the port object&apos;s spec class. This value is required except if the spec is a DataTableSpec which is handled differently.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn="org.knime.core.node.port.PortObjectSpec$PortObjectSpecSerializer:"/>
                </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="hidden" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  By default all port types are visible, e.g. when creating metanodes. By hiding a port type users cannot create ports with this type, but the type can still be used programmatically.
+               </documentation>
             </annotation>
          </attribute>
       </complexType>

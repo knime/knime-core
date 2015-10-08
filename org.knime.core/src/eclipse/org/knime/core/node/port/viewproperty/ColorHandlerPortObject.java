@@ -54,21 +54,26 @@ import org.knime.core.node.workflow.ModelContentOutPortView;
 /**
  * <code>PortObject</code> implementation for {@link ColorHandlerPortObject}
  * which are part of a <code>DataTableSpec</code>.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ColorHandlerPortObject extends ViewPropertyPortObject {
-    
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<ColorHandlerPortObject> {}
+
     /** Convenience access method for port type. */
-    public static final PortType TYPE = 
+    public static final PortType TYPE =
         new PortType(ColorHandlerPortObject.class);
 
-    /** Public no arg constructor required by super class. 
+    /** Public no arg constructor required by super class.
      * <p>
      * <b>This constructor should only be used by the framework.</b> */
     public ColorHandlerPortObject() {
     }
-    
+
     /** Constructor used to instantiate this object during a node's execute
      * method.
      * @param spec The accompanying spec
@@ -82,14 +87,14 @@ public class ColorHandlerPortObject extends ViewPropertyPortObject {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public JComponent[] getViews() {
-        ModelContent model = new ModelContent("Color"); 
+        ModelContent model = new ModelContent("Color");
         getSpec().getColumnSpec(0).getColorHandler().save(model);
         return new JComponent[] {new ModelContentOutPortView(model)};
     }
-    
+
 }

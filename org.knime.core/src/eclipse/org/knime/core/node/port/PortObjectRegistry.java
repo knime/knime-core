@@ -48,9 +48,8 @@
  */
 package org.knime.core.node.port;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,6 +61,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.SerializerMethodLoader;
@@ -87,7 +87,9 @@ public final class PortObjectRegistry {
 
     private final Map<String, Class<? extends PortObjectSpec>> m_specClassMap = new ConcurrentHashMap<>();
 
-    private Collection<PortType> m_allPortTypes;
+    private Map<Class<? extends PortObject>, PortType> m_allPortTypes;
+
+    private Map<Class<? extends PortObject>, PortType> m_allOptionalPortTypes;
 
     private static final PortObjectRegistry INSTANCE = new PortObjectRegistry();
 
@@ -108,31 +110,80 @@ public final class PortObjectRegistry {
 
         m_objectClassMap.put(PortObject.class.getName(), PortObject.class);
         m_specClassMap.put(PortObjectSpec.class.getName(), PortObjectSpec.class);
+
+        m_specClassMap.put(DataTableSpec.class.getName(), DataTableSpec.class);
+        m_specSerializers.put(DataTableSpec.class, new DataTableSpec.Serializer());
     }
 
     /**
      * Returns a collection with all known data types (that registered at the extension point
-     * <tt>org.knime.core.DataType</tt>.
+     * <tt>org.knime.core.DataType</tt>. The returned collection is not sorted in any particular order.
      *
      * @return a (possibly empty) collection with data types
      */
     public synchronized Collection<PortType> availablePortTypes() {
         // perform lazy initialization
         if (m_allPortTypes != null) {
-            return m_allPortTypes;
+            return m_allPortTypes.values();
 
         }
 
-        List<PortType> types = new ArrayList<>();
+        readAllPortTypes();
+        return m_allPortTypes.values();
+    }
+
+    private void readAllPortTypes() {
+        m_allPortTypes = new HashMap<>();
+        m_allOptionalPortTypes = new HashMap<>();
 
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
         Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements()))
-            .map(e -> e.getAttribute("objectClass")).map(cn -> getObjectClass(cn)).filter(Optional::isPresent)
-            .map(Optional::get).forEach(c -> types.add(new PortType(c)));
+            .filter(e -> getObjectClass(e.getAttribute("objectClass")).isPresent()).forEach(e -> createPortTypes(e));
+    }
 
-        m_allPortTypes = types;
-        return types;
+    private void createPortTypes(final IConfigurationElement e) {
+        PortType pt = new PortType(getObjectClass(e.getAttribute("objectClass")).get(), false, e.getAttribute("name"),
+            Integer.parseInt(e.getAttribute("color").substring(1), 16), Boolean.parseBoolean(e.getAttribute("hidden")));
+        m_allPortTypes.put(pt.getPortObjectClass(), pt);
+
+        pt = new PortType(getObjectClass(e.getAttribute("objectClass")).get(), true, e.getAttribute("name"),
+            Integer.parseInt(e.getAttribute("color").substring(1), 16), Boolean.parseBoolean(e.getAttribute("hidden")));
+        m_allOptionalPortTypes.put(pt.getPortObjectClass(), pt);
+    }
+
+    /**
+     * Returns the port type for the given port object class.
+     *
+     * @param portClass any port object class, must not be <code>null</code>
+     * @return a port type, never <code>null</code>
+     */
+    public synchronized PortType getPortType(final Class<? extends PortObject> portClass) {
+        return getPortType(portClass, false);
+    }
+
+    /**
+     * Returns the port type for the given port object class.
+     *
+     * @param portClass any port object class, must not be <code>null</code>
+     * @param isOptional <code>true</code> for an optional port, <code>false</code> for a required port
+     * @return a port type, never <code>null</code>
+     */
+    public synchronized PortType getPortType(final Class<? extends PortObject> portClass, final boolean isOptional) {
+        if (m_allPortTypes == null) {
+            readAllPortTypes();
+        }
+
+        Map<Class<? extends PortObject>, PortType> map = isOptional ? m_allOptionalPortTypes : m_allPortTypes;
+
+        PortType pt = map.get(portClass);
+        if (pt == null) {
+            NodeLogger.getLogger(getClass()).coding("Port object class '" + portClass.getName() + "' is not "
+                + "registered at the extension point org.knime.core.PortType.");
+            pt = new PortType(portClass, isOptional, null, PortType.DEFAULT_COLOR, true);
+            map.put(portClass, pt);
+        }
+        return pt;
     }
 
     /**
@@ -232,7 +283,7 @@ public final class PortObjectRegistry {
      * @param objectClass a data cell class
      * @return an optional containing a serializer for the port object class
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     public Optional<PortObjectSerializer<PortObject>>
         getObjectSerializer(final Class<? extends PortObject> objectClass) {
         PortObjectSerializer<PortObject> ser = (PortObjectSerializer<PortObject>)m_objectSerializers.get(objectClass);
@@ -275,7 +326,7 @@ public final class PortObjectRegistry {
      * @param specClass a port object spec class
      * @return an optional containing a serializer for the port object spec class
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     public Optional<PortObjectSpecSerializer<PortObjectSpec>>
         getSpecSerializer(final Class<? extends PortObjectSpec> specClass) {
         PortObjectSpecSerializer<PortObjectSpec> ser =

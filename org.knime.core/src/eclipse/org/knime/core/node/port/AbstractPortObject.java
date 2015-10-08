@@ -78,15 +78,6 @@ import org.knime.core.node.ModelContentRO;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class AbstractPortObject implements PortObject {
-
-    /** Abstract serializer method as required by interface {@link PortObject}.
-     * @return A serializer that reads/writes any implementation of this class.
-     */
-    public static final PortObjectSerializer<AbstractPortObject>
-        getPortObjectSerializer() {
-        return MyPortObjectSerializer.INSTANCE;
-    }
-
     /** Public no-arg constructor. Subclasses must also provide such a
      * constructor in order to allow the serializer to instantiate them using
      * reflection. */
@@ -121,23 +112,17 @@ public abstract class AbstractPortObject implements PortObject {
             final PortObjectSpec spec, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException;
 
-    /** Final implementation of the serializer. */
-    private static final class MyPortObjectSerializer extends
-            PortObjectSerializer<AbstractPortObject> {
-
-        /** Instance to be used. */
-        static final MyPortObjectSerializer INSTANCE =
-                new MyPortObjectSerializer();
-
-        private MyPortObjectSerializer() {
-        }
-
+    /**
+     * Abstract implementation of the a serializer for all {@link AbstractPortObject}s. Subclasses can simply extend
+     * this class with the appropriate type without implementing any methods.
+     *
+     * @since 3.0
+     */
+    public static abstract class AbstractPortObjectSerializer<T extends AbstractPortObject> extends PortObjectSerializer<T> {
         /** {@inheritDoc} */
         @Override
-        public AbstractPortObject loadPortObject(
-                final PortObjectZipInputStream in,
-                final PortObjectSpec spec, final ExecutionMonitor exec)
-                throws IOException, CanceledExecutionException {
+        public T loadPortObject(final PortObjectZipInputStream in, final PortObjectSpec spec,
+            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
             AbstractPortObject result;
             ZipEntry entry = in.getNextEntry();
             if (!entry.getName().equals("meta.xml")) {
@@ -177,15 +162,13 @@ public abstract class AbstractPortObject implements PortObject {
             }
             // current zip entry was already closed by ModelContent.loadFrom...
             result.load(in, spec, exec);
-            return result;
+            return (T)result;
         }
 
         /** {@inheritDoc} */
         @Override
-        public void savePortObject(final AbstractPortObject portObject,
-                final PortObjectZipOutputStream out,
-                final ExecutionMonitor exec)
-                throws IOException, CanceledExecutionException {
+        public void savePortObject(final T portObject, final PortObjectZipOutputStream out, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
             // this is going to throw a runtime exception in case...
             out.putNextEntry(new ZipEntry("meta.xml"));
             ModelContent meta = new ModelContent("meta.xml");

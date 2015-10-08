@@ -165,29 +165,28 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
     /**
      * Serializer used to save <code>DatabasePortObject</code>.
      * @return a new database port object serializer
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSerializer<DatabaseConnectionPortObject>
-            getPortObjectSerializer() {
-        return new PortObjectSerializer<DatabaseConnectionPortObject>() {
-            /** {@inheritDoc} */
-            @Override
-            public void savePortObject(final DatabaseConnectionPortObject portObject,
-                    final PortObjectZipOutputStream out,
-                    final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
-                // nothing to save
-            }
+    public static final class Serializer extends PortObjectSerializer<DatabaseConnectionPortObject> {
+        /** {@inheritDoc} */
+        @Override
+        public void savePortObject(final DatabaseConnectionPortObject portObject,
+                final PortObjectZipOutputStream out,
+                final ExecutionMonitor exec)
+                throws IOException, CanceledExecutionException {
+            // nothing to save
+        }
 
-            /** {@inheritDoc} */
-            @Override
-            public DatabasePortObject loadPortObject(
-                    final PortObjectZipInputStream in,
-                    final PortObjectSpec spec,
-                    final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
-                return new DatabasePortObject((DatabasePortObjectSpec) spec);
-            }
-        };
+        /** {@inheritDoc} */
+        @Override
+        public DatabasePortObject loadPortObject(
+                final PortObjectZipInputStream in,
+                final PortObjectSpec spec,
+                final ExecutionMonitor exec)
+                throws IOException, CanceledExecutionException {
+            return new DatabasePortObject((DatabasePortObjectSpec) spec);
+        }
     }
 
     /** Credentials to connect to the database while previewing the data. */

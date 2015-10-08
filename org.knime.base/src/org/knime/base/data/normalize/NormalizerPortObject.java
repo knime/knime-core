@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sep 9, 2008 (wiswedel): created
  */
@@ -61,19 +61,24 @@ import org.knime.core.node.port.PortType;
 
 /**
  * Port Object that is passed along a normalizer and a normalizer apply node.
- * 
+ *
  * <p>This class is not official API, it may change without prior notice.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class NormalizerPortObject extends AbstractSimplePortObject {
-    
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<NormalizerPortObject> {}
+
     /** Convenience accessor for the port type. */
-    public static final PortType TYPE = 
+    public static final PortType TYPE =
         new PortType(NormalizerPortObject.class);
-    
+
     private DataTableSpec m_spec;
     private AffineTransConfiguration m_configuration;
-    
+
     /** Empty constructor required by super class, should not be used. */
     public NormalizerPortObject() {
     }
@@ -85,7 +90,7 @@ public final class NormalizerPortObject extends AbstractSimplePortObject {
      * @throws IllegalArgumentException If columns to be normalized don't
      * exist or are not numeric.
      */
-    public NormalizerPortObject(final DataTableSpec spec, 
+    public NormalizerPortObject(final DataTableSpec spec,
             final AffineTransConfiguration configuration) {
         if (spec == null || configuration == null) {
             throw new NullPointerException("Args must not be null");
@@ -93,8 +98,8 @@ public final class NormalizerPortObject extends AbstractSimplePortObject {
         for (String s : configuration.getNames()) {
             DataColumnSpec col = spec.getColumnSpec(s);
             if (col == null) {
-                throw new IllegalArgumentException("Spec does not match " 
-                        + "normalizer configuration, no column such in spec: " 
+                throw new IllegalArgumentException("Spec does not match "
+                        + "normalizer configuration, no column such in spec: "
                         + s);
             }
             if (!col.getType().isCompatible(DoubleValue.class)) {
@@ -105,7 +110,7 @@ public final class NormalizerPortObject extends AbstractSimplePortObject {
         m_spec = spec;
         m_configuration = configuration;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public DataTableSpec getSpec() {
@@ -117,7 +122,7 @@ public final class NormalizerPortObject extends AbstractSimplePortObject {
     public String getSummary() {
         return m_configuration.getSummary();
     }
-    
+
     /**
      * @return the configuration
      */

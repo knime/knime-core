@@ -86,6 +86,12 @@ import org.xml.sax.SAXException;
  */
 @Deprecated
 public class PMMLPreprocPortObject extends AbstractPortObject {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractPortObjectSerializer<PMMLPreprocPortObject> {}
+
     /** Convenience accessor for the port type. */
     public static final PortType TYPE =
             new PortType(PMMLPreprocPortObject.class);

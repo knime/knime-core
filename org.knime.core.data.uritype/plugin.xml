@@ -22,5 +22,16 @@
          </serializer>
       </DataType>
    </extension>
+   <extension
+         point="org.knime.core.PortType">
+      <portType
+            color="#1e69af"
+            name="URI"
+            objectClass="org.knime.core.data.uri.URIPortObject"
+            objectSerializer="org.knime.core.data.uri.URIPortObject$Serializer"
+            specClass="org.knime.core.data.uri.URIPortObjectSpec"
+            specSerializer="org.knime.core.data.uri.URIPortObjectSpec$Serializer">
+      </portType>
+   </extension>
 
 </plugin>

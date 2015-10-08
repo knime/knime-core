@@ -195,21 +195,6 @@ public final class PMMLPortObject implements PortObject {
 
     private PMMLPortObjectSpec m_spec;
 
-    private static PMMLPortObjectSerializer serializer;
-
-    /**
-     * Static serializer as demanded from {@link PortObject} framework.
-     * @return serializer for PMML (reads and writes PMML files)
-     */
-    public static final PortObjectSerializer<PMMLPortObject>
-            getPortObjectSerializer() {
-        if (serializer == null) {
-            serializer = new PMMLPortObjectSerializer();
-        }
-        return serializer;
-    }
-
-
     /**
      * Default constructor necessary for loading. Derived classes also
      * <em>must</em> provide a default constructor, otherwise loading will fail.

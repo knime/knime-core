@@ -68,7 +68,11 @@ import org.knime.core.node.workflow.DataTableSpecView;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DatabasePortObjectSpec extends DatabaseConnectionPortObjectSpec {
-    private static class Serializer extends ConnectionSpecSerializer {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends DatabaseConnectionPortObjectSpec.Serializer {
         /**
          * {@inheritDoc}
          */

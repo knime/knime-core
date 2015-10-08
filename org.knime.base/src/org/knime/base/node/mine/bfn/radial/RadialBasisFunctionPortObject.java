@@ -52,23 +52,28 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class RadialBasisFunctionPortObject 
+public final class RadialBasisFunctionPortObject
         extends BasisFunctionPortObject {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<RadialBasisFunctionPortObject> {}
 
     /** The <code>PortType</code> for basisfunction models. */
     public static final PortType TYPE = new PortType(
             RadialBasisFunctionPortObject.class);
-    
+
     /**
-     * 
+     *
      */
     public RadialBasisFunctionPortObject() {
-        
+
     }
-    
+
     /**
      * Creates a new basis function model object.
      * @param cont basisfunction model content containing rules and spec
@@ -85,7 +90,7 @@ public final class RadialBasisFunctionPortObject
             final BasisFunctionModelContent content) {
         return new RadialBasisFunctionPortObject(content);
     }
-    
+
     /**
      * Used to create PNN predictor rows.
      */
@@ -93,13 +98,14 @@ public final class RadialBasisFunctionPortObject
         /**
          * {@inheritDoc}
          */
+        @Override
         public BasisFunctionPredictorRow createPredictorRow(
                 final ModelContentRO pp)
                 throws InvalidSettingsException {
             return new RadialBasisFunctionPredictorRow(pp);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -107,5 +113,5 @@ public final class RadialBasisFunctionPortObject
     public Creator getCreator() {
         return new RadialCreator();
     }
-    
+
 }

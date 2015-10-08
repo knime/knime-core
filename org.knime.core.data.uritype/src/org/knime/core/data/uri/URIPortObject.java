@@ -67,6 +67,11 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class URIPortObject extends AbstractSimplePortObject implements IURIPortObject {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<URIPortObject> {} 
 
     private URIPortObjectSpec m_uriPortObjectSpec;
     private List<URIContent> m_uriContents;

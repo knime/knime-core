@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.10.2006 (uwe): created
  */
@@ -61,18 +61,17 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 
 /**
  * Spec for pca model port object.
- * 
+ *
  * @author uwe, University of Konstanz
  */
 public class PCAModelPortObjectSpec implements PortObjectSpec {
-
     private final String[] m_columnNames;
 
     private double[] m_eigenvalues;
 
     /**
      * create object spec.
-     * 
+     *
      * @param columnNames names of input columns
      */
     public PCAModelPortObjectSpec(final String[] columnNames) {
@@ -81,7 +80,7 @@ public class PCAModelPortObjectSpec implements PortObjectSpec {
     }
 
     /**
-     * 
+     *
      * @return names of input columns
      */
     public String[] getColumnNames() {
@@ -105,44 +104,37 @@ public class PCAModelPortObjectSpec implements PortObjectSpec {
     }
 
     /**
-     * Method required by the interface {@link PortObjectSpec}. Not meant for
-     * public use.
-     * 
-     * @return A new serializer responsible for loading/saving.
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSpecSerializer<PCAModelPortObjectSpec> getPortObjectSpecSerializer() {
-
-        return new PortObjectSpecSerializer<PCAModelPortObjectSpec>() {
-
-            @Override
-            public PCAModelPortObjectSpec loadPortObjectSpec(
-                    final PortObjectSpecZipInputStream in) throws IOException {
-                in.getNextEntry();
-                final ObjectInputStream ois = new ObjectInputStream(in);
-                try {
-                    final String[] columnNames = (String[])ois.readObject();
-                    return new PCAModelPortObjectSpec(columnNames);
-                } catch (final ClassNotFoundException e) {
-                    throw new IOException(e.getMessage(), e.getCause());
-                }
-
+    public static final class Serializer extends PortObjectSpecSerializer<PCAModelPortObjectSpec> {
+        @Override
+        public PCAModelPortObjectSpec loadPortObjectSpec(
+                final PortObjectSpecZipInputStream in) throws IOException {
+            in.getNextEntry();
+            final ObjectInputStream ois = new ObjectInputStream(in);
+            try {
+                final String[] columnNames = (String[])ois.readObject();
+                return new PCAModelPortObjectSpec(columnNames);
+            } catch (final ClassNotFoundException e) {
+                throw new IOException(e.getMessage(), e.getCause());
             }
 
-            @Override
-            public void savePortObjectSpec(
-                    final PCAModelPortObjectSpec portObjectSpec,
-                    final PortObjectSpecZipOutputStream out) throws IOException {
-                out.putNextEntry(new ZipEntry("content.dat"));
-                new ObjectOutputStream(out).writeObject(portObjectSpec
-                        .getColumnNames());
-            }
+        }
 
-        };
+        @Override
+        public void savePortObjectSpec(
+                final PCAModelPortObjectSpec portObjectSpec,
+                final PortObjectSpecZipOutputStream out) throws IOException {
+            out.putNextEntry(new ZipEntry("content.dat"));
+            new ObjectOutputStream(out).writeObject(portObjectSpec
+                    .getColumnNames());
+        }
     }
 
     /**
      * set eigenvalues of existing pca.
-     * 
+     *
      * @param eigenvalues
      */
     public void setEigenValues(final double[] eigenvalues) {

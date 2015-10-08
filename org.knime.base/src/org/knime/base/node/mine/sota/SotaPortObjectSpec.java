@@ -62,16 +62,21 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<SotaPortObjectSpec> {}
 
     private DataTableSpec m_spec;
 
     private int m_indexOfClassCol;
 
     /**
-     * This seems to be unused, please use {@link #SotaPortObjectSpec(DataTableSpec, int)} instead.
-     * @deprecated Use {@link #SotaPortObjectSpec(DataTableSpec, int)}.
+     * Default constructor used for serialization.
+     *
+     * @noreference This constructor is not intended to be referenced by clients.
      */
-    @Deprecated
     public SotaPortObjectSpec() { }
 
     /**

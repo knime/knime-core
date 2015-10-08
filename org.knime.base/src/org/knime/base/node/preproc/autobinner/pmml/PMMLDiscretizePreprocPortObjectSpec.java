@@ -77,81 +77,78 @@ public final class PMMLDiscretizePreprocPortObjectSpec extends PMMLPreprocPortOb
     private PMMLPreprocDiscretize m_op;
 
     /**
-     * @return PMMLPreprocPortObjectSpec singleton
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSpecSerializer<PMMLPreprocPortObjectSpec>
-    getPortObjectSpecSerializer() {
-        return new PortObjectSpecSerializer<PMMLPreprocPortObjectSpec>() {
+    public static final class Serializer extends PortObjectSpecSerializer<PMMLPreprocPortObjectSpec> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void savePortObjectSpec(
+                final PMMLPreprocPortObjectSpec portObjectSpec,
+                final PortObjectSpecZipOutputStream out)
+                throws IOException {
+            try {
+                PMMLPreprocDiscretize op =
+                    ((PMMLDiscretizePreprocPortObjectSpec) portObjectSpec).getOperation();
+                out.putNextEntry(new ZipEntry(op.getClass().getName()));
 
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void savePortObjectSpec(
-                    final PMMLPreprocPortObjectSpec portObjectSpec,
-                    final PortObjectSpecZipOutputStream out)
-                    throws IOException {
+                PortObjectZipOutputStreamAndString sout
+                    = new PortObjectZipOutputStreamAndString(out);
+                TransformerHandler handler =
+                    createTransformerHandlerForSave(sout);
+                String writeElement = op.getTransformElement().toString();
+                handler.startElement("", "", writeElement, null);
+                op.save(handler, null);
+                handler.endElement("", "", writeElement);
+
+                    handler.endDocument();
+
+                out.closeEntry();
+                out.close();
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public PMMLPreprocPortObjectSpec loadPortObjectSpec(
+                final PortObjectSpecZipInputStream in) throws IOException {
+            PMMLPreprocOperation op = null;
+            ZipEntry entry;
+            while ((entry =  in.getNextEntry()) != null) {
+                String clazzName = entry.getName();
+                Class<?> clazz;
                 try {
-                    PMMLPreprocDiscretize op =
-                        ((PMMLDiscretizePreprocPortObjectSpec) portObjectSpec).getOperation();
-                    out.putNextEntry(new ZipEntry(op.getClass().getName()));
+                    clazz = Class.forName(clazzName);
+                    if (!PMMLPreprocOperation.class.isAssignableFrom(clazz)) {
+                        // throw exception
+                        throw new IllegalArgumentException(
+                                "Class "
+                                        + clazz.getName()
+                                        + " must extend PMMLPreprocOperation! "
+                                        + "Loading failed!");
+                    }
+                    op =
+                            (PMMLPreprocOperation)clazz.newInstance();
+                    SAXParserFactory fac = SAXParserFactory.newInstance();
+                    SAXParser parser;
+                    parser = fac.newSAXParser();
+                    parser.parse(new NonClosableInputStream(in),
+                            op.getHandlerForLoad());
 
-                    PortObjectZipOutputStreamAndString sout
-                        = new PortObjectZipOutputStreamAndString(out);
-                    TransformerHandler handler =
-                        createTransformerHandlerForSave(sout);
-                    String writeElement = op.getTransformElement().toString();
-                    handler.startElement("", "", writeElement, null);
-                    op.save(handler, null);
-                    handler.endElement("", "", writeElement);
-
-                        handler.endDocument();
-
-                    out.closeEntry();
-                    out.close();
                 } catch (Exception e) {
                     throw new IOException(e);
                 }
+                in.closeEntry();
             }
 
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public PMMLPreprocPortObjectSpec loadPortObjectSpec(
-                    final PortObjectSpecZipInputStream in) throws IOException {
-                PMMLPreprocOperation op = null;
-                ZipEntry entry;
-                while ((entry =  in.getNextEntry()) != null) {
-                    String clazzName = entry.getName();
-                    Class<?> clazz;
-                    try {
-                        clazz = Class.forName(clazzName);
-                        if (!PMMLPreprocOperation.class.isAssignableFrom(clazz)) {
-                            // throw exception
-                            throw new IllegalArgumentException(
-                                    "Class "
-                                            + clazz.getName()
-                                            + " must extend PMMLPreprocOperation! "
-                                            + "Loading failed!");
-                        }
-                        op =
-                                (PMMLPreprocOperation)clazz.newInstance();
-                        SAXParserFactory fac = SAXParserFactory.newInstance();
-                        SAXParser parser;
-                        parser = fac.newSAXParser();
-                        parser.parse(new NonClosableInputStream(in),
-                                op.getHandlerForLoad());
-
-                    } catch (Exception e) {
-                        throw new IOException(e);
-                    }
-                    in.closeEntry();
-                }
-
-                return new PMMLDiscretizePreprocPortObjectSpec((PMMLPreprocDiscretize)op);
-            }
-        };
+            return new PMMLDiscretizePreprocPortObjectSpec((PMMLPreprocDiscretize)op);
+        }
     }
 
     static TransformerHandler createTransformerHandlerForSave(

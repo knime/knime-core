@@ -99,36 +99,33 @@ public class PMMLPreprocPortObjectSpec implements PortObjectSpec {
     }
 
     /**
-     * @return PMMLPreprocPortObjectSpec singleton
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSpecSerializer<PMMLPreprocPortObjectSpec>
-    getPortObjectSpecSerializer() {
-        return new PortObjectSpecSerializer<PMMLPreprocPortObjectSpec>() {
+    public static final class Serializer extends PortObjectSpecSerializer<PMMLPreprocPortObjectSpec> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void savePortObjectSpec(
+                final PMMLPreprocPortObjectSpec portObjectSpec,
+                final PortObjectSpecZipOutputStream out)
+                throws IOException {
+            portObjectSpec.saveTo(out);
+        }
 
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void savePortObjectSpec(
-                    final PMMLPreprocPortObjectSpec portObjectSpec,
-                    final PortObjectSpecZipOutputStream out)
-                    throws IOException {
-                portObjectSpec.saveTo(out);
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public PMMLPreprocPortObjectSpec loadPortObjectSpec(
+                final PortObjectSpecZipInputStream in) throws IOException {
+            try {
+                return PMMLPreprocPortObjectSpec.loadFrom(in);
+            } catch (InvalidSettingsException e) {
+                throw new IOException(e);
             }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public PMMLPreprocPortObjectSpec loadPortObjectSpec(
-                    final PortObjectSpecZipInputStream in) throws IOException {
-                try {
-                    return PMMLPreprocPortObjectSpec.loadFrom(in);
-                } catch (InvalidSettingsException e) {
-                    throw new IOException(e);
-                }
-            }
-        };
+        }
     }
 
     /**

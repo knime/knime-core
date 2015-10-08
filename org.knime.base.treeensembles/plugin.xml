@@ -57,5 +57,15 @@
             classMapper="org.knime.base.node.mine.treeensemble.node.DeprecatedNodeFactoryClassMapper">
       </NodeFactoryClassMapper>
    </extension>
+   <extension
+         point="org.knime.core.PortType">
+      <portType
+            name="Tree Ensembles"
+            objectClass="org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject"
+            objectSerializer="org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject$Serializer"
+            specClass="org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec"
+            specSerializer="org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec$Serializer">
+      </portType>
+   </extension>
 
 </plugin>

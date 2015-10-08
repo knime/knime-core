@@ -61,31 +61,28 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
  * @author M. Berthold, University of Konstanz
  */
 public final class InactiveBranchPortObjectSpec implements PortObjectSpec {
-
     /** Singleton to be used. */
     public static final InactiveBranchPortObjectSpec INSTANCE =
             new InactiveBranchPortObjectSpec();
 
-    /** Serializer method as required by {@link PortObjectSpec} class.
-     * @return The serializer instance.
+    /**
+     * Serializer for {@link InactiveBranchPortObjectSpec}s.
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSpecSerializer<InactiveBranchPortObjectSpec>
-        getPortObjectSpecSerializer() {
-        return new PortObjectSpecSerializer<InactiveBranchPortObjectSpec>() {
+    public static final class Serializer extends PortObjectSpecSerializer<InactiveBranchPortObjectSpec> {
+        @Override
+        public InactiveBranchPortObjectSpec loadPortObjectSpec(
+                final PortObjectSpecZipInputStream in) {
+            return INSTANCE;
+        }
 
-            @Override
-            public InactiveBranchPortObjectSpec loadPortObjectSpec(
-                    final PortObjectSpecZipInputStream in) {
-                return INSTANCE;
-            }
-
-            @Override
-            public void savePortObjectSpec(
-                    final InactiveBranchPortObjectSpec portObjectSpec,
-                    final PortObjectSpecZipOutputStream out) {
-                // no op (singleton)
-            }
-        };
+        @Override
+        public void savePortObjectSpec(
+                final InactiveBranchPortObjectSpec portObjectSpec,
+                final PortObjectSpecZipOutputStream out) {
+            // no op (singleton)
+        }
     }
 
     private InactiveBranchPortObjectSpec() {

@@ -71,6 +71,11 @@ import org.knime.core.node.port.PortType;
  * @author Christoph, University of Konstanz
  */
 public class DiscretizationModel extends AbstractSimplePortObject {
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractSimplePortObjectSerializer<DiscretizationModel> {}
 
     /**
      * Convenience method to get the type of this port object.
@@ -188,7 +193,7 @@ public class DiscretizationModel extends AbstractSimplePortObject {
      */
     @Override
     public String getSummary() {
-        if (m_includedColumnNames.getNumColumns() == 0 
+        if (m_includedColumnNames.getNumColumns() == 0
                 || m_schemes.length == 0) {
             return "Empty Model";
         }

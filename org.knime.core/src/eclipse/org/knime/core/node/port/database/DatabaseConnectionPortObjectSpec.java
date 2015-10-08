@@ -73,8 +73,10 @@ public class DatabaseConnectionPortObjectSpec implements PortObjectSpec {
      * A serializer for {@link DatabaseConnectionPortObjectSpec}s.
      *
      * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    protected static class ConnectionSpecSerializer extends PortObjectSpecSerializer<DatabaseConnectionPortObjectSpec> {
+    public static class Serializer extends PortObjectSpecSerializer<DatabaseConnectionPortObjectSpec> {
         @Override
         public DatabaseConnectionPortObjectSpec loadPortObjectSpec(final PortObjectSpecZipInputStream in)
             throws IOException {
@@ -178,15 +180,6 @@ public class DatabaseConnectionPortObjectSpec implements PortObjectSpec {
     public DatabaseConnectionSettings getConnectionSettings(final CredentialsProvider credProvider)
         throws InvalidSettingsException {
         return new DatabaseConnectionSettings(m_conn, credProvider);
-    }
-
-    /**
-     * Serializer used to save {@link DatabaseConnectionPortObjectSpec}s.
-     *
-     * @return a new serializer
-     */
-    public static PortObjectSpecSerializer<DatabaseConnectionPortObjectSpec> getPortObjectSpecSerializer() {
-        return new ConnectionSpecSerializer();
     }
 
     private static final String KEY_DATABASE_CONNECTION = "database_connection.zip";

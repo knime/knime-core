@@ -151,29 +151,10 @@ public class BWElimModel implements PortObject, PortObjectSpec {
     }
 
     /**
-     * Returns a serializer object for this model.
-     *
-     * @return a port object serializer
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSerializer<BWElimModel> getPortObjectSerializer() {
-        return ModelSerializer.INSTANCE;
-    }
-
-    /**
-     * Returns a serializer object for this model's spec (which is the model
-     * itself).
-     *
-     * @return a port object serializer
-     */
-    public static PortObjectSpecSerializer<BWElimModel>
-            getPortObjectSpecSerializer() {
-        return SpecSerializer.INSTANCE;
-    }
-
-    private static class SpecSerializer extends
-            PortObjectSpecSerializer<BWElimModel> {
-        private static final SpecSerializer INSTANCE = new SpecSerializer();
-
+    public static final class SpecSerializer extends PortObjectSpecSerializer<BWElimModel> {
         /** {@inheritDoc} */
         @Override
         public BWElimModel loadPortObjectSpec(
@@ -220,10 +201,11 @@ public class BWElimModel implements PortObject, PortObjectSpec {
         }
     }
 
-    private static class ModelSerializer extends
-            PortObjectSerializer<BWElimModel> {
-        private static final ModelSerializer INSTANCE = new ModelSerializer();
-
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class ModelSerializer extends PortObjectSerializer<BWElimModel> {
         /**
          * {@inheritDoc}
          */

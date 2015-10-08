@@ -58,7 +58,11 @@ import org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObjectSpec;
  * @author Heiko Hofer
  */
 public class PMMLDiscretizePreprocPortObject extends PMMLPreprocPortObject {
-
+    /**
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class Serializer extends AbstractPortObjectSerializer<PMMLDiscretizePreprocPortObject> {}
 
     public PMMLDiscretizePreprocPortObject() {
         // necessary for loading (see documentation of PMMLPreprocPortObject)

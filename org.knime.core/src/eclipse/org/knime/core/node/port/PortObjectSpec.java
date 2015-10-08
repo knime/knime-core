@@ -74,18 +74,8 @@ import org.knime.core.node.util.ConvenienceMethods;
  *
  * <p>
  * <b>Important:</b> Implementors of this interface must also provide a
- * {@link PortObjectSpecSerializer}, which is used to save and load instances.
- * The framework will try to invoke a static method defined in the
- * implementation with the following signature:
- *
- * <pre>
- *  public static PortObjectSpecSerializer&lt;FooPortObjectSpec&gt;
- *          getPortObjectSpecSerializer()
- *              throws IOException {...}
- * </pre>
- *
- * If the class does not have such a static method (or it has the wrong
- * signature), an exception will be thrown at runtime.
+ * {@link PortObjectSpecSerializer}, which is used to save and load instances. This serializer must be registered at the
+ * extension pint <tt>org.knime.core.PortType</tt>.
  *
  * <p>
  * <b>Note:</b> The API of this class is not finalized and may slightly change

@@ -73,31 +73,28 @@ public final class InactiveBranchPortObject implements PortObject {
         // singleton
     }
 
-    /** Serializer as required by {@link PortObject} class.
-     * @return The serializer.
+    /**
+     * Serializer for {@link InactiveBranchPortObject}s.
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
      */
-    public static PortObjectSerializer<InactiveBranchPortObject>
-        getPortObjectSerializer() {
-        return new PortObjectSerializer<InactiveBranchPortObject>() {
+    public static final class Serializer extends PortObjectSerializer<InactiveBranchPortObject> {
+        @Override
+        public InactiveBranchPortObject loadPortObject(
+                final PortObjectZipInputStream in,
+                final PortObjectSpec spec, final ExecutionMonitor exec)
+                throws IOException, CanceledExecutionException {
+            return INSTANCE;
+        }
 
-            @Override
-            public InactiveBranchPortObject loadPortObject(
-                    final PortObjectZipInputStream in,
-                    final PortObjectSpec spec, final ExecutionMonitor exec)
-                    throws IOException, CanceledExecutionException {
-                return INSTANCE;
-            }
-
-            @Override
-            public void savePortObject(
-                    final InactiveBranchPortObject portObject,
-                    final PortObjectZipOutputStream out,
-                    final ExecutionMonitor exec) throws IOException,
-                    CanceledExecutionException {
-                // no op -- singleton
-            }
-
-        };
+        @Override
+        public void savePortObject(
+                final InactiveBranchPortObject portObject,
+                final PortObjectZipOutputStream out,
+                final ExecutionMonitor exec) throws IOException,
+                CanceledExecutionException {
+            // no op -- singleton
+        }
     }
 
     /** {@inheritDoc} */
