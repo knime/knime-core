@@ -50,15 +50,11 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
-import org.knime.core.data.DataCellFactory.FromComplexString;
-import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
@@ -160,80 +156,6 @@ public final class ComplexNumberCell extends DataCell implements
             return result + " - i*" + Math.abs(m_imag);
         } else {
             return result + " + i*" + m_imag;
-        }
-    }
-
-    /**
-     * Factory for {@link ComplexNumberCell}s.
-     *
-     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
-     * @since 3.0
-     */
-    public static final class ComplexNumberCellFactory implements FromSimpleString, FromComplexString {
-        /**
-         * The data type for the cells created by this factory.
-         */
-        public static final DataType TYPE = ComplexNumberCell.TYPE;
-
-        private static final Pattern SPLIT_PATTERN = Pattern.compile("^(.+?)(?:\\s*([\\+\\-])(?:\\s*i\\s*\\*(.+)|(.*)i))?$");
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DataType getDataType() {
-            return TYPE;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DataCell createCell(final String input) {
-            return create(input);
-        }
-
-        /**
-         * Creates a new complex number cell by parsing the given string. The expected format is
-         * <tt>real "+" img"i"</tt>, e.g <tt>3 + 2i</tt>, <tt>0.5 - 0.3i</tt>, <tt>0.1</tt>, <tt>-i</tt>.
-         *
-         * @param s a string denoting a complex number
-         * @return a new complex number cell
-         */
-        public static DataCell create(final String s) {
-            Matcher m = SPLIT_PATTERN.matcher(s);
-            if (m.matches()) {
-                double real = 0, img = 0;
-
-                if ("i".equals(m.group(1))) {
-                    img = 1;
-                } else if ("-i".equals(m.group(1))) {
-                    img = -1;
-                } else {
-                    real = Double.parseDouble(m.group(1));
-                    double sign = "-".equals(m.group(2)) ? -1 : 1;
-                    if (m.group(3) != null) {
-                        img = sign * Double.parseDouble(m.group(3));
-                    } else if (m.group(4) != null) {
-                        img = sign * Double.parseDouble(m.group(4));
-                    }
-                }
-                return new ComplexNumberCell(real, img);
-            } else {
-                throw new NumberFormatException("'" + s + "_ is not a valid complex number, expected something that "
-                    + "matches '" + SPLIT_PATTERN.pattern() + "'");
-            }
-        }
-
-        /**
-         * Creates a new complex number cell from the real and imaginary parts.
-         *
-         * @param real the real part
-         * @param img the imaginary part
-         * @return a new data cell
-         */
-        public static DataCell create(final double real, final double img) {
-            return new ComplexNumberCell(real, img);
         }
     }
 

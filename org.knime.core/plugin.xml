@@ -276,8 +276,7 @@
          </serializer>
       </DataType>
       <DataType
-            cellClass="org.knime.core.data.def.ComplexNumberCell"
-            factoryClass="org.knime.core.data.def.ComplexNumberCell$ComplexNumberCellFactory">
+            cellClass="org.knime.core.data.def.ComplexNumberCell">
          <serializer
                cellClass="org.knime.core.data.def.ComplexNumberCell"
                serializerClass="org.knime.core.data.def.ComplexNumberCell$ComplexNumberSerializer">
