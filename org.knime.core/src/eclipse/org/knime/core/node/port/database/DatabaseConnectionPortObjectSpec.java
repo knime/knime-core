@@ -89,34 +89,37 @@ public class DatabaseConnectionPortObjectSpec implements PortObjectSpec {
             final PortObjectSpecZipOutputStream out) throws IOException {
             saveModelContent(out, portObjectSpec);
         }
-
-        /**
-         * Reads the model content from the input stream.
-         * @param in an input stream
-         * @return the model content containing the spec information
-         * @throws IOException if an I/O error occurs
-         */
-        protected ModelContentRO loadModelContent(final PortObjectSpecZipInputStream in) throws IOException {
-            ZipEntry ze = in.getNextEntry();
-            if (!ze.getName().equals(KEY_DATABASE_CONNECTION)) {
-                throw new IOException("Key \"" + ze.getName() + "\" does not " + " match expected zip entry name \""
-                    + KEY_DATABASE_CONNECTION + "\".");
-            }
-            return ModelContent.loadFromXML(new NonClosableInputStream.Zip(in));
-        }
-
-        /**
-         * Saves the given spec object into the output stream.
-         * @param os an output stream
-         * @param portObjectSpec the port spec
-         * @throws IOException if an I/O error occurs
-         */
-        protected void saveModelContent(final PortObjectSpecZipOutputStream os,
-            final DatabaseConnectionPortObjectSpec portObjectSpec) throws IOException {
-            os.putNextEntry(new ZipEntry(KEY_DATABASE_CONNECTION));
-            portObjectSpec.m_conn.saveToXML(new NonClosableOutputStream.Zip(os));
-        }
     }
+
+    /**
+     * Reads the model content from the input stream.
+     * @param in an input stream
+     * @return the model content containing the spec information
+     * @throws IOException if an I/O error occurs
+     * @since 3.0
+     */
+    protected static ModelContentRO loadModelContent(final PortObjectSpecZipInputStream in) throws IOException {
+        ZipEntry ze = in.getNextEntry();
+        if (!ze.getName().equals(KEY_DATABASE_CONNECTION)) {
+            throw new IOException("Key \"" + ze.getName() + "\" does not " + " match expected zip entry name \""
+                + KEY_DATABASE_CONNECTION + "\".");
+        }
+        return ModelContent.loadFromXML(new NonClosableInputStream.Zip(in));
+    }
+
+    /**
+     * Saves the given spec object into the output stream.
+     * @param os an output stream
+     * @param portObjectSpec the port spec
+     * @throws IOException if an I/O error occurs
+     * @since 3.0
+     */
+    protected static void saveModelContent(final PortObjectSpecZipOutputStream os,
+        final DatabaseConnectionPortObjectSpec portObjectSpec) throws IOException {
+        os.putNextEntry(new ZipEntry(KEY_DATABASE_CONNECTION));
+        portObjectSpec.m_conn.saveToXML(new NonClosableOutputStream.Zip(os));
+    }
+
 
     private final ModelContentRO m_conn;
 

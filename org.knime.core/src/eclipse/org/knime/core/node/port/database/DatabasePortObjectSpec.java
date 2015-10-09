@@ -72,13 +72,13 @@ public class DatabasePortObjectSpec extends DatabaseConnectionPortObjectSpec {
      * @noreference This class is not intended to be referenced by clients.
      * @since 3.0
      */
-    public static final class Serializer extends DatabaseConnectionPortObjectSpec.Serializer {
+    public static final class Serializer extends PortObjectSpecSerializer<DatabasePortObjectSpec> {
         /**
          * {@inheritDoc}
          */
         @Override
         public DatabasePortObjectSpec loadPortObjectSpec(final PortObjectSpecZipInputStream in) throws IOException {
-            ModelContentRO connSpecContent = super.loadModelContent(in);
+            ModelContentRO connSpecContent = loadModelContent(in);
 
             ZipEntry ze = in.getNextEntry();
             if (!ze.getName().equals(KEY_SPEC)) {
@@ -98,12 +98,12 @@ public class DatabasePortObjectSpec extends DatabaseConnectionPortObjectSpec {
          * {@inheritDoc}
          */
         @Override
-        public void savePortObjectSpec(final DatabaseConnectionPortObjectSpec portObjectSpec,
+        public void savePortObjectSpec(final DatabasePortObjectSpec portObjectSpec,
             final PortObjectSpecZipOutputStream out) throws IOException {
-            super.savePortObjectSpec(portObjectSpec, out);
+            saveModelContent(out, portObjectSpec);
 
             ModelContent specModel = new ModelContent(KEY_SPEC);
-            ((DatabasePortObjectSpec) portObjectSpec).m_spec.save(specModel);
+            portObjectSpec.m_spec.save(specModel);
             out.putNextEntry(new ZipEntry(KEY_SPEC));
             specModel.saveToXML(new NonClosableOutputStream.Zip(out));
         }
@@ -167,16 +167,6 @@ public class DatabasePortObjectSpec extends DatabaseConnectionPortObjectSpec {
     public DatabaseQueryConnectionSettings getConnectionSettings(final CredentialsProvider credProvider)
         throws InvalidSettingsException {
         return new DatabaseQueryConnectionSettings(super.getConnectionModel(), credProvider);
-    }
-
-
-    /**
-     * Serializer used to save <code>DatabasePortObjectSpec</code>.
-     * @return a new database spec serializer
-     */
-    public static PortObjectSpecSerializer<DatabaseConnectionPortObjectSpec>
-            getPortObjectSpecSerializer() {
-        return new Serializer();
     }
 
     private static final String KEY_SPEC = "spec_xml.zip";
