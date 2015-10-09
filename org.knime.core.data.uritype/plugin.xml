@@ -26,9 +26,19 @@
          point="org.knime.core.PortType">
       <portType
             color="#1eb9dc"
+            hidden="true"
             name="URI"
             objectClass="org.knime.core.data.uri.URIPortObject"
             objectSerializer="org.knime.core.data.uri.URIPortObject$Serializer"
+            specClass="org.knime.core.data.uri.URIPortObjectSpec"
+            specSerializer="org.knime.core.data.uri.URIPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            color="#1eb9dc"
+            hidden="false"
+            name="URI"
+            objectClass="org.knime.core.data.uri.IURIPortObject"
+            objectSerializer="org.knime.core.data.uri.IURIPortObject$DummySerializer"
             specClass="org.knime.core.data.uri.URIPortObjectSpec"
             specSerializer="org.knime.core.data.uri.URIPortObjectSpec$Serializer">
       </portType>

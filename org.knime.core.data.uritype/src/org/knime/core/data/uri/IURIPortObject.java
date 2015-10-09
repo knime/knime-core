@@ -47,17 +47,43 @@
  */
 package org.knime.core.data.uri;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortObjectZipInputStream;
+import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface IURIPortObject extends PortObject {
+    /**
+     * Dummy serializer that throws exceptions if used, only to make the extension point happy.
+     * 
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @noreference This class is not intended to be referenced by clients.
+     * @since 3.0
+     */
+    public static final class DummySerializer extends PortObjectSerializer<IURIPortObject> {
+        @Override
+        public void savePortObject(IURIPortObject portObject, PortObjectZipOutputStream out, ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+            throw new UnsupportedOperationException("Don't use this serializer");
+        }
+
+        @Override
+        public IURIPortObject loadPortObject(PortObjectZipInputStream in, PortObjectSpec spec, ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
+            throw new UnsupportedOperationException("Don't use this serializer");
+        }
+    }
 
     /**
      * Type of this port.
