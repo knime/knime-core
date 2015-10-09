@@ -54,8 +54,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
 import org.eclipse.swt.custom.ExtendedModifyListener;
@@ -96,8 +96,6 @@ import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.commands.AddAnnotationCommand;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.FontStore;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  *
@@ -158,8 +156,6 @@ public class StyledTextEditor extends CellEditor {
 
     private MenuItem m_leftAlignMenuItem;
 
-    private MenuItem m_backgroundMenuItem;
-
     /**
      * Creates a workflow annotation editor (with the font set to workflow annotations default font - see
      * #setDefaultFont(Font)).
@@ -212,6 +208,9 @@ public class StyledTextEditor extends CellEditor {
         m_shadowStyledText.setStyleRanges(m_styledText.getStyleRanges());
         m_shadowStyledText.setAlignment(m_styledText.getAlignment());
         m_shadowStyledText.setBackground(m_styledText.getBackground());
+        int m = m_styledText.getRightMargin();
+        m_shadowStyledText.setMargins(m, m, m, m);
+        m_shadowStyledText.setMarginColor(m_styledText.getMarginColor());
     }
 
     private Control createStyledText(final Composite parent) {
@@ -375,10 +374,11 @@ public class StyledTextEditor extends CellEditor {
             }
         });
         Image img;
+        MenuItem action;
 
         // background color
         img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/bgcolor_10.png");
-        m_backgroundMenuItem = addMenuItem(menu, "bg", SWT.PUSH, "Background", img);
+        action = addMenuItem(menu, "bg", SWT.PUSH, "Background", img);
 
         // alignment
         img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/alignment_10.png");
@@ -397,11 +397,10 @@ public class StyledTextEditor extends CellEditor {
         new MenuItem(menu, SWT.SEPARATOR);
         // contains buttons being en/disabled with selection
         m_enableOnSelectedTextMenuItems = new ArrayList<MenuItem>();
-        MenuItem action;
 
         // font/style button
         img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/font_10.png");
-        action = addMenuItem(menu, "style", SWT.PUSH, "Font", img);
+        action = addMenuItem(menu, "style", SWT.PUSH, "Font...", img);
         m_enableOnSelectedTextMenuItems.add(action);
 
         // foreground color button
@@ -418,6 +417,12 @@ public class StyledTextEditor extends CellEditor {
         img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/italic_10.png");
         action = addMenuItem(menu, "italic", SWT.PUSH, "Italic", img);
         m_enableOnSelectedTextMenuItems.add(action);
+
+        new MenuItem(menu, SWT.SEPARATOR);
+
+        // border style
+        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/border_10.png");
+        action = addMenuItem(menu, "border", SWT.PUSH, "Border...", img);
 
         new MenuItem(menu, SWT.SEPARATOR);
 
@@ -481,6 +486,9 @@ public class StyledTextEditor extends CellEditor {
             fireEditorValueChanged(true, true);
         } else if (src.equals("alignment_right")) {
             alignment(SWT.RIGHT);
+            fireEditorValueChanged(true, true);
+        } else if (src.equals("border")) {
+            borderStyle();
             fireEditorValueChanged(true, true);
         } else if (src.equals("ok")) {
             ok();
@@ -611,16 +619,13 @@ public class StyledTextEditor extends CellEditor {
             text = wa.getText();
             m_selectAllUponFocusGain = AddAnnotationCommand.INITIAL_FLOWANNO_TEXT.equals(text);
 
-            // get workflow annotation border size from preferences
-            IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
-            int annotationBorderSize = store.getInt(PreferenceConstants.P_ANNOTATION_BORDER_SIZE);
-
+            int annotationBorderSize = wa.getBorderSize();
             // set margins as borders
-            m_styledText.setMargins(annotationBorderSize, annotationBorderSize, annotationBorderSize,
-                annotationBorderSize);
-
-            // set "Border Color" instead of "Background"
-            m_backgroundMenuItem.setText("Border Color");
+            m_styledText.setMarginColor(AnnotationEditPart.RGBintToColor(wa.getBorderColor()));
+            if (annotationBorderSize > 0) {
+                m_styledText.setMargins(annotationBorderSize, annotationBorderSize, annotationBorderSize,
+                    annotationBorderSize);
+            }
         }
         m_styledText.setAlignment(alignment);
         m_styledText.setText(text);
@@ -797,13 +802,25 @@ public class StyledTextEditor extends CellEditor {
             colDlg.setRGB(m_backgroundColor.getRGB());
         }
         RGB newBGCol = colDlg.open();
-        lastColors = colDlg.getRGBs();
         if (newBGCol == null) {
             // user canceled
             return;
         }
+        lastColors = colDlg.getRGBs();
         m_backgroundColor = new Color(null, newBGCol);
         applyBackgroundColor();
+    }
+
+
+    private void borderStyle() {
+        BorderStyleDialog dlg = new BorderStyleDialog(m_styledText.getShell(), m_styledText.getMarginColor(),
+            m_styledText.getRightMargin());
+        if (dlg.open() == Window.OK) {
+            m_styledText.setMarginColor(AnnotationEditPart.RGBtoColor(dlg.getColor()));
+            m_styledText.redraw();
+            int s = dlg.getSize();
+            m_styledText.setMargins(s, s, s, s);
+        }
     }
 
     /**

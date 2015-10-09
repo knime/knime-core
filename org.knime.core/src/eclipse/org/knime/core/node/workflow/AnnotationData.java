@@ -54,15 +54,13 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.ConvenienceMethods;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * @author  Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class AnnotationData implements Cloneable {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(AnnotationData.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AnnotationData.class);
 
     /** Text alignment in annotation. */
     public enum TextAlignment {
@@ -96,6 +94,10 @@ public class AnnotationData implements Cloneable {
     private int m_height;
 
     private TextAlignment m_alignment = TextAlignment.LEFT;
+
+    private int m_borderSize = 0;
+
+    private int m_borderColor = 0;
 
     /** @return the text */
     public String getText() {
@@ -180,6 +182,30 @@ public class AnnotationData implements Cloneable {
         return m_alignment;
     }
 
+    /** @return the border width. 0 or neg. for no border.
+     * @since 3.0*/
+    public int getBorderSize() {
+        return m_borderSize;
+    }
+
+    /** @param size border size in pixel, 0 or neg. for no border.
+     * @since 3.0*/
+    public void setBorderSize(final int size) {
+        m_borderSize = size;
+    }
+
+    /** @return the color of the border. See also {@link #getBorderSize()}.
+     * @since 3.0*/
+    public int getBorderColor() {
+        return m_borderColor;
+    }
+
+    /** @param color the new border color to set.
+     * @since 3.0*/
+    public void setBorderColor(final int color) {
+        m_borderColor = color;
+    }
+
     /** Shift annotation after copy&paste.
      * @param xOff x offset
      * @param yOff y offset
@@ -246,6 +272,12 @@ public class AnnotationData implements Cloneable {
         if (m_y != other.m_y) {
             return false;
         }
+        if (m_borderSize != other.m_borderSize) {
+            return false;
+        }
+        if (m_borderColor != other.m_borderColor) {
+            return false;
+        }
         if (!Arrays.equals(m_styleRanges, other.m_styleRanges)) {
             return false;
         }
@@ -266,6 +298,8 @@ public class AnnotationData implements Cloneable {
         result ^= m_width;
         result ^= m_x;
         result ^= m_y;
+        result ^= m_borderColor;
+        result ^= m_borderSize;
         result ^= Arrays.hashCode(m_styleRanges);
         if (m_text != null) {
             result ^= m_text.hashCode();
@@ -289,6 +323,8 @@ public class AnnotationData implements Cloneable {
         setText(otherData.getText());
         setBgColor(otherData.getBgColor());
         setAlignment(otherData.getAlignment());
+        setBorderSize(otherData.getBorderSize());
+        setBorderColor(otherData.getBorderColor());
         StyleRange[] otherStyles = otherData.getStyleRanges();
         StyleRange[] myStyles = cloneStyleRanges(otherStyles);
         setStyleRanges(myStyles);
@@ -328,6 +364,8 @@ public class AnnotationData implements Cloneable {
         config.addInt("width", getWidth());
         config.addInt("height", getHeight());
         config.addString("alignment", getAlignment().toString());
+        config.addInt("borderSize", m_borderSize);
+        config.addInt("borderColor", m_borderColor);
         NodeSettingsWO styleConfigs = config.addNodeSettings("styles");
         int i = 0;
         for (StyleRange sr : getStyleRanges()) {
@@ -348,6 +386,8 @@ public class AnnotationData implements Cloneable {
         int y = config.getInt("y-coordinate");
         int width = config.getInt("width");
         int height = config.getInt("height");
+        int borderSize = config.getInt("borderSize", 0); // default to 0 for backward compatibility
+        int borderColor = config.getInt("borderColor", 0); // default for backward compatibility
         TextAlignment alignment = TextAlignment.LEFT;
         if (loadVersion.ordinal() >= FileWorkflowPersistor.LoadVersion.V250.ordinal()) {
             String alignmentS = config.getString("alignment");
@@ -360,6 +400,8 @@ public class AnnotationData implements Cloneable {
         }
         setDimension(x, y, width, height);
         setAlignment(alignment);
+        setBorderSize(borderSize);
+        setBorderColor(borderColor);
         NodeSettingsRO styleConfigs = config.getNodeSettings("styles");
         StyleRange[] styles = new StyleRange[styleConfigs.getChildCount()];
         int i = 0;

@@ -139,17 +139,19 @@ public class NodeAnnotationFigure extends Figure {
         }
         int i = 0;
         List<TextFlow> segments = new ArrayList<TextFlow>(sr.length);
+        // in old flow annotations didn't store the font if system default was used. New annotations always store font
+        // info. For backward compatibility use the system font if no font is specified here.
         final Font defaultFont = isNodeAnnotation
-                ? AnnotationEditPart.getNodeAnnotationDefaultFont()
-                : AnnotationEditPart.getWorkflowAnnotationDefaultFont();
+                ? FontStore.INSTANCE.getSystemDefFontNodeAnnotations()
+                : FontStore.INSTANCE.getSystemDefaultFont();
         for (AnnotationData.StyleRange r : sr) {
             // create text from last range to beginning of this range
             if (i < r.getStart()) {
                 String noStyle = text.substring(i, r.getStart());
                 if (isNodeAnnotation) {
-                    segments.add(getNodeAnnotationDefaultStyled(noStyle, bg));
+                    segments.add(getNodeAnnotationSystemDefaultStyled(noStyle, bg));
                 } else {
-                    segments.add(getWorkflowAnnotationDefaultStyled(noStyle, bg));
+                    segments.add(getWorkflowAnnotationSystemDefaultStyled(noStyle, bg));
                 }
                 i = r.getStart();
             }
@@ -160,9 +162,9 @@ public class NodeAnnotationFigure extends Figure {
         if (i < text.length()) {
             String noStyle = text.substring(i, text.length());
             if (isNodeAnnotation) {
-                segments.add(getNodeAnnotationDefaultStyled(noStyle, bg));
+                segments.add(getNodeAnnotationSystemDefaultStyled(noStyle, bg));
             } else {
-                segments.add(getWorkflowAnnotationDefaultStyled(noStyle, bg));
+                segments.add(getWorkflowAnnotationSystemDefaultStyled(noStyle, bg));
             }
         }
         BlockFlow bf = new BlockFlow();
@@ -202,22 +204,20 @@ public class NodeAnnotationFigure extends Figure {
         m_page.invalidate();
     }
 
-    private TextFlow getNodeAnnotationDefaultStyled(final String text, final Color bg) {
-        Font normalFont = AnnotationEditPart.getNodeAnnotationDefaultFont();
+    private TextFlow getNodeAnnotationSystemDefaultStyled(final String text, final Color bg) {
+        Font normalFont = FontStore.INSTANCE.getSystemDefFontNodeAnnotations();
         TextFlow unstyledText = new TextFlow();
-        unstyledText.setForegroundColor(AnnotationEditPart
-                .getAnnotationDefaultForegroundColor());
+        unstyledText.setForegroundColor(AnnotationEditPart.getAnnotationDefaultForegroundColor());
         unstyledText.setBackgroundColor(bg);
         unstyledText.setFont(normalFont);
         unstyledText.setText(text);
         return unstyledText;
     }
 
-    private TextFlow getWorkflowAnnotationDefaultStyled(final String text, final Color bg) {
-        Font normalFont = AnnotationEditPart.getWorkflowAnnotationDefaultFont();
+    private TextFlow getWorkflowAnnotationSystemDefaultStyled(final String text, final Color bg) {
+        Font normalFont = FontStore.INSTANCE.getSystemDefaultFont();
         TextFlow unstyledText = new TextFlow();
-        unstyledText.setForegroundColor(AnnotationEditPart
-                .getAnnotationDefaultForegroundColor());
+        unstyledText.setForegroundColor(AnnotationEditPart.getAnnotationDefaultForegroundColor());
         unstyledText.setBackgroundColor(bg);
         unstyledText.setFont(normalFont);
         unstyledText.setText(text);
@@ -230,8 +230,7 @@ public class NodeAnnotationFigure extends Figure {
         Font styledFont = FontStore.INSTANCE.getAnnotationFont(style, defaultFont);
         TextFlow styledText = new TextFlow(text);
         styledText.setFont(styledFont);
-        styledText.setForegroundColor(new Color(null, AnnotationEditPart
-                .RGBintToRGBObj(style.getFgColor())));
+        styledText.setForegroundColor(new Color(null, AnnotationEditPart.RGBintToRGBObj(style.getFgColor())));
         styledText.setBackgroundColor(bg);
         return styledText;
     }

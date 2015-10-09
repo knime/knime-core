@@ -52,7 +52,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * An annotation on the workflow. It keeps all relevant information, such as
@@ -128,6 +127,18 @@ public abstract class Annotation implements UIInformation {
     /** @return the alignment */
     public TextAlignment getAlignment() {
         return m_data.getAlignment();
+    }
+
+    /** @return the border size, 0 or neg. for none.
+     * @since 3.0*/
+    public int getBorderSize() {
+        return m_data.getBorderSize();
+    }
+
+    /** @return the border color.
+     * @since 3.0*/
+    public int getBorderColor()  {
+        return m_data.getBorderColor();
     }
 
     /** Shift annotation after copy&paste.

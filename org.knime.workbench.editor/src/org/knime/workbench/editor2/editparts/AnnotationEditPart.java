@@ -97,9 +97,11 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
 
     private static final Color DEFAULT_FG = ColorConstants.black;
 
-    /** Light yellow. */
-    public static final Color DEFAULT_BG_WORKFLOW =
-        new Color(null, 255, 255, 225);
+    /** White (since annotations have borders the default color is white) */
+    public static final Color DEFAULT_BG_WORKFLOW = new Color(null, 255, 255, 255);
+
+    /** default Color of the border for workflow annotations. Light yellow.*/
+    private static final Color DEFAULT_BORDER_WORKFLOW = new Color(null, 255, 255, 225);
 
     /** White. */
     public static final Color DEFAULT_BG_NODE = new Color(null, 255, 255, 255);
@@ -175,6 +177,20 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
+     * @return the default color of the workflow annotation border.
+     */
+    public static Color getAnnotationDefaultBorderColor() {
+        return DEFAULT_BORDER_WORKFLOW;
+    }
+
+    /** @return the value set in the preference page for the default border width. */
+    public static int getAnnotationDefaultBorderSizePrefValue() {
+        // get workflow annotation border size from preferences
+        IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        return store.getInt(PreferenceConstants.P_ANNOTATION_BORDER_SIZE);
+    }
+
+    /**
      * Returns an integer with 24bit color info. Bits 23 to 16 contain the red
      * value, 15 to 8 contain the green value, and 7 to 0 contain the blue.
      *
@@ -219,18 +235,16 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
 
     /**
      * If no font is set, this one should be used for workflow annotations.
-     * It is the system default font.
      *
      * @return the default font for workflow annotation
      */
     public static Font getWorkflowAnnotationDefaultFont() {
-        // its the system default font.
+        // its the default font.
         return FontStore.INSTANCE.getDefaultFont(FontStore.getFontSizeFromKNIMEPrefPage());
     }
 
     /**
     * If no font is set, this one should be used for node annotations.
-    * It is the system default font with the size specified in the preference
     * page for node labels.
     *
     * @return the default font for node annotation
@@ -367,9 +381,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         for (AnnotationData.StyleRange knimeSR : knimeStyleRanges) {
             StyleRange swtStyle = new StyleRange();
             Font f = FontStore.INSTANCE.getAnnotationFont(knimeSR, defaultFont);
-            if (!FontStore.INSTANCE.isDefaultFont(f)) {
-                swtStyle.font = f;
-            }
+            swtStyle.font = f;
             if (knimeSR.getFgColor() >= 0) {
                 int rgb = knimeSR.getFgColor();
                 RGB rgbObj = RGBintToRGBObj(rgb);
@@ -391,6 +403,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         AnnotationData result = new AnnotationData();
         result.setText(s.getText());
         result.setBgColor(colorToRGBint(s.getBackground()));
+        result.setBorderColor(AnnotationEditPart.colorToRGBint(s.getMarginColor()));
+        result.setBorderSize(s.getRightMargin()); // annotations have the same margin top/left/right/bottom.
         TextAlignment alignment;
         switch (s.getAlignment()) {
         case SWT.RIGHT:
@@ -408,7 +422,6 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         ArrayList<AnnotationData.StyleRange> wfStyleRanges =
                 new ArrayList<AnnotationData.StyleRange>(
                         swtStyleRange.length);
-        final Font defaultFont = s.getFont();
         for (StyleRange sr : swtStyleRange) {
             if (sr.isUnstyled()) {
                 continue;
@@ -419,7 +432,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
                 int rgb = colorToRGBint(fg);
                 waSr.setFgColor(rgb);
             }
-            FontStore.saveAnnotationFontToStyleRange(waSr, sr.font, defaultFont);
+            FontStore.saveAnnotationFontToStyleRange(waSr, sr.font);
             waSr.setStart(sr.start);
             waSr.setLength(sr.length);
             wfStyleRanges.add(waSr);

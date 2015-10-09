@@ -72,13 +72,15 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
 
     private static final int DEFAULT_HEIGHT = 140;
 
-    private static final int DEFAULT_WIDTH = 200;
+    private static final int DEFAULT_WIDTH = 250;
 
-    private static final int INITIAL_FLOWANNO_COLOR = AnnotationEditPart
-            .colorToRGBint(AnnotationEditPart
-                    .getWorkflowAnnotationDefaultBackgroundColor());
+    private static final int INITIAL_FLOWANNO_COLOR =
+        AnnotationEditPart.colorToRGBint(AnnotationEditPart.getWorkflowAnnotationDefaultBackgroundColor());
 
-    public static final String INITIAL_FLOWANNO_TEXT = "Double-click to edit.";
+    private static final int INITAL_FLOWBORDER_COLOR =
+            AnnotationEditPart.colorToRGBint(AnnotationEditPart.getAnnotationDefaultBorderColor());
+
+    public static final String INITIAL_FLOWANNO_TEXT = "Double-click top left corner to edit.";
 
     // remember the new annotation for undo
     private WorkflowAnnotation m_anno;
@@ -119,8 +121,9 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
         AnnotationData data = new AnnotationData();
         // it is a workflow annotation
         data.setBgColor(INITIAL_FLOWANNO_COLOR);
-        data.setDimension((int)location.preciseX, (int)location.preciseY,
-                DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        data.setDimension((int)location.preciseX, (int)location.preciseY, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        data.setBorderSize(AnnotationEditPart.getAnnotationDefaultBorderSizePrefValue());
+        data.setBorderColor(INITAL_FLOWBORDER_COLOR);
         data.setText(INITIAL_FLOWANNO_TEXT);
         data.setStyleRanges(new AnnotationData.StyleRange[0]);
         m_anno.copyFrom(data, true);

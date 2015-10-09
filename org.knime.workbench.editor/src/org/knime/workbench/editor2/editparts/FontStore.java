@@ -60,7 +60,6 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -213,25 +212,14 @@ public class FontStore {
      * as otherwise the font should change with changing the pref page values.
      * @param toSaveTo The style range to save to.
      * @param f The used font
-     * @param defaultFont The default font associated with the (node or
-     * workflow) annotation.
      */
     public static void saveAnnotationFontToStyleRange(
             final AnnotationData.StyleRange toSaveTo,
-            final Font f, final Font defaultFont) {
-        FontData defaultFontData = defaultFont.getFontData()[0];
+            final Font f) {
         if (f != null) {
             final FontData fontData = f.getFontData()[0];
             String fontName = fontData.getName();
             int fontSize = fontData.getHeight();
-            boolean isDefaultFontName = ConvenienceMethods.areEqual(
-                    fontName, defaultFontData.getName());
-            boolean isDefaultFontSize =
-                fontSize == defaultFontData.getHeight();
-            if (isDefaultFontName && isDefaultFontSize) {
-                fontName = null;
-                fontSize = -1;
-            }
             toSaveTo.setFontName(fontName);
             toSaveTo.setFontSize(fontSize);
             toSaveTo.setFontStyle(fontData.getStyle());
@@ -324,6 +312,30 @@ public class FontStore {
         boolean result = font.equals(defaultFont);
         releaseFont(defaultFont);
         return result;
+    }
+
+    /**
+     * Method is provided to support backward compatibility only. You should not use this method. Rather call
+     * {@link #getDefaultFont(int)}. Avoid calling this method to maintain the same look on all systems.
+     *
+     * @return the default font of the system. May return different fonts on different systems!
+     */
+    public Font getSystemDefaultFont() {
+        FontData sysFont = Display.getDefault().getSystemFont().getFontData()[0];
+        // go through #getFont to account for highDPI scaling
+        return getFont(sysFont.getName(), sysFont.getHeight(), sysFont.getStyle());
+    }
+
+    /**
+     * Method is provided to support backward compatibility only. You should not use this method. Rather call
+     * {@link #getDefaultFont(int)}. Avoid calling this method to maintain the same look on all systems.
+     *
+     * @return the default font of the system in bold and in the size set for node labels. May return different fonts on
+     *         different systems!
+     */
+    public Font getSystemDefFontNodeAnnotations() {
+        FontData sysFont = getSystemDefaultFont().getFontData()[0];
+        return getFont(sysFont.getName(), getFontSizeFromKNIMEPrefPage(), SWT.BOLD);
     }
 
     /**
