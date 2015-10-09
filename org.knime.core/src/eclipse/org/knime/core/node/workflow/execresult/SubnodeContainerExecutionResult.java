@@ -96,7 +96,7 @@ public final class SubnodeContainerExecutionResult extends NodeContainerExecutio
     /** {@inheritDoc} */
     @Override
     public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
-        CheckUtils.checkArgument(idSuffix == 0, "Exec result of subnode has only one child ('0'), got %d", idSuffix);
+        CheckUtils.checkArgument(idSuffix == 0, "Exec result of Wrapped Node has only one child ('0'), got %d", idSuffix);
         CheckUtils.checkState(m_workflowExecutionResult != null, "No inner workflow result set");
         return m_workflowExecutionResult;
     }

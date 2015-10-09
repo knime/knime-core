@@ -102,8 +102,8 @@ public class DisconnectSubNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Removes the link to the sub node template and keeps a local, "
-            + "editable copy of the sub node.";
+        return "Removes the link to the Wrapped Node template and keeps a local, "
+            + "editable copy of the Wrapped Node.";
     }
 
 

@@ -106,7 +106,7 @@ public class CollapseSubNodeCommand extends AbstractKNIMECommand {
                         m_name).getID();
             m_wrapper = getHostWFM().convertMetaNodeToSubNode(id);
         } catch (Exception e) {
-            String error = "Collapsing Sub Node failed: " + e.getMessage();
+            String error = "Collapsing Wrapped Node failed: " + e.getMessage();
             LOGGER.error(error, e);
             MessageDialog.openError(Display.getCurrent().getActiveShell(),
                     "Collapse failed", error);

@@ -156,8 +156,7 @@ public class DisconnectSubNodeLinkCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        LOGGER.debug("Undo: Reconnecting sub node links ("
-                + m_changedIDs.size() + " sub node(s))");
+        LOGGER.debug("Undo: Reconnecting Wrapped Node links (" + m_changedIDs.size() + " Wrapped Node(s))");
         for (int i = 0; i < m_changedIDs.size(); i++) {
             NodeID id = m_changedIDs.get(i);
             MetaNodeTemplateInformation old = m_oldTemplInfos.get(i);

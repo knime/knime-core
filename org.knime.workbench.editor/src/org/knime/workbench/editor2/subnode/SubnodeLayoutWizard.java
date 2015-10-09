@@ -87,7 +87,7 @@ public class SubnodeLayoutWizard extends Wizard {
      */
     @Override
     public void addPages() {
-        setWindowTitle("Layout Subnode Wizard");
+        setWindowTitle("Layout Wrapped Node Wizard");
         setDefaultPageImageDescriptor(
             ImageRepository.getImageDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/layout_55.png"));
         WorkflowManager wfManager = m_subNodeContainer.getWorkflowManager();

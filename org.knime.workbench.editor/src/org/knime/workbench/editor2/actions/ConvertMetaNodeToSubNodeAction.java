@@ -93,7 +93,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Convert to Subnode";
+        return "Wrap";
     }
 
     /**

@@ -170,9 +170,9 @@ public class LockSubNodeAction extends AbstractNodeAction {
         try {
             metaNodeWFM.setWorkflowPassword(password, hint);
         } catch (NoSuchAlgorithmException e) {
-            String msg = "Unable to encrypt sub node: " + e.getMessage();
+            String msg = "Unable to encrypt Wrapped Node: " + e.getMessage();
             LOGGER.error(msg, e);
-            MessageDialog.openError(shell, "Subnode encrypt", msg);
+            MessageDialog.openError(shell, "Wrapped Node encrypt", msg);
         }
     }
 

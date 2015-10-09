@@ -93,7 +93,7 @@ public class OpenSubNodeEditorAction extends Action {
      */
     @Override
     public String getToolTipText() {
-        return "Opens editor for this Sub Node";
+        return "Opens editor for this Wrapped Node";
     }
 
     /**

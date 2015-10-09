@@ -192,13 +192,13 @@ public final class VirtualSubNodeInputNodeFactory extends DynamicNodeFactory<Vir
         /** {@inheritDoc} */
         @Override
         public String getOutportName(final int index) {
-            return "Delegated Subnode Input " + index;
+            return "Delegated Wrapped Node Input " + index;
         }
 
         /** {@inheritDoc} */
         @Override
         public String getOutportDescription(final int index) {
-            return "The port content from the subnode input";
+            return "The port content from the Wrapped Node input";
         }
 
     }

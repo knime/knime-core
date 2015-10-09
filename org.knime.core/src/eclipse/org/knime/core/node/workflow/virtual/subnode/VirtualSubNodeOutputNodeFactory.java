@@ -148,13 +148,13 @@ public class VirtualSubNodeOutputNodeFactory extends DynamicNodeFactory<VirtualS
         /** {@inheritDoc} */
         @Override
         public String getInportName(final int index) {
-            return "Passed-on Subnode Output " + index;
+            return "Passed-on Wrapped Node Output " + index;
         }
 
         /** {@inheritDoc} */
         @Override
         public String getInportDescription(final int index) {
-            return "The port content passed onto the subnode output, port " + index;
+            return "The port content passed onto the Wrapped Node output, port " + index;
         }
 
     }
