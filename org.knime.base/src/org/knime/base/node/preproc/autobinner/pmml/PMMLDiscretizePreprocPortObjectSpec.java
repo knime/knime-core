@@ -80,18 +80,18 @@ public final class PMMLDiscretizePreprocPortObjectSpec extends PMMLPreprocPortOb
      * @noreference This class is not intended to be referenced by clients.
      * @since 3.0
      */
-    public static final class Serializer extends PortObjectSpecSerializer<PMMLPreprocPortObjectSpec> {
+    public static final class Serializer extends PortObjectSpecSerializer<PMMLDiscretizePreprocPortObjectSpec> {
         /**
          * {@inheritDoc}
          */
         @Override
         public void savePortObjectSpec(
-                final PMMLPreprocPortObjectSpec portObjectSpec,
+                final PMMLDiscretizePreprocPortObjectSpec portObjectSpec,
                 final PortObjectSpecZipOutputStream out)
                 throws IOException {
             try {
                 PMMLPreprocDiscretize op =
-                    ((PMMLDiscretizePreprocPortObjectSpec) portObjectSpec).getOperation();
+                    portObjectSpec.getOperation();
                 out.putNextEntry(new ZipEntry(op.getClass().getName()));
 
                 PortObjectZipOutputStreamAndString sout
@@ -116,7 +116,7 @@ public final class PMMLDiscretizePreprocPortObjectSpec extends PMMLPreprocPortOb
          * {@inheritDoc}
          */
         @Override
-        public PMMLPreprocPortObjectSpec loadPortObjectSpec(
+        public PMMLDiscretizePreprocPortObjectSpec loadPortObjectSpec(
                 final PortObjectSpecZipInputStream in) throws IOException {
             PMMLPreprocOperation op = null;
             ZipEntry entry;
