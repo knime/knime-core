@@ -125,7 +125,7 @@ public interface PortObjectSpec {
          * @since 3.0
          */
         @SuppressWarnings("unchecked")
-        final Class<T> getSpecClass() {
+        Class<T> getSpecClass() {
              for (Type type : ConvenienceMethods.getAllGenericInterfaces(getClass())) {
                 if (type instanceof ParameterizedType) {
                     Type rawType = ((ParameterizedType) type).getRawType();

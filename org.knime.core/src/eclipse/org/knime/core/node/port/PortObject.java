@@ -149,7 +149,7 @@ public interface PortObject {
          * @since 3.0
          */
         @SuppressWarnings("unchecked")
-        final Class<T> getObjectClass() {
+        Class<T> getObjectClass() {
              for (Type type : ConvenienceMethods.getAllGenericInterfaces(getClass())) {
                 if (type instanceof ParameterizedType) {
                     Type rawType = ((ParameterizedType) type).getRawType();

@@ -149,8 +149,8 @@ public final class PortTypeRegistry {
     private void createPortTypes(final IConfigurationElement e) {
         int color;
         try {
-            color =e.getAttribute("color") != null ? Integer.parseInt(e.getAttribute("color").substring(1), 16)
-            : PortType.DEFAULT_COLOR;
+            color = e.getAttribute("color") != null ? Integer.parseInt(e.getAttribute("color").substring(1), 16)
+                : PortType.DEFAULT_COLOR;
         } catch (NumberFormatException ex) {
             NodeLogger.getLogger(getClass()).coding(
                 "Illegal color in port type extension for '" + e.getAttribute("name") + "': " + e.getAttribute("color"),
@@ -304,7 +304,7 @@ public final class PortTypeRegistry {
      * @param objectClass a data cell class
      * @return an optional containing a serializer for the port object class
      */
-    @SuppressWarnings({"unchecked", "deprecation"})
+    @SuppressWarnings({"unchecked", "deprecation", "rawtypes"})
     public Optional<PortObjectSerializer<PortObject>>
         getObjectSerializer(final Class<? extends PortObject> objectClass) {
         PortObjectSerializer<PortObject> ser = (PortObjectSerializer<PortObject>)m_objectSerializers.get(objectClass);
@@ -320,6 +320,7 @@ public final class PortTypeRegistry {
         // check old static method
         // TODO remove with next major release
         try {
+            m_objectClassMap.put(objectClass.getName(), objectClass);
             PortObjectSerializer<? extends PortObject> serializer = SerializerMethodLoader.getSerializer(objectClass,
                 PortObjectSerializer.class, "getPortObjectSerializer", true);
             ser = (PortObjectSerializer<PortObject>)serializer;
@@ -327,15 +328,33 @@ public final class PortTypeRegistry {
                 .coding("No serializer for port object class '" + objectClass + "' registered at " + "extension point '"
                     + EXT_POINT_ID + "', using static method as fallback. Please change your "
                     + "implementation and use the extension point.");
-            m_objectClassMap.put(objectClass.getName(), objectClass);
             m_objectSerializers.put(objectClass, ser);
             return Optional.of(ser);
         } catch (NoSuchMethodException nsme) {
-            NodeLogger.getLogger(getClass()).coding(
-                "Class \"" + objectClass.getSimpleName() + "\" does not have a custom PortObjectSerializer, "
-                    + "using standard (but slow) Java serialization. Consider implementing a PortObjectSerialzer.",
-                nsme);
-            return Optional.empty();
+            // check if it's an AbstractSimplePortObject which had a static method in the abstract class
+            if (AbstractSimplePortObject.class.isAssignableFrom(objectClass)) {
+                NodeLogger.getLogger(getClass())
+                    .coding("No serializer for port object class '" + objectClass + "' registered at "
+                        + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
+                        + "implementation and use the extension point.");
+                ser = new AbstractSimplePortObject.AbstractSimplePortObjectSerializer() {
+                    /**
+                     * {@inheritDoc}
+                     */
+                    @Override
+                        Class<? extends PortObject> getObjectClass() {
+                        return objectClass;
+                    }
+                };
+                m_objectSerializers.put(objectClass, ser);
+                return Optional.of(ser);
+            } else {
+                NodeLogger.getLogger(getClass()).coding(
+                    "Class \"" + objectClass.getSimpleName() + "\" does not have a custom PortObjectSerializer, "
+                        + "using standard (but slow) Java serialization. Consider implementing a PortObjectSerialzer.",
+                    nsme);
+                return Optional.empty();
+            }
         }
     }
 
@@ -347,7 +366,7 @@ public final class PortTypeRegistry {
      * @param specClass a port object spec class
      * @return an optional containing a serializer for the port object spec class
      */
-    @SuppressWarnings({"unchecked", "deprecation"})
+    @SuppressWarnings({"unchecked", "deprecation", "rawtypes"})
     public Optional<PortObjectSpecSerializer<PortObjectSpec>>
         getSpecSerializer(final Class<? extends PortObjectSpec> specClass) {
         PortObjectSpecSerializer<PortObjectSpec> ser =
@@ -365,6 +384,7 @@ public final class PortTypeRegistry {
         // check old static method
         // TODO remove with next major release
         try {
+            m_specClassMap.put(specClass.getName(), specClass);
             PortObjectSpecSerializer<? extends PortObjectSpec> serializer = SerializerMethodLoader
                 .getSerializer(specClass, PortObjectSpecSerializer.class, "getPortObjectSpecSerializer", true);
             ser = (PortObjectSpecSerializer<PortObjectSpec>)serializer;
@@ -372,15 +392,33 @@ public final class PortTypeRegistry {
                 .coding("No serializer for port object spec class '" + specClass + "' registered at "
                     + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
                     + "implementation and use the extension point.");
-            m_specClassMap.put(specClass.getName(), specClass);
             m_specSerializers.put(specClass, ser);
             return Optional.of(ser);
         } catch (NoSuchMethodException nsme) {
-            NodeLogger.getLogger(getClass()).coding(
-                "Class \"" + specClass.getSimpleName() + "\" does not have a custom PortObjectSpecSerializer, "
-                    + "using standard (but slow) Java serialization. Consider implementing a PortObjectSpecSerialzer.",
-                nsme);
-            return Optional.empty();
+            // check if it's an AbstractSimplePortObject which had a static method in the abstract class
+            if (AbstractSimplePortObjectSpec.class.isAssignableFrom(specClass)) {
+                NodeLogger.getLogger(getClass())
+                    .coding("No serializer for port object spec class '" + specClass + "' registered at "
+                        + "extension point '" + EXT_POINT_ID + "', using static method as fallback. Please change your "
+                        + "implementation and use the extension point.");
+                ser = new AbstractSimplePortObjectSpec.AbstractSimplePortObjectSpecSerializer() {
+                    /**
+                     * {@inheritDoc}
+                     */
+                    @Override
+                    Class<? extends PortObjectSpec> getSpecClass() {
+                        return specClass;
+                    }
+                };
+                m_specSerializers.put(specClass, ser);
+                return Optional.of(ser);
+            } else {
+                NodeLogger.getLogger(getClass()).coding(
+                    "Class \"" + specClass.getSimpleName() + "\" does not have a custom PortObjectSpecSerializer, "
+                        + "using standard (but slow) Java serialization. Consider implementing a PortObjectSpecSerialzer.",
+                    nsme);
+                return Optional.empty();
+            }
         }
     }
 
