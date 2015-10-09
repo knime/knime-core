@@ -764,7 +764,7 @@ propagated with or for interoperation with KNIME.
          version="0.0.0"/>
 
    <includes
-         id="org.knime.features.js"
+         id="org.knime.features.js.quickforms"
          version="0.0.0"/>
 
    <requires>
