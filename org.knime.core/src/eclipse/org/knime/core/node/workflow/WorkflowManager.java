@@ -3454,14 +3454,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public String canExpandSubNode(final NodeID subNodeID) {
         synchronized (m_workflowMutex) {
             if (!(getNodeContainer(subNodeID) instanceof SubNodeContainer)) {
-                return "Cannot expand selected node (not a subnode).";
+                return "Cannot expand selected node (not a Wrapped Node).";
             }
             if (!canRemoveNode(subNodeID)) {
-                return "Cannot move subnode or nodes inside subnode (node(s) or successor still executing?)";
+                return "Cannot move Wrapped Node or nodes inside Wrapped Nodes (node(s) or successor still executing?)";
             }
             WorkflowManager wfm = ((SubNodeContainer)getNodeContainer(subNodeID)).getWorkflowManager();
             if (wfm.containsExecutedNode()) {
-                return "Cannot expand executed sub node (reset first).";
+                return "Cannot expand executed Wrapped Node (reset first).";
             }
             return null;
         }
@@ -4583,13 +4583,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     void resetHaltedSubnode(final NodeID id) {
         synchronized (m_workflowMutex) {
             SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
-            CheckUtils.checkState(snc.getInternalState().isExecuted(), "Subnode %s not executed", snc.getNameWithID());
+            CheckUtils.checkState(snc.getInternalState().isExecuted(),
+                "Wrapped Node %s not executed", snc.getNameWithID());
             for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                 NodeID dest = cc.getDest();
                 NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
                 final InternalNodeContainerState destNCState = destNC.getInternalState();
                 CheckUtils.checkState(destNCState.isHalted() && !destNCState.isExecuted(), "Downstream nodes of "
-                    + "subnode %s must not be in execution/executed (node %s)", snc.getNameWithID(), destNC);
+                    + "Wrapped Node %s must not be in execution/executed (node %s)", snc.getNameWithID(), destNC);
             }
             invokeResetOnSingleNodeContainer(snc);
         }

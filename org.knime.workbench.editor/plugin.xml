@@ -20,9 +20,9 @@
             name="Toggle Snap to Grid"/>
       <command
             categoryId="knime.command.category"
-            description="Opens the settings dialog for the subnode layout."
+            description="Opens the settings dialog for the Wrapped Node layout."
             id="knime.commands.editor.subnodeLayout"
-            name="Subnode Layout">
+            name="Wrapped Node Layout">
       </command>
       <command
             categoryId="knime.command.category"
@@ -371,11 +371,11 @@
                disabledIcon="icons/layout_16_bw.png"
                icon="icons/layout_16.png"
                id="org.knime.workbench.editor.actions.subnodeLayout"
-               label="Subnode Layout"
+               label="Wrapped NodeLayout"
                menubarPath="org.knime.workbench.editor.menu/group2"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group2"
-               tooltip="Opens dialog to edit layout of subnode views.">
+               tooltip="Opens dialog to edit layout of Wrapped Node views.">
          </action>
          
          

@@ -179,7 +179,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     private enum NodeType {
         NativeNode("node"),
         MetaNode("meta node"),
-        SubNode("sub node");
+        SubNode("wrapped node");
 
         private final String m_shortName;
 

@@ -335,7 +335,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
                 m_layoutInfo.put(nodeID, layoutInfo);
             }
         } catch (InvalidSettingsException e) {
-            String error = "Could not load subnode layout information: " + e.getMessage();
+            String error = "Could not load Wrapped Node layout information: " + e.getMessage();
             result.addError(error);
             getLogger().error(error, e);
             setDirtyAfterLoad();
@@ -378,7 +378,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     NodeSettingsRO loadSettingsForNode(final LoadResult loadResult) throws IOException {
         NodeSettingsRO nodeSettings = getNodeSettings();
         if (getLoadVersion().ordinal() < LoadVersion.V280.ordinal()) {
-            throw new IOException("No subnodes in version " + getLoadVersion());
+            throw new IOException("No Wrapped Node in version " + getLoadVersion());
         } else {
             return nodeSettings;
         }

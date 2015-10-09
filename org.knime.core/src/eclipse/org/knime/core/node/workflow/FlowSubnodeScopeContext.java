@@ -57,7 +57,7 @@ final class FlowSubnodeScopeContext extends FlowScopeContext {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return "Subnode Context";
+        return "Wrapped Node Context";
     }
 
     /** {@inheritDoc} */
