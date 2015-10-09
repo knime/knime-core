@@ -1712,7 +1712,9 @@ public abstract class NodeModel {
                     final ExecutionContext ctx) throws Exception {
                 PortObject[] inObjects = new PortObject[inputs.length];
                 for (int i = 0; i < inputs.length; i++) {
-                    inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
+                    if(inputs[i] != null) {
+                        inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
+                    }
                 }
                 // add flow variable port and remove it later from result - executeModel expects it
                 PortObject[] extendedInData = ArrayUtils.add(inObjects, 0, FlowVariablePortObject.INSTANCE);
