@@ -364,7 +364,7 @@
             icon="icons/16x16/category_applications.png"
             level-id="applications"
             locked="true"
-            name="Misc Object Representation"
+            name="Other Data Types"
             after="chemistry"
             path="/">
       </category>            
