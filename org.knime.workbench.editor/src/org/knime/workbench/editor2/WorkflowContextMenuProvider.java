@@ -356,16 +356,14 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     }
 
                     // TO FUNCTIONAL UNIT (META NODE)
-                    if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
-                        action = m_actionRegistry.getAction(ConvertMetaNodeToSubNodeAction.ID);
-                        metanodeMenuMgr.appendToGroup(GROUP_METANODE, action);
-                        ((AbstractNodeAction)action).update();
-                    }
+                    action = m_actionRegistry.getAction(ConvertMetaNodeToSubNodeAction.ID);
+                    metanodeMenuMgr.appendToGroup(GROUP_METANODE, action);
+                    ((AbstractNodeAction)action).update();
 
                 }
 
                 // SUBNODE
-                if (container instanceof SubNodeContainer && ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
+                if (container instanceof SubNodeContainer) {
 
                     subnodeMenuMgr = getSubNodeMenuManager(subnodeMenuMgr, manager);
 
