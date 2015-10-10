@@ -79,6 +79,42 @@ public final class PortUtil {
     private PortUtil() {
     }
 
+    /**
+     * Get the globally used serializer for {@link PortObjectSpec} objects
+     * represented by the class argument.
+     *
+     * @param <T> The specific PortObjectSpec class of interest.
+     * @param c Class argument.
+     * @return The serializer to be used. Will throw an undeclared runtime
+     * exception if retrieving the type causes problems (suggests a coding
+     * problem)
+     */
+    @SuppressWarnings("unchecked")
+    // access to CLASS_TO_SERIALIZER_MAP
+    public static <T extends PortObjectSpec> PortObjectSpecSerializer<T> getPortObjectSpecSerializer(final Class<T> c) {
+        return (PortObjectSpecSerializer<T>)PortTypeRegistry.getInstance().getSpecSerializer(c).orElseThrow(
+            () -> new RuntimeException(String.format("No serializer for spec class \"%s\" available - "
+                + "grep log files for details", c.getClass().getName())));
+    }
+
+    /**
+     * Get the globally used serializer for {@link PortObject} objects
+     * represented by the class argument.
+     *
+     * @param <T> The specific PortObject class of interest.
+     * @param cl Class argument.
+     * @return The serializer to be used. Will throw an undeclared runtime
+     * exception if retrieving the type causes problems (suggests a coding
+     * problem)
+     */
+    @SuppressWarnings("unchecked")
+    // access to CLASS_TO_SERIALIZER_MAP
+    public static <T extends PortObject> PortObjectSerializer<T> getPortObjectSerializer(final Class<T> cl) {
+        return (PortObjectSerializer<T>)PortTypeRegistry.getInstance().getObjectSerializer(cl).orElseThrow(
+            () -> new RuntimeException(String.format("No serializer for object class \"%s\" available - "
+                    + "grep log files for details", cl.getClass().getName())));
+    }
+
     public static PortObjectSpecZipOutputStream getPortObjectSpecZipOutputStream(
             final OutputStream in) throws IOException {
         PortObjectSpecZipOutputStream zipOut =

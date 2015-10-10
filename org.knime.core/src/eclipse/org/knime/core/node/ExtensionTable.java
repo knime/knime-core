@@ -168,6 +168,14 @@ public abstract class ExtensionTable implements KnowsRowCountTable {
         return table;
     }
 
+    /** Overridden to help preserve backward compatibility. It will simply call {@link #getRowCount()}. Subclasses
+     * are encouraged to override.
+     * @since 3.0 */
+    @Override
+    public long size() {
+        return getRowCount();
+    }
+
     /**
      * Overwrite this method to provide a custom viewer. It will use the default
      * viewer (BufferedDataTableViewer) if the implementation returns null
