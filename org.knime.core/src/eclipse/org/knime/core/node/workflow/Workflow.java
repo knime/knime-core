@@ -1412,6 +1412,14 @@ class Workflow {
                assert nga.getOutportIndex() == -1;  // must be SingleNodeContainer, ports don't matter.
                NodeID start = nga.peekStartNodeStack();
                if (start != null) {
+                   NodeContainer ncls = getNode(start);
+                   if (!(ncls instanceof SingleNodeContainer)) {
+                       throw new IllegalLoopException(id + " is not connected to a SNC / LoopStartNode but " + start);
+                   }
+                   SingleNodeContainer sncls = (SingleNodeContainer)ncls;
+                   if (!sncls.isModelCompatibleTo(LoopStartNode.class)) {
+                       throw new IllegalLoopException(id + " is not connected to a LoopStartNode but " + start);
+                   }
                    return start;
                } else {
                    throw new IllegalLoopException("Could not find matching loop start node!");

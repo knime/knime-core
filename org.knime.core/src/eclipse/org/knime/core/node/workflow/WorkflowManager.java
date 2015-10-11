@@ -2943,7 +2943,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             }
                         }
                     }
-                    if (node.getLoopContext() != null) {
+                    if (success && node.getLoopContext() != null) {
                         // we are supposed to execute this loop again.
                         assert nnc.isModelCompatibleTo(LoopEndNode.class);
                         FlowLoopContext slc = node.getLoopContext();
@@ -2975,11 +2975,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             // since we are not yet done with the loop
                             canConfigureSuccessors = false;
                         }
-                        if (!success) {
-                            // make sure any marks are removed (only for loop ends!)
-                            disableNodeForExecution(nnc.getID());
-                            nnc.getNode().clearLoopContext();
-                        }
+                    }
+                    if (!success) {
+                        // make sure any marks are removed (only for loop ends!)
+                        disableNodeForExecution(nnc.getID());
+                        nnc.getNode().clearLoopContext();
                     }
                 }
             }
