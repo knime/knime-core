@@ -183,6 +183,7 @@ public class MetaPortDialog extends Dialog {
             names[i++] = pt.getName();
         }
         m_type.setItems(names);
+        m_type.select(0);
         m_type.addFocusListener(new FocusAdapter() {
 
             @Override

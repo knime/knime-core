@@ -471,6 +471,7 @@
             specSerializer="org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObjectSpec$Serializer">
       </portType>
       <portType
+            hidden="true"
             color="#1eb9dc"
             name="Color"
             objectClass="org.knime.core.node.port.viewproperty.ColorHandlerPortObject"
@@ -478,6 +479,7 @@
             specClass="org.knime.core.data.DataTableSpec">
       </portType>
       <portType
+            hidden="true"
             color="#1eb9dc"
             name="Size"
             objectClass="org.knime.core.node.port.viewproperty.SizeHandlerPortObject"
@@ -485,6 +487,7 @@
             specClass="org.knime.core.data.DataTableSpec">
       </portType>
       <portType
+            hidden="true"
             color="#1eb9dc"
             name="Shape"
             objectClass="org.knime.core.node.port.viewproperty.ShapeHandlerPortObject"

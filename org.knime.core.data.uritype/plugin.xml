@@ -35,7 +35,7 @@
       </portType>
       <portType
             color="#1eb9dc"
-            hidden="false"
+            hidden="true"
             name="URI"
             objectClass="org.knime.core.data.uri.IURIPortObject"
             objectSerializer="org.knime.core.data.uri.IURIPortObject$DummySerializer"
