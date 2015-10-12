@@ -254,4 +254,9 @@ public class DeleteCommand extends AbstractKNIMECommand {
         return m_connectionCount;
     }
 
+    /** @return the number of workflow annotations to be deleted. */
+    public int getAnnotationCount() {
+        return m_annotations.length;
+    }
+
 }

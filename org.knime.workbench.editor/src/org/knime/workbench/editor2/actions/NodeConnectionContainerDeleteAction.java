@@ -110,17 +110,27 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         DeleteCommand cmd = new DeleteCommand(objects, manager);
         int nodeCount = cmd.getNodeCount();
         int connCount = cmd.getConnectionCount();
+        int annoCount = cmd.getAnnotationCount();
 
         StringBuilder dialogText =
             new StringBuilder("Do you really want to delete ");
         if (nodeCount > 0) {
             dialogText.append(nodeCount).append(" node");
-            dialogText.append(nodeCount > 1 ? "s " : " ");
-            dialogText.append(connCount > 0 ? "and " : "");
+            dialogText.append(nodeCount > 1 ? "s" : "");
+            if (annoCount > 0 && connCount > 0) {
+                dialogText.append(" , ");
+            } else if (annoCount > 0 || connCount > 0) {
+                dialogText.append(" and ");
+            }
         }
         if (connCount > 0) {
             dialogText.append(connCount).append(" connection");
-            dialogText.append(connCount > 1 ? "s " : " ");
+            dialogText.append(connCount > 1 ? "s" : "");
+            dialogText.append(annoCount > 0 ? " and " : "");
+        }
+        if (annoCount > 0) {
+            dialogText.append(annoCount).append(" annotation");
+            dialogText.append(annoCount > 1 ? "s" : "");
         }
         dialogText.append("?");
         compoundCmd.setDialogDisplayText(dialogText.toString());
