@@ -101,7 +101,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     public static final Color DEFAULT_BG_WORKFLOW = new Color(null, 255, 255, 255);
 
     /** default Color of the border for workflow annotations. Light yellow.*/
-    private static final Color DEFAULT_BORDER_WORKFLOW = new Color(null, 255, 255, 225);
+    private static final Color DEFAULT_BORDER_WORKFLOW = new Color(null, 255, 216, 0);
 
     /** White. */
     public static final Color DEFAULT_BG_NODE = new Color(null, 255, 255, 255);
