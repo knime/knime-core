@@ -101,17 +101,28 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
 
     private boolean m_removeSources = false;
 
-    private final boolean m_pmmlEnabled;
+    private final boolean m_pmmlOutEnabled;
+
+    private final boolean m_pmmlInEnabled;
 
     /**
      * @param pmmlEnabled if PMML support should be enabled or not
      */
     public One2ManyCol2PMMLNodeModel(final boolean pmmlEnabled) {
-        super(pmmlEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
+        this(pmmlEnabled, pmmlEnabled);
+    }
+
+    /**
+     * @param pmmlOutEnabled if PMML output should be enabled or not
+     * @param pmmlInEnabled if optional PMML input should be enabled or not
+     */
+    public One2ManyCol2PMMLNodeModel(final boolean pmmlOutEnabled, final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
                         : new PortType[]{BufferedDataTable.TYPE},
-                pmmlEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
+                pmmlOutEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
                         : new PortType[]{BufferedDataTable.TYPE});
-        m_pmmlEnabled = pmmlEnabled;
+        m_pmmlOutEnabled = pmmlOutEnabled;
+        m_pmmlInEnabled = pmmlInEnabled;
     }
 
     /**
@@ -172,9 +183,9 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
         BufferedDataTable outData =
                 exec.createColumnRearrangeTable(inData, createRearranger(dts, cellFactory), exec);
 
-        if (m_pmmlEnabled) {
+        if (m_pmmlOutEnabled) {
             // the optional PMML in port (can be null)
-            PMMLPortObject inPMMLPort = (PMMLPortObject)inObjects[1];
+            PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inObjects[1] : null;
             PMMLOne2ManyTranslator trans = new PMMLOne2ManyTranslator(
                     cellFactory.getColumnMapping(), new DerivedFieldMapper(inPMMLPort));
             PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
@@ -220,8 +231,8 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
                 m_appendOrgColName);
         ColumnRearranger rearranger = createRearranger(inDataSpec, cellFactory);
 
-        if (m_pmmlEnabled) {
-            PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
+        if (m_pmmlOutEnabled) {
+            PMMLPortObjectSpec pmmlSpec = m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[1] : null;
             PMMLPortObjectSpecCreator pmmlSpecCreator
                 = new PMMLPortObjectSpecCreator(pmmlSpec, inDataSpec);
             return new PortObjectSpec[]{rearranger.createSpec(),

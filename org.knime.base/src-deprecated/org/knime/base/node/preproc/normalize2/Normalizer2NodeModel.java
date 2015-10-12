@@ -151,6 +151,19 @@ public class Normalizer2NodeModel extends NodeModel {
     }
 
     /**
+     * @param inModelPortType the port type of the incoming model
+     * @param outModelPortType the port type of the outgoing model
+     */
+    protected Normalizer2NodeModel(final PortType inModelPortType, final PortType outModelPortType) {
+        super(PMMLPortObject.TYPE.equals(inModelPortType)
+                ? new PortType[]{BufferedDataTable.TYPE,
+                    new PortType(PMMLPortObject.class, true)}
+                : new PortType[]{BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE,
+                    outModelPortType});
+    }
+
+    /**
      * @param inSpecs An array of DataTableSpecs (as many as this model has
      *            inputs).
      * @return An array of DataTableSpecs (as many as this model has outputs)

@@ -204,7 +204,9 @@ public class Many2OneCol2PMMLNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_keepColumns = createKeepColumnsSettingsModel();
 
-    private final boolean m_pmmlEnabled;
+    private final boolean m_pmmlOutEnabled;
+
+    private final boolean m_pmmlInEnabled;
 
     /**
      * Constructor for the node model.
@@ -212,14 +214,23 @@ public class Many2OneCol2PMMLNodeModel extends NodeModel {
      * @param pmmlEnabled true if there should be a pmml in and outport.
      */
     public Many2OneCol2PMMLNodeModel(final boolean pmmlEnabled) {
+        this(pmmlEnabled, pmmlEnabled);
+    }
 
-        super(
-            pmmlEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
-                : new PortType[]{BufferedDataTable.TYPE},
-            pmmlEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
-                : new PortType[]{BufferedDataTable.TYPE});
+    /**
+     * Constructor for the node model.
+     *
+     * @param pmmlOutEnabled true if there should be a pmml outport.
+     * @param pmmlInEnabled true if there should be a pmml inport.
+     */
+    public Many2OneCol2PMMLNodeModel(final boolean pmmlOutEnabled, final boolean pmmlInEnabled) {
 
-        m_pmmlEnabled = pmmlEnabled;
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
+            : new PortType[]{BufferedDataTable.TYPE}, pmmlOutEnabled ? new PortType[]{BufferedDataTable.TYPE,
+                PMMLPortObject.TYPE_OPTIONAL} : new PortType[]{BufferedDataTable.TYPE});
+
+        m_pmmlOutEnabled = pmmlOutEnabled;
+        m_pmmlInEnabled = pmmlInEnabled;
 
         m_includeMethod.addChangeListener(new ChangeListener() {
             @Override
@@ -251,13 +262,13 @@ public class Many2OneCol2PMMLNodeModel extends NodeModel {
         BufferedDataTable outData =
             exec.createColumnRearrangeTable(inData, createRearranger(inData.getDataTableSpec(), cellFactory), exec);
 
-        if (m_pmmlEnabled) {
+        if (m_pmmlOutEnabled) {
             if (IncludeMethod.valueOf(m_includeMethod.getStringValue()) == IncludeMethod.RegExpPattern) {
                 setWarningMessage("Regular Expressions are not supported in PMML. "
                     + "The generated PMML document is invalid.");
             }
             // the optional PMML in port (can be null)
-            PMMLPortObject inPMMLPort = (PMMLPortObject)inObjects[1];
+            PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inObjects[1] : null;
 
             /*
              PMMLOne2ManyTranslator trans = new PMMLOne2ManyTranslator(
@@ -352,8 +363,8 @@ public class Many2OneCol2PMMLNodeModel extends NodeModel {
             }
         }
         ColumnRearranger rearranger = createRearranger(inDataSpec, getCellFactory(inDataSpec));
-        if (m_pmmlEnabled) {
-            PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
+        if (m_pmmlOutEnabled) {
+            PMMLPortObjectSpec pmmlSpec = m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[1] : null;
             PMMLPortObjectSpecCreator pmmlSpecCreator = new PMMLPortObjectSpecCreator(pmmlSpec, inDataSpec);
             return new PortObjectSpec[]{rearranger.createSpec(), pmmlSpecCreator.createSpec()};
         } else {

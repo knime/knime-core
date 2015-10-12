@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,24 +42,61 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   12.10.2015 (Alexander): created
  */
-package org.knime.base.node.preproc.pmml.normalize;
+package org.knime.base.node.preproc.pmml.columntrans2;
 
-import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.base.node.preproc.columntrans2.One2ManyCol2NodeDialog;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Alexander Fillbrunn
- * @since 3.0
+ * @author Dominik Morent, University of Konstanz
  */
-public class NormalizerPMMLNodeModel extends AbstractNormalizerPMMLNodeModel {
+public class One2ManyCol2PMMLNodeFactory2 extends NodeFactory<One2ManyCol2PMMLNodeModel> {
 
     /**
-     * Creates a new normalizer node with an optional PMML inport.
+     * {@inheritDoc}
+     * @since 2.8
      */
-    public NormalizerPMMLNodeModel() {
-        super(PMMLPortObject.TYPE);
+    @Override
+    public One2ManyCol2PMMLNodeModel createNodeModel() {
+        return new One2ManyCol2PMMLNodeModel(true, false);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.8
+     */
+    @Override
+    public NodeView<One2ManyCol2PMMLNodeModel> createNodeView(final int viewIndex,
+            final One2ManyCol2PMMLNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new One2ManyCol2NodeDialog();
+    }
+
 }

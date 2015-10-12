@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,26 +40,60 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   12.10.2015 (Alexander): created
+ * ------------------------------------------------------------------------
  */
-package org.knime.base.node.preproc.pmml.normalize;
+package org.knime.base.node.preproc.pmml.binner;
 
-import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Alexander Fillbrunn
+ * @author Thomas Gabriel, University of Konstanz
  * @since 3.0
  */
-public class NormalizerPMMLNodeModel extends AbstractNormalizerPMMLNodeModel {
+public final class BinnerNodeFactory2 extends NodeFactory {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeModel createNodeModel() {
+        return new BinnerNodeModel(false);
+    }
 
     /**
-     * Creates a new normalizer node with an optional PMML inport.
+     * {@inheritDoc}
      */
-    public NormalizerPMMLNodeModel() {
-        super(PMMLPortObject.TYPE);
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView createNodeView(final int viewIndex,
+            final NodeModel nodeModel) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return <b>true</b>.
+     * @see org.knime.core.node.NodeFactory#hasDialog()
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new BinnerNodeDialogPane();
     }
 }

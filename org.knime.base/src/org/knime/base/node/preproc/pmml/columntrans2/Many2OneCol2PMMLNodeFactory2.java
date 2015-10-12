@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,26 +40,64 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   12.10.2015 (Alexander): created
+ * ------------------------------------------------------------------------
  */
-package org.knime.base.node.preproc.pmml.normalize;
+package org.knime.base.node.preproc.pmml.columntrans2;
 
-import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.base.node.preproc.columntrans2.Many2OneCol2NodeDialog;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
+ * <code>NodeFactory</code> for the "Many2OneColPMML" Node.
  *
- * @author Alexander Fillbrunn
- * @since 3.0
+ * @author Alexander Fillbrunn, Universitaet Konstanz
+ * @since 2.8
  */
-public class NormalizerPMMLNodeModel extends AbstractNormalizerPMMLNodeModel {
+public class Many2OneCol2PMMLNodeFactory2
+        extends NodeFactory<Many2OneCol2PMMLNodeModel> {
 
     /**
-     * Creates a new normalizer node with an optional PMML inport.
+     * {@inheritDoc}
      */
-    public NormalizerPMMLNodeModel() {
-        super(PMMLPortObject.TYPE);
+    @Override
+    public Many2OneCol2PMMLNodeModel createNodeModel() {
+        return new Many2OneCol2PMMLNodeModel(true, false);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<Many2OneCol2PMMLNodeModel> createNodeView(final int viewIndex,
+            final Many2OneCol2PMMLNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new Many2OneCol2NodeDialog();
+    }
+
 }
+

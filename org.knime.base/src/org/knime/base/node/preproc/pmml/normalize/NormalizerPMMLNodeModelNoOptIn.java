@@ -55,12 +55,11 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
  * @author Alexander Fillbrunn
  * @since 3.0
  */
-public class NormalizerPMMLNodeModel extends AbstractNormalizerPMMLNodeModel {
-
+public class NormalizerPMMLNodeModelNoOptIn extends AbstractNormalizerPMMLNodeModel {
     /**
-     * Creates a new normalizer node with an optional PMML inport.
+     * Creates a new normalizer node without an optional PMML inport.
      */
-    public NormalizerPMMLNodeModel() {
-        super(PMMLPortObject.TYPE);
+    public NormalizerPMMLNodeModelNoOptIn() {
+        super(null, PMMLPortObject.TYPE);
     }
 }

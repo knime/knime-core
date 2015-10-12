@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,26 +40,64 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
- *   12.10.2015 (Alexander): created
+ *   19.04.2005 (cebron): created
  */
 package org.knime.base.node.preproc.pmml.normalize;
 
-import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.base.node.preproc.normalize.NormalizerNodeDialog;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
+ * Factory class for the Normalize Node.
  *
- * @author Alexander Fillbrunn
+ * @author Nicolas Cebron, University of Konstanz
  * @since 3.0
  */
-public class NormalizerPMMLNodeModel extends AbstractNormalizerPMMLNodeModel {
+public class NormalizerPMMLNodeFactory2
+extends NodeFactory<NormalizerPMMLNodeModelNoOptIn> {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new NormalizerNodeDialog();
+    }
 
     /**
-     * Creates a new normalizer node with an optional PMML inport.
+     * {@inheritDoc}
      */
-    public NormalizerPMMLNodeModel() {
-        super(PMMLPortObject.TYPE);
+    @Override
+    public NormalizerPMMLNodeModelNoOptIn createNodeModel() {
+        return new NormalizerPMMLNodeModelNoOptIn();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<NormalizerPMMLNodeModelNoOptIn> createNodeView(
+            final int viewIndex, final NormalizerPMMLNodeModelNoOptIn nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
     }
 }

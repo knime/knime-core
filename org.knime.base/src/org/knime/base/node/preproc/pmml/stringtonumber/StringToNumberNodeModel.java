@@ -149,13 +149,27 @@ public class StringToNumberNodeModel extends NodeModel {
 
     private DataType m_parseType = POSSIBLETYPES[0];
 
+    private boolean m_pmmlInEnabled;
+
     /**
      * Constructor with one data inport, one data outport and an optional
      * PMML inport and outport.
      */
     public StringToNumberNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
-            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL});
+        this(true);
+    }
+
+    /**
+     * Constructor with one data inport, one data outport and an optional
+     * PMML inport and outport.
+     * @param pmmlInEnabled true if an optional PMML input port should be present
+     * @since 3.0
+     */
+    public StringToNumberNodeModel(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
+                                                : new PortType[]{BufferedDataTable.TYPE},
+                new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL});
+        m_pmmlInEnabled = pmmlInEnabled;
     }
 
     /**
@@ -174,7 +188,7 @@ public class StringToNumberNodeModel extends NodeModel {
         DataTableSpec newspec = colre.createSpec();
 
         // create the PMML spec based on the optional incoming PMML spec
-        PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
+        PMMLPortObjectSpec pmmlSpec = m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[1] : null;
         PMMLPortObjectSpecCreator pmmlSpecCreator
                 = new PMMLPortObjectSpecCreator(pmmlSpec, dts);
 
@@ -218,7 +232,7 @@ public class StringToNumberNodeModel extends NodeModel {
         }
 
         // the optional PMML in port (can be null)
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inObjects[1];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inObjects[1] : null;
         PMMLStringConversionTranslator trans
                 = new PMMLStringConversionTranslator(
                             m_inclCols.getIncludeList(), m_parseType,

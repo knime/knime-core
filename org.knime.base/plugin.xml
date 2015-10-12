@@ -607,38 +607,47 @@
             factory-class="org.knime.base.node.preproc.normalize3.Normalizer3NodeFactory"
             id="org.knime.base.node.preproc.normalize3.Normalize3NodeFactory"/>
      <node
-            category-path="/manipulation/pmml"
-            factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory"
-            id="org.knime.base.node.preproc.normalize.NormalizePMMLNodeFactory"/>
+           category-path="/manipulation/pmml"
+           deprecated="true"
+           factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory"
+           id="org.knime.base.node.preproc.normalize.NormalizePMMLNodeFactory"/>
       <node
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLApplyNodeFactory"
             id="org.knime.base.node.preproc.normalize.PMMLNormalizerApplyNodeFactory"/>
       <node
             category-path="/manipulation/pmml"
+            deprecated="true"
             factory-class="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory"
             id="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory"/>
-      <node  
+      <node
             category-path="/manipulation/pmml"
+            deprecated="true"
             factory-class="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory"
             id="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory"/>
       <node
             category-path="/manipulation/pmml"
+            deprecated="true"
             factory-class="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"
             id="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"/>
       <node
             category-path="/manipulation/pmml"
+            deprecated="true"
             factory-class="org.knime.base.node.preproc.pmml.columntrans2.One2ManyCol2PMMLNodeFactory"
-            id="org.knime.base.node.preproc.columntrans2.One2ManyCol2PMMLNodeFactory" />
+            id="org.knime.base.node.preproc.columntrans2.One2ManyCol2PMMLNodeFactory"/>
             
-        <node category-path="/manipulation/pmml" 
-        factory-class="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory"
-         id="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory"/>
+        <node
+              category-path="/manipulation/pmml"
+              deprecated="true"
+              factory-class="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory"
+              id="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory"/>
          
          
-        <node category-path="/manipulation/pmml" 
-        factory-class="org.knime.base.node.preproc.pmml.columnfilter.DataColumnSpecFilterPMMLNodeFactory"
-         id="org.knime.base.node.preproc.pmml.columnfilter.DataColumnSpecFilterPMMLNodeFactory"/>
+        <node
+              category-path="/manipulation/pmml"
+              deprecated="false"
+              factory-class="org.knime.base.node.preproc.pmml.columnfilter.DataColumnSpecFilterPMMLNodeFactory"
+              id="org.knime.base.node.preproc.pmml.columnfilter.DataColumnSpecFilterPMMLNodeFactory"/>
          
          
      <node
@@ -1777,6 +1786,42 @@
       		category-path="/database/database-manipulation" 
       		factory-class="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory" 
       		id="org.knime.base.node.io.database.columnrename.DBColumnRenameNodeFactory"/>
+      <node
+            category-path="/manipulation/pmml"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory2"
+            id="org.knime.base.node.preproc.normalize.NormalizePMMLNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/pmml"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory2"
+            id="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/pmml"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory2"
+            id="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/pmml"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory2"
+            id="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/pmml"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.pmml.columntrans2.One2ManyCol2PMMLNodeFactory2"
+            id="org.knime.base.node.preproc.columntrans2.One2ManyCol2PMMLNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/pmml"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory2"
+            id="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory">
+      </node>
    </extension>
    
       

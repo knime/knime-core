@@ -103,10 +103,20 @@ final class BinnerNodeModel extends NodeModel {
     /** Keeps index of the output port which is 0. */
     static final int OUTPORT = 0;
 
+    private boolean m_pmmlInEnabled;
+
     /** Creates a new binner. */
     BinnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
-            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+        this(true);
+    }
+
+    /** Creates a new binner. */
+    BinnerNodeModel(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[] {BufferedDataTable.TYPE,
+                PMMLPortObject.TYPE_OPTIONAL} : new PortType[] {BufferedDataTable.TYPE},
+                new PortType[] {BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+
+        m_pmmlInEnabled = pmmlInEnabled;
     }
 
     /**
@@ -122,7 +132,7 @@ final class BinnerNodeModel extends NodeModel {
                 colReg, exec);
 
         // handle the optional PMML in port (can be null)
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inPorts[1];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inPorts[1] : null;
         PMMLBinningTranslator trans = new PMMLBinningTranslator(m_columnToBins,
                 m_columnToAppended,
                 new DerivedFieldMapper(inPMMLPort));
@@ -156,7 +166,7 @@ final class BinnerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         DataTableSpec inDataSpec = (DataTableSpec)inSpecs[DATA_INPORT];
         PMMLPortObjectSpec inModelSpec
-                = (PMMLPortObjectSpec)inSpecs[MODEL_INPORT];
+                = m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[MODEL_INPORT] : null;
         for (String columnKey : m_columnToBins.keySet()) {
             assert m_columnToAppended.containsKey(columnKey) : columnKey;
             if (!inDataSpec.containsName(columnKey)) {

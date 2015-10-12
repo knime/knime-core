@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,26 +40,66 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * --------------------------------------------------------------------
  *
  * History
- *   12.10.2015 (Alexander): created
+ *   03.07.2007 (cebron): created
  */
-package org.knime.base.node.preproc.pmml.normalize;
+package org.knime.base.node.preproc.pmml.stringtonumber;
 
-import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
+ * NodeFactory for the String to Number Node that converts strings to double
+ * values.
  *
- * @author Alexander Fillbrunn
+ * @author cebron, University of Konstanz
  * @since 3.0
  */
-public class NormalizerPMMLNodeModel extends AbstractNormalizerPMMLNodeModel {
+public class StringToNumberNodeFactory2 extends
+        NodeFactory<StringToNumberNodeModel> {
 
     /**
-     * Creates a new normalizer node with an optional PMML inport.
+     * {@inheritDoc}
      */
-    public NormalizerPMMLNodeModel() {
-        super(PMMLPortObject.TYPE);
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new StringToNumberNodeDialog();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StringToNumberNodeModel createNodeModel() {
+        return new StringToNumberNodeModel(false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<StringToNumberNodeModel> createNodeView(
+            final int viewIndex, final StringToNumberNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
 }
