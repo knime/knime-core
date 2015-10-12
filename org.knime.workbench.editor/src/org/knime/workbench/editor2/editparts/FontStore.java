@@ -47,7 +47,10 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import java.awt.GraphicsEnvironment;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -83,6 +86,11 @@ public class FontStore {
 
     private final int m_defFontStyle;
 
+    /** Retrieve list of fonts from AWT - as of today (Oct 2015) there is no reliable way to retrieve the list
+     * of available fonts in SWT. You can even create Font objects with bogus names and SWT will accept. */
+    private static final LinkedHashSet<String> FONT_FAMILY_NAMES =  new LinkedHashSet<>(
+            Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()));
+
     public static final FontStore INSTANCE = new FontStore();
 
     /**
@@ -109,41 +117,28 @@ public class FontStore {
          */
         int defFontSize = getFontSizeFromKNIMEPrefPage();
         Font defFont = null;
+        String name = "Arial";
         try {
-            defFont = new Font(Display.getDefault(), "Arial", defFontSize, SWT.NORMAL);
+            if (FONT_FAMILY_NAMES.contains(name)) {
+                defFont = new Font(Display.getDefault(), name, defFontSize, SWT.NORMAL);
+            }
         } catch (SWTError e) {
-            LOGGER.warn("Font 'Arial' is not available on your system. "
+            LOGGER.warn("Font '" + name + "' is not available on your system. "
                     + "Try to install it, if you want workflows to look the same on different computers.", e);
         }
         if (defFont == null) {
             // Fall back to "common" fonts similar to Arial
-                if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-                    try {
-                        defFont = new Font(Display.getDefault(), "Trebuchet MS", defFontSize, SWT.NORMAL);
-                    } catch (SWTError e) {
-                        LOGGER.warn("Unable to use fallback font 'Trebuchet MS'. ", e);
-                    }
-                } else if (Platform.OS_LINUX.equals(Platform.getOS())) {
-                    try {
-                        defFont = new Font(Display.getDefault(), "Nimbus Sans L", defFontSize, SWT.NORMAL);
-                    } catch (SWTError e) {
-                        LOGGER.warn("Unable to use fallback font 'Nimbus Sans L'. ", e);
-                    }
-                } else {
-                    try {
-                        defFont = new Font(Display.getDefault(), "Microsoft Sans Serif", defFontSize, SWT.NORMAL);
-                    } catch (SWTError e) {
-                        LOGGER.warn("Unable to use fallback font 'Microsoft Sans Serif'. ", e);
-                    }
-                    if (defFont == null) {
-                        try {
-                            defFont = new Font(Display.getDefault(), "Trebuchet MS", defFontSize, SWT.NORMAL);
-                        } catch (SWTError e) {
-                            LOGGER.warn("Unable to use fallback font 'Trebuchet MS'. ", e);
-                        }
-                    }
+            if (Platform.OS_MACOSX.equals(Platform.getOS())) {
+                defFont = tryLoadFallbackFont(defFontSize, "Trebuchet MS");
+            } else if (Platform.OS_LINUX.equals(Platform.getOS())) {
+                defFont = tryLoadFallbackFont(defFontSize, "Nimbus Sans L");
+            } else {
+                defFont = tryLoadFallbackFont(defFontSize, "Microsoft Sans Serif");
+                if (defFont == null) {
+                    defFont = tryLoadFallbackFont(defFontSize, "Trebuchet MS");
                 }
             }
+        }
         if (defFont == null) {
             // last resort: use system default font. May look totally different on different systems.
             defFont = Display.getDefault().getSystemFont();
@@ -152,7 +147,21 @@ public class FontStore {
         return defFont;
     }
 
-    /**
+    /** Used to instantiate SWT Font objects given a name. It will check the (AWT) list of available font names first.
+     * @return the font object (which very likely is valid) or null if font not available. */
+    private static Font tryLoadFallbackFont(final int defFontSize, final String name) {
+        if (FONT_FAMILY_NAMES.contains(name)) {
+            try {
+                return new Font(Display.getDefault(), name, defFontSize, SWT.NORMAL);
+            } catch (SWTError e) {
+                // this is not actually thrown by an invalid name - kept here because Font constructor may throw it
+                LOGGER.warn("Unable to use fallback font '" + name + "'. ", e);
+            }
+        }
+        return null;
+    }
+
+     /**
      * Returns the font with the specified attributes (using attributes of the
      * default font, in case name is null or the size is not positive). Each
      * font must be released after it is not used anymore (@see #releaseFont).
@@ -364,7 +373,7 @@ public class FontStore {
      */
     public Font getSystemDefFontNodeAnnotations() {
         FontData sysFont = getSystemDefaultFont().getFontData()[0];
-        return getFont(sysFont.getName(), getFontSizeFromKNIMEPrefPage(), SWT.NONE);
+        return getFont(sysFont.getName(), getFontSizeFromKNIMEPrefPage(), SWT.NORMAL);
     }
 
     /**

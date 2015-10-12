@@ -52,15 +52,9 @@ package org.knime.core.node.workflow;
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
-public class NodeAnnotation extends Annotation
-    implements NodeUIInformationListener {
+public final class NodeAnnotation extends Annotation implements NodeUIInformationListener {
 
     private NodeContainer m_nodeContainer;
-
-    /** Create default annotation, to be activated later. */
-    public NodeAnnotation() {
-        this(new NodeAnnotationData(true));
-    }
 
     /**
      * @param data */

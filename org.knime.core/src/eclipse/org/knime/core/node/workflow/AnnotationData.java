@@ -72,6 +72,13 @@ public class AnnotationData implements Cloneable {
         RIGHT;
     }
 
+    /** Old type annotation - font is system font (inconsistent layout).
+     * @since 3.0 */
+    public static final int VERSION_OLD = -1;
+    /** Released with 3.0 - uses (almost) same fonts on all systems.
+     * @since 3.0 */
+    public static final int VERSION_20151012 = 20151012;
+
     /**  */
     private String m_text = "";
 
@@ -99,23 +106,25 @@ public class AnnotationData implements Cloneable {
 
     private int m_borderColor = 0;
 
+    private int m_version = VERSION_20151012;
+
     /** @return the text */
-    public String getText() {
+    public final String getText() {
         return m_text;
     }
 
     /** @param text the text to set */
-    public void setText(final String text) {
+    public final void setText(final String text) {
         m_text = text;
     }
 
     /** @return the styleRanges */
-    public StyleRange[] getStyleRanges() {
+    public final StyleRange[] getStyleRanges() {
         return m_styleRanges;
     }
 
     /** @param styleRanges the styleRanges to set */
-    public void setStyleRanges(final StyleRange[] styleRanges) {
+    public final void setStyleRanges(final StyleRange[] styleRanges) {
         if (styleRanges == null || Arrays.asList(styleRanges).contains(null)) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -123,86 +132,86 @@ public class AnnotationData implements Cloneable {
     }
 
     /** @return the bgColor */
-    public int getBgColor() {
+    public final int getBgColor() {
         return m_bgColor;
     }
 
     /** @param bgColor the bgColor to set */
-    public void setBgColor(final int bgColor) {
+    public final void setBgColor(final int bgColor) {
         m_bgColor = bgColor;
     }
 
     /** @return the x */
-    public int getX() {
+    public final int getX() {
         return m_x;
     }
 
     /** @param x the x to set */
-    public void setX(final int x) {
+    public final void setX(final int x) {
         m_x = x;
     }
 
     /** @return the y */
-    public int getY() {
+    public final int getY() {
         return m_y;
     }
 
     /** @param y the y to set */
-    public void setY(final int y) {
+    public final void setY(final int y) {
         m_y = y;
     }
 
     /** @return the width */
-    public int getWidth() {
+    public final int getWidth() {
         return m_width;
     }
 
     /** @param width the width to set */
-    public void setWidth(final int width) {
+    public final void setWidth(final int width) {
         m_width = width;
     }
 
     /** @return the height */
-    public int getHeight() {
+    public final int getHeight() {
         return m_height;
     }
 
     /** @param height the height to set */
-    public void setHeight(final int height) {
+    public final void setHeight(final int height) {
         m_height = height;
     }
 
     /** @param alignment the alignment to set */
-    public void setAlignment(final TextAlignment alignment) {
+    public final void setAlignment(final TextAlignment alignment) {
         m_alignment = alignment == null ? TextAlignment.LEFT : alignment;
     }
 
     /** @return the alignment */
-    public TextAlignment getAlignment() {
+    public final TextAlignment getAlignment() {
         return m_alignment;
     }
 
     /** @return the border width. 0 or neg. for no border.
      * @since 3.0*/
-    public int getBorderSize() {
+    public final int getBorderSize() {
         return m_borderSize;
     }
 
     /** @param size border size in pixel, 0 or neg. for no border.
      * @since 3.0*/
-    public void setBorderSize(final int size) {
+    public final void setBorderSize(final int size) {
         m_borderSize = size;
     }
 
     /** @return the color of the border. See also {@link #getBorderSize()}.
      * @since 3.0*/
-    public int getBorderColor() {
+    public final int getBorderColor() {
         return m_borderColor;
     }
 
     /** @param color the new border color to set.
      * @since 3.0*/
-    public void setBorderColor(final int color) {
+    public final void setBorderColor(final int color) {
         m_borderColor = color;
     }
 
@@ -210,9 +219,17 @@ public class AnnotationData implements Cloneable {
      * @param xOff x offset
      * @param yOff y offset
      */
-    public void shiftPosition(final int xOff, final int yOff) {
+    public final void shiftPosition(final int xOff, final int yOff) {
         setX(getX() + xOff);
         setY(getY() + yOff);
+    }
+
+    /** Save-Version of this annotation. "Old" annotations used the system default font, newer ones will use
+     * hardcoded font families.
+     * @return the version, usually one of AnnotationData#VERSION_XYZ.
+     * @since 3.0 */
+    public final int getVersion() {
+        return m_version;
     }
 
     /**
@@ -223,7 +240,7 @@ public class AnnotationData implements Cloneable {
      * @param width width of component
      * @param height height of component
      */
-    public void setDimension(final int x, final int y, final int width,
+    public final void setDimension(final int x, final int y, final int width,
             final int height) {
         setX(x);
         setY(y);
@@ -314,8 +331,7 @@ public class AnnotationData implements Cloneable {
      * @param includeBounds Whether to also update x, y, width, height. If
      * false, it will only a copy the text with its styles
      */
-    public void copyFrom(final AnnotationData otherData,
-            final boolean includeBounds) {
+    public void copyFrom(final AnnotationData otherData, final boolean includeBounds) {
         if (includeBounds) {
             setDimension(otherData.getX(), otherData.getY(),
                     otherData.getWidth(), otherData.getHeight());
@@ -325,6 +341,7 @@ public class AnnotationData implements Cloneable {
         setAlignment(otherData.getAlignment());
         setBorderSize(otherData.getBorderSize());
         setBorderColor(otherData.getBorderColor());
+        m_version = otherData.getVersion();
         StyleRange[] otherStyles = otherData.getStyleRanges();
         StyleRange[] myStyles = cloneStyleRanges(otherStyles);
         setStyleRanges(myStyles);
@@ -366,6 +383,7 @@ public class AnnotationData implements Cloneable {
         config.addString("alignment", getAlignment().toString());
         config.addInt("borderSize", m_borderSize);
         config.addInt("borderColor", m_borderColor);
+        config.addInt("annotation-version", m_version);
         NodeSettingsWO styleConfigs = config.addNodeSettings("styles");
         int i = 0;
         for (StyleRange sr : getStyleRanges()) {
@@ -388,6 +406,7 @@ public class AnnotationData implements Cloneable {
         int height = config.getInt("height");
         int borderSize = config.getInt("borderSize", 0); // default to 0 for backward compatibility
         int borderColor = config.getInt("borderColor", 0); // default for backward compatibility
+        m_version = config.getInt("annotation-version", VERSION_OLD); // added in 3.0
         TextAlignment alignment = TextAlignment.LEFT;
         if (loadVersion.ordinal() >= FileWorkflowPersistor.LoadVersion.V250.ordinal()) {
             String alignmentS = config.getString("alignment");

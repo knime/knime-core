@@ -50,6 +50,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 
@@ -67,21 +68,11 @@ public abstract class Annotation implements UIInformation {
     private CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
             new CopyOnWriteArraySet<NodeUIInformationListener>();
 
-    /**
-     * Creates a new annotation.
-     */
-    public Annotation() {
-        this(new AnnotationData());
-    }
-
     /** Create new annotation with arg data (not null).
      * @param data The data
      */
-    public Annotation(final AnnotationData data) {
-        if (data == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_data = data;
+    Annotation(final AnnotationData data) {
+        m_data = CheckUtils.checkArgumentNotNull(data);
     }
 
     /** @return the data */
@@ -90,62 +81,71 @@ public abstract class Annotation implements UIInformation {
     }
 
     /** @return the text */
-    public String getText() {
+    public final String getText() {
         return m_data.getText();
     }
 
     /** @return the styleRanges */
-    public StyleRange[] getStyleRanges() {
+    public final StyleRange[] getStyleRanges() {
         return m_data.getStyleRanges();
     }
 
     /** @return the bgColor */
-    public int getBgColor() {
+    public final int getBgColor() {
         return m_data.getBgColor();
     }
 
     /** @return the x */
-    public int getX() {
+    public final int getX() {
         return m_data.getX();
     }
 
     /** @return the y */
-    public int getY() {
+    public final int getY() {
         return m_data.getY();
     }
 
     /** @return the width */
-    public int getWidth() {
+    public final int getWidth() {
         return m_data.getWidth();
     }
 
     /** @return the height */
-    public int getHeight() {
+    public final int getHeight() {
         return m_data.getHeight();
     }
 
     /** @return the alignment */
-    public TextAlignment getAlignment() {
+    public final TextAlignment getAlignment() {
         return m_data.getAlignment();
     }
 
     /** @return the border size, 0 or neg. for none.
      * @since 3.0*/
-    public int getBorderSize() {
+    public final int getBorderSize() {
         return m_data.getBorderSize();
     }
 
     /** @return the border color.
      * @since 3.0*/
-    public int getBorderColor()  {
+    public final int getBorderColor()  {
         return m_data.getBorderColor();
+    }
+
+    /**
+     * @return The version to guarantee backward compatible look.
+     * @see org.knime.core.node.workflow.AnnotationData#getVersion()
+     * @since 3.0
+     */
+    public final int getVersion() {
+        return m_data.getVersion();
     }
 
     /** Shift annotation after copy&paste.
      * @param xOff x offset
      * @param yOff y offset
      */
-    public void shiftPosition(final int xOff, final int yOff) {
+    public final void shiftPosition(final int xOff, final int yOff) {
         m_data.shiftPosition(xOff, yOff);
         fireChangeEvent();
     }
@@ -158,7 +158,7 @@ public abstract class Annotation implements UIInformation {
      * @param width width of component
      * @param height height of component
      */
-    public void setDimension(final int x, final int y, final int width,
+    public final void setDimension(final int x, final int y, final int width,
             final int height) {
         m_data.setDimension(x, y, width, height);
         fireChangeEvent();
@@ -227,7 +227,7 @@ public abstract class Annotation implements UIInformation {
         }
     }
 
-    public void addUIInformationListener(final NodeUIInformationListener l) {
+    public final void addUIInformationListener(final NodeUIInformationListener l) {
         if (l == null) {
             throw new NullPointerException(
                     "NodeUIInformationListener must not be null!");
@@ -235,7 +235,7 @@ public abstract class Annotation implements UIInformation {
         m_uiListeners.add(l);
     }
 
-    public void removeUIInformationListener(final NodeUIInformationListener l) {
+    public final void removeUIInformationListener(final NodeUIInformationListener l) {
         m_uiListeners.remove(l);
     }
 

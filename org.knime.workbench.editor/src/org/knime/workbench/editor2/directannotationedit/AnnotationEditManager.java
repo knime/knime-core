@@ -52,13 +52,16 @@ import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.tools.CellEditorLocator;
 import org.eclipse.gef.tools.DirectEditManager;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.part.CellEditorActionHandler;
 import org.knime.core.node.workflow.Annotation;
+import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.FontStore;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 
 /**
@@ -95,11 +98,15 @@ public class AnnotationEditManager extends DirectEditManager {
         editPart.getFigure().setVisible(false);
         StyledTextEditor stw = (StyledTextEditor)getCellEditor();
         Annotation anno = ((AnnotationEditPart)editPart).getModel();
+        Font defaultFont;
         if (editPart instanceof NodeAnnotationEditPart) {
-            stw.setDefaultFont(AnnotationEditPart.getNodeAnnotationDefaultFont());
+            defaultFont = AnnotationEditPart.getNodeAnnotationDefaultFont();
+        } else if (anno.getVersion() < AnnotationData.VERSION_20151012) {
+            defaultFont = FontStore.INSTANCE.getSystemDefaultFont();
         } else {
-            stw.setDefaultFont(AnnotationEditPart.getWorkflowAnnotationDefaultFont());
+            defaultFont = AnnotationEditPart.getWorkflowAnnotationDefaultFont();
         }
+        stw.setDefaultFont(defaultFont);
         stw.setValue(anno);
 
         // Hook the cell editor's copy/paste actions to the actionBars so that

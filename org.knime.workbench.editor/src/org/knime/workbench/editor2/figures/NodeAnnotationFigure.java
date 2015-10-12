@@ -105,9 +105,7 @@ public class NodeAnnotationFigure extends Figure {
         } else {
             text = annotation.getText();
             if (annotation.getStyleRanges() != null) {
-                sr =
-                        Arrays.copyOf(annotation.getStyleRanges(),
-                                annotation.getStyleRanges().length);
+                sr = Arrays.copyOf(annotation.getStyleRanges(), annotation.getStyleRanges().length);
             } else {
                 sr = new AnnotationData.StyleRange[0];
             }
@@ -141,17 +139,22 @@ public class NodeAnnotationFigure extends Figure {
         List<TextFlow> segments = new ArrayList<TextFlow>(sr.length);
         // in old flow annotations didn't store the font if system default was used. New annotations always store font
         // info. For backward compatibility use the system font if no font is specified here.
-        final Font defaultFont = isNodeAnnotation
-                ? FontStore.INSTANCE.getSystemDefFontNodeAnnotations()
-                : FontStore.INSTANCE.getSystemDefaultFont();
+        final Font defaultFont;
+        if (isNodeAnnotation) {
+            defaultFont = AnnotationEditPart.getNodeAnnotationDefaultFont();
+        } else if (annotation.getVersion() < AnnotationData.VERSION_20151012) {
+            defaultFont = FontStore.INSTANCE.getSystemDefaultFont();
+        } else {
+            defaultFont = AnnotationEditPart.getWorkflowAnnotationDefaultFont();
+        }
         for (AnnotationData.StyleRange r : sr) {
             // create text from last range to beginning of this range
             if (i < r.getStart()) {
                 String noStyle = text.substring(i, r.getStart());
                 if (isNodeAnnotation) {
-                    segments.add(getNodeAnnotationSystemDefaultStyled(noStyle, bg));
+                    segments.add(getNodeAnnotationSystemDefaultStyled(noStyle, defaultFont, bg));
                 } else {
-                    segments.add(getWorkflowAnnotationSystemDefaultStyled(noStyle, bg));
+                    segments.add(getWorkflowAnnotationSystemDefaultStyled(noStyle, defaultFont, bg));
                 }
                 i = r.getStart();
             }
@@ -162,9 +165,9 @@ public class NodeAnnotationFigure extends Figure {
         if (i < text.length()) {
             String noStyle = text.substring(i, text.length());
             if (isNodeAnnotation) {
-                segments.add(getNodeAnnotationSystemDefaultStyled(noStyle, bg));
+                segments.add(getNodeAnnotationSystemDefaultStyled(noStyle, defaultFont, bg));
             } else {
-                segments.add(getWorkflowAnnotationSystemDefaultStyled(noStyle, bg));
+                segments.add(getWorkflowAnnotationSystemDefaultStyled(noStyle, defaultFont, bg));
             }
         }
         BlockFlow bf = new BlockFlow();
@@ -204,22 +207,20 @@ public class NodeAnnotationFigure extends Figure {
         m_page.invalidate();
     }
 
-    private TextFlow getNodeAnnotationSystemDefaultStyled(final String text, final Color bg) {
-        Font normalFont = FontStore.INSTANCE.getSystemDefFontNodeAnnotations();
+    private TextFlow getNodeAnnotationSystemDefaultStyled(final String text, final Font font1, final Color bg) {
         TextFlow unstyledText = new TextFlow();
         unstyledText.setForegroundColor(AnnotationEditPart.getAnnotationDefaultForegroundColor());
         unstyledText.setBackgroundColor(bg);
-        unstyledText.setFont(normalFont);
+        unstyledText.setFont(font1);
         unstyledText.setText(text);
         return unstyledText;
     }
 
-    private TextFlow getWorkflowAnnotationSystemDefaultStyled(final String text, final Color bg) {
-        Font normalFont = FontStore.INSTANCE.getSystemDefaultFont();
+    private TextFlow getWorkflowAnnotationSystemDefaultStyled(final String text, final Font font1, final Color bg) {
         TextFlow unstyledText = new TextFlow();
         unstyledText.setForegroundColor(AnnotationEditPart.getAnnotationDefaultForegroundColor());
         unstyledText.setBackgroundColor(bg);
-        unstyledText.setFont(normalFont);
+        unstyledText.setFont(font1);
         unstyledText.setText(text);
         return unstyledText;
     }

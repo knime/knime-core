@@ -54,7 +54,7 @@ public class WorkflowAnnotation extends Annotation {
 
     /** New empty annotation. */
     public WorkflowAnnotation() {
-        // no op
+        this(new AnnotationData());
     }
 
     /** Restore annotation.
