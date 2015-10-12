@@ -1396,63 +1396,6 @@ public abstract class NodeModel {
         return Collections.unmodifiableMap(result);
     }
 
-    /** @deprecated This method has been replaced by
-     * {@link #pushFlowVariableString(String, String)}.
-     * It will be removed in future versions.
-     */
-    @Deprecated
-    protected final void pushScopeVariableString(
-            final String name, final String value) {
-        pushFlowVariableString(name, value);
-    }
-
-    /** @deprecated This method has been replaced by
-     * {@link #peekFlowVariableString(String)}.
-     * It will be removed in future versions.
-     */
-    @Deprecated
-    protected final String peekScopeVariableString(final String name) {
-        return peekFlowVariableString(name);
-    }
-
-    /** @deprecated This method has been replaced by
-     * {@link #pushFlowVariableDouble(String, double)}.
-     * It will be removed in future versions.
-     */
-    @Deprecated
-    protected final void pushScopeVariableDouble(
-            final String name, final double value) {
-        pushFlowVariableDouble(name, value);
-    }
-
-    /** @deprecated This method has been replaced by
-     * {@link #peekFlowVariableDouble(String)}.
-     * It will be removed in future versions.
-     */
-    @Deprecated
-    protected final double peekScopeVariableDouble(final String name) {
-        return peekFlowVariableDouble(name);
-    }
-
-    /** @deprecated This method has been replaced by
-     * {@link #pushFlowVariableInt(String, int)}.
-     * It will be removed in future versions.
-     */
-    @Deprecated
-    protected final void pushScopeVariableInt(
-            final String name, final int value) {
-        pushFlowVariableInt(name, value);
-    }
-
-    /** @deprecated This method has been replaced by
-     * {@link #peekFlowVariableInt(String)}.
-     * It will be removed in future versions.
-     */
-    @Deprecated
-    protected final int peekScopeVariableInt(final String name) {
-        return peekFlowVariableInt(name);
-    }
-
     //////////////////////////////////////////
     // Loop Support...
     //
