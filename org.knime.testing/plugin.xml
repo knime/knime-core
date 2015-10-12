@@ -209,6 +209,7 @@
    <extension
          point="org.knime.core.PortType">
       <portType
+            hidden="true"
             name="Large Filestore"
             objectClass="org.knime.testing.data.filestore.LargeFileStorePortObject"
             objectSerializer="org.knime.testing.data.filestore.LargeFileStorePortObject$Serializer"
