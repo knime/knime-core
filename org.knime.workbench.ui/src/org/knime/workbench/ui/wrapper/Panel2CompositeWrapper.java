@@ -135,20 +135,14 @@ public class Panel2CompositeWrapper extends Composite {
                 awtFrame.setSize(panel.getSize());
 
                 final Dimension panelSize = panel.getSize();
-                /*System.out.println("Frame Pref: " + awtFrame.getPreferredSize());
-                System.out.println("Frame Size: " + awtFrame.getSize());
-                System.out.println("Panel Pref: " + panel.getPreferredSize());
-                System.out.println("Panel Size: " + panel.getSize());*/
                 if (!isDisposed()) {
                     getDisplay().asyncExec(new Runnable() {
                         @Override
                         public void run() {
                             if (!isDisposed()) {
                                 final Point wrapperSize = getSize();
-                                //System.out.println("Wrapper Size: " + wrapperSize);
                                 // Check if size of this component is the same as the panel
                                 if (panelSize.width != wrapperSize.x || panelSize.height != wrapperSize.y) {
-                                    //System.out.println("Trying to adjust AWT components size...");
                                     ViewUtils.invokeLaterInEDT(new Runnable() {
                                         @Override
                                         public void run() {
@@ -156,7 +150,6 @@ public class Panel2CompositeWrapper extends Composite {
                                             // wrapper component
                                             awtFrame.setSize(wrapperSize.x, wrapperSize.y);
                                             panel.setSize(wrapperSize.x, wrapperSize.y);
-                                            //System.out.println("Adjusted AWT components size");
                                         }
                                     });
                                 }
