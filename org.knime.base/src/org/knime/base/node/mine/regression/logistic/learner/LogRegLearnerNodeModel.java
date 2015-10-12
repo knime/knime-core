@@ -88,12 +88,24 @@ public final class LogRegLearnerNodeModel extends NodeModel {
     /** The learned regression model. */
     private LogisticRegressionContent m_content;
 
+    private boolean m_pmmlInEnabled;
+
     /** Inits a new node model, it will have 1 data input, and optional PMML
      * model inport, 1 model and 1 data output. */
     public LogRegLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
-            new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE});
+        this(true);
+    }
+
+    /** Inits a new node model, it will have 1 data input, and optional PMML
+     * model inport, 1 model and 1 data output.
+     * @param pmmlInEnabled if true, the node has an optional PMML input
+     * @since 3.0*/
+    public LogRegLearnerNodeModel(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[] {BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL } : new PortType[] {BufferedDataTable.TYPE},
+                    new PortType[] {PMMLPortObject.TYPE,
+                            BufferedDataTable.TYPE});
         m_settings = new LogRegLearnerSettings();
+        m_pmmlInEnabled = pmmlInEnabled;
     }
 
     /**
@@ -132,7 +144,7 @@ public final class LogRegLearnerNodeModel extends NodeModel {
         DataTableSpec tableSpec = data.getDataTableSpec();
 
         // handle the optional PMML input
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inObjects[1];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inObjects[1] : null;
         PMMLPortObjectSpec inPMMLSpec = null;
         if (inPMMLPort != null) {
             inPMMLSpec = inPMMLPort.getSpec();
@@ -142,7 +154,7 @@ public final class LogRegLearnerNodeModel extends NodeModel {
             inPMMLSpec = creator.createSpec();
             inPMMLPort = new PMMLPortObject(inPMMLSpec);
         }
-        LogRegLearner learner = new LogRegLearner(new PortObjectSpec[] {tableSpec, inPMMLSpec}, m_settings);
+        LogRegLearner learner = new LogRegLearner(new PortObjectSpec[] {tableSpec, inPMMLSpec}, m_pmmlInEnabled, m_settings);
         m_content = learner.execute(new PortObject[] {data, inPMMLPort}, exec);
         String warn = learner.getWarningMessage();
         if (warn != null) {
@@ -162,7 +174,7 @@ public final class LogRegLearnerNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        LogRegLearner learner = new LogRegLearner(inSpecs, m_settings);
+        LogRegLearner learner = new LogRegLearner(inSpecs, m_pmmlInEnabled, m_settings);
         return learner.getOutputSpec();
     }
 

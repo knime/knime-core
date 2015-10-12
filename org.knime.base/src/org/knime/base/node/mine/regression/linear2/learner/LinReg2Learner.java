@@ -104,9 +104,22 @@ final class LinReg2Learner {
     public LinReg2Learner(final PortObjectSpec[] specs,
             final LinReg2LearnerSettings settings)
             throws InvalidSettingsException {
+        this(specs, true, settings);
+    }
+
+    /**
+     * @param specs The input specs.
+     * @param hasPMMLIn whether the specs contain PMML specs at position 1
+     * @param settings The settings object.
+     * @throws InvalidSettingsException when settings are not consistent
+     * @see LinReg2LearnerNodeModel#configure(PortObjectSpec[])
+     */
+    public LinReg2Learner(final PortObjectSpec[] specs, final boolean hasPMMLIn,
+            final LinReg2LearnerSettings settings)
+            throws InvalidSettingsException {
         m_settings = settings;
         DataTableSpec dataSpec = (DataTableSpec)specs[0];
-        PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)specs[1];
+        PMMLPortObjectSpec pmmlSpec = hasPMMLIn ? (PMMLPortObjectSpec)specs[1] : null;
         init(dataSpec, pmmlSpec, Collections.<String>emptySet());
     }
 

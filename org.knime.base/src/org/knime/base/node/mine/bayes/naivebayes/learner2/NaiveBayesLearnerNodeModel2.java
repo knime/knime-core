@@ -184,11 +184,21 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
 
     private NaiveBayesModel m_model = null;
 
+    private boolean m_pmmlInEnabled;
+
     /**
      * Constructor.
      */
     protected NaiveBayesLearnerNodeModel2() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+        this(true);
+    }
+
+    /**
+     * Constructor.
+     * @param pmmlInEnabled true if the optional PMML input is accessible
+     */
+    public NaiveBayesLearnerNodeModel2(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL} : new PortType[]{BufferedDataTable.TYPE},
             new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE});
         m_pmmlCompatible.addChangeListener(new ChangeListener() {
             @Override
@@ -200,6 +210,7 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
                 m_ignoreMissingVals.setEnabled(!m_pmmlCompatible.getBooleanValue());
             }
         });
+        m_pmmlInEnabled = pmmlInEnabled;
     }
 
     /**
@@ -277,7 +288,7 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
         if (learnCols.size() < 1) {
             throw new InvalidSettingsException("Not enough valid columns");
         }
-        final PMMLPortObjectSpec modelSpec = (PMMLPortObjectSpec)inSpecs[MODEL_INPORT];
+        final PMMLPortObjectSpec modelSpec = m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[MODEL_INPORT] : null;
         final PMMLPortObjectSpec pmmlSpec = createPMMLSpec(tableSpec, modelSpec, learnCols, classColumn);
         return new PortObjectSpec[]{pmmlSpec, NaiveBayesModel.createStatisticsTableSpec(classColSpec.getType(),
             m_ignoreMissingVals.getBooleanValue())};
@@ -312,7 +323,8 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec)
             throws CanceledExecutionException, InvalidSettingsException {
         LOGGER.debug("Entering execute of " + NaiveBayesLearnerNodeModel2.class.getName());
-        assert (inData != null && inData.length == 2 && inData[TRAINING_DATA_PORT] != null);
+        assert (inData != null && ((inData.length == 2 && m_pmmlInEnabled) || (inData.length == 1 && !m_pmmlInEnabled))
+                && inData[TRAINING_DATA_PORT] != null);
         final PortObject inObject = inData[TRAINING_DATA_PORT];
         if (!(inObject instanceof BufferedDataTable)) {
             throw new IllegalArgumentException("Invalid input data");
@@ -345,7 +357,7 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
         LOGGER.debug("Exiting execute of " + NaiveBayesLearnerNodeModel2.class.getName());
 
         // handle the optional PMML input
-        final PMMLPortObject inPMMLPort = (PMMLPortObject)inData[MODEL_INPORT];
+        final PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inData[MODEL_INPORT] : null;
         final DataTableSpec tableSpec = trainingTable.getSpec();
         final PMMLPortObjectSpec outPortSpec = createPMMLSpec(tableSpec,
             inPMMLPort == null ? null : inPMMLPort.getSpec(),

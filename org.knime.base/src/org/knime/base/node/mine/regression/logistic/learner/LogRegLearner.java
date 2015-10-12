@@ -108,12 +108,25 @@ public final class LogRegLearner {
     public LogRegLearner(final PortObjectSpec[] specs,
             final LogRegLearnerSettings settings)
             throws InvalidSettingsException {
-        m_settings = settings;
-        DataTableSpec dataSpec = (DataTableSpec)specs[0];
-        PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)specs[1];
-        init(dataSpec, pmmlSpec, Collections.<String>emptySet());
+        this(specs, true, settings);
     }
 
+    /**
+     * @param specs The input specs.
+     * @param hasPMMLIn if the specs contain a PMML
+     * @param settings The settings object.
+     * @throws InvalidSettingsException when settings are not consistent
+     * @see LogRegLearnerNodeModel#configure(PortObjectSpec[])
+     * @since 3.0
+     */
+    public LogRegLearner(final PortObjectSpec[] specs, final boolean hasPMMLIn,
+            final LogRegLearnerSettings settings)
+            throws InvalidSettingsException {
+        m_settings = settings;
+        DataTableSpec dataSpec = (DataTableSpec)specs[0];
+        PMMLPortObjectSpec pmmlSpec = hasPMMLIn ? (PMMLPortObjectSpec)specs[1] : null;
+        init(dataSpec, pmmlSpec, Collections.<String>emptySet());
+    }
 
     /**
      * Compute logistic regression model.

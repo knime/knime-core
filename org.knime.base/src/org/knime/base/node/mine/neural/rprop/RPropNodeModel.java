@@ -162,6 +162,7 @@ public class RPropNodeModel extends NodeModel {
      */
     public static final String SEED_KEY = "randomSeed";
 
+    private boolean m_pmmlInEnabled;
 
     /*
      * Number of iterations.
@@ -242,10 +243,23 @@ public class RPropNodeModel extends NodeModel {
      *
      */
     public RPropNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
-            new PortType[]{PMMLPortObject.TYPE});
+        this(true);
+    }
+
+    /**
+     * The RPropNodeModel has 2 inputs, one for the positive examples and one
+     * for the negative ones. The output is the model of the constructed and
+     * trained neural network.
+     * @param pmmlInEnabled if true the node has an optional PMML input port
+     * @since 3.0
+     *
+     */
+    public RPropNodeModel(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL} : new PortType[]{BufferedDataTable.TYPE},
+                new PortType[]{PMMLPortObject.TYPE});
         m_architecture = new Architecture();
         m_mlp = new MultiLayerPerceptron();
+        m_pmmlInEnabled = pmmlInEnabled;
     }
 
     /**
@@ -315,7 +329,7 @@ public class RPropNodeModel extends NodeModel {
             }
 
             return new PortObjectSpec[]{createPMMLPortObjectSpec(
-                    (PMMLPortObjectSpec)inSpecs[1],
+                m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[1] : null,
                     (DataTableSpec)inSpecs[0], learningCols, targetCols)};
         } else {
             throw new InvalidSettingsException("Class column not set");
@@ -525,7 +539,7 @@ public class RPropNodeModel extends NodeModel {
         }
 
         // handle the optional PMML input
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inData[INMODEL];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inData[INMODEL] : null;
         PMMLPortObjectSpec inPMMLSpec = null;
         if (inPMMLPort != null) {
             inPMMLSpec = inPMMLPort.getSpec();

@@ -125,6 +125,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
     private boolean[] m_colSelected;
 
+    private boolean m_pmmlInEnabled;
+
     private PolyRegViewData m_viewData = new PolyRegViewData(new double[0], new double[0], new double[0], new double[0], new double[0], Double.NaN, Double.NaN, new String[0],
         0, "N/A", null);
 
@@ -144,11 +146,20 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * Creates a new model for the polynomial regression learner node.
+     * Creates a new model for the polynomial regression learner node with optional PMML input.
      */
     public PolyRegLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+        this(true);
+    }
+
+    /**
+     * Creates a new model for the polynomial regression learner node.
+     * @param pmmlInEnabled if true, the node has an optional PMML input
+     */
+    public PolyRegLearnerNodeModel(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL} : new PortType[]{BufferedDataTable.TYPE},
             new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE, BufferedDataTable.TYPE});
+        m_pmmlInEnabled = pmmlInEnabled;
     }
 
     /**
@@ -157,7 +168,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
-        PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
+        PMMLPortObjectSpec pmmlSpec = m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[1] : null;
         String[] selectedCols = computeSelectedColumns(tableSpec);
         m_columnNames = selectedCols;
         for (String colName : selectedCols) {
@@ -235,9 +246,9 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         final DataArray rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
 
         // handle the optional PMML input
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inData[1] : null;
 
-        PortObjectSpec[] outputSpec = configure(inData[1] == null ? new PortObjectSpec[] {inData[0].getSpec(), null} : new PortObjectSpec[] {inData[0].getSpec(), inData[1].getSpec()});
+        PortObjectSpec[] outputSpec = configure((inPMMLPort == null) ? new PortObjectSpec[] {inData[0].getSpec(), null} : new PortObjectSpec[] {inData[0].getSpec(), inPMMLPort.getSpec()});
         Learner learner = new Learner((PMMLPortObjectSpec)outputSpec[0], 0d, m_settings.getMissingValueHandling() == MissingValueHandling.fail, m_settings.getDegree());
         try {
             PolyRegContent polyRegContent = learner.perform(inTable, exec);

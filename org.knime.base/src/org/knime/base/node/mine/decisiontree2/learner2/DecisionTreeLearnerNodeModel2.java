@@ -394,13 +394,24 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
      */
     private DecisionTree m_decisionTree;
 
+    private boolean m_pmmlInEnabled;
+
     /**
      * Inits a new Decision Tree model with one data in- and one model output
      * port. In addition it has an optional model input.
      */
     public DecisionTreeLearnerNodeModel2() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+        this(true);
+    }
+
+    /**
+     * Inits a new Decision Tree model with one data in- and one model output
+     * port. In addition it has an optional model input.
+     */
+    public DecisionTreeLearnerNodeModel2(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL} : new PortType[]{BufferedDataTable.TYPE},
             new PortType[]{PMMLPortObject.TYPE});
+        m_pmmlInEnabled = pmmlInEnabled;
     }
 
     /**
@@ -544,7 +555,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         exec.setMessage("Creating PMML decision tree model...");
 
         // handle the optional PMML input
-        PMMLPortObject inPMMLPort = (PMMLPortObject)data[1];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)data[1] : null;
         DataTableSpec inSpec = inData.getSpec();
         PMMLPortObjectSpec outPortSpec = createPMMLPortObjectSpec(
                 inPMMLPort == null ? null : inPMMLPort.getSpec(),
@@ -856,7 +867,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             throws InvalidSettingsException {
         DataTableSpec inSpec = (DataTableSpec)inSpecs[DATA_INPORT];
         PMMLPortObjectSpec modelSpec
-                = (PMMLPortObjectSpec)inSpecs[MODEL_INPORT];
+                = m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[MODEL_INPORT] : null;
         // check spec with selected column
         String classifyColumn = m_classifyColumn.getStringValue();
         DataColumnSpec columnSpec = inSpec.getColumnSpec(classifyColumn);

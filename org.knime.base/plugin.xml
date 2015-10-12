@@ -699,6 +699,7 @@
             id="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"/-->
       <node
             category-path="/analytics/mining/nn/mlp"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"
             id="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"/>
       <node
@@ -765,18 +766,21 @@
             id="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"/>
        <node
              category-path="/analytics/statistics/regression"
+             deprecated="true"
              factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"
              id="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
-            category-path="/analytics/statistics/regression"
-            factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
-            id="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
-            after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
-       <node
+             after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"
              category-path="/analytics/statistics/regression"
+             deprecated="true"
+             factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
+             id="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"/>
+       <node
+             after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
+             category-path="/analytics/statistics/regression"
+             deprecated="true"
              factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
-             id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
-             after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"/>
+             id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"/>
        <node
              category-path="/analytics/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"
@@ -875,6 +879,7 @@
       </node>
       <node
             category-path="/analytics/mining/dtree"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2"
             id="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2">
       </node>
@@ -901,6 +906,7 @@
             id="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"/-->
       <node
             category-path="/analytics/mining/bayes"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2"
             id="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2"/>
       <node
@@ -927,10 +933,12 @@
             id="org.knime.base.node.mine.mds.MDSNodeFactory"/>
       <node
             category-path="/analytics/mining/mds"
+            deprecated="false"
             factory-class="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"
             id="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"/>
       <node
             category-path="/analytics/mining/svm"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory"
             id="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory">
       </node>
@@ -1821,6 +1829,49 @@
             deprecated="false"
             factory-class="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory2"
             id="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/dtree"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory3"
+            id="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2">
+      </node>
+      <node
+            category-path="/analytics/statistics/regression"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory2"
+            id="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory2"
+            category-path="/analytics/statistics/regression"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory2"
+            id="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/statistics/regression"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory2"
+            id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/nn/mlp"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.neural.rprop.RPropNodeFactory2"
+            id="org.knime.base.node.mine.neural.rprop.RPropNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/svm"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory2"
+            id="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/bayes"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory3"
+            id="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2">
       </node>
    </extension>
    

@@ -96,12 +96,23 @@ public final class LinReg2LearnerNodeModel extends NodeModel implements LinReg2D
     /** The learned regression model. */
     private LinearRegressionContent m_content;
 
+    private boolean m_pmmlInEnabled;
+
     /** Inits a new node model, it will have 1 data input, and optional PMML
      * model inport, 1 model and 1 data output. */
     public LinReg2LearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
-            new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE});
+        this(true);
+    }
+
+    /** Inits a new node model, it will have 1 data input, and optional PMML
+     * model inport, 1 model and 1 data output.
+     * @param pmmlInEnabled true if the optional PMML input should be usable*/
+    public LinReg2LearnerNodeModel(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[] {BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL} : new PortType[] {BufferedDataTable.TYPE},
+                    new PortType[] {PMMLPortObject.TYPE,
+                            BufferedDataTable.TYPE});
         m_settings = new LinReg2LearnerSettings();
+        m_pmmlInEnabled = pmmlInEnabled;
     }
 
     /**
@@ -144,7 +155,7 @@ public final class LinReg2LearnerNodeModel extends NodeModel implements LinReg2D
         DataTableSpec tableSpec = data.getDataTableSpec();
 
         // handle the optional PMML input
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inObjects[1];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inObjects[1] : null;
         PMMLPortObjectSpec inPMMLSpec = null;
         if (inPMMLPort != null) {
             inPMMLSpec = inPMMLPort.getSpec();
@@ -154,7 +165,7 @@ public final class LinReg2LearnerNodeModel extends NodeModel implements LinReg2D
             inPMMLSpec = creator.createSpec();
             inPMMLPort = new PMMLPortObject(inPMMLSpec);
         }
-        LinReg2Learner learner = new LinReg2Learner(new PortObjectSpec[] {tableSpec, inPMMLSpec}, m_settings);
+        LinReg2Learner learner = new LinReg2Learner(new PortObjectSpec[] {tableSpec, inPMMLSpec}, m_pmmlInEnabled, m_settings);
         m_content = learner.execute(new PortObject[] {data, inPMMLPort}, exec);
 
         if (learner.getWarningMessage() != null && learner.getWarningMessage().length() > 0) {
@@ -179,7 +190,7 @@ public final class LinReg2LearnerNodeModel extends NodeModel implements LinReg2D
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        LinReg2Learner learner = new LinReg2Learner(inSpecs, m_settings);
+        LinReg2Learner learner = new LinReg2Learner(inSpecs, m_pmmlInEnabled, m_settings);
         return learner.getOutputSpec();
     }
 

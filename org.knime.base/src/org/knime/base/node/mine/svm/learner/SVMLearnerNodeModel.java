@@ -165,6 +165,8 @@ public class SVMLearnerNodeModel extends NodeModel {
      */
     private Svm[] m_svms;
 
+    private boolean m_pmmlInEnabled;
+
     /*
      * String containing info about the trained SVM's
      */
@@ -198,7 +200,15 @@ public class SVMLearnerNodeModel extends NodeModel {
      *
      */
     public SVMLearnerNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
+        this(true);
+    }
+
+    /**
+     * @param pmmlInEnabled true if the node should have an optional PMML input port
+     * @since 3.0
+     */
+    public SVMLearnerNodeModel(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL} : new PortType[]{BufferedDataTable.TYPE},
             new PortType[]{PMMLPortObject.TYPE});
         m_kernelParameters = createKernelParams();
     }
@@ -210,7 +220,7 @@ public class SVMLearnerNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec inSpec = (DataTableSpec)inSpecs[0];
-        PMMLPortObjectSpec portSpec = (PMMLPortObjectSpec)inSpecs[1];
+        PMMLPortObjectSpec portSpec = m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[1] : null;
         LearnColumnsAndColumnRearrangerTuple tuple =
             createTrainTableColumnRearranger(inSpec);
         DataTableSpec trainSpec = tuple.getTrainingRearranger().createSpec();
@@ -349,7 +359,7 @@ public class SVMLearnerNodeModel extends NodeModel {
         }
 
         // the optional PMML input (can be null)
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inData[1] : null;
 
         // create the outgoing PMML spec
         PMMLPortObjectSpecCreator specCreator =
