@@ -49,25 +49,29 @@ package org.knime.workbench.ui.wrapper;
 
 import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.event.FocusListener;
 
 import javax.swing.JComponent;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * Wrapper Composite that uses the SWT_AWT bridge to embed an AWT Panel into a
- * SWT composite.
+ * Wrapper Composite that uses the SWT_AWT bridge to embed an AWT Panel into a SWT composite.
  *
  * @author Florian Georg, University of Konstanz
  */
 public class Panel2CompositeWrapper extends Composite {
+
     /**
      * Creates a new wrapper.
      *
@@ -75,9 +79,9 @@ public class Panel2CompositeWrapper extends Composite {
      * @param panel The AWT panel to wrap
      * @param style Style bits, ignored so far
      */
-    public Panel2CompositeWrapper(final Composite parent,
-            final JComponent panel, final int style) {
+    public Panel2CompositeWrapper(final Composite parent, final JComponent panel, final int style) {
         super(parent, style | SWT.EMBEDDED);
+
         final GridLayout gridLayout = new GridLayout();
         gridLayout.verticalSpacing = 0;
         gridLayout.marginWidth = 0;
@@ -111,6 +115,65 @@ public class Panel2CompositeWrapper extends Composite {
                         panel.requestFocus();
                     }
                 });
+            }
+        });
+
+        // Bug 6275: Use a focus listener to check if wrapper component, AWT Frame and dialog panel
+        // have the same size. The asynchronous queuing in SWT_AWT.new_Frame() leads to sizes not being correctly
+        // set on the AWT components sometimes at this point. The following code corrects this.
+        // Note that this only works in conjunction with "resizeHasOccurred = true; getShell().layout();
+        // in WrappedNodeDialog (lines 271 following), otherwise the size of the wrapper component (this) is also not correct.
+        final FocusListener sizeFocusListener = new FocusListener() {
+
+            @Override
+            public void focusLost(final java.awt.event.FocusEvent e) { /* do nothing */ }
+
+            @Override
+            public void focusGained(final java.awt.event.FocusEvent e) {
+                // Ensure the dialog panel and the AWT frame have the same sizes set
+                awtFrame.setPreferredSize(panel.getPreferredSize());
+                awtFrame.setSize(panel.getSize());
+
+                final Dimension panelSize = panel.getSize();
+                /*System.out.println("Frame Pref: " + awtFrame.getPreferredSize());
+                System.out.println("Frame Size: " + awtFrame.getSize());
+                System.out.println("Panel Pref: " + panel.getPreferredSize());
+                System.out.println("Panel Size: " + panel.getSize());*/
+                if (!isDisposed()) {
+                    getDisplay().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!isDisposed()) {
+                                final Point wrapperSize = getSize();
+                                //System.out.println("Wrapper Size: " + wrapperSize);
+                                // Check if size of this component is the same as the panel
+                                if (panelSize.width != wrapperSize.x || panelSize.height != wrapperSize.y) {
+                                    //System.out.println("Trying to adjust AWT components size...");
+                                    ViewUtils.invokeLaterInEDT(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            // Set sizes on AWT frame and dialog panel if different from
+                                            // wrapper component
+                                            awtFrame.setSize(wrapperSize.x, wrapperSize.y);
+                                            panel.setSize(wrapperSize.x, wrapperSize.y);
+                                            //System.out.println("Adjusted AWT components size");
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        };
+        panel.addFocusListener(sizeFocusListener);
+
+        // We reuse the panel on subsequent dialog opens but always create a new wrapper component.
+        // Therefore we need to remove the focus listener on the dialog panel when the wrapper is disposed.
+        addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(final DisposeEvent e) {
+                panel.removeFocusListener(sizeFocusListener);
             }
         });
     }

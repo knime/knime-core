@@ -259,13 +259,20 @@ public class WrappedNodeDialog extends Dialog {
                 Display.getCurrent()
                         .getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
         area.setBackground(backgroundColor);
-        // m_container.setLayoutData(new GridData(GridData.FILL_BOTH));
+        //area.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         // create the dialogs' panel and pass it to the SWT wrapper composite
         getShell().setText("Dialog - " + m_nodeContainer.getDisplayLabel());
 
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(area, p, SWT.EMBEDDED);
+
+        // Bug 6275: Explicitly set has size flag and layout.
+        // This ensures that the wrapper component has the correct size.
+        if (Platform.OS_WIN32.equals(Platform.getOS())) {
+            resizeHasOccurred = true;
+            getShell().layout();
+        }
 
         return area;
     }
@@ -284,6 +291,7 @@ public class WrappedNodeDialog extends Dialog {
             // For other systems we calculate it
             size = getInitialSize();
         }
+
         Rectangle knimeWindowBounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell().getBounds();
         // Middle point relative to the KNIME window
         Point middle = new Point(knimeWindowBounds.width / 2, knimeWindowBounds.height / 2);
