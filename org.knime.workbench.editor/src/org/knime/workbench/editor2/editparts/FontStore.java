@@ -302,6 +302,35 @@ public class FontStore {
     }
 
     /**
+     * Returns the default font in the desired size and style
+     * @param size
+     * @param bold
+     * @param italic
+     * @return the font.
+     */
+    public Font getDefaultFont(final int size, final boolean bold, final boolean italic) {
+        int pt = size;
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_HIGH_DPI_SUPPORT)) {
+            int z = ViewUtils.getDisplayZoom();
+            if (z != 100) {
+                // the editor scales fonts with the display zoom. But the rest is unscaled! Thus we scale down!
+                pt = pt * 100 / z;
+                if (pt <= 0) {
+                    pt = 1;
+                }
+            }
+        }
+        int style = SWT.NONE;
+        if (bold) {
+            style |= SWT.BOLD;
+        }
+        if (italic) {
+            style |= SWT.ITALIC;
+        }
+        return getFont(m_defFontName, pt, style);
+    }
+
+    /**
      * Returns true if the argument is the default font.
      *
      * @param font

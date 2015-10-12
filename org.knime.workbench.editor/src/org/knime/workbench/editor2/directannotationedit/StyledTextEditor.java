@@ -83,7 +83,6 @@ import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
@@ -400,22 +399,7 @@ public class StyledTextEditor extends CellEditor {
 
         // font/style button
         img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/font_10.png");
-        action = addMenuItem(menu, "style", SWT.PUSH, "Font...", img);
-        m_enableOnSelectedTextMenuItems.add(action);
-
-        // foreground color button
-        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/color_10.png");
-        action = addMenuItem(menu, "color", SWT.PUSH, "Color", img);
-        m_enableOnSelectedTextMenuItems.add(action);
-
-        // bold button
-        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/bold_10.png");
-        action = addMenuItem(menu, "bold", SWT.PUSH, "Bold", img);
-        m_enableOnSelectedTextMenuItems.add(action);
-
-        // italic button
-        img = ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/annotations/italic_10.png");
-        action = addMenuItem(menu, "italic", SWT.PUSH, "Italic", img);
+        action = addMenuItem(menu, "style", SWT.PUSH, "Font Style...", img);
         m_enableOnSelectedTextMenuItems.add(action);
 
         new MenuItem(menu, SWT.SEPARATOR);
@@ -883,33 +867,49 @@ public class StyledTextEditor extends CellEditor {
     private void font() {
         List<StyleRange> sel = getStylesInSelection();
         Font f = m_styledText.getFont();
-        // set the first font in the selection
+        Color c = null;
+        // set the first font style in the selection
         for (StyleRange style : sel) {
             if (style.font != null) {
                 f = style.font;
+                c = style.foreground;
                 break;
             }
         }
-        FontDialog fd = new FontDialog(m_styledText.getShell());
-        fd.setText("Change Font in Selection");
-        FontData[] dlgFontData = f.getFontData();
-        fd.setFontList(dlgFontData);
+        FontData fd = f.getFontData()[0];
+        FontStyleDialog dlg = new FontStyleDialog(m_styledText.getShell(), c, fd.getHeight(),
+            (fd.getStyle() & SWT.BOLD) != 0, (fd.getStyle() & SWT.ITALIC) != 0);
         m_allowFocusLost.set(false);
-        FontData newFontData;
         try {
-            newFontData = fd.open();
+            if (dlg.open() != Window.OK) {
+                // user canceled.
+                return;
+            }
         } finally {
             m_allowFocusLost.set(true);
         }
-        if (newFontData == null) {
-            // user canceled
-            return;
-        }
-        RGB newRGB = fd.getRGB();
+        RGB newRGB = dlg.getColor();
+        Integer newSize = dlg.getSize();
+        Boolean newBold = dlg.getBold();
+        Boolean newItalic = dlg.getItalic();
         Color newCol = newRGB == null ? null : AnnotationEditPart.RGBtoColor(newRGB);
         for (StyleRange style : sel) {
-            style.font =
-                FontStore.INSTANCE.getFont(newFontData.getName(), newFontData.getHeight(), newFontData.getStyle());
+            if (newSize != null || newBold != null || newItalic != null) {
+                FontData stylefd = style.font.getFontData()[0];
+                boolean b = (stylefd.getStyle() & SWT.BOLD) != 0;
+                if (newBold != null) {
+                    b = newBold.booleanValue();
+                }
+                boolean i = (stylefd.getStyle() & SWT.ITALIC) != 0;
+                if (newItalic != null) {
+                    i = newItalic.booleanValue();
+                }
+                int s = stylefd.getHeight();
+                if (newSize != null) {
+                    s = newSize.intValue();
+                }
+                style.font = FontStore.INSTANCE.getDefaultFont(s, b, i);
+            }
             if (newCol != null) {
                 style.foreground = newCol;
             }
