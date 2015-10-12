@@ -41,79 +41,26 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
+ *
+ * History
+ *   25.08.2011 (hofer): created
  */
-package org.knime.base.node.mine.cluster.fuzzycmeans;
+package org.knime.base.node.preproc.colconvert.categorytonumber2;
 
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 
 /**
- * Create classes for fuzzy c-means Clustering NodeModel, NodeView and
- * NodeDialogPane.
+ * The {@link NodeFactory} of the Category2Number node.
  *
- * @author Michael Berthold, University of Konstanz
- * @author Nicolas Cebron, University of Konstanz
+ * @author Heiko Hofer
  */
-public class FuzzyClusterNodeFactory extends
-        NodeFactory<FuzzyClusterNodeModel> {
-
-    private boolean m_showPMMLInput;
+public class CategoryToNumberNodeFactory2 extends CategoryToNumberNodeFactory {
 
     /**
      *
      */
-    public FuzzyClusterNodeFactory() {
-        this(true);
+    public CategoryToNumberNodeFactory2() {
+        super(false);
     }
 
-    FuzzyClusterNodeFactory(final boolean showPMMLInput) {
-        m_showPMMLInput = showPMMLInput;
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public FuzzyClusterNodeModel createNodeModel() {
-        return new FuzzyClusterNodeModel(m_showPMMLInput);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public FuzzyClusterNodeView createNodeView(final int i,
-            final FuzzyClusterNodeModel nodeModel) {
-        if (i == 0) {
-            return new FuzzyClusterNodeView(nodeModel);
-        } else {
-            throw new IllegalArgumentException(
-                    "FuzzyClusterNode has only one view!!");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new FuzzyClusterNodeDialog();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
 }

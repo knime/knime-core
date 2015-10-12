@@ -44,76 +44,21 @@
  */
 package org.knime.base.node.mine.cluster.fuzzycmeans;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-
 /**
  * Create classes for fuzzy c-means Clustering NodeModel, NodeView and
  * NodeDialogPane.
  *
  * @author Michael Berthold, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
+ * @since 3.0
  */
-public class FuzzyClusterNodeFactory extends
-        NodeFactory<FuzzyClusterNodeModel> {
-
-    private boolean m_showPMMLInput;
+public class FuzzyClusterNodeFactory2 extends FuzzyClusterNodeFactory {
 
     /**
      *
      */
-    public FuzzyClusterNodeFactory() {
-        this(true);
+    public FuzzyClusterNodeFactory2() {
+        super(false);
     }
 
-    FuzzyClusterNodeFactory(final boolean showPMMLInput) {
-        m_showPMMLInput = showPMMLInput;
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public FuzzyClusterNodeModel createNodeModel() {
-        return new FuzzyClusterNodeModel(m_showPMMLInput);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public FuzzyClusterNodeView createNodeView(final int i,
-            final FuzzyClusterNodeModel nodeModel) {
-        if (i == 0) {
-            return new FuzzyClusterNodeView(nodeModel);
-        } else {
-            throw new IllegalArgumentException(
-                    "FuzzyClusterNode has only one view!!");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new FuzzyClusterNodeDialog();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
 }

@@ -86,12 +86,15 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 public class CategoryToNumberNodeModel extends NodeModel {
     private final CategoryToNumberNodeSettings m_settings;
     private final List<CategoryToNumberCellFactory> m_factories;
+    private final boolean m_pmmlInEnabled;
     private String[] m_included;
 
-    /** Create a new instance. */
-    CategoryToNumberNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
-            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL});
+    /** Create a new instance.
+     * @param pmmlInEnabled */
+    CategoryToNumberNodeModel(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
+        : new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+        m_pmmlInEnabled = pmmlInEnabled;
         m_settings = new CategoryToNumberNodeSettings();
         m_factories = new ArrayList<CategoryToNumberCellFactory>();
     }
@@ -125,7 +128,7 @@ public class CategoryToNumberNodeModel extends NodeModel {
 
         ColumnRearranger rearranger = createRearranger(inSpec);
 
-        PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
+        PMMLPortObjectSpec pmmlSpec = m_pmmlInEnabled ? (PMMLPortObjectSpec)inSpecs[1] : null;
         PMMLPortObjectSpecCreator pmmlSpecCreator
             = new PMMLPortObjectSpecCreator(pmmlSpec, inSpec);
         pmmlSpecCreator.addPreprocColNames(inputCols);
@@ -150,7 +153,7 @@ public class CategoryToNumberNodeModel extends NodeModel {
             exec.createColumnRearrangeTable(inData, rearranger, exec);
 
         // the optional PMML in port (can be null)
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inObjects[1];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inObjects[1] : null;
 
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
                 inPMMLPort, rearranger.createSpec());

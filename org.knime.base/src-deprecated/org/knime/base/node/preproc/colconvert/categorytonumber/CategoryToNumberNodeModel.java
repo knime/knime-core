@@ -85,7 +85,7 @@ public class CategoryToNumberNodeModel extends NodeModel {
     /** Create a new instance. */
     CategoryToNumberNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
-            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL});
+            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
         m_settings = new CategoryToNumberNodeSettings();
         m_factories = new ArrayList<CategoryToNumberCellFactory>();
     }

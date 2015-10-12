@@ -59,12 +59,25 @@ import org.knime.core.node.NodeView;
 public class CategoryToNumberNodeFactory extends
         NodeFactory<CategoryToNumberNodeModel> {
 
+    private boolean m_pmmlInEnabled;
+
+    public CategoryToNumberNodeFactory() {
+        this(true);
+    }
+
+    /**
+     * @param pmmlInEnabled
+     */
+    public CategoryToNumberNodeFactory(final boolean pmmlInEnabled) {
+        m_pmmlInEnabled = pmmlInEnabled;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public CategoryToNumberNodeModel createNodeModel() {
-        return new CategoryToNumberNodeModel();
+        return new CategoryToNumberNodeModel(m_pmmlInEnabled);
     }
 
     /**

@@ -270,12 +270,16 @@ public class FuzzyClusterNodeModel extends NodeModel {
 
     private int m_randomSeed;
 
+    private final boolean m_enablePMMLInput;
+
     /**
      * Constructor, remember parent and initialize status.
+     * @param enablePMMLInput whether to show pmml input.
      */
-    public FuzzyClusterNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
-            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+    FuzzyClusterNodeModel(final boolean enablePMMLInput) {
+        super(enablePMMLInput ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
+        : new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+        m_enablePMMLInput = enablePMMLInput;
 
         m_nrClusters = INITIAL_NR_CLUSTERS;
         m_maxNrIterations = INITIAL_MAX_ITERATIONS;
@@ -427,7 +431,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
 
 
      // handle the optional PMML input
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
+        PMMLPortObject inPMMLPort = m_enablePMMLInput ? (PMMLPortObject)inData[1] : null;
         PMMLPortObjectSpec inPMMLSpec = null;
         if (inPMMLPort != null) {
             inPMMLSpec = inPMMLPort.getSpec();
@@ -642,7 +646,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
                 "Winner Cluster", StringCell.TYPE).createSpec();
         DataTableSpec newspec = new DataTableSpec(newSpec);
         DataTableSpec returnspec = new DataTableSpec(inspec, newspec);
-        PMMLPortObjectSpec inPmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
+        PMMLPortObjectSpec inPmmlSpec = m_enablePMMLInput ? (PMMLPortObjectSpec)inSpecs[1] : null;
         return new PortObjectSpec[]{returnspec,
                 createPMMLPortObjectSpec(inPmmlSpec, inspec, learningCols)};
     }

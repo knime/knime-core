@@ -691,8 +691,13 @@
             id="org.knime.base.node.preproc.partition.PartitionNodeFactory"/>
       <node
             category-path="/analytics/mining/clustering"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"
             id="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"/>
+      <node
+            category-path="/analytics/mining/clustering"
+            factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory2"
+            id="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory2"/>
       <!--node deprecated
             factory-class="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"
             category-path="/manipulation/column/column-transform"
@@ -1567,8 +1572,14 @@
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
+            deprecated="true"
             factory-class="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory"
             id="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            factory-class="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory2"
+            id="org.knime.base.node.preproc.colconvert.categorytonumber2.CategoryToNumberNodeFactory2">
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"

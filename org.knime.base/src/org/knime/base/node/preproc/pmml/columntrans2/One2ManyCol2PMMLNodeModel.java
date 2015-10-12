@@ -119,7 +119,7 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
     public One2ManyCol2PMMLNodeModel(final boolean pmmlOutEnabled, final boolean pmmlInEnabled) {
         super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
                         : new PortType[]{BufferedDataTable.TYPE},
-                pmmlOutEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
+                pmmlOutEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE}
                         : new PortType[]{BufferedDataTable.TYPE});
         m_pmmlOutEnabled = pmmlOutEnabled;
         m_pmmlInEnabled = pmmlInEnabled;

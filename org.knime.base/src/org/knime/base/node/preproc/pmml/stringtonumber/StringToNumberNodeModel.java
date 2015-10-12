@@ -168,7 +168,7 @@ public class StringToNumberNodeModel extends NodeModel {
     public StringToNumberNodeModel(final boolean pmmlInEnabled) {
         super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
                                                 : new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL});
+                new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
         m_pmmlInEnabled = pmmlInEnabled;
     }
 
