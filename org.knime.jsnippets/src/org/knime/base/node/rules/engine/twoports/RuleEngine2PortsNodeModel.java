@@ -96,7 +96,7 @@ public class RuleEngine2PortsNodeModel extends NodeModel implements FlowVariable
      */
     protected RuleEngine2PortsNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE},
-            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL});
+            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
     /**
