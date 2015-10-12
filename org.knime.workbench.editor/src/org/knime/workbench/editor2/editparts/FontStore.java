@@ -335,7 +335,7 @@ public class FontStore {
      */
     public Font getSystemDefFontNodeAnnotations() {
         FontData sysFont = getSystemDefaultFont().getFontData()[0];
-        return getFont(sysFont.getName(), getFontSizeFromKNIMEPrefPage(), SWT.BOLD);
+        return getFont(sysFont.getName(), getFontSizeFromKNIMEPrefPage(), SWT.NONE);
     }
 
     /**
