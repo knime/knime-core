@@ -202,7 +202,7 @@ public interface ByteVectorValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Byte vectors";
+            return "Byte vector";
         }
     }
 }

@@ -105,7 +105,7 @@ public interface BooleanValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Boolean values";
+            return "Boolean value";
         }
 
         /**

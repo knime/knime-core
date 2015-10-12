@@ -97,7 +97,7 @@ public interface PortObjectValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Port objects";
+            return "Port object";
         }
     }
 }

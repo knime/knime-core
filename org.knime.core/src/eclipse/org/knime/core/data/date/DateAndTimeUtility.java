@@ -97,7 +97,7 @@ public class DateAndTimeUtility extends ExtensibleUtilityFactory {
      */
     @Override
     public String getName() {
-        return "Dates and Times";
+        return "Date and Time";
     }
 
     /**

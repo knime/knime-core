@@ -98,7 +98,7 @@ public interface CollectionDataValue extends DataValue, CellCollection {
          */
         @Override
         public String getName() {
-            return "Collections";
+            return "Collection";
         }
     }
 }

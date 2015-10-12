@@ -99,7 +99,7 @@ public interface URIDataValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "URIs";
+            return "URI";
         }
     }
 }

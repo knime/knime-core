@@ -122,7 +122,7 @@ public interface FuzzyIntervalValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Fuzzy intervals";
+            return "Fuzzy interval";
         }
     }
 }

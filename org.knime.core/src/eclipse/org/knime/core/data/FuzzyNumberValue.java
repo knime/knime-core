@@ -110,7 +110,7 @@ public interface FuzzyNumberValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Fuzzy numbers";
+            return "Fuzzy number";
         }
 
     }

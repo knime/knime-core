@@ -147,7 +147,7 @@ public interface IntervalValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Intervals";
+            return "Interval";
         }
 
     }

@@ -86,7 +86,7 @@ public interface ImageValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Generic Images";
+            return "Generic Image";
         }
     }
 

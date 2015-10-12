@@ -105,7 +105,7 @@ public interface ComplexNumberValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Complex numbers";
+            return "Complex number";
         }
     }
 }

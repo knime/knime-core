@@ -103,7 +103,7 @@ public interface StringValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Strings";
+            return "String";
         }
 
         /**
