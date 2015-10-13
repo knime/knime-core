@@ -130,10 +130,6 @@ public class Panel2CompositeWrapper extends Composite {
 
             @Override
             public void focusGained(final java.awt.event.FocusEvent e) {
-                // Ensure the dialog panel and the AWT frame have the same sizes set
-                awtFrame.setPreferredSize(panel.getPreferredSize());
-                awtFrame.setSize(panel.getSize());
-
                 final Dimension panelSize = panel.getSize();
                 if (!isDisposed()) {
                     getDisplay().asyncExec(new Runnable() {
