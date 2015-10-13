@@ -151,7 +151,7 @@ public class AbstractColumnTableSorterTest {
             @Override
             public boolean lowMemoryActionRequired() {
                 MemoryAlertSystem.getInstance();
-                return MemoryAlertSystem.getUsage() > 0.02;
+                return MemoryAlertSystem.getUsedMemory() > (150 << 20); // more than 150 MB used
             }
         };
 
