@@ -95,7 +95,8 @@ public class MemoryAlertSystemTest {
      */
     @Test(timeout = 15000)
     public void testSleepWhileLow() throws Exception {
-        int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
+        int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
+            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
         // we should return immediately because enough memory is available
         boolean memoryAvailable = m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 1000);
@@ -142,7 +143,8 @@ public class MemoryAlertSystemTest {
      */
     @Test
     public void testListener() throws Exception {
-        int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
+        int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
+            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
         final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
@@ -180,7 +182,8 @@ public class MemoryAlertSystemTest {
      */
     @Test
     public void testAutoRemoveListener() throws Exception {
-        int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
+        int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
+            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
         final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
