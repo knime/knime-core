@@ -48,6 +48,7 @@
 package org.knime.base.node.mine.svm.predictor2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.knime.base.node.mine.svm.Svm;
 import org.knime.base.node.mine.svm.util.DoubleVector;
@@ -59,6 +60,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
@@ -111,6 +113,11 @@ public final class SVMPredictor implements CellFactory {
         ArrayList<Double> values = new ArrayList<Double>();
         for (int i = 0; i < m_colindices.length; i++) {
             if (row.getCell(m_colindices[i]).isMissing()) {
+                if (m_appendProbabilities) {
+                    DataCell[] ret = new DataCell[1 + m_svms.length];
+                    Arrays.fill(ret, new MissingCell("Missing value in input data."));
+                    return ret;
+                }
                 return new DataCell[]{DataType.getMissingCell()};
             }
             DoubleValue dv = (DoubleValue) row.getCell(m_colindices[i]);
