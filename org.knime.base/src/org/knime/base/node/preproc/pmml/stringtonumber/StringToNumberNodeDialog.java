@@ -47,10 +47,9 @@
  */
 package org.knime.base.node.preproc.pmml.stringtonumber;
 
-import java.awt.Dimension;
+import java.awt.FlowLayout;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -84,9 +83,9 @@ public class StringToNumberNodeDialog extends NodeDialogPane {
                     StringToNumberNodeModel.CFG_INCLUDED_COLUMNS), 0, true,
                     new Class[]{StringValue.class});
 
-    private final JTextField m_decimalSeparator = new JTextField(".", 1);
+    private final JTextField m_decimalSeparator = new JTextField(".", 3);
 
-    private final JTextField m_thousandsSeparator = new JTextField(",", 1);
+    private final JTextField m_thousandsSeparator = new JTextField(",", 3);
 
     private final JComboBox m_typeChooser =
             new JComboBox(StringToNumberNodeModel.POSSIBLETYPES);
@@ -102,24 +101,19 @@ public class StringToNumberNodeDialog extends NodeDialogPane {
         JPanel separatorPanel = new JPanel();
         Border border = BorderFactory.createTitledBorder("Parsing options");
         separatorPanel.setBorder(border);
-        separatorPanel
-                .setLayout(new BoxLayout(separatorPanel, BoxLayout.X_AXIS));
+        separatorPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 5));
 
         m_typeChooser.setRenderer(new DataTypeListCellRenderer());
-        m_typeChooser.setMaximumSize(new Dimension(100, 20));
         separatorPanel.add(new JLabel("Type: "));
         separatorPanel.add(m_typeChooser);
-        separatorPanel.add(Box.createHorizontalStrut(10));
 
         separatorPanel.add(new JLabel("Decimal separator: "));
-        m_decimalSeparator.setMaximumSize(new Dimension(40, 20));
         separatorPanel.add(m_decimalSeparator);
-        separatorPanel.add(Box.createHorizontalStrut(10));
 
         separatorPanel.add(new JLabel("Thousands separator: "));
-        m_thousandsSeparator.setMaximumSize(new Dimension(40, 20));
         separatorPanel.add(m_thousandsSeparator);
         contentpanel.add(separatorPanel);
+
         contentpanel.add(m_filtercomp.getComponentPanel());
         super.addTab("Settings", contentpanel);
     }
