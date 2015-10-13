@@ -85,6 +85,7 @@ public class MemoryAlertSystemTest {
         NodeLogger.getLogger(getClass()).debug(
             "Memory usage: " + MemoryAlertSystem.getUsedMemory() + "/" + MemoryAlertSystem.getMaximumMemory() + " => "
                 + MemoryAlertSystem.getUsage());
+        forceGC();
     }
 
     /**
@@ -212,14 +213,24 @@ public class MemoryAlertSystemTest {
     }
 
     private static void forceGC() throws InterruptedException {
-        Object obj = new Object();
-        SoftReference<Object> ref = new SoftReference<>(obj);
-        obj = null;
+        Object obj1 = new Object();
+        SoftReference<Object> ref1 = new SoftReference<>(obj1);
+        Object obj2 = new Object();
+        SoftReference<Object> ref2 = new SoftReference<>(obj2);
+        obj1 = null;
         int max = 10;
-        while ((ref.get() != null) && (max-- > 0)) {
+        while ((ref1.get() != null) && (max-- > 0)) {
             System.gc();
             Thread.sleep(50);
         }
+
+        obj2 = null;
+        max = 10;
+        while ((ref2.get() != null) && (max-- > 0)) {
+            System.gc();
+            Thread.sleep(50);
+        }
+
         NodeLogger.getLogger(MemoryAlertSystemTest.class).debug(
             "Called System.gc, memory usage is now " + MemoryAlertSystem.getUsage());
     }
