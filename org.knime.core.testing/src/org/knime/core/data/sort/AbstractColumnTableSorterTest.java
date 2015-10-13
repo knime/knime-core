@@ -144,7 +144,7 @@ public class AbstractColumnTableSorterTest {
         BufferedDataTable bt = createRandomTable(50, 5000);
 
         ColumnBufferedDataTableSorter dataTableSorter =
-            new ColumnBufferedDataTableSorter(bt.getDataTableSpec(), bt.getRowCount(), bt.getDataTableSpec()
+            new ColumnBufferedDataTableSorter(bt.getDataTableSpec(), bt.size(), bt.getDataTableSpec()
                 .getColumnNames());
 
         MemoryActionIndicator memIndicator = new MemoryActionIndicator() {
