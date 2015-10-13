@@ -81,8 +81,37 @@ import org.knime.core.util.FileUtil;
  */
 public final class JavaCodeCompiler {
 
+    /**
+     * Java compiler version to use.
+     * @since 3.0
+     */
+    public enum JavaVersion {
+        /**Java 7.*/
+        JAVA_7,
+        /**Java 8.*/
+        JAVA_8,
+        /**The default version to use.*/
+        DEFAULT;
+    }
+
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(JavaCodeCompiler.class);
+    private final JavaVersion m_javaVersion;
+
+    /**
+     *
+     */
+    public JavaCodeCompiler() {
+        this(JavaVersion.JAVA_8);
+    }
+
+    /**
+     * @param javaVersion
+     * @since 3.0
+     */
+    public JavaCodeCompiler(final JavaVersion javaVersion) {
+        m_javaVersion = javaVersion;
+    }
 
     private File[] m_classpaths;
     private String[] m_additionalCompileArgs;
@@ -159,10 +188,11 @@ public final class JavaCodeCompiler {
             compileArgs.add(b.toString());
         }
 
+        final String javaVersion = getJavaVersion();
         compileArgs.add("-source");
-        compileArgs.add("1.8");
+        compileArgs.add(javaVersion);
         compileArgs.add("-target");
-        compileArgs.add("1.8");
+        compileArgs.add(javaVersion);
 
         compileArgs.add("-nowarn");
         if (m_additionalCompileArgs != null) {
@@ -280,6 +310,25 @@ public final class JavaCodeCompiler {
             }
             throw new CompilationFailedException(b.toString());
         }
+    }
+
+    /**
+     * @return the appropriate java version compiler argument
+     */
+    private String getJavaVersion() {
+        final String javaVersion;
+        switch (m_javaVersion) {
+            case JAVA_7:
+                javaVersion = "1.7";
+                break;
+            case JAVA_8:
+            case DEFAULT:
+                javaVersion = "1.8";
+                break;
+            default:
+                throw new IllegalStateException("Incompatible java version selected");
+        }
+        return javaVersion;
     }
 
     /**
