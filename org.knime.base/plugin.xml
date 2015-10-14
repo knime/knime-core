@@ -365,7 +365,7 @@
             level-id="applications"
             locked="true"
             name="Other Data Types"
-            after="chemistry"
+            after="database"
             path="/">
       </category>            
       <category
@@ -381,7 +381,7 @@
             level-id="scripting"
             locked="true"
             name="Scripting"
-            after="struct-data"
+            after="database"
             path="/">
       </category>            
       <category
