@@ -95,7 +95,7 @@ public class PatternAggregator extends AggregationMethodDecorator {
     /**
      * @param pattern the search pattern
      * @param isRegex <code>true</code> if the pattern is a regular expression
-     * @param method {@link AgreementMethod}
+     * @param method the aggregation method
      * @param inclMissing <code>true</code> if missing values should be considered
      */
     public PatternAggregator(final String pattern, final boolean isRegex, final AggregationMethod method,

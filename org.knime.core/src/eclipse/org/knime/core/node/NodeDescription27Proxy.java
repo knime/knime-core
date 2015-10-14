@@ -66,7 +66,7 @@ import org.w3c.dom.Element;
 
 /**
  * Implementation of {@link NodeDescription} for node descriptions between 2.0 and 2.7. It uses XMLBeans to extract the
- * information from the XML file.<br />
+ * information from the XML file.<br>
  * If assertions are enabled (see {@link KNIMEConstants#ASSERTIONS_ENABLED} it also checks the contents of the XML for
  * against the XML schema and reports errors via the logger.
  *

@@ -64,7 +64,7 @@ import org.knime.core.node.NodeLogger;
  * before the drop can be finished (i.e. the workflow can be imported). Allows
  * for a delayed copy of the files. The drop target initiates the copy before
  * accessing the file content (actually it can decide whether the file needs to
- * be downloaded/copied, or how the drop can be finished otherwise).<br />
+ * be downloaded/copied, or how the drop can be finished otherwise).<br>
  * The data set in the event is an array of URIs, denoting the remote files to
  * transfer. The locations of the downloaded/copied files are specified by the
  * corresponding callback/copy method.

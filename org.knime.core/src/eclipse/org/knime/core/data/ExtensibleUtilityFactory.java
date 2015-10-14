@@ -393,7 +393,7 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
     /**
      * Returns the name of a group the data value belongs to. This group name is used e.g. in the preferences in order
      * to group data types. You can define you own group but returning a new, yet unused group name. But beware of
-     * spelling errors if you want to join an existing group.<br />
+     * spelling errors if you want to join an existing group.<br>
      * The default group if this method is not overridden is <em>Other</em>.
      *
      * @return a group name

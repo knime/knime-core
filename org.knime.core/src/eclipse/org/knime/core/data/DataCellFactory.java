@@ -59,7 +59,7 @@ import org.knime.core.node.ExecutionContext;
  * Interface for a factory that can create data cells from certain input formats. The factory is free to create any
  * compatible cell, e.g. normal or blob cell. Such factories are mainly used by reader node in order to create arbitrary
  * cells based on the user-supplied node configuration. A new factory is created every time a node requests one via the
- * {@link DataType#getCellFactory(ExecutionContext)}.<br />
+ * {@link DataType#getCellFactory(ExecutionContext)}.<br>
  * <b>Note that you should not implement the {@link DataCellFactory} interface directly. Instead implement any of the
  * sub-interfaces that read from a specific input source.</b>
  *
@@ -68,14 +68,15 @@ import org.knime.core.node.ExecutionContext;
  */
 public interface DataCellFactory {
     /**
-     * Factory that creates cells from strings.<br /> <b>This interface is not meant for direct implementation. Implement
-     * {@link FromSimpleString} or {@link FromComplexString} instead.</b>
+     * Factory that creates cells from strings.<br>
+     * <b>This interface is not meant for direct implementation. Implement {@link FromSimpleString} or
+     * {@link FromComplexString} instead.</b>
      *
      * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
      */
     public interface FromString extends DataCellFactory {
         /**
-         * Creates a new data cell from a string.
+         * Creates a new data cell from a string.ata
          *
          * @param input a string, never <code>null</code>
          * @return a new data cell

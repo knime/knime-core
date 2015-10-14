@@ -53,7 +53,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
@@ -207,8 +206,8 @@ public class BufferedDataContainer extends DataContainer {
     }
 
     /**
-     * Just delegates to {@link DataContainer#readFromZipDelayed(ReferencedFile,
-     * DataTableSpec, int, Map, WorkflowFileStoreHandlerRepository)}
+     * Just delegates to
+     * {@link DataContainer#readFromZipDelayed(ReferencedFile, DataTableSpec, int, Map, FileStoreHandlerRepository)}
      * This method is available in this class to enable other classes in this
      * package to use it.
      * @param zipFileRef Delegated.
@@ -216,8 +215,7 @@ public class BufferedDataContainer extends DataContainer {
      * @param bufID Delegated.
      * @param bufferRep Delegated.
      * @param fileStoreHandlerRepository Delegated.
-     * @return {@link DataContainer#readFromZipDelayed(ReferencedFile,
-     * DataTableSpec, int, Map, WorkflowFileStoreHandlerRepository)}
+     * @return {@link DataContainer#readFromZipDelayed(ReferencedFile, DataTableSpec, int, Map, FileStoreHandlerRepository)}
      * @noreference This method is not intended to be referenced by clients.
      */
     protected static ContainerTable readFromZipDelayed(

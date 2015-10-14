@@ -58,7 +58,7 @@ import javax.swing.event.ChangeListener;
 /**
  * An "accordion" (in reality just a {@link JTabbedPane} currently) with custom components. The selection means, the
  * active tab is used.
- * <br/>
+ * <br>
  * Not intended to be serialized!
  *
  * @author Gabor Bakos

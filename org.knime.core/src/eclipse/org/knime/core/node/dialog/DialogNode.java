@@ -67,7 +67,7 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
 
     /** Pattern used for {@link #getParameterName() parameter name} validation. Must only consist of word characters or
      * dashes - no spaces no special characters. Name must start with a letter, then it may contain any word character
-     * (including '-' and '_') and ends with a word character (no '-' or '_'), for instance:<br />
+     * (including '-' and '_') and ends with a word character (no '-' or '_'), for instance:<br>
      * <pre>
      * "abc"       - OK
      * "foo-bar-0" - OK

@@ -111,7 +111,7 @@ public final class FuzzyNumberCell extends DataCell implements
      * @param core Core value.
      * @param maxSupp Maximum support value.
      * @throws IllegalArgumentException If not
-     *             <code>minSupp <= core <= maxSupp</code>.
+     *             <code>minSupp &lt;= core &lt;= maxSupp</code>.
      */
     public FuzzyNumberCell(final double minSupp, final double core,
             final double maxSupp) {
@@ -275,7 +275,7 @@ public final class FuzzyNumberCell extends DataCell implements
          * @param core core value
          * @param maxSupp maximum support value
          * @return a new data cell
-         * @throws IllegalArgumentException if not <code>minSupp <= core <= maxSupp</code>
+         * @throws IllegalArgumentException if not <code>minSupp &lt;= core &lt;= maxSupp</code>
          */
         public static DataCell create(final double minSupp, final double core, final double maxSupp) {
             return new FuzzyNumberCell(minSupp, core, maxSupp);

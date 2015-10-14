@@ -56,9 +56,8 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * Utility class to invoke static methods on classes to retrieve a serializer
- * factory. This class is outsourced as it is used in different places,
- * for instance {@link org.knime.core.data.DataType} and
- * {@link org.knime.core.node.NodePersistorVersion200}
+ * factory.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  * @deprecated don't use this class any more it will be removed in the next major release. Use extension points instead.
  */

@@ -61,7 +61,7 @@ import javax.xml.stream.XMLStreamException;
 public class XMLCellReaderFactory {
 	/**
 	 * Creates a {@link XMLCellReader} to read a single cell from given
-	 * @link{InputStream}
+	 * {@link InputStream}
 	 *
 	 * @param is the xml document
 	 * @return {@link XMLCellReader} to read a single cell from given
@@ -79,8 +79,8 @@ public class XMLCellReaderFactory {
      * {@link Reader}
      *
      * @param reader a reader for the xml document
-     * @return @link{XMLCellReader} to read a single cell from given
-     * @link{InputStream}
+     * @return {@link XMLCellReader} to read a single cell from given
+     * {@link InputStream}
      * @throws ParserConfigurationException when the factory object for
      * DOMs could not be created.
      * @since 2.8

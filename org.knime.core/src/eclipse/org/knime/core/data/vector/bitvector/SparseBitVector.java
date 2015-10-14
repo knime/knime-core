@@ -51,14 +51,14 @@ import java.util.Arrays;
 
 /**
  * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
- * a fixed length. <br />
+ * a fixed length. <br>
  * Implementation assumes that the vector is only sparsely populated with '1's.
  * It stores the indices of the ones. For densely populated vectors
- * {@link DenseBitVector} is more suitable.<br />
+ * {@link DenseBitVector} is more suitable.<br>
  * The length of the vector is restricted to {@link Long#MAX_VALUE} (i.e.
  * 9223372036854775807). The number of ones that can be stored is limited to
  * {@link Integer#MAX_VALUE} (which is 2147483647), in which case it uses about
- * 16Gbyte of memory.<br />
+ * 16Gbyte of memory.<br>
  * The implementation is not thread-safe.
  *
  * @author ohl, University of Konstanz
@@ -1006,7 +1006,7 @@ public class SparseBitVector implements BitVector {
     /**
      * Computes the cardinality of the intersection with the given bitVector.
      *
-     * @see {@link BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)}
+     * @see BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)
      * @param bitVector the other operand for the AND operator
      * @return the cardinality of the intersection
      */
@@ -1034,7 +1034,7 @@ public class SparseBitVector implements BitVector {
     /**
      * Computes the cardinality of the complement relative to the given bitVector.
      *
-     * @see {@link BitVectorUtil#cardinalityOfRelativeComplement(BitVectorValue, BitVectorValue)}
+     * @see BitVectorUtil#cardinalityOfRelativeComplement(BitVectorValue, BitVectorValue)
      * @param bitVector the other operand
      * @return the cardinality of the intersection
      */

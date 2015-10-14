@@ -98,10 +98,10 @@ import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
  * Table view on a {@link org.knime.core.data.DataTable}. This
  * implementation uses a caching strategy as described in the
  * {@link org.knime.core.node.tableview.TableContentModel}.
- * <br />
+ * <br>
  * Standard renderers are used to display the different types of
  * {@link org.knime.core.data.DataCell}s. This will change in future.
- * <br />
+ * <br>
  * This view typically resides in a
  * {@link org.knime.core.node.tableview.TableView} (wrapping it in a
  * scroll pane and providing lots of delegating methods). If you want to use a
@@ -858,7 +858,7 @@ public class TableContentView extends JTable {
      * {@link DataValueRendererFamily} (which it is unless a subclass
      * overrides <code>addColumn</code>). In this renderer family the renderer
      * matching the description <code>rendererID</code> is set active.
-     * <br />
+     * <br>
      * If the description is not valid (<code>null</code> or unknown), this
      * method does nothing.
      *
@@ -949,7 +949,7 @@ public class TableContentView extends JTable {
 
     /** Creates a new map containing DataType&lt;-&gt;available renderer
      * identifiers. The size of this map is equal to the number of different
-     * <@link {@link DataColumnSpec#getType() column types}, i.e. if the table
+     * {@link DataColumnSpec#getType() column types}, i.e. if the table
      * only contains, e.g. double values (represented by
      * {@link org.knime.core.data.def.DoubleCell}), this map will have only one
      * entry. The values in this map correspond to the renderer descriptions

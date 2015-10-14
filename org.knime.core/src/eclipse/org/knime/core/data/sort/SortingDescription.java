@@ -98,9 +98,8 @@ public abstract class SortingDescription implements Comparator<DataRow> {
         private final int m_count;
 
         /**
-         * @param indexMap index map
          * @param delegate the underlying row
-         * @param keepRowKey
+         * @param indexMap index map
          */
         MappedDataRow(final DataRow delegate, final int... indexMap) {
             m_indexMap = indexMap;

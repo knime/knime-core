@@ -370,7 +370,7 @@ public class BatchExecutor {
         /** The master key. */
         public String masterKey;
 
-        /** A map with credentials (name => credentials) . */
+        /** A map with credentials (name =&gt; credentials) . */
         public final Map<String, Credentials> credentials = new HashMap<String, Credentials>();
 
         /** The input workflow, either a directory or zip file. */

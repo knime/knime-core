@@ -85,7 +85,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @see PortObject
  * @see PortType
  * @since 2.0
- * @author M. Berthold & B. Wiswedel, University of Konstanz
+ * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
  */
 public interface PortObjectSpec {
 

@@ -126,8 +126,8 @@ public final class BooleanCell extends DataCell implements BooleanValue,
      *
      * @param b The boolean value to store.
      */
-    BooleanCell(final boolean i) {
-        m_boolean = i;
+    BooleanCell(final boolean b) {
+        m_boolean = b;
     }
 
     /** {@inheritDoc} */

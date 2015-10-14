@@ -101,7 +101,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  * Panel containing a table view on a generic {@link DataTable}. The
  * table is located in a scroll pane and row and column headers are visible and
  * fixed.
- * <br />
+ * <br>
  * For the caching strategy used in the table refer to
  * {@link TableContentModel}.
  *

@@ -107,7 +107,7 @@ import org.w3c.dom.Element;
  * Implementation of {@link SingleNodeContainer} for a natively implemented KNIME Node relying
  * on a {@link NodeModel}.
  *
- * @author B. Wiswedel & M.Berthold
+ * @author B. Wiswedel &amp; M.Berthold
  * @since 2.9
  */
 public class NativeNodeContainer extends SingleNodeContainer {

@@ -77,7 +77,7 @@ import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
  * <code>toString()</code> method. Thus, this table has exactly one column.
  * The model for this kind of view is a
  * {@link org.knime.core.node.tableview.TableRowHeaderModel}.
- * <br />
+ * <br>
  * This class is used in conjunction with a {@link TableContentView} as
  * the row header view in a scroll pane (realized by {@link TableView}).
  *

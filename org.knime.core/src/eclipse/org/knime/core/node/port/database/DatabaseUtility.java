@@ -189,7 +189,7 @@ public class DatabaseUtility {
 
     /**
      * Constructor that uses all default aggregation methods.
-     * @see #DatabaseUtility(String, StatementManipulator, DBAggregationFunction...)
+     * @see #DatabaseUtility(String, StatementManipulator, DBAggregationFunctionFactory...)
      */
     @Deprecated
     public DatabaseUtility() {

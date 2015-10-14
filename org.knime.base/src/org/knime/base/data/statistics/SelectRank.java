@@ -81,11 +81,11 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
 /**
- * Class to find the median/kth element of a table. Based on {@link TableSorter}.
+ * Class to find the median/kth element of a table.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @author Gabor Bakos
- * @see TableSorter
+ *
  * @since 2.8
  * @param <C> The {@link DataContainer} type.
  * @param <T> The result and input table type.

@@ -146,7 +146,7 @@ public final class KNIMEConstants {
     public static final String PROPERTY_CELLS_IN_MEMORY = "org.knime.container.cellsinmemory";
 
     /** Java property name to specify the minimum free disc space in MB that needs to be available. If less is
-     * available, no further table files & blobs will be created (resulting in an exception). Default is
+     * available, no further table files &amp; blobs will be created (resulting in an exception). Default is
      * {@value org.knime.core.data.container.DataContainer#DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB} MB.
      * @since 2.8
      */
@@ -184,7 +184,7 @@ public final class KNIMEConstants {
      * asynchronously. By default, the node repository loads completely before
      * the GUI is shown. If this flag is set, it will load the entire repository
      * in the background while the GUI is already there is usable.
-     * <br />
+     * <br>
      * This flag only affects the KNIME client.
      * @since v2.4 */
     public static final String PROPERTY_ENABLE_FAST_LOADING =
@@ -197,7 +197,7 @@ public final class KNIMEConstants {
      * org.knime.workbench.editor (though hidden unless this property is
      * specified).
      *
-     * <br />
+     * <br>
      * This flag only affects the KNIME client.
      * @since v2.5 */
     public static final String PROPERTY_SHOW_METANODE_LOCK_ACTION =

@@ -61,10 +61,10 @@ import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataValue;
 
 /**
- * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has a fixed length. <br />
+ * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has a fixed length. <br>
  * Implementation stores the bits in a collection of longs (64 bit words). Thus it can be used for well populated
  * vectors. Its length is restricted to ({@link Integer#MAX_VALUE} - 1) * 64 (i.e. 137438953344, in which case it uses
- * around 16GigaByte of memory).<br />
+ * around 16GigaByte of memory).
  *
  * @author ohl, University of Konstanz
  */

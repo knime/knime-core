@@ -149,9 +149,9 @@ public final class ConvenienceMethods {
     }
 
     /** Get string summary from argument collection for printing in warning messages.
-     * Here are some examples with maxToPrint = 3: <br/>
-     * [foo, bar, foobar, barfoo, barfuss] -> "foo", "bar", "foobar", ... &lt;1 more>
-     * [foo, bar] -> "foo", "bar"
+     * Here are some examples with maxToPrint = 3: <br>
+     * [foo, bar, foobar, barfoo, barfuss] -&gt; "foo", "bar", "foobar", ... &lt;1 more&gt;
+     * [foo, bar] -&gt; "foo", "bar"
      *
      * @param objs The non null array to summarize
      * @param maxToPrint length to print, rest will be cut.

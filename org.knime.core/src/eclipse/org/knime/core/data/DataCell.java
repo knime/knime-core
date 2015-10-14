@@ -83,13 +83,14 @@ import org.knime.core.data.container.BlobWrapperDataCell;
  * <code>org.knime.core.DataType</code>.
  * </p>
  *
+ * <a name="preferredvalueclass"></a>
  * <p>
- * <a name="preferredvalueclass"/>
  * Since <code>DataCell</code>s may implement several {@link DataValue}
  * interfaces but only one is the <i>preferred</i> value class, the order of the implemented interfaces is important.
  * The first implemented {@link DataValue} interface is taken as the preferred value class. The {@link DataType}
  * associated with this cell implementation will then provide the renderer, icon, and comparator of this preferred
  * value.
+ * </p>
  *
  * <p>
  * For further details on data types, see also the <a
@@ -228,7 +229,7 @@ public abstract class DataCell implements DataValue, Serializable {
      * SdfCell and SdfAdapterCell or MolCell and MolBlobCell). All such cell classes should override this method
      * with the same implementation, usually by comparing both preferred values. You can assume the this cell and the
      * other cell have the same preferred value class, i.e. you can cast the argument to the preferred value.
-     * <br />
+     * <br>
      * The default implementation returns <code>false</code>.
      *
      * @param otherValue the other data value

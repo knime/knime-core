@@ -59,7 +59,6 @@ import java.util.Map;
 
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
-import org.knime.base.node.mine.regression.linear2.learner.LinearRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
@@ -87,9 +86,7 @@ import org.knime.core.util.Pair;
 import Jama.Matrix;
 
 /**
- * Base class for the learned statistics of the (linear or polynomial) regression models. <br/>
- * Created from {@link LinearRegressionContent} and
- * {@link org.knime.base.node.mine.regression.polynomial.learner2.PolyRegContent}.
+ * Base class for the learned statistics of the (linear or polynomial) regression models. <br>
  *
  * @author Gabor Bakos
  * @since 2.10

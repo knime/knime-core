@@ -225,7 +225,7 @@ public class TableRowHeaderModel extends AbstractTableModel {
     /**
      * Set the table content to which this class will listen and whose
      * content is content of this class.
-     * <br />
+     * <br>
      * Note: If the passed argument is not an instance of
      * {@link TableContentInterface}, this model will be a very dumb model:
      * It will not show any row keys and also no hilighting nor color

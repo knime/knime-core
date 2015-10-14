@@ -1310,7 +1310,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * New bounds describe the boundaries of figure with x/y at the top left
      * corner. Since 2.3.0 the UI info stores the boundaries with x/y relative
      * to the icon symbol. Width and height in the UI info is in both cases the
-     * width and height of the figure. <br />
+     * width and height of the figure. <br>
      * This method returns x/y offsets - basically the current distance of the
      * top left corner to the top left corner of the symbol (with the current
      * font size etc.).

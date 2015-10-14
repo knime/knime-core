@@ -49,7 +49,6 @@
 package org.knime.core.data.def;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -292,7 +291,7 @@ public final class IntervalCell extends DataCell implements IntervalValue, Fuzzy
          *
          * @param s an interval
          * @return a new data cell
-         * @throws ParseException if the string is not a valid interval
+         * @throws IllegalArgumentException if the string is not a valid interval
          */
         public static DataCell create(final String s) {
             Matcher m = PATTERN.matcher(s);

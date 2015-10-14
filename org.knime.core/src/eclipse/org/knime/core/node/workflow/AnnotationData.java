@@ -215,7 +215,7 @@ public class AnnotationData implements Cloneable {
         m_borderColor = color;
     }
 
-    /** Shift annotation after copy&paste.
+    /** Shift annotation after copy&amp;paste.
      * @param xOff x offset
      * @param yOff y offset
      */

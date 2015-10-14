@@ -56,7 +56,7 @@ import org.knime.core.data.ExtensibleUtilityFactory;
 /**
  * Implementations are vectors of fixed length storing byte counts at specific
  * positions. Only positive values of counts are supported. Each index can store
- * a number between 0 and 255 (both inclusive).<br />
+ * a number between 0 and 255 (both inclusive).
  *
  * @author ohl, University of Konstanz
  */

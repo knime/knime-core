@@ -55,10 +55,10 @@ import java.util.Arrays;
  * between 0 and 255 (both inclusive). Attempts to store negative numbers or
  * numbers larger than 255 cause an exception. This implementation stores only
  * the counts not equal to zero, thus it is suitable for large and sparsely
- * populated vectors. <br />
+ * populated vectors. <br>
  * The maximum length is {@link Long#MAX_VALUE}(i.e. 9223372036854775807). The
  * maximum number of counts larger than zero that can be stored is
- * {@link Integer#MAX_VALUE} (i.e. 2147483647).<br />
+ * {@link Integer#MAX_VALUE} (i.e. 2147483647).<br>
  * The implementation is not thread-safe.
  *
  * @author ohl, University of Konstanz
@@ -119,7 +119,7 @@ public class SparseByteVector {
      * (<code>countIndices</code>)
      * are considered indices of the positions a number is stored at. The second
      * array (<code>counts</code>) contains the corresponding number to
-     * store. Both arrays must have the same length.<br />
+     * store. Both arrays must have the same length.<br>
      * The <code>countIndices</code> array must be sorted! The lowest index
      * must be stored at array index zero. The arrays must be build like the one
      * returned by the {@link #getAllCountIndices()} and {@link #getAllCounts()}
@@ -859,7 +859,7 @@ public class SparseByteVector {
      * are of same length. The count at index i in the result array is located
      * in the vector at the index stored in the other array at the same index i.
      * Note, even though Java stores signed numbers in <code>byte</code>, the
-     * returned number are values in the range of 0... 255.<br />
+     * returned number are values in the range of 0... 255.<br>
      * The length of the returned array is the cardinality of the vector.
      *
      * @return a copy of the internal representation of the bits in this vector.

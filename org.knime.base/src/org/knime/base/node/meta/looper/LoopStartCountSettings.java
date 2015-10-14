@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.meta.looper;
 
@@ -50,20 +50,20 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Settings for the looper node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class LoopStartCountSettings {
     private int m_loops = 10;
-    
+
     /**
      * Sets the number of times the inner workflow should be executed.
-     * @param loops the number loops, which must be > 0
+     * @param loops the number loops, which must be &gt; 0
      */
     public void loops(final int loops) {
         m_loops = loops;
     }
-    
+
     /**
      * Returns the number of loops.
      * @return the number of loops.
@@ -71,21 +71,21 @@ public class LoopStartCountSettings {
     public int loops() {
         return m_loops;
     }
-    
-    
+
+
     /**
      * Loads the settings from the node settings object.
-     * 
+     *
      * @param settings a node settings object
      */
     public void loadSettingsFrom(final NodeSettingsRO settings) {
         m_loops = settings.getInt("loops", 10);
     }
 
-    
+
     /**
      * Writes the settings into the node settings object.
-     * 
+     *
      * @param settings a node settings object
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {

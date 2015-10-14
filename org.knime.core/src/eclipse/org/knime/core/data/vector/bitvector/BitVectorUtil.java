@@ -64,10 +64,10 @@ public final class BitVectorUtil {
     /**
      * Creates a sparse bit vector cell, in case that one or both given values are sparse bit vector cells (otherwise a
      * dense bit vector cell). The returned cell contains the result of the AND operation on the passed operands. The
-     * length of the result vector is the maximum of the lengths of the operands.<br />
+     * length of the result vector is the maximum of the lengths of the operands.<br>
      * NOTE: This method performs best if the two arguments are both {@link SparseBitVectorCell}s or
      * {@link DenseBitVectorCell}s. All other implementations need to access the bits through get/set methods which
-     * probably performs very poorly.<br />
+     * probably performs very poorly.<br>
      *
      * To perform the AND operation the sparse implementation
      * {@link SparseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)}, or the dense implementation
@@ -92,10 +92,10 @@ public final class BitVectorUtil {
     /**
      * Creates a sparse bit vector cell, in case that both given values are sparse bit vector cells (otherwise a dense
      * bit vector cell). The returned cell contains the result of the OR operation on the passed operands. The length of
-     * the result vector is the maximum of the lengths of the operands.<br />
+     * the result vector is the maximum of the lengths of the operands.<br>
      * NOTE: This method performs best if the two arguments are both {@link SparseBitVectorCell}s or
      * {@link DenseBitVectorCell}s. All other implementations need to access the bits through get/set methods which
-     * probably performs very poorly.<br />
+     * probably performs very poorly.<br>
      *
      * To perform the OR operation the sparse implementation
      * {@link SparseBitVectorCellFactory#or(BitVectorValue, BitVectorValue)}, or the dense implementation
@@ -120,10 +120,10 @@ public final class BitVectorUtil {
     /**
      * Creates a sparse bit vector cell, in case that both given values are sparse bit vector cells (otherwise a dense
      * bit vector cell). The returned cell contains the result of the XOR operation on the passed operands. The length
-     * of the result vector is the maximum of the lengths of the operands.<br />
+     * of the result vector is the maximum of the lengths of the operands.<br>
      * NOTE: This method performs best if the two arguments are both {@link SparseBitVectorCell}s or
      * {@link DenseBitVectorCell}s. All other implementations need to access the bits through get/set methods which
-     * probably performs very poorly.<br />
+     * probably performs very poorly.<br>
      *
      * To perform the XOR operation the sparse implementation
      * {@link SparseBitVectorCellFactory#xor(BitVectorValue, BitVectorValue)}, or the dense implementation

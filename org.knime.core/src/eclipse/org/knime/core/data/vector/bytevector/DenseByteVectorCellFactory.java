@@ -52,7 +52,7 @@ import org.knime.core.data.DataCell;
 /**
  * Used to created {@link DataCell}s holding a {@link DenseByteVector}. As
  * data cells are read only this factory can be used to initialize the byte
- * vector accordingly and then create a data cell from it. <br />
+ * vector accordingly and then create a data cell from it. <br>
  * This factory also provides methods for performing basic operations
  * ({@link #min(ByteVectorValue, ByteVectorValue)},
  * {@link #max(ByteVectorValue, ByteVectorValue)}, etc.) on two data cells
@@ -157,11 +157,11 @@ public class DenseByteVectorCellFactory {
      * Creates a dense byte vector cell containing the result of the min
      * operation on the passed operands (that is each position holds the minimum
      * of the values of the operands). The length of the result vector is the
-     * maximum of the lengths of the operands.<br />
+     * maximum of the lengths of the operands.<br>
      * NOTE: This method performs best, if the two arguments are both
      * {@link DenseByteVectorCell}s. All other implementations need to access
      * the byte counts through get/set methods and will probably perform poorly.
-     * <br />
+     * <br>
      * See also
      * {@link SparseByteVectorCellFactory#min(ByteVectorValue, ByteVectorValue)}
      * for calculating the minimum on sparce byte vector cells.
@@ -212,11 +212,11 @@ public class DenseByteVectorCellFactory {
      * Creates a dense byte vector cell containing the result of the max
      * operation on the passed operands (that is each position holds the maximum
      * of the values of the operands). The length of the result vector is the
-     * maximum of the length of the operands.<br />
+     * maximum of the length of the operands.<br>
      * NOTE: This method performs best, if the two arguments are both
      * {@link DenseByteVectorCell}s. All other implementations need to access
      * the byte counts through get/set methods and will probably perform poorly.
-     * <br />
+     * <br>
      * See also
      * {@link SparseByteVectorCellFactory#max(ByteVectorValue, ByteVectorValue)}
      * for calculating the maximum on sparce byte vector cells.
@@ -282,11 +282,11 @@ public class DenseByteVectorCellFactory {
      * operands (that is each position holds the sum of the values of the
      * operands). The length of the result vector is the maximum of the length
      * of the operands. If the sum of both counts is larger than the maximum
-     * count (i.e. 255) the result is set to this maximum count (255) <br />
+     * count (i.e. 255) the result is set to this maximum count (255) <br>
      * NOTE: This method performs best, if the two arguments are both
      * {@link DenseByteVectorCell}s. All other implementations need to access
      * the byte counts through get/set methods and will probably perform poorly.
-     * <br />
+     * <br>
      * See also
      * {@link SparseByteVectorCellFactory#sum(ByteVectorValue, ByteVectorValue)}
      * for calculating the sum on sparce byte vector cells.

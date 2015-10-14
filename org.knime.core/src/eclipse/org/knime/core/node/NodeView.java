@@ -291,7 +291,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
 
     /**
      * Invoked when the window is about to be closed. Unregister
-     * <code>HiLiteListeners</code>. Dispose internal members. <br />
+     * <code>HiLiteListeners</code>. Dispose internal members. <br>
      * This method is the first to be called on a close request (right after
      * the view is unregistered from the {@link NodeModel}
      */
@@ -299,7 +299,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
 
     /**
      * Invoked when the window has been opened. Register property listeners.
-     * <br />
+     * <br>
      * This method is called last on view construction - right before the
      * components are made visible. It is not called on re-opening.
      */

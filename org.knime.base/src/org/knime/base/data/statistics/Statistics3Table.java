@@ -296,7 +296,7 @@ public class Statistics3Table {
         m_negInfinityValueCnt = new int[nrCols];
         m_median = new double[nrCols];
         m_nominalValues = new ArrayList<Map<DataCell, Integer>>(nominalValueColumns.size());
-        for (int _ = nrCols; _-- > 0;) {
+        for (int i = nrCols; i-- > 0;) {
             m_nominalValues.add(null);
         }
         m_rowCount = table.getRowCount();
@@ -337,7 +337,7 @@ public class Statistics3Table {
         // temp map used to sort later based in occurrences
         final List<Map<DataCell, MutableInteger>> nominalValues =
             new ArrayList<Map<DataCell, MutableInteger>>(m_nominalValues.size());
-        for (int _ = m_nominalValues.size(); _-- > 0;) {
+        for (int i = m_nominalValues.size(); i-- > 0;) {
             nominalValues.add(null);
         }
 
@@ -959,7 +959,7 @@ public class Statistics3Table {
 
     /**
      * Returns the minimum for all columns. Will be {@link Double#NaN} for columns that only contain missing cells or
-     * for empty data tables.<br />
+     * for empty data tables.<br>
      * Consider using {@link #getMinCells()} instead because this gives you the correct type and can distinguish between
      * NaN and missing cells.
      *
@@ -982,7 +982,7 @@ public class Statistics3Table {
 
     /**
      * Returns the maximum for all columns. Will be {@link Double#NaN} for columns that only contain missing cells or
-     * for empty data tables.<br />
+     * for empty data tables.<br>
      * Consider using {@link #getMinCells()} instead because this gives you the correct type and can distinguish between
      * NaN and missing cells.
      *
@@ -1007,7 +1007,7 @@ public class Statistics3Table {
     /**
      * Returns the minimum (not infinite) value selected column. Will be {@link Double#NaN} for columns that only
      * contain missing cells/{@link Double#NaN}/infinite values or for empty data tables.
-     * <br/>
+     * <br>
      * Can be infinity if the node was not executed and an old array is loaded.
      *
      * @param col The column index.
@@ -1021,7 +1021,7 @@ public class Statistics3Table {
     /**
      * Returns the maximum (not infinite) value selected column. Will be {@link Double#NaN} for columns that only
      * contain missing cells/{@link Double#NaN}/infinite values or for empty data tables.
-     * <br/>
+     * <br>
      * Can be infinity if the node was not executed and an old array is loaded.
      *
      * @param col The column index.

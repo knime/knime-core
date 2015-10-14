@@ -62,7 +62,7 @@ import org.knime.core.node.NotConfigurableException;
  * from the <code>DataTableSpec</code>.
  *
  * <p>Note, consider to use {@link ColumnSelectionPanel} to have more options like ability to select
- * row ID column or "&lt;none>", show error marker for non-existing columns etc.
+ * row ID column or "&lt;none&gt;", show error marker for non-existing columns etc.
  *
  * @author Bernd Wiswedel, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz

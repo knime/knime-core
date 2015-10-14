@@ -52,22 +52,23 @@ package org.knime.core.node.workflow;
  * Main entry point for compute intensive jobs. Controls resource (thread)
  * allocation...
  *
- * @author M. Berthold & B. Wiswedel, University of Konstanz
+ * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
  */
 public interface NodeExecutionJobManagerFactory {
 
     /**
      * Returns a unique ID of this job manager implementations. Preferably this
-     * is the fully qualifying name of its package. <br />
+     * is the fully qualifying name of its package. <br>
      * For a user readable label, see {@link #toString()}
      *
      * @return a unique ID of this job manager implementations
      */
     String getID();
-    
+
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
+    @Override
     String toString();
 
     /**

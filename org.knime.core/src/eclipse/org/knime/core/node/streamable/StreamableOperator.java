@@ -95,13 +95,11 @@ public abstract class StreamableOperator {
     throws Exception;
 
     /**
-     * Called when the corresponding {@link org.knime.core.node.NodeModel#
-     * iterate(StreamableOperatorInternals)}
+     * Called when the corresponding {@link org.knime.core.node.NodeModel#iterate(StreamableOperatorInternals)}
      * returns <code>true</code>. It performs one iteration on the input data
      * to, e.g. adjust clusters or compute data statistics. The result of this
      * run will be persisted in {@link #saveInternals()} and fed back to
-     * {@link org.knime.core.node.NodeModel#
-     * iterate(StreamableOperatorInternals)}
+     * {@link org.knime.core.node.NodeModel#iterate(StreamableOperatorInternals)}
      * (after aggregated using a {@link MergeOperator}.
      *
      * <p>

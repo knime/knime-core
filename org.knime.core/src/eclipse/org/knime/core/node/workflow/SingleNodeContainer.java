@@ -94,8 +94,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
         /** Hold output in memory. */
         CacheInMemory,
         /**
-         * Cache only small tables in memory, i.e. with cell count <=
-         * DataContainer.MAX_CELLS_IN_MEMORY.
+         * Cache only small tables in memory, i.e. with cell count &lt;= DataContainer.MAX_CELLS_IN_MEMORY.
          */
         CacheSmallInMemory,
         /** Buffer on disc. */

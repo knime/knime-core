@@ -45,6 +45,7 @@
 package org.knime.core.node.defaultnodesettings;
 
 import java.awt.BorderLayout;
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -56,7 +57,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
- * A column twin list with include & exclude list and optionally column name and type matcher.
+ * A column twin list with include &amp; exclude list and optionally column name and type matcher.
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  * @since 2.6
  */

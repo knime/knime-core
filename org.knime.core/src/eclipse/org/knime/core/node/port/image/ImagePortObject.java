@@ -63,11 +63,11 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.AbstractPortObject;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 
 /**
  * Port object representing a simple image (png, ...).
@@ -125,8 +125,7 @@ public class ImagePortObject extends AbstractPortObject {
     /**
      * Produces a single data cell containing the image. This method also
      * verifies the requirements stated in the
-     * {@link ImagePortObject# ImagePortObject(ImageContent, ImagePortObjectSpec)
-     * constructor}.
+     * {@link #ImagePortObject(ImageContent, ImagePortObjectSpec) constructor}.
      *
      * @return A new cell representing the image.
      * @see ImageContent#toImageCell()

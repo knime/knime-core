@@ -75,7 +75,7 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
     private int m_inputPortIndex = -1;
 
     /**
-     * Accepts columns of all type. The dialog component to this settings model will also show a name pattern &
+     * Accepts columns of all type. The dialog component to this settings model will also show a name pattern &amp;
      * type filter as no restrictions on the possible value classes is set.
      * @param configName the root config name.
      */

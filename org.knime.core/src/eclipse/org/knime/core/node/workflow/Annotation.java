@@ -141,7 +141,7 @@ public abstract class Annotation implements UIInformation {
         return m_data.getVersion();
     }
 
-    /** Shift annotation after copy&paste.
+    /** Shift annotation after copy&amp;paste.
      * @param xOff x offset
      * @param yOff y offset
      */

@@ -64,7 +64,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * Frame for a {@link org.knime.core.node.tableview.TableContentView}. It
  * simply puts a table view into a frame, adds a menu bar (by now with one item
  * "Close") and displays it.
- * <br />
+ * <br>
  * <b>Note:</b>This class is obsolete as a table view pops up in an specific
  * frame in the flow. But this view is currently used inside the port to show
  * its data table. Might be extended.

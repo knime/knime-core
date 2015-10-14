@@ -136,7 +136,7 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
     /**
      * Sorts the table passed in the constructor according to the settings and returns the sorted output table.
      *
-     * @param ctx To report progress & create temporary and final output tables.
+     * @param ctx To report progress &amp; create temporary and final output tables.
      * @return The sorted output.
      * @throws CanceledExecutionException If canceled.
      */

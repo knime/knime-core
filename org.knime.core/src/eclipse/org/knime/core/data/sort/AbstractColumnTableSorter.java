@@ -121,7 +121,7 @@ abstract class AbstractColumnTableSorter {
     private final DataTableSpec m_dataTableSpec;
 
     /**
-     * The constructor is identical to {@link #AbstractColumnTableSorter(DataTableSpec, int, String...)} with
+     * The constructor is identical to {@link #AbstractColumnTableSorter(DataTableSpec, long, String...)} with
      * {@link DataTableSpec#getColumnNames()} as the last input.
      *
      * @param spec the spec

@@ -99,7 +99,7 @@ public final class NodeGraphAnnotation implements Comparable<NodeGraphAnnotation
     }
 
     /**
-     * Constructor for depth > 0 - depth & stack will be initialized (copied!) from predecessor.
+     * Constructor for depth &gt; 0 - depth &amp; stack will be initialized (copied!) from predecessor.
      *
      * @param node associated with this NGA.
      * @param outportIx -1 for a SNC, outport index for a Metanode.

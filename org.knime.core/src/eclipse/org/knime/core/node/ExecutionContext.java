@@ -87,8 +87,7 @@ import org.knime.core.util.DuplicateKeyException;
  * <code>create...</code> methods. There are basically three different ways to
  * create the output table:
  * <dl>
- * <a name="new_data"/>
- * <dt><strong>New data</strong></dt>
+ * <dt><a name="new_data"></a><strong>New data</strong></dt>
  * <dd>Use the {@link #createDataContainer(DataTableSpec)} method to create a
  * container to which rows are sequentially added. The final result will be
  * available through the container's {@link BufferedDataContainer#getTable()}
@@ -97,15 +96,13 @@ import org.knime.core.util.DuplicateKeyException;
  * will traverse the argument table and cache everything. These method shall be
  * used when the entire output must be cached (thus also resulting in using more
  * disc space when the workflow is saved). </dd>
- * <a name="new_column"/>
- * <dt><strong>Some columns of the input have changed</strong></dt>
+ * <dt><a name="new_column"></a><strong>Some columns of the input have changed</strong></dt>
  * <dd>This is the case, for instance when you just append a single column to
  * the input table (or filter/replace existing columns from it). The method to
  * use here is {@link #createColumnRearrangeTable(BufferedDataTable,
  * ColumnRearranger, ExecutionMonitor)}. When the workflow is saved, only the
  * columns that have changed are stored to disc.</dd>
- * <a name="new_spec"/>
- * <dt><strong>The table spec of the input changes</strong></dt>
+ * <dt><a name="new_spec"></a><strong>The table spec of the input changes</strong></dt>
  * <dd>This happens for nodes that rename a column or add some properties to
  * the table spec. The input data itself is left untouched. Use the
  * {@link #createSpecReplacerTable(BufferedDataTable, DataTableSpec)} here.</dd>

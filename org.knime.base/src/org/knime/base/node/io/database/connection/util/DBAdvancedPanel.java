@@ -64,7 +64,7 @@ import org.knime.core.node.port.database.DatabaseUtility;
 
 /**
  * A panel for settings advanced connection information, such as the database type.
- * The panel has a {@link GridBagLayout} and uses the protected {@link #c} {@link GridBagConstraints} for layouting.
+ * The panel has a {@link GridBagLayout} and uses the protected {@link #m_c} {@link GridBagConstraints} for layouting.
  * You should re-use the constraints when extending this panel.
  *
  * @param <T> a subclass of {@link DatabaseConnectionSettings}

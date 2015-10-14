@@ -62,13 +62,13 @@ public enum PMMLOperator {
     EQUAL("equal", "="),
     /** != operator. */
     NOT_EQUAL("notEqual", "<>"),
-    /** < operator. */
+    /** &lt; operator. */
     LESS_THAN("lessThan", "<"),
-    /** <= operator. */
+    /** &lt;= operator. */
     LESS_OR_EQUAL("lessOrEqual", "<="),
-    /** > operator. */
+    /** &gt; operator. */
     GREATER_THAN("greaterThan", ">"),
-    /** >= operator. */
+    /** &gt;= operator. */
     GREATER_OR_EQUAL("greaterOrEqual", ">="),
     /** is missing operator. */
     IS_MISSING("isMissing", "is missing"),

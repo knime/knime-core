@@ -90,7 +90,7 @@ public class DBAuthenticationPanel<T extends DatabaseConnectionSettings> extends
     protected final JRadioButton m_useCredentials = new JRadioButton("Use credentials");
 
     /**
-     * Checkbox whether username&password should be used.
+     * Checkbox whether username&amp;password should be used.
      */
     protected final JRadioButton m_usePassword = new JRadioButton("Use username & password");
 

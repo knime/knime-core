@@ -62,12 +62,12 @@ interface NodeContainerMetaPersistor {
     WorkflowLoadHelper getLoadHelper();
 
     /**
-     * File reference to the node container directory. Something like &lt;workflow_space>/File Reader (#xy). This value
-     * is non-null when (i) loading from disk or (ii) if pasted into a workflow as part of an undo of a delete command.
-     * It's null if node is copied&pasted. If the value is non-null the referenced file will be removed from the list of
-     * obsolete node directories (must not clear directories as they may contain a "drop" folder).
+     * File reference to the node container directory. Something like &lt;workflow_space&gt;/File Reader (#xy). This
+     * value is non-null when (i) loading from disk or (ii) if pasted into a workflow as part of an undo of a delete
+     * command. It's null if node is copied&amp;pasted. If the value is non-null the referenced file will be removed
+     * from the list of obsolete node directories (must not clear directories as they may contain a "drop" folder).
      *
-     * @return The node container dir or null
+     * @return The node container dir or <code>null</code>
      */
     ReferencedFile getNodeContainerDirectory();
 

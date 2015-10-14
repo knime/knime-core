@@ -67,11 +67,11 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.BufferedDataTableView;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.util.SwingWorkerWithContext;
@@ -166,7 +166,7 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
 
     /**
      * Serializer used to save <code>DatabasePortObject</code>.
-     * @return a new database port object serializer
+     *
      * @noreference This class is not intended to be referenced by clients.
      * @since 3.0
      */

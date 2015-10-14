@@ -195,7 +195,7 @@ public class WorkflowLoadHelper {
 
     /**Create persistor for a workflow or template.
      * @noreference Clients should only be required to load projects using
-     * {@link #loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
+     * {@link WorkflowManager#loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
      * @param directory The directory to load from
      * @return The persistor
      * @throws IOException If an IO error occured

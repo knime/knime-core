@@ -86,13 +86,13 @@ import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectHolder;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
@@ -135,12 +135,12 @@ import org.w3c.dom.Element;
  * output ports, {@link org.knime.core.node.workflow.NodeInPort} and
  * {@link org.knime.core.node.workflow.NodeOutPort}, respectively. There are
  * data ports for exchanging data tables, and prediction model ports for
- * transferring computed data models. <br />
+ * transferring computed data models. <br>
  * A node must contain a {@link NodeModel} and may contain {@link NodeView}s
  * and a {@link NodeDialogPane} implementing the Model-View-Controller paradigm.
  * The node manages the interactions between these components and handles all
  * internal and external data flows. Incoming data is passed to the
- * {@link NodeModel} and forwarded from there to the node's ports. <br />
+ * {@link NodeModel} and forwarded from there to the node's ports. <br>
  * The <code>Node</code> is the part within a workflow holding and managing
  * the user specific {@link NodeModel}, {@link NodeDialogPane}, and possibly
  * {@link NodeView}, thus, it is not intended to extend this class. A
@@ -309,7 +309,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /** Create a persistor that is used to paste a copy of this node into the same or a different workflow.
-     * (Used by copy&paste actions and undo operations)
+     * (Used by copy&amp;paste actions and undo operations)
      * @return A new copy persistor (which doesn't copy anything as settings are taken care of by the SNC class).
      */
     public CopyNodePersistor createCopyPersistor() {
@@ -529,7 +529,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Calls {@link NodeModel#loadSettingsFrom(NodeSettingsRO)}. Only used by 3rd party executors
-     * to clone node.<br />
+     * to clone node.<br>
      * <b>Note:</b> The KNIME core is using {@link #loadModelSettingsFrom(NodeSettingsRO)}.
      *
      * @param modelSettings a settings object
@@ -835,7 +835,7 @@ public final class Node implements NodeModelWarningListener {
     * @param exec The execution monitor.
     * @return <code>true</code> if execution was successful otherwise
     *         <code>false</code>.
-    * @see Node#execute(BufferedDataTable[],ExecutionContext)
+    * @see Node#execute(PortObject[], ExecutionEnvironment, ExecutionContext)
     */
     @Deprecated
     public boolean execute(final PortObject[] rawData, final ExecutionContext exec) {
@@ -2242,7 +2242,7 @@ public final class Node implements NodeModelWarningListener {
         table.ensureOpen();
     }
 
-    /** Widens scope of {@link AbstractNodeView#openView(String)} method so it
+    /** Widens scope of {@link AbstractNodeView#openView(String, Rectangle)} method so it
      * can be called from UI framework components. This method is not meant for
      * public use and may change in future versions.
      * @param view The view to call the method on.
@@ -2253,7 +2253,7 @@ public final class Node implements NodeModelWarningListener {
         invokeOpenView(view, title, null);
     }
 
-    /** Widens scope of {@link AbstractNodeView#openView(String)} method so it
+    /** Widens scope of {@link AbstractNodeView#openView(String, Rectangle)} method so it
      * can be called from UI framework components. This method is not meant for
      * public use and may change in future versions.
      * @param view The view to call the method on.
@@ -2323,7 +2323,7 @@ public final class Node implements NodeModelWarningListener {
 
     /** Get list of flow variables that are added by NodeModel implementation.
      * @return The stack of flow variables that the node added in its client
-     *         code (configure & execute).
+     *         code (configure &amp; execute).
      */
     public FlowObjectStack getOutgoingFlowObjectStack() {
         return m_model.getOutgoingFlowObjectStack();

@@ -83,8 +83,7 @@ public class PMMLNormalizeTranslator implements PMMLPreprocTranslator {
 
     /**
      * Creates a new empty translator to be initialized by the
-     * {@link #initializeFrom(LocalTransformations, boolean)} or
-     * {@link #initializeFrom(TransformationDictionary, boolean)} method.
+     * {@link #initializeFrom(DerivedField[])} method.
      */
     public PMMLNormalizeTranslator() {
         m_fields = new ArrayList<String>();

@@ -332,31 +332,31 @@ public class PredictorNodeDialog extends NodeDialogPane {
         }
         try {
             m_overridePredModel.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException _) {
-            getLogger().debug(_.getMessage(), _);
+        } catch (InvalidSettingsException ex) {
+            getLogger().debug(ex.getMessage(), ex);
             m_overridePredModel.setEnabled(true);
             m_overridePredModel.setBooleanValue(false);
         }
         try {
             m_predictionColModel.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException _) {
-            getLogger().debug(_.getMessage(), _);
+        } catch (InvalidSettingsException ex) {
+            getLogger().debug(ex.getMessage(), ex);
             m_predictionColModel.setEnabled(m_overridePredModel.getBooleanValue());
             m_predictionColModel.setStringValue("");
         }
         m_overridePred.getModel().setSelected(m_overridePredModel.getBooleanValue());
         try {
             m_addProbsModel.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException _) {
-            getLogger().debug(_.getMessage(), _);
+        } catch (InvalidSettingsException ex) {
+            getLogger().debug(ex.getMessage(), ex);
             m_addProbsModel.setEnabled(true);
             m_addProbsModel.setBooleanValue(true);
         }
         m_addProbs.getModel().setSelected(m_addProbsModel.getBooleanValue());
         try {
             m_suffixModel.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException _) {
-            getLogger().debug(_.getMessage(), _);
+        } catch (InvalidSettingsException ex) {
+            getLogger().debug(ex.getMessage(), ex);
             m_suffixModel.setEnabled(m_addProbsModel.getBooleanValue());
             m_suffixModel.setStringValue("");
         }
@@ -388,10 +388,10 @@ public class PredictorNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * Override this if you want to add additional controls on the same tab before the common controls. <br/>
+     * Override this if you want to add additional controls on the same tab before the common controls. <br>
      * You can specify their arrangement using the {@link #getLayout() SpringLayout}. An easier option for
      * {@link DialogComponent}s is the {@link #addDialogComponent(JPanel, DialogComponent)} method.
-     * <br/>
+     * <br>
      * This method is called once in the constructor.
      *
      * @param panel The panel where you can add the controls.

@@ -65,7 +65,7 @@ package org.knime.core.node.workflow;
  * null _after_ the last iteration if the tables should not be persisted
  * with saving the workflow).
  *
- * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
+ * @author M. Berthold, University of Konstanz &amp; Bernd Wiswedel, KNIME.com
  */
 public interface LoopStartNode extends ScopeStartNode {
     // marker interface only
