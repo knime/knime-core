@@ -90,7 +90,7 @@ div#links {
     float: left;
     width: 45%;
 	overflow: hidden;
-	margin: 0 3px 0 0;
+	margin: 0 1.5%;
 	border: solid 2px #ffd600;
 	border-radius: 5px;
 }
@@ -109,8 +109,8 @@ a .text {
 div#mru {
     width: 50%;
      overflow-y: auto;
-    margin-left: 490px;
     border: solid 2px #ffd600;
+    float: left;
 	border-radius: 5px;
 }
 
