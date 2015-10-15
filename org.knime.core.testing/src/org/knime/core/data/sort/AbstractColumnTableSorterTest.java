@@ -27,6 +27,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
+import org.knime.core.data.util.memory.MemoryAlertSystemTest;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -97,7 +98,7 @@ public class AbstractColumnTableSorterTest {
         final BufferedDataContainer emptyContainer = m_exec.createDataContainer(spec);
         emptyContainer.close();
         emptyTestTable = emptyContainer.getTable();
-
+        MemoryAlertSystemTest.forceGC();
     }
 
     /**
@@ -140,18 +141,18 @@ public class AbstractColumnTableSorterTest {
      */
     @Test
     public void testSortingWithLimitedFileHandler() throws CanceledExecutionException, InvalidSettingsException {
-
         BufferedDataTable bt = createRandomTable(50, 5000);
 
         ColumnBufferedDataTableSorter dataTableSorter =
             new ColumnBufferedDataTableSorter(bt.getDataTableSpec(), bt.size(), bt.getDataTableSpec()
                 .getColumnNames());
 
+        long usageThreshold = MemoryAlertSystem.getUsedMemory() + (100 << 20);  // more than 100 MB used
         MemoryActionIndicator memIndicator = new MemoryActionIndicator() {
             @Override
             public boolean lowMemoryActionRequired() {
                 MemoryAlertSystem.getInstance();
-                return MemoryAlertSystem.getUsedMemory() > (150 << 20); // more than 150 MB used
+                return MemoryAlertSystem.getUsedMemory() > usageThreshold;
             }
         };
 
