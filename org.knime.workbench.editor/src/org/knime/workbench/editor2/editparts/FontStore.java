@@ -47,12 +47,12 @@
  */
 package org.knime.workbench.editor2.editparts;
 
-import java.awt.GraphicsEnvironment;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -86,11 +86,6 @@ public class FontStore {
 
     private final int m_defFontStyle;
 
-    /** Retrieve list of fonts from AWT - as of today (Oct 2015) there is no reliable way to retrieve the list
-     * of available fonts in SWT. You can even create Font objects with bogus names and SWT will accept. */
-    private static final LinkedHashSet<String> FONT_FAMILY_NAMES =  new LinkedHashSet<>(
-            Arrays.asList(GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames()));
-
     public static final FontStore INSTANCE = new FontStore();
 
     /**
@@ -115,11 +110,16 @@ public class FontStore {
          * Fallback on Linux:
          *     Nimbus Sans L
          */
+        // the "new Font(..." constructor does not verify the validity of a font name so we need to check first
+        // if the font is available.
+        Set<String> installedFontFamilyNames = Stream.of(Display.getCurrent().getFontList(null, true))
+                .map(f -> f.getName())
+                .collect(Collectors.toSet());
         int defFontSize = getFontSizeFromKNIMEPrefPage();
         Font defFont = null;
         String name = "Arial";
         try {
-            if (FONT_FAMILY_NAMES.contains(name)) {
+            if (installedFontFamilyNames.contains(name)) {
                 defFont = new Font(Display.getDefault(), name, defFontSize, SWT.NORMAL);
             }
         } catch (SWTError e) {
@@ -129,13 +129,13 @@ public class FontStore {
         if (defFont == null) {
             // Fall back to "common" fonts similar to Arial
             if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-                defFont = tryLoadFallbackFont(defFontSize, "Trebuchet MS");
+                defFont = tryLoadFallbackFont(defFontSize, "Trebuchet MS", installedFontFamilyNames);
             } else if (Platform.OS_LINUX.equals(Platform.getOS())) {
-                defFont = tryLoadFallbackFont(defFontSize, "Nimbus Sans L");
+                defFont = tryLoadFallbackFont(defFontSize, "Nimbus Sans L", installedFontFamilyNames);
             } else {
-                defFont = tryLoadFallbackFont(defFontSize, "Microsoft Sans Serif");
+                defFont = tryLoadFallbackFont(defFontSize, "Microsoft Sans Serif", installedFontFamilyNames);
                 if (defFont == null) {
-                    defFont = tryLoadFallbackFont(defFontSize, "Trebuchet MS");
+                    defFont = tryLoadFallbackFont(defFontSize, "Trebuchet MS", installedFontFamilyNames);
                 }
             }
         }
@@ -149,8 +149,9 @@ public class FontStore {
 
     /** Used to instantiate SWT Font objects given a name. It will check the (AWT) list of available font names first.
      * @return the font object (which very likely is valid) or null if font not available. */
-    private static Font tryLoadFallbackFont(final int defFontSize, final String name) {
-        if (FONT_FAMILY_NAMES.contains(name)) {
+    private static Font tryLoadFallbackFont(final int defFontSize, final String name,
+        final Set<String> installedFontFamilyNames) {
+        if (installedFontFamilyNames.contains(name)) {
             try {
                 return new Font(Display.getDefault(), name, defFontSize, SWT.NORMAL);
             } catch (SWTError e) {
@@ -502,7 +503,5 @@ public class FontStore {
         int fontSize = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
         return fontSize;
     }
-
-
 
 }
