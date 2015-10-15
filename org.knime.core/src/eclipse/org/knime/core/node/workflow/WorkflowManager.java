@@ -2896,6 +2896,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             // and appropriate message is set.
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                     "Parallel Branch Start Failure: " + e.getMessage());
+                            LOGGER.error(latestNodeMessage.getMessage(), e);
                             success = false;
                             canConfigureSuccessors = false;
                             disableNodeForExecution(nc.getID());
@@ -2920,6 +2921,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             // loop is incorrectly wired. We can not restart potentially dangling branches
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                 "Loop Body wired incorrectly (" + ile.getMessage() + ").");
+                            LOGGER.error(latestNodeMessage.getMessage(), ile);
                             success = false;
                         }
                         // check if any of those nodes can still be executed (configured but not yet executing)
@@ -2956,6 +2958,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             }
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                     "Loop nodes are not in the same workflow!");
+                            LOGGER.error(latestNodeMessage.getMessage());
                             success = false;
                         } else {
                             try {
