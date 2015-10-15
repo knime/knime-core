@@ -31,7 +31,7 @@
                 Binary: Name of first column with value 1<br/>
                 Maximum: Name of column with the largest value<br/>
                 Minimum: Name of column with the smallest value<br/>
-                RegExPattern: Name of first column that matches the given pattern (currently not supported in PMML,
+                Include Pattern: Name of first column that matches the given pattern (currently not supported in PMML,
                 uses option Binary within the generated PMML document)
             </option>
             <option name="Include pattern">
