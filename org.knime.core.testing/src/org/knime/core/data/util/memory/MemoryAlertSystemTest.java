@@ -215,7 +215,12 @@ public class MemoryAlertSystemTest {
         }
     }
 
-    private static void forceGC() throws InterruptedException {
+    /**
+     * Forces a GC run. By using soft reference {@link System#gc()} is called until the soft reference has been cleared.
+     *
+     * @throws InterruptedException if the thread is interrupted
+     */
+    public static void forceGC() throws InterruptedException {
         Object obj1 = new Object();
         SoftReference<Object> ref1 = new SoftReference<>(obj1);
         Object obj2 = new Object();
