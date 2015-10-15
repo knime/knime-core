@@ -89,7 +89,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(PreferenceConstants.P_DEFAULT_NODE_LABEL, "Node");
 
-        int defaultFontHeight = 10;
+        int defaultFontHeight = 8;
         Display current = Display.getCurrent();
         if (current != null) {
             Font systemFont = current.getSystemFont();
