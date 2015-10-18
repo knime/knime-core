@@ -58,8 +58,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.json.Json;
 import javax.json.JsonNumber;
@@ -118,13 +120,15 @@ public final class NodeTimer {
 
     public static final class GlobalNodeStats {
 
+        private static final String N_A = "n/a";
+
         private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalNodeStats.class);
 
         private class NodeStats {
             long executionTime = 0;
             int executionCount = 0;
             int creationCount = 0;
-            String likelySuccessor = "n/a";
+            String likelySuccessor = N_A;
         }
         private LinkedHashMap<String, NodeStats> m_globalNodeStats = new LinkedHashMap<String, NodeStats>();
 
@@ -195,7 +199,7 @@ public final class NodeTimer {
                 }
                 // remember the newly connected successor with a 50:50 chance
                 // (statistics over many thousands of users will provide real info)
-                if ((ns.likelySuccessor.equals("n/a")) | (Math.random() >= .5)) {
+                if ((ns.likelySuccessor.equals(N_A)) | (Math.random() >= .5)) {
                     ns.likelySuccessor = NodeTimer.getCanonicalName(dest);
                 }
                 processStatChanges();
@@ -209,6 +213,31 @@ public final class NodeTimer {
                 if (System.currentTimeMillis() > m_timeOfLastSend + SENDINTERVAL) {
                     asyncSendToServer(false);
                     m_timeOfLastSend = System.currentTimeMillis();
+                }
+            }
+        }
+
+        private void processLegacyStats() {
+            Iterator<Entry<String, NodeStats>> iterator = m_globalNodeStats.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Entry<String, NodeStats> entry = iterator.next();
+                String possibleLegacyName = entry.getKey();
+                for (String possibleNewName : m_globalNodeStats.keySet()) {
+                    // find the first possible match and add legacy stats to it,
+                    // in most cases there is only one node per node model, all
+                    // other cases are skewed towards the first found node model slightly
+                    if (possibleNewName.startsWith(possibleLegacyName + ":")) {
+                        NodeStats legacyStats = entry.getValue();
+                        NodeStats newStats = m_globalNodeStats.get(possibleNewName);
+                        newStats.creationCount += legacyStats.creationCount;
+                        newStats.executionCount += legacyStats.executionCount;
+                        newStats.executionTime += legacyStats.executionTime;
+                        if (newStats.likelySuccessor.equals(N_A)) {
+                            newStats.likelySuccessor = legacyStats.likelySuccessor;
+                        }
+                        iterator.remove();
+                        break;
+                    }
                 }
             }
         }
@@ -289,9 +318,11 @@ public final class NodeTimer {
             job.add("created", m_created);
             JsonObjectBuilder job2 = Json.createObjectBuilder();
             synchronized (this) {
+                processLegacyStats();
                 for (String cname : m_globalNodeStats.keySet()) {
                     JsonObjectBuilder job3 = Json.createObjectBuilder();
                     NodeStats ns = m_globalNodeStats.get(cname);
+
                     if (ns != null) {
                         job3.add("nrexecs", ns.executionCount);
                         job3.add("exectime", ns.executionTime);

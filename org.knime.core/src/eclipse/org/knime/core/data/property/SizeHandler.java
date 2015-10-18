@@ -108,7 +108,7 @@ public final class SizeHandler implements PropertyHandler {
     /**
      * Returns the size as a scaling factor (in [1, )).
      * @param dc value to use to compute size for
-     * @return a double value > 1
+     * @return a double value &gt; 1
      */
     public double getSizeFactor(final DataCell dc) {
         return m_model.getSizeFactor(dc);

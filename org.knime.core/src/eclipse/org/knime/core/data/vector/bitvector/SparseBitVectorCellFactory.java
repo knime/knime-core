@@ -189,11 +189,11 @@ public class SparseBitVectorCellFactory implements BitVectorCellFactory<SparseBi
     /**
      * Creates a sparse bit vector cell containing the result of the AND
      * operation on the passed operands. The length of the result vector is the
-     * maximum of the lengths of the operands.<br />
+     * maximum of the lengths of the operands.<br>
      * NOTE: This method performs best if the two arguments are both
      * {@link SparseBitVectorCell}s. All other implementations need to access
      * the bits through get/set methods which probably performs very poorly.
-     * <br />
+     * <br>
      * See also
      * {@link DenseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)}
      * for ANDing dense bit vector cells.
@@ -235,11 +235,11 @@ public class SparseBitVectorCellFactory implements BitVectorCellFactory<SparseBi
     /**
      * Creates a sparse bit vector cell containing the result of the OR
      * operation on the passed operands. The length of the result vector is the
-     * maximum of the lengths of the operands.<br />
+     * maximum of the lengths of the operands.<br>
      * NOTE: This method performs best if the two arguments are both
      * {@link SparseBitVectorCell}s. All other implementations need to access
      * the bits through get/set methods which probably performs very poorly.
-     * <br />
+     * <br>
      * See also
      * {@link DenseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)}
      * for ORing dense bit vector cells.
@@ -275,11 +275,11 @@ public class SparseBitVectorCellFactory implements BitVectorCellFactory<SparseBi
     /**
      * Creates a sparse bit vector cell containing the result of the XOR
      * operation on the passed operands. The length of the result vector is the
-     * maximum of the lengths of the operands.<br />
+     * maximum of the lengths of the operands.<br>
      * NOTE: This method performs best if the two arguments are both
      * {@link SparseBitVectorCell}s. All other implementations need to access
      * the bits through get/set methods which probably performs very poorly.
-     * <br />
+     * <br>
      * See also
      * {@link DenseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)}
      * for XORing dense bit vector cells.

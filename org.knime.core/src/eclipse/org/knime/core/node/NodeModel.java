@@ -1426,7 +1426,7 @@ public abstract class NodeModel {
     }
 
     /** Informs WorkflowManager if the nodes inside the loop (= the loop
-     * body) have to be reset & configured inbetween iterations. Default
+     * body) have to be reset &amp; configured inbetween iterations. Default
      * behavior is to reset/configure everytime.
      */
     protected boolean resetAndConfigureLoopBody() {
@@ -1696,18 +1696,17 @@ public abstract class NodeModel {
      * Called to determine whether the node requires an(other) iteration on the
      * data before the final results are computed. If <code>true</code> the
      * argument internals are transferred to the remote side and loaded into a
-     * {@link StreamableOperator} on which {@link StreamableOperator#
-     * runIntermediate(PortInput[], ExecutionContext)} is called.
+     * {@link StreamableOperator} on which {@link StreamableOperator#runIntermediate(PortInput[], ExecutionContext)} is
+     * called.
      *
      * <p>This implementation returns <code>false</code>.
      * @since 2.6
      * @param internals the internals. Before the first iteration it will
      * be the result of {@link #createInitialStreamableOperatorInternals()},
      * any subsequent invocation will be called with a merged internals
-     * (creating using {@link MergeOperator#
-     * mergeIntermediate(StreamableOperatorInternals[])}).
-     * @return If another iteration on {@link StreamableOperator#
-     * runIntermediate(PortInput[], ExecutionContext)} is to be run.
+     * (creating using {@link MergeOperator#mergeIntermediate(StreamableOperatorInternals[])}).
+     * @return If another iteration on {@link StreamableOperator#runIntermediate(PortInput[], ExecutionContext)} is to
+     * be run.
      */
     public boolean iterate(final StreamableOperatorInternals internals) {
         return false;

@@ -68,7 +68,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 
 /**
- * Provides helper methods mostly useful when implementing NodeViews.<br />
+ * Provides helper methods mostly useful when implementing NodeViews.<br>
  * Especially the methods {@link #runOrInvokeLaterInEDT(Runnable)}, {@link #invokeAndWaitInEDT(Runnable)}, and
  * {@link #invokeLaterInEDT(Runnable)} are quite useful because they take care of
  * retaining the {@link NodeContext} if the calling thread.

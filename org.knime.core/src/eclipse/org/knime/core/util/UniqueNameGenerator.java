@@ -56,7 +56,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 
 /** Helper class to create a set of unique names. Unique names are created
- * by appending a suffix <i>(#&lt;index>)</i> to duplicate names. The name set
+ * by appending a suffix <i>(#&lt;index&gt;)</i> to duplicate names. The name set
  * is initially created either based on a {@link DataTableSpec} (names derived
  * from column headers) or based on a {@link Set} of strings.
  *

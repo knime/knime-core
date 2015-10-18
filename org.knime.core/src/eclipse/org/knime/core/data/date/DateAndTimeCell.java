@@ -177,7 +177,7 @@ public class DateAndTimeCell extends DataCell
      * @param hourOfDay hour of day {@link Calendar#HOUR_OF_DAY}
      * @param minute minute {@link Calendar#MINUTE}
      * @param second second {@link Calendar#SECOND}
-     * @param milliseconds the milliseconds (or &lt 0 if they should not be set)
+     * @param milliseconds the milliseconds (or &lt; 0 if they should not be set)
      */
     public DateAndTimeCell(final int hourOfDay, final int minute, final int second, final int milliseconds) {
         m_utcCalendar = getUTCCalendar();
@@ -218,7 +218,7 @@ public class DateAndTimeCell extends DataCell
      * @param hourOfDay hour of day {@link Calendar#HOUR_OF_DAY}
      * @param minute minute {@link Calendar#MINUTE}
      * @param second second {@link Calendar#SECOND}
-     * @param millisecond milliseconds {@link Calendar#MILLISECOND} (or &lt 0 if they should not be set)
+     * @param millisecond milliseconds {@link Calendar#MILLISECOND} (or &lt; 0 if they should not be set)
      */
     public DateAndTimeCell(final int year, final int month,
             final int dayOfMonth, final int hourOfDay, final int minute,

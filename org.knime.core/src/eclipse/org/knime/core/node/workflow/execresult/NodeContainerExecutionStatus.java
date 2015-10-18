@@ -83,7 +83,7 @@ public interface NodeContainerExecutionStatus {
     public NodeContainerExecutionStatus getChildStatus(final int idSuffix);
 
     /** Convenience shortcut to create failure with no children but custom error message.
-     * @param message The message in {@link #toString()}.
+     * @param message the message
      * @return a new failure with a custom message.
      * @since 3.0 */
     static public NodeContainerExecutionStatus newFailure(final String message) {

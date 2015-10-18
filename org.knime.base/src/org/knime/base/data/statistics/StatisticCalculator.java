@@ -76,7 +76,7 @@ import org.knime.core.node.InvalidSettingsException;
 /**
  * A utility class for calculating several statistical moments, such as the {@link Variance}, {@link Mean} or others.
  * The <code>org.knime.base.data.statistics.calculation</code> package contains default statistics. One may also
- * implement custom {@link Statistic}s. <br/>
+ * implement custom {@link Statistic}s. <br>
  * <b>Example usage:</b>
  *
  * <pre>

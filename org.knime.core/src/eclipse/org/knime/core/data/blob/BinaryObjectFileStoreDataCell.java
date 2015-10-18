@@ -112,7 +112,7 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
 
     /** Create new object based on file store with exiting file.
      * @param fs The file store object with the file to represent.
-     * @param md5sum The MD5 sum of the corresponding file (needed for equals & hashcode)
+     * @param md5sum The MD5 sum of the corresponding file (needed for equals &amp; hashcode)
      */
     BinaryObjectFileStoreDataCell(final FileStore fs, final byte[] md5sum) {
         super(fs);
@@ -120,7 +120,7 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
     }
 
     /** Restore from disk.
-     * @param md5sum The MD5 sum of the corresponding file (needed for equals & hashcode)
+     * @param md5sum The MD5 sum of the corresponding file (needed for equals &amp; hashcode)
      */
     BinaryObjectFileStoreDataCell(final byte[] md5sum) {
         super(); // deserialization constructor

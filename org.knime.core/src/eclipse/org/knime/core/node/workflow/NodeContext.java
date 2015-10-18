@@ -55,7 +55,7 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * A {@link NodeContext} holds information about the context in which an operation on a node is executed. This is used
- * for internal purposes, node implementors should not use this class.<br />
+ * for internal purposes, node implementors should not use this class.<br>
  * The node context is local to the current thread and is set by the workflow manager or the node container in which a
  * node is contained. Each thread has a stack of {@link NodeContext} objects, only the last set context can be retrieved
  * via {@link #getContext()}. You must absolutely make sure that if you push a new context that you remove it
@@ -125,8 +125,9 @@ public final class NodeContext {
      */
     public NodeContainer getNodeContainer() {
         NodeContainer cont = m_nodeContainerRef.get();
-        logger.assertLog(cont != null,
-            "Node container has been garbage collected, you should not have such a context available");
+        if (KNIMEConstants.ASSERTIONS_ENABLED && cont == null) {
+            logger.debug("Node container has been garbage collected, you should not have such a context available");
+        }
         return cont;
     }
 

@@ -57,10 +57,10 @@ import org.knime.core.node.util.ConvenienceMethods;
 /**
  * Interface for classes that can read or write specific {@link DataCell} implementations. Using
  * <code>DataCellSerializer</code> implementations is usually considerably faster than ordinary Java serialization.
- * <br />
+ * <br>
  * The framework creates one serializer instance that is re-used. Therefore serializers must be thread-safe. Serializers
  * must be registered at the extension point <code>org.knime.core.DataType</code> under the appropriate DataType.
- * <br />
+ * <br>
  * For further details see the {@link DataCell} description and the
  * <a href="doc-files/newtypes.html#newtypes">manual</a> on how to define new types.
  *

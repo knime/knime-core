@@ -49,20 +49,21 @@ package org.knime.core.data.xml.io;
 
 import java.io.IOException;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.xml.XMLValue;
 
 /**
  * An object to read @link{DataCell}s that can safely be casted to
- * @link{XMLValue}.
- * 
+ * {@link XMLValue}.
+ *
  * @author Heiko Hofer
  */
 public interface XMLCellReader {
 	/**
-	 * Reads the next XML @link{DataCell}.
-	 * 
-	 * @return The next @link{DataCell} or null when there is nothing to read. 
-	 * Note that this data cell implements @link{XMLValue}.
+	 * Reads the next XML {@link DataCell}.
+	 *
+	 * @return The next {@link DataCell} or null when there is nothing to read.
+	 * Note that this data cell implements {@link XMLValue}.
 	 * @throws IOException If an error occurred during the read process.
 	 */
 	XMLValue readXML() throws IOException;

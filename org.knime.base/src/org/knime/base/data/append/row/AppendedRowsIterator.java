@@ -133,8 +133,6 @@ public class AppendedRowsIterator extends CloseableRowIterator {
      * Creates new iterator of <code>tables</code> following <code>spec</code>.
      * The iterator may throw an exception in next.
      *
-     * @param table Table host.
-     *
      * @param exec for progress/cancel, may be <code>null</code>
      * @param totalRowCount the total row count or negative if unknown
      */

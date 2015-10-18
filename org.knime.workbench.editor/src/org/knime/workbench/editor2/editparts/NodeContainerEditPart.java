@@ -146,9 +146,9 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 /**
  * Edit part for node containers. This also listens to interesting events, like changed extra infos or execution states.
  *
- * <br />
- * Model: {@link NodeContainer} <br />
- * View: {@link NodeContainerFigure} <br />
+ * <br>
+ * Model: {@link NodeContainer} <br>
+ * View: {@link NodeContainerFigure} <br>
  * Controller: {@link NodeContainerEditPart}
  *
  * @author Florian Georg, University of Konstanz

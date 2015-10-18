@@ -49,15 +49,13 @@
 package org.knime.core.node.workflow.virtual.parchunk;
 
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
-import org.knime.core.node.workflow.LoopStartParallelizeNode;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Represents all parallel chunks ({@link ParallelChunkContent}) together and also encapsulating metanode.
+ * Represents all parallel chunks ({@link ParallelizedChunkContent}) together and also encapsulating metanode.
  *
  * @author M. Berthold, University of Konstanz
  */

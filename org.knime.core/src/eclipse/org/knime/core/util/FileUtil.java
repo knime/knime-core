@@ -611,7 +611,7 @@ public final class FileUtil {
      * Passed to the
      * {@link FileUtil#zipDir(File, Collection, int, ZipFileFilter, ExecutionMonitor)}
      * method to exclude certain files from being archived and added to the zip
-     * file.<br />
+     * file.<br>
      * A default implementation accepting all files is
      * {@link #ZIP_INCLUDEALL_FILTER}
      *
@@ -936,8 +936,8 @@ public final class FileUtil {
     /** For some suggested name the returned string can be used to create a file. All unsupported characters are
      * replaced by '_'. Used when a workflow is saved to derive the folder name for a node. The returned string
      * may change between version (as we allow more special characters).
-     * @param strWithWeirdChars Some string (not null, length > 0)
-     * @param maxLength If name should be truncated, specify some value > 0 (<= 0 means no truncation)
+     * @param strWithWeirdChars Some string (not null, length &gt; 0)
+     * @param maxLength If name should be truncated, specify some value &gt; 0 (&lt;= 0 means no truncation)
      * @return the name
      * @since 2.8
      */

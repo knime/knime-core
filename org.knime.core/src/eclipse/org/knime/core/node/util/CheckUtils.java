@@ -71,7 +71,7 @@ public final class CheckUtils {
 
     /**
      * Checks the given object to be not <code>null</code>. If the check fails the exception is thrown containing the
-     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br/>
+     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br>
      * <b>Note: the string is only formatted if the exception is actually thrown.</b>
      *
      * @param toCheck the object which may not be <code>null</code>
@@ -114,7 +114,7 @@ public final class CheckUtils {
 
     /**
      * Checks the given predicate to be <code>true</code>. If the check fails the exception is thrown containing the
-     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br/>
+     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br>
      * <b>Note: the string is only formatted if the exception is actually thrown.</b>
      *
      * @param predicate is checked to be <code>true</code>
@@ -142,7 +142,7 @@ public final class CheckUtils {
 
     /**
      * Checks the given predicate to be <code>true</code>. If the check fails the exception is thrown containing the
-     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br/>
+     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br>
      * <b>Note: the string is only formatted if the exception is actually thrown.</b>
      *
      * @param predicate is checked to be <code>true</code>
@@ -184,7 +184,7 @@ public final class CheckUtils {
 
     /**
      * Checks the given object to be not <code>null</code>. If the check fails the exception is thrown containing the
-     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br/>
+     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br>
      * <b>Note: the string is only formatted if the exception is actually thrown.</b>
      *
      * @param toCheck the object which may not be <code>null</code>
@@ -201,7 +201,7 @@ public final class CheckUtils {
 
     /**
      * Checks the given object to be not <code>null</code>. If the check fails the exception is thrown containing the
-     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br/>
+     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br>
      * <b>Note: the string is only formatted if the exception is actually thrown.</b>
      *
      * @param predicate is checked to be <code>true</code>
@@ -217,7 +217,7 @@ public final class CheckUtils {
 
     /**
      * Checks the given object to be not <code>null</code>. If the check fails the exception is thrown containing the
-     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br/>
+     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br>
      * <b>Note: the string is only formatted if the exception is actually thrown.</b>
      *
      * @param toCheck the object which may not be <code>null</code>

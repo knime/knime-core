@@ -174,7 +174,7 @@ public class DataTableDomainCreator {
     /**
      * Set the maximum number of possible values in the domain of a nominal value columns.
      *
-     * @param maxValues the maximal number of values, must be >= 0
+     * @param maxValues the maximal number of values, must be &gt;= 0
      */
     public void setMaxPossibleValues(final int maxValues) {
         if (maxValues < 0) {

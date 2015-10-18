@@ -854,7 +854,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
     }
 
     /**
-     * The number of the class column must be > 0 and < number of input columns.
+     * The number of the class column must be &gt; 0 and &lt; number of input columns.
      *
      * @param inSpecs the tabel specs on the input port to use for configuration
      * @see NodeModel#configure(DataTableSpec[])
@@ -982,7 +982,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
     /**
      * This method validates the settings. That is:
      * <ul>
-     * <li>The number of the class column must be an integer > 0</li>
+     * <li>The number of the class column must be an integer &gt; 0</li>
      * <li>The positive value <code>DataCell</code> must not be null</li>
      * </ul>
      * {@inheritDoc}

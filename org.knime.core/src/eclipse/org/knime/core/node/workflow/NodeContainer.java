@@ -559,7 +559,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     }
 
     /** Called when the state of a node should switch from
-     * {@link InternalNodeContainerState#QUEUED} to {@link InternalNodeContainerState#PREEXECUTE}. The method is to be
+     * {@link State#QUEUED} to {@link State#PREEXECUTE}. The method is to be
      * called from the node's parent in a synchronized environment.
      * @return whether there was an actual state transition, false if the
      *         execution was canceled (cancel checking to be done in
@@ -575,8 +575,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     abstract void performStateTransitionEXECUTING();
 
     /** Called when the state of a node should switch from
-     * {@link InternalNodeContainerState#EXECUTING} (or {@link InternalNodeContainerState#EXECUTINGREMOTELY}) to
-     * {@link InternalNodeContainerState#POSTEXECUTE}. The method is to be called from the node's
+     * {@link State#EXECUTING} (or {@link State#EXECUTINGREMOTELY}) to
+     * {@link State#POSTEXECUTE}. The method is to be called from the node's
      * parent in a synchronized environment. */
     abstract void performStateTransitionPOSTEXECUTE();
 
@@ -1386,7 +1386,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
     }
 
-    /** Get a new persistor that is used to copy this node (copy&paste action).
+    /** Get a new persistor that is used to copy this node (copy&amp;paste action).
      * @param tableRep Table repository of the destination.
      * @param fileStoreHandlerRepository file store handler of destination
      * @param preserveDeletableFlags Whether the "isdeleteable" annotation

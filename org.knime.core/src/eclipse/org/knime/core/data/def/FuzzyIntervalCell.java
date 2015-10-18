@@ -112,7 +112,7 @@ public final class FuzzyIntervalCell extends DataCell implements
      * @param minCore Minimum core value.
      * @param maxCore Maximum core value.
      * @param maxSupp Maximum support value.
-     * @throws IllegalArgumentException If not <code>a <= b <= c <= d</code>.
+     * @throws IllegalArgumentException If not <code>a &lt;= b &lt;= c &lt;= d</code>.
      */
     public FuzzyIntervalCell(final double minSupp, final double minCore,
             final double maxCore, final double maxSupp) {
@@ -277,7 +277,7 @@ public final class FuzzyIntervalCell extends DataCell implements
          * @param maxCore maximum core value
          * @param maxSupp maximum support value
          * @return a new data cell
-         * @throws IllegalArgumentException If not <code>a <= b <= c <= d</code>.
+         * @throws IllegalArgumentException If not <code>a &lt;= b &lt;= c &lt;= d</code>.
          */
         public static DataCell create(final double minSupp, final double minCore, final double maxCore,
             final double maxSupp) {

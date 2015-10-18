@@ -210,9 +210,9 @@ public final class PortTypeRegistry {
     /**
      * Returns the {@link PortObject} class for the given class name. This method looks through all registered
      * {@link PortObject} implementations. If no port object implementation is found, an empty optional is returned.
-     * <br />
+     * <br>
      * As a fallback mechanism, the {@link GlobalClassCreator} is used. This will be changed with the next major
-     * release. <br />
+     * release. <br>
      *
      * @param className a class name
      * @return an optional containing the requested port object class
@@ -254,9 +254,9 @@ public final class PortTypeRegistry {
 
     /**
      * Returns the {@link DataCell} class for the given class name. This method looks through all registered
-     * {@link DataCell} implementations. If no data cell implementation is found, an empty optional is returned. <br />
+     * {@link DataCell} implementations. If no data cell implementation is found, an empty optional is returned. <br>
      * As a fallback mechanism, the {@link GlobalClassCreator} is used. This will be changed with the next major
-     * release. <br />
+     * release. <br>
      * This method should only be used by {@link DataType} for creating data types that were saved to disc.
      *
      * @param className a class name

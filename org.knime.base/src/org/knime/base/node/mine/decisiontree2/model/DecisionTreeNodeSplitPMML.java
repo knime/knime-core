@@ -69,7 +69,7 @@ import org.knime.core.util.Pair;
 
 /**
  * Decision tree split node that supports PMML predicates to partition the data.
- * An arbitrary number of childs (>2) is allowed.
+ * An arbitrary number of childs (&gt; 2) is allowed.
  *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */

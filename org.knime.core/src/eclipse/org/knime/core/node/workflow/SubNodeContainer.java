@@ -137,7 +137,7 @@ import org.w3c.dom.Element;
  * and acting like a {@link NativeNodeContainer} to the outside.
  *
  * @noreference Not to be used by clients.
- * @author M. Berthold & B. Wiswedel
+ * @author M. Berthold &amp; B. Wiswedel
  * @since 2.9
  */
 public final class SubNodeContainer extends SingleNodeContainer implements NodeContainerParent, NodeContainerTemplate {

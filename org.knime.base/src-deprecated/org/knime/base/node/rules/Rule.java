@@ -93,7 +93,7 @@ import org.knime.core.data.def.StringCell;
  * STRINGLIST := '(' STRING (',' STRING)* ')'
  * </pre>
  *
- * The operators should be self-describing, if not look them up in SQL ;-) <br />
+ * The operators should be self-describing, if not look them up in SQL ;-) <br>
  * While parsing a rule, the parser also checks if the arithmetic operations are
  * in fact done with numerical columns and throws an exception if not. Therefore
  * the constructor needs the spec of the table on which the rule will lateron be

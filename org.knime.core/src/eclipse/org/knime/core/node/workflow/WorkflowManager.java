@@ -2845,8 +2845,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Cleanup a node after execution. This will also permit the argument node
-     * to change its state in {@link NodeContainer#
-     * performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
+     * to change its state in {@link NodeContainer#performStateTransitionEXECUTED(NodeContainerExecutionStatus)}.
      * This method also takes care of restarting loops, if there are any to be
      * continued.
      *
@@ -2897,6 +2896,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             // and appropriate message is set.
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                     "Parallel Branch Start Failure: " + e.getMessage());
+                            LOGGER.error(latestNodeMessage.getMessage(), e);
                             success = false;
                             canConfigureSuccessors = false;
                             disableNodeForExecution(nc.getID());
@@ -2921,6 +2921,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             // loop is incorrectly wired. We can not restart potentially dangling branches
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                 "Loop Body wired incorrectly (" + ile.getMessage() + ").");
+                            LOGGER.error(latestNodeMessage.getMessage(), ile);
                             success = false;
                         }
                         // check if any of those nodes can still be executed (configured but not yet executing)
@@ -2957,6 +2958,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             }
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                     "Loop nodes are not in the same workflow!");
+                            LOGGER.error(latestNodeMessage.getMessage());
                             success = false;
                         } else {
                             try {
@@ -7037,11 +7039,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Copy the nodes with the given ids.
-     * @param isUndoableDeleteCommand True if the returned persistor is used
+     * @param isUndoableDeleteCommand <code>true</code> if the returned persistor is used
      * in the delete command (which supports undo). This has two effects:
      * <ol>
      *   <li>It keeps the locations of the node's directories (e.g.
-     *   &lt;workflow>/File Reader (#xy)/). This is true if the copy serves
+     *   &lt;workflow&gt;/File Reader (#xy)/). This is true if the copy serves
      *   as backup of an undoable delete command (undoable = undo enabled).
      *   If it is undone, the directories must not be cleared before the
      *   next save (in order to keep the drop folder)

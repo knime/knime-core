@@ -105,8 +105,7 @@ public class GlobalSettings {
      * value delimiter.
      *
      * @param maxUniqueValues the maximum number of unique values to consider
-     * @see #GlobalSettings(FileStoreFactory, List, int, String,
-     * DataTableSpec, int)
+     * @see #GlobalSettings(FileStoreFactory, List, int, String, DataTableSpec, int)
      */
     @Deprecated
     public GlobalSettings(final int maxUniqueValues) {
@@ -119,8 +118,7 @@ public class GlobalSettings {
      * @param valueDelimiter the delimiter to use for value separation
      * @param spec the {@link DataTableSpec} of the input table
      * @param noOfRows the number of rows of the input table
-     * @see #GlobalSettings(FileStoreFactory, List, int, String,
-     * DataTableSpec, int)
+     * @see #GlobalSettings(FileStoreFactory, List, int, String, DataTableSpec, int)
      */
     @Deprecated
     public GlobalSettings(final int maxUniqueValues,

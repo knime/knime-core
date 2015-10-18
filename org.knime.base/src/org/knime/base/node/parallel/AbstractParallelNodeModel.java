@@ -73,7 +73,7 @@ import org.knime.core.util.ThreadPool;
  * RowAppender[], ExecutionMonitor)} method must be overriden. This method is
  * called with a {@link DataTable} containing only a part of the input rows as
  * often as necessary. A default value for the maximal chunk size (i.e. the
- * number of rows in the chunked data table) is given in the constructor.<br />
+ * number of rows in the chunked data table) is given in the constructor.<br>
  *
  * If the node has more than one input table only the first input table is
  * chunked, the remaining ones are passed to {@link #executeByChunk(
@@ -157,6 +157,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
         final double max = data[0].getRowCount();
 
         final Callable<Void> submitter = new Callable<Void>() {
+            @Override
             public Void call() throws Exception {
                 final RowIterator it = data[0].iterator();
                 BufferedDataContainer container = null;
@@ -172,6 +173,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
                             final int temp2 = chunks;
                             futures.add(m_workers
                                     .submit(new Callable<DataContainer[]>() {
+                                        @Override
                                         public DataContainer[] call()
                                                 throws Exception {
                                             ExecutionMonitor subProg =

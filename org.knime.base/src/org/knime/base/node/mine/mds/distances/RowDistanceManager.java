@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 23, 2005 (Kilian Thiel): created
  */
@@ -51,32 +51,29 @@ import org.knime.core.data.DataRow;
 
 /**
  * Provides distances between two data rows.
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  * @since 2.6
  */
 public interface RowDistanceManager {
 
     /**
-     * Returns the distance between the given <code>DataRow</code>s, row1 and 
+     * Returns the distance between the given <code>DataRow</code>s, row1 and
      * row2. The distance metric is up to the concrete implementation.
-     * 
+     *
      * @param row1 First <code>DataRow</code> to compute distance.
      * @param row2 Second <code>DataRow</code> to compute distance.
      * @return The distance between given <code>DataRow</code>s.
      */
-    public double getDistance(DataRow row1, DataRow row2);    
-    
+    public double getDistance(DataRow row1, DataRow row2);
+
     /**
      * @return The type of the <code>RowDistanceManager</code>. See
      *         <code>DistanceManagerFactory</code> for valid types.
-     * 
-     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#
-     *      COS_DIST
-     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#
-     *      EUCLIDEAN_DIST
-     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#
-     *      MANHATTAN_DIST
+     *
+     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#COS_DIST
+     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#EUCLIDEAN_DIST
+     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#MANHATTAN_DIST
      */
     public String getType();
 }

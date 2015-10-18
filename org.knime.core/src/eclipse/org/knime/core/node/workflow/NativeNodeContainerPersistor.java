@@ -64,8 +64,11 @@ interface NativeNodeContainerPersistor extends SingleNodeContainerPersistor {
      */
     Node getNode();
 
-    /** @return bundle info to the underlying null. May be null for idle/configured nodes (so always during copy&paste).
-     * @since 2.10 */
-    NodeAndBundleInformation getNodeAndBundleInformation();
+    /**
+     * @return bundle info to the underlying null. May be null for idle/configured nodes (so always during
+     *         copy&amp;paste).
+     * @since 2.10
+     */
+        NodeAndBundleInformation getNodeAndBundleInformation();
 
 }

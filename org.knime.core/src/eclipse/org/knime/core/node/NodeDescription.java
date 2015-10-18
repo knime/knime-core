@@ -164,7 +164,7 @@ public abstract class NodeDescription {
     public abstract Element getXMLDescription();
 
     /**
-     * Utility function which strips the <tt><&lt;xml-fragment></tt> start and end tags from the strings returned by
+     * Utility function which strips the <tt>&lt;xml-fragment&gt;</tt> start and end tags from the strings returned by
      * <tt>xmlText()</tt>.
      *
      * @param xmlObject an xmlObject whose contents should be serialized into a string

@@ -110,7 +110,7 @@ public final class ParallelizedChunkContent {
 	}
 
     /**
-     * @param nmodel
+     * @param pccm
      */
     public void registerLoopEndStateChangeListener(
             final ParallelizedChunkContentMaster pccm) {
@@ -119,7 +119,7 @@ public final class ParallelizedChunkContent {
     }
 
     /**
-     * @param nmodel
+     * @param pccm
      */
     public void removeLoopEndStateChangeListener(
             final ParallelizedChunkContentMaster pccm) {

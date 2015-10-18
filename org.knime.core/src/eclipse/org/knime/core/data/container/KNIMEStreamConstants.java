@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 8, 2008 (wiswedel): created
  */
@@ -50,14 +50,14 @@ package org.knime.core.data.container;
 import org.knime.core.data.RowKey;
 
 /**
- * Defines some constants commonly used when writing {@link Buffer} files. 
+ * Defines some constants commonly used when writing {@link Buffer} files.
  * @author Bernd Wiswedel, University of Konstanz
  */
 interface KNIMEStreamConstants {
-    
+
     /** The key being returned by a {@link NoKeyBuffer}. */
     static final RowKey DUMMY_ROW_KEY = new RowKey("non-existing");
-    
+
     /** The byte being used as block terminate. */
     static final byte TC_TERMINATE = (byte)0x61;
 
@@ -66,18 +66,18 @@ interface KNIMEStreamConstants {
      * neither be considered as terminate nor as escape byte.
      */
     static final byte TC_ESCAPE = (byte)0x62;
- 
+
     /** The char for missing cells. */
     static final byte BYTE_TYPE_MISSING = Byte.MIN_VALUE;
 
     /** The char for cell whose type needs serialization. */
     static final byte BYTE_TYPE_SERIALIZATION = BYTE_TYPE_MISSING + 1;
 
-    /** The first used char for the map char --> type. */
+    /** The first used char for the map char --&gt; type. */
     static final byte BYTE_TYPE_START = BYTE_TYPE_MISSING + 2;
 
     /** Separator for different rows. */
     static final byte BYTE_ROW_SEPARATOR = BYTE_TYPE_MISSING + 3;
-    
+
 
 }

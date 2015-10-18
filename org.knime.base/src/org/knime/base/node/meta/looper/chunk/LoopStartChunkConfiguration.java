@@ -86,7 +86,7 @@ final class LoopStartChunkConfiguration {
         return m_nrRowsPerChunk;
     }
     /** @param nrRowsPerChunk the nrRowsPerChunk to set
-     * @throws InvalidSettingsException If argument < 1*/
+     * @throws InvalidSettingsException If argument &lt; 1*/
     void setNrRowsPerChunk(final int nrRowsPerChunk)
         throws InvalidSettingsException {
         if (nrRowsPerChunk < 1) {
@@ -100,7 +100,7 @@ final class LoopStartChunkConfiguration {
         return m_nrOfChunks;
     }
     /** @param nrOfChunks the nrOfChunks to set
-    * @throws InvalidSettingsException If argument < 1*/
+    * @throws InvalidSettingsException If argument &lt; 1*/
     void setNrOfChunks(final int nrOfChunks) throws InvalidSettingsException {
         if (nrOfChunks < 1) {
             throw new IllegalArgumentException("No of chunks must "

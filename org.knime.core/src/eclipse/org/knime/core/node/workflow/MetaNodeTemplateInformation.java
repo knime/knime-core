@@ -198,8 +198,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         return m_updateStatus;
     }
 
-    /** Set update status field, only to be called via {@link WorkflowManager#
-     * checkUpdateMetaNodeLink(NodeID, WorkflowLoadHelper)}.
+    /** Set update status field, only to be called via
+     * {@link WorkflowManager#checkUpdateMetaNodeLink(NodeID, WorkflowLoadHelper)}.
      * @param updateStatus The field
      * @return Whether the field has changed (caller needs notifying listeners).
      */

@@ -53,9 +53,7 @@ package org.knime.core.node.workflow;
  * details, in this case making sure variables put onto the stack inside
  * the scope are removed when leaving it again.
  *
- * Derivatives of this interface, such as @see{LoopStartNode} or
- * @see{GenericTryNodeModel} add additional functionality on top of
- * the scope.
+ * Derivatives of this interface, such as {@link LoopStartNode} additional functionality on top of the scope.
  *
  * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
  * @since 2.8

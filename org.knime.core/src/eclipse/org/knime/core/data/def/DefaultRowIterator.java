@@ -54,7 +54,7 @@ import org.knime.core.data.RowIterator;
 /**
  * Specific implementation for a {@link RowIterator} that iterates over a
  * generic {@link org.knime.core.data.DataTable DataTable}. It delegates to a
- * given <code>Iterator&lt;DataRow&gt</code>; but disallows the invocation of
+ * given <code>Iterator&lt;DataRow&gt;</code>; but disallows the invocation of
  * the <code>remove</code> method.
  *
  * @author Bernd Wiswedel, University of Konstanz

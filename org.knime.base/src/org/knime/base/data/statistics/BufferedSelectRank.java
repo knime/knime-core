@@ -81,7 +81,7 @@ class BufferedSelectRank extends SelectRank<BufferedDataContainer, BufferedDataT
      * Selects values for indices from the table passed in the constructor according to the settings and returns the
      * values in the output table.
      *
-     * @param ctx To report progress & create temporary and final output tables.
+     * @param ctx To report progress &amp; create temporary and final output tables.
      * @return The selected values.
      * @throws CanceledExecutionException If canceled.
      */

@@ -566,7 +566,7 @@ public class DataContainer implements RowAppender {
      * rows are added.
      *
      * @param maxPossibleValues The new number.
-     * @throws IllegalArgumentException If the value < 0
+     * @throws IllegalArgumentException If the value &lt; 0
      */
     public void setMaxPossibleValues(final int maxPossibleValues) {
         m_domainCreator.setMaxPossibleValues(maxPossibleValues);

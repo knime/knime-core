@@ -300,7 +300,7 @@ class Workflow {
 
     /** Return map of node ids connected to the given outport of the given node
      * sorted in breadth first order mapped to a set of portIDs.
-     * See also {@link #getBreadthFirstListOfNodeAndSuccessors()}
+     * See also {@link #getBreadthFirstListOfNodeAndSuccessors(NodeID, boolean)}
      *
      * @param id of node
      * @param outPortIndices of node (empty set for all ports)
@@ -1442,7 +1442,7 @@ class Workflow {
      *
      * @param startNode id of head of loop
      * @param endNode if of tail of loop
-     * @return list of nodes within loop body & any dangling branches. The list
+     * @return list of nodes within loop body &amp; any dangling branches. The list
      *         also contains the used input ports of each node.
      * @throws IllegalLoopException If there is a ill-posed loop (dangling branches)
      */

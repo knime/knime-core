@@ -222,8 +222,7 @@ public abstract class PMMLContentHandler extends DefaultHandler
     /**
      * Returns the PMML version that this content handler prefers to write.
      * Override this method in a derived class to change the set preferred
-     * version. Valid versions are defined in
-     * {@link PMMLPortObject#getSupportedPMMLVersions()}.
+     * version. Valid versions are defined in {@link #getSupportedVersions()}.
      *
      * @return the preferred PMML version
      */
@@ -348,7 +347,7 @@ public abstract class PMMLContentHandler extends DefaultHandler
      * They can assume that the document is started and will be ended and should
      * only provided the content starting with the mining scheme.
      * If they want to support the addition of LocalTransformations they have to
-     * provide an empty <LocalTransformation></LocalTransformations> element
+     * provide an empty &lt;LocalTransformation&gt; element
      * that can be filled later with preprocessing operations.
      *
      *
@@ -356,7 +355,6 @@ public abstract class PMMLContentHandler extends DefaultHandler
      * @param spec the port object spec
      * @throws SAXException if the model cannot be added
      */
-    @SuppressWarnings("unused")
     protected void addPMMLModelContent(final TransformerHandler handler,
             final PMMLPortObjectSpec spec) throws SAXException {
         // empty in the base class

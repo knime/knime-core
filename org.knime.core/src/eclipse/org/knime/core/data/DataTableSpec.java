@@ -83,6 +83,7 @@ import org.knime.core.node.workflow.DataTableSpecView;
  * types, names, and other column oriented information through a collection of
  * {@link DataColumnSpec} objects. The names of the {@link DataColumnSpec}s
  * must be unique identifiers within a <code>DataTableSpec</code>.
+ * </p>
  *
  * <p>
  * Once a <code>DataTableSpec</code> is initialized, it is immutable. That is,
@@ -91,6 +92,7 @@ import org.knime.core.node.workflow.DataTableSpecView;
  * <code>DataTableSpec</code> carrying the new information. A spec can be
  * propagated from node to node via the ports so that succeeding nodes know
  * about the table structure even if no data table is currently available.
+ * </p>
  *
  * <p>
  * In addition, the table spec provides a single {@link SizeHandler},
@@ -100,7 +102,7 @@ import org.knime.core.node.workflow.DataTableSpecView;
  * size, color, and shape to a row based on the {@link DataCell}s value in the
  * corresponding column. If there is more than one column that provides a
  * handler of a certain type (color, shape, size) the first handler is used.
- * <br />
+ * </p>
  * A <code>DataTableSpec</code> can also have a name which does not need to be
  * unique.
  *

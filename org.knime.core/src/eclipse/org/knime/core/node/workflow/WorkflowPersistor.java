@@ -249,7 +249,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             m_uiInfo = uiInfo;
         }
 
-        /** Copies an existing connection (used for copy&paste).
+        /** Copies an existing connection (used for copy&amp;paste).
          * @param original To copy.
          * @param preserveDeletableFlag Whether to retain the deletable status
          * of the original connection. */

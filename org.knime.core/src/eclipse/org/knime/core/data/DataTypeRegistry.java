@@ -200,10 +200,10 @@ public final class DataTypeRegistry {
     /**
      * Returns the {@link DataCell} class for the given class name. This method looks through all registered
      * {@link DataCell} implementations. If no data cell implementation is found, an empty optional is returned.
-     * <br />
+     * <br>
      * As a fallback mechanism, the {@link GlobalClassCreator} is used. This will be changed with the next major
      * release.
-     * <br />
+     * <br>
      * This method should only be used by {@link DataType} for creating data types that were saved to disc.
      *
      * @param className a class name
@@ -252,7 +252,7 @@ public final class DataTypeRegistry {
      * Returns the {@link DataValue} class for the given class name. This method looks through all registered
      * {@link DataCell} implementations and inspects their implemented interfaces. If no data cell implements the given
      * value class, an empty optional is returned.
-     * <br />
+     * <br>
      * As a fallback mechanism, the {@link GlobalClassCreator} is used. This will be changed with the next major
      * release.
      *

@@ -51,11 +51,11 @@ import java.util.Arrays;
 
 /**
  * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
- * a fixed length. <br />
+ * a fixed length. <br>
  * Implementation stores the bits in a collection of longs (64 bit words). Thus
  * it can be used for well populated vectors. Its length is restricted to
  * ({@link Integer#MAX_VALUE} - 1) * 64 (i.e. 137438953344, in which case it
- * uses around 16GigaByte of memory).<br />
+ * uses around 16GigaByte of memory).<br>
  * The implementation is not thread-safe.
  *
  * @author ohl, University of Konstanz
@@ -1254,7 +1254,7 @@ public class DenseBitVector implements BitVector {
     /**
      * Computes the cardinality of the intersection with the given bitVector.
      *
-     * @see {@link BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)}
+     * @see BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)
      * @param bitVector the other operand for the AND operator
      * @return the cardinality of the intersection
      */
@@ -1277,7 +1277,7 @@ public class DenseBitVector implements BitVector {
     /**
      * Computes the cardinality of the complement relative to the given bitVector.
      *
-     * @see {@link BitVectorUtil#cardinalityOfRelativeComplement(BitVectorValue, BitVectorValue)}
+     * @see BitVectorUtil#cardinalityOfRelativeComplement(BitVectorValue, BitVectorValue)
      * @param bitVector the other operand
      * @return the cardinality of the intersection
      */

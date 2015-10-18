@@ -43,7 +43,7 @@
          </property>
          <property
                name="windowImages"
-               value="icons/png/knime_16.png,icons/png/knime_32.png,icons/png/knime_48.png,icons/png/knime_64.png,icons/png/knime_128.png">
+               value="icons/png/knime_16.png,icons/png/knime_32.png,icons/png/knime_48.png,icons/png/knime_64.png,icons/png/knime_128.png,icons/png/knime_256.png">
          </property>
          <property
                name="cssTheme"

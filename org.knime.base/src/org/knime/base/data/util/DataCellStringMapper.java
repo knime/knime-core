@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   06.08.2005 (mb): created
  */
@@ -60,9 +60,9 @@ import org.knime.core.node.config.ConfigWO;
  * Allow a mapping of arbitrary {@link org.knime.core.data.DataCell}s to
  * unique, well-behaved strings, for example for usage with external executables
  * that may frown upon parsing arbitrary strings. Keeps two maps for each
- * direction ({@link DataCell} <-> {@link String}) and creates new, unique
+ * direction ({@link DataCell} &lt;-&gt; {@link String}) and creates new, unique
  * Strings for unknown DataCells.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
@@ -73,7 +73,7 @@ public final class DataCellStringMapper {
     private static final String CFG_STRINGTOCELL = "stringToCell";
 
     private static final String CFG_UNIQUEINDEX = "unique_index";
-    
+
     private final HashMap<DataCell, String> m_cellToString;
 
     private final  HashMap<String, String> m_origstringToString;
@@ -93,7 +93,7 @@ public final class DataCellStringMapper {
         m_stringToCell = new HashMap<String, DataCell>();
         m_stringToOrigstring = new HashMap<String, String>();
     }
-    
+
     private DataCellStringMapper(final HashMap<DataCell, String> cellToString,
             final HashMap<String, String> origstringToString,
             final HashMap<String, DataCell> stringToCell,
@@ -105,8 +105,8 @@ public final class DataCellStringMapper {
         m_stringToOrigstring = stringToOrigstring;
         m_uniqueIndex = uniqueIndex;
     }
-        
-    
+
+
     /**
      * @param cell {@link DataCell} to be replaced
      * @return unique string representation
@@ -197,10 +197,10 @@ public final class DataCellStringMapper {
         }
         return newNameBuffer.toString();
     }
-    
+
     /**
      * Saves the {@link DataCellStringMapper}> to the given {@link ConfigWO}.
-     * 
+     *
      * @param config Save settings to.
      */
     public void save(final ConfigWO config) {
@@ -221,7 +221,7 @@ public final class DataCellStringMapper {
 
     /**
      * Reads a {@link DataCellStringMapper} from given {@link ConfigRO}.
-     * 
+     *
      * @param config to read the mapper from
      * @return A new {@link DataCellStringMapper} object.
      * @throws InvalidSettingsException If the settings could not be read.

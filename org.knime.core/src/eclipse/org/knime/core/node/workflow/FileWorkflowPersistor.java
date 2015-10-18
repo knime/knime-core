@@ -116,13 +116,13 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
              * Version 2.2.x, introduces optional inputs, flow variable input credentials, node local drop directory.
              */
             V220("2.2.0"),
-            /** Version 2.3.x, introduces workflow annotations & switches. */
+            /** Version 2.3.x, introduces workflow annotations &amp; switches. */
             V230("2.3.0"),
             /** Version 2.4.x, introduces meta node templates. */
             V240("2.4.0"),
             /** Version 2.5.x, lockable meta nodes, node-relative annotations. */
             V250("2.5.0"),
-            /** Version 2.6.x, file store objects, grid information, node vendor & plugin information.
+            /** Version 2.6.x, file store objects, grid information, node vendor &amp; plugin information.
              * @since 2.6 */
             V260("2.6.0"),
             /** node.xml and settings.xml are one file, settings in SNC, meta data in workflow.knime.
@@ -1396,7 +1396,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     /**
-     * Load editor information (grid settings & zoom level).
+     * Load editor information (grid settings &amp; zoom level).
      *
      * @param settings ...
      * @return null
@@ -1875,7 +1875,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         return null;
     }
 
-    /** @return version that is saved, {@value #VERSION_LATEST}. */
+    /** @return version that is saved */
     protected static LoadVersion getSaveVersion() {
         return VERSION_LATEST;
     }

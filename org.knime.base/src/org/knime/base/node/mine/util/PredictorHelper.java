@@ -158,7 +158,7 @@ public class PredictorHelper {
     }
 
     /**
-     * Adds the prediction column name to the {@code dialog}. After that horizontal placement is set. <br/>
+     * Adds the prediction column name to the {@code dialog}. After that horizontal placement is set. <br>
      * Please make sure to initialize the {@code changePredictionColName} model properly or fire the model state change
      * listeners.
      *

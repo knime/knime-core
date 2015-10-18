@@ -440,7 +440,7 @@ public class TableContentModel extends AbstractTableModel
      * and count the rows in it. Successive calls of this method are ignored.
      * Also if the final row count is known (either by consecutive calls of
      * this method or because the table is so small that the cache is filled
-     * with all rows) this method has no effect.<br />
+     * with all rows) this method has no effect.<br>
      *
      * The row counting process can be aborted by calling
      * {@link #cancelRowCountingInBackground()}.
@@ -844,11 +844,12 @@ public class TableContentModel extends AbstractTableModel
      * have at least a size so that all rows that are displayed at a time can
      * be buffered (however, no further checking is carried out).
      *
-     * <p>If <code>size</code> is less than twice the chunk size, i.e.
-     * <pre><code>size < 2*getChunkSize()</code></pre>, it will be set to it.
+     * <p>
+     * If <code>size</code> is less than twice the chunk size, i.e.
+     * <pre><code>size &lt; 2*getChunkSize()</code></pre>, it will be set to it.
      * So when a "new" row is requested, at least <code>getChunkSize()</code>
      * rows after (including that row) and before the new row will be also in
-     * the cache.</p>
+     * the cache.
      *
      * @param size size of the new cache.
      * @return the new cache size (may differ from <code>size</code>, see above)
@@ -885,7 +886,7 @@ public class TableContentModel extends AbstractTableModel
      *
      * @param newSize the new value
      * @return the new chunk size (may differ from passed argument, see above)
-     * @throws IllegalArgumentException if <code>newSize</code> is <= 0.
+     * @throws IllegalArgumentException if <code>newSize</code> is &lt;= 0.
      * @see #getCacheSize()
      */
     protected final int setChunkSize(final int newSize) {

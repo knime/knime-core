@@ -97,7 +97,7 @@ class TempTreeNodeContainer {
 
     /**
      * @param className to be added to
-     * @param value can be >1 in case of missing values
+     * @param value can be &gt; 1 in case of missing values
      */
     void addClassCount(final DataCell className, final double value) {
         m_classCounts.put(className, value);

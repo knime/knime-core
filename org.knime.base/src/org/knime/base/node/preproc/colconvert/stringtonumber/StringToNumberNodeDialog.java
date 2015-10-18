@@ -47,10 +47,10 @@
  */
 package org.knime.base.node.preproc.colconvert.stringtonumber;
 
-import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -71,6 +71,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.util.DataTypeListCellRenderer;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * Dialog for the String to Number Node. Lets the user choose the columns to
@@ -85,9 +86,9 @@ public class StringToNumberNodeDialog extends NodeDialogPane {
                     StringToNumberNodeModel.CFG_INCLUDED_COLUMNS), 0, true,
                     new Class[]{StringValue.class});
 
-    private JTextField m_decimalSeparator = new JTextField(".", 1);
+    private JTextField m_decimalSeparator = new JTextField(".", 3);
 
-    private JTextField m_thousandsSeparator = new JTextField(",", 1);
+    private JTextField m_thousandsSeparator = new JTextField(",", 3);
 
     private JComboBox<DataType> m_typeChooser =
             new JComboBox<>(StringToNumberNodeModel.POSSIBLETYPES);
@@ -105,24 +106,17 @@ public class StringToNumberNodeDialog extends NodeDialogPane {
         JPanel separatorPanel = new JPanel();
         Border border = BorderFactory.createTitledBorder("Parsing options");
         separatorPanel.setBorder(border);
-        separatorPanel
-                .setLayout(new BoxLayout(separatorPanel, BoxLayout.X_AXIS));
+        separatorPanel.setLayout(new GridLayout(0, 2, 0, 0));
 
         m_typeChooser.setRenderer(new DataTypeListCellRenderer());
-        m_typeChooser.setMaximumSize(new Dimension(100, 20));
-        separatorPanel.add(new JLabel("Type: "));
-        separatorPanel.add(m_typeChooser);
-        separatorPanel.add(Box.createHorizontalStrut(10));
+        separatorPanel.add(ViewUtils.getInFlowLayout(5, 0, FlowLayout.LEADING, new JLabel("Type: ")));
+        separatorPanel.add(ViewUtils.getInFlowLayout(5, 0, FlowLayout.LEADING, m_typeChooser));
 
-        separatorPanel.add(new JLabel("Decimal separator: "));
-        m_decimalSeparator.setMaximumSize(new Dimension(40, 20));
-        separatorPanel.add(m_decimalSeparator);
-        separatorPanel.add(Box.createHorizontalStrut(10));
+        separatorPanel.add(ViewUtils.getInFlowLayout(5, 0, FlowLayout.LEADING, new JLabel("Decimal separator: ")));
+        separatorPanel.add(ViewUtils.getInFlowLayout(5, 0, FlowLayout.LEADING, m_decimalSeparator));
 
-        separatorPanel.add(new JLabel("Thousands separator: "));
-        m_thousandsSeparator.setMaximumSize(new Dimension(40, 20));
-        separatorPanel.add(m_thousandsSeparator);
-        separatorPanel.add(Box.createHorizontalStrut(10));
+        separatorPanel.add(ViewUtils.getInFlowLayout(5, 0, FlowLayout.LEADING, new JLabel("Thousands separator: ")));
+        separatorPanel.add(ViewUtils.getInFlowLayout(5, 0, FlowLayout.LEADING, m_thousandsSeparator));
         separatorPanel.add(m_genericParse);
         contentpanel.add(separatorPanel);
         contentpanel.add(m_filtercomp.getComponentPanel());

@@ -70,11 +70,11 @@ import org.knime.core.node.util.ConvenienceMethods;
  * <code>PortObjects</code> contain the actual data or models, which are used
  * during a node's
  * {@link NodeModel#execute(PortObject[], ExecutionContext) execution}.
- * <br />
+ * <br>
  * <p><b>Important:</b> Implementors of this interface must also provide a
  * {@link PortObjectSerializer}, which is used to save and load instances. The serializer must be registered at
  * the extension point <tt>org.knime.core.PortType</tt>.
- * <br />
+ * <br>
  * There are two exceptions to this rule: Objects of class {@link BufferedDataTable} and
  * {@link ModelContent} are treated separately, they don't need to be registered.
  *
@@ -88,7 +88,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @see AbstractPortObject
  * @see AbstractSimplePortObject
  * @since 2.0
- * @author Bernd Wiswedel & Michael Berthold, University of Konstanz
+ * @author Bernd Wiswedel &amp; Michael Berthold, University of Konstanz
  */
 public interface PortObject {
     /**

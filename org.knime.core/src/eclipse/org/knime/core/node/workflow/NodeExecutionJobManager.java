@@ -67,7 +67,7 @@ import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitTyp
  * <p>Subclasses should extend from {@link AbstractNodeExecutionJobManager} (which has one more method
  * {@link AbstractNodeExecutionJobManager#getIconForWorkflow()}).
  *
- * @author M. Berthold & B. Wiswedel, University of Konstanz
+ * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
  */
 public interface NodeExecutionJobManager {
 
@@ -88,7 +88,7 @@ public interface NodeExecutionJobManager {
     /**
      * Creates a new instance of a panel that holds components to display the
      * job manager's settings and to allow the user to enter new values. A new
-     * instance must be created every time this method is called.<br />
+     * instance must be created every time this method is called.<br>
      * Returns null if this job manager has no settings to adjust. The framework
      * transfers the settings of the job manager in the panel. The returned
      * panel can be un-initialized.
@@ -101,7 +101,7 @@ public interface NodeExecutionJobManager {
 
     /**
      * Returns a unique ID of this job manager implementations. Preferably this
-     * is the fully qualifying name of its package. <br />
+     * is the fully qualifying name of its package. <br>
      * For a user readable label, see {@link #toString()}
      *
      * @return a unique ID of this job manager implementations

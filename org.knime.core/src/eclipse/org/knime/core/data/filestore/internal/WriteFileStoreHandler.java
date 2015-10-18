@@ -72,7 +72,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
 
     /** File organization of file stores. There are {@value #FOLDER_LEVEL} levels of sub folders in the temp dir,
      * each folder contains {@value #FILES_PER_FOLDER} sub folders or files (in the leaf folders). A file store
-     * file is then located in, e.g. &lt;filestore_dir>/000/000/000/file1.bin */
+     * file is then located in, e.g. &lt;filestore_dir&gt;/000/000/000/file1.bin */
     public static final int FILES_PER_FOLDER = 1000;
     /** See {@link #FILES_PER_FOLDER}. */
     public static final int FOLDER_LEVEL = 2;

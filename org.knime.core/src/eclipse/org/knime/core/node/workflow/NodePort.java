@@ -49,8 +49,8 @@ import org.knime.core.node.port.PortType;
 
 /**
  * Abstract node port implementation which keeps an index and a port name.
- * 
- * @author Michael Berthold & B. Wiswedel, University of Konstanz
+ *
+ * @author Michael Berthold &amp; B. Wiswedel, University of Konstanz
  */
 public interface NodePort {
 
@@ -58,9 +58,9 @@ public interface NodePort {
      * @return The port index.
      */
     public int getPortIndex();
-    
+
     /**
-     * @return The port type. 
+     * @return The port type.
      */
     public PortType getPortType();
 
@@ -72,7 +72,7 @@ public interface NodePort {
     /**
      * Sets a new name for this port. If null or an empty string is passed, the
      * default name will be generated: "Port [" + portID + "]".
-     * 
+     *
      * @param portName The new name for this port. If null is passed, the
      *            default name will be generated.
      */

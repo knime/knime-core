@@ -70,7 +70,7 @@ import org.knime.core.node.config.ConfigWO;
  * {@link PortObject} or {@link PortObjectSpec}).
  *
  * @since 2.0
- * @author M. Berthold & B. Wiswedel, University of Konstanz
+ * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
  */
 public final class PortType {
     /**

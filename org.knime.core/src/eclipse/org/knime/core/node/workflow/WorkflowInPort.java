@@ -51,7 +51,7 @@ import org.knime.core.node.port.PortType;
 
 /**
  *
- * @author M. Berthold & B. Wiswedel, University of Konstanz
+ * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
  */
 public final class WorkflowInPort extends NodeInPort {
 

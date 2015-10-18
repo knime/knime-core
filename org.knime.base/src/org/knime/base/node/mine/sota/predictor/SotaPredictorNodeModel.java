@@ -258,7 +258,7 @@ public class SotaPredictorNodeModel extends NodeModel {
             if (s.getStringValue().isEmpty()) {
                 throw new InvalidSettingsException("The prediction column name cannot be empty.");
             }
-        } catch (InvalidSettingsException _) {
+        } catch (InvalidSettingsException ex) {
             //Ignore
         }
     }
@@ -270,24 +270,24 @@ public class SotaPredictorNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         try {
             m_appendProbs.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException _) {
+        } catch (InvalidSettingsException ex) {
             m_appendProbs.setBooleanValue(DEFAULT_APPEND_PROBABILITIES);
         }
         try {
             m_changePrediction.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException _) {
+        } catch (InvalidSettingsException ex) {
             m_changePrediction.setBooleanValue(false);
         }
         try {
             m_customPrediction.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException _) {
+        } catch (InvalidSettingsException ex) {
             //For compatibility reasons
             m_changePrediction.setBooleanValue(true);
             m_customPrediction.setStringValue("Predicted class");
         }
         try {
             m_probSuffix.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException _) {
+        } catch (InvalidSettingsException ex) {
             m_probSuffix.setStringValue("");
         }
     }

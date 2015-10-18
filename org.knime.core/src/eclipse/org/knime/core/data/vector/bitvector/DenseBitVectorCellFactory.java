@@ -51,7 +51,7 @@ import org.knime.core.data.DataCell;
 
 /**
  * Used to created {@link DataCell}s holding a {@link DenseBitVector}. As data cells are read only this factory can be
- * used to initialize the bit vector accordingly and then create a data cell from it. <br />
+ * used to initialize the bit vector accordingly and then create a data cell from it. <br>
  * This factory also provides methods for performing basic operations ({@link #and(BitVectorValue, BitVectorValue)},
  * {@link #or(BitVectorValue, BitVectorValue)}, etc.) on two data cells holding bit vectors.
  *
@@ -177,9 +177,9 @@ public class DenseBitVectorCellFactory implements BitVectorCellFactory<DenseBitV
 
     /**
      * Creates a dense bit vector cell containing the result of the AND operation on the passed operands. The length of
-     * the result vector is the maximum of the lengths of the operands.<br />
+     * the result vector is the maximum of the lengths of the operands.<br>
      * NOTE: This method performs best if the two arguments are both {@link DenseBitVectorCell}s. All other
-     * implementations need to access the bits through get/set methods which probably performs very poorly. <br />
+     * implementations need to access the bits through get/set methods which probably performs very poorly. <br>
      * See also {@link SparseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)} for ANDing sparse bit vector
      * cells.
      *
@@ -215,9 +215,9 @@ public class DenseBitVectorCellFactory implements BitVectorCellFactory<DenseBitV
 
     /**
      * Creates a dense bit vector cell containing the result of the OR operation on the passed operands. The length of
-     * the result vector is the maximum of the lengths of the operants.<br />
+     * the result vector is the maximum of the lengths of the operants.<br>
      * NOTE: This method performs best if the two arguments are both {@link DenseBitVectorCell}s. All other
-     * implementations need to access the bits through get/set methods which probably performs very poorly. <br />
+     * implementations need to access the bits through get/set methods which probably performs very poorly. <br>
      * See also {@link SparseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)} for ORing sparse bit vector
      * cells.
      *
@@ -245,9 +245,9 @@ public class DenseBitVectorCellFactory implements BitVectorCellFactory<DenseBitV
 
     /**
      * Creates a dense bit vector cell containing the result of the XOR operation on the passed operands. The length of
-     * the result vector is the maximum of the lengths of the operants.<br />
+     * the result vector is the maximum of the lengths of the operants.<br>
      * NOTE: This method performs best if the two arguments are both {@link SparseBitVectorCell}s. All other
-     * implementations need to access the bits through get/set methods which probably performs very poorly. <br />
+     * implementations need to access the bits through get/set methods which probably performs very poorly. <br>
      * See also {@link SparseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)} for XORing sparse bit vector
      * cells.
      *

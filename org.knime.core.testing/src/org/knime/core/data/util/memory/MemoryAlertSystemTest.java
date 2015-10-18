@@ -95,7 +95,8 @@ public class MemoryAlertSystemTest {
      */
     @Test(timeout = 15000)
     public void testSleepWhileLow() throws Exception {
-        int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
+        int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
+            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
         // we should return immediately because enough memory is available
         boolean memoryAvailable = m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 1000);
@@ -142,7 +143,8 @@ public class MemoryAlertSystemTest {
      */
     @Test
     public void testListener() throws Exception {
-        int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
+        int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
+            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
         final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
@@ -180,7 +182,8 @@ public class MemoryAlertSystemTest {
      */
     @Test
     public void testAutoRemoveListener() throws Exception {
-        int reserveSize = (int)(0.75 * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
+        int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
+            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
 
         final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
@@ -212,7 +215,12 @@ public class MemoryAlertSystemTest {
         }
     }
 
-    private static void forceGC() throws InterruptedException {
+    /**
+     * Forces a GC run. By using soft reference {@link System#gc()} is called until the soft reference has been cleared.
+     *
+     * @throws InterruptedException if the thread is interrupted
+     */
+    public static void forceGC() throws InterruptedException {
         Object obj1 = new Object();
         SoftReference<Object> ref1 = new SoftReference<>(obj1);
         Object obj2 = new Object();

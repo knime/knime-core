@@ -199,7 +199,7 @@ public abstract class AbstractNodeView<T extends NodeModel> {
 
     /** Closes the view and disposes all allocated resources. The view is not
      * meant to be opened again. This method is the counterpart to
-     * {@link #openView(String)}. (Core) Sub-classes may widen the scope of this
+     * {@link #openView(String, Rectangle)}. (Core) Sub-classes may widen the scope of this
      * method. */
     void closeView() {
         m_nodeModel.unregisterView(this);
@@ -213,7 +213,7 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      **/
     protected abstract void callCloseView();
 
-    /** @return the viewName as set in the {@link #openView(String)} method. */
+    /** @return the viewName as set in the {@link #openView(String, Rectangle)} method. */
     String getViewName() {
         return m_viewName;
     }

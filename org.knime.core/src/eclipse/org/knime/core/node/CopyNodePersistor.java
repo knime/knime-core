@@ -55,7 +55,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  * A persistor cloning a node's settings. It does not retain port objects or
- * node internals. Used by copy&paste and undo.
+ * node internals. Used by copy&amp;paste and undo.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
