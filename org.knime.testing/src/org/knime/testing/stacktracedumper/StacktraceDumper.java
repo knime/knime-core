@@ -61,14 +61,14 @@ import org.knime.core.util.MutableInteger;
  * Collects stack traces and writes them into a file. It launches two thread (in
  * its constructor) that periodically create snapshots of the stacks of all
  * threads and continuously write those snapshots into a file (specified as an
- * argument to the constructor). <br />
+ * argument to the constructor). <br>
  * This goes together with the {@link StackDumpAnalyzer} class which uses the
- * file written out by this class and creates an HTML result file from it.<br />
+ * file written out by this class and creates an HTML result file from it.<br>
  * The collecting and analyzing of stack traces of course only gives you a rough
  * idea of where time is spent in the code. But it is very easy to use and comes
  * with only a small performance hit. Sometimes it is good enough to find where
  * the bottleneck sits.<p>
- * How to use this:<br />
+ * How to use this:<br>
  * Instantiate this class, providing a file name (in which the stack traces are
  * written into) and an interval (in milli seconds). After that stack traces
  * are collected after each interval and written to file (in two independent

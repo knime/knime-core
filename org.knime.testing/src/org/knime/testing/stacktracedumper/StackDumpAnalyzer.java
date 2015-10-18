@@ -73,12 +73,12 @@ import org.knime.core.node.NodeLogger;
 /**
  * This class goes together with the {@link StacktraceDumper}. It analyzes the
  * file the dumper class created and writes the result into an HTML file (see
- * {@link #writeToHTML(File)}). <br />
+ * {@link #writeToHTML(File)}). <br>
  * The generated HTML file shows the call tree for each thread with the
  * percentage of the "time" spent in sub methods. The time spent is really the
  * number of stack traces (in percent of all stack traces for this
  * thread/method) in which this sub method occurred above the method. It is not
- * the real CPU time spent.<br />
+ * the real CPU time spent.<br>
  * The provided main method pops open a file chooser, analyzes the selected file
  * and write the result to a new file with &quot;.html&quot; appended to the
  * selected file name

@@ -52,7 +52,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.lang.management.MemoryUsage;
 import java.util.Collection;
+import java.util.Formatter;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -206,13 +208,18 @@ public class UnittestRunnerApplication implements IApplication {
 
             NodeLogger.addWriter(stdout, LEVEL.DEBUG, LEVEL.FATAL);
 
+            NodeLogger logger = NodeLogger.getLogger(testClass);
             try {
                 System.setOut(new PrintStream(new WriterOutputStream(stdout), false, "UTF-8"));
                 System.setErr(new PrintStream(new WriterOutputStream(stdout), false, "UTF-8"));
+                logger.info("================= Starting testcase " + junitTest.getName() + " =================");
+                logMemoryStatus(logger);
                 runner.run();
                 System.out.flush();
                 System.err.flush();
             } finally {
+                logMemoryStatus(logger);
+                logger.info("================= Finished testcase " + junitTest.getName() + " =================");
                 System.setOut(sysout);
                 System.setErr(syserr);
             }
@@ -238,6 +245,17 @@ public class UnittestRunnerApplication implements IApplication {
             }
         }
     }
+
+    private void logMemoryStatus(final NodeLogger logger) {
+        MemoryUsage usage = WorkflowTest.getHeapUsage();
+
+        Formatter formatter = new Formatter();
+        formatter.format("===== Memory statistics: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free ====",
+            usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
+            (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
+        logger.info(formatter.out().toString());
+    }
+
 
     @Override
     public void stop() {

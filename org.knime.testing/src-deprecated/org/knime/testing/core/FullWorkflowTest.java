@@ -72,9 +72,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -101,7 +98,6 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -110,6 +106,9 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.Pointer;
 import org.knime.testing.node.config.TestConfigNodeModel;
 import org.knime.testing.node.config.TestConfigSettings;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 // TODO: check, that the number of correct results corresponds to the number
 // of out-ports of the node under test
@@ -153,7 +152,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
         /**
          * Creates a new pattern for a message. In the simple case this is the
          * expected message. But it could also be a message containing a regular
-         * expression. The equals method pays attention to it then.<br />
+         * expression. The equals method pays attention to it then.<br>
          * The part in the pattern that starts with _!_ and ends with _!_ will
          * be considered a regular expression. If a pattern consists of
          * PART1_!_RegExpr_!_PART3 then the message to compare against it will
