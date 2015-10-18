@@ -159,13 +159,25 @@ public class ClusterNodeModel extends NodeModel {
 
     private ClusterViewData m_viewData;
 
+    private boolean m_pmmlInEnabled;
+
     /**
      * Constructor, remember parent and initialize status.
      */
     ClusterNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL},
-            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+        this(true);
     }
+
+    /**
+     * Constructor, remember parent and initialize status.
+     */
+    ClusterNodeModel(final boolean pmmlInEnabled) {
+        super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
+                                : new PortType[]{BufferedDataTable.TYPE},
+            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+        m_pmmlInEnabled = pmmlInEnabled;
+    }
+
 
     /**
      * @return cluster centers' hilite handler
@@ -392,7 +404,7 @@ public class ClusterNodeModel extends NodeModel {
         BufferedDataTable outData = exec.createBufferedDataTable(labeledInput.getTable(), exec);
 
         // handle the optional PMML input
-        PMMLPortObject inPMMLPort = (PMMLPortObject)data[1];
+        PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)data[1] : null;
         PMMLPortObjectSpec inPMMLSpec = null;
         if (inPMMLPort != null) {
             inPMMLSpec = inPMMLPort.getSpec();
@@ -575,7 +587,12 @@ public class ClusterNodeModel extends NodeModel {
         addExcludeColumnsToIgnoreList(spec);
         DataTableSpec appendedSpec = createAppendedSpec(spec);
         // return spec for data and model outport!
-        PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
+        PMMLPortObjectSpec pmmlSpec;
+        if (m_pmmlInEnabled) {
+            pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
+        } else {
+            pmmlSpec = new PMMLPortObjectSpecCreator(spec).createSpec();
+        }
         return new PortObjectSpec[]{appendedSpec, createPMMLSpec(pmmlSpec, spec)};
     }
 

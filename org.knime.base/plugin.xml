@@ -519,6 +519,7 @@
             id="org.knime.base.node.util.cache.CacheNodeFactory"/>
       <node
             category-path="/analytics/mining/clustering"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"
             id="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"/>
       <node
@@ -1883,6 +1884,12 @@
             deprecated="false"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory3"
             id="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory3">
+      </node>
+      <node
+            category-path="/analytics/mining/clustering"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory2"
+            id="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory">
       </node>
    </extension>
    
