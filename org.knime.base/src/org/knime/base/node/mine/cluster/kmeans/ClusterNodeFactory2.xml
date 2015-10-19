@@ -32,6 +32,7 @@
         numerical values and only these are considered for clustering.</inPort>
         <outPort index="0" name="Labeled input">The input data labeled with the 
         cluster they are contained in.</outPort>
+        <outPort index="1" name="Clusters">The created clusters</outPort>
         <outPort index="1" name="PMML Cluster Model">PMML cluster model</outPort>
 	</ports>
 	
