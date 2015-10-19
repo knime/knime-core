@@ -67,10 +67,13 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -160,22 +163,25 @@ public class ClusterNodeModel extends NodeModel {
     private ClusterViewData m_viewData;
 
     private boolean m_pmmlInEnabled;
+    private boolean m_outputCenters;
 
     /**
      * Constructor, remember parent and initialize status.
      */
     ClusterNodeModel() {
-        this(true);
+        this(true, false);
     }
 
     /**
      * Constructor, remember parent and initialize status.
      */
-    ClusterNodeModel(final boolean pmmlInEnabled) {
+    ClusterNodeModel(final boolean pmmlInEnabled, final boolean outputCenters) {
         super(pmmlInEnabled ? new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE_OPTIONAL}
                                 : new PortType[]{BufferedDataTable.TYPE},
-            new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
+            outputCenters ? new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE, PMMLPortObject.TYPE}
+        : new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE});
         m_pmmlInEnabled = pmmlInEnabled;
+        m_outputCenters = outputCenters;
     }
 
 
@@ -418,7 +424,22 @@ public class ClusterNodeModel extends NodeModel {
         outPMMLPort.addModelTranslater(new PMMLClusterTranslator(ComparisonMeasure.squaredEuclidean,
                 m_nrOfClusters.getIntValue(), clusters, clusterCoverage, columns));
         m_viewData = new ClusterViewData(clusters, clusterCoverage, m_dimension - m_nrIgnoredColumns, featureNames);
-        return new PortObject[]{outData, outPMMLPort};
+
+        if (m_outputCenters) {
+            DataContainer clusterCenterContainer = exec.createDataContainer(createClusterCentersSpec(spec));
+            int i = 0;
+            for (double[] cluster : clusters) {
+                List<DataCell> cells = new ArrayList<>();
+                for (double d : cluster) {
+                    cells.add(new DoubleCell(d));
+                }
+                clusterCenterContainer.addRowToTable(new DefaultRow(new RowKey("Cluster" + i++), cells));
+            }
+            clusterCenterContainer.close();
+            return new PortObject[]{outData, (BufferedDataTable)clusterCenterContainer.getTable(), outPMMLPort};
+        } else {
+            return new PortObject[]{outData, outPMMLPort};
+        }
      }
 
     private double[][] initializeClusters(final DataTable input) {
@@ -584,6 +605,7 @@ public class ClusterNodeModel extends NodeModel {
                 setWarningMessage("No column in include list! Produces one huge cluster");
             }
         }
+
         addExcludeColumnsToIgnoreList(spec);
         DataTableSpec appendedSpec = createAppendedSpec(spec);
         // return spec for data and model outport!
@@ -593,7 +615,22 @@ public class ClusterNodeModel extends NodeModel {
         } else {
             pmmlSpec = new PMMLPortObjectSpecCreator(spec).createSpec();
         }
-        return new PortObjectSpec[]{appendedSpec, createPMMLSpec(pmmlSpec, spec)};
+        if (m_outputCenters) {
+            return new PortObjectSpec[]{appendedSpec, createClusterCentersSpec(spec), createPMMLSpec(pmmlSpec, spec)};
+        } else {
+            return new PortObjectSpec[]{appendedSpec, createPMMLSpec(pmmlSpec, spec)};
+        }
+    }
+
+    private DataTableSpec createClusterCentersSpec(final DataTableSpec spec) {
+     // Create spec for cluster center table
+        DataTableSpecCreator clusterCenterSpecCreator = new DataTableSpecCreator();
+        for (int i = 0; i < m_dimension; i++) {
+            if (!m_ignoreColumn[i]) {
+                clusterCenterSpecCreator.addColumns(spec.getColumnSpec(i));
+            }
+        }
+        return clusterCenterSpecCreator.createSpec();
     }
 
     private DataTableSpec createAppendedSpec(final DataTableSpec originalSpec) {

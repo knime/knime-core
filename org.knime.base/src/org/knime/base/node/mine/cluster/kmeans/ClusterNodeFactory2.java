@@ -59,7 +59,7 @@ public class ClusterNodeFactory2 extends NodeFactory<ClusterNodeModel> {
      */
     @Override
     public ClusterNodeModel createNodeModel() {
-        return new ClusterNodeModel(false);
+        return new ClusterNodeModel(false, true);
     }
 
     /**
