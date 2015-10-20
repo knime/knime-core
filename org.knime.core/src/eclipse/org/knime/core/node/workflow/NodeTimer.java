@@ -496,11 +496,10 @@ public final class NodeTimer {
         String cname = "NodeContainer";
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer node = (NativeNodeContainer)nc;
-            //added in 3.0: name consists of class name + node name
-            String className = node.getNodeModel().getClass().getName();
+            //changed in 3.0.1: name consists of factory class name + node name
+            String className = node.getNode().getFactory().getClass().getName();
             String nodeName = node.getName();
             cname = className + "#" + nodeName;
-            ((NativeNodeContainer)nc).getName();
         } else if (nc instanceof SubNodeContainer) {
             cname = nc.getClass().getName();
         }
