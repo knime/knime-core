@@ -598,7 +598,7 @@ public class GroupByNodeModel extends NodeModel {
         if (table == null) {
             throw new IllegalArgumentException("No input table found");
         }
-        if (table.getRowCount() < 1) {
+        if (table.size() < 1) {
             setWarningMessage("Empty input table found");
         }
 
@@ -708,7 +708,7 @@ public class GroupByNodeModel extends NodeModel {
     protected GlobalSettings createGlobalSettings(final ExecutionContext exec, final BufferedDataTable table,
         final List<String> groupByCols, final int maxUniqueVals) {
         return new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
-                maxUniqueVals, getDefaultValueDelimiter(), table.getDataTableSpec(), table.getRowCount());
+                maxUniqueVals, getDefaultValueDelimiter(), table.getDataTableSpec(), table.size());
     }
 
     /**

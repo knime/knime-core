@@ -286,7 +286,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         m_mildOutliers = new LinkedHashMap<String, Map<Double, Set<RowKey>>>();
         m_extremeOutliers =
                 new LinkedHashMap<String, Map<Double, Set<RowKey>>>();
-        double nrRows = inData[0].getRowCount();
+        double nrRows = inData[0].size();
         int rowCount = 0;
         int numericIndex =
                 inData[0].getDataTableSpec().findColumnIndex(
@@ -720,6 +720,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<String, Map<Double, Set<RowKey>>> getExtremeOutliers() {
         return m_extremeOutliers;
     }
@@ -727,6 +728,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<String, Map<Double, Set<RowKey>>> getMildOutliers() {
         return m_mildOutliers;
     }
@@ -734,6 +736,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<DataColumnSpec, double[]> getStatistics() {
         return m_statistics;
     }
@@ -741,6 +744,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataArray getDataArray(final int index) {
         return m_dataArray;
     }

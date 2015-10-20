@@ -98,13 +98,13 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
         // include data container
         DataContainer positive =
                 exec.createDataContainer(inData[0].getDataTableSpec());
-        double currentRow = 0;
+        long currentRow = 0;
         for (DataRow row : inData[0]) {
             // if row matches to included...
             if (matches(row)) {
                 positive.addRowToTable(row);
             }
-            exec.setProgress(currentRow / inData[0].getRowCount(),
+            exec.setProgress(currentRow / (double) inData[0].size(),
                     "filtering row # " + currentRow);
             currentRow++;
             exec.checkCanceled();
@@ -112,7 +112,7 @@ public class NominalValueRowFilterNodeModel extends NodeModel {
         positive.close();
         BufferedDataTable positiveTable =
                 exec.createBufferedDataTable(positive.getTable(), exec);
-        if (positiveTable.getRowCount() <= 0) {
+        if (positiveTable.size() <= 0) {
             setWarningMessage("No rows matched!");
         }
         return new BufferedDataTable[]{positiveTable};

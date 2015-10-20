@@ -96,7 +96,7 @@ class EmptyTableSwitchNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         PortObject[] out = new PortObject[2];
         final BufferedDataTable inTable = (BufferedDataTable)inData[0];
-        if (inTable.getRowCount() == 0) {
+        if (inTable.size() == 0) {
             out[0] = InactiveBranchPortObject.INSTANCE;
             out[1] = inTable;
         } else {

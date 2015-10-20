@@ -69,6 +69,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Model of the transpose node which swaps rows and columns. In addition, a new
@@ -169,7 +170,8 @@ final class TransposeTableNodeModel extends NodeModel {
 
         }
         // new number of columns = number of rows
-        final int newNrCols = inData[0].getRowCount();
+        CheckUtils.checkState(inData[0].size() <= Integer.MAX_VALUE, "Transpose operation can't handle more rows than " + Integer.MAX_VALUE);
+        final int newNrCols = (int)inData[0].size();
         // new column names
         final ArrayList<String> colNames = new ArrayList<String>();
         // new column types

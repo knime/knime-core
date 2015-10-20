@@ -294,7 +294,7 @@ public class CrosstabNodeModel extends NodeModel
             props.put(prop, i + 2);
         }
 
-        for (int i = 0; i < freqTable.getRowCount(); i++) {
+        for (long i = 0; i < freqTable.size(); i++) {
             final DataCell[] cells = new DataCell[props.size() + 2];
             final DataRow freqRow = freqIter.next();
             // add the row variable
@@ -458,7 +458,7 @@ public class CrosstabNodeModel extends NodeModel
         final GlobalSettings globalSettings =
             new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
                     maxUniqueVals, GlobalSettings.STANDARD_DELIMITER,
-                    table.getDataTableSpec(), table.getRowCount());
+                    table.getDataTableSpec(), table.size());
 
         ColumnAggregator collAggregator = null;
         if (null != m_settings.getWeightColumn()) {

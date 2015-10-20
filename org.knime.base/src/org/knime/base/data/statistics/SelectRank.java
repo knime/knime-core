@@ -117,7 +117,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
 
     private final T m_inputTable;
 
-    private final int m_rowsInInputTable;
+    private final long m_rowsInInputTable;
 
     /**
      * The maximal number of open containers. This has an effect when many containers must be merged.
@@ -142,7 +142,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
      * @param rowsCount The number of rows in the table
      * @throws NullPointerException If arg is null.
      */
-    private SelectRank(final T inputTable, final int rowsCount) {
+    private SelectRank(final T inputTable, final long rowsCount) {
         if (inputTable == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -167,7 +167,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
      */
-    public SelectRank(final T inputTable, final int rowsCount, final Collection<String> inclList, final int[][] k) {
+    public SelectRank(final T inputTable, final long rowsCount, final Collection<String> inclList, final int[][] k) {
         this(inputTable, rowsCount);
         setSelectRank(inclList, k);
     }
@@ -314,7 +314,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
         }
 
         int progress = 0;
-        final int rowCount = m_rowsInInputTable;
+        final long rowCount = m_rowsInInputTable;
         exec.setMessage("Reading data");
         ExecutionMonitor readExec = exec.createSubProgress(0.5);
         for (final DataRow r : dataTable) {

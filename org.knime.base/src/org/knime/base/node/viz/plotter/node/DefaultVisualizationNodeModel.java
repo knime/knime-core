@@ -163,6 +163,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataArray getDataArray(final int index) {
         return m_input;
     }
@@ -290,7 +291,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
                 getExcludedColumns());
         m_input = new DefaultDataArray(
                 filter, 1, m_maxRows.getIntValue(), exec);
-        if (m_maxRows.getIntValue() < inData[0].getRowCount()) {
+        if (m_maxRows.getIntValue() < inData[0].size()) {
             setWarningMessage("Only the first "
                     + m_maxRows.getIntValue() + " rows are displayed.");
         }

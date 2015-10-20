@@ -30,12 +30,6 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  */
 public class MissingValueHandlerNodeModel extends NodeModel {
 
-    private static final double STAT_MAX_PROGRESS = 0.5;
-
-    private static final double REPLACE_MAX_PROGRESS = 0.2;
-
-    private static final double PMML_MAX_PROGRESS = 0.3;
-
     /**
      * Constructor for the node model.
      */
@@ -58,18 +52,19 @@ public class MissingValueHandlerNodeModel extends NodeModel {
 
         // Calculate the statistics
         exec.setMessage("Calculating statistics");
-        mvTable.init(inTable, exec.createSubExecutionContext(STAT_MAX_PROGRESS));
+        mvTable.init(inTable, exec.createSubExecutionContext(0.5));
 
-        int rowCounter = 0;
+        long rowCounter = 0;
+        final long numOfRows = inTable.size();
+
         DataContainer container = exec.createDataContainer(mvTable.getDataTableSpec());
-        ExecutionContext tableSubExec = exec.createSubExecutionContext(REPLACE_MAX_PROGRESS);
+        ExecutionContext tableSubExec = exec.createSubExecutionContext(0.4);
         exec.setMessage("Replacing missing values");
         for (DataRow row : mvTable) {
             tableSubExec.checkCanceled();
-            tableSubExec.setProgress((double)(++rowCounter) / inTable.getRowCount());
-            if (row != null) {
-                container.addRowToTable(row);
-            }
+            tableSubExec.setProgress(++rowCounter / (double)numOfRows,
+                    "Processed row " + rowCounter + "/" + numOfRows + " (\"" + row.getKey() + "\")");
+            container.addRowToTable(row);
         }
         container.close();
 

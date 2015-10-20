@@ -215,15 +215,15 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                 SortedTable sorted = new SortedTable(table,
                         col, new boolean[]{true},
                         sortExec);
-                int currRowAbsolute = 0;
+                long currRowAbsolute = 0;
                 int currCountingRow = 1;
                 double lastValue = 1;
-                int nrOfRows = table.getRowCount();
+                long nrOfRows = table.size();
                 boolean first = true;
                 for (DataRow row : sorted) {
                     exec.checkCanceled();
-                    double rowProgress = (double)currRowAbsolute
-                    / (double)table.getRowCount();
+                    double rowProgress = currRowAbsolute
+                    / (double)table.size();
                     findExec.setProgress(rowProgress,
                             "determining statistics for: "
                             + table.getDataTableSpec().getColumnSpec(colIdx)
@@ -248,7 +248,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                         first = false;
                     }
                     // get the last value = actually observed maximum
-                    if (currRowAbsolute == table.getRowCount() - 1) {
+                    if (currRowAbsolute == table.size() - 1) {
                         statistic[MAX] = ((DoubleValue)row
                                 .getCell(colIdx)).getDoubleValue();
                     }
@@ -451,6 +451,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<DataColumnSpec, double[]>getStatistics() {
         return m_statistics;
     }
@@ -458,6 +459,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<String, Map<Double, Set<RowKey>>> getMildOutliers() {
         return m_mildOutliers;
     }
@@ -465,6 +467,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Map<String, Map<Double, Set<RowKey>>> getExtremeOutliers() {
         return m_extremeOutliers;
     }
@@ -473,6 +476,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataArray getDataArray(final int index) {
         return m_array;
     }

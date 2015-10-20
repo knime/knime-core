@@ -73,6 +73,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -306,7 +307,7 @@ public class EnrichmentPlotterModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final double rowCount = inData[0].getRowCount();
+        final double rowCount = inData[0].size();
         final BufferedDataContainer areaOutCont =
                 exec.createDataContainer(AREA_OUT_SPEC);
         final BufferedDataContainer discrateOutCont =
@@ -318,7 +319,7 @@ public class EnrichmentPlotterModel extends NodeModel {
             exec.setMessage("Generating curve " + (i + 1));
 
             final Curve c = m_settings.getCurve(i);
-            final Helper[] curve = new Helper[inData[0].getRowCount()];
+            final Helper[] curve = new Helper[KnowsRowCountTable.checkRowCount(inData[0].size())];
 
             final int sortIndex =
                     inData[0].getDataTableSpec().findColumnIndex(

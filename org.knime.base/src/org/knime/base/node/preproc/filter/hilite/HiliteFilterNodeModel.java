@@ -64,7 +64,7 @@ import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
- * 
+ *
  * @author thiel, University of Konstanz
  */
 public class HiliteFilterNodeModel extends NodeModel implements HiLiteListener {
@@ -75,7 +75,7 @@ public class HiliteFilterNodeModel extends NodeModel implements HiLiteListener {
     public HiliteFilterNodeModel() {
         super(1, 2);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -96,9 +96,9 @@ public class HiliteFilterNodeModel extends NodeModel implements HiLiteListener {
         BufferedDataContainer bufIn = exec.createDataContainer(inSpec);
         BufferedDataContainer bufOut = exec.createDataContainer(inSpec);
         synchronized (m_inHdl) {
-            double rowCnt = inData[0].getRowCount();
+            double rowCnt = inData[0].size();
             CloseableRowIterator it = inData[0].iterator();
-            for (int i = 0; i < rowCnt; i++) {
+            for (long i = 0; i < rowCnt; i++) {
                 DataRow row = it.next();
                 if (m_inHdl.isHiLit(row.getKey())) {
                     bufIn.addRowToTable(row);
@@ -114,7 +114,7 @@ public class HiliteFilterNodeModel extends NodeModel implements HiLiteListener {
         m_inHdl.addHiLiteListener(this);
         return new BufferedDataTable[]{bufIn.getTable(), bufOut.getTable()};
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -148,39 +148,39 @@ public class HiliteFilterNodeModel extends NodeModel implements HiLiteListener {
             throws InvalidSettingsException {
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         hiliteWarning();
         m_inHdl.addHiLiteListener(this);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
-    
+
     /** Holds the current input HiLiteHandler. */
     private HiLiteHandler m_inHdl;
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex, 
+    protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         m_inHdl = hiLiteHdl;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -188,7 +188,7 @@ public class HiliteFilterNodeModel extends NodeModel implements HiLiteListener {
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
         return m_inHdl;
     }
-    
+
     /** Hilite warning, when hilite state as changed. */
     private void hiliteWarning() {
         if (m_inHdl != null) {
@@ -196,8 +196,8 @@ public class HiliteFilterNodeModel extends NodeModel implements HiLiteListener {
         }
         super.setWarningMessage(
                 "HiLite status has changed, re-execute node to apply changes.");
-    }   
-    
+    }
+
     /**
      * {@inheritDoc}
      */

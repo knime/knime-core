@@ -191,8 +191,8 @@ public class BigGroupByTable extends GroupByTable {
         final DataCell[] currentGroup = new DataCell[groupColIdx.length];
         final MutableInteger groupCounter = new MutableInteger(0);
         boolean firstRow = true;
-        final double progressPerRow = 1.0 / sortedTable.getRowCount();
-        int rowCounter = 0;
+        final double numOfRows = sortedTable.size();
+        long rowCounter = 0;
         //In the rare case that the DataCell comparator return 0 for two
         //data cells that are not equal we have to maintain a map with all
         //rows with equal cells in the group columns per chunk.
@@ -275,7 +275,7 @@ public class BigGroupByTable extends GroupByTable {
                 member.getSecond().add(row.getKey());
             }
             groupExec.checkCanceled();
-            groupExec.setProgress(progressPerRow * rowCounter++, groupLabel);
+            groupExec.setProgress(++rowCounter/numOfRows, groupLabel);
         }
         //create the final row for the last chunk after processing the last
         //table row

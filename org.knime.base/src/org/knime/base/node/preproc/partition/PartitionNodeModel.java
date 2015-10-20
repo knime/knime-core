@@ -90,7 +90,7 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
             exec.createDataContainer(in.getDataTableSpec());
         BufferedDataContainer secondOutCont =
             exec.createDataContainer(in.getDataTableSpec());
-        double rowCount = in.getRowCount(); // floating point op. below
+        final double rowCount = in.size(); // floating point op. below
         // one of the flags will be set if one of the exceptions below
         // is thrown.
         boolean putRestInOut1 = false;
@@ -131,10 +131,10 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
         if (filter instanceof StratifiedSamplingRowFilter) {
             int classCount =
                 ((StratifiedSamplingRowFilter)filter).getClassCount();
-            if (classCount > outs[0].getRowCount()) {
+            if (classCount > outs[0].size()) {
                 setWarningMessage("Class column contains more classes ("
                         + classCount + ") than sampled rows ("
-                        + outs[0].getRowCount() + ")");
+                        + outs[0].size() + ")");
             }
         }
         return outs;

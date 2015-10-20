@@ -139,6 +139,7 @@ extends NodeModel {
         m_allRows = new SettingsModelBoolean(CFGKEY_ALL_ROWS, false);
         m_allRows.addChangeListener(new ChangeListener() {
 
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
             }
@@ -149,6 +150,7 @@ extends NodeModel {
                         AggregationMethod.getDefaultMethod().name());
         m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
         m_aggrColumn.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 boolean enable = m_aggrColumn.getStringValue() != null;
                 m_aggrMethod.setEnabled(enable);
@@ -274,7 +276,7 @@ extends NodeModel {
             setWarningMessage("Data table contains no rows");
             return new BufferedDataTable[0];
         }
-        if (dataTable.getRowCount() < 1) {
+        if (dataTable.size() < 1) {
             setWarningMessage("Data table contains no rows");
             return new BufferedDataTable[0];
         }
@@ -326,7 +328,7 @@ extends NodeModel {
     }
 
     /**
-     * Called prior <code>#addDataRow(...)</code> method to allow the 
+     * Called prior <code>#addDataRow(...)</code> method to allow the
      * implementing class the specific model creation.
      * @param exec the {@link ExecutionMonitor}
      * @param pieColSpec the {@link DataColumnSpec} of the selected pie column

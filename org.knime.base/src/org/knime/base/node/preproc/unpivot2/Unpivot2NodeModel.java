@@ -201,7 +201,7 @@ final class Unpivot2NodeModel extends NodeModel {
         for (int i = 0; i < orderColumnIdx.length; i++) {
             orderColumnIdx[i] = inSpec.findColumnIndex(retainedColumns[i]);
         }
-        final double newRowCnt = inData[0].getRowCount() * valueColumns.length;
+        final double newRowCnt = inData[0].size() * valueColumns.length;
         final boolean enableHilite = m_enableHilite.getBooleanValue();
         LinkedHashMap<RowKey, Set<RowKey>> map =
             new LinkedHashMap<RowKey, Set<RowKey>>();

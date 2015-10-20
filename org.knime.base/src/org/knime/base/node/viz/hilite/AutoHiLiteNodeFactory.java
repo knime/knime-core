@@ -116,11 +116,12 @@ public class AutoHiLiteNodeFactory extends NodeFactory<NodeModel> {
 
                 final Set<RowKey> keys = new HashSet<RowKey>();
                 final HiLiteHandler hlh = getInHiLiteHandler(0);
-                double rowCount = 0;
+                long counter = 0;
+                long numOfRows = inData[0].size();
                 for (final DataRow row : inData[0]) {
                     keys.add(row.getKey());
                     if (keys.size() == NUMBER_OF_ROWS_HILITED_AT_ONCE) {
-                        exec.setProgress(++rowCount * 1000 / inData[0].getRowCount(), "HiLiting all rows...");
+                        exec.setProgress(++counter * NUMBER_OF_ROWS_HILITED_AT_ONCE / (double)numOfRows, "HiLiting all rows...");
                         hlh.fireHiLiteEvent(keys);
                         keys.clear();
                     }

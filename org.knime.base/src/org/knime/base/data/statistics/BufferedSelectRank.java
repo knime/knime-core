@@ -74,7 +74,7 @@ class BufferedSelectRank extends SelectRank<BufferedDataContainer, BufferedDataT
      *            the column indices (the position within {@code inclList}).
      */
     public BufferedSelectRank(final BufferedDataTable inputTable, final Collection<String> inclList, final int[][] k) {
-        super(inputTable, inputTable.getRowCount(), inclList, k);
+        super(inputTable, inputTable.size(), inclList, k);
     }
 
     /**

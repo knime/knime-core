@@ -124,10 +124,11 @@ public class BoxplotCalculator {
             containers.put(numCol[i], map);
         }
         ExecutionContext subExec = exec.createSubExecutionContext(0.7);
-        int count = 0;
+        long count = 0;
+        final long numOfRows = table.size();
         for (DataRow row : table) {
             exec.checkCanceled();
-            subExec.setProgress((double)count++ / table.getRowCount());
+            subExec.setProgress(count++ / (double)numOfRows);
             DataCell catCell = row.getCell(catColIdx);
             if (!catCell.isMissing()) {
                 String cat = catCell.toString();
@@ -145,10 +146,10 @@ public class BoxplotCalculator {
         = new LinkedHashMap<>();
 
         ExecutionContext subExec2 = exec.createSubExecutionContext(1.0);
-        count = 0;
+        int count2 = 0;
         for (Entry<String, LinkedHashMap<String, DataContainer>> entry : containers.entrySet()) {
             exec.checkCanceled();
-            subExec2.setProgress((double)count++ / containers.size());
+            subExec2.setProgress(count2++ / (double)containers.size());
             LinkedHashMap<String, DataContainer> containers2 = entry.getValue();
             LinkedHashMap<String, BoxplotStatistics> colStats = new LinkedHashMap<String, BoxplotStatistics>();
 
@@ -173,17 +174,17 @@ public class BoxplotCalculator {
                 }, false, exec);
 
                 double min = 0, max = 0, q1 = 0, q3 = 0, median = 0;
-                int q1Idx = catTable.getRowCount() / 4;
-                int q3Idx = (int)Math.ceil((double)catTable.getRowCount() * 3 / 4);
-                boolean dMedian = catTable.getRowCount() % 2 == 0;
-                int medianIdx = catTable.getRowCount() / 2;
+                long q1Idx = catTable.size() / 4;
+                long q3Idx = (long)Math.ceil((double)catTable.size() * 3 / 4);
+                boolean dMedian = catTable.size() % 2 == 0;
+                long medianIdx = catTable.size() / 2;
                 int counter = 0;
                 for (DataRow row : st) {
                     double val = ((DoubleValue)row.getCell(0)).getDoubleValue();
                     if (counter == 0) {
                         min = val;
                     }
-                    if (counter == catTable.getRowCount() - 1) {
+                    if (counter == catTable.size() - 1) {
                         max = val;
                     }
                     if (counter == q1Idx) {
@@ -264,7 +265,7 @@ public class BoxplotCalculator {
         int count = 0;
         for (DataRow row : table) {
             exec.checkCanceled();
-            subExec.setProgress((double)count++ / table.getRowCount());
+            subExec.setProgress((double)count++ / table.size());
             for (int i = 0; i < numCol.length; i++) {
                 DataCell cell = row.getCell(numColIdxs[i]);
                 if (!cell.isMissing()) {
@@ -305,17 +306,17 @@ public class BoxplotCalculator {
             }, false, exec);
 
             double min = 0, max = 0, q1 = 0, q3 = 0, median = 0;
-            int q1Idx = catTable.getRowCount() / 4;
-            int q3Idx = (int)Math.ceil((double)catTable.getRowCount() * 3 / 4);
-            boolean dMedian = catTable.getRowCount() % 2 == 0;
-            int medianIdx = catTable.getRowCount() / 2;
+            long q1Idx = catTable.size() / 4;
+            long q3Idx = (long)Math.ceil((double)catTable.size() * 3 / 4);
+            boolean dMedian = catTable.size() % 2 == 0;
+            long medianIdx = catTable.size() / 2;
             int counter = 0;
             for (DataRow row : st) {
                 double val = ((DoubleValue)row.getCell(0)).getDoubleValue();
                 if (counter == 0) {
                     min = val;
                 }
-                if (counter == catTable.getRowCount() - 1) {
+                if (counter == catTable.size() - 1) {
                     max = val;
                 }
                 if (counter == q1Idx) {

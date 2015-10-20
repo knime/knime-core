@@ -128,7 +128,7 @@ public final class CovarianceMatrixCalculator {
      */
     public RealMatrix computeCovarianceMatrix(final ExecutionMonitor exec, final BufferedDataTable inTable,
         final DataContainer resultDataContainer) throws CanceledExecutionException {
-        return calculateCovarianceMatrix(exec, inTable, inTable.getRowCount(), resultDataContainer);
+        return calculateCovarianceMatrix(exec, inTable, inTable.size(), resultDataContainer);
     }
 
     /**

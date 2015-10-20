@@ -56,15 +56,15 @@ public class MissingValueApplyNodeModel extends NodeModel {
         // Calculate the statistics
         mvTable.init(inTable, exec.createSubExecutionContext(0.5));
 
-        int rowCounter = 0;
+        long rowCounter = 0;
+        final long numOfRows = inTable.size();
         DataContainer container = exec.createDataContainer(mvTable.getDataTableSpec());
 
         for (DataRow row : mvTable) {
             exec.checkCanceled();
-            exec.setProgress(0.5 + (double)(rowCounter++) / inTable.getRowCount());
-            if (row != null) {
-                container.addRowToTable(row);
-            }
+            exec.setProgress(++rowCounter / (double)numOfRows, 
+            		"Processed row " + rowCounter + "/" + numOfRows + " (\"" + row.getKey() + "\")");
+            container.addRowToTable(row);
         }
         container.close();
 

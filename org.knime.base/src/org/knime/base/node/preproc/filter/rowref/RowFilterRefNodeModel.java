@@ -44,6 +44,10 @@
  */
 package org.knime.base.node.preproc.filter.rowref;
 
+import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -57,10 +61,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
-import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * The Reference Row Filter node allow the filtering of row IDs based
@@ -202,11 +202,11 @@ public class RowFilterRefNodeModel extends NodeModel {
         //Filter the data table
         final BufferedDataContainer buf =
             exec.createDataContainer(dataTableSpec);
-        double rowCnt = 1;
+        long rowCnt = 1;
         for (final DataRow row : dataTable) {
             exec.checkCanceled();
             exec.setProgress(
-                    rowCnt++ / dataTable.getRowCount(), "Filtering...");
+                    rowCnt++ / (double) dataTable.size(), "Filtering...");
             //get the right value to check for...
             final Object val2Compare;
             if (filterByString) {

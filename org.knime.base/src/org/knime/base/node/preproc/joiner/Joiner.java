@@ -640,7 +640,7 @@ public final class Joiner {
             final double progressDiff) throws CanceledExecutionException  {
         // Update increment for reporting progress
         double progress = exec.getProgressMonitor().getProgress();
-        double numRows = leftTable.getRowCount() + rightTable.getRowCount();
+        double numRows = leftTable.size() + rightTable.size();
         double inc = (progressDiff - progress) / numRows;
 
         Collection<Integer> currParts = new ArrayList<Integer>();
@@ -715,8 +715,7 @@ public final class Joiner {
                             + "reading inner table. Currently Processed: "
                             + currParts + ". Skip: " + removeParts);
                     // update increment for reporting progress
-                    numRows += leftTable.getRowCount()
-                    + rightTable.getRowCount();
+                    numRows += leftTable.size() + rightTable.size();
                     inc = (progressDiff - progress) / numRows;
 
                     setMessage("Read", exec, pendingParts, currParts);
@@ -745,8 +744,7 @@ public final class Joiner {
                         retainPartitions(leftTableHashed, leftOuterJoins,
                                 currPart);
                         // update increment for reporting progress
-                        numRows += leftTable.getRowCount()
-                        + rightTable.getRowCount();
+                        numRows += leftTable.size() + rightTable.size();
                         inc = (progressDiff - progress) / numRows;
 
                         setMessage("Read", exec, pendingParts, currParts);

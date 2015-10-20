@@ -99,8 +99,8 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
             percentages[dataTableSpec.findColumnIndex(column)] = m_percentage.getDoubleValue();
         }
 
-        double[] missingCount = new double[dataTableSpec.getNumColumns()];
-        double rowCount = inputTable.getRowCount();
+        long[] missingCount = new long[dataTableSpec.getNumColumns()];
+        final double rowCount = inputTable.size();
         double processedRows = 0;
         for (DataRow row : inputTable) {
             exec.setProgress(processedRows++ / rowCount);
@@ -116,7 +116,7 @@ public class MissingValueColumnFilterNodeModel extends NodeModel {
         int alreadyRemoved = 0;
         for (int i = 0; i < percentages.length; i++) {
             if (percentages[i] > -1) {
-                if ((missingCount[i] / inputTable.getRowCount()) * 100 >= percentages[i]) {
+                if ((missingCount[i] / rowCount) * 100 >= percentages[i]) {
                     r.remove(i - alreadyRemoved++);
                 }
             }
