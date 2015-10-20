@@ -630,6 +630,7 @@ public class ClusterNodeModel extends NodeModel {
                 clusterCenterSpecCreator.addColumns(spec.getColumnSpec(i));
             }
         }
+        clusterCenterSpecCreator.dropAllDomains();
         return clusterCenterSpecCreator.createSpec();
     }
 
