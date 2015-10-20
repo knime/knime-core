@@ -127,11 +127,11 @@ class TableRowToImageNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         BufferedDataTable inTable = (BufferedDataTable)inObjects[0];
         // check for empty table
-        if (inTable.getRowCount() == 0) {
+        if (inTable.size() == 0) {
             throw new IllegalArgumentException("Input table is empty.");
         }
         // warn if more than one row
-        if (inTable.getRowCount() > 1) {
+        if (inTable.size() > 1) {
             setWarningMessage("Input data table has more than one rows! "
                     + "Using first row only.");
         }

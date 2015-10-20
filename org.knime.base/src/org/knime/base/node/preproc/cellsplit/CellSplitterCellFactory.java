@@ -160,7 +160,7 @@ class CellSplitterCellFactory implements CellFactory {
             throw new IllegalStateException(msg);
         }
         if (m_settings.isGuessNumOfCols()
-                && m_settings.getNumOfColsGuessed() < 1 
+                && m_settings.getNumOfColsGuessed() < 1
                 && m_settings.isOutputAsCols()) {
             // guess the number of columns before creating the table
             assert false;
@@ -180,14 +180,14 @@ class CellSplitterCellFactory implements CellFactory {
         if (m_settings.isGuessNumOfCols() && m_settings.isOutputAsCols()) {
             numOfCols = m_settings.getNumOfColsGuessed();
         }
-        
+
         DataCell inputCell = row.getCell(m_colIdx);
-        
+
         // if regular output as columns
         if (m_settings.isOutputAsCols()) {
             return tokenizeAndCreateCells(inputCell, numOfCols);
         }
-        
+
         // if output as collection cell
         return tokenizeAndCreateCollectionsCell(inputCell);
     }
@@ -207,9 +207,9 @@ class CellSplitterCellFactory implements CellFactory {
         }
         return inputString;
     }
-    
+
     /**
-     * Creates a tokenizer on the given string reader and prepares it with 
+     * Creates a tokenizer on the given string reader and prepares it with
      * specific settings.
      * and returns it.
      * @param inputReader The string reader to create a tokenizer on.
@@ -222,11 +222,11 @@ class CellSplitterCellFactory implements CellFactory {
         tokenizer.setSettings(m_tokenizerSettings);
         return tokenizer;
     }
-    
+
     /**
      * Tokenizes the string representation of the given data cell and returns
      * an array of data cells. The array contains only one data cell, which
-     * is a collection cell. Whether it is a List or Set cell is specified in 
+     * is a collection cell. Whether it is a List or Set cell is specified in
      * the settings. The collection cell contains string cells. For each
      * token one string cell is created.
      * @param inputCell the cell to tokenize (its string representation)
@@ -237,11 +237,11 @@ class CellSplitterCellFactory implements CellFactory {
     private DataCell[] tokenizeAndCreateCollectionsCell(
             final DataCell inputCell) {
         DataCell[] result = new DataCell[1];
-        
+
         // missing value handling
         if (inputCell.isMissing()) {
             Arrays.fill(result, DataType.getMissingCell());
-            
+
             if (m_settings.isUseEmptyString()) {
                 Collection<DataCell> strColl = new ArrayList<DataCell>(1);
                 strColl.add(EMPTY_STRINGCELL);
@@ -249,13 +249,13 @@ class CellSplitterCellFactory implements CellFactory {
             }
             return result;
         }
-        
+
         final String inputString = getInputString(inputCell);
 
         // init the tokenizer
         StringReader inputReader = new StringReader(inputString);
         Tokenizer tokenizer = prepareTokenizer(inputReader);
-        
+
         Collection<DataCell> strColl = new ArrayList<DataCell>();
         String token = null;
         while ((token = tokenizer.nextToken()) != null) {
@@ -273,17 +273,17 @@ class CellSplitterCellFactory implements CellFactory {
 
         return result;
     }
-    
+
     /**
      * Tokenizes the string representation of the given data cell and returns
      * an array of data cells containing the tokens.
      * @param inputCell the cell to tokenize (its string representation)
-     * @param numOfCells The number of cells to create, containing the tokens 
+     * @param numOfCells The number of cells to create, containing the tokens
      * @return An arrays of cells containing the tokens. The length of the array
      * is specified by <code>numOfCells</code>.
      * @since 2.6
      */
-    private DataCell[] tokenizeAndCreateCells(final DataCell inputCell, 
+    private DataCell[] tokenizeAndCreateCells(final DataCell inputCell,
             final int numOfCells) {
         DataCell[] result = new DataCell[numOfCells];
 
@@ -353,7 +353,7 @@ class CellSplitterCellFactory implements CellFactory {
                 if (m_settings.isTrim()) {
                     token = token.trim();
                 }
-                result[col] = createDataCell(token, 
+                result[col] = createDataCell(token,
                         m_settings.getTypeOfColumn(col));
             }
         }
@@ -464,7 +464,7 @@ class CellSplitterCellFactory implements CellFactory {
         // now, create the output specs
         if (m_outSpecs == null) {
 
-            // create regular columns output spec if output as column is 
+            // create regular columns output spec if output as column is
             // specified
             if (m_settings.isOutputAsCols()) {
                 int colNum = m_settings.getNumOfCols();
@@ -484,12 +484,12 @@ class CellSplitterCellFactory implements CellFactory {
                             new DataColumnSpecCreator(colName, colType);
                     m_outSpecs[col] = dcsc.createSpec();
                 }
-                
+
             // create list or set cell output spec
             } else {
                 m_outSpecs = new DataColumnSpec[1];
                 String selColName = m_settings.getColumnName();
-                
+
                 String colName;
                 if (m_settings.isOutputAsList()) {
                     colName = selColName + "_SplitResultList";
@@ -497,12 +497,12 @@ class CellSplitterCellFactory implements CellFactory {
                     colName = selColName + "_SplitResultSet";
                 }
                 colName = uniquifyName(colName, m_inSpec);
-                
+
                 DataType colType = null;
                 // list cell type
                 if (m_settings.isOutputAsList()) {
                     colType = ListCell.getCollectionType(StringCell.TYPE);
-                // set cell type otherwise (there is no other option left)    
+                // set cell type otherwise (there is no other option left)
                 } else {
                     colType = SetCell.getCollectionType(StringCell.TYPE);
                 }
@@ -622,14 +622,14 @@ class CellSplitterCellFactory implements CellFactory {
             // list cell type
             if (userSettings.isOutputAsList()) {
                 colType = ListCell.getCollectionType(StringCell.TYPE);
-            // set cell type otherwise (there is no other option left)    
+            // set cell type otherwise (there is no other option left)
             } else {
                 colType = SetCell.getCollectionType(StringCell.TYPE);
             }
             result.addColumnOfType(colType);
             return result;
         }
-        
+
         /*
          * analyze table
          */
@@ -649,7 +649,7 @@ class CellSplitterCellFactory implements CellFactory {
         }
 
         long rowCnt = 0;
-        long numOfRows = table.getRowCount();
+        long numOfRows = table.size();
 
         for (DataRow row : table) {
             rowCnt++;

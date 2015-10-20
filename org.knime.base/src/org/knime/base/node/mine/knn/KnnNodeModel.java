@@ -67,7 +67,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
@@ -233,7 +233,7 @@ public class KnnNodeModel extends NodeModel {
         int count = 0;
         for (DataRow currentRow : inData[0]) {
             exec.checkCanceled();
-            exec.setProgress(0.1 * count * inData[0].getRowCount(),
+            exec.setProgress(0.1 * count * inData[0].size(),
                     "Reading row " + currentRow.getKey());
 
             double[] features = createFeatureVector(currentRow, featureColumns);
@@ -276,7 +276,7 @@ public class KnnNodeModel extends NodeModel {
         exec.setMessage("Classifying");
         ColumnRearranger c =
                 createRearranger(inSpec, classColumnSpec, featureColumns,
-                        firstToSecond, tree, inData[1].getRowCount());
+                        firstToSecond, tree, inData[1].size());
         BufferedDataTable out =
                 exec.createColumnRearrangeTable(inData[1], c,
                         exec.createSubProgress(0.6));
@@ -379,12 +379,11 @@ public class KnnNodeModel extends NodeModel {
 
         final DataColumnSpec[] colSpecArray =
                 colSpecs.toArray(new DataColumnSpec[colSpecs.size()]);
-        c.append(new CellFactory() {
-            /**
-             * {@inheritDoc}
-             */
+        c.append(new AbstractCellFactory(colSpecArray) {
+
+            /** {@inheritDoc} */
             @Override
-            public void setProgress(final int curRowNr, final int rowCount,
+            public void setProgress(final long curRowNr, final long rowCount,
                     final RowKey lastKey, final ExecutionMonitor exec) {
                 exec.setProgress(curRowNr / maxRows, "Classifying row "
                         + lastKey);
@@ -398,10 +397,6 @@ public class KnnNodeModel extends NodeModel {
                 return output.toArray(new DataCell[output.size()]);
             }
 
-            @Override
-            public DataColumnSpec[] getColumnSpecs() {
-                return colSpecArray;
-            }
         });
         return c;
     }

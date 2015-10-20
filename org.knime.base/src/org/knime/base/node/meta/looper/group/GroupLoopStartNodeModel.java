@@ -176,7 +176,7 @@ class GroupLoopStartNodeModel extends NodeModel implements
         ///////////////////////////
         BufferedDataTable table = inData[0];
         DataTableSpec spec = table.getDataTableSpec();
-        if (table.getRowCount() <= 0) {
+        if (table.size() <= 0) {
             m_endLoop = true;
         }
 

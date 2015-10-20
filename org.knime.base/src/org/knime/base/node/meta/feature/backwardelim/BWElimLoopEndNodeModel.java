@@ -341,7 +341,7 @@ public class BWElimLoopEndNodeModel extends NodeModel implements LoopEndNode {
 
         }
 
-        return wrong / (double)table.getRowCount();
+        return wrong / (double)table.size();
     }
 
     /**

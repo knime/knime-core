@@ -125,7 +125,7 @@ final class EqualSizeSamplingNodeModel extends NodeModel {
         final int colIndex = in.getDataTableSpec().findColumnIndex(
                 m_configuration.getClassColumn());
         int rowIndex = 0;
-        final int rowCount = in.getRowCount();
+        final long rowCount = in.size();
         for (DataRow r : in) {
             countExec.setProgress(rowIndex / (double)rowCount,
                     "Row \"" + r.getKey() + "\" (" + (rowIndex++)

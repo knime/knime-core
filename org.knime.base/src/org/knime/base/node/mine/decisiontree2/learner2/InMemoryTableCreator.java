@@ -65,7 +65,7 @@ import org.knime.core.node.ExecutionContext;
  * attribute).
  *
  * @author Christoph Sieb, University of Konstanz
- * 
+ *
  * @since 2.6
  */
 public class InMemoryTableCreator {
@@ -165,7 +165,7 @@ public class InMemoryTableCreator {
         // copy the data from the table to the in memory table and update
         // the value mappers
         double counter = 0;
-        int numRows = m_table.getRowCount();
+        long numRows = m_table.size();
         for (org.knime.core.data.DataRow row : m_table) {
 
             // report progress and check memory footprint

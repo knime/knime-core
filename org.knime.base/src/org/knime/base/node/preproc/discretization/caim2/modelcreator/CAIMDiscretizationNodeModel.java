@@ -543,7 +543,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
 
         // discretize the included column values
         double rowCounter = 0;
-        double numRows = table.getRowCount();
+        double numRows = table.size();
         for (DataRow row : table) {
 
             if (rowCounter % 200 == 0) {

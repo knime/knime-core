@@ -178,7 +178,7 @@ public class AppendedRowsNodeModel extends NodeModel {
         RowInput[] inputs = new RowInput[noNullArray.length];
         DataTableSpec[] noNullSpecs = new DataTableSpec[noNullArray.length];
         for (int i = 0; i < noNullArray.length; i++) {
-            totalRowCount += noNullArray[i].getRowCount();
+            totalRowCount += noNullArray[i].size();
             inputs[i] = new DataTableRowInput(noNullArray[i]);
             noNullSpecs[i] = noNullArray[i].getDataTableSpec();
         }

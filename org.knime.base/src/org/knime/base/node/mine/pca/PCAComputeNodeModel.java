@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.10.2006 (uwe): created
  */
@@ -72,7 +72,7 @@ import Jama.Matrix;
 
 /**
  * Node for PCA learning.
- * 
+ *
  * @author uwe, University of Konstanz
  */
 public class PCAComputeNodeModel extends NodeModel {
@@ -115,7 +115,7 @@ public class PCAComputeNodeModel extends NodeModel {
         }
         final BufferedDataTable dataTable =
             (BufferedDataTable)inData[DATA_INPORT];
-        if (dataTable.getRowCount() == 0) {
+        if (dataTable.size() == 0) {
             throw new IllegalArgumentException("Input table is empty!");
         }
 

@@ -165,7 +165,7 @@ public final class LogRegLearner {
                 final DataColumnDomain domain = colSpec.getDomain();
                 final DataCell lowerBound = domain.getLowerBound();
                 final DataCell upperBound = domain.getUpperBound();
-                assert lowerBound != null || data.getRowCount() == 0
+                assert lowerBound != null || data.size() == 0
                         : "Non empty table must have domain set at this point";
                 if (ObjectUtils.equals(lowerBound, upperBound)) {
                     exclude.add(colSpec.getName());

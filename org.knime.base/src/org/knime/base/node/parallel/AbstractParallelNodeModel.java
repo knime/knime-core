@@ -154,7 +154,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             }
         }
 
-        final double max = data[0].getRowCount();
+        final double max = data[0].size();
 
         final Callable<Void> submitter = new Callable<Void>() {
             @Override

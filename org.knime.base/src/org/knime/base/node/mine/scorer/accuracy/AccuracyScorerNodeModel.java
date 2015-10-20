@@ -210,7 +210,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             }
         }
 
-        int rowCnt = in.getRowCount();
+        long rowCnt = in.size();
         int numberOfRows = 0;
         int correctCount = 0;
         int falseCount = 0;
@@ -218,7 +218,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         for (Iterator<DataRow> it = in.iterator(); it.hasNext(); numberOfRows++) {
             DataRow row = it.next();
             subExec.setProgress((1.0 + numberOfRows) / rowCnt, "Computing score, row " + numberOfRows + " (\"" + row.getKey()
-                + "\") of " + in.getRowCount());
+                + "\") of " + in.size());
             try {
                 subExec.checkCanceled();
             } catch (CanceledExecutionException cee) {
@@ -571,7 +571,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
      */
     protected DataCell[] determineColValues(final BufferedDataTable in, final int index1, final int index2,
         final ExecutionMonitor exec) throws CanceledExecutionException {
-        int rowCnt = in.getRowCount();
+        long rowCnt = in.size();
         DataTableSpec inSpec = in.getDataTableSpec();
         DataColumnSpec col1 = inSpec.getColumnSpec(index1);
         DataColumnSpec col2 = inSpec.getColumnSpec(index2);

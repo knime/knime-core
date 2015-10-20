@@ -331,9 +331,9 @@ final class BootstrapNodeModel extends NodeModel {
 
         private ExecutionContext m_exec;
 
-        private int m_all;
+        private long m_all;
 
-        private int m_current;
+        private long m_current;
 
         /**
          * Creates a new progress object for the given amount of increments.
@@ -341,7 +341,7 @@ final class BootstrapNodeModel extends NodeModel {
          * @param all How many increments until completed
          * @param exec ExecutionContext to update the progress of the nodes execution
          */
-        public Progress(final int all, final ExecutionContext exec) {
+        public Progress(final long all, final ExecutionContext exec) {
             m_exec = exec;
             m_all = all;
             m_current = 0;

@@ -163,7 +163,7 @@ public abstract class GroupByTable {
         m_groupCols = groupByCols;
         m_colNamePolicy = colNamePolicy;
         //retain the row order only if the input table contains more than 1 row
-        m_retainOrder = retainOrder && inDataTable.getRowCount() > 1;
+        m_retainOrder = retainOrder && inDataTable.size() > 1;
         final Set<String> workingCols = getWorkingCols(globalSettings, groupByCols, colAggregators);
         final BufferedDataTable dataTable;
         final ColumnAggregator[] aggrs;
@@ -208,7 +208,7 @@ public abstract class GroupByTable {
             }
         }
         exec.setMessage("Creating group table...");
-        if (dataTable.getRowCount() < 1) {
+        if (dataTable.size() < 1) {
             //check for an empty table
             final BufferedDataContainer dc = exec.createDataContainer(resultSpec);
             dc.close();

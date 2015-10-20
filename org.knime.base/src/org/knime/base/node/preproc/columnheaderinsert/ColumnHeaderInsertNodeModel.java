@@ -137,7 +137,7 @@ final class ColumnHeaderInsertNodeModel extends NodeModel {
         String valueColumnIdx = m_config.getValueColumn();
         int valueColIndex = dictionaryTableSpec.findColumnIndex(valueColumnIdx);
         int rowIndex = 0;
-        final int rowCount = dictionaryTable.getRowCount();
+        final long rowCount = dictionaryTable.size();
         for (DataRow row : dictionaryTable) {
             RowKey key = row.getKey();
             exec.setProgress(rowIndex / (double)rowCount, "Reading dictionary, "

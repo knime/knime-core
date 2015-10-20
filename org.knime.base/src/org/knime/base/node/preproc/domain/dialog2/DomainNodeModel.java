@@ -162,7 +162,7 @@ public class DomainNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTableDomainCreator domainCreator = getDomainCreator(inData[0].getDataTableSpec());
-        domainCreator.updateDomain(inData[0], exec, inData[0].getRowCount());
+        domainCreator.updateDomain(inData[0], exec, inData[0].size());
         return new BufferedDataTable[]{exec.createSpecReplacerTable(inData[0], domainCreator.createSpec())};
     }
 

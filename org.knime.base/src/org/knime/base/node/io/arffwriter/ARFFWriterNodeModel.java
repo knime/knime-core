@@ -220,7 +220,7 @@ public class ARFFWriterNodeModel extends NodeModel {
 
             // finally add the data
             writer.write("\n@DATA\n");
-            long rowCnt = inData[0].getRowCount();
+            long rowCnt = inData[0].size();
             long rowNr = 0;
             for (DataRow row : inData[0]) {
 

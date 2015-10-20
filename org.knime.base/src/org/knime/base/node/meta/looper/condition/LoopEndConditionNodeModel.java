@@ -244,7 +244,7 @@ public class LoopEndConditionNodeModel extends NodeModel implements
                         .addLastRowsOnly()))) {
             exec.setMessage("Collecting rows from current iteration");
             int k = 0;
-            final double max = inData[0].getRowCount();
+            final double max = inData[0].size();
             IntCell currIterCell = new IntCell(count);
             for (DataRow row : inData[0]) {
                 exec.checkCanceled();

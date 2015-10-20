@@ -185,7 +185,7 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
 
         BufferedDataContainer container = exec.createDataContainer(new DataTableSpec(colSpecs));
         i = 0;
-        final double rowCount = table.getRowCount();
+        final double rowCount = table.size();
         for (DataRow r : table) {
             container.addRowToTable(r);
             exec.setProgress((i++) / rowCount, "Copied row " + i + "/"

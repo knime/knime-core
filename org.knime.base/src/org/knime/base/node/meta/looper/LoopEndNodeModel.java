@@ -150,7 +150,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
         }
         BufferedDataTable in = inData[0];
         DataTableSpec inSpec = in.getSpec();
-        if (m_settings.ignoreEmptyTables() && in.getRowCount() < 1) {
+        if (m_settings.ignoreEmptyTables() && in.size() < 1) {
             if (m_emptyTable == null) {
                 BufferedDataContainer cont = exec.createDataContainer(createSpec(inSpec));
                 cont.close();

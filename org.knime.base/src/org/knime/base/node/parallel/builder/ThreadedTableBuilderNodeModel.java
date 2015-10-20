@@ -111,6 +111,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
                 final BufferedDataTable data, final int chunkSize,
                 final double max) {
             return new Callable<BufferedDataContainer[]>() {
+                @Override
                 public BufferedDataContainer[] call() throws Exception {
                     BufferedDataContainer[] result =
                         new BufferedDataContainer[m_specs.length];
@@ -144,8 +145,9 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
          *
          * {@inheritDoc}
          */
+        @Override
         public Void call() throws Exception {
-            final double max = m_data[0].getRowCount();
+            final double max = m_data[0].size();
             final int chunkSize =
                     (int)Math.ceil(max / (4.0 * m_workers.getMaxThreads()));
             final RowIterator it = m_data[0].iterator();

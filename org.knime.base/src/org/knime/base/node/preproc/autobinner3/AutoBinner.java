@@ -400,7 +400,7 @@ public class AutoBinner {
         for (DataRow row : data) {
             c++;
             exec.checkCanceled();
-            exec.setProgress(c / (double)data.getRowCount());
+            exec.setProgress(c / (double)data.size());
             for (int col : valuesI) {
                 double val = ((DoubleValue)row.getCell(col)).getDoubleValue();
                 if (min.get(col) > val) {

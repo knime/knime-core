@@ -113,8 +113,8 @@ public class PMMLKNNNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         BufferedDataTable inTable = (BufferedDataTable)inPorts[0];
 
-        if (m_limitRows.getBooleanValue() && inTable.getRowCount() > m_maxNumRows.getIntValue()) {
-            setWarningMessage("The number of records in the table (" + inTable.getRowCount()
+        if (m_limitRows.getBooleanValue() && inTable.size() > m_maxNumRows.getIntValue()) {
+            setWarningMessage("The number of records in the table (" + inTable.size()
                               + ") exceeds the maximum record number of " + m_maxNumRows.getIntValue());
         }
 

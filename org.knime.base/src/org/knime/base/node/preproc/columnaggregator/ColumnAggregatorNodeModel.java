@@ -208,7 +208,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
                 origSpec, selectedCols, new GlobalSettings(
                         FileStoreFactory.createWorkflowFileStoreFactory(exec), selectedCols,
                         m_maxUniqueValues.getIntValue(), getDefaultValueDelimiter(), origSpec,
-                        table.getRowCount()), m_methods);
+                        table.size()), m_methods);
         final ColumnRearranger cr =
             createRearranger(origSpec, cellFactory);
         final BufferedDataTable out =

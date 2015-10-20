@@ -176,7 +176,7 @@ public class NaiveBayesModel {
         if (data == null) {
             throw new NullPointerException("Training table must not be null.");
         }
-        if (data.getRowCount() < 1) {
+        if (data.size() < 1) {
             throw new InvalidSettingsException("Input data contains no rows");
         }
         if (classColName == null) {

@@ -334,10 +334,10 @@ public class PCANodeModel extends NodeModel {
         // filterNonNumericalColumns(inData[DATA_INPORT]);
 
         final BufferedDataTable dataTable = (BufferedDataTable) inData[DATA_INPORT];
-        if (dataTable.getRowCount() == 0) {
+        if (dataTable.size() == 0) {
             throw new IllegalArgumentException("Input table is empty!");
         }
-        if (dataTable.getRowCount() == 1) {
+        if (dataTable.size() == 1) {
             throw new IllegalArgumentException("Input table has only one row!");
         }
 
@@ -593,9 +593,9 @@ public class PCANodeModel extends NodeModel {
                 }
             }
             counter++;
-            exec.setProgress((double) counter / dataTable.getRowCount(),
+            exec.setProgress((double) counter / dataTable.size(),
                     "create covariance matrix, processing row " + counter
-                    + " of " + dataTable.getRowCount());
+                    + " of " + dataTable.size());
             exec.checkCanceled();
         }
         if (counter < 2) {
@@ -632,7 +632,7 @@ public class PCANodeModel extends NodeModel {
             final ExecutionContext exec) throws CanceledExecutionException {
         final double[] means = new double[numericIndices.length];
         int numRows = 0;
-        final double rowCount = ((BufferedDataTable) dataTable).getRowCount();
+        final double rowCount = ((BufferedDataTable) dataTable).size();
         int totalRowCount = 0;
         // calculate mean for each row and column
         ROW: for (final DataRow row : dataTable) {

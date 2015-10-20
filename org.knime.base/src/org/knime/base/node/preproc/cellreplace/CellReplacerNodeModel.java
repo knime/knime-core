@@ -128,8 +128,8 @@ public class CellReplacerNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         BufferedDataTable table = inData[0];
         BufferedDataTable dictionary = inData[1];
-        double tableSize = table.getRowCount();
-        double dictSize = dictionary.getRowCount();
+        double tableSize = table.size();
+        double dictSize = dictionary.size();
         double dictCreateAmount = dictSize / (dictSize + tableSize);
         double outputCreateAmount = tableSize / (dictSize + tableSize);
         ColumnRearranger rearranger =
@@ -257,7 +257,7 @@ public class CellReplacerNodeModel extends NodeModel {
                 if (m_dictionaryMap == null) {
                     m_dictionaryMap = new HashMap<DataCell, DataCell>();
                     int i = 0;
-                    double rowCount = dictTable.getRowCount();
+                    double rowCount = dictTable.size();
                     for (DataRow r : dictTable) {
                         dictionaryInitExec.setProgress((i++) / rowCount,
                                 "Reading dictionary into memory, row " + i);

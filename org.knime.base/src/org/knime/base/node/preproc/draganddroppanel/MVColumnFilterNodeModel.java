@@ -143,7 +143,7 @@ public class MVColumnFilterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
         int[] missingCount = new int[inData[0].getDataTableSpec().getNumColumns()];
         boolean stop = true;
-        double rowCount = inData[0].getRowCount();
+        double rowCount = inData[0].size();
         long processedRows = 0;
         for (DataRow row : inData[0]) {
             exec.setProgress(processedRows++/rowCount);
@@ -167,7 +167,7 @@ public class MVColumnFilterNodeModel extends NodeModel {
         int alreadyRemoved = 0;
         for (int i = 0; i < percentages.length; i++) {
             if (percentages[i] > 0) {
-                if (((double)missingCount[i] / inData[0].getRowCount())*100 >= percentages[i]) {
+                if (((double)missingCount[i] / inData[0].size())*100 >= percentages[i]) {
                 r.remove(i - alreadyRemoved++);
                 }
             }
