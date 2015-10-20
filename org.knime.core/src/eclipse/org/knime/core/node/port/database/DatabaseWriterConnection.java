@@ -535,7 +535,7 @@ public final class DatabaseWriterConnection {
             // problems writing more than 13 columns. the prepare statement
             // ensures that we can set the columns directly row-by-row, the
             // database will handle the commit
-            int rowCount = data.getRowCount();
+            long rowCount = data.size();
             int cnt = 1;
             int errorCnt = 0;
             int allErrors = 0;
@@ -684,7 +684,7 @@ public final class DatabaseWriterConnection {
             // problems writing more than 13 columns. the prepare statement
             // ensures that we can set the columns directly row-by-row, the
             // database will handle the commit
-            int rowCount = data.getRowCount();
+            long rowCount = data.size();
             int cnt = 1;
             int errorCnt = 0;
             int allErrors = 0;
