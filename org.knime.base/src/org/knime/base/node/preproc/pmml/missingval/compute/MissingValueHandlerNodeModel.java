@@ -62,9 +62,14 @@ public class MissingValueHandlerNodeModel extends NodeModel {
         exec.setMessage("Replacing missing values");
         for (DataRow row : mvTable) {
             tableSubExec.checkCanceled();
-            tableSubExec.setProgress(++rowCounter / (double)numOfRows,
+            if(row != null) {
+                tableSubExec.setProgress(++rowCounter / (double)numOfRows,
                     "Processed row " + rowCounter + "/" + numOfRows + " (\"" + row.getKey() + "\")");
-            container.addRowToTable(row);
+                container.addRowToTable(row);
+            } else {
+                tableSubExec.setProgress(++rowCounter / (double)numOfRows,
+                    "Processed row " + rowCounter + "/" + numOfRows);
+            }
         }
         container.close();
 
