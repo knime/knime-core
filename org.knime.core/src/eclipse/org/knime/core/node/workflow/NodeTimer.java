@@ -58,10 +58,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.json.Json;
 import javax.json.JsonNumber;
@@ -217,31 +215,6 @@ public final class NodeTimer {
             }
         }
 
-        private void processLegacyStats() {
-            Iterator<Entry<String, NodeStats>> iterator = m_globalNodeStats.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Entry<String, NodeStats> entry = iterator.next();
-                String possibleLegacyName = entry.getKey();
-                for (String possibleNewName : m_globalNodeStats.keySet()) {
-                    // find the first possible match and add legacy stats to it,
-                    // in most cases there is only one node per node model, all
-                    // other cases are skewed towards the first found node model slightly
-                    if (possibleNewName.startsWith(possibleLegacyName + ":")) {
-                        NodeStats legacyStats = entry.getValue();
-                        NodeStats newStats = m_globalNodeStats.get(possibleNewName);
-                        newStats.creationCount += legacyStats.creationCount;
-                        newStats.executionCount += legacyStats.executionCount;
-                        newStats.executionTime += legacyStats.executionTime;
-                        if (newStats.likelySuccessor.equals(N_A)) {
-                            newStats.likelySuccessor = legacyStats.likelySuccessor;
-                        }
-                        iterator.remove();
-                        break;
-                    }
-                }
-            }
-        }
-
         public DataTableSpec getGlobalStatsSpecs() {
             DataTableSpecCreator dtsc = new DataTableSpecCreator();
             DataColumnSpec[] colSpecs = new DataColumnSpec[] {
@@ -318,7 +291,6 @@ public final class NodeTimer {
             job.add("created", m_created);
             JsonObjectBuilder job2 = Json.createObjectBuilder();
             synchronized (this) {
-                processLegacyStats();
                 for (String cname : m_globalNodeStats.keySet()) {
                     JsonObjectBuilder job3 = Json.createObjectBuilder();
                     NodeStats ns = m_globalNodeStats.get(cname);
@@ -524,11 +496,10 @@ public final class NodeTimer {
         String cname = "NodeContainer";
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer node = (NativeNodeContainer)nc;
-            //added in 3.0: name consists of class name + node name
-            String className = node.getNodeModel().getClass().getName();
+            //changed in 3.0.1: name consists of factory class name + node name
+            String className = node.getNode().getFactory().getClass().getName();
             String nodeName = node.getName();
-            cname = className + ":" + nodeName;
-            ((NativeNodeContainer)nc).getName();
+            cname = className + "#" + nodeName;
         } else if (nc instanceof SubNodeContainer) {
             cname = nc.getClass().getName();
         }
