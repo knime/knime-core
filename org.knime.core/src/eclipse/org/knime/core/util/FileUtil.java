@@ -91,6 +91,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.pathresolve.ResolverUtil;
 
 /**
@@ -857,24 +858,31 @@ public final class FileUtil {
 
     /** Reads the current temp dir from the workflow context or returns the standard tmp dir, if not set. */
     private static File getTmpDir() {
-        File rootDir = null;
+        final File fallbackDir = new File(KNIMEConstants.getKNIMETempDir());
+
         NodeContext nodeContext = NodeContext.getContext();
-        if (nodeContext != null) {
-            WorkflowContext workflowContext = nodeContext.getWorkflowManager().getContext();
-            if (workflowContext != null) {
-                rootDir = workflowContext.getTempLocation();
-                if (!rootDir.isDirectory()) {
-                    LOGGER.error("Temp folder \"" + rootDir.getAbsolutePath() + "\" does not exist (associated "
-                            + "with NodeContext \"" + nodeContext + "\") - using default temp folder (\""
-                            + KNIMEConstants.getKNIMETempDir() + "\"");
-                    rootDir = null;
-                }
-            }
+        if (nodeContext == null) {
+            return fallbackDir;
         }
-        if (rootDir == null) {
-            rootDir = new File(KNIMEConstants.getKNIMETempDir());
+
+        WorkflowManager wfm = nodeContext.getWorkflowManager();
+        if (wfm == null) {
+            return fallbackDir;
         }
-        return rootDir;
+
+        WorkflowContext workflowContext = wfm.getContext();
+        if (workflowContext == null) {
+            return fallbackDir;
+        }
+
+        if (!workflowContext.getTempLocation().isDirectory()) {
+            LOGGER.error("Temp folder \"" + workflowContext.getTempLocation().getAbsolutePath()
+                + "\" does not exist (associated with node context \"" + nodeContext
+                + "\") - using fallback temp folder (\"" + fallbackDir.getAbsolutePath() + "\"");
+            return fallbackDir;
+        } else {
+            return workflowContext.getTempLocation();
+        }
     }
 
 
