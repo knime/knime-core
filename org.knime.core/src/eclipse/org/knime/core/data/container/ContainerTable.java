@@ -276,16 +276,17 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
     /** Executes the copy process when the content of this table is demanded
      * for the first time. */
     private void ensureBufferOpen() {
+        CopyOnAccessTask readTask = m_readTask;
         // do not synchronize this check here as this method most of the
         // the times returns immediately
-        if (m_buffer != null) {
+        if (readTask == null) {
             return;
         }
-        synchronized (m_readTask) {
+        synchronized (readTask) {
             // synchronized may have blocked when another thread was
             // executing the copy task. If so, there is nothing else to
             // do here
-            if (m_buffer != null) {
+            if (m_readTask == null) {
                 return;
             }
             try {

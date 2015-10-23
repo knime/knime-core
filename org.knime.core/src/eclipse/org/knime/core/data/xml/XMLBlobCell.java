@@ -176,7 +176,7 @@ public class XMLBlobCell extends BlobDataCell implements XMLValue, StringValue {
      */
     @Override
     public int hashCode() {
-        return XMLValue.hashCode(this);
+        return m_content.hashCode();
     }
 
 }

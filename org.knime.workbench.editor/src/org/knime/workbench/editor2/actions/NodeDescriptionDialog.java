@@ -89,6 +89,7 @@ public class NodeDescriptionDialog extends Dialog {
             final String descriptionInit,
             final NodeID nodeID) {
         super(parent);
+        setShellStyle(getShellStyle() | SWT.APPLICATION_MODAL | SWT.BORDER);
         m_nodeID = nodeID;
         m_initDescription = descriptionInit;
         m_title = dialogTitle;
@@ -102,6 +103,7 @@ public class NodeDescriptionDialog extends Dialog {
     @Override
     protected void configureShell(final Shell newShell) {
         super.configureShell(newShell);
+
         newShell.setText(m_title);
         Image img = KNIMEUIPlugin.getDefault().getImageRegistry().get("knime");
         newShell.setImage(img);

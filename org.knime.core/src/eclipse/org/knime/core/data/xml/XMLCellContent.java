@@ -236,7 +236,7 @@ public class XMLCellContent implements XMLValue {
     public boolean equals(final Object obj) {
         if (obj instanceof XMLCellContent) {
             XMLCellContent that = (XMLCellContent)obj;
-            return this.getStringValue().equals(that.getStringValue());
+            return XMLValue.equalContent(this, that);
         } else {
             return false;
         }
@@ -247,6 +247,6 @@ public class XMLCellContent implements XMLValue {
      */
     @Override
     public int hashCode() {
-        return getStringValue().hashCode();
+        return XMLValue.hashCode(this);
     }
 }
