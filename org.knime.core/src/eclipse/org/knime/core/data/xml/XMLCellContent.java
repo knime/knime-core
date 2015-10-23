@@ -60,7 +60,6 @@ import javax.xml.stream.XMLStreamException;
 import org.knime.core.data.xml.io.XMLCellReaderFactory;
 import org.knime.core.data.xml.io.XMLCellWriter;
 import org.knime.core.data.xml.io.XMLCellWriterFactory;
-import org.knime.core.data.xml.util.XmlDomComparer;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.Document;
@@ -237,7 +236,7 @@ public class XMLCellContent implements XMLValue {
     public boolean equals(final Object obj) {
         if (obj instanceof XMLCellContent) {
             XMLCellContent that = (XMLCellContent)obj;
-            return XmlDomComparer.equals(this.getDocument(), that.getDocument());
+            return XMLValue.equalContent(this, that);
         } else {
             return false;
         }
@@ -248,6 +247,6 @@ public class XMLCellContent implements XMLValue {
      */
     @Override
     public int hashCode() {
-        return getStringValue().hashCode();
+        return XMLValue.hashCode(this);
     }
 }

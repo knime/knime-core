@@ -172,7 +172,7 @@ public class XMLCell extends DataCell implements XMLValue, StringValue {
      */
     @Override
     public int hashCode() {
-        return XMLValue.hashCode(this);
+        return m_content.hashCode();
     }
 
     /**
