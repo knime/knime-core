@@ -174,9 +174,13 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
         if (m_settings.samplingMethod().equals(SamplingMethods.Random)
                 || m_settings.samplingMethod().equals(
                         SamplingMethods.Stratified)) {
-            rand =
-                    m_settings.seed() != null ? new Random(m_settings.seed())
-                            : new Random();
+            if (m_settings.seed() != null) {
+                rand = new Random(m_settings.seed());
+            } else {
+                long seed = System.nanoTime() ^ ((hashCode() << 32) + (m_settings.hashCode()));
+                rand = new Random(seed);
+                getLogger().debug("Using random seed " + seed);
+            }
         } else {
             rand = null;
         }
