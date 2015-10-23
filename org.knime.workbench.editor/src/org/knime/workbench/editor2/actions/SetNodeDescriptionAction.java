@@ -49,7 +49,6 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
@@ -153,11 +152,7 @@ public class SetNodeDescriptionAction extends AbstractNodeAction {
         final NodeContainer container = nodeParts[0].getNodeContainer();
 
         try {
-            Shell editorShell = PlatformUI.getWorkbench()
-            .getDisplay().getActiveShell();
-
-            Shell parent = new Shell(editorShell, SWT.BORDER
-                    | SWT.TITLE | SWT.NO_TRIM | SWT.APPLICATION_MODAL);
+            Shell parent = PlatformUI.getWorkbench().getDisplay().getActiveShell();
 
             String initialDescr = "";
             if (container.getCustomDescription() != null) {
@@ -174,8 +169,9 @@ public class SetNodeDescriptionAction extends AbstractNodeAction {
                     nodeParts[0].getFigure().getBounds().x,
                     nodeParts[0].getFigure().getBounds().y);
 
-            relativeLocation = editorShell.toDisplay(relativeLocation);
-            parent.setLocation(relativeLocation);
+            relativeLocation = parent.toDisplay(relativeLocation);
+            dialog.create();
+            dialog.getShell().setLocation(relativeLocation);
 
             int result = dialog.open();
 

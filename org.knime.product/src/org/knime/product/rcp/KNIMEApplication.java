@@ -48,10 +48,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -102,15 +99,9 @@ public class KNIMEApplication implements IApplication {
         Display display = createDisplay();
 
         try {
-            Shell shell = new Shell(display, SWT.ON_TOP);
-
-            try {
-                if (!checkInstanceLocation(shell)) {
-                    appContext.applicationRunning();
-                    return EXIT_OK;
-                }
-            } finally {
-                shell.dispose();
+            if (!checkInstanceLocation()) {
+                appContext.applicationRunning();
+                return EXIT_OK;
             }
 
             // initialize KNIMEConstants as early as possible in order to avoid deadlocks during startup
@@ -125,7 +116,7 @@ public class KNIMEApplication implements IApplication {
             RepositoryUpdater.INSTANCE.updateArtifactRepositoryURLs();
 
             int returnCode;
-            if (m_checkForUpdates && checkForUpdates(shell)) {
+            if (m_checkForUpdates && checkForUpdates()) {
                 returnCode = PlatformUI.RETURN_RESTART;
             } else {
                 startDeadlockDetectors(display);
@@ -199,13 +190,13 @@ public class KNIMEApplication implements IApplication {
      * @return true if a valid instance location has been set and false
      *         otherwise
      */
-    private boolean checkInstanceLocation(final Shell shell) {
+    private boolean checkInstanceLocation() {
         // -data @none was specified but an ide requires workspace
         Location instanceLoc = Platform.getInstanceLocation();
         if (instanceLoc == null) {
             MessageDialog
                     .openError(
-                            shell,
+                            null,
                             IDEWorkbenchMessages.IDEApplication_workspaceMandatoryTitle,
                             IDEWorkbenchMessages.IDEApplication_workspaceMandatoryMessage);
             return false;
@@ -215,7 +206,7 @@ public class KNIMEApplication implements IApplication {
         if (instanceLoc.isSet()) {
             // make sure the meta data version is compatible (or the user has
             // chosen to overwrite it).
-            if (!checkValidWorkspace(shell, instanceLoc.getURL())) {
+            if (!checkValidWorkspace(instanceLoc.getURL())) {
                 return false;
             }
 
@@ -236,18 +227,18 @@ public class KNIMEApplication implements IApplication {
                 if (workspaceDirectory.exists()) {
                     MessageDialog
                             .openError(
-                                    shell,
+                                    null,
                                     IDEWorkbenchMessages.IDEApplication_workspaceCannotLockTitle,
                                     IDEWorkbenchMessages.IDEApplication_workspaceCannotLockMessage);
                 } else {
                     MessageDialog
                             .openError(
-                                    shell,
+                                    null,
                                     IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetTitle,
                                     IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetMessage);
                 }
             } catch (IOException e) {
-                MessageDialog.openError(shell,
+                MessageDialog.openError(null,
                         IDEWorkbenchMessages.InternalError, e.getMessage());
             }
             return false;
@@ -270,7 +261,7 @@ public class KNIMEApplication implements IApplication {
 
         boolean force = false;
         while (true) {
-            URL workspaceUrl = promptForWorkspace(shell, launchData, force);
+            URL workspaceUrl = promptForWorkspace(launchData, force);
             if (workspaceUrl == null) {
                 return false;
             }
@@ -289,13 +280,13 @@ public class KNIMEApplication implements IApplication {
                 }
                 // by this point it has been determined that the workspace is
                 // already in use -- force the user to choose again
-                MessageDialog.openError(shell,
+                MessageDialog.openError(null,
                                         IDEWorkbenchMessages.IDEApplication_workspaceInUseTitle,
                                         IDEWorkbenchMessages.IDEApplication_workspaceInUseMessage);
             } catch (Exception e) {
                 MessageDialog
                         .openError(
-                                shell,
+                                null,
                                 IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetTitle,
                                 IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetMessage);
             }
@@ -315,8 +306,7 @@ public class KNIMEApplication implements IApplication {
      * @return An URL storing the selected workspace or null if the user has
      *         canceled the launch operation.
      */
-    private URL promptForWorkspace(final Shell shell,
-            final ChooseWorkspaceData launchData, boolean force) {
+    private URL promptForWorkspace(final ChooseWorkspaceData launchData, boolean force) {
         URL url = null;
         do {
             // don't use the parent shell to make the dialog a top-level
@@ -337,7 +327,7 @@ public class KNIMEApplication implements IApplication {
             if (instancePath.isEmpty()) {
                 MessageDialog
                         .openError(
-                                shell,
+                                null,
                                 IDEWorkbenchMessages.IDEApplication_workspaceEmptyTitle,
                                 IDEWorkbenchMessages.IDEApplication_workspaceEmptyMessage);
             }
@@ -345,7 +335,7 @@ public class KNIMEApplication implements IApplication {
             File workspace = new File(instancePath);
             if (!workspace.exists() && !workspace.mkdir()) {
                 // selected fresh workspace not writable
-                MessageDialog.openError(shell, IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetTitle,
+                MessageDialog.openError(null, IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetTitle,
                                         IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetMessage);
                 continue;
             }
@@ -360,12 +350,12 @@ public class KNIMEApplication implements IApplication {
             } catch (MalformedURLException e) {
                 MessageDialog
                         .openError(
-                                shell,
+                                null,
                                 IDEWorkbenchMessages.IDEApplication_workspaceInvalidTitle,
                                 IDEWorkbenchMessages.IDEApplication_workspaceInvalidMessage);
         		continue;
             }
-        } while (!checkValidWorkspace(shell, url));
+        } while (!checkValidWorkspace(url));
 
         return url;
     }
@@ -379,7 +369,7 @@ public class KNIMEApplication implements IApplication {
      * @return true if the argument URL is ok to use as a workspace and false
      *         otherwise.
      */
-    private boolean checkValidWorkspace(final Shell shell, final URL url) {
+    private boolean checkValidWorkspace(final URL url) {
         // a null url is not a valid workspace
         if (url == null) {
             return false;
@@ -415,12 +405,7 @@ public class KNIMEApplication implements IApplication {
             message = NLS.bind(IDEWorkbenchMessages.IDEApplication_versionMessage_olderWorkspace, url.getFile());
         }
 
-        MessageBox mbox =
-                new MessageBox(shell, SWT.OK | SWT.CANCEL | SWT.ICON_WARNING
-                        | SWT.APPLICATION_MODAL);
-        mbox.setText(title);
-        mbox.setMessage(message);
-        return mbox.open() == SWT.OK;
+        return MessageDialog.openConfirm(null, title, message);
     }
 
     /**
@@ -543,7 +528,7 @@ public class KNIMEApplication implements IApplication {
         });
     }
 
-    private boolean checkForUpdates(final Shell shell) {
+    private boolean checkForUpdates() {
         final IPreferenceStore prefStore =
                 ProductPlugin.getDefault().getPreferenceStore();
         if (prefStore.getBoolean(JUSTUPDATED)) {
