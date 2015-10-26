@@ -44,90 +44,64 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   Jun 22, 2015 (Lara): created
  */
-package org.knime.core.node.port.database.aggregation.function;
+package org.knime.core.node.port.database.pivoting;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
+import java.util.List;
+
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.node.port.database.StatementManipulator;
 
 /**
+ * This class holds pivot columns and corresponding values
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
- * @since 2.11
+ * @author Lara Gorini
+ * @since 3.0
  */
-public final class AvgDistinctDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
+public class PivotData {
 
-    private static final String LABEL = "AVG";
-    /**Factory for parent class.*/
-    public static final class Factory implements DBAggregationFunctionFactory {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getId() {
-            return LABEL + AbstractDistinctDBAggregationFunction.LABEL_POSTIX;
+    private final StatementManipulator m_statementManipulator;
+
+    private List<DataColumnSpec> m_myCols;
+
+    private List<Object> m_myVals;
+
+    /**
+     * Constructor of class {@link PivotData}
+     *
+     * @param myCols List of {@link DataColumnSpec} holding pivot values
+     * @param myVals List of pivot values
+     * @param statementManipulator The {@link StatementManipulator} to use
+     */
+    public PivotData(final StatementManipulator statementManipulator, final List<DataColumnSpec> myCols,
+        final List<Object> myVals) {
+        m_statementManipulator = statementManipulator;
+        m_myCols = myCols;
+        m_myVals = myVals;
+    }
+
+    /**
+     * @return String for pivot statement
+     */
+    public String getQuery() {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < m_myCols.size(); i++) {
+            if (i != 0) {
+                buf.append(" AND ");
+            }
+            buf.append(m_statementManipulator.quoteIdentifier(m_myCols.get(i).getName()));
+            buf.append("='");
+            buf.append(m_myVals.get(i) + "'");
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DBAggregationFunction createInstance() {
-            return new AvgDistinctDBAggregationFunction();
-        }
+        return buf.toString();
     }
 
     /**
-     * Constructor.
+     * @return List of values in pivot column
      */
-    public AvgDistinctDBAggregationFunction() {
-        this(false);
+    public List<Object> getValues() {
+        return m_myVals;
     }
 
-    private AvgDistinctDBAggregationFunction(final boolean distinct) {
-        super(distinct);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getLabel() {
-        return LABEL;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return DoubleCell.TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Returns the average of the (distinct) values.";
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isCompatible(final DataType type) {
-        return type.isCompatible(DoubleValue.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getFunction() {
-        return "AVG";
-    }
 }

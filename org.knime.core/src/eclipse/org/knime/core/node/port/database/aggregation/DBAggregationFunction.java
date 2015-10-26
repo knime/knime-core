@@ -74,6 +74,15 @@ public interface DBAggregationFunction extends AggregationFunction {
     String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
 
     /**
+     * @param manipulator {@link StatementManipulator} for quoting the column name if necessary
+     * @param subQuery the sub query to use e.g. CASE statement
+     * @param tableName the name of the table the column belongs to
+     * @return the sql fragment to use in the sql query e.g. SUM(colName)
+     * @since 3.0
+     */
+    String getSQLFragment4SubQuery(StatementManipulator manipulator, String tableName, String subQuery);
+
+    /**
      * @return the name of the function used in the column name
      */
     String getColumnName();

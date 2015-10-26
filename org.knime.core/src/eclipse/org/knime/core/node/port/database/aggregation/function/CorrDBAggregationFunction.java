@@ -51,7 +51,6 @@ package org.knime.core.node.port.database.aggregation.function;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
@@ -95,17 +94,6 @@ public final class CorrDBAggregationFunction extends AbstractColumnDBAggregation
     @Override
     public DataType getType(final DataType originalType) {
         return DoubleCell.TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
-        final String columnName) {
-        return getLabel() + "(" + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName)
-                + ", " + manipulator.quoteIdentifier(tableName) + "."
-                + manipulator.quoteIdentifier(getSelectedColumnName()) + ")";
     }
 
     /**

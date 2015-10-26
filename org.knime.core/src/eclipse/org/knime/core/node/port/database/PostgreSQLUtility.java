@@ -76,6 +76,8 @@ import org.knime.core.node.port.database.aggregation.function.SumDistinctDBAggre
 import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.postgresql.ArrayAggDBAggregationFunction;
+import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
+import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 
 /**
  * Database utility for PostgreSQL.
@@ -85,6 +87,13 @@ import org.knime.core.node.port.database.aggregation.function.postgresql.ArrayAg
  */
 public class PostgreSQLUtility extends DatabaseUtility {
     private static class PostgreSQLStatementManipulator extends StatementManipulator {
+
+        /**
+         * Constructor of class {@link PostgreSQLStatementManipulator}.
+         */
+        public PostgreSQLStatementManipulator() {
+            super(CasePivotStatementGenerator.getINSTANCE(), CaseBinningStatementGenerator.getINSTANCE());
+        }
         /**
          * {@inheritDoc}
          */
@@ -105,7 +114,17 @@ public class PostgreSQLUtility extends DatabaseUtility {
         public String forMetadataOnly(final String sql) {
             return limitRows(sql, 0);
         }
+
+        @Override
+        public String randomRows(final String sql, final long count) {
+            final String tmp = "SELECT * FROM (" + sql + ") " + getTempTableName() + " ORDER BY RANDOM() LIMIT " +count;
+            return limitRows(tmp, count);
+        }
+
     }
+
+
+
 
     private static final StatementManipulator MANIPULATOR = new PostgreSQLStatementManipulator();
 
@@ -131,5 +150,10 @@ public class PostgreSQLUtility extends DatabaseUtility {
             new RegrSXYDBAggregationFunction.Factory(), new RegrSYYDBAggregationFunction.Factory(),
             new StdDevPopDBAggregationFunction.Factory(), new StdDevSampDBAggregationFunction.Factory(),
             new VarPopDBAggregationFunction.Factory(), new VarSampDBAggregationFunction.Factory());
+    }
+
+    @Override
+    public boolean supportsRandomSampling() {
+        return true;
     }
 }

@@ -87,6 +87,12 @@ public class SQLiteUtility extends DatabaseUtility {
             }
         }
 
+        @Override
+        public String randomRows(final String sql, final long count) {
+            final String tmp = "SELECT * FROM (" + sql + ") " + getTempTableName() + " ORDER BY RANDOM() LIMIT " + count;
+            return limitRows(tmp, count);
+        }
+
         /**
          * {@inheritDoc}
          */
@@ -119,5 +125,10 @@ public class SQLiteUtility extends DatabaseUtility {
             new CountDistinctDBAggregationFunction.Factory(), new GroupConcatDBAggregationFunction.Factory(),
             new MaxDBAggregationFunction.Factory(), new MinDBAggregationFunction.Factory(),
             new SumDistinctDBAggregationFunction.Factory(), new TotalDBAggregationFunction.Factory());
+    }
+
+    @Override
+    public boolean supportsRandomSampling() {
+        return true;
     }
 }

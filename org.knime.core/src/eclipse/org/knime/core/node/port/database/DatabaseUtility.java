@@ -314,6 +314,22 @@ public class DatabaseUtility {
     }
 
     /**
+     * @return <code>true</code> if the database supports random sampling
+     * @since 3.0
+     */
+    public boolean supportsRandomSampling() {
+        return false;
+    }
+
+    /**
+     * @return <code>true</code> if the database supports CASE statements
+     * @since 3.0
+     */
+    public boolean supportsCase() {
+        return false;
+    }
+
+    /**
      * Returns whether the given table name exists in the database denoted by the connection.
      *
      * @param conn a database connection

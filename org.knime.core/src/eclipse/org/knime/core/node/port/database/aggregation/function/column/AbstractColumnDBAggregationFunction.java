@@ -54,6 +54,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 
 /**
@@ -83,6 +84,27 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
 
     /**
      * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
+        final String columnName) {
+        return getLabel() + "(" + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName)
+                + ", " + manipulator.quoteIdentifier(tableName) + "."
+                + manipulator.quoteIdentifier(getSelectedColumnName()) + ")";
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {
+        return getLabel() + "((" + subQuery + "), " + manipulator.quoteIdentifier(tableName) + "."
+                + manipulator.quoteIdentifier(getSelectedColumnName()) + ")";
+    }
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String getColumnName() {
@@ -90,7 +112,7 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
     }
 
     /**
-     * @return <code>true</code> if the option is selected otherwise <code>false</code>
+     * @return the selected second column name if available otherwise it returns <code>null</code>
      */
     protected String getSelectedColumnName() {
         return m_settings.getColumnName();

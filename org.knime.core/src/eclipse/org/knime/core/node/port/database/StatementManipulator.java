@@ -49,9 +49,21 @@ package org.knime.core.node.port.database;
 
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.binning.BinningStatamentGenerator;
+import org.knime.core.node.port.database.binning.DefaultBinningStatementGenerator;
+import org.knime.core.node.port.database.pivoting.DefaultPivotStatementGenerator;
+import org.knime.core.node.port.database.pivoting.PivotColumnNameGenerator;
+import org.knime.core.node.port.database.pivoting.PivotStatementGenerator;
+import org.knime.core.util.Pair;
 
 /**
  * This class lets you manipulate SQL statement by adding database-specific parts or changing statement parameters.
@@ -61,6 +73,31 @@ import java.util.regex.Pattern;
  * @since 2.10
  */
 public class StatementManipulator {
+
+    private final PivotStatementGenerator m_pivot;
+
+    private final BinningStatamentGenerator m_binning;
+
+    /**
+     * Constructor of class {@link StatementManipulator}.
+     */
+    public StatementManipulator() {
+        this(DefaultPivotStatementGenerator.getINSTANCE(), DefaultBinningStatementGenerator.getINSTANCE());
+    }
+
+    /**
+     * @param pivot
+     * @param binning
+     * @since 3.0
+     */
+    protected StatementManipulator(final PivotStatementGenerator pivot, final BinningStatamentGenerator binning) {
+        if (pivot == null) {
+            throw new IllegalArgumentException("PivotStatementGenerator must not be null");
+        }
+        m_pivot = pivot;
+        m_binning = binning;
+    }
+
     /**
      * Pattern for matching any character that needs escaping.
      *
@@ -90,18 +127,28 @@ public class StatementManipulator {
         return "SELECT * FROM (" + sql + ") " + getTempTableName() + " LIMIT " + count;
     }
 
-//    /**
-//     * Modifies the incoming SQL query so that the number of rows is limited. The default implementation uses the
-//     * LIMIT clause.
-//     *
-//     * @param sql any valid SQL query
-//     * @param offset the offset
-//     * @param count the maximum number of rows
-//     * @return an SQL query
-//     */
-//    public String limitRows(final String sql, final long count, final long offset) {
-//        return "SELECT * FROM (" + sql + ") " + getTempTableName() + " LIMIT " + count + " OFFSET " + offset;
-//    }
+    /**
+     * @param sql A valid SQL query
+     * @param count The number of rows to take randomly
+     * @return a SQL query
+     * @since 3.0
+     */
+    public String randomRows(final String sql, final long count) {
+        return limitRows(sql, count);
+    }
+
+    //    /**
+    //     * Modifies the incoming SQL query so that the number of rows is limited. The default implementation uses the
+    //     * LIMIT clause.
+    //     *
+    //     * @param sql any valid SQL query
+    //     * @param offset the offset
+    //     * @param count the maximum number of rows
+    //     * @return an SQL query
+    //     */
+    //    public String limitRows(final String sql, final long count, final long offset) {
+    //        return "SELECT * FROM (" + sql + ") " + getTempTableName() + " LIMIT " + count + " OFFSET " + offset;
+    //    }
 
 
     /**
@@ -139,6 +186,7 @@ public class StatementManipulator {
         }
         return buf.toString();
     }
+
 
     /**
      * Quotes an identifier e.g. column or table name if it contains characters that need
@@ -219,5 +267,59 @@ public class StatementManipulator {
      */
     protected final String getTempTableName() {
         return "tempTable_" + Math.abs(m_rand.nextLong());
+    }
+
+    /**
+     * Returns a SQL statement for pivoting.
+     *
+     * @param tableName Input query
+     * @param groupByColumnsList Name of columns used for GROUP BY
+     * @param pivotElements Columns and corresponding elements used for pivot
+     * @param aggValues Aggregation columns and corresponding functions
+     * @param pivotColGenerator Column name generator
+     * @return result SQL Statement for pivoting
+     * @since 3.0
+     */
+    public String getPivotStatement(final String tableName, final List<String> groupByColumnsList,
+        final Map<DataColumnSpec, Set<Object>> pivotElements,
+        final List<Pair<String, DBAggregationFunction>> aggValues, final PivotColumnNameGenerator pivotColGenerator) {
+        return m_pivot.getPivotStatement(this, tableName, groupByColumnsList, pivotElements, aggValues, pivotColGenerator);
+   }
+
+
+
+    /**
+     * Returns a SQL statement for sampling.
+     *
+     * @param sql Input SQL query
+     * @param valueToLimit Number of rows to take
+     * @param random <code>true</code>, if rows are selected randomly
+     * @return a SQL statement for sampling
+     * @since 3.0
+     */
+    public String getSamplingStatement(final String sql, final long valueToLimit, final boolean random) {
+        if (random) {
+            return randomRows(sql, valueToLimit);
+        } else {
+            return limitRows(sql, valueToLimit);
+        }
+    }
+
+
+    /**
+     * @param query
+     * @param includeCols
+     * @param excludeCols
+     * @param columnNames
+     * @param limitsMap
+     * @param includeMap
+     * @param appendMap
+     * @param namingMap
+     * @return
+     * @since 3.0
+     */
+    public String getBinnerStatement(final String query, final String[] includeCols, final String[] excludeCols, final Map<String, Double[][]> limitsMap,
+        final Map<String, Boolean[][]> includeMap, final Map<String, String[]> namingMap, final Map<String, String> appendMap) {
+        return m_binning.getBinnerStatement(this, query, includeCols, excludeCols, limitsMap, includeMap, namingMap, appendMap);
     }
 }

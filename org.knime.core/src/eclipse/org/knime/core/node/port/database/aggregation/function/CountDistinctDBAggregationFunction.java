@@ -51,7 +51,6 @@ package org.knime.core.node.port.database.aggregation.function;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.LongCell;
-import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 
@@ -105,9 +104,8 @@ public class CountDistinctDBAggregationFunction extends AbstractDistinctDBAggreg
      * {@inheritDoc}
      */
     @Override
-    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
-        final String colName) {
-        return buildSQLFragment("COUNT", manipulator, tableName, colName);
+    protected String getFunction() {
+        return "COUNT";
     }
 
     /**

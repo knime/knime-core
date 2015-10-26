@@ -49,6 +49,8 @@
 package org.knime.core.node.port.database;
 
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
+import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
+import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 
 
 /**
@@ -59,6 +61,14 @@ import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactor
  */
 public class DB2Utility extends DatabaseUtility {
     private static class DB2StatementManipulator extends StatementManipulator {
+
+        /**
+         * Constructor of class {@link DB2StatementManipulator}.
+         */
+       public DB2StatementManipulator() {
+           super(CasePivotStatementGenerator.getINSTANCE(), CaseBinningStatementGenerator.getINSTANCE());
+       }
+
         /**
          * {@inheritDoc}
          */
@@ -66,6 +76,13 @@ public class DB2Utility extends DatabaseUtility {
         public String limitRows(final String sql, final long count) {
             return sql + "FETCH FIRST " + count + " ROWS ONLY";
         }
+
+
+        @Override
+        public String randomRows(final String sql, final long count) {
+            return sql + " ORDER BY rand() FETCH FIRST " + count + " ROWS ONLY";
+        }
+
 
         /**
          * {@inheritDoc}
@@ -97,5 +114,19 @@ public class DB2Utility extends DatabaseUtility {
      */
     public DB2Utility() {
         super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
+    }
+
+
+    @Override
+    public boolean supportsRandomSampling() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean supportsCase() {
+        return true;
     }
 }

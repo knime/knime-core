@@ -72,8 +72,16 @@ public abstract class NoSettingsDBAggregationFunction implements DBAggregationFu
     @Override
     public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
         final String columnName) {
-        return getLabel() + "("
-                + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName) + ")";
+        return getSQLFragment4SubQuery(manipulator, tableName, manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName));
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {
+        return getLabel() + "(" + subQuery + ")";
     }
 
     /**

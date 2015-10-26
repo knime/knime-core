@@ -44,90 +44,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   Jun 22, 2015 (Lara): created
  */
-package org.knime.core.node.port.database.aggregation.function;
+package org.knime.core.node.port.database.pivoting;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
+import java.util.List;
+
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 
 /**
+ * Interface to name columns of pivot table.
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
- * @since 2.11
+ * @author Lara Gorini
+ * @since 3.0
  */
-public final class AvgDistinctDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
-
-    private static final String LABEL = "AVG";
-    /**Factory for parent class.*/
-    public static final class Factory implements DBAggregationFunctionFactory {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getId() {
-            return LABEL + AbstractDistinctDBAggregationFunction.LABEL_POSTIX;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DBAggregationFunction createInstance() {
-            return new AvgDistinctDBAggregationFunction();
-        }
-    }
+public interface PivotColumnNameGenerator {
 
     /**
-     * Constructor.
+     * @param origName Column name
+     * @param function Aggregation function
+     * @param values Pivot values
+     * @return columnName
      */
-    public AvgDistinctDBAggregationFunction() {
-        this(false);
-    }
+    public String createColumnName(final String origName, final DBAggregationFunction function,
+        final List<Object> values);
 
-    private AvgDistinctDBAggregationFunction(final boolean distinct) {
-        super(distinct);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getLabel() {
-        return LABEL;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return DoubleCell.TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Returns the average of the (distinct) values.";
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isCompatible(final DataType type) {
-        return type.isCompatible(DoubleValue.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getFunction() {
-        return "AVG";
-    }
 }

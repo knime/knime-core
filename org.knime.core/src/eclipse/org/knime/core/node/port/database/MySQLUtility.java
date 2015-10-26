@@ -66,6 +66,8 @@ import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggreg
 import org.knime.core.node.port.database.aggregation.function.SumDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
+import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
+import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 
 /**
  * Database utility for MySQL.
@@ -75,6 +77,16 @@ import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregati
  */
 public class MySQLUtility extends DatabaseUtility {
     private static class MySQLStatementManipulator extends StatementManipulator {
+
+
+        /**
+         * Constructor of class {@link MySQLStatementManipulator}.
+         */
+       public MySQLStatementManipulator () {
+           super(CasePivotStatementGenerator.getINSTANCE(), CaseBinningStatementGenerator.getINSTANCE());
+       }
+
+
         /**
          * {@inheritDoc}
          * @deprecated
@@ -135,12 +147,33 @@ public class MySQLUtility extends DatabaseUtility {
             }
         }
 
+
+        @Override
+        public String randomRows(final String sql, final long count) {
+            final String tmp =
+                    "SELECT * FROM (" + sql + ") " + getTempTableName() + " ORDER BY RAND() LIMIT " + count;
+            return tmp;
+        }
+
+
+
         /**
          * {@inheritDoc}
          */
         @Override
         public String forMetadataOnly(final String sql) {
             return limitRows(sql, 0);
+        }
+
+
+
+        @Override
+        public String getSamplingStatement(final String sql, final long valueToLimit, final boolean random) {
+            if (random) {
+                return randomRows(sql, valueToLimit);
+            } else {
+                return super.limitRows(sql, valueToLimit);
+            }
         }
     }
 
@@ -161,5 +194,10 @@ public class MySQLUtility extends DatabaseUtility {
             new MinDBAggregationFunction.Factory(), new StdDevPopDBAggregationFunction.Factory(),
             new StdDevSampDBAggregationFunction.Factory(), new SumDistinctDBAggregationFunction.Factory(),
             new VarPopDBAggregationFunction.Factory(), new VarSampDBAggregationFunction.Factory());
+    }
+
+    @Override
+    public boolean supportsRandomSampling() {
+        return true;
     }
 }

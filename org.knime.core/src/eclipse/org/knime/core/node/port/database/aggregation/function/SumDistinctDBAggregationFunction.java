@@ -50,7 +50,6 @@ package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 
@@ -127,8 +126,7 @@ public final class SumDistinctDBAggregationFunction extends AbstractDistinctDBAg
      * {@inheritDoc}
      */
     @Override
-    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
-        final String colName) {
-        return buildSQLFragment("SUM", manipulator, tableName, colName);
+    protected String getFunction() {
+        return "SUM";
     }
 }

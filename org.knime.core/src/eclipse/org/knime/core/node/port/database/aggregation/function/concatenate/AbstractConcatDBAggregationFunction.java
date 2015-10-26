@@ -27,6 +27,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 
 /**
@@ -52,6 +53,40 @@ public abstract class AbstractConcatDBAggregationFunction implements DBAggregati
      */
     protected ConcatDBAggregationFuntionSettings getSettings() {
         return m_settings;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public String getSQLFragment(final StatementManipulator manipulator, final String tableName, final String colName) {
+        return getFunction() + "(" + tableName + "." + manipulator.quoteIdentifier(colName)
+                + ", " + quoteSeparator(getSettings().getSeparator()) + ")";
+    }
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {
+        return getFunction() + "((" + subQuery  + "), " + quoteSeparator(getSettings().getSeparator()) + ")";
+    }
+
+    /**
+     * @return the database aggregation function to use e.g. CONCAT
+     * @since 3.0
+     */
+    protected abstract String getFunction();
+
+    /**
+     * @param separator the value separator
+     * @return the quoted separator
+     * @since 3.0
+     */
+    protected String quoteSeparator(final String separator) {
+        return "'" + separator + "'";
     }
 
     /**

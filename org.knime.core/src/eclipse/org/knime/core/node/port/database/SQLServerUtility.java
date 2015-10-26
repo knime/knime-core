@@ -49,6 +49,8 @@
 package org.knime.core.node.port.database;
 
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
+import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
+import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 
 
 /**
@@ -59,12 +61,29 @@ import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactor
  */
 public class SQLServerUtility extends DatabaseUtility {
     private static class SQLServerStatementManipulator extends StatementManipulator {
+
+
+        /**
+         * Constructor of class {@link SQLServerStatementManipulator}.
+         */
+       public SQLServerStatementManipulator () {
+           super(CasePivotStatementGenerator.getINSTANCE(), CaseBinningStatementGenerator.getINSTANCE());
+       }
+
+
         /**
          * {@inheritDoc}
          */
         @Override
         public String limitRows(final String sql, final long count) {
             return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName();
+        }
+
+
+        @Override
+        public String randomRows(final String sql, final long count) {
+            final String tmp = limitRows(sql, count);
+            return tmp + " ORDER BY rand()";
         }
 
         /**
@@ -97,5 +116,10 @@ public class SQLServerUtility extends DatabaseUtility {
      */
     public SQLServerUtility() {
         super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
+    }
+
+    @Override
+    public boolean supportsRandomSampling() {
+        return true;
     }
 }

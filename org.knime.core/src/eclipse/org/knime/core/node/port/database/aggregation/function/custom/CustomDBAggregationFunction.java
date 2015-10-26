@@ -159,6 +159,14 @@ public class CustomDBAggregationFunction implements DBAggregationFunction {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {
+        return m_settings.getSQLFragment4SubQuery(manipulator, tableName, subQuery);
+    }
+
+    /**
      * @return the settings
      */
     protected CustomDBAggregationFuntionSettings getSettings() {

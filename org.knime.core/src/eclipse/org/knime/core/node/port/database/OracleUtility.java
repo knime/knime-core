@@ -48,6 +48,8 @@
 package org.knime.core.node.port.database;
 
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
+import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
+import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 
 
 /**
@@ -58,12 +60,29 @@ import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactor
  */
 public class OracleUtility extends DatabaseUtility {
     private static class OracleStatementManipulator extends StatementManipulator {
+
+
+        /**
+         * Constructor of class {@link OracleStatementManipulator}.
+         */
+       public OracleStatementManipulator() {
+           super(CasePivotStatementGenerator.getINSTANCE(), CaseBinningStatementGenerator.getINSTANCE());
+       }
+
+
         /**
          * {@inheritDoc}
          */
         @Override
         public String limitRows(final String sql, final long count) {
             return "SELECT * FROM (" + sql + ") " + getTempTableName() + " WHERE rownum <= " + count;
+        }
+
+
+        @Override
+        public String randomRows(final String sql, final long count) {
+            final String stmt = sql + " ORDER BY dbms_random.value";
+            return limitRows(stmt, count);
         }
 
         /**
@@ -128,5 +147,10 @@ public class OracleUtility extends DatabaseUtility {
      */
     public OracleUtility() {
         super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
+    }
+
+    @Override
+    public boolean supportsRandomSampling() {
+        return true;
     }
 }

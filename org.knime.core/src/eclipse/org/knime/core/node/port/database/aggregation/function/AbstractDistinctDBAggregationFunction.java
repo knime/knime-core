@@ -90,15 +90,27 @@ public abstract class AbstractDistinctDBAggregationFunction extends AbstractBool
     }
 
     /**
-     * @param function the aggregation function e.g. count, sum, etc.
-     * @param manipulator the {@link StatementManipulator}
-     * @param tableName the name of the table the column belongs to
-     * @param colName the column name
-     * @return the sql fragment
+     * @return the database function to use e.g. SUM
+     * @since 3.0
      */
-    protected String buildSQLFragment(final String function, final StatementManipulator manipulator,
-        final String tableName, final String colName) {
-        return function + "(" + (isSelected() ? "DISTINCT " : "")
-                + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(colName) + ")";
+    protected abstract String getFunction();
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public String getSQLFragment(final StatementManipulator manipulator, final String tableName, final String columnName) {
+        return getFunction() + "(" + (isSelected() ? "DISTINCT " : "")
+                + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName) + ")";
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.0
+     */
+    @Override
+    public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {
+        return getFunction() + "(" + (isSelected() ? "DISTINCT (" : "") + subQuery + (isSelected() ? ")" : "") + ")";
     }
 }

@@ -24,7 +24,6 @@ package org.knime.core.node.port.database.aggregation.function;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.function.concatenate.AbstractConcatDBAggregationFunction;
@@ -189,16 +188,7 @@ public final class GroupConcatDBAggregationFunction extends AbstractConcatDBAggr
      * {@inheritDoc}
      */
     @Override
-    public String getSQLFragment(final StatementManipulator manipulator, final String tableName, final String colName) {
-        return m_function + "(" + tableName + "." + manipulator.quoteIdentifier(colName)
-                + ", " + quoteSeparator(getSettings().getSeparator()) + ")";
-    }
-
-    /**
-     * @param separator the value separator
-     * @return the quoted separator
-     */
-    protected String quoteSeparator(final String separator) {
-        return "'" + separator + "'";
+    protected String getFunction() {
+        return m_function;
     }
 }

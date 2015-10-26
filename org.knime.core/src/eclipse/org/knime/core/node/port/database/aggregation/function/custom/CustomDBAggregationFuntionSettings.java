@@ -194,6 +194,29 @@ public class CustomDBAggregationFuntionSettings {
         return replacedFunction;
     }
 
+
+    /**
+     * @param manipulator {@link StatementManipulator}
+     * @param tableName the table name
+     * @param subQuery the sub query to use as first db column
+     * @return the custom aggregation function
+     */
+    public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {
+        String replacedFunction = m_function.getStringValue();
+        final String secondCol = m_secondColumn.getStringValue();
+        final String firstCol;
+        if (secondCol != null && !secondCol.isEmpty()) {
+            firstCol = "(" + subQuery + ")";
+            final String quotedSecondCol =
+                    manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(secondCol);
+            replacedFunction = replacedFunction.replaceAll(SECOND_COLUMN_NAME, quotedSecondCol);
+        } else {
+            firstCol = subQuery;
+        }
+        replacedFunction = replacedFunction.replaceAll(COLUMN_NAME, firstCol);
+        return replacedFunction;
+    }
+
     /**
      * @return the name to use for the result column
      */

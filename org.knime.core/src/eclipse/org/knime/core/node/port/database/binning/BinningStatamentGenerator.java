@@ -44,90 +44,33 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   Sep 30, 2015 (Lara): created
  */
-package org.knime.core.node.port.database.aggregation.function;
+package org.knime.core.node.port.database.binning;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
+import java.util.Map;
+
+import org.knime.core.node.port.database.StatementManipulator;
 
 /**
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
- * @since 2.11
+ * @author Lara
  */
-public final class AvgDistinctDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
-
-    private static final String LABEL = "AVG";
-    /**Factory for parent class.*/
-    public static final class Factory implements DBAggregationFunctionFactory {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getId() {
-            return LABEL + AbstractDistinctDBAggregationFunction.LABEL_POSTIX;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DBAggregationFunction createInstance() {
-            return new AvgDistinctDBAggregationFunction();
-        }
-    }
+public interface BinningStatamentGenerator {
 
     /**
-     * Constructor.
+     * @param statementManipulator
+     * @param query
+     * @param includeCols
+     * @param excludeCols
+     * @param limits
+     * @param include
+     * @param namingMap
+     * @param appendMap
+     * @return
      */
-    public AvgDistinctDBAggregationFunction() {
-        this(false);
-    }
+    public String getBinnerStatement(StatementManipulator statementManipulator, String query, String[] includeCols, String[] excludeCols, Map<String, Double[][]> limitsMap,
+        Map<String, Boolean[][]> includeMap, Map<String, String[]> namingMap, Map<String, String> appendMap);
 
-    private AvgDistinctDBAggregationFunction(final boolean distinct) {
-        super(distinct);
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getLabel() {
-        return LABEL;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return DoubleCell.TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Returns the average of the (distinct) values.";
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isCompatible(final DataType type) {
-        return type.isCompatible(DoubleValue.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected String getFunction() {
-        return "AVG";
-    }
 }
