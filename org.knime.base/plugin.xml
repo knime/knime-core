@@ -1891,6 +1891,30 @@
             factory-class="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory2"
             id="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory">
       </node>
+      <node
+            category-path="/database/database-manipulation"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.database.pivot.DBPivotNodeFactory"
+            id="org.knime.base.node.io.database.pivot.DBPivotNodeFactory">
+      </node>
+      <node
+            category-path="/database/database-manipulation"
+            deprecated="false"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.database.sampling.DBSamplingNodeFactory"
+            id="org.knime.base.node.io.database.sampling.DBSamplingNodeFactory">
+      </node>
+      <node
+            category-path="/database/database-manipulation"
+            factory-class="org.knime.base.node.io.database.binning.DBBinnerNodeFactory"
+            id="org.knime.base.node.io.database.binning.DBBinnerNodeFactory">
+      </node>
+      <node
+            category-path="/database/database-manipulation"
+            deprecated="false"
+            factory-class="org.knime.base.node.io.database.binning.DBNumericBinnerNodeFactory"
+            id="org.knime.base.node.io.database.binning.DBNumericBinnerNodeFactory">
+      </node>
    </extension>
    
       

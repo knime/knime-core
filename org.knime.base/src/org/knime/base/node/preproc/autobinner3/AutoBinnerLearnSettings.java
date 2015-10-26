@@ -53,6 +53,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
@@ -91,17 +92,61 @@ public final class AutoBinnerLearnSettings {
      *
      * @author Heiko Hofer
      */
-    public enum BinNaming {
+    public enum BinNaming implements ButtonGroupEnumInterface {
         /** Numbered starting from one: Bin 1, Bin2, ... */
-        numbered,
+        numbered("Numbered", "e.g.: Bin 1, Bin 2, Bin 3"),
         /** Use edges for defining bins: (-,0] (0,1], ... */
-        edges,
+        edges("Borders", "e.g.: [-10,0], (0,10], (10,20]" ),
         /**
          * Use midpoint of bins: 0.25, 0.75, ...
          *
          * @since 2.10
          */
-        midpoints
+        midpoints("Midpoints", "e.g.: -5, 5, 15");
+
+
+        private String m_label;
+
+        private String m_desc;
+
+        private BinNaming(final String label, final String desc) {
+            m_label = label;
+            m_desc = desc;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getText() {
+            return m_label;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getActionCommand() {
+            return name();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getToolTip() {
+            return m_desc;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isDefault() {
+            return numbered.equals(this);
+        }
+
+
     }
 
     /**

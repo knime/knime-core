@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.05.2006 (gabriel): created
  */
@@ -56,7 +56,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Delegates bin access function to lokal structure.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class NumericBin implements Bin {
@@ -86,7 +86,7 @@ public class NumericBin implements Bin {
     private final double m_rightValue;
 
     /**
-     * 
+     *
      * @param binName the bin's name
      * @param leftOpen <code>true</code> if left interval is open
      * @param leftValue the left interval value
@@ -106,6 +106,7 @@ public class NumericBin implements Bin {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getBinName() {
         return m_binName;
     }
@@ -143,6 +144,7 @@ public class NumericBin implements Bin {
      * @return <code>true</code>, if interval covers the given value
      * @throws ClassCastException if the cell is not of type {@link DoubleValue}
      */
+    @Override
     public boolean covers(final DataCell cell) {
         if (cell.isMissing()) {
             return false;
@@ -166,6 +168,7 @@ public class NumericBin implements Bin {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void saveToSettings(final NodeSettingsWO bin) {
         bin.addString(BIN_NAME, getBinName());
         bin.addBoolean(LEFT_OPEN, isLeftOpen());
@@ -176,11 +179,12 @@ public class NumericBin implements Bin {
 
     /**
      * Create numeric bin from NodeSettings.
-     * 
+     *
      * @param bin read settings from
      * @throws InvalidSettingsException if slots could not be read
+     * @since 3.0
      */
-    NumericBin(final NodeSettingsRO bin) throws InvalidSettingsException {
+    public NumericBin(final NodeSettingsRO bin) throws InvalidSettingsException {
         this(bin.getString(BIN_NAME), bin.getBoolean(LEFT_OPEN), bin
                 .getDouble(LEFT_VALUE), bin.getBoolean(RIGHT_OPEN), bin
                 .getDouble(RIGHT_VALUE));

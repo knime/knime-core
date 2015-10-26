@@ -142,16 +142,16 @@ public class AutoBinner {
                     // bounds of the domain
                     double min = ((DoubleValue)targetCol.getDomain().getLowerBound()).getDoubleValue();
                     double max = ((DoubleValue)targetCol.getDomain().getUpperBound()).getDoubleValue();
+
                     // the edges of the bins
-                    double[] edges = new double[m_settings.getBinCount() + 1];
-                    edges[0] = min;
-                    edges[edges.length - 1] = max;
-                    for (int i = 1; i < edges.length - 1; i++) {
-                        edges[i] = min + i / (double)m_settings.getBinCount() * (max - min);
-                    }
+                    int binCount = m_settings.getBinCount();
+
+                    double[] edges = calculateBounds(binCount, min, max);
+
                     if (m_settings.getIntegerBounds()) {
                         edges = toIntegerBounds(edges);
                     }
+
                     edgesMap.put(target, edges);
                 }
                 return createDisretizeOp(edgesMap);
@@ -202,6 +202,27 @@ public class AutoBinner {
         }
     }
 
+    /**
+     * @param binCount
+     * @param min
+     * @param max
+     * @param edges
+     * @return
+     */
+    public static double[] calculateBounds(final int binCount, final double min, final double max) {
+        double[] edges = new double[binCount + 1];
+        edges[0] = min;
+        edges[edges.length - 1] = max;
+        for (int i = 1; i < edges.length - 1; i++) {
+            edges[i] = min + i / (double)binCount * (max - min);
+        }
+        return edges;
+    }
+
+    /**
+     * @param edges
+     * @return
+     */
     private static double[] toIntegerBounds(final double[] edges) {
         Set<Long> intEdges = new TreeSet<Long>();
         intEdges.add((long)Math.floor(edges[0]));
@@ -454,8 +475,8 @@ public class AutoBinner {
     /**
      * This formatted should not be changed, since it may result in a different output of the binning labels.
      */
-    private final class BinnerNumberFormat {
-        private BinnerNumberFormat() {
+    protected class BinnerNumberFormat {
+        protected BinnerNumberFormat() {
             // no op
         }
 
@@ -515,6 +536,17 @@ public class AutoBinner {
                 default:
                     return Double.toString(bd.doubleValue());
             }
+        }
+
+        /**
+         * @return the smallFormat
+         */
+        public DecimalFormat getSmallFormat() {
+            return m_smallFormat;
+        }
+
+        public NumberFormat getDefaultFormat() {
+            return m_defaultFormat;
         }
     }
 

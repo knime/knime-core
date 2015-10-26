@@ -58,6 +58,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -101,6 +102,8 @@ import org.knime.core.node.NotConfigurableException;
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AggregationOperator implements AggregationMethod {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AggregationOperator.class);
     /**If the aggregator should be skipped.*/
     private boolean m_skipped;
     private String m_skipMsg = "";
@@ -402,7 +405,14 @@ public abstract class AggregationOperator implements AggregationMethod {
         if (m_skipped) {
             return DataType.getMissingCell();
         }
-        return getResultInternal();
+        try {
+            return getResultInternal();
+        } catch (Throwable t) {
+            final String msg = "Computing '" + getOperatorData().getLabel() + "' on column '" + getOperatorColumnSettings().getOriginalColSpec().getName()
+                    + "' failed. Error: " + t.getMessage();
+            LOGGER.error(msg, t);
+            throw new IllegalStateException(msg);
+        }
     }
 
     /**
