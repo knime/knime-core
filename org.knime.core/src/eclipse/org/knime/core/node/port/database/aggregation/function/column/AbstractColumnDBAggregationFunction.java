@@ -84,7 +84,7 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
 
     /**
      * {@inheritDoc}
-     * @since 3.0
+     * @since 3.1
      */
     @Override
     public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
@@ -96,7 +96,7 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
 
     /**
      * {@inheritDoc}
-     * @since 3.0
+     * @since 3.1
      */
     @Override
     public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {

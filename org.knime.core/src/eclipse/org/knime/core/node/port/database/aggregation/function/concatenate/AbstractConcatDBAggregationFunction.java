@@ -58,7 +58,7 @@ public abstract class AbstractConcatDBAggregationFunction implements DBAggregati
 
     /**
      * {@inheritDoc}
-     * @since 3.0
+     * @since 3.1
      */
     @Override
     public String getSQLFragment(final StatementManipulator manipulator, final String tableName, final String colName) {
@@ -67,7 +67,7 @@ public abstract class AbstractConcatDBAggregationFunction implements DBAggregati
     }
     /**
      * {@inheritDoc}
-     * @since 3.0
+     * @since 3.1
      */
     @Override
     public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {
@@ -76,14 +76,14 @@ public abstract class AbstractConcatDBAggregationFunction implements DBAggregati
 
     /**
      * @return the database aggregation function to use e.g. CONCAT
-     * @since 3.0
+     * @since 3.1
      */
     protected abstract String getFunction();
 
     /**
      * @param separator the value separator
      * @return the quoted separator
-     * @since 3.0
+     * @since 3.1
      */
     protected String quoteSeparator(final String separator) {
         return "'" + separator + "'";

@@ -104,7 +104,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * Binner dialog used to group numeric columns (int or double) into intervals.
  *
  * @author Thomas Gabriel, University of Konstanz
- * @since 3.0
+ * @since 3.1
  */
 public class BinnerNodeDialogPane extends NodeDialogPane {
     /** The node logger for this class. */

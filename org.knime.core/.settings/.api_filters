@@ -148,6 +148,36 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/aggregation/DBAggregationFunction.java" type="org.knime.core.node.port.database.aggregation.DBAggregationFunction">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.aggregation.DBAggregationFunction"/>
+                <message_argument value="getSQLFragment4SubQuery(StatementManipulator, String, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/aggregation/function/AbstractDistinctDBAggregationFunction.java" type="org.knime.core.node.port.database.aggregation.function.AbstractDistinctDBAggregationFunction">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.aggregation.function.AbstractDistinctDBAggregationFunction"/>
+                <message_argument value="getFunction()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.aggregation.function.AbstractDistinctDBAggregationFunction"/>
+                <message_argument value="buildSQLFragment(String, StatementManipulator, String, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/aggregation/function/concatenate/AbstractConcatDBAggregationFunction.java" type="org.knime.core.node.port.database.aggregation.function.concatenate.AbstractConcatDBAggregationFunction">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.aggregation.function.concatenate.AbstractConcatDBAggregationFunction"/>
+                <message_argument value="getFunction()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/streamable/PortInput.java" type="org.knime.core.node.streamable.PortInput">
         <filter id="336695337">
             <message_arguments>

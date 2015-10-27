@@ -61,7 +61,7 @@ import org.knime.core.util.Pair;
  * This interface must be implemented by all classes creating SQL Statements for pivoting.
  *
  * @author Lara Gorini
- * @since 3.0
+ * @since 3.1
  */
 public interface PivotStatementGenerator {
     /**

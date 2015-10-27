@@ -88,7 +88,7 @@ public class StatementManipulator {
     /**
      * @param pivot
      * @param binning
-     * @since 3.0
+     * @since 3.1
      */
     protected StatementManipulator(final PivotStatementGenerator pivot, final BinningStatamentGenerator binning) {
         if (pivot == null) {
@@ -131,25 +131,11 @@ public class StatementManipulator {
      * @param sql A valid SQL query
      * @param count The number of rows to take randomly
      * @return a SQL query
-     * @since 3.0
+     * @since 3.1
      */
     public String randomRows(final String sql, final long count) {
         return limitRows(sql, count);
     }
-
-    //    /**
-    //     * Modifies the incoming SQL query so that the number of rows is limited. The default implementation uses the
-    //     * LIMIT clause.
-    //     *
-    //     * @param sql any valid SQL query
-    //     * @param offset the offset
-    //     * @param count the maximum number of rows
-    //     * @return an SQL query
-    //     */
-    //    public String limitRows(final String sql, final long count, final long offset) {
-    //        return "SELECT * FROM (" + sql + ") " + getTempTableName() + " LIMIT " + count + " OFFSET " + offset;
-    //    }
-
 
     /**
      * Modifies the query so that it does not return any rows. This is usually used for just getting the result's
@@ -278,7 +264,7 @@ public class StatementManipulator {
      * @param aggValues Aggregation columns and corresponding functions
      * @param pivotColGenerator Column name generator
      * @return result SQL Statement for pivoting
-     * @since 3.0
+     * @since 3.1
      */
     public String getPivotStatement(final String tableName, final List<String> groupByColumnsList,
         final Map<DataColumnSpec, Set<Object>> pivotElements,
@@ -295,7 +281,7 @@ public class StatementManipulator {
      * @param valueToLimit Number of rows to take
      * @param random <code>true</code>, if rows are selected randomly
      * @return a SQL statement for sampling
-     * @since 3.0
+     * @since 3.1
      */
     public String getSamplingStatement(final String sql, final long valueToLimit, final boolean random) {
         if (random) {
@@ -316,7 +302,7 @@ public class StatementManipulator {
      * @param appendMap
      * @param namingMap
      * @return
-     * @since 3.0
+     * @since 3.1
      */
     public String getBinnerStatement(final String query, final String[] includeCols, final String[] excludeCols, final Map<String, Double[][]> limitsMap,
         final Map<String, Boolean[][]> includeMap, final Map<String, String[]> namingMap, final Map<String, String> appendMap) {

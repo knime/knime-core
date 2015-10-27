@@ -315,7 +315,7 @@ public class DatabaseUtility {
 
     /**
      * @return <code>true</code> if the database supports random sampling
-     * @since 3.0
+     * @since 3.1
      */
     public boolean supportsRandomSampling() {
         return false;
@@ -323,7 +323,7 @@ public class DatabaseUtility {
 
     /**
      * @return <code>true</code> if the database supports CASE statements
-     * @since 3.0
+     * @since 3.1
      */
     public boolean supportsCase() {
         return false;
@@ -383,4 +383,5 @@ public class DatabaseUtility {
             }
         }
     }
+
 }

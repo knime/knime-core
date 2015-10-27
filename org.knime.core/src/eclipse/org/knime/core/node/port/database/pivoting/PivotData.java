@@ -57,7 +57,7 @@ import org.knime.core.node.port.database.StatementManipulator;
  * This class holds pivot columns and corresponding values
  *
  * @author Lara Gorini
- * @since 3.0
+ * @since 3.1
  */
 public class PivotData {
 

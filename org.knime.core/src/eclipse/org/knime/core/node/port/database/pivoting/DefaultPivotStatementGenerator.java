@@ -68,7 +68,7 @@ import org.knime.core.util.Pair;
  * The innerStatement combines the aggregation method with aggregation values and pivot values, respectively.
  *
  * @author Lara Gorini
- * @since 3.0
+ * @since 3.1
  */
 public class DefaultPivotStatementGenerator implements PivotStatementGenerator {
 

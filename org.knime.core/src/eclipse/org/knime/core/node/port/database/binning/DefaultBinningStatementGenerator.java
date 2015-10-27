@@ -56,6 +56,7 @@ import org.knime.core.node.port.database.StatementManipulator;
 /**
  *
  * @author Lara
+ * @since 3.1
  */
 public class DefaultBinningStatementGenerator implements BinningStatamentGenerator {
 

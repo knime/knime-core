@@ -91,13 +91,13 @@ public abstract class AbstractDistinctDBAggregationFunction extends AbstractBool
 
     /**
      * @return the database function to use e.g. SUM
-     * @since 3.0
+     * @since 3.1
      */
     protected abstract String getFunction();
 
     /**
      * {@inheritDoc}
-     * @since 3.0
+     * @since 3.1
      */
     @Override
     public String getSQLFragment(final StatementManipulator manipulator, final String tableName, final String columnName) {
@@ -107,7 +107,7 @@ public abstract class AbstractDistinctDBAggregationFunction extends AbstractBool
 
     /**
      * {@inheritDoc}
-     * @since 3.0
+     * @since 3.1
      */
     @Override
     public String getSQLFragment4SubQuery(final StatementManipulator manipulator, final String tableName, final String subQuery) {

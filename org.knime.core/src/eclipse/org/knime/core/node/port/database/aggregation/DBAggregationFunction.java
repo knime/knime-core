@@ -78,7 +78,7 @@ public interface DBAggregationFunction extends AggregationFunction {
      * @param subQuery the sub query to use e.g. CASE statement
      * @param tableName the name of the table the column belongs to
      * @return the sql fragment to use in the sql query e.g. SUM(colName)
-     * @since 3.0
+     * @since 3.1
      */
     String getSQLFragment4SubQuery(StatementManipulator manipulator, String tableName, String subQuery);
 

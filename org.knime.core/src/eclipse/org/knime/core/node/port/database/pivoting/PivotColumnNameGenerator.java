@@ -56,7 +56,7 @@ import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
  * Interface to name columns of pivot table.
  *
  * @author Lara Gorini
- * @since 3.0
+ * @since 3.1
  */
 public interface PivotColumnNameGenerator {
 
