@@ -50,6 +50,7 @@ package org.knime.core.node.workflow;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Interface used by embedded {@link WorkflowManager} instances to invoke actions on the parent item. The parent
@@ -86,8 +87,24 @@ public interface NodeContainerParent {
      * @return that property */
     public boolean canConfigureNodes();
 
-    /** @return the workflowMutex */
-    public Object getWorkflowMutex();
+    /** @return the ReentrantLock underlying the {@link WorkflowLock} instance used by this NC parent. */
+    public ReentrantLock getReentrantLockInstance();
+
+    /** Locks and returns the {@link WorkflowLock} associated with this workflow. This should always be used in a
+     * try-with-resources statement:
+     * <pre>
+     * try (WorkflowLock lock = lock()) {
+     *    ...
+     * }
+     * </pre>
+     * @return The workflow lock instance, freshly locked (see {@link ReentrantLock#lock()}.
+     */
+    public WorkflowLock lock();
+
+    /** @return true if the calling thread has acquired the workflow lock either via {@link #lock()} or by
+     * locking the {@link #getReentrantLockInstance() ReentrantLock}. Mainly used for assertions.
+     */
+    public boolean isLockedByCurrentThread();
 
     /** Is this workflow represents a linked meta node (locked for edit). This
      * flag is only a hint for the UI -- non of the add/remove operations will

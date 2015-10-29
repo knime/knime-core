@@ -181,7 +181,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
 
         @Override
         protected boolean shouldHold() {
-            synchronized (m_wfm.getWorkflowMutex()) {
+            try (WorkflowLock lock = m_wfm.lock()) {
                 return !m_wfm.getNodeContainerState().isHalted();
             }
         }

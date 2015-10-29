@@ -200,6 +200,45 @@
                 <message_argument value="findJobManager()"/>
             </message_arguments>
         </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
+                <message_argument value="getReentrantLockInstance()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
+                <message_argument value="isLockedByCurrentThread()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
+                <message_argument value="lock()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
+                <message_argument value="getWorkflowMutex()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="since 3.1 - but no public api" id="1211105284">
+            <message_arguments>
+                <message_argument value="getReentrantLockInstance()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="since 3.1 - but no public api" id="1211105284">
+            <message_arguments>
+                <message_argument value="isLockedByCurrentThread()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="since 3.1 - but no public api" id="1211105284">
+            <message_arguments>
+                <message_argument value="lock()"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerState.java" type="org.knime.core.node.workflow.NodeContainerState">
         <filter id="403804204">
@@ -211,6 +250,14 @@
         <filter id="1211105284">
             <message_arguments>
                 <message_argument value="isHalted()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="getWorkflowMutex()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -226,6 +273,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="expandSubWorkflow(NodeID, WorkflowManager)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="getWorkflowMutex()"/>
             </message_arguments>
         </filter>
     </resource>

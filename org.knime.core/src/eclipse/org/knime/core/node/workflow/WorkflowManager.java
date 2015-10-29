@@ -91,6 +91,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -211,9 +213,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         });
 
-    /** Executor for asynchronous invocation of checkForNodeStateChanges
+    /** Executor for asynchronous invocation of queueCheckForNodeStateChangeNotification
      * in an unconnected parent.
-     * If a checkForNodeStateChanges-Thread is already waiting, additional
+     * If a queueCheckForNodeStateChangeNotification-Thread is already waiting, additional
      * ones will be discarded. */
     private static final Executor PARENT_NOTIFIER =
         new ThreadPoolExecutor(1, 1, 60, TimeUnit.SECONDS,
@@ -290,7 +292,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * semaphore will be used by all "connected" children of this node. Isolated
      * workflows create a new semaphore.
      */
-    private final Object m_workflowMutex;
+    private final WorkflowLock m_workflowLock;
 
     /** see {@link #getDirectNCParent()}. */
     private final NodeContainerParent m_directNCParent;
@@ -359,14 +361,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             m_globalTableRepository = new GlobalTableRepository();
             m_fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
             // ...and we do not need to synchronize across unconnected workflows
-            m_workflowMutex = new Object();
+            m_workflowLock = new WorkflowLock(this);
             m_workflowContext = context;
             if (context != null) {
                 createAndSetWorkflowTempDirectory(context);
             }
         } else {
             // ...synchronize across border
-            m_workflowMutex = m_directNCParent.getWorkflowMutex();
+            m_workflowLock = new WorkflowLock(this, m_directNCParent);
             // otherwise we may have incoming and/or outgoing dependencies...
             m_globalTableRepository = globalTableRepository;
             m_fileStoreHandlerRepository = fileStoreHandlerRepository;
@@ -376,8 +378,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // initialize listener list
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         m_templateInformation = MetaNodeTemplateInformation.NONE;
-        synchronized (m_workflowMutex) { // asserted in check -- even from constructor
-            checkForNodeStateChanges(false); // get default state right
+        try (WorkflowLock lock = lock()) {
+            // asserted in check -- even from constructor
+            lock.queueCheckForNodeStateChangeNotification(false);  // get default state right
         }
         LOGGER.debug("Created subworkflow " + this.getID());
     }
@@ -466,11 +469,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert !isProject || noPorts; // projects must not have ports
 
         if (isProject) {
-            m_workflowMutex = new Object();
+            m_workflowLock = new WorkflowLock(this);
             m_globalTableRepository = persistor.getGlobalTableRepository();
             m_fileStoreHandlerRepository = persistor.getFileStoreHandlerRepository();
         } else {
-            m_workflowMutex = m_directNCParent.getWorkflowMutex();
+            m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_globalTableRepository = globalTableRepository;
             m_fileStoreHandlerRepository = fileStoreHandlerRepository;
         }
@@ -485,12 +488,38 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return m_workflow;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}
+     * @since 3.1 */
     @Override
-    public Object getWorkflowMutex() {
-        return m_workflowMutex;
+    public WorkflowLock lock() {
+        m_workflowLock.lock();
+        return m_workflowLock;
+    }
+
+    /** Like {@link #lock()} just that it assert that the lock is already held by the calling thread. Used in private
+     * methods that need to be called while locked.
+     * @return The lock instance.
+     * @since 3.1
+     */
+    public WorkflowLock assertLock() {
+        assert isLockedByCurrentThread();
+        // lock because the returned instance is an AutoClosable and will release the lock when close()'d.
+        m_workflowLock.lock();
+        return m_workflowLock;
+    }
+
+    /** {@inheritDoc}
+     * @since 3.1 */
+    @Override
+    public ReentrantLock getReentrantLockInstance() {
+        return m_workflowLock.getReentrantLock();
+    }
+
+    /** {@inheritDoc}
+     * @since 3.1 */
+    @Override
+    public boolean isLockedByCurrentThread() {
+        return m_workflowLock.isHeldByCurrentThread();
     }
 
     /** {@inheritDoc} */
@@ -568,7 +597,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param id of the project to be removed.
      */
     public void removeProject(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
             if (nc instanceof WorkflowManager && ((WorkflowManager)nc).isProject()) {
                 final String nameAndID = "\"" + nc.getNameWithID() + "\"";
@@ -615,9 +644,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     @SuppressWarnings("unchecked")
-    private NodeID internalAddNewNode(final NodeFactory<?> factory,
-            final NodeCreationContext context) {
-        synchronized (m_workflowMutex) {
+    private NodeID internalAddNewNode(final NodeFactory<?> factory, final NodeCreationContext context) {
+        try (WorkflowLock lock = lock()) {
             // TODO synchronize to avoid messing with running workflows!
             assert factory != null;
             // insert node
@@ -642,7 +670,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return true if node can safely be removed.
      */
     public boolean canRemoveNode(final NodeID nodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             // check to make sure we can safely remove this node
             NodeContainer nc = m_workflow.getNode(nodeID);
             if (nc == null) {
@@ -664,8 +692,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     return false;
                 }
             }
+            return true;
         }
-        return true;
     }
 
     /** Remove node if possible. Throws an exception if node is "busy" and can
@@ -676,7 +704,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void removeNode(final NodeID nodeID) {
         NodeContainer nc;
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             // if node does not exist, simply return
             if (m_workflow.getNode(nodeID) == null) {
                 return;
@@ -706,7 +734,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (this != ROOT && autoSaveDir != null && getAutoSaveDirectory() != null) {
                 getAutoSaveDirectory().getDeletedNodesFileLocations().add(autoSaveDir);
             }
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
         setDirty();
         notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, getID(), nc, null));
@@ -742,7 +770,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         NodeID newID;
         WorkflowManager wfm;
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             newID = m_workflow.createUniqueID();
             HashMap<Integer, ContainerTable> globalTableRepository = isNewProject ? null : m_globalTableRepository;
             WorkflowFileStoreHandlerRepository fileStoreRepository = isNewProject ? null : m_fileStoreHandlerRepository;
@@ -761,7 +789,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return This property.
      * @since 2.6 */
     public boolean isProject() {
-        return this == ROOT || m_workflowMutex != getDirectNCParent().getWorkflowMutex();
+        return this == ROOT || getReentrantLockInstance() != getDirectNCParent().getReentrantLockInstance();
     }
 
     /** Creates new meta node from a persistor instance.
@@ -791,24 +819,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (this is always true unless called from the load routines)
      */
     private void addNodeContainer(final NodeContainer nodeContainer, final boolean propagateChanges) {
-        assert Thread.holdsLock(m_workflowMutex);
-        if (this == ROOT && !(nodeContainer instanceof WorkflowManager)) {
-            throw new IllegalStateException("Can't add ordinary node to root "
-                    + "workflow, use createAndAddProject() first");
-        }
-        if (this == ROOT && (nodeContainer.getNrInPorts() != 0 || nodeContainer.getNrOutPorts() != 0)) {
-            throw new IllegalStateException("Can't add sub workflow to root "
-                    + " workflow, use createProject() instead");
-        }
-        NodeID id = nodeContainer.getID();
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = assertLock()) {
+            if (this == ROOT && !(nodeContainer instanceof WorkflowManager)) {
+                throw new IllegalStateException("Can't add ordinary node to root "
+                        + "workflow, use createAndAddProject() first");
+            }
+            if (this == ROOT && (nodeContainer.getNrInPorts() != 0 || nodeContainer.getNrOutPorts() != 0)) {
+                throw new IllegalStateException("Can't add sub workflow to root "
+                        + " workflow, use createProject() instead");
+            }
+            NodeID id = nodeContainer.getID();
             assert !m_workflow.containsNodeKey(id) : "\""
-               + nodeContainer.getNameWithID() + "\" already contained in flow";
+                    + nodeContainer.getNameWithID() + "\" already contained in flow";
             m_workflow.putNode(id, nodeContainer);
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED, id, null, nodeContainer));
+            lock.queueCheckForNodeStateChangeNotification(propagateChanges);
         }
-        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
-                id, null, nodeContainer));
-        checkForNodeStateChanges(propagateChanges);
     }
 
     ///////////////////////////
@@ -859,7 +885,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         ConnectionType newConnType = null;
         NodeContainer sourceNC;
         NodeContainer destNC;
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (!canAddConnection(source, sourcePort, dest, destPort, true, currentlyLoadingFlow)) {
                 throw new IllegalArgumentException("Cannot add connection!");
             }
@@ -920,7 +946,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // if the destination was the WFM itself, only configure its
                     // successors one layer up!
                     getParent().configureNodeAndSuccessors(dest, false);
-                    checkForNodeStateChanges(true);
+                    lock.queueCheckForNodeStateChangeNotification(true);
                 } else if (destNC instanceof WorkflowManager) {
                     // connection enters a meta node
                     // (can't have optional ins -- no reset required)
@@ -982,7 +1008,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private boolean canAddConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort, final boolean allowConnRemoval, final boolean currentlyLoadingFlow) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (source == null || dest == null) {
                 return false;
             }
@@ -1096,7 +1122,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return true if connection cc is removable.
      */
     public boolean canRemoveConnection(final ConnectionContainer cc) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (cc == null || !cc.isDeletable()) {
                 return false;
             }
@@ -1136,7 +1162,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param cc connection
      */
     public void removeConnection(final ConnectionContainer cc) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             // make sure both nodes (well, their connection lists) exist
             if (m_workflow.getConnectionsByDest(cc.getDest()) == null) {
                 return;
@@ -1220,7 +1246,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // this is a bit too broad (configure ALL successors) but should not be harmful
                 this.getParent().configureNodeAndSuccessors(this.getID(), false);
                 // make sure to reflect state changes
-                checkForNodeStateChanges(true);
+                lock.queueCheckForNodeStateChangeNotification(true);
             } else if (destNC instanceof WorkflowManager) {
                 // connection entered a meta node
                 WorkflowManager destWFM = (WorkflowManager)destNC;
@@ -1251,7 +1277,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id,
             final int portIdx) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             Set<ConnectionContainer> outConnections = m_workflow.getConnectionsBySource(id);
             Set<ConnectionContainer> outConsForPort = new HashSet<ConnectionContainer>();
             if (outConnections == null) {
@@ -1272,7 +1298,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If the node is unknown or null.
      */
     public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             getNodeContainer(id); // for exception handling
             return new LinkedHashSet<ConnectionContainer>(m_workflow.getConnectionsBySource(id));
         }
@@ -1288,7 +1314,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public ConnectionContainer getIncomingConnectionFor(final NodeID id,
             final int portIdx) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             Set<ConnectionContainer>inConns = m_workflow.getConnectionsByDest(id);
             if (inConns != null) {
                 for (ConnectionContainer cont : inConns) {
@@ -1307,7 +1333,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If the node is unknown or null.
      */
     public Set<ConnectionContainer> getIncomingConnectionsFor(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             getNodeContainer(id); // for exception handling
             return new LinkedHashSet<ConnectionContainer>(
                     m_workflow.getConnectionsByDest(id));
@@ -1320,7 +1346,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return the connection with the specified id
      */
     public ConnectionContainer getConnection(final ConnectionID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             return getIncomingConnectionFor(id.getDestinationNode(),
                     id.getDestinationPort());
         }
@@ -1334,7 +1360,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If the node is invalid.
      * @since 2.6 */
     public MetaPortInfo[] getMetanodeInputPortInfo(final NodeID metaNodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             return m_workflow.getMetanodeInputPortInfo(metaNodeID);
         }
     }
@@ -1346,7 +1372,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If the node is invalid.
      * @since 2.6 */
     public MetaPortInfo[] getMetanodeOutputPortInfo(final NodeID metaNodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             return m_workflow.getMetanodeOutputPortInfo(metaNodeID);
         }
     }
@@ -1359,7 +1385,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If the node is invalid.
      * @since 2.10 */
     public MetaPortInfo[] getSubnodeInputPortInfo(final NodeID subNodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             return getNodeContainer(subNodeID, SubNodeContainer.class, true).getInputPortInfo();
         }
     }
@@ -1371,7 +1397,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If the node is invalid.
      * @since 2.10 */
     public MetaPortInfo[] getSubnodeOutputPortInfo(final NodeID subNodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             return getNodeContainer(subNodeID, SubNodeContainer.class, true).getOutputPortInfo();
         }
     }
@@ -1382,7 +1408,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.6
      */
     public void changeMetaNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             WorkflowManager subFlowMgr = getNodeContainer(subFlowID, WorkflowManager.class, true);
             if (!haveMetaPortsChanged(newPorts, true, subFlowMgr)) {
                 return;
@@ -1442,7 +1468,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.6
      */
     public void changeMetaNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             WorkflowManager subFlowMgr = getNodeContainer(subFlowID, WorkflowManager.class, true);
             if (!haveMetaPortsChanged(newPorts, false, subFlowMgr)) {
                 return;
@@ -1501,7 +1527,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10
      */
     public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
             if (!haveSubPortsChanged(newPorts, true, snc)) {
                 return;
@@ -1554,7 +1580,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10
      */
     public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
             if (!haveSubPortsChanged(newPorts, false, snc)) {
                 return;
@@ -1651,7 +1677,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void loadNodeSettings(final NodeID id, final NodeSettingsRO settings)
     throws InvalidSettingsException {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
             if (!nc.getInternalState().isExecutionInProgress() && !hasSuccessorInProgress(id)) {
                 // make sure we are consistent (that is reset + configure)
@@ -1683,7 +1709,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void saveNodeSettings(final NodeID id, final NodeSettingsWO settings)
     throws InvalidSettingsException {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
             nc.saveSettings(settings);
         }
@@ -1700,7 +1726,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.7
      */
     public NodeContainerSettings getCommonSettings(final NodeID... ids) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeExecutionJobManager[] jobManagers = new NodeExecutionJobManager[ids.length];
             for (int i = 0; i < ids.length; i++) {
                 NodeContainer nc = getNodeContainer(ids[i]);
@@ -1719,7 +1745,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void applyCommonSettings(final NodeContainerSettings settings, final NodeID... ids)
         throws InvalidSettingsException {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             for (NodeID id : ids) {
                 NodeContainer nc = getNodeContainer(id);
                 if (nc.getInternalState().isExecutionInProgress() || hasSuccessorInProgress(id)) {
@@ -1742,7 +1768,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     configureNodeAndSuccessors(id, false);
                 }
             }
-
         }
     }
 
@@ -1760,7 +1785,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param flag mark nodes if true, otherwise try to erase marks
      */
     private void markForExecutionAllNodesInWorkflow(final boolean flag) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             boolean changed = false; // will be true in case of state changes
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 if (nc instanceof SingleNodeContainer) {
@@ -1792,12 +1817,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     WorkflowManager wfm = ((WorkflowManager)nc);
                     // does not need to set "changed" flag here as this child
                     // will propagate state changes by calling
-                    // call checkForNodeStateChanges (possibly too often)
+                    // call queueCheckForNodeStateChangeNotification (possibly too often)
                     wfm.markForExecutionAllNodesInWorkflow(flag);
                 }
             }
             if (changed) {
-                checkForNodeStateChanges(true);
+                lock.queueCheckForNodeStateChangeNotification(true);
             }
         }
     }
@@ -1812,7 +1837,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param markExecutedNodes if true also (re)mark executed nodes.
      */
     void markForExecutionNodesInWFMConnectedToInPorts(final Set<Integer> inPorts, final boolean markExecutedNodes) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             boolean changed = false; // will be true in case of state changes
             ArrayList<NodeAndInports> nodes = m_workflow.findAllConnectedNodes(inPorts);
             for (NodeAndInports nai : nodes) {
@@ -1840,12 +1865,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     assert nc instanceof WorkflowManager;
                     // does not need to set "changed" flag here as child
                     // will propagate state changes by calling
-                    // call checkForNodeStateChanges (likely too often)
+                    // call queueCheckForNodeStateChangeNotification (likely too often)
                     wfm.markForExecutionNodesInWFMConnectedToInPorts(nai.getInports(), markExecutedNodes);
                 }
             }
             if (changed) {
-                checkForNodeStateChanges(true);
+                lock.queueCheckForNodeStateChangeNotification(true);
             }
         }
     }
@@ -1860,7 +1885,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return true if all nodes in chain were markable
      */
     private boolean markForExecutionAllAffectedNodes(final int outPortIndex) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             HashSet<Integer> p = new HashSet<Integer>();
             if (outPortIndex >= 0) {
                 p.add(outPortIndex);
@@ -1906,7 +1931,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             } // endfor all nodes in sorted list
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
             if (sortedNodes.containsKey(this.getID())) {
                 // list contained WFM, go up one level
                 Set<Integer> is = sortedNodes.get(this.getID());
@@ -1922,7 +1947,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param loopContext The context to find the corresponding loop end node.
      * @param message A message or null to set as error on the end node. */
     private void disableLoopExecution(final FlowLoopContext loopContext, final NodeMessage message) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             final NodeID endNode = loopContext.getTailNode();
             if (message != null) {
                 getNodeContainer(endNode).setNodeMessage(message);
@@ -1951,62 +1976,64 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param snc
      */
     private void disableNodeForExecution(final NodeID id, final int inportIndex) {
-        NodeContainer nc = m_workflow.getNode(id);
-        if (nc != null) {
-            switch (nc.getInternalState()) {
-            case IDLE:
-            case CONFIGURED:
-                if (nc instanceof SingleNodeContainer) {
-                    // nothing needs to be done - also with the successors!
-                    return;
+        try (WorkflowLock lock = assertLock()) {
+            NodeContainer nc = m_workflow.getNode(id);
+            if (nc != null) {
+                switch (nc.getInternalState()) {
+                    case IDLE:
+                    case CONFIGURED:
+                        if (nc instanceof SingleNodeContainer) {
+                            // nothing needs to be done - also with the successors!
+                            return;
+                        }
+                        // in not-SNC case do check successor (could be a through-conn)
+                    case EXECUTED_MARKEDFOREXEC:
+                    case CONFIGURED_MARKEDFOREXEC:
+                    case UNCONFIGURED_MARKEDFOREXEC:
+                        if (nc instanceof SingleNodeContainer) {
+                            ((SingleNodeContainer)nc).markForExecution(false);
+                            disableSuccessorsForExecution(id, -1);
+                            break;
+                        }
+                        assert !(nc instanceof SingleNodeContainer);
+                        // (treat MARKED and EXECUTING metanodes the same - both can contain MARKED nodes!)
+                    case EXECUTING:
+                        // bug "fix" (workaround) 3913
+                        // this is only relevant for WorkflowManagers (it may still contain some MARKED nodes)
+                        if (!(nc instanceof SingleNodeContainer)) {
+                            if (inportIndex == -1) {
+                                ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(false);
+                                disableSuccessorsForExecution(id, -1);
+                            } else {
+                                // automatically unmarks connected successors of this metanode/port as well.
+                                ((WorkflowManager)nc).disableInportSuccessorsForExecution(inportIndex);
+                            }
+                        }
+                        break;
+                    default:
+                        // ignore all other states but disable successors!
+                        if (nc instanceof SingleNodeContainer) {
+                            disableSuccessorsForExecution(id, -1);
+                        } else {
+                            if (inportIndex == -1) {
+                                ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(false);
+                                disableSuccessorsForExecution(id, -1);
+                            } else {
+                                ((WorkflowManager)nc).disableInportSuccessorsForExecution(inportIndex);
+                            }
+                        }
                 }
-                // in not-SNC case do check successor (could be a through-conn)
-            case EXECUTED_MARKEDFOREXEC:
-            case CONFIGURED_MARKEDFOREXEC:
-            case UNCONFIGURED_MARKEDFOREXEC:
-                if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).markForExecution(false);
-                    disableSuccessorsForExecution(id, -1);
-                    break;
-                }
-                assert !(nc instanceof SingleNodeContainer);
-                // (treat MARKED and EXECUTING metanodes the same - both can contain MARKED nodes!)
-            case EXECUTING:
-                // bug "fix" (workaround) 3913
-                // this is only relevant for WorkflowManagers (it may still contain some MARKED nodes)
-                if (!(nc instanceof SingleNodeContainer)) {
-                    if (inportIndex == -1) {
-                        ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(false);
-                        disableSuccessorsForExecution(id, -1);
-                    } else {
-                        // automatically unmarks connected successors of this metanode/port as well.
-                        ((WorkflowManager)nc).disableInportSuccessorsForExecution(inportIndex);
-                    }
-                }
-                break;
-            default:
-                // ignore all other states but disable successors!
-                if (nc instanceof SingleNodeContainer) {
-                    disableSuccessorsForExecution(id, -1);
+            } else { // WFM
+                assert getID().equals(id);
+                if (inportIndex == -1) {
+                    this.markForExecutionAllNodesInWorkflow(false);
+                    // unmark successors (on all ports) of this metanode
+                    getParent().disableSuccessorsForExecution(this.getID(), -1);
                 } else {
-                    if (inportIndex == -1) {
-                        ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(false);
-                        disableSuccessorsForExecution(id, -1);
-                    } else {
-                        ((WorkflowManager)nc).disableInportSuccessorsForExecution(inportIndex);
-                    }
+                    // automatically unmarks connected successors of this metanode as well.
+                    this.disableSuccessorsForExecution(id, inportIndex);
+                    lock.queueCheckForNodeStateChangeNotification(true);
                 }
-            }
-        } else { // WFM
-            assert getID().equals(id);
-            if (inportIndex == -1) {
-                this.markForExecutionAllNodesInWorkflow(false);
-                // unmark successors (on all ports) of this metanode
-                getParent().disableSuccessorsForExecution(this.getID(), -1);
-            } else {
-                // automatically unmarks connected successors of this metanode as well.
-                this.disableSuccessorsForExecution(id, inportIndex);
-                checkForNodeStateChanges(true);
             }
         }
     }
@@ -2040,19 +2067,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param inportIndex this node's inport
      */
    private void disableInportSuccessorsForExecution(final int inportIndex) {
-       for (ConnectionContainer cc : m_workflow.getConnectionsBySource(this.getID())) {
-           if ((inportIndex) == -1 || (cc.getSourcePort() == inportIndex)) {
-               NodeID succId = cc.getDest();
-               if (succId.equals(this.getID())) {
-                   // unmark successors of this metanode
-                   getParent().disableSuccessorsForExecution(this.getID(), cc.getDestPort());
-               } else {
-                   // handle normal node
-                   disableNodeForExecution(succId, cc.getDestPort());
+       try (WorkflowLock lock = assertLock()) {
+           for (ConnectionContainer cc : m_workflow.getConnectionsBySource(this.getID())) {
+               if ((inportIndex) == -1 || (cc.getSourcePort() == inportIndex)) {
+                   NodeID succId = cc.getDest();
+                   if (succId.equals(this.getID())) {
+                       // unmark successors of this metanode
+                       getParent().disableSuccessorsForExecution(this.getID(), cc.getDestPort());
+                   } else {
+                       // handle normal node
+                       disableNodeForExecution(succId, cc.getDestPort());
+                   }
                }
            }
+           lock.queueCheckForNodeStateChangeNotification(false);
        }
-       checkForNodeStateChanges(false);
    }
 
     /**
@@ -2064,7 +2093,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * new workflow variables are spread accordingly.
      */
 //    public void resetAll() {
-//        synchronized (m_workflowMutex) {
+//        m_workflowLock.lock();
+//        try {
 //            for (NodeID id : m_workflow.getNodeIDs()) {
 //                boolean hasNonParentPredecessors = false;
 //                for (ConnectionContainer cc
@@ -2087,6 +2117,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 //                    }
 //                }
 //            }
+//          } finally {
+//              m_workflowLock.unlock();
+//          }
 //        }
 //    }
 
@@ -2098,7 +2131,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param keepNodeMessages if existing messages are to be kept (possibly merged).
      */
     void reconfigureAllNodesOnlyInThisWFM(final boolean keepNodeMessages) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             // do not worry about pipelines, just process all nodes "left
             // to right" and make sure we touch all of them (also yellow
             // nodes in a metanode that is connected to red nodes only)...
@@ -2115,7 +2148,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM(keepNodeMessages);
                 }
             }
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
     }
 
@@ -2130,7 +2163,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *  (only called when WorkflowVariables are set)
      */
     void resetAndReconfigureAllNodesInWFM() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             // do not worry about pipelines, just process all nodes "left
             // to right" and make sure we touch all of them (also yellow/green
             // nodes in a metanode that is connected to red nodes only)...
@@ -2156,7 +2189,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     ((WorkflowManager)nc).resetAndReconfigureAllNodesInWFM();
                 }
             }
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
     }
 
@@ -2181,7 +2214,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * possible outports of this WFM.
      */
     void resetAllNodesInWFM() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (!isResetable()) {
                 // only attempt to do this if possible.
                 return;
@@ -2218,7 +2251,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param inPorts set of port indices of the WFM.
      */
     void resetNodesInWFMConnectedToInPorts(final Set<Integer> inPorts) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (!isResetable()) {
                 // only attempt to do this if possible.
                 return;
@@ -2242,7 +2275,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
-            checkForNodeStateChanges(false);
+            lock.queueCheckForNodeStateChangeNotification(false);
         }
     }
 
@@ -2254,7 +2287,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param inPorts set of port indices of the WFM.
      */
     void cleanOutputPortsInWFMConnectedToInPorts(final Set<Integer> inPorts) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             ArrayList<NodeAndInports> nodes =
                 m_workflow.findAllConnectedNodes(inPorts);
             ListIterator<NodeAndInports> li = nodes.listIterator(nodes.size());
@@ -2280,7 +2313,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param ids node ids to mark
      */
     public void executeUpToHere(final NodeID... ids) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             for (NodeID id : ids) {
                 NodeContainer nc = getNodeContainer(id);
                 if (nc instanceof SingleNodeContainer) {
@@ -2295,7 +2328,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     markAndQueueNodeAndPredecessors(id, -1);
                 }
             }
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
     }
 
@@ -2306,7 +2339,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.8
      */
     public boolean canReExecuteNode(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
             if (!(nc instanceof NativeNodeContainer)) {
                 throw new IllegalArgumentException("Can't reexecute sub- or metanodes.");
@@ -2337,7 +2370,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10
      */
     public void reExecuteNode(final NodeID id, final ViewContent vc, final boolean useAsNewDefault, final ReexecutionCallback rec) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (!canReExecuteNode(id)) {
                 throw new IllegalArgumentException("Can't reexecute executing nodes.");
             }
@@ -2356,7 +2389,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.8
      */
     public void saveNodeSettingsToDefault(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
             if (!(nc instanceof SingleNodeContainer)) {
                 throw new IllegalArgumentException("Can't set new defaults for metanodes.");
@@ -2375,7 +2408,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WizardExecutionController getWizardExecutionController() {
         CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (!(m_executionController instanceof WizardExecutionController)) {
                 m_executionController = new WizardExecutionController(this);
             }
@@ -2403,12 +2436,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private <T> void stepExecutionUpToNodeType(final Class<T> nodeModelClass,
                                                final NodeModelFilter<T> filter, final Set<NodeID> visitedNodes) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             HashMap<NodeID, Integer> nodes = m_workflow.getStartNodes();
             for (NodeID id : nodes.keySet()) {
                 stepExecutionUpToNodeType(id, nodeModelClass, filter, visitedNodes);
             }
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
     }
 
@@ -2421,7 +2454,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private <T> void stepExecutionUpToNodeType(final NodeID id, final Class<T> nodeModelClass,
             final NodeModelFilter<T> filter, final Set<NodeID> visitedNodes) {
-        assert Thread.holdsLock(m_workflowMutex); // lock prevents state transitions due to finished executions.
+        assert m_workflowLock.isHeldByCurrentThread(); // lock prevents state transitions due to finished executions.
         NodeContainer nc = getNodeContainer(id);
         if (!nc.isLocalWFM()) { // single node container or meta node with other job manager (SGE, DR, ...)
             // for single Node Containers we need to make sure that they are
@@ -2518,7 +2551,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.6*/
     public void executePredecessorsAndWait(final NodeID id) throws InterruptedException {
         final NodeOutPort[] predecessorOutPorts;
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             final NodeContainer nc = getNodeContainer(id);
             predecessorOutPorts = assemblePredecessorOutPorts(id);
             boolean hasChanged = false;
@@ -2526,10 +2559,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 hasChanged = markAndQueuePredecessors(id, i) || hasChanged;
             }
             if (hasChanged) {
-                checkForNodeStateChanges(true);
+                lock.queueCheckForNodeStateChangeNotification(true);
             }
         }
-        waitWhileInExecution(m_workflowMutex, predecessorOutPorts, 0L, TimeUnit.MILLISECONDS);
+        waitWhileInExecution(m_workflowLock, predecessorOutPorts, 0L, TimeUnit.MILLISECONDS);
     }
 
     /** Find all nodes which are connected to a specific inport of a node
@@ -2580,7 +2613,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private boolean markAndQueueNodeAndPredecessors(final NodeID id, final int outPortIndex) {
         assert !id.equals(this.getID());
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
             // first check some basic facts about this node:
             // 1) executed? - done (and happy)
@@ -2688,57 +2721,58 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return whether successfully queued.
      */
     private boolean queueIfQueuable(final NodeContainer nc) {
-        if (nc.isLocalWFM()) {
+        try (WorkflowLock lock = assertLock()) {
+            if (nc.isLocalWFM()) {
+                return false;
+            }
+            if (!isLocalWFM()) {
+                switch (getInternalState()) {
+                case EXECUTED_MARKEDFOREXEC:
+                case CONFIGURED_MARKEDFOREXEC:
+                case UNCONFIGURED_MARKEDFOREXEC:
+                    return getParent().queueIfQueuable(this);
+                default:
+                    return false;
+                }
+            }
+            switch (nc.getInternalState()) {
+                case UNCONFIGURED_MARKEDFOREXEC:
+                case CONFIGURED_MARKEDFOREXEC:
+                case EXECUTED_MARKEDFOREXEC:
+                    break;
+                default:
+                    assert false : "Queuing of " + nc.getNameWithID() + " not possible, node is " + nc.getInternalState();
+                    return false;
+            }
+            PortObject[] inData = new PortObject[nc.getNrInPorts()];
+            boolean allDataAvailable = assembleInputData(nc.getID(), inData);
+            if (allDataAvailable) {
+                NodeID[] predecessors = assemblePredecessors(nc.getID());
+                boolean mustHalt = false;
+                for (NodeID p : predecessors) {
+                    if (p != null && m_executionController.isHalted(p)) {
+                        mustHalt = true;
+                    }
+                }
+                if (mustHalt) {
+                    return false;
+                } else if (nc.queue(inData)) {
+                    return true;
+                } else {
+                    // coming from UNCONFIGURED_MARKEDFOREXEC and can't be queued
+                    // (subnode is special ... it can be queued even if unconfigured_markedforexec)
+                    disableNodeForExecution(nc.getID());
+                    // clean loops which were waiting for this one to be executed.
+                    for (FlowLoopContext flc : nc.getWaitingLoops()) {
+                        disableNodeForExecution(flc.getTailNode());
+                    }
+                    nc.clearWaitingLoopList();
+                    lock.queueCheckForNodeStateChangeNotification(true);
+                    return false;
+                }
+            }
             return false;
         }
-        if (!isLocalWFM()) {
-            switch (getInternalState()) {
-            case EXECUTED_MARKEDFOREXEC:
-            case CONFIGURED_MARKEDFOREXEC:
-            case UNCONFIGURED_MARKEDFOREXEC:
-                return getParent().queueIfQueuable(this);
-            default:
-                return false;
-            }
-        }
-        assert Thread.holdsLock(m_workflowMutex);
-        switch (nc.getInternalState()) {
-            case UNCONFIGURED_MARKEDFOREXEC:
-            case CONFIGURED_MARKEDFOREXEC:
-            case EXECUTED_MARKEDFOREXEC:
-                break;
-            default:
-                assert false : "Queuing of " + nc.getNameWithID() + " not possible, node is " + nc.getInternalState();
-                return false;
-        }
-        PortObject[] inData = new PortObject[nc.getNrInPorts()];
-        boolean allDataAvailable = assembleInputData(nc.getID(), inData);
-        if (allDataAvailable) {
-            NodeID[] predecessors = assemblePredecessors(nc.getID());
-            boolean mustHalt = false;
-            for (NodeID p : predecessors) {
-                if (p != null && m_executionController.isHalted(p)) {
-                    mustHalt = true;
-                }
-            }
-            if (mustHalt) {
-                return false;
-            } else if (nc.queue(inData)) {
-                return true;
-            } else {
-                // coming from UNCONFIGURED_MARKEDFOREXEC and can't be queued
-                // (subnode is special ... it can be queued even if unconfigured_markedforexec)
-                disableNodeForExecution(nc.getID());
-                // clean loops which were waiting for this one to be executed.
-                for (FlowLoopContext flc : nc.getWaitingLoops()) {
-                    disableNodeForExecution(flc.getTailNode());
-                }
-                nc.clearWaitingLoopList();
-                checkForNodeStateChanges(true);
-                return false;
-            }
-        }
-        return false;
     }
 
     /* -------------- State changing actions and testers ----------- */
@@ -2755,10 +2789,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     boolean doBeforePreExecution(final NodeContainer nc) {
         assert !nc.isLocalWFM() : "No execution of local meta nodes";
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             LOGGER.debug(nc.getNameWithID() + " doBeforePreExecution");
             if (nc.performStateTransitionPREEXECUTE()) {
-                checkForNodeStateChanges(true);
+                lock.queueCheckForNodeStateChangeNotification(true);
                 return true;
             }
             return false;
@@ -2776,7 +2810,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     void doBeforePostExecution(final NodeContainer nc, final NodeContainerExecutionStatus status) {
         assert !nc.isLocalWFM() : "No execution of local meta nodes";
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             LOGGER.debug(nc.getNameWithID() + " doBeforePostExecution");
             if (nc instanceof NativeNodeContainer && status.isSuccess()) {
                 NativeNodeContainer nnc = (NativeNodeContainer)nc;
@@ -2786,7 +2820,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             nc.performStateTransitionPOSTEXECUTE();
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
     }
 
@@ -2802,7 +2836,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     void doBeforeExecution(final NodeContainer nc) {
         assert !nc.getID().equals(this.getID());
         assert !nc.isLocalWFM() : "No execution of local meta nodes";
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             LOGGER.debug(nc.getNameWithID() + " doBeforeExecution");
             nc.getNodeTimer().startExec();
             // allow NNC to update states etc
@@ -2840,7 +2874,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             nc.performStateTransitionEXECUTING();
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
     }
 
@@ -2861,7 +2895,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert isLocalWFM() : "doAfterExecute not allowed for remotely executing workflows";
         assert !nc.getID().equals(this.getID());
         boolean success = status.isSuccess();
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             nc.getNodeTimer().endExec(success);
             String st = success ? " - success" : " - failure";
             LOGGER.debug(nc.getNameWithID() + " doAfterExecute" + st);
@@ -3020,7 +3054,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 m_executionController.checkHaltingCriteria(nc.getID());
                 configureNodeAndPortSuccessors(nc.getID(), null, false, true, false);
             }
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
     }
 
@@ -3031,7 +3065,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param slc FlowLoopContext of the actual loop
      */
     private void restartLoop(final FlowLoopContext slc) throws IllegalLoopException {
-        assert Thread.holdsLock(m_workflowMutex);
+        assert m_workflowLock.isHeldByCurrentThread();
         NodeContainer tailNode = m_workflow.getNode(slc.getTailNode());
         NodeContainer headNode = m_workflow.getNode(slc.getOwner());
         if ((tailNode == null) || (headNode == null)) {
@@ -3187,7 +3221,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private void parallelizeLoop(final NodeID startID)
     throws IllegalLoopException {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             final NodeID endID = m_workflow.getMatchingLoopEnd(startID);
             LoopEndParallelizeNode endNode;
             LoopStartParallelizeNode startNode;
@@ -3307,7 +3341,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final HashMap<Pair<NodeID, Integer>, Integer> extInConnections,
             final NodeID startID, final NodeID endID, final NodeID[] oldIDs,
             final int chunkIndex) {
-        assert Thread.holdsLock(m_workflowMutex);
+        assert m_workflowLock.isHeldByCurrentThread();
         // compute offset for new nodes (shifted in case of same
         // workflow, otherwise just underneath each other)
         final int[] moveUIDist;
@@ -3454,7 +3488,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10
      */
     public String canExpandSubNode(final NodeID subNodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (!(getNodeContainer(subNodeID) instanceof SubNodeContainer)) {
                 return "Cannot expand selected node (not a Wrapped Node).";
             }
@@ -3478,7 +3512,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return null of ok otherwise reason (String) why not
      */
     public String canExpandMetaNode(final NodeID wfmID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(wfmID);
             if (nc == null) {
                 return "No node with id \"" + wfmID + "\"";
@@ -3518,7 +3552,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @noreference This method is not intended to be referenced by clients.
      */
     public ExpandSubnodeResult expandSubWorkflow(final NodeID nodeID) throws IllegalStateException {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             WorkflowCopyContent cnt = new WorkflowCopyContent();
             cnt.setNodeIDs(nodeID);
             cnt.setIncludeInOutConnections(true);
@@ -3698,7 +3732,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10
      */
     public NodeID convertMetaNodeToSubNode(final NodeID wfmID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock l = lock()) {
             //
             WorkflowManager subWFM = getNodeContainer(wfmID, WorkflowManager.class, true);
             final Set<ConnectionContainer> connectionsByDestination =
@@ -3739,7 +3773,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return null or reason why this can not be done as string.
      */
     public String canCollapseNodesIntoMetaNode(final NodeID[] orgIDs) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             // for quick search:
             HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
             // Check if we are allowed to move (=delete) all those nodes
@@ -3833,7 +3867,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public WorkflowManager collapseIntoMetaNode(final NodeID[] orgIDs,
             final WorkflowAnnotation[] orgAnnos, final String name)
     throws IllegalArgumentException {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             // make sure this is still true:
             String res = canCollapseNodesIntoMetaNode(orgIDs);
             if (res != null) {
@@ -4139,9 +4173,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     boolean canPerformReset() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             final Collection<NodeContainer> nodeValues = m_workflow.getNodeValues();
-            // no nodes but executed (through connections and outputs populated - see checkForNodeStateChanges)
+            // no nodes but executed (through connections and outputs populated - see queueCheckForNodeStateChangeNotification)
             if (nodeValues.isEmpty() && getInternalState().isExecuted()) {
                 return true;
             }
@@ -4174,43 +4208,43 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     void mimicRemoteExecuting() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.mimicRemoteExecuting();
             }
             // do not propagate -- this method is called from parent
-            checkForNodeStateChanges(false);
+            lock.queueCheckForNodeStateChangeNotification(false);
         }
     }
 
     /** {@inheritDoc} */
     @Override
     void mimicRemotePreExecute() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.mimicRemotePreExecute();
             }
             // do not propagate -- this method is called from parent
-            checkForNodeStateChanges(false);
+            lock.queueCheckForNodeStateChangeNotification(false);
         }
     }
 
     /** {@inheritDoc} */
     @Override
     void mimicRemotePostExecute() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.mimicRemotePostExecute();
             }
             // do not propagate -- this method is called from parent
-            checkForNodeStateChanges(false);
+            lock.queueCheckForNodeStateChangeNotification(false);
         }
     }
 
     /** {@inheritDoc} */
     @Override
     void mimicRemoteExecuted(final NodeContainerExecutionStatus status) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 int i = nc.getID().getIndex();
                 NodeContainerExecutionStatus sub = status.getChildStatus(i);
@@ -4224,7 +4258,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 nc.mimicRemoteExecuted(sub);
             }
             // do not propagate -- method is (indirectly) called from parent
-            checkForNodeStateChanges(false);
+            lock.queueCheckForNodeStateChangeNotification(false);
         }
     }
 
@@ -4252,15 +4286,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     boolean performStateTransitionPREEXECUTE() {
-        assert !isLocalWFM() : "Execution of meta node not allowed"
-            + " for locally executing (sub-)flows";
-        synchronized (m_nodeMutex) {
+        assert !isLocalWFM() : "Execution of meta node not allowed for locally executing (sub-)flows";
+        try (WorkflowLock lock = lock()) {
             if (getInternalState().isExecutionInProgress()) {
                 for (NodeContainer nc : m_workflow.getNodeValues()) {
                     nc.mimicRemotePreExecute();
                 }
                 // method is called from parent, don't propagate state changes
-                checkForNodeStateChanges(false);
+                lock.queueCheckForNodeStateChangeNotification(false);
                 return true;
             } else {
                 // node may not be executinInProgress when previously queued
@@ -4276,28 +4309,26 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     void performStateTransitionEXECUTING() {
-        assert !isLocalWFM() : "Execution of meta node not allowed"
-            + " for locally executing (sub-)flows";
-        synchronized (m_nodeMutex) {
+        assert !isLocalWFM() : "Execution of meta node not allowed for locally executing (sub-)flows";
+        try (WorkflowLock lock = lock()) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.mimicRemoteExecuting();
             }
             // method is called from parent, don't propagate state changes
-            checkForNodeStateChanges(false);
+            lock.queueCheckForNodeStateChangeNotification(false);
         }
     }
 
     /** {@inheritDoc} */
     @Override
     void performStateTransitionPOSTEXECUTE() {
-        assert !isLocalWFM() : "Execution of meta node not allowed"
-            + " for locally executing (sub-)flows";
-        synchronized (m_nodeMutex) {
+        assert !isLocalWFM() : "Execution of meta node not allowed for locally executing (sub-)flows";
+        try (WorkflowLock lock = lock()) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.mimicRemotePostExecute();
             }
             // method is called from parent, don't propagate state changes
-            checkForNodeStateChanges(false);
+            lock.queueCheckForNodeStateChangeNotification(false);
         }
     }
 
@@ -4333,7 +4364,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return true if the node can safely be reset.
      */
     public boolean canResetNode(final NodeID nodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(nodeID);
             if (nc == null) {
                 return false;
@@ -4357,14 +4388,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nodeID the id to query (sub node ID)
      * @return ... */
     boolean canResetSuccessors(final NodeID nodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             return !hasSuccessorInProgress(nodeID);
         }
     }
 
     /** Reset node and notify listeners. */
     private void invokeResetOnSingleNodeContainer(final SingleNodeContainer snc) {
-        assert Thread.holdsLock(m_workflowMutex);
+        assert m_workflowLock.isHeldByCurrentThread();
         snc.rawReset();
         snc.getNodeTimer().resetNode();
         if (snc.isModelCompatibleTo(LoopStartNode.class)) {
@@ -4382,7 +4413,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return true if at least one successors is currently in progress.
      */
     private boolean hasSuccessorInProgress(final NodeID nodeID) {
-        assert Thread.holdsLock(m_workflowMutex);
+        assert m_workflowLock.isHeldByCurrentThread();
         if (this.getID().equals(nodeID)) {  // we are talking about this WFM
             return getParent().hasSuccessorInProgress(nodeID);
         }
@@ -4432,7 +4463,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param id of first node in chain to be reset.
      */
     private void resetNodeAndSuccessors(final NodeID id) {
-        assert Thread.holdsLock(m_workflowMutex);
+        assert m_workflowLock.isHeldByCurrentThread();
         NodeContainer nc = getNodeContainer(id);
         if (!nc.isResetable()) {
             if (nc.getInternalState().equals(IDLE)) {
@@ -4583,7 +4614,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalStateException If downstream nodes are actively executing or already executed.
      */
     void resetHaltedSubnode(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
             CheckUtils.checkState(snc.getInternalState().isExecuted(),
                 "Wrapped Node %s not executed", snc.getNameWithID());
@@ -4605,7 +4636,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param resetMyself If to include the node itself or only downstream nodes
      */
     void resetAndConfigureNodeAndSuccessors(final NodeID id, final boolean resetMyself) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (hasSuccessorInProgress(id)) {
                 throw new IllegalStateException("Cannot reset node (wrong state of node or successors) " + id);
             }
@@ -4617,7 +4648,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // and launch configure starting with this node
             configureNodeAndSuccessors(id, resetMyself);
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
     }
 
@@ -4637,67 +4668,68 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param portID port index or -1 to reset successors connected to any out port.
      */
     void resetSuccessors(final NodeID id, final int portID) {
-        assert Thread.holdsLock(m_workflowMutex);
-        assert !this.getID().equals(id);
-        Set<ConnectionContainer> succs = m_workflow.getConnectionsBySource(id);
-        for (ConnectionContainer conn : succs) {
-            NodeID currID = conn.getDest();
-            if ((conn.getSourcePort() == portID) || (portID < 0)) {
-                // only reset successors if they are connected to the
-                // correct port or we don't care (id==-1)
-                if (!conn.getType().isLeavingWorkflow()) {
-                    assert m_workflow.getNode(currID) != null;
-                    // normal connection to another node within this workflow
-                    // first check if it is already reset
-                    NodeContainer nc = m_workflow.getNode(currID);
-                    assert nc != null;
-                    if (nc.isResetable()) {
-                        // first reset successors of successor
-                        if (nc instanceof SingleNodeContainer) {
-                            // for a normal node, ports don't matter
-                            this.resetSuccessors(currID, -1);
-                            // ..then reset immediate successor itself if it was not implicitly
-                            // reset by the successor reset (via an outer loop)
-                            if (nc.isResetable()) {
-                                invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
+        try (WorkflowLock lock = assertLock()) {
+            assert !this.getID().equals(id);
+            Set<ConnectionContainer> succs = m_workflow.getConnectionsBySource(id);
+            for (ConnectionContainer conn : succs) {
+                NodeID currID = conn.getDest();
+                if ((conn.getSourcePort() == portID) || (portID < 0)) {
+                    // only reset successors if they are connected to the
+                    // correct port or we don't care (id==-1)
+                    if (!conn.getType().isLeavingWorkflow()) {
+                        assert m_workflow.getNode(currID) != null;
+                        // normal connection to another node within this workflow
+                        // first check if it is already reset
+                        NodeContainer nc = m_workflow.getNode(currID);
+                        assert nc != null;
+                        if (nc.isResetable()) {
+                            // first reset successors of successor
+                            if (nc instanceof SingleNodeContainer) {
+                                // for a normal node, ports don't matter
+                                this.resetSuccessors(currID, -1);
+                                // ..then reset immediate successor itself if it was not implicitly
+                                // reset by the successor reset (via an outer loop)
+                                if (nc.isResetable()) {
+                                    invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
+                                }
+                            } else {
+                                assert nc instanceof WorkflowManager;
+                                WorkflowManager wfm = (WorkflowManager)nc;
+                                // first reset all nodes which are connected
+                                // to the outports of interest of this WFM...
+                                Set<Integer> outcomingPorts = wfm.m_workflow.connectedOutPorts(conn.getDestPort());
+                                for (Integer i : outcomingPorts) {
+                                    this.resetSuccessors(currID, i);
+                                }
+                                // Reset nodes inside WFM.
+                                // (cleaning of  loop context affected one level
+                                //  down will be done in there.)
+                                wfm.resetNodesInWFMConnectedToInPorts(
+                                        Collections.singleton(conn.getDestPort()));
                             }
-                        } else {
-                            assert nc instanceof WorkflowManager;
-                            WorkflowManager wfm = (WorkflowManager)nc;
-                            // first reset all nodes which are connected
-                            // to the outports of interest of this WFM...
-                            Set<Integer> outcomingPorts = wfm.m_workflow.connectedOutPorts(conn.getDestPort());
-                            for (Integer i : outcomingPorts) {
-                                this.resetSuccessors(currID, i);
-                            }
-                            // Reset nodes inside WFM.
-                            // (cleaning of  loop context affected one level
-                            //  down will be done in there.)
-                            wfm.resetNodesInWFMConnectedToInPorts(
-                                    Collections.singleton(conn.getDestPort()));
                         }
+                    } else {
+                        assert this.getID().equals(currID);
+                        // connection goes to a meta outport!
+                        // Only reset nodes which are connected to the currently
+                        // interesting port.
+                        int outGoingPortID = conn.getDestPort();
+                        // clean loop context affected one level up
+                        getParent().resetAndConfigureAffectedLoopContext(
+                               this.getID(), Collections.singleton(outGoingPortID));
+                        getParent().resetSuccessors(this.getID(), outGoingPortID);
                     }
-                } else {
-                    assert this.getID().equals(currID);
-                    // connection goes to a meta outport!
-                    // Only reset nodes which are connected to the currently
-                    // interesting port.
-                    int outGoingPortID = conn.getDestPort();
-                    // clean loop context affected one level up
-                    getParent().resetAndConfigureAffectedLoopContext(
-                           this.getID(), Collections.singleton(outGoingPortID));
-                    getParent().resetSuccessors(this.getID(), outGoingPortID);
                 }
             }
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
-        checkForNodeStateChanges(true);
     }
 
     /** {@inheritDoc}
      * @since 2.11*/
     @Override
     public boolean canConfigureNodes() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             // workflows and meta nodes can always configure, nodes in subnodes need to ask parent
             return isProject() || getDirectNCParent().canConfigureNodes();
         }
@@ -4710,7 +4742,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.9
      */
     public boolean canExecuteNodeDirectly(final NodeID nodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(nodeID);
             if (nc == null) {
                 return false;
@@ -4736,7 +4768,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     * @return true if node can be executed.
     */
    public boolean canExecuteNode(final NodeID nodeID) {
-       synchronized (m_workflowMutex) {
+       try (WorkflowLock lock = lock()) {
            NodeContainer nc = m_workflow.getNode(nodeID);
            if (nc == null) {
                return false;
@@ -4757,7 +4789,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     * @return true if at least one predecessor can be executed.
     */
     private boolean hasExecutablePredecessor(final NodeID nodeID) {
-        assert Thread.holdsLock(m_workflowMutex);
+        assert m_workflowLock.isHeldByCurrentThread();
         if (this.getID().equals(nodeID)) {  // we are talking about this WFM
             return getParent().hasExecutablePredecessor(nodeID);
         }
@@ -4798,7 +4830,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return That property.
      * @since 2.6 */
     boolean isAllInputDataAvailableToNode(final NodeID nodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             final NodeContainer nc = getNodeContainer(nodeID);
             return assembleInputData(nodeID, new PortObject[nc.getNrInPorts()]);
         }
@@ -4811,7 +4843,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     *
     */
    public boolean canCancelNode(final NodeID nodeID) {
-       synchronized (m_workflowMutex) {
+       try (WorkflowLock lock = lock()) {
            NodeContainer nc = m_workflow.getNode(nodeID);
            if (nc == null) {
                return false;
@@ -4848,7 +4880,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     void cancelExecution() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeExecutionJob job = getExecutionJob();
             if (job != null) {
                 // this is a remotely executed workflow, cancel its execution
@@ -4861,7 +4893,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         nc.cancelExecution();
                     }
                 }
-                checkForNodeStateChanges(true);
+                lock.queueCheckForNodeStateChangeNotification(true);
             }
         }
     }
@@ -4872,12 +4904,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nc node to be canceled
      */
     public void cancelExecution(final NodeContainer nc) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             disableNodeForExecution(nc.getID());
             if (nc.getInternalState().isExecutionInProgress()) {
                 nc.cancelExecution();
             }
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
         }
     }
 
@@ -4890,12 +4922,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer nnc = (NativeNodeContainer)nc;
             if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
-                synchronized (m_workflowMutex) {
+                try (WorkflowLock lock = lock()) {
                     if (nnc.getLoopStatus().equals(LoopStatus.RUNNING)) {
                         // currently running
                         nnc.pauseLoopExecution(true);
                     }
-                    checkForNodeStateChanges(true);
+                    lock.queueCheckForNodeStateChangeNotification(true);
                 }
             }
         }
@@ -4912,7 +4944,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer nnc = (NativeNodeContainer)nc;
             if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
-                synchronized (m_workflowMutex) {
+                try (WorkflowLock lock = lock()) {
                     if (nnc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                         // currently paused - ok!
                         FlowLoopContext flc = nnc.getNode().getLoopContext();
@@ -4937,7 +4969,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * {@link #setJobManager(NodeID, NodeExecutionJobManager)} method.
      */
     public boolean canSetJobManager(final NodeID nodeID) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (!m_workflow.containsNodeKey(nodeID)) {
                 return false;
             }
@@ -4964,7 +4996,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @see #canSetJobManager(NodeID)
      */
     public void setJobManager(final NodeID nodeID, final NodeExecutionJobManager jobMgr) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(nodeID);
             nc.setJobManager(jobMgr);
         }
@@ -4982,7 +5014,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     void performShutdown() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeExecutionJob job = getExecutionJob();
             if (job != null) {
                 if (job.isSavedForDisconnect()) {
@@ -4995,7 +5027,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     disableNodeForExecution(nc.getID());
                     nc.performShutdown();
                 }
-                checkForNodeStateChanges(false);
+                lock.queueCheckForNodeStateChangeNotification(false);
             }
             m_wfmListeners.clear();
             super.performShutdown();
@@ -5034,7 +5066,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public boolean waitWhileInExecution(final long time, final TimeUnit unit)
     throws InterruptedException {
-        return waitWhileInExecution(m_workflowMutex, new NodeContainer[] {this}, time, unit);
+        return waitWhileInExecution(m_workflowLock, new NodeContainer[] {this}, time, unit);
     }
 
     /** Causes the current thread to wait until the the workflow has reached
@@ -5048,42 +5080,46 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *         {@code true} if the time argument is 0 or negative.
      * @throws InterruptedException if the current thread is interrupted
      */
-    private static boolean waitWhileInExecution(final Object mutex,
+    private static boolean waitWhileInExecution(final WorkflowLock workflowLock,
             final NodeContainerStateObservable[] ncs, final long time, final TimeUnit unit)
         throws InterruptedException {
-        // lock supporting timeout
-        // temporarily(?) using a global workflow lock - trying to identify unforeseeable problem of synchronizing
-        // state retrieval on workflow
-//        final ReentrantLock lock = new ReentrantLock();
-//        final Condition condition = lock.newCondition();
+        final ReentrantLock lock = workflowLock.getReentrantLock();
+        final Condition whileInExecCondition = lock.newCondition();
         NodeStateChangeListener listener = new NodeStateChangeListener() {
             @Override
             public void stateChanged(final NodeStateEvent stateEvent) {
-                synchronized (mutex) {
-                    mutex.notifyAll();
+                lock.lock();
+                try {
+                    if (!containsExecutingNode(ncs)) {
+                        whileInExecCondition.signalAll();
+                    }
+                } finally {
+                    lock.unlock();
                 }
             }
+
         };
-        synchronized (mutex) {
+        lock.lockInterruptibly();
+        for (NodeContainerStateObservable nc : ncs) {
+            if (nc != null) {
+                nc.addNodeStateChangeListener(listener);
+            }
+        }
+        try {
+            if (!containsExecutingNode(ncs)) {
+                return true;
+            }
+            if (time > 0) {
+                return whileInExecCondition.await(time, unit);
+            } else {
+                whileInExecCondition.await();
+                return true;
+            }
+        } finally {
+            lock.unlock();
             for (NodeContainerStateObservable nc : ncs) {
                 if (nc != null) {
-                    nc.addNodeStateChangeListener(listener);
-                }
-            }
-            try {
-                // max time to wait - decremented with each wakeup - wait infinitely long if time arg is <= 0
-                long delay = time > 0 ? unit.toMillis(time) : Long.MAX_VALUE;
-                while (delay > 0L && containsExecutingNode(ncs)) {
-                    final long start = System.currentTimeMillis();
-                    mutex.wait(delay);
-                    delay -= System.currentTimeMillis() - start;
-                }
-                return delay > 0L;
-            } finally {
-                for (NodeContainerStateObservable nc : ncs) {
-                    if (nc != null) {
-                        nc.removeNodeStateChangeListener(listener);
-                    }
+                    nc.removeNodeStateChangeListener(listener);
                 }
             }
         }
@@ -5109,7 +5145,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10 */
     public boolean canExecuteAll() {
         if (isLocalWFM()) {
-            synchronized (m_workflowMutex) {
+            try (WorkflowLock lock = lock()) {
                 return hasExecutableNode();
             }
         } else {
@@ -5126,7 +5162,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @see #executeAllAndWaitUntilDone() */
     public void executeAll() {
         if (isLocalWFM()) {
-            synchronized (m_workflowMutex) {
+            try (WorkflowLock lock = lock()) {
                 Set<NodeID> endNodes = new HashSet<NodeID>();
                 for (NodeID id : m_workflow.getNodeIDs()) {
                     boolean hasNonParentSuccessors = false;
@@ -5166,7 +5202,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 // bug 6026: need one additional check in case the workflow only consists of meta nodes
                 // TODO: improve this: each and every node in the workflow performs a check!
-                checkForNodeStateChanges(true);
+                lock.queueCheckForNodeStateChangeNotification(true);
             }
         } else {
             // unsynchronized as parent may be ROOT (different mutex), see
@@ -5300,7 +5336,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (true always except for loading)
      */
     void checkForNodeStateChanges(final boolean propagateChanges) {
-        assert Thread.holdsLock(m_workflowMutex);
+        assert m_workflowLock.isHeldByCurrentThread();
         int[] nrNodesInState = new int[InternalNodeContainerState.values().length];
         int nrNodes = 0;
         boolean internalNodeHasError = false;
@@ -5444,11 +5480,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         if ((!oldState.equals(newState)) && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes
-            if (m_workflowMutex.equals(getDirectNCParent().getWorkflowMutex())
-                    // simple: mutexes are the same which means that we have
+            if (getReentrantLockInstance() == getDirectNCParent().getReentrantLockInstance()
+                    // simple: locks are the same which means that we have
                     // either in- or outgoing connections (or both). No need
                     // to add an synchronize on the parent-mutex.
-                    || Thread.holdsLock(getDirectNCParent().getWorkflowMutex())) {
+                    || getDirectNCParent().isLockedByCurrentThread()) {
                     // the second case is less simple: we don't have the same
                     // mutex but we already hold it: in this case, do not
                     // make this change asynchronously because we obviously
@@ -5457,7 +5493,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // this fixes a problem with metanodes containing cluster
                     // (sub) workflows which were started but the state of
                     // the metanode/project was changed too late.
-                getParent().checkForNodeStateChanges(propagateChanges);
+                try (WorkflowLock lock = getParent().lock()) {
+                    lock.queueCheckForNodeStateChangeNotification(propagateChanges);
+                }
             } else {
                 // Different mutexes, that is this workflowmanager is a
                 // project and the state check in the parent has do be
@@ -5468,8 +5506,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 PARENT_NOTIFIER.execute(new Runnable() {
                     @Override
                     public void run() {
-                        synchronized (getParent().getWorkflowMutex()) {
-                                getParent().checkForNodeStateChanges(propagateChanges);
+                        try (WorkflowLock parentLock = getParent().lock()) {
+                            parentLock.queueCheckForNodeStateChangeNotification(propagateChanges);
                         }
                     }
                 });
@@ -5543,7 +5581,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return true if all input ports are connected.
      */
     boolean isFullyConnected(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (id.equals(this.getID())) {
                 return getParent().isFullyConnected(id);
             }
@@ -5590,25 +5628,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param keepNodeMessage Whether to retain the previously set node message.
      */
     private void configureAllNodesInWFM(final boolean keepNodeMessage) {
-        assert Thread.holdsLock(m_workflowMutex);
-        Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(
-                m_workflow.getNodeIDs(), true).keySet();
-        for (NodeID id : bfsSortedSet) {
-            NodeContainer nc = getNodeContainer(id);
-            if (nc instanceof SingleNodeContainer) {
-                switch (nc.getInternalState()) {
-                case EXECUTED:
-                    break;
-                default:
-                    configureSingleNodeContainer(
-                            (SingleNodeContainer)nc, keepNodeMessage);
+        try (WorkflowLock lock = assertLock()) {
+            Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(
+                    m_workflow.getNodeIDs(), true).keySet();
+            for (NodeID id : bfsSortedSet) {
+                NodeContainer nc = getNodeContainer(id);
+                if (nc instanceof SingleNodeContainer) {
+                    switch (nc.getInternalState()) {
+                    case EXECUTED:
+                        break;
+                    default:
+                        configureSingleNodeContainer(
+                                (SingleNodeContainer)nc, keepNodeMessage);
+                    }
+                } else {
+                    ((WorkflowManager)nc).configureAllNodesInWFM(keepNodeMessage);
                 }
-            } else {
-                ((WorkflowManager)nc).configureAllNodesInWFM(keepNodeMessage);
             }
+            lock.queueCheckForNodeStateChangeNotification(false);
         }
-        checkForNodeStateChanges(false);
     }
+
 
     /** Configure a SingleNodeContainer.
      *
@@ -5619,7 +5659,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private boolean configureSingleNodeContainer(final SingleNodeContainer snc, final boolean keepNodeMessage) {
         boolean configurationChanged = false;
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeMessage oldMessage = keepNodeMessage ? snc.getNodeMessage() : NodeMessage.NONE;
             final int inCount = snc.getNrInPorts();
             NodeID sncID = snc.getID();
@@ -5800,7 +5840,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public FlowObjectStack createAndSetFlowObjectStackFor(final SingleNodeContainer snc, final FlowObjectStack[] sos)
     throws IllegalFlowObjectStackException {
-        CheckUtils.checkState(Thread.holdsLock(m_workflowMutex), "Workflow mutex not held");
+        CheckUtils.checkState(m_workflowLock.isHeldByCurrentThread(), "Workflow lock not held");
         NodeID sncID = snc.getID();
         FlowObjectStack scsc;
         FlowObjectStack nodeOutgoingStack = new FlowObjectStack(sncID);
@@ -5828,7 +5868,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param inportIndeces indeces of incoming ports (or null if not known)
      */
     private void configureNodesConnectedToPortInWFM(final Set<Integer> inportIndeces) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             ArrayList<NodeAndInports> nodes = m_workflow.findAllConnectedNodes(inportIndeces);
             for (NodeAndInports nai : nodes) {
                 NodeContainer nc = m_workflow.getNode(nai.getID());
@@ -5842,7 +5882,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // and finalize state
             // (note that we must call this even if no node was configured since a predecessor
             // and a THROUGH_Connetion can affect that state of this node, too.)
-            checkForNodeStateChanges(true);
+            lock.queueCheckForNodeStateChangeNotification(true);
             // TODO: clean up flow object stack after we leave WFM?
         }
     }
@@ -5867,54 +5907,54 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *   all are to be used).
      * @param configureMyself true if the node itself is to be configured
      * @param configureParent true also the parent is configured (if affected)
-     * @param updateWFMState if to call {@link #checkForNodeStateChanges(boolean)}.
+     * @param updateWFMState if to call {@link #queueCheckForNodeStateChangeNotification(boolean)}.
      */
     private void configureNodeAndPortSuccessors(final NodeID nodeId,
             final Set<Integer> ports,
             final boolean configureMyself,
             final boolean configureParent, final boolean updateWFMState) {
-        // ensure we always configured ALL successors if we configure the node
-        assert (!configureMyself) || (ports == null);
-        // create list of properly ordered nodes (each one appears only once!)
-        LinkedHashMap<NodeID, Set<Integer>> nodes;
-        if (ports != null) {
-            assert !configureMyself;
-            // only consider nodes attached to port:
-            nodes = m_workflow.getBreadthFirstListOfPortSuccessors(nodeId, ports, false);
-        } else {
-            // take all nodes
-            nodes = m_workflow.getBreadthFirstListOfNodeAndSuccessors(nodeId, false);
-        }
-        // remember which ones we did configure to avoid useless configurations
-        // (this list does not contain nodes where configure() didn't change
-        // the specs/handlers/stacks.
-        HashSet<NodeID> freshlyConfiguredNodes = new HashSet<NodeID>();
-        // if not desired, don't configure origin
-        if (!configureMyself) {
-            // don't configure origin...
-            nodes.remove(nodeId);
-            // ...but pretend we did configure it
-            freshlyConfiguredNodes.add(nodeId);
-        }
-        // Don't configure WFM itself but make sure the nodes connected
-        // to this WFM are configured when we are done here...
-        boolean wfmIsPartOfList = nodes.containsKey(this.getID());
-        if (wfmIsPartOfList) {
-            nodes.remove(this.getID());
-        }
-        // now iterate over the remaining nodes
-        for (NodeID currNode : nodes.keySet()) {
-            boolean needsConfiguration = currNode.equals(nodeId);
-            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(currNode)) {
-                if (freshlyConfiguredNodes.contains(cc.getSource())) {
-                    needsConfiguration = true;
+        try (WorkflowLock lock = assertLock()) {
+            // ensure we always configured ALL successors if we configure the node
+            assert (!configureMyself) || (ports == null);
+            // create list of properly ordered nodes (each one appears only once!)
+            LinkedHashMap<NodeID, Set<Integer>> nodes;
+            if (ports != null) {
+                assert !configureMyself;
+                // only consider nodes attached to port:
+                nodes = m_workflow.getBreadthFirstListOfPortSuccessors(nodeId, ports, false);
+            } else {
+                // take all nodes
+                nodes = m_workflow.getBreadthFirstListOfNodeAndSuccessors(nodeId, false);
+            }
+            // remember which ones we did configure to avoid useless configurations
+            // (this list does not contain nodes where configure() didn't change
+            // the specs/handlers/stacks.
+            HashSet<NodeID> freshlyConfiguredNodes = new HashSet<NodeID>();
+            // if not desired, don't configure origin
+            if (!configureMyself) {
+                // don't configure origin...
+                nodes.remove(nodeId);
+                // ...but pretend we did configure it
+                freshlyConfiguredNodes.add(nodeId);
+            }
+            // Don't configure WFM itself but make sure the nodes connected
+            // to this WFM are configured when we are done here...
+            boolean wfmIsPartOfList = nodes.containsKey(this.getID());
+            if (wfmIsPartOfList) {
+                nodes.remove(this.getID());
+            }
+            // now iterate over the remaining nodes
+            for (NodeID currNode : nodes.keySet()) {
+                boolean needsConfiguration = currNode.equals(nodeId);
+                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(currNode)) {
+                    if (freshlyConfiguredNodes.contains(cc.getSource())) {
+                        needsConfiguration = true;
+                    }
                 }
-            }
-            if (!needsConfiguration) {
-                continue;
-            }
-            final NodeContainer nc = getNodeContainer(currNode);
-            synchronized (m_workflowMutex) {
+                if (!needsConfiguration) {
+                    continue;
+                }
+                final NodeContainer nc = getNodeContainer(currNode);
                 if (nc instanceof SingleNodeContainer) {
                     if (configureSingleNodeContainer((SingleNodeContainer)nc, /*keepNodeMessage=*/false)) {
                         freshlyConfiguredNodes.add(nc.getID());
@@ -5925,28 +5965,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     freshlyConfiguredNodes.add(nc.getID());
                 }
             }
-        }
-        if (updateWFMState) {
-            // make sure internal status changes are properly reflected
-            checkForNodeStateChanges(true);
-        }
-        // And finally clean up: if the WFM was part of the list of nodes
-        // make sure we only configure nodes actually connected to ports
-        // which are connected to nodes which we did configure!
-        if (configureParent && wfmIsPartOfList) {
-            Set<Integer> portsToConf = new LinkedHashSet<Integer>();
-            for (int i = 0; i < getNrWorkflowOutgoingPorts(); i++) {
-                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(
-                        this.getID())) {
-                    assert cc.getType().isLeavingWorkflow();
-                    if ((cc.getDestPort() == i)
-                        && (freshlyConfiguredNodes.contains(cc.getSource()))) {
-                        portsToConf.add(i);
+            if (updateWFMState) {
+                // make sure internal status changes are properly reflected
+                lock.queueCheckForNodeStateChangeNotification(true);
+            }
+            // And finally clean up: if the WFM was part of the list of nodes
+            // make sure we only configure nodes actually connected to ports
+            // which are connected to nodes which we did configure!
+            if (configureParent && wfmIsPartOfList) {
+                Set<Integer> portsToConf = new LinkedHashSet<Integer>();
+                for (int i = 0; i < getNrWorkflowOutgoingPorts(); i++) {
+                    for (ConnectionContainer cc : m_workflow.getConnectionsByDest(
+                            this.getID())) {
+                        assert cc.getType().isLeavingWorkflow();
+                        if ((cc.getDestPort() == i)
+                            && (freshlyConfiguredNodes.contains(cc.getSource()))) {
+                            portsToConf.add(i);
+                        }
                     }
                 }
-            }
-            if (!portsToConf.isEmpty()) {
-                getParent().configureNodeAndPortSuccessors(this.getID(), portsToConf, false, configureParent, updateWFMState);
+                if (!portsToConf.isEmpty()) {
+                    getParent().configureNodeAndPortSuccessors(
+                        getID(), portsToConf, false, configureParent, updateWFMState);
+                }
             }
         }
     }
@@ -6016,7 +6057,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         Arrays.fill(indentChars, ' ');
         String indentString = new String(indentChars);
         StringBuilder build = new StringBuilder(indentString);
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             build.append(getNameWithID());
             build.append(": " + getInternalState() + " (start)\n");
             for (NodeID id : m_workflow.getNodeIDs()) {
@@ -6126,7 +6167,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     public boolean containsExecutedNode() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 if (nc instanceof WorkflowManager) {
                     if (((WorkflowManager)nc).containsExecutedNode()) {
@@ -6165,7 +6206,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         final List<Type> asList = Arrays.asList(types);
         CheckUtils.checkArgument(asList.size() > 0 && !asList.contains(null),
             "Type list must not be empty, nor contain null");
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             ArrayList<Pair<String, NodeMessage>> result = new ArrayList<>();
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 if (nc instanceof NativeNodeContainer) {
@@ -6279,7 +6320,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (this == ROOT) {
             return false;
         }
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             return getDirectNCParent().isWriteProtected()
                 || m_isWorkflowDirectoryReadonly
                 || Role.Link.equals(getTemplateInformation().getRole());
@@ -6311,7 +6352,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.6
      */
     public List<NodeID> getLinkedMetaNodes(final boolean recurse) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             Map<NodeID, NodeContainerTemplate> filled =
                     fillLinkedTemplateNodesList(new LinkedHashMap<NodeID, NodeContainerTemplate>(), recurse, false);
             return new ArrayList<NodeID>(filled.keySet());
@@ -6468,7 +6509,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param id The meta node in question.
      * @return The above described property. */
     public boolean canUpdateMetaNodeLink(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(id);
             if (!(nc instanceof NodeContainerTemplate)) {
                 return false;
@@ -6494,7 +6535,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.9
      */
     public boolean hasUpdateableMetaNodeLink(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainer nc = m_workflow.getNode(id);
             if (!(nc instanceof NodeContainerTemplate)) {
                 return false;
@@ -6560,7 +6601,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             loadRes.addError("Node \"" + getNameWithID() + "\" is not a template node link");
             return loadRes;
         }
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             boolean needsUpdate;
             try {
                 needsUpdate = checkUpdateMetaNodeLinkWithCache(id, loadHelper, loadRes, visitedTemplateMap, false);
@@ -6668,7 +6709,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         NodeContainerTemplate newLinkMN;
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeUIInformation oldUI = m_workflow.getNode(id).getUIInformation();
             NodeUIInformation newUI = oldUI != null ? oldUI.clone() : null;
             // keep old in/out connections to later relink them
@@ -6796,13 +6837,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         try {
             WorkflowCopyContent cnt = new WorkflowCopyContent();
             cnt.setNodeIDs(getID());
-            synchronized (m_workflowMutex) {
+            try (WorkflowLock lock = lock()) {
                 cnt = tempParent.copyFromAndPasteHere(getParent(), cnt);
             }
             NodeID cID = cnt.getNodeIDs()[0];
             copy = (WorkflowManager)tempParent.getNodeContainer(cID);
             MetaNodeTemplateInformation template = MetaNodeTemplateInformation.createNewTemplate(WorkflowManager.class);
-            synchronized (copy.m_workflowMutex) {
+            try (WorkflowLock copyLock = copy.lock()) {
                 copy.setTemplateInformation(template);
                 copy.setName(null);
                 NodeSettings templateSettings = MetaNodeTemplateInformation.createNodeSettingsForTemplate(copy);
@@ -6829,7 +6870,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * valid meta node. */
     public MetaNodeTemplateInformation setTemplateInformation(final NodeID id,
             final MetaNodeTemplateInformation templateInformation) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             NodeContainerTemplate nc = getNodeContainer(id, NodeContainerTemplate.class, true);
             MetaNodeTemplateInformation old = nc.getTemplateInformation();
             nc.setTemplateInformation(templateInformation);
@@ -6855,7 +6896,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (cipher.equals(m_cipher)) {
             return;
         }
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             setDirtyAll(); // first set dirty to decrypt with old cipher
             m_cipher = cipher;
             String msg = " cipher on meta node \"" + getNameWithID() + "\"";
@@ -6896,7 +6937,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public boolean unlock(final WorkflowCipherPrompt prompt) {
         boolean isNowUnlocked;
         boolean wasUnlocked;
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             wasUnlocked = isUnlocked();
             isNowUnlocked = m_cipher.unlock(prompt);
         }
@@ -7072,7 +7113,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         Set<ConnectionContainerTemplate> additionalConnTemplates =
             new HashSet<ConnectionContainerTemplate>();
         boolean isIncludeInOut = content.isIncludeInOutConnections();
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             for (int i = 0; i < nodeIDs.length; i++) {
                 // throws exception if not present in workflow
                 NodeContainer cont = getNodeContainer(nodeIDs[i]);
@@ -7126,7 +7167,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *         dedicated object.
      */
     public WorkflowCopyContent paste(final WorkflowPersistor persistor) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             try {
                 return loadContent(persistor,
                         new HashMap<Integer, BufferedDataTable>(),
@@ -7245,7 +7286,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         CheckUtils.checkArgument(result instanceof WorkflowExecutionResult, "Argument must be instance of \"%s\": %s",
             WorkflowExecutionResult.class.getSimpleName(), result == null ? "null" : result.getClass().getSimpleName());
         WorkflowExecutionResult r = (WorkflowExecutionResult)result;
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             super.loadExecutionResult(result, exec, loadResult);
             Map<NodeID, NodeContainerExecutionResult> map = r.getExecutionResultMap();
             final int count = map.size();
@@ -7430,8 +7471,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContainerTemplate loadedInstance = null;
         boolean isIsolatedProject = persistor.isProject();
         InsertWorkflowPersistor insertPersistor = new InsertWorkflowPersistor(persistor);
-        Object mutex = isIsolatedProject ? new Object() : m_workflowMutex;
-        synchronized (mutex) {
+        ReentrantLock lock = isIsolatedProject ? new ReentrantLock() : m_workflowLock.getReentrantLock();
+        lock.lock();
+        try {
             m_loadVersion = persistor.getLoadVersion();
             NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, exec, result, keepNodeMessages).getNodeIDs();
             if (newIDs.length != 1) {
@@ -7439,6 +7481,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     + "couldn't identify child sub flow (typically " + "a project)");
             }
             loadedInstance = (NodeContainerTemplate)getNodeContainer(newIDs[0]);
+        } finally {
+            lock.unlock();
         }
         exec.setProgress(1.0);
         result.setLoadedInstance(loadedInstance);
@@ -7602,11 +7646,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContext.removeLastContext();
             }
             sub1.setProgress(1.0);
-            // if cont == isolated meta nodes, then we need to block that meta
-            // node as well (that is being asserted in methods which get called
-            // indirectly)
-            Object mutex = cont instanceof WorkflowManager ? ((WorkflowManager)cont).m_workflowMutex : m_workflowMutex;
-            synchronized (mutex) {
+            // if cont == isolated meta nodes, then we need to block that meta node as well
+            // (that is being asserted in methods which get called indirectly)
+            try (WorkflowLock lock = cont instanceof WorkflowManager ? ((WorkflowManager)cont).lock() : lock()) {
                 cont.loadContent(persistor, tblRep, inStack, sub2, subResult, keepNodeMessage);
             }
             sub2.setProgress(1.0);
@@ -7760,7 +7802,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // the mutex may be already held here. It is not held if we load
             // a completely new project (for performance reasons when loading
             // 100+ workflows simultaneously in a cluster environment)
-            synchronized (m_workflowMutex) {
+            try (WorkflowLock lock = lock()) {
                 if (m_workflow.containsNodeKey(subId)) {
                     subId = m_workflow.createUniqueID();
                 }
@@ -7847,7 +7889,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
         }
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             ReferencedFile ncDirRef = getNodeContainerDirectory();
             if (!isProject()) {
                 throw new IOException("Cannot call save-as on a non-project workflow");
@@ -7937,7 +7979,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (m_isWorkflowDirectoryReadonly) {
             throw new IOException("Workflow is read-only, can't save");
         }
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             ReferencedFile directoryReference = new ReferencedFile(directory);
             // if it's the location associated with the workflow we will use the same instance (due to VM lock)
             if (directoryReference.equals(getNodeContainerDirectory())) {
@@ -8002,7 +8044,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     boolean sweep(final Set<NodeID> nodes, final boolean propagate) {
         boolean wasClean = true;
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             for (NodeID id : m_workflow.createBreadthFirstSortedList(nodes, true).keySet()) {
                 NodeContainer nc = getNodeContainer(id);
                 if (nc instanceof WorkflowManager) {
@@ -8122,7 +8164,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
-            checkForNodeStateChanges(propagate);
+            lock.queueCheckForNodeStateChangeNotification(propagate);
         }
         return wasClean;
     }
@@ -8142,7 +8184,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @noreference This method is not intended to be referenced by clients.
      * @since 2.10 */
     public void setAutoSaveDirectoryDirtyRecursivly() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             ReferencedFile autoSaveDirectory = getAutoSaveDirectory();
             setDirty(autoSaveDirectory);
             if (autoSaveDirectory != null) {
@@ -8197,7 +8239,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // think of a different class that locks the workflow and then retrieves the state of a contained node
         // (say marked_for_exec) and then of the wfm. The latter could still be configured only as the
         // checkForNodeStateChanges hasn't been called yet
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             return super.getInternalState();
         }
     }
@@ -8246,7 +8288,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (has no corresponding node directory).
      */
     public boolean renameWorkflowDirectory(final String newName) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             ReferencedFile file = getNodeContainerDirectory();
             if (file == null) {
                 throw new IllegalStateException("Workflow has not been saved yet.");
@@ -8269,7 +8311,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException If any of the credentials is unknown
      */
     public void updateCredentials(final Credentials... credentialsList) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (getCredentialsStore().update(credentialsList)) {
                 configureAllNodesInWFM(false);
             }
@@ -8453,7 +8495,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     void cleanup() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             super.cleanup();
             ReferencedFile ncDir = getNodeContainerDirectory();
             if (isProject() && ncDir != null) {
@@ -8633,7 +8675,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // to be hidden in outer workflow
         assert (getNrInPorts() == 0 && getNrOutPorts() == 0)
             : "Workflow variables can't be set on meta nodes";
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             if (m_workflowVariables == null) {
                 // create new set of vars if none exists
                 m_workflowVariables = new Vector<FlowVariable>();
@@ -8748,7 +8790,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return a list of all node annotations in the contained flow.
      */
     public List<NodeAnnotation> getNodeAnnotations() {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             Collection<NodeContainer> nodeContainers = getNodeContainers();
             List<NodeAnnotation> result = new LinkedList<NodeAnnotation>();
             for (NodeContainer node : nodeContainers) {
@@ -8824,7 +8866,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter,
                                         final boolean recurse) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             Map<NodeID, T> result = new LinkedHashMap<NodeID, T>();
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 if (nc instanceof NativeNodeContainer) {
@@ -8861,7 +8903,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * this workflow.
      * @since 2.6 */
     public NodeContainer findNodeContainer(final NodeID id) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             final NodeID prefix = id.getPrefix();
             if (prefix.equals(getID())) {
                 return getNodeContainer(id);
@@ -8894,7 +8936,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @noreference This method is not intended to be referenced by clients.
      */
     public <T> Map<NodeID, T> findWaitingNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             Map<NodeID, T> nodes = findNodes(nodeModelClass, /*recurse=*/false);
             Iterator<Map.Entry<NodeID, T>> it = nodes.entrySet().iterator();
             while (it.hasNext()) {
@@ -8932,7 +8974,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @noreference This method is not intended to be referenced by clients.
      */
     public <T> Map<NodeID, T> findExecutedNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             Map<NodeID, T> nodes = findNodes(nodeModelClass, /*recurse=*/false);
             Iterator<Map.Entry<NodeID, T>> it = nodes.entrySet().iterator();
             while (it.hasNext()) {
@@ -8972,7 +9014,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private <T> WorkflowManager findNextWaitingWorkflowManager(
             final WorkflowManager parentWfm,
             final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
-        synchronized (m_workflowMutex) {
+        try (WorkflowLock lock = lock()) {
             Map<NodeID, T> nodes = parentWfm.findWaitingNodes(nodeModelClass, filter);
             if (nodes.size() > 0) {
                 return this;
@@ -9008,8 +9050,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public Map<String, ExternalNodeData> getInputNodes() {
         Map<String, ExternalNodeData> result = new LinkedHashMap<>();
-
-        synchronized (getWorkflowMutex()) {
+        try (WorkflowLock lock = lock()) {
             Map<NodeID, InputNode> nodeMap = findNodes(InputNode.class, false);
             for (Map.Entry<NodeID, InputNode> e : nodeMap.entrySet()) {
                 ExternalNodeData nodeData = e.getValue().getInputData();
@@ -9030,7 +9071,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.12
      */
     public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
-        synchronized (getWorkflowMutex()) {
+        try (WorkflowLock lock = lock()) {
             CheckUtils.checkState(!getNodeContainerState().isExecutionInProgress(),
                 "Cannot apply new parameters - workflow still in execution");
             // splits "foobar-123-xy-2" into "foobar-123-xy" (parameter name) and 2 (node id suffix)
@@ -9092,7 +9133,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public Map<String, ExternalNodeData> getExternalOutputs() {
         Map<String, ExternalNodeData> result = new LinkedHashMap<>();
-        synchronized (getWorkflowMutex()) {
+        try (WorkflowLock lock = lock()) {
 
             Map<NodeID, OutputNode> nodeMap = findNodes(OutputNode.class, false);
             for (Map.Entry<NodeID, OutputNode> e : nodeMap.entrySet()) {

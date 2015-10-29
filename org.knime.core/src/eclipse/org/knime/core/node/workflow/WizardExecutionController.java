@@ -312,7 +312,7 @@ public final class WizardExecutionController extends ExecutionController {
      * @return That property.
      */
     public static boolean hasWizardExecution(final WorkflowManager manager) {
-        synchronized (manager.getWorkflowMutex()) {
+        try (WorkflowLock lock = manager.lock()) {
             Collection<NodeContainer> nodes = manager.getWorkflow().getNodeValues();
             for (NodeContainer nc : nodes) {
                 if (nc instanceof SubNodeContainer) {
@@ -358,7 +358,7 @@ public final class WizardExecutionController extends ExecutionController {
      */
     @Override
     void checkHaltingCriteria(final NodeID source) {
-        assert Thread.holdsLock(m_manager.getWorkflowMutex());
+        assert m_manager.isLockedByCurrentThread();
         if (m_waitingSubnodes.remove(source)) {
             // trick to handle re-execution of SubNodes properly: when the node is already
             // in the list it was just re-executed and we don't add it to the list of halted
@@ -427,7 +427,7 @@ public final class WizardExecutionController extends ExecutionController {
      * @return The current wizard page. */
     public WizardPageContent getCurrentWizardPage() {
         WorkflowManager manager = m_manager;
-        synchronized (manager.getWorkflowMutex()) {
+        try (WorkflowLock lock = manager.lock()) {
             NodeContext.pushContext(manager);
             try {
                 return getCurrentWizardPageInternal();
@@ -440,7 +440,7 @@ public final class WizardExecutionController extends ExecutionController {
     @SuppressWarnings("rawtypes")
     private WizardPageContent getCurrentWizardPageInternal() {
         final WorkflowManager manager = m_manager;
-        assert Thread.holdsLock(manager.getWorkflowMutex());
+        assert manager.isLockedByCurrentThread();
         CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page - all executed");
         NodeID currentSubnodeID = m_waitingSubnodes.get(0);
 //        int currentSubnodeIDSuffix = m_promptedSubnodeIDSuffixes.peek();
@@ -473,7 +473,7 @@ public final class WizardExecutionController extends ExecutionController {
      * @since 2.11 */
     public boolean hasCurrentWizardPage() {
         final WorkflowManager manager = m_manager;
-        synchronized (manager.getWorkflowMutex()) {
+        try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
@@ -485,7 +485,7 @@ public final class WizardExecutionController extends ExecutionController {
     }
 
     private boolean hasCurrentWizardPageInternal() {
-        assert Thread.holdsLock(m_manager.getWorkflowMutex());
+        assert m_manager.isLockedByCurrentThread();
         return !m_waitingSubnodes.isEmpty();
 //        if (m_promptedSubnodeIDSuffixes.isEmpty()) {
 //            // stepNext not called
@@ -501,7 +501,7 @@ public final class WizardExecutionController extends ExecutionController {
      * it fully executes the workflow. */
     public void stepFirst() {
         final WorkflowManager manager = m_manager;
-        synchronized (manager.getWorkflowMutex()) {
+        try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
@@ -514,13 +514,13 @@ public final class WizardExecutionController extends ExecutionController {
 
     private void stepFirstInternal() {
         WorkflowManager manager = m_manager;
-        assert Thread.holdsLock(manager.getWorkflowMutex());
+        assert manager.isLockedByCurrentThread();
         manager.executeAll();
     }
 
     public Map<String, ValidationError> loadValuesIntoCurrentPage(final Map<String, String> viewContentMap) {
         WorkflowManager manager = m_manager;
-        synchronized (manager.getWorkflowMutex()) {
+        try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
@@ -534,7 +534,7 @@ public final class WizardExecutionController extends ExecutionController {
     @SuppressWarnings({"rawtypes", "unchecked" })
     private Map<String, ValidationError> loadValuesIntoCurrentPageInternal(final Map<String, String> viewContentMap) {
         WorkflowManager manager = m_manager;
-        assert Thread.holdsLock(manager.getWorkflowMutex());
+        assert manager.isLockedByCurrentThread();
         CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page");
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", viewContentMap.size());
 //        int subnodeIDSuffix = m_promptedSubnodeIDSuffixes.peek();
@@ -597,7 +597,7 @@ public final class WizardExecutionController extends ExecutionController {
 
     public void stepNext() {
         final WorkflowManager manager = m_manager;
-        synchronized (manager.getWorkflowMutex()) {
+        try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
@@ -610,7 +610,7 @@ public final class WizardExecutionController extends ExecutionController {
 
     private void stepNextInternal() {
         WorkflowManager manager = m_manager;
-        assert Thread.holdsLock(manager.getWorkflowMutex());
+        assert manager.isLockedByCurrentThread();
         CheckUtils.checkState(hasCurrentWizardPageInternal(), "No current wizard page");
         NodeID currentID = m_waitingSubnodes.get(0);
         SubNodeContainer currentNC = manager.getNodeContainer(currentID, SubNodeContainer.class, true);
@@ -633,7 +633,7 @@ public final class WizardExecutionController extends ExecutionController {
 
     public boolean hasPreviousWizardPage() {
         WorkflowManager manager = m_manager;
-        synchronized (manager.getWorkflowMutex()) {
+        try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
@@ -645,14 +645,14 @@ public final class WizardExecutionController extends ExecutionController {
     }
 
     private boolean hasPreviousWizardPageInternal() {
-        assert Thread.holdsLock(m_manager.getWorkflowMutex());
+        assert m_manager.isLockedByCurrentThread();
         return !m_promptedSubnodeIDSuffixes.isEmpty();
     }
 
 
     public void stepBack() {
         WorkflowManager manager = m_manager;
-        synchronized (manager.getWorkflowMutex()) {
+        try (WorkflowLock lock = manager.lock()) {
             checkDiscard();
             NodeContext.pushContext(manager);
             try {
@@ -665,7 +665,7 @@ public final class WizardExecutionController extends ExecutionController {
 
     private void stepBackInternal() {
         WorkflowManager manager = m_manager;
-        assert Thread.holdsLock(manager.getWorkflowMutex());
+        assert manager.isLockedByCurrentThread();
         CheckUtils.checkState(hasPreviousWizardPageInternal(), "No more previous pages");
         int currentPage = m_promptedSubnodeIDSuffixes.pop();
         NodeID currentSNID = toNodeID(currentPage);

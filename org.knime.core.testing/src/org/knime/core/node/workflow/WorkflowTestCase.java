@@ -54,9 +54,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
-
-import junit.framework.Assert;
-import junit.framework.TestCase;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -68,6 +67,9 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+
+import junit.framework.Assert;
+import junit.framework.TestCase;
 
 /**
  *
@@ -392,6 +394,7 @@ public abstract class WorkflowTestCase extends TestCase {
     }
 
     protected void waitWhileInExecution() throws Exception {
+        assert !m_manager.isLockedByCurrentThread();
         waitWhileNodeInExecution(m_manager);
     }
 
@@ -412,41 +415,42 @@ public abstract class WorkflowTestCase extends TestCase {
 
     protected void waitWhile(final NodeContainer nc,
             final Hold hold) throws Exception {
-        final Object mutex = nc instanceof WorkflowManager
-                ? ((WorkflowManager)nc).getWorkflowMutex() : nc.getParent().getWorkflowMutex();
         if (!hold.shouldHold()) {
             return;
         }
 
+        final ReentrantLock lock = nc instanceof WorkflowManager ? ((WorkflowManager)nc).getReentrantLockInstance()
+            : nc.getParent().getReentrantLockInstance();
+        final Condition condition = lock.newCondition();
         NodeStateChangeListener l = new NodeStateChangeListener() {
             /** {@inheritDoc} */
             @Override
             public void stateChanged(final NodeStateEvent state) {
-                synchronized (mutex) {
+                lock.lock();
+                try {
                     m_logger.info("Received " + state);
-                    mutex.notifyAll();
+                    condition.signalAll();
+                } finally {
+                    lock.unlock();
                 }
             }
         };
         nc.addNodeStateChangeListener(l);
-        synchronized (mutex) {
+        lock.lock();
+        try {
             while (hold.shouldHold()) {
                 int secToWait = hold.getSecondsToWaitAtMost();
                 if (secToWait > 0) {
-                    mutex.wait(TimeUnit.SECONDS.toMillis(secToWait));
+                    condition.await(secToWait, TimeUnit.SECONDS);
                     break;
                 } else {
-                    mutex.wait(TimeUnit.SECONDS.toMillis(5));
+                    condition.await(5, TimeUnit.SECONDS);
                 }
             }
+        } finally {
+            lock.unlock();
         }
         nc.removeNodeStateChangeListener(l);
-        // ugly workaround: The state changes happen in the wfm which does it synchronized on
-        // m_workflowMutex. The conditions above only check for "executionInProgress", it does
-        // not wait until the WFM has released the mutex (state change events from idle -> configured
-        // in one synchronized block). the canResetNode method will acquire the lock and
-        // hence will wait until the WFM is done with all state transitions...
-        nc.getParent().canResetNode(nc.getID());
     }
 
 

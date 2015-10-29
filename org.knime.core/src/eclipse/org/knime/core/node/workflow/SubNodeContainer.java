@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -425,7 +426,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         if (!m_isPerformingActionCalledFromParent) {
             setNodeMessage(NodeMessage.NONE);
             final WorkflowManager parent = getParent();
-            assert Thread.holdsLock(parent.getWorkflowMutex()) : "Unsynchronized workflow state event";
+            assert parent.isLockedByCurrentThread() : "Unsynchronized workflow state event";
             final InternalNodeContainerState oldState = getInternalState();
             final InternalNodeContainerState newState = state.getInternalNCState();
             final boolean gotReset = oldState.isExecuted() && !newState.isExecuted();
@@ -438,7 +439,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             if (outputChanged) {
                 parent.resetAndConfigureNodeAndSuccessors(getID(), false);
             } else {
-                parent.checkForNodeStateChanges(true);
+                try (WorkflowLock parentLock = parent.lock()) {
+                    parentLock.queueCheckForNodeStateChangeNotification(true);
+                }
             }
         }
     }
@@ -1184,7 +1187,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             "Argument must be instance of \"%s\": %s", SubnodeContainerExecutionResult.class.getSimpleName(),
             result == null ? "null" : result.getClass().getSimpleName());
         SubnodeContainerExecutionResult r = (SubnodeContainerExecutionResult)result;
-        synchronized (getWorkflowMutex()) {
+        try (WorkflowLock lock = lock()) {
             super.loadExecutionResult(result, exec, loadResult);
             WorkflowExecutionResult innerExecResult = r.getWorkflowExecutionResult();
             runParentAction(() -> getWorkflowManager().loadExecutionResult(innerExecResult, exec, loadResult));
@@ -1447,7 +1450,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     @SuppressWarnings("rawtypes")
     private void loadModelSettingsIntoDialogNodes(final NodeSettingsRO modelSettings,
         final boolean performReset) throws InvalidSettingsException {
-        assert Thread.holdsLock(getWorkflowMutex());
+        assert isLockedByCurrentThread();
         synchronized (m_nodeMutex) {
             // check state of contained WFM as state of this Subnode may already be "MARKED".
             if (m_wfm.getInternalState().isExecutionInProgress()) {
@@ -1868,17 +1871,29 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /* -------------- NodeContainerParent methods ---------------- */
 
-    /** {@inheritDoc}*/
+    /** {@inheritDoc} */
     @Override
-    public Object getWorkflowMutex() {
-        return getParent().getWorkflowMutex();
+    public WorkflowLock lock() {
+        return getParent().lock();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ReentrantLock getReentrantLockInstance() {
+        return getParent().getReentrantLockInstance();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isLockedByCurrentThread() {
+        return getParent().isLockedByCurrentThread();
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean canConfigureNodes() {
         final NodeContainerParent directNCParent = getDirectNCParent();
-        synchronized (directNCParent.getWorkflowMutex()) {
+        try (WorkflowLock lock = directNCParent.lock()) {
             final WorkflowManager parent = getParent();
             if (!parent.containsNodeContainer(getID())) { // called during set-up (loading via constructor)
                 return false;

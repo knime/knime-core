@@ -64,7 +64,7 @@ public class Bug6432_ParallelLoops extends WorkflowTestCase {
     }
 
     /** Loads workflow and executes as is - expects certain event count. */
-    public void disabledTestExecutePlain() throws Exception {
+    public void testExecutePlain() throws Exception {
         final WorkflowManager manager = getManager();
         checkState(manager, InternalNodeContainerState.IDLE);
         checkListenerAndStateAfterExecAll(manager);
