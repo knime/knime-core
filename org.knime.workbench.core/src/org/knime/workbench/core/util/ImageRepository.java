@@ -84,9 +84,6 @@ public final class ImageRepository {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ImageRepository.class);
 
-    private static final ImageRegistry REGISTRY = KNIMECorePlugin.getDefault()
-            .getImageRegistry();
-
     // appended to the key if the image is scaled to icon size
     private static final String ICONIFIED_KEY = "@:/icon";
 
@@ -355,7 +352,7 @@ public final class ImageRepository {
         final String key = url.toString();
         // make sure the image is in the registry
         getImage(url);
-        return REGISTRY.getDescriptor(key);
+        return KNIMECorePlugin.getDefault().getImageRegistry().getDescriptor(key);
     }
 
     /**
@@ -398,7 +395,7 @@ public final class ImageRepository {
              return null;
          }
         final String key = resourceURL.toString();
-        Image img = REGISTRY.get(key);
+        Image img = KNIMECorePlugin.getDefault().getImageRegistry().get(key);
         if (img != null) {
             return img;
         }
@@ -409,7 +406,7 @@ public final class ImageRepository {
             LOGGER.coding("Unable to locate image " + resourceURL.toString() + ": " + e.getMessage(), e);
             return getMissingIcon();
         }
-        REGISTRY.put(key, img);
+        KNIMECorePlugin.getDefault().getImageRegistry().put(key, img);
         return img;
      }
 
@@ -433,7 +430,7 @@ public final class ImageRepository {
         final String key = image.getUrl().toString() + NOTSCALED_KEY;
         // make sure the image is in the registry
         getUnscaledImage(image.getUrl());
-        return REGISTRY.getDescriptor(key);
+        return KNIMECorePlugin.getDefault().getImageRegistry().getDescriptor(key);
     }
 
     /**
@@ -448,7 +445,7 @@ public final class ImageRepository {
              return null;
          }
         final String key = resourceURL.toString() + NOTSCALED_KEY;
-        Image img = REGISTRY.get(key);
+        Image img = KNIMECorePlugin.getDefault().getImageRegistry().get(key);
         if (img != null) {
             return img;
         }
@@ -459,7 +456,7 @@ public final class ImageRepository {
             LOGGER.coding("Unable to locate image " + resourceURL.toString() + ": " + e.getMessage(), e);
             return getMissingIcon();
         }
-        REGISTRY.put(key, img);
+        KNIMECorePlugin.getDefault().getImageRegistry().put(key, img);
         return img;
      }
 
@@ -497,7 +494,7 @@ public final class ImageRepository {
               return null;
           }
          final String key = resourceURL.toString() + ICONIFIED_KEY + NOTSCALED_KEY;
-         Image img = REGISTRY.get(key);
+         Image img = KNIMECorePlugin.getDefault().getImageRegistry().get(key);
          if (img != null) {
              return img;
          }
@@ -508,7 +505,7 @@ public final class ImageRepository {
              LOGGER.coding("Unable to locate node icon. Using default icon instead." + e.getMessage(), e);
              return getIconImage(SharedImages.DefaultNodeIcon);
          }
-         REGISTRY.put(key, img);
+         KNIMECorePlugin.getDefault().getImageRegistry().put(key, img);
          return img;
       }
 
@@ -574,7 +571,7 @@ public final class ImageRepository {
         final String key = icon.getUrl().toString() + ICONIFIED_KEY;
         // make sure the image is in the repository!
         getIconImage(icon.getUrl());
-        return REGISTRY.getDescriptor(key);
+        return KNIMECorePlugin.getDefault().getImageRegistry().getDescriptor(key);
     }
      /**
      * Returns a 16x16px version of a node icon. If no icon is specified by the node factory the default node icon is
@@ -607,7 +604,7 @@ public final class ImageRepository {
              return null;
          }
         final String key = resourceURL.toString() + ICONIFIED_KEY;
-        Image img = REGISTRY.get(key);
+        Image img = KNIMECorePlugin.getDefault().getImageRegistry().get(key);
         if (img != null) {
             return img;
         }
@@ -619,7 +616,7 @@ public final class ImageRepository {
 //            return getIconImage(SharedImages.DefaultNodeIcon);
             return null;
         }
-        REGISTRY.put(key, img);
+        KNIMECorePlugin.getDefault().getImageRegistry().put(key, img);
         return img;
      }
 
@@ -630,7 +627,7 @@ public final class ImageRepository {
          final String key = resourceURL.toString() + ICONIFIED_KEY;
          // make sure the image is in the registry
          getIconImage(resourceURL);
-         return REGISTRY.getDescriptor(key);
+         return KNIMECorePlugin.getDefault().getImageRegistry().getDescriptor(key);
      }
 
     /**
@@ -665,12 +662,12 @@ public final class ImageRepository {
      * @return a red 16x16 icon
      */
     public static Image getMissingIcon() {
-        Image img = REGISTRY.get(MISSING_ICON_KEY);
+        Image img = KNIMECorePlugin.getDefault().getImageRegistry().get(MISSING_ICON_KEY);
         if (img != null) {
             return img;
         }
         img = new Image(Display.getDefault(), KNIMEImageProvider.MISSING_IMAGE_DATA);
-        REGISTRY.put(MISSING_ICON_KEY, img);
+        KNIMECorePlugin.getDefault().getImageRegistry().put(MISSING_ICON_KEY, img);
         return img;
     }
 }
