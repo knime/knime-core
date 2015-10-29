@@ -93,7 +93,10 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
 
     private String m_dbName;
 
-    private boolean m_databaseCreated;
+    /**
+     * Flag that indicates if the database was actually created and that it should be deleted afterwards.
+     */
+    protected boolean m_databaseCreated;
 
     /**
      * Creates a new database janitor.
