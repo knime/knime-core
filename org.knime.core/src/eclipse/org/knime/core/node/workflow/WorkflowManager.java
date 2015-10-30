@@ -5330,10 +5330,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * Check if any internal nodes have changed state which might mean that
-     * this WFM also needs to change its state...
-     * @param propagateChanges Whether to also inform this wfm's parent if done
-     * (true always except for loading)
+     * Check if any internal nodes have changed state which might mean that this WFM also needs to change its state...
+     *
+     * @param propagateChanges Whether to also inform this wfm's parent if done (true always except for loading)
      */
     void checkForNodeStateChanges(final boolean propagateChanges) {
         assert m_workflowLock.isHeldByCurrentThread();
@@ -5344,15 +5343,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             nrNodesInState[ncIt.getInternalState().ordinal()]++;
             nrNodes++;
             if ((ncIt.getNodeMessage() != null)
-                    && (ncIt.getNodeMessage().getMessageType().equals(
-                            NodeMessage.Type.ERROR))) {
+                && (ncIt.getNodeMessage().getMessageType().equals(NodeMessage.Type.ERROR))) {
                 internalNodeHasError = true;
             }
         }
         // set summarization message if any of the internal nodes has an error
         if (internalNodeHasError) {
-            setNodeMessage(new NodeMessage(
-                    NodeMessage.Type.ERROR, "Error in sub flow."));
+            setNodeMessage(new NodeMessage(NodeMessage.Type.ERROR, "Error in sub flow."));
         } else {
             setNodeMessage(NodeMessage.NONE);
         }
@@ -5360,14 +5357,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         assert nrNodes == m_workflow.getNrNodes();
         InternalNodeContainerState newState = IDLE;
         // check if all outports are connected
-        boolean allOutPortsConnected =
-            getNrOutPorts() == m_workflow.getConnectionsByDest(
-                    this.getID()).size();
+        boolean allOutPortsConnected = getNrOutPorts() == m_workflow.getConnectionsByDest(this.getID()).size();
         // check if we have complete Objects on outports
         boolean allPopulated = false;
-        // ...and at the same time find the "smallest" common state of
-        // all inports (useful when all internal nodes are green but we
-        // have through connections)!
+        // ...and at the same time find the "smallest" common state of all inports (useful when all internal nodes
+        // are green but we have through connections)!
         InternalNodeContainerState inportState = EXECUTED;
         if (allOutPortsConnected) {
             allPopulated = true;
@@ -5379,12 +5373,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 } else if (nop.getPortObject() == null) {
                     allPopulated = false;
                     switch (nop.getNodeState()) {
-                    case IDLE:
-                    case UNCONFIGURED_MARKEDFOREXEC:
-                        inportState = IDLE;
-                        break;
-                    default:
-                        inportState = CONFIGURED;
+                        case IDLE:
+                        case UNCONFIGURED_MARKEDFOREXEC:
+                            inportState = IDLE;
+                            break;
+                        default:
+                            inportState = CONFIGURED;
                     }
                 }
             }
@@ -5397,9 +5391,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 newState = IDLE;
             }
         } else if (nrNodesInState[EXECUTED.ordinal()] == nrNodes) {
-            // WFM is executed only if all (>=1) nodes are executed and
-            // all output ports are connected and contain their
-            // portobjects.
+            // WFM is executed only if all (>=1) nodes are executed and all output ports
+            // are connected and contain their portobjects.
             if (allPopulated) {
                 // all nodes in WFM done and all ports populated!
                 newState = EXECUTED;
@@ -5414,9 +5407,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else {
                 newState = IDLE;
             }
-        } else if (nrNodesInState[EXECUTED.ordinal()]
-                                  + nrNodesInState[CONFIGURED.ordinal()]
-                                                   == nrNodes) {
+        } else if (nrNodesInState[EXECUTED.ordinal()] + nrNodesInState[CONFIGURED.ordinal()] == nrNodes) {
             newState = CONFIGURED;
         } else if (nrNodesInState[EXECUTING.ordinal()] >= 1) {
             newState = EXECUTING;
@@ -5433,21 +5424,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         } else if (nrNodesInState[UNCONFIGURED_MARKEDFOREXEC.ordinal()] >= 1) {
             newState = UNCONFIGURED_MARKEDFOREXEC;
         } else if (nrNodesInState[CONFIGURED_MARKEDFOREXEC.ordinal()]
-                   + nrNodesInState[EXECUTED_MARKEDFOREXEC.ordinal()] >= 1) {
+            + nrNodesInState[EXECUTED_MARKEDFOREXEC.ordinal()] >= 1) {
             newState = CONFIGURED_MARKEDFOREXEC;
         }
         InternalNodeContainerState oldState = this.getInternalState();
         this.setInternalState(newState, propagateChanges);
-        boolean wasExecuting = oldState.equals(EXECUTINGREMOTELY)
-            || oldState.equals(EXECUTING);
+        boolean wasExecuting = oldState.equals(EXECUTINGREMOTELY) || oldState.equals(EXECUTING);
         if (wasExecuting) {
             boolean isExecuting = newState.isExecutionInProgress();
             if (newState.equals(EXECUTED)) {
                 // we just successfully executed this WFM: check if any
                 // loops were waiting for this one in the parent workflow!
                 if (getWaitingLoops().size() >= 1) {
-                    // looks as if some loops were waiting for this node to
-                    // finish! Let's try to restart them:
+                    // looks as if some loops were waiting for this node to finish! Let's try to restart them:
                     for (FlowLoopContext flc : getWaitingLoops()) {
                         try {
                             getParent().restartLoop(flc);
@@ -5460,10 +5449,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     clearWaitingLoopList();
                 }
             } else if (!isExecuting) {
-                // if something went wrong and any other loops were waiting
-                // for this node: clean them up!
-                // (most likely this is just an IDLE node, however, which
-                // had other flows that were not executed (such as ROOT!)
+                // if something went wrong and any other loops were waiting for this node: clean them up!
+                // (most likely this is an IDLE node, however, which had other flows that were not executed (e.g. ROOT)
                 for (FlowLoopContext flc : getWaitingLoops()) {
                     getParent().disableLoopExecution(flc, null);
                 }
@@ -5473,36 +5460,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (inportState.equals(IDLE)) {
             newState = IDLE;
         }
-        if (inportState.equals(CONFIGURED)
-                && (!newState.equals(IDLE))
-                && (!newState.equals(UNCONFIGURED_MARKEDFOREXEC))) {
+        if (inportState.equals(CONFIGURED) && (!newState.equals(IDLE))
+            && (!newState.equals(UNCONFIGURED_MARKEDFOREXEC))) {
             newState = CONFIGURED;
         }
         if ((!oldState.equals(newState)) && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes
             if (getReentrantLockInstance() == getDirectNCParent().getReentrantLockInstance()
-                    // simple: locks are the same which means that we have
-                    // either in- or outgoing connections (or both). No need
-                    // to add an synchronize on the parent-mutex.
-                    || getDirectNCParent().isLockedByCurrentThread()) {
-                    // the second case is less simple: we don't have the same
-                    // mutex but we already hold it: in this case, do not
-                    // make this change asynchronously because we obviously
-                    // called this from outside the "disconnected" metanode
-                    // and want to keep the state change sync'ed.
-                    // this fixes a problem with metanodes containing cluster
-                    // (sub) workflows which were started but the state of
-                    // the metanode/project was changed too late.
+                // simple: locks are the same which means that we have either in- or outgoing connections (or both).
+                // No need to add an synchronize on the parent-mutex.
+                || getDirectNCParent().isLockedByCurrentThread()) {
+                // the second case is less simple: we don't have the same mutex but we already hold it: in this case,
+                // do not make this change asynchronously because we obviously called this from outside the
+                // "disconnected" metanode and want to keep the state change sync'ed.
+                // this fixes a problem with metanodes containing cluster (sub) workflows which were started but the
+                // state of the metanode/project was changed too late.
                 try (WorkflowLock lock = getParent().lock()) {
                     lock.queueCheckForNodeStateChangeNotification(propagateChanges);
                 }
             } else {
-                // Different mutexes, that is this workflowmanager is a
-                // project and the state check in the parent has do be
-                // done asynchronosly to avoid deadlocks.
-                // Locking the parent here would be exactly what we do not want
-                // to do: Never lock a child (e.g. node) first and then its
-                // parent (e.g. wfm) - see also bug #1755!
+                // Different mutexes, that is this workflowmanager is a project and the state check in the parent has
+                // do be done asynchronosly to avoid deadlocks.
+                // Locking the parent here would be exactly what we do not want to do:
+                // Never lock a child (e.g. node) first and then its parent (e.g. wfm) - see also bug #1755
                 PARENT_NOTIFIER.execute(new Runnable() {
                     @Override
                     public void run() {
