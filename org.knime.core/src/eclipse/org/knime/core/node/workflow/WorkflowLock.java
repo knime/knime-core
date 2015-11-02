@@ -125,11 +125,24 @@ public final class WorkflowLock implements AutoCloseable {
                 boolean propagateChanges = m_propagateChanges;
                 m_propagateChanges = false;
                 m_checkForNodeStateChanges = false;
-                m_wfm.checkForNodeStateChanges(propagateChanges);
+                m_wfm.setInternalStateAfterLockRelease(m_wfm.computeNewState(), propagateChanges);
             }
         } finally {
             m_reentrantLock.unlock();
         }
+    }
+
+    /** Callback by {@link WorkflowManager} to retrieve a guaranteed up-to-date status of the workflow.
+     * @return The correct state of the workflow. */
+    InternalNodeContainerState getWFMInternalState() {
+        assert isHeldByCurrentThread();
+        // two scenarios to be addressed here:
+        // (1) a thread holds a lock and (indirectly) calls m_wfm#getInternalState() - then this state is outdated
+        //     unless we compute it (if possibly changes - so update flag is set)
+        // (2) a thread holds a lock and queues an update and then puts itself to sleep (releasing the lock), e.g.
+        //     when waiting for an execution to finish.
+        //     Another thread aquires the lock and then sees an outdated workflow manager state.
+        return m_checkForNodeStateChanges ? m_wfm.computeNewState() : m_wfm.getSuperclassInternalState();
     }
 
     /** Queues a state update check and notification when the lock is finally released by the calling thread.

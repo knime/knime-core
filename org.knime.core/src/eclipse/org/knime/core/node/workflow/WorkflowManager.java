@@ -5329,12 +5329,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return m_fileStoreHandlerRepository;
     }
 
-    /**
-     * Check if any internal nodes have changed state which might mean that this WFM also needs to change its state...
-     *
-     * @param propagateChanges Whether to also inform this wfm's parent if done (true always except for loading)
+    /** Derives state of this WFM by iterating all nodes and computing the corresponding state.
+     * @return the state of the wfm derived from the state of its contained nodes.
      */
-    void checkForNodeStateChanges(final boolean propagateChanges) {
+    InternalNodeContainerState computeNewState() {
         assert m_workflowLock.isHeldByCurrentThread();
         int[] nrNodesInState = new int[InternalNodeContainerState.values().length];
         int nrNodes = 0;
@@ -5427,8 +5425,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             + nrNodesInState[EXECUTED_MARKEDFOREXEC.ordinal()] >= 1) {
             newState = CONFIGURED_MARKEDFOREXEC;
         }
-        InternalNodeContainerState oldState = this.getInternalState();
-        this.setInternalState(newState, propagateChanges);
+        // TODO Michael/Bernd: Review this block and consider executing workflows - this block was previously
+        // executed below the "setInternalState" call so it had almost no effect (see previous SVN version)
+//        if (inportState.equals(IDLE)) {
+//            newState = IDLE;
+//        }
+//        if (inportState.equals(CONFIGURED) && (!newState.equals(IDLE))
+//            && (!newState.equals(UNCONFIGURED_MARKEDFOREXEC))) {
+//            newState = CONFIGURED;
+//        }
+        return newState;
+    }
+
+    /**
+     * Called by the workflow lock upon releasing the lock by a thread to finally update the internal state.
+     * @param propagateChanges Whether to also inform this wfm's parent if done (true always except for loading)
+     */
+    void setInternalStateAfterLockRelease(final InternalNodeContainerState newState, final boolean propagateChanges) {
+        InternalNodeContainerState oldState = getInternalState();
+        setInternalState(newState, propagateChanges);
         boolean wasExecuting = oldState.equals(EXECUTINGREMOTELY) || oldState.equals(EXECUTING);
         if (wasExecuting) {
             boolean isExecuting = newState.isExecutionInProgress();
@@ -5456,13 +5471,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 clearWaitingLoopList();
             }
-        }
-        if (inportState.equals(IDLE)) {
-            newState = IDLE;
-        }
-        if (inportState.equals(CONFIGURED) && (!newState.equals(IDLE))
-            && (!newState.equals(UNCONFIGURED_MARKEDFOREXEC))) {
-            newState = CONFIGURED;
         }
         if ((!oldState.equals(newState)) && (getParent() != null) && propagateChanges) {
             // make sure parent WFM reflects state changes
@@ -8212,16 +8220,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     // (WorkflowManager acts as meta node)
     //////////////////////////////////////
 
-    /** {@inheritDoc} */
+    /** The up-to-date state of the workflow, not neccarily the one that was most recently set by
+     * {@link #setInternalState(InternalNodeContainerState)}.
+     * @return the state.
+     * @see NodeContainer#getInternalState()
+     * @see WorkflowLock#getWFMInternalState()*/
     @Override
     InternalNodeContainerState getInternalState() {
-        // synchronize state retrieval even if that's just a field.
-        // think of a different class that locks the workflow and then retrieves the state of a contained node
-        // (say marked_for_exec) and then of the wfm. The latter could still be configured only as the
-        // checkForNodeStateChanges hasn't been called yet
         try (WorkflowLock lock = lock()) {
-            return super.getInternalState();
+            return lock.getWFMInternalState();
         }
+    }
+
+    /** Calls {@link NodeContainer#getInternalState()} - used by the lock instance to get the originally assigned
+     * workflow state as {@link #getInternalState()} is overridden in this class.
+     * @return The state as per super class method.
+     */
+    InternalNodeContainerState getSuperclassInternalState() {
+        return super.getInternalState();
     }
 
     /** {@inheritDoc} */
