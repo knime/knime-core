@@ -93,6 +93,7 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
     /** Execute bottom loop (many iterations) - the is executed (and has always been). */
     public void testManyIterationsExecuteUpToHere() throws Exception {
         executeAndWait(m_loopEnd12);
+        waitWhileInExecution();
         checkState(m_loopEnd12, EXECUTED);
         checkState(m_javaSnippet13, EXECUTED); // this was also executed before 2.12 - multiple iterations
     }
