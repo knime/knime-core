@@ -50,6 +50,7 @@ package org.knime.core.node.workflow;
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -72,7 +73,15 @@ public final class WorkflowLock implements AutoCloseable {
 
     private boolean m_checkForNodeStateChanges;
     private boolean m_propagateChanges;
-    private int m_holdCountThisInstance;
+
+    /** For each thread doing something with this {@link WorkflowLock} a counter how often the thread went through
+     * {@link #lock()} without {@link #unlock()} (on this instance, not the parent nor child instance).
+     * It's a ThreadLocal because threads putting themselves to sleep on the underlying {@link ReentrantLock} will
+     * release all hold counts and need to start from 0 again.
+     * Ideally we'd be using the logic in {@link ReentrantLock#getHoldCount()} but that doesn't have all the features
+     * we need (lock/unlock on 'children'). */
+    private final ThreadLocal<MutableInt> m_lockHierarchyLevelThreadLocal =
+        ThreadLocal.withInitial(() -> new MutableInt());
 
     /** An instance for a workflow project.
      * @param wfm The non-null workflow.
@@ -108,20 +117,20 @@ public final class WorkflowLock implements AutoCloseable {
      */
     public WorkflowLock lock() {
         m_reentrantLock.lock();
-        m_holdCountThisInstance += 1;
+        m_lockHierarchyLevelThreadLocal.get().increment();
         return this;
     }
 
     /** Unlocks as per {@link ReentrantLock#unlock()}, possibly causing a state update check and notification on the
      * workflow when this is the last unlock. */
     public void unlock() {
-        if (m_reentrantLock.isHeldByCurrentThread()) {
-            CheckUtils.checkState(m_holdCountThisInstance > 0,
-                "ReentrantLock is held by current thread but not associated with this workflow lock");
-        }
-        m_holdCountThisInstance -= 1;
+        CheckUtils.checkState(m_reentrantLock.isHeldByCurrentThread(), "Lock not held by current thread");
+        final MutableInt lockHierarchyLevel = m_lockHierarchyLevelThreadLocal.get();
+        CheckUtils.checkState(lockHierarchyLevel.intValue() > 0,
+            "ReentrantLock is held by current thread but not associated with this workflow lock");
+        lockHierarchyLevel.decrement();
         try {
-            if (m_holdCountThisInstance == 0 && m_checkForNodeStateChanges) {
+            if (lockHierarchyLevel.getValue() == 0 && m_checkForNodeStateChanges) {
                 boolean propagateChanges = m_propagateChanges;
                 m_propagateChanges = false;
                 m_checkForNodeStateChanges = false;
