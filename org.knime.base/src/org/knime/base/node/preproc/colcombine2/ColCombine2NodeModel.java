@@ -63,9 +63,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
@@ -75,7 +75,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class ColCombine2NodeModel extends NodeModel {
+public class ColCombine2NodeModel extends SimpleStreamableFunctionNodeModel {
 
     /** Config identifier: Name of new column. */
     static final String CFG_NEW_COLUMN_NAME = "new_column_name";
@@ -99,12 +99,6 @@ public class ColCombine2NodeModel extends NodeModel {
     private String m_replaceDelimString;
     private String[] m_included;
 
-    /**
-     * Constructor for the node model.
-     */
-    protected ColCombine2NodeModel() {
-        super(1, 1);
-    }
 
     /** {@inheritDoc} */
     @Override
@@ -148,7 +142,11 @@ public class ColCombine2NodeModel extends NodeModel {
         return new DataTableSpec[]{arranger.createSpec()};
     }
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
         ColumnRearranger result = new ColumnRearranger(spec);
         DataColumnSpec append = new DataColumnSpecCreator(
                 m_newColName, StringCell.TYPE).createSpec();
