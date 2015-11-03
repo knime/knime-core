@@ -57,7 +57,12 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
@@ -141,8 +146,10 @@ public class DataColumnSpecFilterNodeModel extends NodeModel {
      * Creates the output data table spec according to the current settings.
      * Throws an InvalidSettingsException if columns are specified that don't
      * exist in the input table spec.
+     *
+     * @since 3.1
      */
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
         if (m_conf == null) {
             m_conf = createDCSFilterConfiguration();
             // auto-configure
@@ -153,6 +160,31 @@ public class DataColumnSpecFilterNodeModel extends NodeModel {
         final ColumnRearranger c = new ColumnRearranger(spec);
         c.keepOnly(incls);
         return c;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return createColumnRearranger((DataTableSpec) inSpecs[0]).createStreamableFunction();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     /**

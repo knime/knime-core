@@ -67,6 +67,7 @@ import org.dmg.pmml.PMMLDocument.PMML;
 import org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
@@ -77,6 +78,15 @@ import org.knime.core.node.port.pmml.PMMLModelWrapper;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortObjectOutput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.w3c.dom.Document;
 
@@ -102,7 +112,7 @@ public class DataColumnSpecFilterPMMLNodeModel extends DataColumnSpecFilterNodeM
         final BufferedDataTable inTable = (BufferedDataTable) data[0];
         final BufferedDataTable outTable = super.execute(new BufferedDataTable[]{inTable}, exec)[0];
         final FilterResult res = getFilterResult(inTable.getSpec());
-        final PMMLPortObject pmmlOut = createPMMLOut((PMMLPortObject)data[1], inTable, outTable.getSpec(), res);
+        final PMMLPortObject pmmlOut = createPMMLOut((PMMLPortObject)data[1], outTable.getSpec(), res);
         return new PortObject[]{outTable, pmmlOut};
     }
 
@@ -124,6 +134,51 @@ public class DataColumnSpecFilterPMMLNodeModel extends DataColumnSpecFilterNodeM
         return new PortObjectSpec[]{outSpec, pmmlSpec};
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        final ColumnRearranger corea = createColumnRearranger((DataTableSpec)inSpecs[0]);
+        final StreamableFunction fct = corea.createStreamableFunction();
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+
+                //execute streamable in- and outport (0)
+                fct.init(exec);
+                fct.runFinal(inputs, outputs, exec);
+                fct.finish();
+
+                DataTableSpec outSpec = corea.createSpec();
+
+                //pmml ports
+                PMMLPortObject pmmlIn = (PMMLPortObject) ((PortObjectInput) inputs[1]).getPortObject();
+                final PMMLPortObject pmmlOut = createPMMLOut(pmmlIn, outSpec, getFilterResult((DataTableSpec) inSpecs[0]));
+                ((PortObjectOutput) outputs[1]).setPortObject(pmmlOut);
+
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED, OutputPortRole.NONDISTRIBUTED};
+    }
+
 
 
  /*----------------------------------------------------------------------
@@ -139,8 +194,7 @@ public class DataColumnSpecFilterPMMLNodeModel extends DataColumnSpecFilterNodeM
         return false;
     }
 
-    private PMMLPortObject createPMMLOut(final PMMLPortObject pmmlIn,
-             final BufferedDataTable inTable, final DataTableSpec outSpec, final FilterResult res) throws XmlException {
+    private PMMLPortObject createPMMLOut(final PMMLPortObject pmmlIn, final DataTableSpec outSpec, final FilterResult res) throws XmlException {
         StringBuffer warningBuffer = new StringBuffer();
         if (pmmlIn == null) {
             return new PMMLPortObject(createPMMLSpec(null, outSpec, res));
