@@ -96,6 +96,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -125,6 +126,12 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
 
     /** Identifier in model spec to address sorting order of labels. */
     static final String SORTING_REVERSED = SortingOptionPanel.DEFAULT_KEY_SORTING_REVERSED;
+
+    /** Identifier in model spec to specify how to handle missing values. If {@code true}, ignore the problem. */
+    static final String ACTION_ON_MISSING_VALUES = "ignore.missing.values";
+
+    /** By default ignore missing values (with a warning). */
+    static final boolean DEFAULT_IGNORE_MISSING_VALUES = true;
 
     /** The input port 0. */
     static final int INPORT = 0;
@@ -159,6 +166,8 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
     private boolean m_sortingReversed;
 
     private SortingStrategy m_sortingStrategy =  SortingStrategy.InsertionOrder;
+
+    private boolean m_ignoreMissingValues = true;
 
     /** Inits a new <code>ScorerNodeModel</code> with one in- and one output. */
     AccuracyScorerNodeModel() {
@@ -214,6 +223,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         int numberOfRows = 0;
         int correctCount = 0;
         int falseCount = 0;
+        int missingCount = 0;
         ExecutionMonitor subExec = exec.createSubProgress(0.5);
         for (Iterator<DataRow> it = in.iterator(); it.hasNext(); numberOfRows++) {
             DataRow row = it.next();
@@ -229,7 +239,11 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             DataCell cell2 = row.getCell(index2);
             valuesInCol2.add(cell2);
             if (cell1.isMissing() || cell2.isMissing()) {
-                continue;
+                ++missingCount;
+                CheckUtils.checkState(m_ignoreMissingValues, "Missing value in row: " + row.getKey());
+                if (m_ignoreMissingValues) {
+                    continue;
+                }
             }
             boolean areEqual = cell1.equals(cell2);
 
@@ -281,7 +295,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
                 targetValues[i] = newName;
                 if (!hasPrintedWarningOnAmbiguousValues) {
                     hasPrintedWarningOnAmbiguousValues = true;
-                    setWarningMessage("Ambiguous value \"" + c.toString()
+                    addWarning("Ambiguous value \"" + c.toString()
                         + "\" encountered. Preserving individual instances;"
                         + " consider to convert input columns to string");
                 }
@@ -293,6 +307,9 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
                 }
                 targetValues[i] = newName;
             }
+        }
+        if (missingCount > 0) {
+            addWarning("There were missing values in the reference or in the predicition class columns.");
         }
         DataType[] colTypes = new DataType[targetValues.length];
         Arrays.fill(colTypes, IntCell.TYPE);
@@ -370,7 +387,20 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
 
         m_viewData = viewData;
         pushFlowVars(false);
+
         return new BufferedDataTable[]{result, accTable.getTable()};
+    }
+
+    /**
+     * @param string
+     */
+    private void addWarning(final String string) {
+        String warningMessage = getWarningMessage();
+        if (warningMessage == null || warningMessage.isEmpty()) {
+            setWarningMessage(string);
+        } else {
+            setWarningMessage(warningMessage + "\n" + string);
+        }
     }
 
     /**
@@ -389,7 +419,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         if (isConfigureOnly
             && (vars.containsKey(accuracyName) || vars.containsKey(errorName) || vars.containsKey(correctName)
                 || vars.containsKey(falseName) || vars.containsKey(kappaName))) {
-            setWarningMessage("A flow variable was replaced!");
+            addWarning("A flow variable was replaced!");
         }
 
         double accu = isConfigureOnly ? 0.0 : m_viewData.getAccuracy();
@@ -462,6 +492,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Cohen's kappa", DoubleCell.TYPE).createSpec()};
 
+
     /**
      * Get the correct classification count, i.e. where both columns agree.
      *
@@ -528,6 +559,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         m_sortingReversed = settings.getBoolean(SORTING_REVERSED, false);
         m_sortingStrategy =
             SortingStrategy.values()[settings.getInt(SORTING_STRATEGY, SortingStrategy.InsertionOrder.ordinal())];
+        m_ignoreMissingValues = settings.getBoolean(ACTION_ON_MISSING_VALUES, DEFAULT_IGNORE_MISSING_VALUES);
     }
 
     /**
@@ -546,6 +578,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         // Added sorting strategy, reversed are new in 2.9.0
         settings.addBoolean(SORTING_REVERSED, m_sortingReversed);
         settings.addInt(SORTING_STRATEGY, m_sortingStrategy.ordinal());
+        settings.addBoolean(ACTION_ON_MISSING_VALUES, m_ignoreMissingValues);
     }
 
     /**
@@ -557,6 +590,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         settings.getString(SECOND_COMP_ID);
         // no flow var prefix in 2.5.x and before
         // sorting strategy and sorting reversed is not present before 2.9.x
+        // ignore missing values is not present before 3.0
     }
 
     /**

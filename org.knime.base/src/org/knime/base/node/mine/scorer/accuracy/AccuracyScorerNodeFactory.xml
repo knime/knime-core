@@ -28,6 +28,9 @@
         <option name="Use name prefix">The scores (i.e. accuracy, error rate, number of correct and wrong classification) are exported
         as flow variables with a hard coded name. This option allows you to define a prefix for these variable identifiers so that name
         conflicts are resolved.</option>
+        <option name="Missing Values">Choose how to treat missing values in either the reference or prediction column. 
+        Default is to ignore them (treat them as if the row did not exist). Alternatively, you can expect the table to 
+        not contain missing values in these two columns. If they do, the node will fail during execution.</option>
 	</fullDescription>
     <ports>
         <inPort index="0" name="Input table">Table containing at least two columns to compare.</inPort>

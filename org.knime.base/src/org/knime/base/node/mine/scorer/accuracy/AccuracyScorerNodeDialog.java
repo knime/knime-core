@@ -46,6 +46,8 @@ package org.knime.base.node.mine.scorer.accuracy;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -54,9 +56,12 @@ import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 
@@ -110,6 +115,11 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
     private static final SortingStrategy[] SUPPORTED_STRING_SORT_STRATEGIES = new SortingStrategy[] {
         SortingStrategy.InsertionOrder, SortingStrategy.Lexical
     };
+
+    /** Radio button for ignoring missing values, default for compatibility. */
+    private final JRadioButton m_ignoreMissingValues = new JRadioButton("Ignore", true);
+    /** Radio button to fail on missing values. */
+    private final JRadioButton m_failOnMissingValues = new JRadioButton("Fail", false);
 
     /**
      * Creates a new {@link NodeDialogPane} for scoring in order to set the two
@@ -202,6 +212,23 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         m_firstColumns.addItemListener(colChangeListener);
         m_secondColumns.addItemListener(colChangeListener);
         m_sortingOptions.updateControls();
+
+        ButtonGroup missingValueGroup = new ButtonGroup();
+        missingValueGroup.add(m_ignoreMissingValues);
+        missingValueGroup.add(m_failOnMissingValues);
+        JPanel missingValues = new JPanel(new GridBagLayout());
+        missingValues.setBorder(new TitledBorder("Missing values"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        JLabel label = new JLabel("In case of missing values...");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        missingValues.add(label, gbc);
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        gbc.gridx = 1;
+        missingValues.add(m_ignoreMissingValues, gbc);
+        gbc.gridy = 1;
+        missingValues.add(m_failOnMissingValues, gbc);
+        p.add(missingValues);
         super.addTab("Scorer", p);
     } // ScorerNodeDialog(NodeModel)
 
@@ -262,6 +289,9 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
             m_sortingOptions.setReverseOrder(false);
         }
         m_sortingOptions.updateControls();
+        boolean ignoreMissingValues = settings.getBoolean(AccuracyScorerNodeModel.ACTION_ON_MISSING_VALUES, AccuracyScorerNodeModel.DEFAULT_IGNORE_MISSING_VALUES);
+        m_ignoreMissingValues.setSelected(ignoreMissingValues);
+        m_failOnMissingValues.setSelected(!ignoreMissingValues);
     }
 
     /**
@@ -302,5 +332,6 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         		useFlowVar ? flowVariableName : null);
 
         m_sortingOptions.saveDefault(settings);
+        settings.addBoolean(AccuracyScorerNodeModel.ACTION_ON_MISSING_VALUES, m_ignoreMissingValues.isSelected());
     }
 }
