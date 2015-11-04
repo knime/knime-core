@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   28.05.2012 (kilian): created
  */
@@ -60,9 +60,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 
 /**
  * The node model of the column resorter node, re sorting columns based on
@@ -70,16 +70,10 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
-class ColumnResorterNodeModel extends NodeModel {
+class ColumnResorterNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private String[] m_order = new String[] {};
-    
-    /**
-     * Creates new instance of <code>ColumnResorterNodeModel</code>.
-     */
-    ColumnResorterNodeModel() {
-        super(1, 1);
-    }
+
 
     /**
      * {@inheritDoc}
@@ -123,7 +117,8 @@ class ColumnResorterNodeModel extends NodeModel {
      * @param original The data table spec of the original input table.
      * @return The rearranger to resort the columns.
      */
-    private ColumnRearranger createColumnRearranger(
+    @Override
+    protected ColumnRearranger createColumnRearranger(
             final DataTableSpec original) {
         ColumnRearranger rearranger = new ColumnRearranger(original);
         String[] newColOder = getNewOrder(original);
@@ -257,5 +252,5 @@ class ColumnResorterNodeModel extends NodeModel {
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // Nothing to do ...
-    }    
+    }
 }
