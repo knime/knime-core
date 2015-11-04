@@ -59,7 +59,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.MissingCell;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.collection.SetCell;
@@ -71,19 +70,19 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class CollectionCreate2NodeModel extends NodeModel {
+public class CollectionCreate2NodeModel extends SimpleStreamableFunctionNodeModel {
 
     private SettingsModelColumnFilter2 m_includeModel;
 
@@ -100,7 +99,6 @@ public class CollectionCreate2NodeModel extends NodeModel {
      *
      */
     public CollectionCreate2NodeModel() {
-        super(1, 1);
         m_createSet = createSettingsModelSetOrList();
         m_removeCols = createSettingsModelRemoveCols();
         m_newColName = createSettingsModelColumnName();
@@ -139,7 +137,8 @@ public class CollectionCreate2NodeModel extends NodeModel {
         return new BufferedDataTable[]{out};
     }
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec in)
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec in)
             throws InvalidSettingsException {
 
         FilterResult filterResult = m_includeModel.applyTo(in);
