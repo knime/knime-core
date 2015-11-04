@@ -54,6 +54,7 @@ import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
 import org.knime.base.node.preproc.filter.row.rowfilter.IRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilterFactory;
+import org.knime.base.node.preproc.filter.row.rowfilter.RowNoRowFilter;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataContainer;
@@ -65,6 +66,17 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  * Model of a node filtering rows. This node has two ports: index 0 contains the
@@ -161,49 +173,110 @@ public class RowFilter2PortNodeModel extends NodeModel {
                 exec.createDataContainer(in.getDataTableSpec());
         BufferedDataContainer miss =
                 exec.createDataContainer(in.getDataTableSpec());
+        RowOutput rowOutput1 = new BufferedDataTableRowOutput(match);
+        RowOutput rowOutput2 = new BufferedDataTableRowOutput(miss);
+        RowInput rowInput = new DataTableRowInput(inData[0]);
 
+        //do it
+        this.execute(rowInput, rowOutput1, rowOutput2, inData[0].size(), exec);
+
+        //note: tables are closed in the private execute method
+        return new BufferedDataTable[]{match.getTable(), miss.getTable()};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        m_rowFilter.configure((DataTableSpec) inSpecs[0]);
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+
+                //do it
+                RowFilter2PortNodeModel.this.execute((RowInput) inputs[0], (RowOutput) outputs[0], (RowOutput) outputs[1], -1, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        InputPortRole in;
+        if(m_rowFilter instanceof RowNoRowFilter) {
+            //if the row count is used as filter criteria is cannot be distributed (because the RowNoRowFilter uses the row index)
+            in = InputPortRole.NONDISTRIBUTED_STREAMABLE;
+        } else {
+            in = InputPortRole.DISTRIBUTED_STREAMABLE;
+        }
+        return new InputPortRole[]{in};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED, OutputPortRole.DISTRIBUTED};
+    }
+
+
+
+    /*
+     * The main work is done here
+     *
+     * @param rows total number of rows. Can be -1 if not available.
+     */
+    private void execute(final RowInput in, final RowOutput match, final RowOutput miss, final long rows,
+        final ExecutionContext exec) throws InterruptedException, CanceledExecutionException {
         try {
 
             long rowIdx = -1;
-            long rows = in.size();
             boolean allMatch = false;
             boolean allMiss = false;
 
-            for (DataRow row : in) {
+            DataRow row;
+            while ((row = in.poll()) != null) {
                 rowIdx++;
-                exec.setProgress(rowIdx / (double)rows, "Adding row " + rowIdx
-                        + " of " + rows);
+                if (rows > 0) {
+                    exec.setProgress(rowIdx / (double)rows, "Adding row " + rowIdx + " of " + rows);
+                } else {
+                    exec.setProgress("Adding row " + rowIdx + ".");
+                }
                 exec.checkCanceled();
 
                 if (allMatch) {
-                    match.addRowToTable(row);
+                    match.push(row);
                     continue;
                 }
                 if (allMiss) {
-                    miss.addRowToTable(row);
+                    miss.push(row);
                     continue;
                 }
 
                 try {
                     if (m_rowFilter.matches(row, rowIdx)) {
-                        match.addRowToTable(row);
+                        match.push(row);
                     } else {
-                        miss.addRowToTable(row);
+                        miss.push(row);
                     }
                 } catch (EndOfTableException eote) {
-                    miss.addRowToTable(row);
+                    miss.push(row);
                     allMiss = true;
                 } catch (IncludeFromNowOn ifnoe) {
-                    match.addRowToTable(row);
+                    match.push(row);
                     allMatch = true;
                 }
-
             }
         } finally {
             match.close();
             miss.close();
         }
-        return new BufferedDataTable[]{match.getTable(), miss.getTable()};
     }
 
     /**
