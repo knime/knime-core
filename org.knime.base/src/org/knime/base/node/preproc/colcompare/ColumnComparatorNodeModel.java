@@ -72,10 +72,10 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 
 /**
  * The comparator node model which compares two columns by it values within one
@@ -84,7 +84,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ColumnComparatorNodeModel extends NodeModel {
+public class ColumnComparatorNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private final SettingsModelString m_operator = createComparatorMethod();
     private final SettingsModelString m_firstColumn = createFirstColumnModel();
@@ -96,12 +96,6 @@ public class ColumnComparatorNodeModel extends NodeModel {
     private final SettingsModelString m_mismatchValue = createMismatchValue();
     private final SettingsModelString m_newColumn = createNewColumnName();
 
-    /**
-     * Creates a new node model with one in- and outport.
-     */
-    public ColumnComparatorNodeModel() {
-        super(1, 1);
-    }
 
     /**
      * {@inheritDoc}
@@ -131,19 +125,62 @@ public class ColumnComparatorNodeModel extends NodeModel {
                     + m_newColumn.getStringValue() + "' already exists "
                     + "in input data.");
         }
-        DataColumnSpec leftSpec = inSpecs[0].getColumnSpec(
-                m_firstColumn.getStringValue());
-        DataColumnSpec rightSpec = inSpecs[0].getColumnSpec(
-                m_secondColumn.getStringValue());
-        ColumnRearranger colRe = new ColumnRearranger(inSpecs[0]);
+        ColumnRearranger colRe = createColumnRearranger(inSpecs[0]);
+        return new DataTableSpec[]{colRe.createSpec()};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) throws InvalidSettingsException {
+        final ComparatorMethod method = ComparatorMethod.getMethod(
+            m_operator.getStringValue());
+        final int idx1 = spec.findColumnIndex(m_firstColumn.getStringValue());
+        final int idx2 = spec.findColumnIndex(m_secondColumn.getStringValue());
+        DataColumnSpec leftSpec = spec.getColumnSpec(
+            idx1);
+        DataColumnSpec rightSpec = spec.getColumnSpec(
+            idx2);
+        ColumnRearranger colRe = new ColumnRearranger(spec);
         colRe.append(new SingleCellFactory(createSpec(leftSpec, rightSpec)) {
+
+            private final StringCell m_matchRepl = new StringCell(
+                m_matchValue.getStringValue());
+            private final StringCell m_mismatchRepl = new StringCell(
+                m_mismatchValue.getStringValue());
+
             @Override
             public DataCell getCell(final DataRow row) {
-                return null;
+                DataCell cell1 = row.getCell(idx1);
+                DataCell cell2 = row.getCell(idx2);
+                if (method.compare(cell1, cell2)) {
+                    String strMatch = m_matchOption.getStringValue();
+                    if (strMatch.equals(REPL_OPTIONS[0])) {
+                        return covertMatch(cell1);
+                    } else if (strMatch.equals(REPL_OPTIONS[1])) {
+                        return covertMatch(cell2);
+                    } else if (strMatch.equals(REPL_OPTIONS[2])) {
+                        return DataType.getMissingCell();
+                    } else {
+                        return m_matchRepl;
+                    }
+                } else {
+                    String strMismatch = m_mismatchOption.getStringValue();
+                    if (strMismatch.equals(REPL_OPTIONS[0])) {
+                        return covertMismatch(cell1);
+                    } else if (strMismatch.equals(REPL_OPTIONS[1])) {
+                        return covertMismatch(cell2);
+                    } else if (strMismatch.equals(REPL_OPTIONS[2])) {
+                        return DataType.getMissingCell();
+                    } else {
+                        return m_mismatchRepl;
+                    }
+                }
             }
 
         });
-        return new DataTableSpec[]{colRe.createSpec()};
+        return colRe;
     }
 
     private DataColumnSpec createSpec(final DataColumnSpec leftSpec,
@@ -175,54 +212,15 @@ public class ColumnComparatorNodeModel extends NodeModel {
         return newCSpec.createSpec();
     }
 
+
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final ComparatorMethod method = ComparatorMethod.getMethod(
-                m_operator.getStringValue());
-        DataTableSpec spec = inData[0].getDataTableSpec();
-        final int idx1 = spec.findColumnIndex(m_firstColumn.getStringValue());
-        final int idx2 = spec.findColumnIndex(m_secondColumn.getStringValue());
-        DataColumnSpec leftSpec = spec.getColumnSpec(idx1);
-        DataColumnSpec rightSpec = spec.getColumnSpec(idx2);
-        ColumnRearranger colRe = new ColumnRearranger(spec);
-        colRe.append(new SingleCellFactory(createSpec(leftSpec, rightSpec)) {
-            private final StringCell m_matchRepl = new StringCell(
-                    m_matchValue.getStringValue());
-            private final StringCell m_mismatchRepl = new StringCell(
-                    m_mismatchValue.getStringValue());
-            @Override
-            public DataCell getCell(final DataRow row) {
-                DataCell cell1 = row.getCell(idx1);
-                DataCell cell2 = row.getCell(idx2);
-                if (method.compare(cell1, cell2)) {
-                    String strMatch = m_matchOption.getStringValue();
-                    if (strMatch.equals(REPL_OPTIONS[0])) {
-                        return covertMatch(cell1);
-                    } else if (strMatch.equals(REPL_OPTIONS[1])) {
-                        return covertMatch(cell2);
-                    } else if (strMatch.equals(REPL_OPTIONS[2])) {
-                        return DataType.getMissingCell();
-                    } else {
-                        return m_matchRepl;
-                    }
-                } else {
-                    String strMismatch = m_mismatchOption.getStringValue();
-                    if (strMismatch.equals(REPL_OPTIONS[0])) {
-                        return covertMismatch(cell1);
-                    } else if (strMismatch.equals(REPL_OPTIONS[1])) {
-                        return covertMismatch(cell2);
-                    } else if (strMismatch.equals(REPL_OPTIONS[2])) {
-                        return DataType.getMissingCell();
-                    } else {
-                        return m_mismatchRepl;
-                    }
-                }
-            }
-        });
+        ColumnRearranger colRe = createColumnRearranger(inData[0].getDataTableSpec());
         BufferedDataTable outData =
             exec.createColumnRearrangeTable(inData[0], colRe, exec);
         return new BufferedDataTable[]{outData};
