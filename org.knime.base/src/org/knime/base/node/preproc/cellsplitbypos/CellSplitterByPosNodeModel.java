@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 19, 2007 (ohl): created
  */
@@ -58,17 +58,17 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 
 /**
  * This is the model implementation of CellSplitterByPosition.
  * 
  * @author ohl, University of Konstanz
  */
-public class CellSplitterByPosNodeModel extends NodeModel {
+public class CellSplitterByPosNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private final SettingsModelString m_splitPoints =
             createSplitPointSettingsModel();
@@ -104,10 +104,6 @@ public class CellSplitterByPosNodeModel extends NodeModel {
         return new SettingsModelString("SelColumn", null);
     }
 
-    /** The constructor */
-    CellSplitterByPosNodeModel() {
-        super(1, 1);
-    }
 
     /**
      * {@inheritDoc}
@@ -132,8 +128,10 @@ public class CellSplitterByPosNodeModel extends NodeModel {
      * 
      * @param inTableSpec the spec of the table to split the column from
      * @return the col rearranger
+     * @since 3.1
      */
-    private ColumnRearranger createColumnRearranger(
+    @Override
+    protected ColumnRearranger createColumnRearranger(
             final DataTableSpec inTableSpec) throws InvalidSettingsException {
         // user settings must be set and valid
         assert m_splitPoints.getStringValue() != null;
