@@ -73,6 +73,14 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortObjectOutput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
@@ -166,6 +174,60 @@ public class CategoryToNumberNodeModel extends NodeModel {
             outPMMLPort.addGlobalTransformations(trans.exportToTransDict());
         }
         return new PortObject[] {outTable, outPMMLPort};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                ColumnRearranger cr = createRearranger((DataTableSpec) inSpecs[0]);
+                cr.createStreamableFunction(0, 0).runFinal(inputs, outputs, exec);
+
+                // the optional PMML in port (can be null)
+                PMMLPortObject inPMMLPort =
+                    m_pmmlInEnabled ? (PMMLPortObject)((PortObjectInput)inputs[1]).getPortObject() : null;
+
+                PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
+                        inPMMLPort, cr.createSpec());
+
+                PMMLPortObject outPMMLPort = new PMMLPortObject(
+                       creator.createSpec(), inPMMLPort);
+                for (CategoryToNumberCellFactory factory : m_factories) {
+                    PMMLMapValuesTranslator trans = new PMMLMapValuesTranslator(
+                            factory.getConfig(), new DerivedFieldMapper(inPMMLPort));
+                    outPMMLPort.addGlobalTransformations(trans.exportToTransDict());
+                }
+                PortObjectOutput portObjectOutput = (PortObjectOutput) outputs[1];
+                portObjectOutput.setPortObject(outPMMLPort);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        InputPortRole[] in = new InputPortRole[getNrInPorts()];
+        in[0] = InputPortRole.NONDISTRIBUTED_STREAMABLE;
+        if(m_pmmlInEnabled) {
+            in[1] = InputPortRole.NONDISTRIBUTED_NONSTREAMABLE;
+        }
+        return in;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED, OutputPortRole.NONDISTRIBUTED};
     }
 
     private ColumnRearranger createRearranger(final DataTableSpec spec) {
