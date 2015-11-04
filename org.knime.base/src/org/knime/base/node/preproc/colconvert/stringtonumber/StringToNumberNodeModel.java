@@ -61,7 +61,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -72,17 +72,19 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionWithInternalsNodeModel;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
  * The NodeModel for the String to Number Node that converts strings to numbers.
  *
  * @author cebron, University of Konstanz
  */
-public class StringToNumberNodeModel extends NodeModel {
+public class StringToNumberNodeModel extends SimpleStreamableFunctionWithInternalsNodeModel<SimpleStreamableOperatorInternals> {
 
     /**
      * The possible types that the string can be converted to.
@@ -93,6 +95,11 @@ public class StringToNumberNodeModel extends NodeModel {
     /* Node Logger of this class. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(StringToNumberNodeModel.class);
+
+    /*
+     * Config key for the operator internals to propagate error messages.
+     */
+    private static final String CFG_KEY_ERROR_MESSAGES = "error_message";
 
     /**
      * Key for the included columns in the NodeSettings.
@@ -162,7 +169,7 @@ public class StringToNumberNodeModel extends NodeModel {
      * Constructor with one inport and one outport.
      */
     public StringToNumberNodeModel() {
-        super(1, 1);
+        super(SimpleStreamableOperatorInternals.class);
     }
 
     /**
@@ -171,12 +178,7 @@ public class StringToNumberNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        // find indices to work on
-        int[] indices = findColumnIndices(inSpecs[0]);
-        ConverterFactory converterFac =
-                new ConverterFactory(indices, inSpecs[0], m_parseType);
-        ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
-        colre.replace(converterFac, indices);
+        ColumnRearranger colre = createColumnRearranger(inSpecs[0]);
         DataTableSpec newspec = colre.createSpec();
         return new DataTableSpec[]{newspec};
     }
@@ -187,8 +189,6 @@ public class StringToNumberNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        StringBuilder warnings = new StringBuilder();
-        // find indices to work on.
         DataTableSpec inspec = inData[0].getDataTableSpec();
         List<String> inclcols = m_inclCols.getIncludeList();
         if (inclcols.size() == 0) {
@@ -197,16 +197,27 @@ public class StringToNumberNodeModel extends NodeModel {
                     + " returning input DataTable.");
             return new BufferedDataTable[]{inData[0]};
         }
-        int[] indices = findColumnIndices(inData[0].getSpec());
-        ConverterFactory converterFac = new ConverterFactory(
-        		indices, inspec, m_parseType);
-        ColumnRearranger colre = new ColumnRearranger(inspec);
-        colre.replace(converterFac, indices);
+
+        SimpleStreamableOperatorInternals internals = createStreamingOperatorInternals();
+        ColumnRearranger colre = createColumnRearranger(inspec, internals);
 
         BufferedDataTable resultTable =
                 exec.createColumnRearrangeTable(inData[0], colre, exec);
-        String errorMessage = converterFac.getErrorMessage();
 
+        warningMessage(internals);
+
+        return new BufferedDataTable[]{resultTable};
+    }
+
+    private void warningMessage(final SimpleStreamableOperatorInternals internals) {
+        String errorMessage;
+        try {
+            errorMessage = internals.getConfig().getString(CFG_KEY_ERROR_MESSAGES);
+        } catch (InvalidSettingsException e) {
+            // if no warning message has been set
+            return;
+        }
+        StringBuilder warnings = new StringBuilder();
         if (errorMessage.length() > 0) {
             warnings.append("Problems occurred, see Console messages.\n");
         }
@@ -214,7 +225,35 @@ public class StringToNumberNodeModel extends NodeModel {
             LOGGER.warn(errorMessage);
             setWarningMessage(warnings.toString().replaceAll("[\r\n]+$", ""));
         }
-        return new BufferedDataTable[]{resultTable};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
+        return new SimpleStreamableOperatorInternals();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.1
+     */
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec,
+        final SimpleStreamableOperatorInternals emptyInternals) throws InvalidSettingsException {
+        int[] indices = findColumnIndices(spec);
+        ConverterFactory converterFac = new ConverterFactory(indices, spec, m_parseType, emptyInternals);
+        ColumnRearranger colre = new ColumnRearranger(spec);
+        List<String> inclcols = m_inclCols.getIncludeList();
+        if (inclcols.size() == 0) {
+            // nothing to convert, let's return the input table.
+            emptyInternals.getConfig().addString(CFG_KEY_ERROR_MESSAGES,
+                "No columns selected, returning input DataTable.");
+            return colre;
+        }
+        colre.replace(converterFac, indices);
+        return colre;
     }
 
 	private int[] findColumnIndices(final DataTableSpec spec)
@@ -258,6 +297,37 @@ public class StringToNumberNodeModel extends NodeModel {
 		}
 		return indices;
 	}
+
+	/**
+     * {@inheritDoc}
+     * @since 3.1
+     */
+    @Override
+    protected SimpleStreamableOperatorInternals
+        mergeStreamingOperatorInternals(final SimpleStreamableOperatorInternals[] operatorInternals) {
+        StringBuilder errorMessages = new StringBuilder();
+        for (int i = 0; i < operatorInternals.length; i++) {
+            try {
+                errorMessages.append(operatorInternals[i].getConfig().getString(CFG_KEY_ERROR_MESSAGES));
+                errorMessages.append("\n");
+            } catch (InvalidSettingsException e) {
+              //if no warning message has been set -> nothing to do
+            }
+        }
+        SimpleStreamableOperatorInternals res = new SimpleStreamableOperatorInternals();
+        res.getConfig().addString(CFG_KEY_ERROR_MESSAGES, errorMessages.toString().trim());
+        return res;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.1
+     */
+    @Override
+    protected void finishStreamableExecution(final SimpleStreamableOperatorInternals operatorInternals) {
+        warningMessage(operatorInternals);
+
+    }
 
     /**
      * {@inheritDoc}
@@ -360,7 +430,7 @@ public class StringToNumberNodeModel extends NodeModel {
      *
      * @author cebron, University of Konstanz
      */
-    private class ConverterFactory implements CellFactory {
+    private class ConverterFactory extends AbstractCellFactory {
 
         /*
          * Column indices to use.
@@ -382,6 +452,9 @@ public class StringToNumberNodeModel extends NodeModel {
 
         private DataType m_type;
 
+        /* streamable operator internals to propagate the error messages */
+        private SimpleStreamableOperatorInternals m_internals;
+
         /**
          *
          * @param colindices the column indices to use.
@@ -389,11 +462,12 @@ public class StringToNumberNodeModel extends NodeModel {
          * @param type the {@link DataType} to convert to.
          */
         ConverterFactory(final int[] colindices, final DataTableSpec spec,
-                final DataType type) {
+                final DataType type, final SimpleStreamableOperatorInternals internals) {
             m_colindices = colindices;
             m_spec = spec;
             m_type = type;
             m_parseErrorCount = 0;
+            m_internals = internals;
         }
 
         /**
@@ -512,23 +586,28 @@ public class StringToNumberNodeModel extends NodeModel {
             exec.setProgress((double)curRowNr / (double)rowCount, "Converting");
         }
 
+
         /**
-         * Error messages that occur during execution , i.e.
-         * NumberFormatException.
-         *
-         * @return error message
+         * {@inheritDoc}
          */
-        public String getErrorMessage() {
+        @Override
+        public void afterProcessing() {
+            String message;
             switch (m_parseErrorCount) {
-            case 0:
-                return "";
-            case 1:
-                return "Could not parse cell with value " + m_error;
-            default:
-                return "Values in " + m_parseErrorCount
-                        + " cells could not be parsed, first error: " + m_error;
+                case 0:
+                    message = "";
+                    break;
+                case 1:
+                    message = "Could not parse cell with value " + m_error;
+                    break;
+                default:
+                    message = "Values in " + m_parseErrorCount
+                            + " cells could not be parsed, first error: " + m_error;
             }
+            m_internals.getConfig().addString(CFG_KEY_ERROR_MESSAGES, message);
         }
+
+
 
     } // end ConverterFactory
 
