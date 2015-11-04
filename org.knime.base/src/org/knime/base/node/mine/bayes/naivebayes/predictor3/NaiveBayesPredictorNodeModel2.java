@@ -71,6 +71,14 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
@@ -145,20 +153,61 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
             throw new Exception("Node supports only one Naive Bayes Model at a time.");
         }
         exec.setMessage("Classifying rows...");
+        ColumnRearranger rearranger = createColumnRearranger(modelPort, data.getDataTableSpec());
+        final BufferedDataTable returnVal = exec.createColumnRearrangeTable(data, rearranger, exec);
+        LOGGER.debug("Exiting execute(inData, exec) of class NaiveBayesPredictorNodeModel.");
+        return new PortObject[] {returnVal};
+    }
+
+    /* Helper to create the column rearranger that does the actual work */
+    private ColumnRearranger createColumnRearranger(final PMMLPortObject pmmlPortObj, final DataTableSpec inSpec){
         final PMMLNaiveBayesModelTranslator translator = new PMMLNaiveBayesModelTranslator();
-        modelPort.initializeModelTranslator(translator);
+        pmmlPortObj.initializeModelTranslator(translator);
         final NaiveBayesModel model = translator.getModel();
         PredictorHelper predictorHelper = PredictorHelper.getInstance();
         final String classColumnName = model.getClassColumnName();
         final String predictionColName = m_overridePredicted.getBooleanValue()
                 ? m_predictionColumnName.getStringValue() : predictorHelper.computePredictionDefault(classColumnName);
         final NaiveBayesCellFactory appender = new NaiveBayesCellFactory(model, predictionColName,
-            data.getDataTableSpec(), m_inclProbVals.getBooleanValue(), m_probabilitySuffix.getStringValue());
-        final ColumnRearranger rearranger = new ColumnRearranger(data.getDataTableSpec());
+            inSpec, m_inclProbVals.getBooleanValue(), m_probabilitySuffix.getStringValue());
+        final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         rearranger.append(appender);
-        final BufferedDataTable returnVal = exec.createColumnRearrangeTable(data, rearranger, exec);
-        LOGGER.debug("Exiting execute(inData, exec) of class NaiveBayesPredictorNodeModel.");
-        return new PortObject[] {returnVal};
+        return rearranger;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                PMMLPortObject pmmlPortObj = (PMMLPortObject)((PortObjectInput) inputs[MODEL_IN_PORT]).getPortObject();
+
+                DataTableSpec inSpec = (DataTableSpec) inSpecs[DATA_IN_PORT];
+                StreamableFunction fct = createColumnRearranger(pmmlPortObj, inSpec).createStreamableFunction(DATA_IN_PORT, 0);
+                fct.runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     /**
