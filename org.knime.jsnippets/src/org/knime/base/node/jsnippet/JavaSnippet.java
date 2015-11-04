@@ -887,7 +887,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
     }
 
     /** The rearranger is the working horse for creating the ouput table. */
-    private ColumnRearranger createRearranger(final DataTableSpec spec,
+    ColumnRearranger createRearranger(final DataTableSpec spec,
             final FlowVariableRepository flowVariableRepository,
             final int rowCount)
         throws InvalidSettingsException {

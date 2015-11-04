@@ -50,7 +50,10 @@ package org.knime.base.node.jsnippet;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.text.BadLocationException;
+
 import org.apache.commons.lang3.StringUtils;
+import org.knime.base.node.jsnippet.guarded.JavaSnippetDocument;
 import org.knime.base.node.jsnippet.util.FlowVariableRepository;
 import org.knime.base.node.jsnippet.util.JavaSnippetSettings;
 import org.knime.base.node.jsnippet.util.ValidationReport;
@@ -64,6 +67,19 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.MergeOperator;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
 
@@ -74,6 +90,10 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  * @author Heiko Hofer
  */
 public class JavaSnippetNodeModel extends NodeModel {
+
+    /* config key to store the row count in a streamable operator internals */
+    private static final String CFG_ROW_COUNT = "row_count";
+
     private JavaSnippetSettings m_settings;
     private JavaSnippet m_snippet;
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
@@ -147,6 +167,199 @@ public class JavaSnippetNodeModel extends NodeModel {
         }
         return new BufferedDataTable[] {output};
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
+        return new SimpleStreamableOperatorInternals();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean iterate(final StreamableOperatorInternals internals) {
+        if (usesRowCount()) {
+            SimpleStreamableOperatorInternals simpleInternals = (SimpleStreamableOperatorInternals) internals;
+            if (simpleInternals.getConfig().containsKey(CFG_ROW_COUNT)) {
+                //already iterated
+                return false;
+            } else {
+                //needs one iteration to determine the row count
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+
+        m_snippet.setSettings(m_settings);
+        final FlowVariableRepository flowVarRepo =
+                new FlowVariableRepository(getAvailableInputFlowVariables());
+
+        return new StreamableOperator() {
+
+            private SimpleStreamableOperatorInternals m_internals;
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void loadInternals(final StreamableOperatorInternals internals) {
+                m_internals = (SimpleStreamableOperatorInternals) internals;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void runIntermediate(final PortInput[] inputs, final ExecutionContext exec) throws Exception {
+                //count number of rows
+                long count = 0;
+                RowInput rowInput = (RowInput) inputs[0];
+                while(rowInput.poll()!=null) {
+                    count++;
+                }
+                m_internals.getConfig().addLong(CFG_ROW_COUNT, count);
+            }
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                long rowCount = -1;
+                if (m_internals.getConfig().containsKey(CFG_ROW_COUNT)) {
+                    rowCount = m_internals.getConfig().getLong(CFG_ROW_COUNT);
+                }
+                StreamableFunction func = m_snippet.createRearranger((DataTableSpec)inSpecs[0], flowVarRepo, (int) rowCount)
+                    .createStreamableFunction();
+                func.runFinal(inputs, outputs, exec);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public StreamableOperatorInternals saveInternals() {
+                return m_internals;
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MergeOperator createMergeOperator() {
+        return new MergeOperator() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public StreamableOperatorInternals mergeIntermediate(final StreamableOperatorInternals[] operators) {
+                //sum up the row counts if necessary
+                long count = 0;
+                for (int i = 0; i < operators.length; i++) {
+                    SimpleStreamableOperatorInternals simpleInternals = (SimpleStreamableOperatorInternals)operators[i];
+                    CheckUtils.checkState(simpleInternals.getConfig().containsKey(CFG_ROW_COUNT),
+                        "Config for key " + CFG_ROW_COUNT + " isn't set.");
+                    try {
+                        count += simpleInternals.getConfig().getLong(CFG_ROW_COUNT);
+                    } catch (InvalidSettingsException e) {
+                        // should not happen since we checked already
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                SimpleStreamableOperatorInternals res = new SimpleStreamableOperatorInternals();
+                if(count > 0) {
+                    res.getConfig().addLong(CFG_ROW_COUNT, count);
+                }
+                return res;
+            }
+
+            @Override
+            public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] operators) {
+                //nothing to do here
+                return null;
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
+        final PortOutput[] output) throws Exception {
+        // nothing to do here
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        InputPortRole inputPortRole = InputPortRole.DISTRIBUTED_STREAMABLE;
+        if (usesRowIndex()) {
+            //rowindex field is used, can not be distributed
+            inputPortRole = InputPortRole.NONDISTRIBUTED_STREAMABLE;
+            LOGGER
+                .warn("The ROWINDEX field is used in the snippet. Calculations cannot be done in distributed manner!");
+        }
+        if (usesRowCount()) {
+            //rowcount field is used -> streaming not possible but distributed execution
+            inputPortRole = InputPortRole.DISTRIBUTED_NONSTREAMABLE;
+            LOGGER.warn("The ROWCOUNT field is used in the snippet. Calculations cannot be done in streamed manner!");
+        }
+        return new InputPortRole[]{inputPortRole};
+    }
+
+    /* tells if the snippet code uses the row index constant */
+    private boolean usesRowIndex() {
+        //is there a better test?
+        try {
+            String snippetCode = m_snippet.getDocument().getTextBetween(JavaSnippetDocument.GUARDED_BODY_START,
+                JavaSnippetDocument.GUARDED_BODY_END);
+            return snippetCode.contains(JavaSnippet.ROWINDEX);
+        } catch (BadLocationException e) {
+            //should not happen -> implementation error
+            throw new RuntimeException("Most likely an implementation error.", e);
+        }
+
+    }
+
+    /* tells if the snippet code uses the row count constant */
+    private boolean usesRowCount() {
+        //is there a better test?
+        try {
+            String snippetCode = m_snippet.getDocument().getTextBetween(JavaSnippetDocument.GUARDED_BODY_START,
+                JavaSnippetDocument.GUARDED_BODY_END);
+            return snippetCode.contains(JavaSnippet.ROWCOUNT);
+        } catch (BadLocationException e) {
+            //should not happen -> implementation error
+            throw new RuntimeException("Most likely an implementation error.", e);
+        }
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+    }
+
 
     /**
      * {@inheritDoc}
