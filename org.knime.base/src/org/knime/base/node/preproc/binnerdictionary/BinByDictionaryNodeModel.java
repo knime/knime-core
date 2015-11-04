@@ -65,6 +65,14 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /** Model to node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -104,6 +112,42 @@ final class BinByDictionaryNodeModel extends NodeModel {
         BufferedDataTable table = exec.createColumnRearrangeTable(
                 inData[0], rearranger, exec);
         return new BufferedDataTable[] {table};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                DataTableSpec[] specs = new DataTableSpec[2];
+                specs[0] = (DataTableSpec) inSpecs[0];
+                specs[1] = (DataTableSpec) inSpecs[1];
+                BufferedDataTable dict = (BufferedDataTable) ((PortObjectInput) inputs[1]).getPortObject();
+                ColumnRearranger core = createColumnRearranger(specs, dict, exec);
+                core.createStreamableFunction(0, 0).runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec[] ins,
