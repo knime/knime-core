@@ -50,6 +50,7 @@ import java.io.IOException;
 import org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizePreprocPortObjectSpec;
 import org.knime.base.node.preproc.autobinner.pmml.PMMLPreprocDiscretize;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -63,6 +64,14 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObject;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  * The Model for the Binner (Apply) Node.
@@ -104,6 +113,15 @@ final class AutoBinnerApplyNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         PMMLPreprocPortObject pmmlPort = (PMMLPreprocPortObject)inObjects[0];
         BufferedDataTable inTable = (BufferedDataTable)inObjects[1];
+        validatePMMLPort(pmmlPort);
+        PMMLPreprocDiscretize op =
+            (PMMLPreprocDiscretize)pmmlPort.getOperations().get(0);
+        AutoBinnerApply applier = new AutoBinnerApply();
+        BufferedDataTable binnedData = applier.execute(op, inTable, exec);
+        return new PortObject[] {binnedData};
+    }
+
+    private void validatePMMLPort(final PMMLPreprocPortObject pmmlPort) throws InvalidSettingsException {
         if (pmmlPort.getOperations().isEmpty()) {
             throw new InvalidSettingsException("Binner Settings not available");
         }
@@ -115,11 +133,43 @@ final class AutoBinnerApplyNodeModel extends NodeModel {
                 instanceof PMMLPreprocDiscretize)) {
             throw new InvalidSettingsException("Binner Settings not available");
         }
-        PMMLPreprocDiscretize op =
-            (PMMLPreprocDiscretize)pmmlPort.getOperations().get(0);
-        AutoBinnerApply applier = new AutoBinnerApply();
-        BufferedDataTable binnedData = applier.execute(op, inTable, exec);
-        return new PortObject[] {binnedData};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                PMMLPreprocPortObject pmmlPort = (PMMLPreprocPortObject)((PortObjectInput)inputs[0]).getPortObject();
+                validatePMMLPort(pmmlPort);
+                PMMLPreprocDiscretize op = (PMMLPreprocDiscretize)pmmlPort.getOperations().get(0);
+                AutoBinnerApply applier = new AutoBinnerApply();
+                ColumnRearranger core = applier.getRearranger(op, (DataTableSpec)inSpecs[1]);
+                StreamableFunction func = core.createStreamableFunction(1, 0);
+                func.runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     /**

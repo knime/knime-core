@@ -97,7 +97,7 @@ public final class AutoBinnerApply {
     * @param inTable the input data table
     * @throws InvalidSettingsException when settings are inconsistent
     */
-    private ColumnRearranger getRearranger(final PMMLPreprocDiscretize op,
+    ColumnRearranger getRearranger(final PMMLPreprocDiscretize op,
             final DataTableSpec dataSpec) throws InvalidSettingsException {
         DisretizeConfiguration config = op.getConfiguration();
         // Check if columns to discretize exist
