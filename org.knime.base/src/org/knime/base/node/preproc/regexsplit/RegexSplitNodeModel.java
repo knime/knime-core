@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sep 1, 2008 (wiswedel): created
  */
@@ -69,29 +69,36 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionWithInternalsNodeModel;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-final class RegexSplitNodeModel extends NodeModel {
+final class RegexSplitNodeModel extends SimpleStreamableFunctionWithInternalsNodeModel<SimpleStreamableOperatorInternals> {
 
     private RegexSplitSettings m_settings;
-    
-    /** One input, one output. */
+
+    private static final String CONFIG_KEY_ERRORCOUNT = "errorcount";
+
+    /**
+     * @param cl
+     */
     public RegexSplitNodeModel() {
-        super(1, 1);
+        super(SimpleStreamableOperatorInternals.class);
     }
+
 
     /** {@inheritDoc} */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        ColumnRearranger rearranger = 
-            createRearranger(inSpecs[0], new AtomicInteger());
+        ColumnRearranger rearranger =
+            createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{rearranger.createSpec()};
     }
     
@@ -99,20 +106,41 @@ final class RegexSplitNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        AtomicInteger i = new AtomicInteger();
-        ColumnRearranger rearranger = createRearranger(inData[0].getSpec(), i);
+        SimpleStreamableOperatorInternals internals = createStreamingOperatorInternals();
+        ColumnRearranger rearranger = createColumnRearranger(inData[0].getSpec(), internals);
         BufferedDataTable t = exec.createColumnRearrangeTable(
                 inData[0], rearranger, exec);
-        if (i.get() > 0) {
-            setWarningMessage(i.get() + " input string(s) did not match the " 
-                    + "pattern or contained more groups than expected");
-        }
+        warningMessage(internals);
         return new BufferedDataTable[]{t};
     }
-    
-    private ColumnRearranger createRearranger(final DataTableSpec spec,
-            final AtomicInteger errorCounter) 
+
+    private void warningMessage(final SimpleStreamableOperatorInternals internals) {
+        if (internals.getConfig().containsKey(CONFIG_KEY_ERRORCOUNT)) {
+            int errorCount = 0;
+            try {
+                errorCount = internals.getConfig().getInt(CONFIG_KEY_ERRORCOUNT);
+            } catch (InvalidSettingsException e) {
+                // no error count
+            }
+            if (errorCount > 0) {
+                setWarningMessage(errorCount + " input string(s) did not match the "
+                    + "pattern or contained more groups than expected");
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
+        return new SimpleStreamableOperatorInternals();
+    }
+
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec, final SimpleStreamableOperatorInternals internals)
         throws InvalidSettingsException {
+        AtomicInteger errorCounter = new AtomicInteger();
         if (m_settings == null) {
             throw new InvalidSettingsException("Not configuration available.");
         }
@@ -194,8 +222,45 @@ final class RegexSplitNodeModel extends NodeModel {
                     return result;
                 }
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void afterProcessing() {
+                //propagate error count
+                internals.getConfig().addInt(CONFIG_KEY_ERRORCOUNT, errorCounter.get());
+            }
         });
         return rearranger;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected SimpleStreamableOperatorInternals
+        mergeStreamingOperatorInternals(final SimpleStreamableOperatorInternals[] operatorInternals) {
+        int errorCount = 0;
+        for (int i = 0; i < operatorInternals.length; i++) {
+            try {
+                errorCount+=operatorInternals[i].getConfig().getInt(CONFIG_KEY_ERRORCOUNT);
+            } catch (InvalidSettingsException e) {
+                //should not happen since the error count config should be set every time even though its 0
+                throw new RuntimeException(e);
+            }
+        }
+        SimpleStreamableOperatorInternals res = new SimpleStreamableOperatorInternals();
+        res.getConfig().addInt(CONFIG_KEY_ERRORCOUNT, errorCount);
+        return res;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finishStreamableExecution(final SimpleStreamableOperatorInternals operatorInternals) {
+        warningMessage(operatorInternals);
     }
 
     /** {@inheritDoc} */
