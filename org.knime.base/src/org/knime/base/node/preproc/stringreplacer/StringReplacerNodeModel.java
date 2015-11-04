@@ -67,25 +67,19 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 
 /**
  * This is the model for the string replacer node that does the work.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class StringReplacerNodeModel extends NodeModel {
+public class StringReplacerNodeModel extends SimpleStreamableFunctionNodeModel {
     private final StringReplacerSettings m_settings =
             new StringReplacerSettings();
 
-    /**
-     * Creates a new StringReplacerNodeModel.
-     */
-    public StringReplacerNodeModel() {
-        super(1, 1);
-    }
 
     /**
      * Creates the column rearranger that computes the new cells.
@@ -93,7 +87,8 @@ public class StringReplacerNodeModel extends NodeModel {
      * @param spec the spec of the input table
      * @return a column rearranger
      */
-    private ColumnRearranger createRearranger(final DataTableSpec spec) throws InvalidSettingsException {
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) throws InvalidSettingsException {
         final Pattern pattern = createPattern(m_settings);
 
         DataColumnSpec colSpec;
@@ -178,7 +173,7 @@ public class StringReplacerNodeModel extends NodeModel {
                     + "' does not exist in input table");
         }
 
-        ColumnRearranger crea = createRearranger(inSpecs[0]);
+        ColumnRearranger crea = createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{crea.createSpec()};
     }
 
@@ -189,7 +184,7 @@ public class StringReplacerNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         exec.setMessage("Searching & Replacing");
-        ColumnRearranger crea = createRearranger(inData[0].getDataTableSpec());
+        ColumnRearranger crea = createColumnRearranger(inData[0].getDataTableSpec());
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(inData[0], crea, exec)};
     }
 
