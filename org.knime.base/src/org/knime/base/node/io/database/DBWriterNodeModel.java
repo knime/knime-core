@@ -69,6 +69,16 @@ import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseWriterConnection;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.MergeOperator;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
  * Database writer model which creates a new table and adds the entire table to
@@ -124,6 +134,9 @@ final class DBWriterNodeModel extends NodeModel {
 
     /** Config key for column to SQL-type mapping. */
     static final String CFG_SQL_TYPES = "sql_types";
+
+    /* error message during streaming execution */
+    private String m_errorMessage = null;
 
     /**
      * Creates a new model with one data input.
@@ -230,6 +243,84 @@ final class DBWriterNodeModel extends NodeModel {
             super.setWarningMessage(error);
         }
         return new BufferedDataTable[0];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_STREAMABLE, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
+        return new SimpleStreamableOperatorInternals();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                exec.setProgress("Opening database connection to write data...");
+
+                DatabaseConnectionSettings connSettings;
+                PortObject portObj = ((PortObjectInput)inputs[1]).getPortObject();
+                if (portObj != null && (portObj instanceof DatabaseConnectionPortObject)) {
+                    connSettings =
+                        ((DatabaseConnectionPortObject)portObj).getConnectionSettings(getCredentialsProvider());
+                } else {
+                    connSettings = m_conn;
+                }
+
+                // write entire data
+                m_errorMessage =
+                    DatabaseWriterConnection.writeData(connSettings, m_tableName, (RowInput) inputs[0], -1,
+                        m_append, exec, m_types, getCredentialsProvider(), m_batchSize, m_insertNullForMissingCols);
+            }
+
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * NB: needs to be overwritten to enforce the
+     * {@link DBWriterNodeModel#finishStreamableExecution(StreamableOperatorInternals, ExecutionContext, PortOutput[])}
+     * to be called in order to set an error message.
+     */
+    @Override
+    public MergeOperator createMergeOperator() {
+        return new MergeOperator() {
+
+            @Override
+            public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] operators) {
+                 return operators[0];
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
+        final PortOutput[] output) throws Exception {
+        if (m_errorMessage != null) {
+            setWarningMessage(m_errorMessage);
+        }
     }
 
     /**

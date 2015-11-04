@@ -55,11 +55,13 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -72,6 +74,16 @@ import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.DatabaseReaderConnection.RowIteratorConnection;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
@@ -79,9 +91,18 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * @author Thomas Gabriel, University of Konstanz
  */
 class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger("Database Reader");
+
     protected final DatabaseQueryConnectionSettings m_settings = new DatabaseQueryConnectionSettings();
 
     private DataTableSpec m_lastSpec = null;
+
+    /* Flag that is true if the node is just about to be executed in streaming mode.
+     * It is set true in the computeFinalOutputSpecs-method to guarantee that the
+     * configure-method returns a non-null data table spec
+     * (i.e. it annuls the m_settings..getValidateQuery() for a moment).*/
+    private boolean m_isInStreamingExecution = false;
 
     /**
      * Creates a new model with the given number (and types!) of input and output types.
@@ -136,10 +157,17 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
     protected BufferedDataTable getResultTable(final ExecutionContext exec, final PortObject[] inData,
         final DatabaseReaderConnection load)
         throws CanceledExecutionException, SQLException, InvalidSettingsException {
+        loadConnectionSettings(load, inData[getNrInPorts()-1]);
+        CredentialsProvider cp = getCredentialsProvider();
+        final BufferedDataTable result = load.createTable(exec, cp);
+        return result;
+    }
+
+    private void loadConnectionSettings(final DatabaseReaderConnection load, final PortObject dbPortObject) throws InvalidSettingsException {
         String query = parseQuery(m_settings.getQuery());
         DatabaseQueryConnectionSettings connSettings;
-        if ((inData[getNrInPorts() - 1] instanceof DatabaseConnectionPortObject)) {
-            DatabaseConnectionPortObject dbObj = (DatabaseConnectionPortObject)inData[getNrInPorts() - 1];
+        if ((dbPortObject instanceof DatabaseConnectionPortObject)) {
+            DatabaseConnectionPortObject dbObj = (DatabaseConnectionPortObject)dbPortObject;
 
             connSettings =
                 new DatabaseQueryConnectionSettings(dbObj.getConnectionSettings(getCredentialsProvider()), query);
@@ -147,9 +175,75 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             connSettings = new DatabaseQueryConnectionSettings(m_settings, query);
         }
         load.setDBQueryConnection(new DatabaseQueryConnectionSettings(connSettings, query));
-        CredentialsProvider cp = getCredentialsProvider();
-        final BufferedDataTable result = load.createTable(exec, cp);
-        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortObjectSpec[] computeFinalOutputSpecs(final StreamableOperatorInternals internals, final PortObjectSpec[] inSpecs)
+ throws InvalidSettingsException {
+        m_isInStreamingExecution = true;
+        try {
+            return super.computeFinalOutputSpecs(internals, inSpecs);
+        } finally {
+            m_isInStreamingExecution = false;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                exec.setProgress("Opening database connection...");
+                final DatabaseReaderConnection load = new DatabaseReaderConnection(null);
+                exec.setProgress("Reading data from database...");
+                loadConnectionSettings(load, ((PortObjectInput)inputs[0]).getPortObject());
+                RowIteratorConnection rowItConn =
+                    load.createRowIteratorConnection(exec, getCredentialsProvider(), true);
+                try {
+                    setLastSpec(rowItConn.getDataTableSpec());
+                    RowOutput out = (RowOutput)outputs[0];
+                    RowIterator it = rowItConn.iterator();
+                    int index = 0;
+                    while (it.hasNext()) {
+                        out.push(it.next());
+                        exec.setMessage(String.format("Row %d",
+                            ++index));
+                    }
+                } catch (Exception e) {
+                    setLastSpec(null);
+                    throw e;
+                } finally {
+                    rowItConn.close();
+                }
+            }
+        };
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     private String parseQuery(final String query) {
@@ -232,7 +326,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             if ((m_settings.getQuery() == null) || m_settings.getQuery().isEmpty()) {
                 throw new InvalidSettingsException("No query configured.");
             }
-            if (!m_settings.getValidateQuery()) {
+            if (!m_isInStreamingExecution && !m_settings.getValidateQuery()) {
                 return new DataTableSpec[] {null};
             }
             final DatabaseReaderConnection load = new DatabaseReaderConnection(null);

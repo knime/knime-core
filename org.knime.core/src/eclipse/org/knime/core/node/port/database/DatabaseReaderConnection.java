@@ -265,9 +265,44 @@ public final class DatabaseReaderConnection {
      * @throws SQLException if the connection could not be opened
      * @since 2.12
      */
-    public BufferedDataTable createTable(final ExecutionContext exec,
-            final CredentialsProvider cp, final boolean useDbRowId)
-            throws CanceledExecutionException, SQLException {
+    public BufferedDataTable createTable(final ExecutionContext exec, final CredentialsProvider cp,
+        final boolean useDbRowId) throws CanceledExecutionException, SQLException {
+        final RowIteratorConnection ric = createRowIteratorConnection(exec, cp, useDbRowId);
+        try {
+            return exec.createBufferedDataTable(new DataTable() {
+                /** {@inheritDoc} */
+                @Override
+                public DataTableSpec getDataTableSpec() {
+                    return ric.getDataTableSpec();
+                }
+
+                /** {@inheritDoc} */
+                @Override
+                public RowIterator iterator() {
+                    return ric.iterator();
+                }
+
+            }, exec);
+        } finally {
+            ric.close();
+        }
+    }
+
+
+
+    /**
+     * Read data from database using a {@link RowIterator}.
+     * @param exec used for progress info
+     * @param cp {@link CredentialsProvider} providing user/password
+     * @param useDbRowId <code>true</code> if the row id returned by the database should be used to generate the
+     * KNIME row id
+     * @return an object that represents the open database connection. The individual entries are accessible by means of a {@link RowIterator}.
+     * @throws CanceledExecutionException if canceled in between
+     * @throws SQLException if the connection could not be opened
+     * @since 3.1
+     */
+    public RowIteratorConnection createRowIteratorConnection(final ExecutionContext exec,
+        final CredentialsProvider cp, final boolean useDbRowId) throws SQLException {
         if (m_blobFactory == null) {
             m_blobFactory = new BinaryObjectCellFactory(exec);
         }
@@ -279,44 +314,22 @@ public final class DatabaseReaderConnection {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             final Statement stmt = initStatement(cp, conn);
-            try {
-                int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null)
-                    ? DatabaseConnectionSettings.FETCH_SIZE : -1;
-                m_conn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
-                final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
-                // execute all except the last query
-                for (int i = 0; i < oQueries.length - 1; i++) {
-                    LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
-                    stmt.execute(oQueries[i]);
-                }
-                final String selectQuery = oQueries[oQueries.length - 1];
-                LOGGER.debug("Executing SQL statement as executeQuery: " + selectQuery);
-                final ResultSet result = stmt.executeQuery(selectQuery);
-                LOGGER.debug("Reading meta data from database ResultSet...");
-                m_spec = createTableSpec(result.getMetaData());
-                LOGGER.debug("Parsing database ResultSet...");
-                return exec.createBufferedDataTable(new DataTable() {
-                    /** {@inheritDoc} */
-                    @Override
-                    public DataTableSpec getDataTableSpec() {
-                        return m_spec;
-                    }
-                    /** {@inheritDoc} */
-                    @Override
-                    public RowIterator iterator() {
-                        return new DBRowIterator(result, useDbRowId);
-                    }
-
-                }, exec);
-            } finally {
-                if (stmt != null) {
-                    if (!conn.getAutoCommit()) {
-                        conn.commit();
-                    }
-                    DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
-                    stmt.close();
-                }
+            int fetchsize =
+                (DatabaseConnectionSettings.FETCH_SIZE != null) ? DatabaseConnectionSettings.FETCH_SIZE : -1;
+            m_conn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
+            final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
+            // execute all except the last query
+            for (int i = 0; i < oQueries.length - 1; i++) {
+                LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
+                stmt.execute(oQueries[i]);
             }
+            final String selectQuery = oQueries[oQueries.length - 1];
+            LOGGER.debug("Executing SQL statement as executeQuery: " + selectQuery);
+            final ResultSet result = stmt.executeQuery(selectQuery);
+            LOGGER.debug("Reading meta data from database ResultSet...");
+            m_spec = createTableSpec(result.getMetaData());
+            LOGGER.debug("Parsing database ResultSet...");
+            return new RowIteratorConnection(conn, stmt, result, m_spec, autoCommit, useDbRowId);
         }
     }
 
@@ -951,4 +964,71 @@ public final class DatabaseReaderConnection {
             }
         }
     }
+
+    /**
+     * A row iterator that holds an open database connection and allows to create an iterator that iterates through the
+     * database entries and return them as a data row.
+     * IMPORTANT: the RowIteratorConnection needs to be closed after use in order to close the database connection.
+     * 
+     * @author Martin Horn, University of Konstanz
+     * @since 3.1
+     */
+    public class RowIteratorConnection {
+
+        private Connection m_conn2;
+
+        private Statement m_stmt;
+
+        private boolean m_autoCommit;
+
+        private ResultSet m_result;
+
+        private boolean m_useDbRowId;
+
+        private DataTableSpec m_spec2;
+
+        /**
+        *
+        */
+        public RowIteratorConnection(final Connection conn, final Statement stmt, final ResultSet result,
+            final DataTableSpec spec, final boolean autoCommit, final boolean useDbRowId) {
+            m_conn2 = conn;
+            m_stmt = stmt;
+            m_result = result;
+            m_spec2 = spec;
+            m_autoCommit = autoCommit;
+            m_useDbRowId = useDbRowId;
+        }
+
+        /**
+         * @return the database row iterator
+         */
+        public RowIterator iterator() {
+            return new DBRowIterator(m_result, m_useDbRowId);
+        }
+
+        /**
+         * @return the data table spec of the rows returned by the row iterator
+         */
+        public DataTableSpec getDataTableSpec() {
+            return m_spec2;
+        }
+
+        /**
+         * Closes the database connection.
+         *
+         * @throws SQLException
+         */
+        public void close() throws SQLException {
+            if (m_stmt != null) {
+                if (!m_conn2.getAutoCommit()) {
+                    m_conn2.commit();
+                }
+                DatabaseConnectionSettings.setAutoCommit(m_conn2, m_autoCommit);
+                m_stmt.close();
+            }
+        }
+
+    }
+
 }
