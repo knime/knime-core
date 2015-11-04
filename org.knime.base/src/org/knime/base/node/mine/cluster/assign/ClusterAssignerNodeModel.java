@@ -79,6 +79,14 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
@@ -136,10 +144,35 @@ public class ClusterAssignerNodeModel extends NodeModel {
     @Override
     public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        PMMLPortObject port = (PMMLPortObject) inData[PMML_PORT];
+        BufferedDataTable data =(BufferedDataTable) inData[1];
+        ColumnRearranger colre = createColumnRearranger((PMMLPortObject) inData[0], data.getDataTableSpec());
+        BufferedDataTable bdt =
+                exec.createColumnRearrangeTable(data, colre, exec);
+        return new BufferedDataTable[]{bdt};
+    }
 
-        List<Node> models = port.getPMMLValue().getModels(
-                PMMLModelType.ClusteringModel);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                PMMLPortObject portObj = (PMMLPortObject) ((PortObjectInput) inputs[0]).getPortObject();
+                ColumnRearranger colre = createColumnRearranger(portObj, (DataTableSpec) inSpecs[1]);
+                StreamableFunction func = colre.createStreamableFunction(1, 0);
+                func.runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    private ColumnRearranger createColumnRearranger(final PMMLPortObject port, final DataTableSpec inSpec)
+        throws InvalidSettingsException {
+
+        List<Node> models = port.getPMMLValue().getModels(PMMLModelType.ClusteringModel);
         if (models.isEmpty()) {
             String msg = "No Clustering Model found.";
             LOGGER.error(msg);
@@ -154,19 +187,15 @@ public class ClusterAssignerNodeModel extends NodeModel {
         double[][] protos = trans.getPrototypes();
         for (int i = 0; i < protos.length; i++) {
             double[] prototype = protos[i];
-            prototypes.add(new Prototype(prototype,
-                    new StringCell(labels[i])));
+            prototypes.add(new Prototype(prototype, new StringCell(labels[i])));
         }
-        BufferedDataTable data = (BufferedDataTable)inData[DATA_PORT];
-        ColumnRearranger colre = new ColumnRearranger(data.getSpec());
-        colre.append(new ClusterAssignFactory(
-                measure, prototypes, createNewOutSpec(data.getDataTableSpec()),
-                findLearnedColumnIndices(data.getSpec(),
-                        trans.getUsedColumns())));
-        BufferedDataTable bdt =
-                exec.createColumnRearrangeTable(data, colre, exec);
-        return new BufferedDataTable[]{bdt};
+        ColumnRearranger colre = new ColumnRearranger(inSpec);
+        colre.append(new ClusterAssignFactory(measure, prototypes, createNewOutSpec(inSpec),
+            findLearnedColumnIndices(inSpec, trans.getUsedColumns())));
+        return colre;
     }
+
+
 
     private static int[] findLearnedColumnIndices(final DataTableSpec ospec,
             final Set<String> learnedCols)
@@ -183,6 +212,23 @@ public class ClusterAssignerNodeModel extends NodeModel {
         }
         return colIndices;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+    }
+
 
 
     /**
