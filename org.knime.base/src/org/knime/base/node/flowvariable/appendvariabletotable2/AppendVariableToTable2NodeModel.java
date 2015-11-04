@@ -72,13 +72,13 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
@@ -90,7 +90,7 @@ import org.knime.core.util.Pair;
  *
  * @since 2.9
  */
-public class AppendVariableToTable2NodeModel extends NodeModel {
+public class AppendVariableToTable2NodeModel extends SimpleStreamableFunctionNodeModel {
 
     /**
      * Key for the filter configuration.
@@ -102,7 +102,7 @@ public class AppendVariableToTable2NodeModel extends NodeModel {
     /** One input, one output. */
     public AppendVariableToTable2NodeModel() {
         super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL, BufferedDataTable.TYPE},
-            new PortType[]{BufferedDataTable.TYPE});
+            new PortType[]{BufferedDataTable.TYPE}, 1, 0);
         m_filter = new FlowVariableFilterConfiguration(CFG_KEY_FILTER);
         m_filter.loadDefaults(getAvailableFlowVariables(), false);
     }
@@ -124,7 +124,8 @@ public class AppendVariableToTable2NodeModel extends NodeModel {
         return new DataTableSpec[]{ar.createSpec()};
     }
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec) throws InvalidSettingsException {
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) throws InvalidSettingsException {
         ColumnRearranger arranger = new ColumnRearranger(spec);
         Set<String> nameHash = new HashSet<String>();
         for (DataColumnSpec c : spec) {
