@@ -61,8 +61,8 @@
 </fullDescription>
 
 	<ports>
-		<inPort index="0" name="Table 1">TODO A sorted table with n rows if the option "Wrap Tables" is checked, otherwise a table without restrictions</inPort>
-		<inPort index="1" name="Table 2">TODO Another sorted table with n rows if the option "Wrap Tables" is checked, otherwise a table without restrictions
+		<inPort index="0" name="Table 1">If the option "Identical row keys and table lengths" is checked: a sorted table with n rows. Otherwise a table without restrictions.</inPort>
+		<inPort index="1" name="Table 2">If the option "Identical row keys and table lengths" is checked: Another sorted table with n rows. Otherwise a table without restrictions.
 		</inPort>
 		<outPort index="0" name="Appended table">A table with the columns from both
 			Table 1 and Table 2
