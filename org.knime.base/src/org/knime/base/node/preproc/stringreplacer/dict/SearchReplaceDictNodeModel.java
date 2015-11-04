@@ -70,9 +70,12 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -80,7 +83,7 @@ import org.knime.core.util.FileUtil;
  *
  * @author wiswedel, University of Konstanz
  */
-final class SearchReplaceDictNodeModel extends NodeModel {
+final class SearchReplaceDictNodeModel extends SimpleStreamableFunctionNodeModel {
 
     /** Config key for dictionary location. */
     static final String CFG_DICT_LOCATION = "dictionary_location";
@@ -107,7 +110,6 @@ final class SearchReplaceDictNodeModel extends NodeModel {
 
     /** One input, one output. */
     public SearchReplaceDictNodeModel() {
-        super(1, 1);
     }
 
     /** {@inheritDoc} */
@@ -152,7 +154,24 @@ final class SearchReplaceDictNodeModel extends NodeModel {
         return new BufferedDataTable[]{result};
     }
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableFunction createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        try {
+            m_replacementMap = readDictionary(null);
+        } catch (IOException e) {
+            throw new InvalidSettingsException("Can't read dictionary file.", e);
+        }
+        return createColumnRearranger((DataTableSpec) inSpecs[0]).createStreamableFunction();
+    }
+
+
+
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
         ColumnRearranger result = new ColumnRearranger(spec);
         final int targetColIndex = spec.findColumnIndex(m_targetColumnName);
         DataColumnSpecCreator newColCreator;
@@ -190,6 +209,7 @@ final class SearchReplaceDictNodeModel extends NodeModel {
         return result;
     }
 
+    /* execution context can be null -> no progress message*/
     private HashMap<String, String> readDictionary(final ExecutionMonitor exec) throws IOException {
         File f = FileUtil.getFileFromURL(FileUtil.toURL(m_dictFileURLString));
         BufferedReader reader = new BufferedReader(new FileReader(f));
@@ -210,7 +230,9 @@ final class SearchReplaceDictNodeModel extends NodeModel {
                 }
                 // ignores line breaks and such, hope it's ok
                 prog += line.length();
-                exec.setProgress(prog / size, "Read dictionary entry for value \"" + value + "\"");
+                if (exec != null) {
+                    exec.setProgress(prog / size, "Read dictionary entry for value \"" + value + "\"");
+                }
             }
         } finally {
             reader.close();
