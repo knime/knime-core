@@ -78,6 +78,14 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
@@ -156,37 +164,58 @@ public final class SVMPredictorNodeModel extends NodeModel {
     public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         PMMLPortObject port = (PMMLPortObject)inData[0];
+        BufferedDataTable testData = (BufferedDataTable) inData[1];
+        ColumnRearranger colre = createColumnRearranger(port, testData.getDataTableSpec());
+        BufferedDataTable result =
+                exec.createColumnRearrangeTable(testData, colre, exec);
+        return new BufferedDataTable[]{result};
+    }
 
-        List<Node> models = port.getPMMLValue().getModels(
-                PMMLModelType.SupportVectorMachineModel);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                PMMLPortObject pmmlModel = (PMMLPortObject) ((PortObjectInput) inputs[0]).getPortObject();
+                ColumnRearranger colre = createColumnRearranger(pmmlModel, (DataTableSpec) inSpecs[1]);
+                StreamableFunction func = colre.createStreamableFunction(1, 0);
+                func.runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    private ColumnRearranger createColumnRearranger(final PMMLPortObject pmmlModel, final DataTableSpec inSpec)
+        throws InvalidSettingsException {
+        List<Node> models = pmmlModel.getPMMLValue().getModels(PMMLModelType.SupportVectorMachineModel);
         if (models.isEmpty()) {
-            String msg = "SVM evaluation failed: "
-                   + "No support vector machine model found.";
+            String msg = "SVM evaluation failed: " + "No support vector machine model found.";
             LOGGER.error(msg);
             throw new RuntimeException(msg);
         }
         PMMLSVMTranslator trans = new PMMLSVMTranslator();
-        port.initializeModelTranslator(trans);
+        pmmlModel.initializeModelTranslator(trans);
 
         List<Svm> svms = trans.getSVMs();
         m_svms = svms.toArray(new Svm[svms.size()]);
-        if (m_addProbabilities.getBooleanValue() == port.getSpec().getTargetCols().size() > 0) {
-            adjustOrder(port.getSpec().getTargetCols().get(0));
+        if (m_addProbabilities.getBooleanValue() == pmmlModel.getSpec().getTargetCols().size() > 0) {
+            adjustOrder(pmmlModel.getSpec().getTargetCols().get(0));
         }
-        DataTableSpec testSpec =
-                ((BufferedDataTable)inData[1]).getDataTableSpec();
-        PMMLPortObjectSpec pmmlSpec = ((PMMLPortObject)inData[0]).getSpec();
-        DataTableSpec trainingSpec =
-                pmmlSpec.getDataTableSpec();
+        DataTableSpec testSpec = inSpec;
+        PMMLPortObjectSpec pmmlSpec = pmmlModel.getSpec();
+        DataTableSpec trainingSpec = pmmlSpec.getDataTableSpec();
         // try to find all columns (except the class column)
         Vector<Integer> colindices = new Vector<Integer>();
         for (DataColumnSpec colspec : trainingSpec) {
             if (colspec.getType().isCompatible(DoubleValue.class)) {
                 int colindex = testSpec.findColumnIndex(colspec.getName());
                 if (colindex < 0) {
-                    throw new InvalidSettingsException("Column " + "\'"
-                            + colspec.getName() + "\' not found"
-                            + " in test data");
+                    throw new InvalidSettingsException(
+                        "Column " + "\'" + colspec.getName() + "\' not found" + " in test data");
                 }
                 colindices.add(colindex);
             }
@@ -197,17 +226,13 @@ public final class SVMPredictorNodeModel extends NodeModel {
         }
         final PredictorHelper predictorHelper = PredictorHelper.getInstance();
         final String targetCol = pmmlSpec.getTargetFields().iterator().next();
-        SVMPredictor svmpredict =
-            new SVMPredictor(targetCol, m_svms, m_colindices, predictorHelper.computePredictionColumnName(
-                m_predictionColumn.getStringValue(), m_overridePrediction.getBooleanValue(), targetCol),
-                m_addProbabilities.getBooleanValue(), m_suffix.getStringValue());
-        BufferedDataTable testData = (BufferedDataTable) inData[1];
-        ColumnRearranger colre =
-                new ColumnRearranger(testData.getDataTableSpec());
+        SVMPredictor svmpredict = new SVMPredictor(targetCol, m_svms, m_colindices,
+            predictorHelper.computePredictionColumnName(m_predictionColumn.getStringValue(),
+                m_overridePrediction.getBooleanValue(), targetCol),
+            m_addProbabilities.getBooleanValue(), m_suffix.getStringValue());
+        ColumnRearranger colre = new ColumnRearranger(testSpec);
         colre.append(svmpredict);
-        BufferedDataTable result =
-                exec.createColumnRearrangeTable(testData, colre, exec);
-        return new BufferedDataTable[]{result};
+        return colre;
     }
 
     /**
@@ -228,6 +253,22 @@ public final class SVMPredictorNodeModel extends NodeModel {
                 }
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     /**
