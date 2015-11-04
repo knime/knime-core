@@ -90,6 +90,14 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
@@ -216,57 +224,84 @@ public final class MLPPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    public PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws Exception {
+    public PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         BufferedDataTable testdata = (BufferedDataTable)inData[1];
         PMMLPortObject pmmlPort = (PMMLPortObject)inData[0];
+        ColumnRearranger colre = createColumnRearranger(pmmlPort, testdata.getDataTableSpec());
+        BufferedDataTable bdt = exec.createColumnRearrangeTable(testdata, colre, exec);
+        return new BufferedDataTable[]{bdt};
+    }
 
-        List<Node> models = pmmlPort.getPMMLValue().getModels(
-                PMMLModelType.NeuralNetwork);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                PMMLPortObject pmmlPortObject = (PMMLPortObject) ((PortObjectInput) inputs[0]).getPortObject();
+                ColumnRearranger colre = createColumnRearranger(pmmlPortObject, (DataTableSpec) inSpecs[1]);
+                StreamableFunction func = colre.createStreamableFunction(1, 0);
+                func.runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+    }
+
+    private ColumnRearranger createColumnRearranger(final PMMLPortObject pmmlPortObject, final DataTableSpec inSpec) throws Exception {
+        List<Node> models = pmmlPortObject.getPMMLValue().getModels(PMMLModelType.NeuralNetwork);
         if (models.isEmpty()) {
-            String msg = "Neural network evaluation failed: "
-                   + "No neural network model found.";
+            String msg = "Neural network evaluation failed: " + "No neural network model found.";
             LOGGER.error(msg);
             throw new RuntimeException(msg);
         }
         PMMLNeuralNetworkTranslator trans = new PMMLNeuralNetworkTranslator();
-        pmmlPort.initializeModelTranslator(trans);
+        pmmlPortObject.initializeModelTranslator(trans);
         m_mlp = trans.getMLP();
 
-        m_columns =
-                getLearningColumnIndices(testdata.getDataTableSpec(),
-                        pmmlPort.getSpec());
-        DataColumnSpec targetCol =
-                pmmlPort.getSpec().getTargetCols().iterator().next();
-        final String predictionColumnName =
-            PredictorHelper.getInstance().computePredictionColumnName(m_predictionColumn.getStringValue(), m_overridePrediction.getBooleanValue(), targetCol.getName());
+        m_columns = getLearningColumnIndices(inSpec, pmmlPortObject.getSpec());
+        DataColumnSpec targetCol = pmmlPortObject.getSpec().getTargetCols().iterator().next();
+        final String predictionColumnName = PredictorHelper.getInstance().computePredictionColumnName(
+            m_predictionColumn.getStringValue(), m_overridePrediction.getBooleanValue(), targetCol.getName());
         MLPClassificationFactory mymlp;
         /*
          * Regression
          */
         if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
 
-            mymlp =
-                new MLPClassificationFactory(true, m_columns, targetCol, predictionColumnName,
-                    m_appendProbs.getBooleanValue(), m_suffix.getStringValue());
-        } else if (m_mlp.getMode()
-                == MultiLayerPerceptron.CLASSIFICATION_MODE) {
+            mymlp = new MLPClassificationFactory(true, m_columns, targetCol, predictionColumnName,
+                m_appendProbs.getBooleanValue(), m_suffix.getStringValue());
+        } else if (m_mlp.getMode() == MultiLayerPerceptron.CLASSIFICATION_MODE) {
             /*
              * Classification
              */
-            mymlp =
-                new MLPClassificationFactory(false, m_columns, targetCol, predictionColumnName,
-                    m_appendProbs.getBooleanValue(), m_suffix.getStringValue());
+            mymlp = new MLPClassificationFactory(false, m_columns, targetCol, predictionColumnName,
+                m_appendProbs.getBooleanValue(), m_suffix.getStringValue());
         } else {
             throw new Exception("Unsupported Mode: " + m_mlp.getMode());
         }
 
-        ColumnRearranger colre =
-                new ColumnRearranger(testdata.getDataTableSpec());
+        ColumnRearranger colre = new ColumnRearranger(inSpec);
         colre.append(mymlp);
-        BufferedDataTable bdt =
-                exec.createColumnRearrangeTable(testdata, colre, exec);
-        return new BufferedDataTable[]{bdt};
+        return colre;
     }
 
     /**
