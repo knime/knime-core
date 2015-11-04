@@ -77,6 +77,15 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  * This is the model implementation of CellReplacer. Replaces cells in a column
@@ -141,6 +150,42 @@ public class CellReplacerNodeModel extends NodeModel {
                 exec.createColumnRearrangeTable(table, rearranger, exec
                         .createSubProgress(outputCreateAmount));
         return new BufferedDataTable[]{output};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                BufferedDataTable dictTable = (BufferedDataTable) ((PortObjectInput) inputs[1]).getPortObject();
+                ColumnRearranger rearranger =
+                        createColumnRearranger((DataTableSpec) inSpecs[0], dictTable
+                                .getDataTableSpec(), dictTable, exec);
+                StreamableFunction func = rearranger.createStreamableFunction(0, 0);
+                func.runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     /**
