@@ -46,9 +46,16 @@ package org.knime.base.node.preproc.columnappend;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -57,20 +64,55 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
  * This is the model implementation of ColumnAppender. A fast way to reverse the operation of a splitter noded.
  *
  * @author Aaron Hart, Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Martin Horn, University of Konstanz
  */
 final class ColumnAppenderNodeModel extends NodeModel {
+
+
+    static SettingsModelBoolean createWrapTableModel() {
+        return new SettingsModelBoolean("wrap_table", true);
+    }
+
+    static final String[] ROW_KEY_SELECT_OPTIONS = {"Use row keys from FIRST table", "Use row keys from SECOND table", "Generate new row keys"};
+
+    static SettingsModelString createRowKeySelectModel() {
+        return new SettingsModelString("row_key_select", ROW_KEY_SELECT_OPTIONS[0]);
+    }
+
+
+    /* settings whether the data table should either be wrapped or newly created */
+    private final SettingsModelBoolean m_wrapTable;
+
+    /* settings that determine from what table the row keys are to be used*/
+    private final SettingsModelString m_rowKeySelect;
 
     /**
      * Constructor for the node model.
      */
     ColumnAppenderNodeModel() {
         super(2, 1);
+        //initialize settings models
+        m_wrapTable = createWrapTableModel();
+        m_rowKeySelect = createRowKeySelectModel();
+        m_rowKeySelect.setEnabled(!m_wrapTable.getBooleanValue());
+        m_wrapTable.addChangeListener(l -> m_rowKeySelect.setEnabled(!m_wrapTable.getBooleanValue()));
     }
 
     /**
@@ -78,12 +120,150 @@ final class ColumnAppenderNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
-            throws Exception {
+        throws Exception {
         DataTableSpec[] inSpecs = {inData[0].getDataTableSpec(), inData[1].getDataTableSpec()};
         DataTableSpec newSpec = createOutSpec(inSpecs);
-        BufferedDataTable uniquifiedTable = exec.createSpecReplacerTable(inData[1], newSpec);
-        BufferedDataTable out = exec.createJoinedTable(inData[0], uniquifiedTable, exec);
+
+        BufferedDataTable out;
+        if (m_wrapTable.getBooleanValue()) {
+            BufferedDataTable uniquifiedTable = exec.createSpecReplacerTable(inData[1], newSpec);
+            out = exec.createJoinedTable(inData[0], uniquifiedTable, exec);
+        } else {
+            //create a new table and fill the rows accordingly
+
+            BufferedDataContainer container =
+                exec.createDataContainer(new DataTableSpec(inSpecs[0], createOutSpec(inSpecs)));
+
+            CustomRowIterator tableIt1 = new CustomRowIteratorImpl1(inData[0].iterator());
+            CustomRowIterator tableIt2 = new CustomRowIteratorImpl1(inData[1].iterator());
+
+
+            //combine rows
+            compute(tableIt1, tableIt2, inSpecs[0].getNumColumns() + inSpecs[1].getNumColumns(),
+                row -> container.addRowToTable(row), new Progress() {
+
+                    long rowCount;
+
+                    long numRows;
+
+                    {
+                        rowCount = 0;
+                        numRows = Math.max(inData[0].size(), inData[1].size());
+                    }
+
+                    @Override
+                    public void check() throws CanceledExecutionException {
+                        exec.checkCanceled();
+                        exec.setProgress(rowCount / (double)numRows);
+                        rowCount++;
+
+                    }
+                });
+
+            container.close();
+            out = container.getTable();
+        }
         return new BufferedDataTable[]{out};
+    }
+
+    /* combines the rows in case a new table is created */
+    private void compute(final CustomRowIterator rowIt1, final CustomRowIterator rowIt2, final int numColsTotal,
+        final RowConsumer output, final Progress progress) throws InterruptedException, CanceledExecutionException {
+
+        boolean useRowKeysFromFirstTable = m_rowKeySelect.getStringValue().equals(ROW_KEY_SELECT_OPTIONS[0]);
+        boolean useRowKeysFromSecondTable = m_rowKeySelect.getStringValue().equals(ROW_KEY_SELECT_OPTIONS[1]);
+        boolean generateRowKeys = m_rowKeySelect.getStringValue().equals(ROW_KEY_SELECT_OPTIONS[2]);
+
+        long rowCount = 0;
+        while (rowIt1.hasNext() && rowIt2.hasNext()) {
+            DataRow row1 = rowIt1.next();
+            DataRow row2 = rowIt2.next();
+            ArrayList<DataCell> cells = new ArrayList<DataCell>(numColsTotal);
+            for (DataCell cell : row1) {
+                cells.add(cell);
+            }
+            for (DataCell cell : row2) {
+                cells.add(cell);
+            }
+            DefaultRow res;
+            if (useRowKeysFromFirstTable) {
+                res = new DefaultRow(row1.getKey(), cells);
+            } else if(useRowKeysFromSecondTable) {
+                res = new DefaultRow(row2.getKey(), cells);
+            } else {
+                res = new DefaultRow("Row" + (rowCount++), cells);
+            }
+            output.consume(res);
+
+        }
+
+        /* --add missing cells if row counts mismatch --*/
+        int extraRowsTab1 = 0;
+        while (((rowIt1.hasNext() && useRowKeysFromFirstTable) || (rowIt1.hasNext() && generateRowKeys)) && !rowIt2.hasNext()) {
+            progress.check();
+
+            DataRow row = rowIt1.next();
+            ArrayList<DataCell> cells = new ArrayList<DataCell>(numColsTotal);
+            for (DataCell cell : row) {
+                cells.add(cell);
+            }
+            for (int i = 0; i < numColsTotal - row.getNumCells(); i++) {
+                cells.add(DataType.getMissingCell());
+            }
+
+            DefaultRow res;
+            if(generateRowKeys) {
+                res = new DefaultRow("Row" + (rowCount++), cells);
+            } else {
+                res = new DefaultRow(row.getKey(), cells);
+            }
+            output.consume(res);
+            extraRowsTab1++;
+        }
+
+        int extraRowsTab2 = 0;
+        while (((rowIt2.hasNext() && useRowKeysFromSecondTable) || (rowIt2.hasNext() && generateRowKeys)) && !rowIt1.hasNext()) {
+
+            progress.check();
+
+            DataRow row = rowIt2.next();
+            ArrayList<DataCell> cells = new ArrayList<DataCell>(numColsTotal);
+            for (int i = 0; i < numColsTotal - row.getNumCells(); i++) {
+                cells.add(DataType.getMissingCell());
+            }
+            for (DataCell cell : row) {
+                cells.add(cell);
+            }
+            DefaultRow res;
+            if(generateRowKeys) {
+                res = new DefaultRow("Row" + (rowCount++), cells);
+            } else {
+                res = new DefaultRow(row.getKey(), cells);
+            }
+            output.consume(res);
+            extraRowsTab2++;
+        }
+
+        //set warning messages if missing values have been inserted or one table was truncated
+        if(useRowKeysFromFirstTable) {
+            if (extraRowsTab1 == 0 && rowIt2.hasNext()) {
+                setWarningMessage("First table is shorter than the second table! Second table has been truncated.");
+            } else if (extraRowsTab1 > 0) {
+                setWarningMessage(
+                    "First table is longer than the second table! Missing values have been added to the second table.");
+            }
+        } else if(useRowKeysFromSecondTable) {
+            if (extraRowsTab2 == 0 && rowIt1.hasNext()) {
+                setWarningMessage("Second table is shorter than the first table! First table has been truncated.");
+            } else if (extraRowsTab2 > 0) {
+                setWarningMessage(
+                    "Second table is longer than the first table! Missing values have been added to the first table.");
+            }
+        } else {
+            if(extraRowsTab1 > 0 || extraRowsTab2 > 0) {
+                setWarningMessage("Both tables differ in length! Missing values have been added accordingly.");
+            }
+        }
     }
 
     /**
@@ -107,6 +287,8 @@ final class ColumnAppenderNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_wrapTable.saveSettingsTo(settings);
+        m_rowKeySelect.saveSettingsTo(settings);;
     }
 
     /**
@@ -114,6 +296,12 @@ final class ColumnAppenderNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        try {
+            m_wrapTable.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            //use default settings for backwards-compatibility
+        }
+        m_rowKeySelect.loadSettingsFrom(settings);
     }
 
     /**
@@ -121,14 +309,20 @@ final class ColumnAppenderNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        try {
+            m_wrapTable.validateSettings(settings);
+        } catch (InvalidSettingsException e) {
+            //use default settings for backwards-compatibility
+        }
+        m_rowKeySelect.validateSettings(settings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File internDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
 
     }
 
@@ -136,8 +330,8 @@ final class ColumnAppenderNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File internDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
 
     }
 
@@ -155,5 +349,150 @@ final class ColumnAppenderNodeModel extends NodeModel {
         DataTableSpec outSpec = new DataTableSpec(cspecs);
 
         return outSpec;
+    }
+
+    //////////////// STREAMING FUNCTIONS ////////////////
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+
+        if (m_wrapTable.getBooleanValue()) {
+            //tables have to be wrapped
+            return super.createStreamableOperator(partitionInfo, inSpecs);
+        }
+
+        //result table is newly created
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+
+                RowInput in1 = (RowInput)inputs[0];
+                RowInput in2 = (RowInput)inputs[1];
+
+                RowOutput out = (RowOutput)outputs[0];
+
+                CustomRowIterator tableIt1 = new CustomRowIteratorImpl2(in1);
+                CustomRowIterator tableIt2 = new CustomRowIteratorImpl2(in2);
+
+                compute(tableIt1, tableIt2,
+                    in1.getDataTableSpec().getNumColumns() + in2.getDataTableSpec().getNumColumns(),
+                    row -> out.push(row), () -> {
+                });
+
+                //poll all the remaining rows if there are any but don't do anything with them
+                while (tableIt1.hasNext()) {
+                    tableIt1.next();
+                }
+                while (tableIt2.hasNext()) {
+                    tableIt2.next();
+                }
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        if (m_wrapTable.getBooleanValue()) {
+            //if the table is wrapped -> not streamable nor distributable
+            return super.getInputPortRoles();
+        } else {
+            //in-ports are non-distributed since it can't be guaranteed that the chunks at each port are of identical size
+            return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_STREAMABLE, InputPortRole.NONDISTRIBUTED_STREAMABLE};
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        if (m_wrapTable.getBooleanValue()) {
+            return super.getOutputPortRoles();
+        } else {
+            return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+        }
+    }
+
+    //////////////// HELPER CLASSES /////////////////////
+
+    static interface CustomRowIterator {
+
+        boolean hasNext() throws InterruptedException;
+
+        DataRow next();
+    }
+
+    private static final class CustomRowIteratorImpl1 implements CustomRowIterator {
+
+        private RowIterator m_rowIt;
+
+        CustomRowIteratorImpl1(final RowIterator rowIt) {
+            m_rowIt = rowIt;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return m_rowIt.hasNext();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataRow next() {
+            return m_rowIt.next();
+        }
+
+    }
+
+    private static final class CustomRowIteratorImpl2 implements CustomRowIterator {
+
+        private RowInput m_rowInput;
+
+        private DataRow m_row = null;
+
+        CustomRowIteratorImpl2(final RowInput rowInput) {
+            m_rowInput = rowInput;
+        }
+
+        /**
+         * {@inheritDoc}
+         *
+         */
+        @Override
+        public boolean hasNext() throws InterruptedException {
+            m_row = m_rowInput.poll();
+            return m_row != null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataRow next() {
+            return m_row;
+        }
+
+    }
+
+    static interface RowConsumer {
+
+        void consume(DataRow row) throws InterruptedException;
+    }
+
+    static interface Progress {
+            void check() throws CanceledExecutionException;
     }
 }

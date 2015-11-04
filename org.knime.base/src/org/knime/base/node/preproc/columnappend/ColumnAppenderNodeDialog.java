@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,60 +41,34 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 22, 2015 (hornm): created
  */
 package org.knime.base.node.preproc.columnappend;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * <code>NodeFactory</code> for the "ColumnAppender" Node. A fast way to reverse the operation of a splitter noded.
+ * <code>NodeDialog</code> for the "ColumnAppender" Node. A fast way to reverse the operation of a splitter node.
  *
- * @author Aaron Hart, Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Martin Horn, University of Konstanz
  */
-public class ColumnAppenderNodeFactory extends NodeFactory<ColumnAppenderNodeModel> {
+public class ColumnAppenderNodeDialog extends DefaultNodeSettingsPane {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ColumnAppenderNodeModel createNodeModel() {
-        return new ColumnAppenderNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<ColumnAppenderNodeModel>
-            createNodeView(final int viewIndex, final ColumnAppenderNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new ColumnAppenderNodeDialog();
+    ColumnAppenderNodeDialog() {
+        final SettingsModelBoolean cfgWrapTable = ColumnAppenderNodeModel.createWrapTableModel();
+        addDialogComponent(new DialogComponentBoolean(cfgWrapTable, "Identical row keys and table lengths"));
+        final SettingsModelString cfgRowKeySelect = ColumnAppenderNodeModel.createRowKeySelectModel();
+        addDialogComponent(new DialogComponentButtonGroup(cfgRowKeySelect, true, null,
+            ColumnAppenderNodeModel.ROW_KEY_SELECT_OPTIONS));
+        cfgRowKeySelect.setEnabled(!cfgWrapTable.getBooleanValue());
+        cfgWrapTable.addChangeListener(l -> cfgRowKeySelect.setEnabled(!cfgWrapTable.getBooleanValue()));
     }
 
 }
