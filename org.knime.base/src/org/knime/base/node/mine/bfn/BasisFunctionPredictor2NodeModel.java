@@ -70,6 +70,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -110,12 +117,52 @@ public abstract class BasisFunctionPredictor2NodeModel extends NodeModel {
             final ExecutionContext exec)
             throws CanceledExecutionException, InvalidSettingsException {
         BasisFunctionPortObject pred = (BasisFunctionPortObject) portObj[0];
+        final BufferedDataTable data = (BufferedDataTable) portObj[1];
+        final DataTableSpec dataSpec = data.getDataTableSpec();
+        ColumnRearranger colreg = createColumnRearranger(pred, dataSpec);
+       return new BufferedDataTable[]{exec.createColumnRearrangeTable(
+                data, colreg, exec)};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                BasisFunctionPortObject pred = (BasisFunctionPortObject)((PortObjectInput)inputs[0]).getPortObject();
+                ColumnRearranger colre = createColumnRearranger(pred, (DataTableSpec)inSpecs[1]);
+                colre.createStreamableFunction(1, 0).runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+    }
+
+    private ColumnRearranger createColumnRearranger(final BasisFunctionPortObject pred, final DataTableSpec dataSpec) {
         if (pred.getBasisFunctions().size() == 0) {
             setWarningMessage("Rule model is emtpy, no rules available.");
         }
         final DataTableSpec modelSpec = pred.getSpec();
-        final BufferedDataTable data = (BufferedDataTable) portObj[1];
-        final DataTableSpec dataSpec = data.getDataTableSpec();
         int trainingColIndex = modelSpec.getNumColumns() - 5;
         int[] filteredColumns = new int[trainingColIndex];
         for (int i = 0; i < filteredColumns.length; i++) {
@@ -127,8 +174,7 @@ public abstract class BasisFunctionPredictor2NodeModel extends NodeModel {
             createSpec(dataSpec, modelSpec, trainingColIndex), filteredColumns, pred.getBasisFunctions(), m_dontKnow,
             normalizeClassification(), m_appendClassProps, modelSpec.getColumnNames()[trainingColIndex], m_suffix
                 .getStringValue()));
-       return new BufferedDataTable[]{exec.createColumnRearrangeTable(
-                data, colreg, exec)};
+        return colreg;
     }
 
     /**
