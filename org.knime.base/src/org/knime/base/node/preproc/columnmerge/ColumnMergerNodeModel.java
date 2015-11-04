@@ -56,32 +56,27 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 
 /**
  * Model to column merger.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class ColumnMergerNodeModel extends NodeModel {
+final class ColumnMergerNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private ColumnMergerConfiguration m_configuration;
 
-    /** One in, one out. */
-    public ColumnMergerNodeModel() {
-        super(1, 1);
-    }
 
     /** Creates column rearranger doing all the work.
      * @param spec The input spec.
      * @return The rearranger creating the output table/spec. */
-    private ColumnRearranger createColumnRearranger(
+    @Override
+    protected ColumnRearranger createColumnRearranger(
             final DataTableSpec spec) throws InvalidSettingsException {
         ColumnMergerConfiguration cfg = m_configuration;
         if (cfg == null) {
@@ -150,30 +145,7 @@ final class ColumnMergerNodeModel extends NodeModel {
         return result;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[] {rearranger.createSpec()};
-    }
 
-    /** {@inheritDoc} */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        DataTableSpec spec = inData[0].getDataTableSpec();
-        ColumnRearranger rearranger = createColumnRearranger(spec);
-        BufferedDataTable out = exec.createColumnRearrangeTable(
-                inData[0], rearranger, exec);
-        return new BufferedDataTable[] {out};
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void reset() {
-        // no internals
-    }
 
     /** {@inheritDoc} */
     @Override
