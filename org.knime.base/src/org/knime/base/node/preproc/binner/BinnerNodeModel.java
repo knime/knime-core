@@ -60,9 +60,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 
 /**
  * Bins numeric columns into intervals which are then returned as string-type
@@ -70,7 +70,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-final class BinnerNodeModel extends NodeModel {
+final class BinnerNodeModel extends SimpleStreamableFunctionNodeModel {
     // private static final NodeLogger LOGGER =
     // NodeLogger.getLogger(BinnerNodeModel.class);
 
@@ -93,10 +93,6 @@ final class BinnerNodeModel extends NodeModel {
     /** Keeps index of the output port which is 0. */
     static final int OUTPORT = 0;
 
-    /** Creates a new binner. */
-    BinnerNodeModel() {
-        super(1, 1);
-    }
 
     /**
      * {@inheritDoc}
@@ -107,7 +103,7 @@ final class BinnerNodeModel extends NodeModel {
         assert (data != null && data.length == 1 && data[INPORT] != null);
         DataTableSpec spec = data[INPORT].getDataTableSpec();
         BufferedDataTable buf = exec.createColumnRearrangeTable(data[INPORT],
-                createColReg(spec), exec);
+            createColumnRearranger(spec), exec);
         return new BufferedDataTable[]{buf};
     }
 
@@ -151,11 +147,15 @@ final class BinnerNodeModel extends NodeModel {
             super.setWarningMessage("No column select for binning.");
         }
         // generate numeric binned table spec
-        DataTableSpec spec = createColReg(inSpecs[INPORT]).createSpec();
+        DataTableSpec spec = createColumnRearranger(inSpecs[INPORT]).createSpec();
         return new DataTableSpec[]{spec};
     }
 
-    private ColumnRearranger createColReg(final DataTableSpec spec) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
         ColumnRearranger colreg = new ColumnRearranger(spec);
         for (String columnKey : m_columnToBins.keySet()) {
             Bin[] bins = m_columnToBins.get(columnKey);
