@@ -70,13 +70,17 @@ final class ColumnRearrangerFunction extends StreamableFunction {
     /**
      * @param rearranger */
     ColumnRearrangerFunction(final ColumnRearranger rearranger) {
-        this(rearranger, null);
+        this(rearranger, null, StreamableFunction.DEFAULT_INPORT_INDEX, StreamableFunction.DEFAULT_OUTPORT_INDEX);
     }
 
     /**
      * @param rearranger
-     * @param emptyInternals */
-    ColumnRearrangerFunction(final ColumnRearranger rearranger, final StreamableOperatorInternals emptyInternals) {
+     * @param emptyInternals
+     * @param inPortIdx
+     * @param outPortIdx
+     *  */
+    ColumnRearrangerFunction(final ColumnRearranger rearranger, final StreamableOperatorInternals emptyInternals, final int inPortIdx, final int outPortIdx) {
+        super(inPortIdx, outPortIdx);
         Vector<SpecAndFactoryObject> includes = rearranger.getIncludes();
         m_newColumnsMapping = RearrangeColumnsTable.createNewColumnsProducerMapping(includes);
         final int size = includes.size();

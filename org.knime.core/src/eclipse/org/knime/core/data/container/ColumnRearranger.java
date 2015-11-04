@@ -63,6 +63,8 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 
@@ -648,6 +650,19 @@ public class ColumnRearranger {
         return new ColumnRearrangerFunction(this);
     }
 
+    /**
+     * Creates a {@link StreamableFunction} that represents the row calculation. The returned function works on the ports specified by the respective parameters.
+     * NOTE: the specified ports have to be streamable (see {@link InputPortRole} and {@link OutputPortRole}).
+     * @param inPortIdx index of the inport the returned function works on
+     * @param outPortIdx index of the outport the returned function works on
+     * @return the function representing the calculation.
+     * @since 3.0
+     * @noreference Pending API.
+     */
+    public final StreamableFunction createStreamableFunction(final int inPortIdx, final int outPortIdx) {
+        return new ColumnRearrangerFunction(this, null, inPortIdx, outPortIdx);
+    }
+
     /** Creates and {@link StreamableFunction} that represents the row
      * calculation.
      *
@@ -663,7 +678,28 @@ public class ColumnRearranger {
      */
     public final StreamableFunction createStreamableFunction(
             final StreamableOperatorInternals emptyInternals) {
-        return new ColumnRearrangerFunction(this, emptyInternals);
+        return new ColumnRearrangerFunction(this, emptyInternals, StreamableFunction.DEFAULT_INPORT_INDEX, StreamableFunction.DEFAULT_OUTPORT_INDEX);
+    }
+
+    /** Creates and {@link StreamableFunction} that represents the row
+     * calculation. The returned function works on the ports specified by the respective parameters.
+     * NOTE: the specified ports have to be streamable (see {@link InputPortRole} and {@link OutputPortRole}).
+     *
+     * <p><b>NOTE:</b> Pending API, don't use!
+     * @param emptyInternals An empty instance of a
+     * {@link StreamableOperatorInternals} that is filled by
+     * the client implementation and that gets returned by the function's
+     * {@link StreamableFunction#saveInternals()} method after the table has been
+     * processed.
+     * @param inPortIdx index of the in port the returned function works on
+     * @param outPortIdx index of the out port the returned function works on
+     * @return The function representing the calculation.
+     * @since 3.0
+     * @noreference Pending API.
+     */
+    public final StreamableFunction createStreamableFunction(
+            final StreamableOperatorInternals emptyInternals, final int inPortIdx, final int outPortIdx) {
+        return new ColumnRearrangerFunction(this, emptyInternals, inPortIdx, outPortIdx);
     }
 
     /** Utility class that helps us with internal data structures. */

@@ -47,9 +47,7 @@
  */
 package org.knime.core.node.streamable;
 
-/** A port role describes the requirements for a node's output object. Some
- * nodes may only need to see the data once (so they are streamable), others
- * may need multiple iterations on the data and can't be parallelized.
+/** A port role describes the requirements for a node's output object.
  * @since 2.6
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */

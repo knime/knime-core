@@ -51,10 +51,12 @@ import java.lang.reflect.Array;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.streamable.MergeOperator;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.PortOutput;
@@ -85,6 +87,25 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
     public SimpleStreamableFunctionWithInternalsNodeModel(final Class<T> cl) {
         m_class = cl;
 
+    }
+
+    /**
+     * Constructor for a node with multiple in or out ports.
+     *
+     * @param cl The class of the {@link StreamableOperatorInternals} (used for instantiation of arrays and new
+     *            instances).
+     * @param inPortTypes in-port types. The ports at the index <code>streamableInPortIdx</code> MUST be a non-optional
+     *            {@link BufferedDataTable}!
+     * @param outPortTypes out-port types.The ports at the index <code>streamableOutPortIdx</code> MUST be a
+     *            non-optional {@link BufferedDataTable}!
+     * @param streamableInPortIdx the index of the port that is streamable
+     * @param streamableOutPortIdx the index of the port that is streamable
+     * @since 3.1
+     */
+    public SimpleStreamableFunctionWithInternalsNodeModel(final Class<T> cl, final PortType[] inPortTypes,
+        final PortType[] outPortTypes, final int streamableInPortIdx, final int streamableOutPortIdx) {
+        super(inPortTypes, outPortTypes, streamableInPortIdx, streamableOutPortIdx);
+        m_class = cl;
     }
 
     /**
@@ -143,7 +164,8 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
             throw new NullPointerException("createStreamingOperatorInternals" + " in class "
                 + getClass().getSimpleName() + " must not return null");
         }
-        return createColumnRearranger(in, emptyInternals).createStreamableFunction(emptyInternals);
+        return createColumnRearranger(in, emptyInternals).createStreamableFunction(emptyInternals,
+            getStreamableInPortIdx(), getStreamableOutPortIdx());
     }
 
     /** {@inheritDoc} */

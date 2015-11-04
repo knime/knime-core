@@ -49,6 +49,7 @@ package org.knime.core.node.streamable.simple;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -59,6 +60,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.streamable.PartitionInfo;
@@ -74,11 +76,36 @@ import org.knime.core.node.streamable.StreamableFunctionProducer;
  */
 public abstract class SimpleStreamableFunctionNodeModel extends NodeModel implements StreamableFunctionProducer {
 
+    private int m_streamableInPortIdx;
+    private int m_streamableOutPortIdx;
+
     /**
      * Default constructor, defining one data input and one data output port.
      */
     public SimpleStreamableFunctionNodeModel() {
         super(1, 1);
+        m_streamableInPortIdx = 0;
+        m_streamableOutPortIdx = 0;
+    }
+
+    /**
+     * Constructor for a node with multiple in or out ports.
+     *
+     * @param inPortTypes in-port types. The ports at the index <code>streamableInPortIdx</code> MUST be a non-optional {@link BufferedDataTable}!
+     * @param outPortTypes out-port types.The ports at the index <code>streamableOutPortIdx</code> MUST be a non-optional {@link BufferedDataTable}!
+     * @param streamableInPortIdx the index of the port that is streamable. All the others are assumed as neither streamable nor distributable.
+     * @param streamableOutPortIdx the index of the port that is streamable. All the others are assumed as neither streamable nor distributable.
+     * @since 3.1
+     */
+    public SimpleStreamableFunctionNodeModel(final PortType[] inPortTypes,
+        final PortType[] outPortTypes, final int streamableInPortIdx, final int streamableOutPortIdx) {
+        super(inPortTypes, outPortTypes);
+        assert BufferedDataTable.TYPE.isSuperTypeOf(inPortTypes[streamableInPortIdx]);
+        assert BufferedDataTable.TYPE.isSuperTypeOf(outPortTypes[streamableOutPortIdx]);
+        assert !inPortTypes[streamableInPortIdx].isOptional();
+        assert !outPortTypes[streamableOutPortIdx].isOptional();
+        m_streamableInPortIdx = streamableInPortIdx;
+        m_streamableOutPortIdx = streamableOutPortIdx;
     }
 
     /** {@inheritDoc} */
@@ -113,16 +140,20 @@ public abstract class SimpleStreamableFunctionNodeModel extends NodeModel implem
     /** {@inheritDoc} */
     @Override
     public InputPortRole[] getInputPortRoles() {
-        InputPortRole in =
-            isDistributable() ? InputPortRole.DISTRIBUTED_STREAMABLE : InputPortRole.NONDISTRIBUTED_STREAMABLE;
-        return new InputPortRole[]{in};
+        InputPortRole[] in = new InputPortRole[getNrInPorts()];
+        Arrays.fill(in, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE);
+        in[m_streamableInPortIdx] =
+            isDistributable() ? org.knime.core.node.streamable.InputPortRole.DISTRIBUTED_STREAMABLE : org.knime.core.node.streamable.InputPortRole.NONDISTRIBUTED_STREAMABLE;
+        return in;
     }
 
     /** {@inheritDoc} */
     @Override
     public OutputPortRole[] getOutputPortRoles() {
-        OutputPortRole out = isDistributable() ? OutputPortRole.DISTRIBUTED : OutputPortRole.NONDISTRIBUTED;
-        return new OutputPortRole[]{out};
+        OutputPortRole[] out = new OutputPortRole[getNrOutPorts()];
+        Arrays.fill(out, OutputPortRole.NONDISTRIBUTED);
+        out[m_streamableOutPortIdx] = isDistributable() ? OutputPortRole.DISTRIBUTED : OutputPortRole.NONDISTRIBUTED;
+        return out;
     }
 
     /**
@@ -137,13 +168,29 @@ public abstract class SimpleStreamableFunctionNodeModel extends NodeModel implem
     protected abstract ColumnRearranger createColumnRearranger(final DataTableSpec spec)
         throws InvalidSettingsException;
 
+    /**
+     * @return the streamableInPortIdx
+     * @since 3.1
+     */
+    protected int getStreamableInPortIdx() {
+        return m_streamableInPortIdx;
+    }
+
+    /**
+     * @return the streamableOutPortIdx
+     * @since 3.1
+     */
+    public int getStreamableOutPortIdx() {
+        return m_streamableOutPortIdx;
+    }
+
     /** {@inheritDoc} */
     @Override
     public StreamableFunction
         createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DataTableSpec in = (DataTableSpec)inSpecs[0];
-        return createColumnRearranger(in).createStreamableFunction();
+        DataTableSpec in = (DataTableSpec)inSpecs[m_streamableInPortIdx];
+        return createColumnRearranger(in).createStreamableFunction(m_streamableInPortIdx, m_streamableOutPortIdx);
     }
 
     /** {@inheritDoc} */

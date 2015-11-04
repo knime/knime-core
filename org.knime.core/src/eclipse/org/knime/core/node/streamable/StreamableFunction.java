@@ -60,12 +60,49 @@ import org.knime.core.node.ExecutionContext;
  */
 public abstract class StreamableFunction extends StreamableOperator {
 
+    /**
+     * The default in port index the StreamableFunction operates on.
+     * @since 3.1
+     */
+    public static final int DEFAULT_INPORT_INDEX = 0;
+
+    /**
+     * The default out port index the SreamableFunction operates on.
+     * @since 3.1
+     */
+    public static final int DEFAULT_OUTPORT_INDEX = 0;
+
+    private int m_inportIndex = DEFAULT_INPORT_INDEX;
+    private int m_outportIndex = DEFAULT_OUTPORT_INDEX;
+
+
+    /**
+     * Default constructor where the in- and outport indices are set to 0.
+     */
+    protected StreamableFunction() {
+        //nothing to do
+    }
+
+    /**
+     * Constructor to individually determine the indices of the ports to use.
+     * The respective ports must exist and be configured as streamable (see {@link InputPortRole} and {@link OutputPortRole}).
+     *
+     * @param inportIdx index of the (streamable) input port
+     * @param outportIdx index of the output port
+     * @since 3.1
+     *
+     */
+    protected StreamableFunction(final int inportIdx, final int outportIdx) {
+        m_inportIndex = inportIdx;
+        m_outportIndex = outportIdx;
+    }
+
     /** {@inheritDoc} */
     @Override
     public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
             final ExecutionContext ctx) throws Exception {
-        RowInput rowInput = ((RowInput)inputs[0]);
-        RowOutput rowOutput = ((RowOutput)outputs[0]);
+        RowInput rowInput = ((RowInput)inputs[m_inportIndex]);
+        RowOutput rowOutput = ((RowOutput)outputs[m_outportIndex]);
         init(ctx);
         DataRow inputRow;
         long index = 0;
