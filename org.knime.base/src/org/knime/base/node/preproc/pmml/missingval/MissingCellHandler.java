@@ -207,6 +207,12 @@ public abstract class MissingCellHandler {
      */
     protected DerivedField createValueReplacingDerivedField(final DATATYPE.Enum dataType, final String value) {
         DerivedField field = DerivedField.Factory.newInstance();
+        if (dataType == org.dmg.pmml.DATATYPE.STRING || dataType == org.dmg.pmml.DATATYPE.BOOLEAN) {
+            field.setOptype(org.dmg.pmml.OPTYPE.CATEGORICAL);
+        } else {
+            field.setOptype(org.dmg.pmml.OPTYPE.CONTINUOUS);
+        }
+
         /*
          * Create the PMML equivalent of: "if fieldVal is missing then x else fieldVal"
          * <Apply function="if">
@@ -246,6 +252,11 @@ public abstract class MissingCellHandler {
      */
     protected DerivedField createExtensionDerivedField(final DATATYPE.Enum dataType, final String factoryID) {
         DerivedField field = DerivedField.Factory.newInstance();
+        if (dataType == org.dmg.pmml.DATATYPE.STRING || dataType == org.dmg.pmml.DATATYPE.BOOLEAN) {
+            field.setOptype(org.dmg.pmml.OPTYPE.CATEGORICAL);
+        } else {
+            field.setOptype(org.dmg.pmml.OPTYPE.CONTINUOUS);
+        }
         Extension e = field.addNewExtension();
         e.setName(CUSTOM_HANDLER_EXTENSION_NAME);
         e.setValue(factoryID);
