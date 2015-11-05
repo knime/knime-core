@@ -247,7 +247,8 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
                 outTables[1] = m_resultContainer[1].getTable();
             }
 
-            if (tolerate1) {
+            //bugfix 6482: if the table is empty and are to be ignored, no common data type for a column has to be set
+            if (tolerate1 && (inData[0].size() > 0 || !m_settings.ignoreEmptyTables1())) {
                 DataTableSpec outSpec = outTables[0].getSpec();
                 DataColumnSpec[] cspecs = new DataColumnSpec[outSpec.getNumColumns()];
                 for (int i = 0; i < m_commonDataTypes1.length; i++) {
@@ -262,7 +263,8 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
                 outTables[0] = exec.createSpecReplacerTable(outTables[0], new DataTableSpec(cspecs));
             }
 
-            if (tolerate2) {
+            //bugfix 6482: if the table is empty and are to be ignored, no common data type for a column has to be set
+            if (tolerate2 && (inData[1].size() > 0 || !m_settings.ignoreEmptyTables2())) {
                 DataTableSpec outSpec = outTables[1].getSpec();
                 DataColumnSpec[] cspecs = new DataColumnSpec[outSpec.getNumColumns()];
                 for (int i = 0; i < m_commonDataTypes2.length; i++) {
