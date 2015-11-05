@@ -229,7 +229,8 @@ public class KNIMEApplication implements IApplication {
                             .openError(
                                     null,
                                     IDEWorkbenchMessages.IDEApplication_workspaceCannotLockTitle,
-                                    IDEWorkbenchMessages.IDEApplication_workspaceCannotLockMessage);
+                                    NLS.bind(IDEWorkbenchMessages.IDEApplication_workspaceCannotLockMessage,
+                                        workspaceDirectory.getAbsolutePath()));
                 } else {
                     MessageDialog
                             .openError(
