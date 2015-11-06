@@ -51,10 +51,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.event.DocumentListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
+import org.fife.ui.rsyntaxtextarea.folding.FoldManager;
 
 /**
  * A Document with guarded, non editable areas.
@@ -69,6 +71,34 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 public class GuardedDocument extends RSyntaxDocument {
     private Map<String, GuardedSection> m_guards;
     private boolean m_breakGuarded;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addDocumentListener(final DocumentListener listener) {
+        Class<?> listenerClass = getFoldManagerListenerClass();
+        if (listenerClass != null && listenerClass.equals(listener.getClass())) {
+            // don't register FoldManager listener to avoid auto folding issue, see bug 6499
+        } else {
+            super.addDocumentListener(listener);
+        }
+    }
+
+    /*
+     * Gets the Class object for the FoldManager Listener
+     * Needed to fix the auto folding issue in the java snippet node
+     */
+    private Class<?> getFoldManagerListenerClass() {
+        Class<FoldManager> foldManagerClass = FoldManager.class;
+        Class<?> listenerClass = null;
+        try {
+            listenerClass = Class.forName(foldManagerClass.getName() + "$Listener");
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+        return listenerClass;
+    }
 
 
     /**
