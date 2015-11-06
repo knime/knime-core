@@ -96,7 +96,7 @@ public class MemoryAlertSystemTest {
     @Test(timeout = 15000)
     public void testSleepWhileLow() throws Exception {
         int reserveSize = (int)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD
-            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory()));
+            * (MemoryAlertSystem.getMaximumMemory() - MemoryAlertSystem.getUsedMemory())) + (32 << 20);
 
         // we should return immediately because enough memory is available
         boolean memoryAvailable = m_memSystem.sleepWhileLow(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD, 1000);

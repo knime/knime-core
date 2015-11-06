@@ -305,6 +305,7 @@ public abstract class MultiThreadWorker<In, Out> {
             synchronized (m_finishedTasks) {
                 if (m_exceptionReference.get() != null || m_isCanceled) {
                     // don't processFinished if canceled
+                    m_maxQueueSemaphore.release();
                     return;
                 }
                 // is task next-to-be-processed
@@ -326,6 +327,14 @@ public abstract class MultiThreadWorker<In, Out> {
                                 m_exceptionReference.compareAndSet(null, e);
                             }
                             innerCancel(true);
+
+                            // we need to release all waiting tasks if an error has occurred, otherwise the "main"
+                            // thread will wait forever
+                            for (int i = 0; i < m_finishedTasks.size(); i++) {
+                                m_maxQueueSemaphore.release();
+                            }
+                            m_finishedTasks.clear();
+
                             return;
                         } finally {
                             m_maxQueueSemaphore.release();
