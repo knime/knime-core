@@ -83,6 +83,10 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
                 annoFig.newContent(anno);
                 // node annotation ignores its x/y ui info and hooks itself to its node
                 NodeContainer node = anno.getNodeContainer();
+                if (node == null) {
+                    // may happen if the node is disposed before this runnable is executed
+                    return;
+                }
                 NodeUIInformation nodeUI = node.getUIInformation();
                 int x = anno.getX();
                 int y = anno.getY();
