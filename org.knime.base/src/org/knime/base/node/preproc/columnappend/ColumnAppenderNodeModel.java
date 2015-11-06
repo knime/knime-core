@@ -473,7 +473,11 @@ final class ColumnAppenderNodeModel extends NodeModel {
          */
         @Override
         public boolean hasNext() throws InterruptedException {
-            m_row = m_rowInput.poll();
+            //if hasNext() is called multiple times without calling next() in between,
+            //this if-clause ensures that it still returns true
+            if (m_row == null) {
+                m_row = m_rowInput.poll();
+            }
             return m_row != null;
         }
 
@@ -482,7 +486,9 @@ final class ColumnAppenderNodeModel extends NodeModel {
          */
         @Override
         public DataRow next() {
-            return m_row;
+            DataRow row = m_row;
+            m_row = null;
+            return row;
         }
 
     }
