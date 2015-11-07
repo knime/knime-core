@@ -700,19 +700,18 @@ public class DatabaseConnectionSettings {
     }
 
     private static final Set<Class<? extends Connection>> AUTOCOMMIT_EXCEPTIONS =
-        new HashSet<Class<? extends Connection>>();
+        Collections.synchronizedSet(new HashSet<Class<? extends Connection>>());
     /**
      * Calls {@link java.sql.Connection#setAutoCommit(boolean)} on the connection given the commit flag and catches
      * all <code>Exception</code>s, which is reported only once.
      * @param conn the Connection to call auto commit on.
      * @param commit the commit flag.
      */
-    static synchronized void setAutoCommit(final Connection conn, final boolean commit) {
+    static void setAutoCommit(final Connection conn, final boolean commit) {
         try {
             conn.setAutoCommit(commit);
         } catch (Exception e) {
-            if (!AUTOCOMMIT_EXCEPTIONS.contains(conn.getClass())) {
-                AUTOCOMMIT_EXCEPTIONS.add(conn.getClass());
+            if (AUTOCOMMIT_EXCEPTIONS.add(conn.getClass())) {
                 LOGGER.debug(conn.getClass() + "#setAutoCommit(" + commit + ") error, reason: ", e);
             }
         }
