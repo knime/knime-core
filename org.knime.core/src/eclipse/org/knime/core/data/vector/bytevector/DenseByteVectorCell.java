@@ -221,15 +221,34 @@ public class DenseByteVectorCell extends DataCell implements ByteVectorValue {
 
             int index = 0;
             for (int i = 0; i < input.length(); i += 2) {
-                byte b = (byte) ((input.charAt(i) - '0') << 4);
+                byte b = (byte) (hexDigit(input, i) << 4);
 
                 if (i < input.length() - 1) {
-                    b += (byte) (input.charAt(i + 1) - '0');
+                    b += (byte) (hexDigit(input, i + 1));
                 }
                 bytes[index++] = b;
             }
 
             return new DenseByteVectorCell(new DenseByteVector(bytes));
+        }
+
+        /**
+         * @param hexDigits The characters.
+         * @param position The position in {@code hexDigits}
+         * @return The value of the hexadecimal digit.
+         * @throws IllegalArgumentException When the character is not a valid hexadecimal digit.
+         */
+        private static int hexDigit(final String hexDigits, final int position) {
+            char c = hexDigits.charAt(position);
+            if (c >= '0' && c <= '9') {
+                return c - '0';
+            }
+            c = Character.toUpperCase(c);
+            if (c >= 'A' && c <= 'F') {
+                return c - 'A' + 10;
+            }
+            throw new IllegalArgumentException(
+                "Not a hexadecimal number: " + c + " at position: " + position + " in " + hexDigits);
         }
 
         /**
