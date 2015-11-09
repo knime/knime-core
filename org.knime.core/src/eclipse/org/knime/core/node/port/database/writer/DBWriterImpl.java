@@ -886,7 +886,7 @@ public class DBWriterImpl implements DBWriter {
                 }
             }
         } else if (cspec.getType().isCompatible(CollectionDataValue.class)) {
-            fillArray(stmt, dbIdx, cell);
+            fillArray(stmt, dbIdx, cell, tz);
         } else if ((columnTypes == null) || cspec.getType().isCompatible(StringValue.class)) {
             if (cell.isMissing()) {
                 stmt.setNull(dbIdx, Types.VARCHAR);
@@ -910,9 +910,10 @@ public class DBWriterImpl implements DBWriter {
      * @param stmt
      * @param dbIdx
      * @param cell
+     * @param tz
      * @throws SQLException
      */
-    protected void fillArray(final PreparedStatement stmt, final int dbIdx, final DataCell cell)
+    protected void fillArray(final PreparedStatement stmt, final int dbIdx, final DataCell cell, final TimeZone tz)
         throws SQLException {
         if (cell.isMissing()) {
             stmt.setNull(dbIdx, Types.ARRAY);
