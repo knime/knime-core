@@ -271,6 +271,7 @@ public class WrappedNodeDialog extends Dialog {
         // This ensures that the wrapper component has the correct size.
         if (Platform.OS_WIN32.equals(Platform.getOS())) {
             resizeHasOccurred = true;
+            getShell().layout();
         }
 
         return area;
