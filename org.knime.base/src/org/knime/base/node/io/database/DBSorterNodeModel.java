@@ -56,8 +56,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.port.database.reader.DBReader;
 
 /**
  *
@@ -159,10 +159,10 @@ final class DBSorterNodeModel extends DBNodeModel {
             return query;
         }
         final StringBuilder buf = new StringBuilder();
-        final String[] queries = query.split(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+        final String[] queries = query.split(DBReader.SQL_QUERY_SEPARATOR);
         for (int i = 0; i < queries.length - 1; i++) {
             buf.append(queries[i]);
-            buf.append(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+            buf.append(DBReader.SQL_QUERY_SEPARATOR);
         }
         final String selectQuery = queries[queries.length - 1];
         buf.append("SELECT * FROM (" + selectQuery + ") " + "table_" + System.identityHashCode(this) + " ORDER BY ");

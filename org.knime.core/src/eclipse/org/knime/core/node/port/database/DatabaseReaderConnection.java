@@ -100,6 +100,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.util.FileUtil;
 
@@ -107,14 +108,17 @@ import org.knime.core.util.FileUtil;
  * Creates a connection to read from database.
  *
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated use {@link DatabaseUtility#getReader(DatabaseQueryConnectionSettings)} instead
  */
+@Deprecated
 public final class DatabaseReaderConnection {
 
     /** Separator used to decided which SQL statements should be execute
      * line-by-line; the semicolon is not part of the executed query.
      * We need the \n in addition to the semicolon to ensure that commands that contain a ;
      * are handled correctly!*/
-    public static final String SQL_QUERY_SEPARATOR = ";\n";
+    @Deprecated
+    public static final String SQL_QUERY_SEPARATOR = DBReader.SQL_QUERY_SEPARATOR;
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DatabaseReaderConnection.class);
@@ -969,7 +973,7 @@ public final class DatabaseReaderConnection {
      * A row iterator that holds an open database connection and allows to create an iterator that iterates through the
      * database entries and return them as a data row.
      * IMPORTANT: the RowIteratorConnection needs to be closed after use in order to close the database connection.
-     * 
+     *
      * @author Martin Horn, University of Konstanz
      * @since 3.1
      */

@@ -139,15 +139,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/port/database/DatabaseUtility.java" type="org.knime.core.node.port.database.DatabaseUtility">
-        <filter id="1141899266">
-            <message_arguments>
-                <message_argument value="2.12"/>
-                <message_argument value="3.0"/>
-                <message_argument value="isValid(Connection)"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/database/aggregation/DBAggregationFunction.java" type="org.knime.core.node.port.database.aggregation.DBAggregationFunction">
         <filter id="403804204">
             <message_arguments>

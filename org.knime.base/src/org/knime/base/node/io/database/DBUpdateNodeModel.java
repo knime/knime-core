@@ -72,7 +72,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
-import org.knime.core.node.port.database.DatabaseWriterConnection;
+import org.knime.core.node.port.database.writer.DBWriter;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
@@ -196,7 +196,8 @@ final class DBUpdateNodeModel extends NodeModel {
 
         // UPDATE table
         final int[] updateStatus = new int[inTable.getRowCount()];
-        final String errMsg = DatabaseWriterConnection.updateTable(connSettings, m_tableName, inTable,
+        final DBWriter dbWriter = connSettings.getUtility().getWriter(connSettings);
+        final String errMsg = dbWriter.updateTable(null, m_tableName, inTable,
             setIncludes, whereIncludes, updateStatus, exec, getCredentialsProvider(), m_batchSize);
         // set warning message generated during updating rows
         if (errMsg != null) {

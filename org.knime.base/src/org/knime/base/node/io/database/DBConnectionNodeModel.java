@@ -48,7 +48,6 @@ package org.knime.base.node.io.database;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -64,14 +63,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
-import org.knime.core.node.port.database.DatabaseReaderConnection.RowIteratorConnection;
-import org.knime.core.node.streamable.PartitionInfo;
-import org.knime.core.node.streamable.PortInput;
-import org.knime.core.node.streamable.PortObjectInput;
-import org.knime.core.node.streamable.PortOutput;
-import org.knime.core.node.streamable.RowOutput;
-import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
@@ -103,15 +95,21 @@ final class DBConnectionNodeModel extends NodeModel {
         exec.setProgress("Opening database connection...");
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
-        final DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
+
+        final DBReader reader = conn.getUtility().getReader(conn);
+//		final DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
         exec.setProgress("Reading data from database...");
         CredentialsProvider cp = getCredentialsProvider();
-        return new BufferedDataTable[]{load.createTable(exec, cp, m_useDbRowId.getBooleanValue())};
+        return new BufferedDataTable[]{reader.createTable(exec, cp, m_useDbRowId.getBooleanValue())};
     }
 
-    /**
-     * {@inheritDoc}
-     */
+/*
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    STREAMING IS DISABLED UNTIL WE HAVE A PROPPER CONNECTION HANDLING SINCE MYSQL FOR EXAMPLE DOES NOT ALLOW
+    CONCURRENT READS WHICH HAPPEN IF WE USE THE DBRowIterator!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     @Override
     public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
@@ -123,11 +121,11 @@ final class DBConnectionNodeModel extends NodeModel {
                 exec.setProgress("Opening database connection...");
                 DatabasePortObject dbObj = (DatabasePortObject)((PortObjectInput)inputs[0]).getPortObject();
                 DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
-                final DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
+
+                final DBReader load = conn.getUtility().getReader(conn);
                 exec.setProgress("Reading data from database...");
-                RowIteratorConnection rowItConn =
-                    load.createRowIteratorConnection(exec, getCredentialsProvider(), true);
-                try {
+                try (DBRowIterator rowItConn =
+                        load.createRowIteratorConnection(exec, getCredentialsProvider(), true);){
                     RowOutput out = (RowOutput)outputs[0];
                     RowIterator it = rowItConn.iterator();
                     int index = 0;
@@ -135,12 +133,11 @@ final class DBConnectionNodeModel extends NodeModel {
                         out.push(it.next());
                         exec.setMessage(String.format("Row %d", ++index));
                     }
-                } finally {
-                    rowItConn.close();
                 }
             }
         };
     }
+    */
 
     /**
      * {@inheritDoc}

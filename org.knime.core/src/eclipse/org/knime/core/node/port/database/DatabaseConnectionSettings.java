@@ -492,6 +492,9 @@ public class DatabaseConnectionSettings {
                     return driver.connect(jdbcUrl, props);
                 }
             };
+            //TODO:this has to be more robust e.g. the thread should terminate when KNIME terminates and should be
+            //cancelable if the user presses cancel. If no credentials are present for Phoenix the thread keeps KNIME
+            //alive for ages
             Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
             try {
                 conn = task.get(databaseTimeout + 1, TimeUnit.SECONDS);
@@ -515,8 +518,9 @@ public class DatabaseConnectionSettings {
      * Used to sync access to all databases depending if <code>SQL_CONCURRENCY</code> is true.
      * @param conn connection used to sync access to all databases
      * @return sync object which is either the given connection or an new object (no sync necessary)
+     * @since 3.1
      */
-    final Object syncConnection(final Connection conn) {
+    public final Object syncConnection(final Connection conn) {
         if (SQL_CONCURRENCY && conn != null) {
             return conn;
         } else {
@@ -700,14 +704,15 @@ public class DatabaseConnectionSettings {
     }
 
     private static final Set<Class<? extends Connection>> AUTOCOMMIT_EXCEPTIONS =
-        Collections.synchronizedSet(new HashSet<Class<? extends Connection>>());
+            Collections.synchronizedSet(new HashSet<Class<? extends Connection>>());
     /**
      * Calls {@link java.sql.Connection#setAutoCommit(boolean)} on the connection given the commit flag and catches
      * all <code>Exception</code>s, which is reported only once.
      * @param conn the Connection to call auto commit on.
      * @param commit the commit flag.
+     * @since 3.1
      */
-    static void setAutoCommit(final Connection conn, final boolean commit) {
+    public static void setAutoCommit(final Connection conn, final boolean commit) {
         try {
             conn.setAutoCommit(commit);
         } catch (Exception e) {

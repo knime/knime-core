@@ -59,7 +59,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.reader.DBReader;
 
 /**
  *
@@ -67,8 +67,10 @@ import org.knime.core.node.port.database.DatabaseReaderConnection;
  */
 final class DBReaderConnectionNodeModel extends DBNodeModel implements FlowVariableProvider {
 
-    private final DatabaseReaderConnection m_load =
-        new DatabaseReaderConnection(null);
+    private DatabaseQueryConnectionSettings m_conn = new DatabaseQueryConnectionSettings();
+
+//    private final DBReaderConnection m_load =
+//        new DatabaseReaderConnection(null);
 
     /**
      * Creates a new database reader.
@@ -83,9 +85,9 @@ final class DBReaderConnectionNodeModel extends DBNodeModel implements FlowVaria
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         super.saveSettingsTo(settings);
-        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-        if (conn != null) {
-            conn.saveConnection(settings);
+//        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
+        if (m_conn != null) {
+            m_conn.saveConnection(settings);
         }
     }
 
@@ -106,14 +108,14 @@ final class DBReaderConnectionNodeModel extends DBNodeModel implements FlowVaria
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
-        DatabaseQueryConnectionSettings conn =
+        m_conn =
             new DatabaseQueryConnectionSettings(settings,
                 getCredentialsProvider());
-        try {
-            m_load.setDBQueryConnection(conn);
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e);
-        }
+//        try {
+//            m_load.setDBQueryConnection(conn);
+//        } catch (Exception e) {
+//            throw new InvalidSettingsException(e);
+//        }
     }
 
     /**
@@ -123,10 +125,10 @@ final class DBReaderConnectionNodeModel extends DBNodeModel implements FlowVaria
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
-        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-        conn = new DatabaseQueryConnectionSettings(conn,
-                parseQuery(conn.getQuery()));
-        DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
+//        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
+        DatabaseQueryConnectionSettings conn = new DatabaseQueryConnectionSettings(m_conn,
+                parseQuery(m_conn.getQuery()));
+        DBReader load = conn.getUtility().getReader(conn);
         DataTableSpec spec = load.getDataTableSpec(
                 getCredentialsProvider());
         DatabasePortObject dbObj = new DatabasePortObject(
@@ -142,17 +144,18 @@ final class DBReaderConnectionNodeModel extends DBNodeModel implements FlowVaria
             throws InvalidSettingsException {
         try {
             // try to create database connection
-            DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-            if (conn == null) {
+//            DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
+            if (m_conn == null) {
                 throw new InvalidSettingsException("No database connection available.");
             }
-            conn = new DatabaseQueryConnectionSettings(conn, parseQuery(conn.getQuery()));
+            final DatabaseQueryConnectionSettings conn =
+                    new DatabaseQueryConnectionSettings(m_conn, parseQuery(m_conn.getQuery()));
 
             if (!conn.getRetrieveMetadataInConfigure()) {
                 return new PortObjectSpec[1];
             }
 
-            DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
+            DBReader load = conn.getUtility().getReader(conn);
             DataTableSpec spec = load.getDataTableSpec(getCredentialsProvider());
             if (spec == null) {
                 throw new InvalidSettingsException("No database connection available.");

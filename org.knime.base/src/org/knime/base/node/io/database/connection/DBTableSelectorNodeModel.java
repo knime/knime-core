@@ -71,7 +71,7 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.reader.DBReader;
 
 /**
  *
@@ -103,7 +103,7 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
         String sql = FlowVariableResolver.parse(m_settings.getQuery(), this);
         DatabaseQueryConnectionSettings querySettings = new DatabaseQueryConnectionSettings(connSettings, sql);
 
-        DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
+        final DBReader conn = connSettings.getUtility().getReader(querySettings);
 
         if (!connSettings.getRetrieveMetadataInConfigure()) {
             return new PortObjectSpec[1];
@@ -136,7 +136,7 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
         String sql = FlowVariableResolver.parse(m_settings.getQuery(), this);
         DatabaseQueryConnectionSettings querySettings = new DatabaseQueryConnectionSettings(connSettings, sql);
 
-        DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
+        DBReader conn = querySettings.getUtility().getReader(querySettings);
         try {
             DataTableSpec tableSpec = conn.getDataTableSpec(getCredentialsProvider());
 

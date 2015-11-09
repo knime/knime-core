@@ -59,7 +59,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.reader.DBReader;
 
 /**
  *
@@ -118,7 +118,7 @@ final class DBSQLExecutorNodeModel extends DBNodeModel implements FlowVariablePr
         throws CanceledExecutionException, Exception {
         DatabaseConnectionPortObject dbObj = (DatabaseConnectionPortObject)inData[0];
         DatabaseConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
-        String[] statements = parseStatementAndReplaceVariables().split(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+        String[] statements = parseStatementAndReplaceVariables().split(DBReader.SQL_QUERY_SEPARATOR);
 
         final double max = statements.length;
         int i = 0;

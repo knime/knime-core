@@ -58,7 +58,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
@@ -134,8 +134,7 @@ final class DBQueryNodeModel extends DBNodeModel {
         }
 
         try {
-            DatabaseReaderConnection reader =
-                new DatabaseReaderConnection(conn);
+            DBReader reader = conn.getUtility().getReader(conn);
             DataTableSpec outSpec = reader.getDataTableSpec(
                     getCredentialsProvider());
             DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
@@ -158,7 +157,7 @@ final class DBQueryNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(cp);
         String newQuery = createQuery(conn.getQuery());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
-        DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
+        DBReader load = conn.getUtility().getReader(conn);
         DataTableSpec outSpec = load.getDataTableSpec(cp);
         DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
                 outSpec, conn.createConnectionModel());
@@ -169,18 +168,18 @@ final class DBQueryNodeModel extends DBNodeModel {
     private String createQuery(final String query) {
         final StringBuilder resultQueries = new StringBuilder();
         String[] inQueries = query.split(
-                DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+                DBReader.SQL_QUERY_SEPARATOR);
         String inSelect = inQueries[inQueries.length - 1];
         for (int i = 0; i < inQueries.length - 1; i++) {
             resultQueries.append(inQueries[i]);
-            resultQueries.append(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+            resultQueries.append(DBReader.SQL_QUERY_SEPARATOR);
         }
         String[] thisQueries = m_query.getStringValue().split(
-                DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+                DBReader.SQL_QUERY_SEPARATOR);
         String thisSelect = thisQueries[thisQueries.length - 1];
         for (int i = 0; i < thisQueries.length - 1; i++) {
             resultQueries.append(thisQueries[i]);
-            resultQueries.append(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+            resultQueries.append(DBReader.SQL_QUERY_SEPARATOR);
         }
         thisSelect = thisSelect.replaceAll(
                 DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,

@@ -76,6 +76,10 @@ import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFu
 import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.custom.CustomDBAggregationFunction;
+import org.knime.core.node.port.database.reader.DBReader;
+import org.knime.core.node.port.database.reader.DBReaderImpl;
+import org.knime.core.node.port.database.writer.DBWriter;
+import org.knime.core.node.port.database.writer.DBWriterImpl;
 
 /**
  * This class is the entry point for database specific routines and information. All implementations must be
@@ -384,4 +388,22 @@ public class DatabaseUtility {
         }
     }
 
+
+    /**
+     * @param querySettings the {@link DatabaseQueryConnectionSettings}
+     * @return the {@link DBReader} to perform read operations in the db
+     * @since 3.1
+     */
+    public DBReader getReader(final DatabaseQueryConnectionSettings querySettings) {
+        return new DBReaderImpl(querySettings);
+    }
+
+    /**
+     * @param connSettings {@link DatabaseConnectionSettings}
+     * @return {@link DBWriter} to use to write, update or delete values in this db
+     * @since 3.1
+     */
+    public DBWriter getWriter(final DatabaseConnectionSettings connSettings) {
+        return new DBWriterImpl(connSettings);
+    }
 }

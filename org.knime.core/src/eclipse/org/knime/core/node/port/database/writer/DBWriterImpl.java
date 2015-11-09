@@ -42,10 +42,12 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ----------------------------------------------------------------------------
  */
-package org.knime.core.node.port.database;
+package org.knime.core.node.port.database.writer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.ConnectionPendingException;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -57,7 +59,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Spliterator;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 
 import org.apache.commons.io.IOUtils;
 import org.knime.core.data.BooleanValue;
@@ -65,6 +69,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
@@ -72,11 +77,12 @@ import org.knime.core.data.LongValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.blob.BinaryObjectDataValue;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.workflow.CredentialsProvider;
 
@@ -86,280 +92,353 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * <p>No public API.</p>
  *
  * @author Thomas Gabriel, University of Konstanz
- * @deprecated use {@link DatabaseUtility#getWriter(DatabaseConnectionSettings)} instead
+ * @since 3.1
  */
-@Deprecated
-public final class DatabaseWriterConnection {
+public class DBWriterImpl implements DBWriter {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(DatabaseWriterConnection.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DBWriterImpl.class);
+    private DatabaseConnectionSettings m_conn;
 
-    private DatabaseWriterConnection() {
-        // empty default constructor
+    /**
+     * @param conn {@link DatabaseConnectionSettings}
+     */
+    public DBWriterImpl(final DatabaseConnectionSettings conn) {
+        if (conn == null) {
+            throw new NullPointerException("conn must not be null");
+        }
+        m_conn = conn;
     }
 
-    /** Create connection to write into database.
-     * @param dbConn a database connection object
-     * @param data The data to write.
-     * @param table name of table to write
-     * @param appendData if checked the data is appended to an existing table
-     * @param exec Used the cancel writing.
-     * @param sqlTypes A mapping from column name to SQL-type.
-     * @param cp {@link CredentialsProvider} providing user/password
-     * @param batchSize number of rows written in one batch
-     * @return error string or null, if non
-     * @throws Exception if connection could not be established
-     * @since 2.7
+    /**
+     * {@inheritDoc}
+     * @deprecated
      */
-    public static final String writeData(
-            final DatabaseConnectionSettings dbConn,
-            final String table, final BufferedDataTable data,
-            final boolean appendData, final ExecutionMonitor exec,
-            final Map<String, String> sqlTypes,
-            final CredentialsProvider cp,
-            final int batchSize) throws Exception {
-        return writeData(dbConn, table, data, appendData, exec, sqlTypes, cp, batchSize, true);
-    }
-
-    /** Create connection to write into database.
-     * @param dbConn a database connection object
-     * @param data The data to write.
-     * @param table name of table to write
-     * @param appendData if checked the data is appended to an existing table
-     * @param exec Used the cancel writing.
-     * @param sqlTypes A mapping from column name to SQL-type.
-     * @param cp {@link CredentialsProvider} providing user/password
-     * @param batchSize number of rows written in one batch
-     * @param insertNullForMissingCols <code>true</code> if <code>null</code> should be inserted for missing columns
-     * @return error string or null, if non
-     * @throws Exception if connection could not be established
-     * @since 2.11
-     */
-    public static final String writeData(final DatabaseConnectionSettings dbConn, final String table,
-        final BufferedDataTable data, final boolean appendData, final ExecutionMonitor exec,
-        final Map<String, String> sqlTypes, final CredentialsProvider cp, final int batchSize,
-        final boolean insertNullForMissingCols) throws Exception {
-        return writeData(dbConn, table, new DataTableRowInput(data), data.size(), appendData, exec, sqlTypes, cp,
-            batchSize, insertNullForMissingCols);
-    }
-
-
-    /** Create connection to write into database.
-     * @param dbConn a database connection object
-     * @param table name of table to write
-     * @param input the data table as as row input
-     * @param rowCount number of row of the table to write, -1 if unknown
-     * @param appendData if checked the data is appended to an existing table
-     * @param exec Used the cancel writing.
-     * @param sqlTypes A mapping from column name to SQL-type.
-     * @param cp {@link CredentialsProvider} providing user/password
-     * @param batchSize number of rows written in one batch
-     * @param insertNullForMissingCols <code>true</code> if <code>null</code> should be inserted for missing columns
-     * @return error string or null, if non
-     * @throws Exception if connection could not be established
-     * @since 3.1
-     */
-    public static final String writeData(final DatabaseConnectionSettings dbConn, final String table,
-        final RowInput input, final long rowCount, final boolean appendData,
+    @Deprecated
+    @Override
+    public String writeData(final String table, final RowInput input, final long rowCount, final boolean appendData,
         final ExecutionMonitor exec, final Map<String, String> sqlTypes, final CredentialsProvider cp,
         final int batchSize, final boolean insertNullForMissingCols) throws Exception {
-        final Connection conn = dbConn.createConnection(cp);
+        final Connection conn = m_conn.createConnection(cp);
         exec.setMessage("Waiting for free database connection...");
+        final StringBuilder columnNamesForInsertStatement = new StringBuilder("(");
+        synchronized (m_conn.syncConnection(conn)) {
+            exec.setMessage("Start writing rows in database...");
+            DataTableSpec spec = input.getDataTableSpec();
+            // mapping from spec columns to database columns
+            final int[] mapping;
+            // append data to existing table
+            if (appendData) {
+                if (m_conn.getUtility().tableExists(conn, table)) {
+                    String query =
+                        m_conn.getUtility().getStatementManipulator().forMetadataOnly("SELECT * FROM " + table);
+                    try (ResultSet rs = conn.createStatement().executeQuery(query)) {
+                        ResultSetMetaData rsmd = rs.getMetaData();
+                        final Map<String, Integer> columnNames =
+                                new LinkedHashMap<String, Integer>();
+                        for (int i = 0; i < spec.getNumColumns(); i++) {
+                            String colName = replaceColumnName(spec.getColumnSpec(i).getName());
+                            columnNames.put(colName.toLowerCase(), i);
+                        }
 
-    final StringBuilder columnNamesForInsertStatement = new StringBuilder("(");
-    synchronized (dbConn.syncConnection(conn)) {
-        exec.setMessage("Start writing rows in database...");
-        DataTableSpec spec = input.getDataTableSpec();
-        // mapping from spec columns to database columns
-        final int[] mapping;
-        // append data to existing table
-        if (appendData) {
-            if (dbConn.getUtility().tableExists(conn, table)) {
-                String query =
-                    dbConn.getUtility().getStatementManipulator().forMetadataOnly("SELECT * FROM " + table);
-                try (ResultSet rs = conn.createStatement().executeQuery(query)) {
-                    ResultSetMetaData rsmd = rs.getMetaData();
-                    final Map<String, Integer> columnNames =
-                            new LinkedHashMap<String, Integer>();
-                    for (int i = 0; i < spec.getNumColumns(); i++) {
-                        String colName = replaceColumnName(spec.getColumnSpec(i).getName(), dbConn);
-                        columnNames.put(colName.toLowerCase(), i);
-                    }
+                        // sanity check to lock if all input columns are in db
+                        ArrayList<String> columnNotInSpec = new ArrayList<String>(
+                                columnNames.keySet());
+                        for (int i = 0; i < rsmd.getColumnCount(); i++) {
+                            String dbColName = replaceColumnName(rsmd.getColumnName(i + 1));
+                            if (columnNames.containsKey(dbColName.toLowerCase())) {
+                                columnNotInSpec.remove(dbColName.toLowerCase());
+                                columnNamesForInsertStatement.append(dbColName).append(',');
+                            } else if (insertNullForMissingCols) {
+                                //append the column name of a missing column only if the insert null for missing
+                                //column option is enabled
+                                columnNamesForInsertStatement.append(dbColName).append(',');
+                            }
+                        }
+                        if (rsmd.getColumnCount() > 0) {
+                            columnNamesForInsertStatement.deleteCharAt(columnNamesForInsertStatement.length() - 1);
+                        }
+                        columnNamesForInsertStatement.append(')');
 
-                    // sanity check to lock if all input columns are in db
-                    ArrayList<String> columnNotInSpec = new ArrayList<String>(
-                            columnNames.keySet());
-                    for (int i = 0; i < rsmd.getColumnCount(); i++) {
-                        String dbColName = replaceColumnName(rsmd.getColumnName(i + 1), dbConn);
-                        if (columnNames.containsKey(dbColName.toLowerCase())) {
-                            columnNotInSpec.remove(dbColName.toLowerCase());
-                            columnNamesForInsertStatement.append(dbColName).append(',');
-                        } else if (insertNullForMissingCols) {
-                            //append the column name of a missing column only if the insert null for missing
-                            //column option is enabled
-                            columnNamesForInsertStatement.append(dbColName).append(',');
+                        if (columnNotInSpec.size() > 0) {
+                            throw new RuntimeException("No. of columns in input"
+                                    + " table > in database; not existing columns: "
+                                    + columnNotInSpec.toString());
+                        }
+                        mapping = new int[rsmd.getColumnCount()];
+                        for (int i = 0; i < mapping.length; i++) {
+                            String name = replaceColumnName(rsmd.getColumnName(i + 1)).toLowerCase();
+                            if (!columnNames.containsKey(name)) {
+                                mapping[i] = -1;
+                                continue;
+                            }
+                            mapping[i] = columnNames.get(name);
+                            DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
+                            int type = rsmd.getColumnType(i + 1);
+                            switch (type) {
+                                // check all boolean compatible types
+                                case Types.BIT:
+                                case Types.BOOLEAN:
+                                    // types must be compatible to BooleanValue
+                                    if (!cspec.getType().isCompatible(BooleanValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // check all int compatible types
+                                case Types.TINYINT:
+                                case Types.SMALLINT:
+                                case Types.INTEGER:
+                                    // types must be compatible to IntValue
+                                    if (!cspec.getType().isCompatible(IntValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                case Types.BIGINT:
+                                    // types must also be compatible to LongValue
+                                    if (!cspec.getType().isCompatible(LongValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // check all double compatible types
+                                case Types.FLOAT:
+                                case Types.DOUBLE:
+                                case Types.NUMERIC:
+                                case Types.DECIMAL:
+                                case Types.REAL:
+                                    // types must also be compatible to DoubleValue
+                                    if (!cspec.getType().isCompatible(DoubleValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // check for date-and-time compatible types
+                                case Types.DATE:
+                                case Types.TIME:
+                                case Types.TIMESTAMP:
+                                    // types must also be compatible to DataValue
+                                    if (!cspec.getType().isCompatible(DateAndTimeValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // check for blob compatible types
+                                case Types.BLOB:
+                                case Types.BINARY:
+                                case Types.LONGVARBINARY:
+                                    // types must also be compatible to DataValue
+                                    if (!cspec.getType().isCompatible(BinaryObjectDataValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // all other cases are defined as StringValue types
+                            }
                         }
                     }
-                    if (rsmd.getColumnCount() > 0) {
-                        columnNamesForInsertStatement.deleteCharAt(columnNamesForInsertStatement.length() - 1);
-                    }
-                    columnNamesForInsertStatement.append(')');
-
-                    if (columnNotInSpec.size() > 0) {
-                        throw new RuntimeException("No. of columns in input"
-                                + " table > in database; not existing columns: "
-                                + columnNotInSpec.toString());
-                    }
-                    mapping = new int[rsmd.getColumnCount()];
-                    for (int i = 0; i < mapping.length; i++) {
-                        String name = replaceColumnName(rsmd.getColumnName(i + 1), dbConn).toLowerCase();
-                        if (!columnNames.containsKey(name)) {
-                            mapping[i] = -1;
-                            continue;
-                        }
-                        mapping[i] = columnNames.get(name);
-                        DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
-                        int type = rsmd.getColumnType(i + 1);
-                        switch (type) {
-                            // check all boolean compatible types
-                            case Types.BIT:
-                            case Types.BOOLEAN:
-                                // types must be compatible to BooleanValue
-                                if (!cspec.getType().isCompatible(BooleanValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                                // check all int compatible types
-                            case Types.TINYINT:
-                            case Types.SMALLINT:
-                            case Types.INTEGER:
-                                // types must be compatible to IntValue
-                                if (!cspec.getType().isCompatible(IntValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                            case Types.BIGINT:
-                                // types must also be compatible to LongValue
-                                if (!cspec.getType().isCompatible(LongValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                                // check all double compatible types
-                            case Types.FLOAT:
-                            case Types.DOUBLE:
-                            case Types.NUMERIC:
-                            case Types.DECIMAL:
-                            case Types.REAL:
-                                // types must also be compatible to DoubleValue
-                                if (!cspec.getType().isCompatible(DoubleValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                                // check for date-and-time compatible types
-                            case Types.DATE:
-                            case Types.TIME:
-                            case Types.TIMESTAMP:
-                                // types must also be compatible to DataValue
-                                if (!cspec.getType().isCompatible(DateAndTimeValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                                // check for blob compatible types
-                            case Types.BLOB:
-                            case Types.BINARY:
-                            case Types.LONGVARBINARY:
-                                // types must also be compatible to DataValue
-                                if (!cspec.getType().isCompatible(BinaryObjectDataValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                                // all other cases are defined as StringValue types
-                        }
+                } else {
+                    LOGGER.info("Table \"" + table
+                        + "\" does not exist in database, "
+                        + "will create new table.");
+                    // and create new table
+                    final String query =
+                            "CREATE TABLE " + table + " "
+                                    + createTableStmt(spec, sqlTypes, columnNamesForInsertStatement);
+                    LOGGER.debug("Executing SQL statement as execute: " + query);
+                    Statement statement = conn.createStatement();
+                    statement.execute(query);
+                    mapping = new int[spec.getNumColumns()];
+                    for (int k = 0; k < mapping.length; k++) {
+                        mapping[k] = k;
                     }
                 }
             } else {
-                LOGGER.info("Table \"" + table
-                    + "\" does not exist in database, "
-                    + "will create new table.");
-                // and create new table
-                final String query =
-                        "CREATE TABLE " + table + " "
-                                + createStmt(spec, sqlTypes, dbConn, columnNamesForInsertStatement);
-                LOGGER.debug("Executing SQL statement as execute: " + query);
-                Statement statement = conn.createStatement();
-                statement.execute(query);
+                LOGGER.debug("Append not enabled. Table " + table + " will be dropped if exists.");
                 mapping = new int[spec.getNumColumns()];
                 for (int k = 0; k < mapping.length; k++) {
                     mapping[k] = k;
                 }
-            }
-        } else {
-            LOGGER.debug("Append not enabled. Table " + table + " will be dropped if exists.");
-            mapping = new int[spec.getNumColumns()];
-            for (int k = 0; k < mapping.length; k++) {
-                mapping[k] = k;
-            }
-            Statement statement = null;
-            try {
-                statement = conn.createStatement();
-                // remove existing table (if any)
-                final String query = "DROP TABLE " + table;
+                Statement statement = null;
+                try {
+                    statement = conn.createStatement();
+                    // remove existing table (if any)
+                    final String query = "DROP TABLE " + table;
+                    LOGGER.debug("Executing SQL statement as execute: " + query);
+                    statement.execute(query);
+                } catch (Throwable t) {
+                    if (statement == null) {
+                        throw new SQLException("Could not create SQL statement,"
+                            + " reason: " + t.getMessage(), t);
+                    }
+                    LOGGER.info("Exception droping table \"" + table + "\": " + t.getMessage()
+                        + ". Will create new table.");
+                } finally {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                }
+                // and create new table
+                final String query =
+                    "CREATE TABLE " + table + " " + createTableStmt(spec, sqlTypes, columnNamesForInsertStatement);
                 LOGGER.debug("Executing SQL statement as execute: " + query);
                 statement.execute(query);
-            } catch (Throwable t) {
-                if (statement == null) {
-                    throw new SQLException("Could not create SQL statement,"
-                        + " reason: " + t.getMessage(), t);
+                statement.close();
+            }
+
+            // this is a (temporary) workaround for bug #5802: if there is a DataValue column in the input table
+            // we need to use the SQL type for creating the insert statements.
+            Map<Integer, Integer> columnTypes = null;
+            for (DataColumnSpec cs : spec) {
+                if (cs.getType().getPreferredValueClass() == DataValue.class) {
+                    columnTypes = getColumnTypes(conn, table);
+                    break;
                 }
-                LOGGER.info("Exception droping table \"" + table + "\": " + t.getMessage()
-                    + ". Will create new table.");
-            } finally {
+            }
+
+            final String insertStamtement =
+                    createInsertStatment(table, columnNamesForInsertStatement.toString(), mapping, insertNullForMissingCols);
+
+            // problems writing more than 13 columns. the prepare statement
+            // ensures that we can set the columns directly row-by-row, the
+            // database will handle the commit
+            long cnt = 1;
+            long errorCnt = 0;
+            long allErrors = 0;
+
+            // count number of rows added to current batch
+            int curBatchSize = 0;
+
+            LOGGER.debug("Executing SQL statement as prepareStatement: " + insertStamtement);
+            final PreparedStatement stmt = conn.prepareStatement(insertStamtement);
+            // remember auto-commit flag
+            final boolean autoCommit = conn.getAutoCommit();
+            DatabaseConnectionSettings.setAutoCommit(conn, false);
+            try {
+                final TimeZone timezone = m_conn.getTimeZone();
+                DataRow row; //get the first row
+                DataRow nextRow = input.poll();
+                //iterate over all incoming data rows
+                while (nextRow != null) {
+                    row = nextRow;
+                    cnt++;
+                    exec.checkCanceled();
+                        if (rowCount > 0) {
+                            exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
+                        } else {
+                            exec.setProgress("Writing Row#" + cnt);
+                        }
+
+                    int dbIdx = 1;
+                    for (int i = 0; i < mapping.length; i++) {
+                        if (mapping[i] < 0) {
+                            if (insertNullForMissingCols) {
+                                //insert only null if the insert null for missing col option is enabled
+                                stmt.setNull(dbIdx++, Types.NULL);
+                            }
+                        } else {
+                            final DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
+                            final DataCell cell = row.getCell(mapping[i]);
+                            fillStatement(stmt, dbIdx++, cspec, cell, timezone, columnTypes);
+                        }
+                    }
+                    // if batch mode
+                    if (batchSize > 1) {
+                        // a new row will be added
+                        stmt.addBatch();
+                    }
+
+                    //get one more input row to check if 'row' is the last one
+                    nextRow = input.poll();
+
+                    curBatchSize++;
+                    // if batch size equals number of row in batch or input table at end
+                        if ((curBatchSize == batchSize) || nextRow == null) {
+                            curBatchSize = 0;
+                        try {
+                            // write batch
+                            if (batchSize > 1) {
+                                stmt.executeBatch();
+                            } else { // or write single row
+                                stmt.execute();
+                            }
+                        } catch (Throwable t) {
+                            // Postgres will refuse any more commands in this transaction after errors
+                            // Therefore we commit the changes that were possible. We commit everything at the end
+                            // anyway.
+                            if (!conn.getAutoCommit()) {
+                                conn.commit();
+                            }
+
+                            allErrors++;
+                            if (errorCnt > -1) {
+                                final String errorMsg;
+                                if (batchSize > 1) {
+                                    errorMsg = "Error while adding rows #" + (cnt - batchSize) + " - #" + cnt
+                                        + ", reason: " + t.getMessage();
+                                } else {
+                                    errorMsg = "Error while adding row #" + cnt + " (" + row.getKey() + "), reason: "
+                                        + t.getMessage();
+                                }
+                                exec.setMessage(errorMsg);
+                                if (errorCnt++ < 10) {
+                                    LOGGER.warn(errorMsg);
+                                } else {
+                                    errorCnt = -1;
+                                    LOGGER.warn(errorMsg + " - more errors...", t);
+                                }
+                            }
+                        } finally {
+                            // clear batch if in batch mode
+                            if (batchSize > 1) {
+                                stmt.clearBatch();
+                            }
+                        }
+                        }
+                    }
                 if (!conn.getAutoCommit()) {
                     conn.commit();
                 }
-            }
-            // and create new table
-            final String query =
-                "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes, dbConn, columnNamesForInsertStatement);
-            LOGGER.debug("Executing SQL statement as execute: " + query);
-            statement.execute(query);
-            statement.close();
-        }
-
-        // this is a (temporary) workaround for bug #5802: if there is a DataValue column in the input table
-        // we need to use the SQL type for creating the insert statements.
-        Map<Integer, Integer> columnTypes = null;
-        for (DataColumnSpec cs : spec) {
-            if (cs.getType().getPreferredValueClass() == DataValue.class) {
-                columnTypes = getColumnTypes(conn, table);
-                break;
+                if (allErrors == 0) {
+                        return null;
+                    } else {
+                        return "Errors \"" + allErrors + "\" writing " + (cnt - 1) + " rows.";
+                    }
+            } finally {
+                DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
+                stmt.close();
             }
         }
+    }
 
-        // creates the wild card string based on the number of columns
+    /**
+     * @param table
+     * @param columnNames
+     * @param mapping
+     * @param insertNullForMissingCols
+     * @return the insert statement
+     */
+    protected String createInsertStatment(final String table, final String columnNames, final int[] mapping,
+        final boolean insertNullForMissingCols) {
+        // // creates the wild card string based on the number of columns
         // this string it used every time an new row is inserted into the db
         final StringBuilder wildcard = new StringBuilder("(");
         boolean first = true;
@@ -376,122 +455,18 @@ public final class DatabaseWriterConnection {
             }
         }
         wildcard.append(")");
-
-        // problems writing more than 13 columns. the prepare statement
-        // ensures that we can set the columns directly row-by-row, the
-        // database will handle the commit
-        long cnt = 1;
-        long errorCnt = 0;
-        long allErrors = 0;
-
-        // count number of rows added to current batch
-        int curBatchSize = 0;
-
         // create table meta data with empty column information
-        final String query = "INSERT INTO " + table + " " + columnNamesForInsertStatement + " VALUES " + wildcard;
-        LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
-        final PreparedStatement stmt = conn.prepareStatement(query);
-        // remember auto-commit flag
-        final boolean autoCommit = conn.getAutoCommit();
-        DatabaseConnectionSettings.setAutoCommit(conn, false);
-        try {
-            final TimeZone timezone = dbConn.getTimeZone();
-            DataRow row; //get the first row
-            DataRow nextRow = input.poll();
-            //iterate over all incoming data rows
-            do {
-                row = nextRow;
-                cnt++;
-                exec.checkCanceled();
-                    if (rowCount > 0) {
-                        exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
-                    } else {
-                        exec.setProgress("Writing Row#" + cnt);
-                    }
-
-                int dbIdx = 1;
-                for (int i = 0; i < mapping.length; i++) {
-                    if (mapping[i] < 0) {
-                        if (insertNullForMissingCols) {
-                            //insert only null if the insert null for missing col option is enabled
-                            stmt.setNull(dbIdx++, Types.NULL);
-                        }
-                    } else {
-                        final DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
-                        final DataCell cell = row.getCell(mapping[i]);
-                        fillStatement(stmt, dbIdx++, cspec, cell, timezone, columnTypes);
-                    }
-                }
-                // if batch mode
-                if (batchSize > 1) {
-                    // a new row will be added
-                    stmt.addBatch();
-                }
-
-                //get one more input row to check if 'row' is the last one
-                nextRow = input.poll();
-
-                curBatchSize++;
-                // if batch size equals number of row in batch or input table at end
-                    if ((curBatchSize == batchSize) || nextRow == null) {
-                        curBatchSize = 0;
-                    try {
-                        // write batch
-                        if (batchSize > 1) {
-                            stmt.executeBatch();
-                        } else { // or write single row
-                            stmt.execute();
-                        }
-                    } catch (Throwable t) {
-                        // Postgres will refuse any more commands in this transaction after errors
-                        // Therefore we commit the changes that were possible. We commit everything at the end
-                        // anyway.
-                        if (!conn.getAutoCommit()) {
-                            conn.commit();
-                        }
-
-                        allErrors++;
-                        if (errorCnt > -1) {
-                            final String errorMsg;
-                            if (batchSize > 1) {
-                                errorMsg = "Error while adding rows #" + (cnt - batchSize) + " - #" + cnt
-                                    + ", reason: " + t.getMessage();
-                            } else {
-                                errorMsg = "Error while adding row #" + cnt + " (" + row.getKey() + "), reason: "
-                                    + t.getMessage();
-                            }
-                            exec.setMessage(errorMsg);
-                            if (errorCnt++ < 10) {
-                                LOGGER.warn(errorMsg);
-                            } else {
-                                errorCnt = -1;
-                                LOGGER.warn(errorMsg + " - more errors...", t);
-                            }
-                        }
-                    } finally {
-                        // clear batch if in batch mode
-                        if (batchSize > 1) {
-                            stmt.clearBatch();
-                        }
-                    }
-                    }
-                } while (nextRow != null);
-            if (!conn.getAutoCommit()) {
-                conn.commit();
-            }
-            if (allErrors == 0) {
-                    return null;
-                } else {
-                    return "Errors \"" + allErrors + "\" writing " + (cnt - 1) + " rows.";
-                }
-        } finally {
-            DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
-            stmt.close();
-        }
+        final String query = "INSERT INTO " + table + " " + columnNames + " VALUES " + wildcard;
+        return query;
     }
-}
 
-    private static Map<Integer, Integer> getColumnTypes(final Connection conn, final String table) throws SQLException {
+    /**
+     * @param conn {@link ConnectionPendingException}
+     * @param table table name
+     * @return the column type mapping
+     * @throws SQLException
+     */
+    protected Map<Integer, Integer> getColumnTypes(final Connection conn, final String table) throws SQLException {
         // TODO move this block to DatabaseUtility
         Map<Integer, Integer> columnTypes = new HashMap<>();
         try (ResultSet metaDataRs = conn.getMetaData().getColumns(conn.getCatalog(), null, table, null)) {
@@ -522,7 +497,6 @@ public final class DatabaseWriterConnection {
     }
 
     /** Create connection to update table in database.
-     * @param dbConn a database connection object
      * @param data The data to write.
      * @param setColumns columns part of the SET clause
      * @param whereColumns columns part of the WHERE clause
@@ -534,41 +508,21 @@ public final class DatabaseWriterConnection {
      * @param batchSize number of rows updated in one batch
      * @return error string or null, if non
      * @throws Exception if connection could not be established
-     * @since 2.7
      */
-    public static final String updateTable(
-            final DatabaseConnectionSettings dbConn,
+    @Override
+    public final String updateTable(final String schema,
             final String table, final BufferedDataTable data,
             final String[] setColumns, final String[] whereColumns,
             final int[] updateStatus,
             final ExecutionMonitor exec,
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
-        final Connection conn = dbConn.createConnection(cp);
+        final Connection conn = m_conn.createConnection(cp);
         exec.setMessage("Waiting for free database connection...");
-        synchronized (dbConn.syncConnection(conn)) {
+        synchronized (m_conn.syncConnection(conn)) {
             exec.setMessage("Start updating rows in database...");
             final DataTableSpec spec = data.getDataTableSpec();
-
-            // create query connection object
-            final StringBuilder query = new StringBuilder("UPDATE " + table + " SET");
-            for (int i = 0; i < setColumns.length; i++) {
-                if (i > 0) {
-                    query.append(",");
-                }
-                final String newColumnName = replaceColumnName(setColumns[i], dbConn);
-                query.append(" " + newColumnName + " = ?");
-            }
-            query.append(" WHERE");
-            for (int i = 0; i < whereColumns.length; i++) {
-                if (i > 0) {
-                    query.append(" AND");
-                }
-                final String newColumnName = replaceColumnName(whereColumns[i], dbConn);
-                query.append(" " + newColumnName + " = ?");
-            }
-
-
+            final String updateStmt = createUpdateStatement(table, setColumns, whereColumns);
             // problems writing more than 13 columns. the prepare statement
             // ensures that we can set the columns directly row-by-row, the
             // database will handle the commit
@@ -581,10 +535,10 @@ public final class DatabaseWriterConnection {
             int curBatchSize = 0;
 
             // selected timezone
-            final TimeZone timezone = dbConn.getTimeZone();
+            final TimeZone timezone = m_conn.getTimeZone();
 
-            LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
-            final PreparedStatement stmt = conn.prepareStatement(query.toString());
+            LOGGER.debug("Executing SQL statement as prepareStatement: " + updateStmt);
+            final PreparedStatement stmt = conn.prepareStatement(updateStmt);
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             DatabaseConnectionSettings.setAutoCommit(conn, false);
@@ -679,8 +633,35 @@ public final class DatabaseWriterConnection {
         }
     }
 
+    /**
+     * @param whereColumns
+     * @param setColumns
+     * @param table
+     * @return update statment
+     */
+    protected String createUpdateStatement(final String table, final String[] setColumns, final String[] whereColumns) {
+     // create query connection object
+        final StringBuilder query = new StringBuilder("UPDATE " + table + " SET");
+        for (int i = 0; i < setColumns.length; i++) {
+            if (i > 0) {
+                query.append(",");
+            }
+            final String newColumnName = replaceColumnName(setColumns[i]);
+            query.append(" " + newColumnName + " = ?");
+        }
+        query.append(" WHERE");
+        for (int i = 0; i < whereColumns.length; i++) {
+            if (i > 0) {
+                query.append(" AND");
+            }
+            final String newColumnName = replaceColumnName(whereColumns[i]);
+            query.append(" " + newColumnName + " = ?");
+        }
+        return query.toString();
+    }
+
     /** Create connection to update table in database.
-     * @param dbConn a database connection object
+     * @param schema table schema name. Could be <code>null</code>.
      * @param data The data to write.
      * @param whereColumns columns part of the WHERE clause
      * @param deleteStatus int array of length data#getRowCount; will be filled with
@@ -691,19 +672,18 @@ public final class DatabaseWriterConnection {
      * @param batchSize number of rows deleted in one batch
      * @return error string or null, if non
      * @throws Exception if connection could not be established
-     * @since 2.7
      */
-    public static final String deleteRows(
-            final DatabaseConnectionSettings dbConn,
+    @Override
+    public final String deleteRows(final String schema,
             final String table, final BufferedDataTable data,
             final String[] whereColumns,
             final int[] deleteStatus,
             final ExecutionMonitor exec,
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
-        final Connection conn = dbConn.createConnection(cp);
+        final Connection conn = m_conn.createConnection(cp);
         exec.setMessage("Waiting for free database connection...");
-        synchronized (dbConn.syncConnection(conn)) {
+        synchronized (m_conn.syncConnection(conn)) {
             exec.setMessage("Start deleting rows from database...");
             final DataTableSpec spec = data.getDataTableSpec();
 
@@ -713,7 +693,7 @@ public final class DatabaseWriterConnection {
                 if (i > 0) {
                     query.append(" AND");
                 }
-                final String newColumnName = replaceColumnName(whereColumns[i], dbConn);
+                final String newColumnName = replaceColumnName(whereColumns[i]);
                 query.append(" " + newColumnName + " = ?");
             }
 
@@ -730,7 +710,7 @@ public final class DatabaseWriterConnection {
             int curBatchSize = 0;
 
             // selected timezone
-            final TimeZone timezone = dbConn.getTimeZone();
+            final TimeZone timezone = m_conn.getTimeZone();
 
             LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
             final PreparedStatement stmt = conn.prepareStatement(query.toString());
@@ -826,10 +806,11 @@ public final class DatabaseWriterConnection {
      * @param cspec column spec to check type
      * @param cell the data cell to write into the statement
      * @param tz the {@link TimeZone} to use
+     * @param columnTypes
      * @throws SQLException if the value can't be set
      */
-    private static void fillStatement(final PreparedStatement stmt, final int dbIdx,
-            final DataColumnSpec cspec, final DataCell cell, final TimeZone tz, final Map<Integer, Integer> columnTypes)
+    protected void fillStatement(final PreparedStatement stmt, final int dbIdx, final DataColumnSpec cspec,
+        final DataCell cell, final TimeZone tz, final Map<Integer, Integer> columnTypes)
             throws SQLException {
         if (cspec.getType().isCompatible(BooleanValue.class)) {
             if (cell.isMissing()) {
@@ -904,6 +885,8 @@ public final class DatabaseWriterConnection {
                     stmt.setNull(dbIdx, Types.BLOB);
                 }
             }
+        } else if (cspec.getType().isCompatible(CollectionDataValue.class)) {
+            fillArray(stmt, dbIdx, cell);
         } else if ((columnTypes == null) || cspec.getType().isCompatible(StringValue.class)) {
             if (cell.isMissing()) {
                 stmt.setNull(dbIdx, Types.VARCHAR);
@@ -923,9 +906,90 @@ public final class DatabaseWriterConnection {
         }
     }
 
-    private static String createStmt(final DataTableSpec spec,
-            final Map<String, String> sqlTypes, final DatabaseConnectionSettings settings,
-            final StringBuilder columnNamesForInsertStatement) {
+    /**
+     * @param stmt
+     * @param dbIdx
+     * @param cell
+     * @throws SQLException
+     */
+    protected void fillArray(final PreparedStatement stmt, final int dbIdx, final DataCell cell)
+        throws SQLException {
+        if (cell.isMissing()) {
+            stmt.setNull(dbIdx, Types.ARRAY);
+        } else {
+            final CollectionDataValue collection = (CollectionDataValue)cell;
+            final Spliterator<DataCell> spliterator = collection.spliterator();
+            final DataType baseType = cell.getType().getCollectionElementType();
+            final Object[] vals = new Object[collection.size()];
+            final String type;
+            if (baseType.isCompatible(BooleanValue.class)) {
+                type = "boolean";
+                spliterator.forEachRemaining(new Consumer<DataCell>() {
+                    int idx = 0;
+                    @Override
+                    public void accept(final DataCell t) {
+                        vals[idx++] = t.isMissing() ? null : ((BooleanValue)t).getBooleanValue();
+                    }
+                });
+            } else if (baseType.isCompatible(IntValue.class)) {
+                type = "integer";
+                spliterator.forEachRemaining(new Consumer<DataCell>() {
+                    int idx = 0;
+                    @Override
+                    public void accept(final DataCell t) {
+                        vals[idx++] = t.isMissing() ? null : ((IntValue)t).getIntValue();
+                    }
+                });
+            } else if (baseType.isCompatible(LongValue.class)) {
+                type = "bigint";
+                spliterator.forEachRemaining(new Consumer<DataCell>() {
+                    int idx = 0;
+                    @Override
+                    public void accept(final DataCell t) {
+                        vals[idx++] = t.isMissing() ? null : ((LongValue)t).getLongValue();
+                    }
+                });
+            } else if (baseType.isCompatible(DoubleValue.class)) {
+                type = "double";
+                spliterator.forEachRemaining(new Consumer<DataCell>() {
+                    int idx = 0;
+                    @Override
+                    public void accept(final DataCell t) {
+                        if (t.isMissing()) {
+                            vals[idx++] = null;
+                        } else {
+                            final double value = ((DoubleValue)t).getDoubleValue();
+                            vals[idx++] = Double.isNaN(value) ? null : value;
+                        }
+                    }
+                });
+            } else if (baseType.isCompatible(DateAndTimeValue.class)) {
+                type = "timestamp";
+            } else {
+                type = "varchar";
+                spliterator.forEachRemaining(new Consumer<DataCell>() {
+                    int idx = 0;
+                    @Override
+                    public void accept(final DataCell t) {
+                        vals[idx++] = t.isMissing() ? null : t.toString();
+                    }
+                });
+            }
+            @SuppressWarnings("resource") //will be closed by the framework
+            final Connection conn = stmt.getConnection();
+            final Array array = conn.createArrayOf(type, vals);
+            stmt.setArray(dbIdx, array);
+        }
+    }
+
+    /**
+     * @param spec
+     * @param sqlTypes
+     * @param columnNamesForInsertStatement
+     * @return the create table statement
+     */
+    protected String createTableStmt(final DataTableSpec spec,
+            final Map<String, String> sqlTypes, final StringBuilder columnNamesForInsertStatement) {
         StringBuilder buf = new StringBuilder("(");
         for (int i = 0; i < spec.getNumColumns(); i++) {
             if (i > 0) {
@@ -934,7 +998,7 @@ public final class DatabaseWriterConnection {
             }
             DataColumnSpec cspec = spec.getColumnSpec(i);
             String colName = cspec.getName();
-            String column = replaceColumnName(colName, settings);
+            String column = replaceColumnName(colName);
             buf.append(column + " " + sqlTypes.get(colName));
 
             columnNamesForInsertStatement.append(column);
@@ -945,15 +1009,19 @@ public final class DatabaseWriterConnection {
         return buf.toString();
     }
 
-    private static String replaceColumnName(final String oldName, final DatabaseConnectionSettings settings) {
+    /**
+     * @param oldName old column name
+     * @return new column name
+     */
+    protected String replaceColumnName(final String oldName) {
         final String colName;
-        if (!settings.getAllowSpacesInColumnNames()) {
+        if (!m_conn.getAllowSpacesInColumnNames()) {
             //TK_TODO: this might replace not only spaces!!!
             colName = oldName.replaceAll("[^a-zA-Z0-9]", "_");
         } else {
             colName = oldName;
         }
         //always call the quote method to also quote key words etc.
-        return settings.getUtility().getStatementManipulator().quoteIdentifier(colName);
+        return m_conn.getUtility().getStatementManipulator().quoteIdentifier(colName);
     }
 }

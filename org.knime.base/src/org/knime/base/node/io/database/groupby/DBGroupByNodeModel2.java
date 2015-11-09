@@ -80,12 +80,12 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.DatabaseUtility;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.AggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.InvalidAggregationFunction;
+import org.knime.core.node.port.database.reader.DBReader;
 
 /**
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
@@ -329,10 +329,10 @@ final class DBGroupByNodeModel2 extends DBNodeModel {
      */
     private String createQuery(final String query, final StatementManipulator manipulator) {
         final StringBuilder buf = new StringBuilder();
-        final String[] queries = query.split(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+        final String[] queries = query.split(DBReader.SQL_QUERY_SEPARATOR);
         for (int i = 0; i < queries.length - 1; i++) {
             buf.append(queries[i]);
-            buf.append(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+            buf.append(DBReader.SQL_QUERY_SEPARATOR);
         }
         final String selectQuery = queries[queries.length - 1];
         // Build identifier for input table
@@ -392,7 +392,7 @@ final class DBGroupByNodeModel2 extends DBNodeModel {
         // Try get spec from database
         try {
             DatabaseQueryConnectionSettings querySettings = new DatabaseQueryConnectionSettings(settings, query);
-            DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
+            DBReader conn = querySettings.getUtility().getReader(querySettings);
             return conn.getDataTableSpec(getCredentialsProvider());
         } catch (SQLException e) {
             NodeLogger.getLogger(getClass()).info("Could not determine table spec from database, trying to guess now",

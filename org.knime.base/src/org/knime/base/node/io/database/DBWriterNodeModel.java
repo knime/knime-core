@@ -68,7 +68,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
-import org.knime.core.node.port.database.DatabaseWriterConnection;
+import org.knime.core.node.port.database.writer.DBWriter;
+import org.knime.core.node.streamable.DataTableRowInput;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.MergeOperator;
 import org.knime.core.node.streamable.PartitionInfo;
@@ -235,8 +236,11 @@ final class DBWriterNodeModel extends NodeModel {
             connSettings = m_conn;
         }
 
+        DBWriter writer = connSettings.getUtility().getWriter(connSettings);
+        BufferedDataTable inputTable = (BufferedDataTable)inData[0];
+        DataTableRowInput rowInput = new DataTableRowInput(inputTable);
         // write entire data
-        final String error = DatabaseWriterConnection.writeData(connSettings, m_tableName, (BufferedDataTable)inData[0],
+        final String error = writer.writeData(m_tableName, rowInput, inputTable.size(),
             m_append, exec, m_types, getCredentialsProvider(), m_batchSize, m_insertNullForMissingCols);
         // set error message generated during writing rows
         if (error != null) {
@@ -284,10 +288,10 @@ final class DBWriterNodeModel extends NodeModel {
                 } else {
                     connSettings = m_conn;
                 }
-
+                DBWriter writer = connSettings.getUtility().getWriter(connSettings);
                 // write entire data
                 m_errorMessage =
-                    DatabaseWriterConnection.writeData(connSettings, m_tableName, (RowInput) inputs[0], -1,
+                    writer.writeData(m_tableName, (RowInput) inputs[0], -1,
                         m_append, exec, m_types, getCredentialsProvider(), m_batchSize, m_insertNullForMissingCols);
             }
 

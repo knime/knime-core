@@ -81,7 +81,6 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.util.MutableInteger;
 
@@ -160,8 +159,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
             final String newQuery;
             newQuery = createDummyValueQuery(tableSpec, colIdx, oQuery);
             setQuery(newQuery);
-            final DatabaseReaderConnection load = new DatabaseReaderConnection(null);
-            spec = new DataTableSpec[] {getResultSpec(inSpecs, load)};
+            spec = new DataTableSpec[] {getResultSpec(inSpecs)};
         } catch (InvalidSettingsException e) {
             setLastSpec(null);
             throw e;
@@ -213,7 +211,6 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         BufferedDataContainer buf = null;
         final String oQuery = getQuery();
         final Collection<DataCell> curSet = new LinkedHashSet<>();
-        final DatabaseReaderConnection load = new DatabaseReaderConnection(null);
         try {
             final int noValues = m_noValues.getIntValue();
             MutableInteger rowCnt = new MutableInteger(0);
@@ -239,7 +236,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                     setQuery(newQuery);
                     exec.setProgress(values.size() * (double)noValues / rowCount, "Selecting all values \""
                         + queryValues + "\"...");
-                    final BufferedDataTable table = getResultTable(exec, inData, load);
+                    final BufferedDataTable table = getResultTable(exec, inData);
                     if (buf == null) {
                         DataTableSpec resSpec = table.getDataTableSpec();
                         buf = exec.createDataContainer(createSpec(resSpec,
@@ -267,7 +264,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                 }
                 final String newQuery = createDummyValueQuery(spec, colIdx, oQuery);
                 setQuery(newQuery);
-                final DataTableSpec resultSpec = getResultSpec(inSpec, load);
+                final DataTableSpec resultSpec = getResultSpec(inSpec);
                 final DataTableSpec outSpec = createSpec(resultSpec, spec.getColumnSpec(column));
                 buf = exec.createDataContainer(outSpec);
             }

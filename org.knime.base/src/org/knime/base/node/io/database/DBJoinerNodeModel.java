@@ -66,8 +66,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.util.Pair;
 
 /**
@@ -190,7 +190,7 @@ final class DBJoinerNodeModel extends DBNodeModel {
     }
 
     private String getLastQuery(final String queryList) {
-        final String[] queries = queryList.split(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
+        final String[] queries = queryList.split(DBReader.SQL_QUERY_SEPARATOR);
         return queries[queries.length - 1];
     }
 

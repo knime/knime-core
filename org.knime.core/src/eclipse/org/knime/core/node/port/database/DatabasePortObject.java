@@ -72,6 +72,7 @@ import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.workflow.BufferedDataTableView;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.util.SwingWorkerWithContext;
@@ -134,8 +135,9 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
      */
     private DataTable getDataTable(final int cacheNoRows) {
         try {
-            DatabaseReaderConnection load = new DatabaseReaderConnection(getConnectionSettings(m_credentials));
-            return load.createTable(cacheNoRows, m_credentials);
+            DatabaseQueryConnectionSettings connSettings = getConnectionSettings(m_credentials);
+            DBReader load = connSettings.getUtility().getReader(connSettings);
+            return load.getTable(new ExecutionMonitor(), m_credentials, false, cacheNoRows);
         } catch (Throwable t) {
             LOGGER.error("Could not fetch data from database, reason: "
                     + t.getMessage(), t);

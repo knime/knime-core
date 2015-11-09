@@ -80,7 +80,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.SwingWorkerWithContext;
@@ -142,10 +142,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
                     updateButton.setText("Fetching...");
                     try {
                         final DatabaseConnectionSettings settings = getConnectionSettings();
-                        final DatabaseReaderConnection conn =
-                                new DatabaseReaderConnection(
-                                    new DatabaseQueryConnectionSettings(
-                                        settings, ""));
+                        final DBReader conn = settings.getUtility().getReader(
+                                    new DatabaseQueryConnectionSettings(settings, ""));
                         browser.update((DatabaseMetaData) null);
                         m_worker = new SwingWorkerWithContext<Void, Void>() {
                              /** {@inheritDoc} */

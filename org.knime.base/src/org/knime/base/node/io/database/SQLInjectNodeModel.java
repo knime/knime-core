@@ -64,7 +64,7 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 
 /**
@@ -121,7 +121,7 @@ public class SQLInjectNodeModel extends NodeModel {
         DatabaseQueryConnectionSettings outSettings = new DatabaseQueryConnectionSettings(inSettings, sql);
 
         // Probe the database to see how the result table looks like
-        DatabaseReaderConnection load = new DatabaseReaderConnection(outSettings);
+        DBReader load = outSettings.getUtility().getReader(outSettings);
         DataTableSpec tableSpec = load.getDataTableSpec(getCredentialsProvider());
         DatabasePortObjectSpec outSpec = new DatabasePortObjectSpec(tableSpec, outSettings.createConnectionModel());
 
