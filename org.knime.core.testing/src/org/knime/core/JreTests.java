@@ -48,11 +48,15 @@
  */
 package org.knime.core;
 
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 
+import javax.crypto.Cipher;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -64,7 +68,7 @@ import org.junit.Test;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class KNIMECertificateTest {
+public class JreTests {
     /**
      * Checks that the JRE's default keystore contains the KNIME.com CA certificate.
      *
@@ -112,5 +116,16 @@ public class KNIMECertificateTest {
         }
 
         fail("No default server certificate found in default keystore");
+    }
+
+    /**
+     * Checks the the Java Cryptography Extension is installed in the JRE.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void checkJCEExtension() throws Exception {
+        assertThat("JCE does not seem to be installed, allows cipher length for AES is too small",
+            Cipher.getMaxAllowedKeyLength("AES"), is(greaterThan(128)));
     }
 }
