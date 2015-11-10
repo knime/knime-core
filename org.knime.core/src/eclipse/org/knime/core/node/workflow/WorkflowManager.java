@@ -5329,7 +5329,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return m_fileStoreHandlerRepository;
     }
 
-    /** Derives state of this WFM by iterating all nodes and computing the corresponding state.
+    /** Derives state of this WFM by inspecting all nodes and computing the corresponding state.
      * @return the state of the wfm derived from the state of its contained nodes.
      */
     InternalNodeContainerState computeNewState() {
@@ -5395,7 +5395,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // all nodes in WFM done and all ports populated!
                 newState = EXECUTED;
             } else {
-                // all executed but some through connections!
+                // all executed but some through connections with non-EXECUTED state!
                 newState = inportState;
             }
         } else if (nrNodesInState[CONFIGURED.ordinal()] == nrNodes) {
@@ -5425,15 +5425,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             + nrNodesInState[EXECUTED_MARKEDFOREXEC.ordinal()] >= 1) {
             newState = CONFIGURED_MARKEDFOREXEC;
         }
-        // TODO Michael/Bernd: Review this block and consider executing workflows - this block was previously
-        // executed below the "setInternalState" call so it had almost no effect (see previous SVN version)
-//        if (inportState.equals(IDLE)) {
-//            newState = IDLE;
-//        }
-//        if (inportState.equals(CONFIGURED) && (!newState.equals(IDLE))
-//            && (!newState.equals(UNCONFIGURED_MARKEDFOREXEC))) {
-//            newState = CONFIGURED;
-//        }
         return newState;
     }
 
@@ -8236,7 +8227,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * workflow state as {@link #getInternalState()} is overridden in this class.
      * @return The state as per super class method.
      */
-    InternalNodeContainerState getSuperclassInternalState() {
+    InternalNodeContainerState getMostRecentInternalState() {
         return super.getInternalState();
     }
 

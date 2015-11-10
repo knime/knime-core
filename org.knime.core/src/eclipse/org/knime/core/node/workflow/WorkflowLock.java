@@ -151,7 +151,7 @@ public final class WorkflowLock implements AutoCloseable {
         // (2) a thread holds a lock and queues an update and then puts itself to sleep (releasing the lock), e.g.
         //     when waiting for an execution to finish.
         //     Another thread aquires the lock and then sees an outdated workflow manager state.
-        return m_checkForNodeStateChanges ? m_wfm.computeNewState() : m_wfm.getSuperclassInternalState();
+        return m_checkForNodeStateChanges ? m_wfm.computeNewState() : m_wfm.getMostRecentInternalState();
     }
 
     /** Queues a state update check and notification when the lock is finally released by the calling thread.
