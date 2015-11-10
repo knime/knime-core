@@ -858,7 +858,7 @@ public final class FileUtil {
 
     /** Reads the current temp dir from the workflow context or returns the standard tmp dir, if not set. */
     private static File getTmpDir() {
-        final File fallbackDir = new File(KNIMEConstants.getKNIMETempDir());
+        final File fallbackDir = KNIMEConstants.getKNIMETempPath().toFile();
 
         NodeContext nodeContext = NodeContext.getContext();
         if (nodeContext == null) {

@@ -309,7 +309,7 @@ public final class KNIMEConstants {
     private static File knimeHomeDir;
 
     /** KNIME temp directory. */
-    private static File knimeTempDir;
+    private static Path knimeTempDir;
 
     /**
      * <i>Welcome to KNIME</i>.
@@ -435,7 +435,13 @@ public final class KNIMEConstants {
                 setKNIMETempDir(f);
             }
         } else {
-            knimeTempDir = new File(System.getProperty("java.io.tmpdir"));
+            try {
+                knimeTempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+                knimeTempDir = knimeTempDir.toRealPath();
+            } catch (IOException ex) {
+                System.err.println("Could not canonicalize temp directory '" + knimeTempDir.toAbsolutePath() + "': "
+                    + ex.getMessage());
+            }
         }
     }
 
@@ -465,7 +471,19 @@ public final class KNIMEConstants {
      * @return The path to the temp directory (trailing slashes omitted).
      */
     public static final String getKNIMETempDir() {
-        return knimeTempDir.getAbsolutePath();
+        return knimeTempDir.toAbsolutePath().toString();
+    }
+
+    /**
+     * Location for KNIME related temp files such as data container files. This
+     * is by default System.getProperty("java.io.tmpdir") but can be overwritten
+     * in the command line or the preference page. The
+     *
+     * @return The path to the temp directory
+     * @since 3.1
+     */
+    public static Path getKNIMETempPath() {
+        return knimeTempDir;
     }
 
     /** Set a new location for the KNIME temp directory. Client should not
@@ -486,7 +504,13 @@ public final class KNIMEConstants {
                     + "\": not a directory or not writable");
         }
         System.setProperty("java.io.tmpdir", dir.getAbsolutePath());
-        knimeTempDir = dir;
+        try {
+            knimeTempDir = dir.toPath().toRealPath();
+        } catch (IOException ex) {
+            NodeLogger.getLogger(KNIMEConstants.class)
+                .debug("Could not canonicalize temp directory '" + dir.getAbsolutePath() + "': " + ex.getMessage(), ex);
+            knimeTempDir = dir.toPath();
+        }
     }
 
     /**
