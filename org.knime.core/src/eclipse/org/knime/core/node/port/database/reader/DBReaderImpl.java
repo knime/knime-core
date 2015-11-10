@@ -294,7 +294,7 @@ public class DBReaderImpl implements DBReader {
         LOGGER.debug("Reading meta data from database ResultSet...");
         m_spec = createTableSpec(result.getMetaData());
         LOGGER.debug("Parsing database ResultSet...");
-        final RowIterator iterator = createDBRowIterator(useDbRowId, result);
+        final RowIterator iterator = createDBRowIterator(m_spec, m_conn, m_blobFactory, useDbRowId, result);
         return new RowIteratorConnection(conn, stmt, m_spec, iterator);
     }
 
@@ -352,7 +352,7 @@ public class DBReaderImpl implements DBReader {
                 m_spec = createTableSpec(result.getMetaData());
                 LOGGER.debug("Parsing database ResultSet...");
 //                final DBRowIterator dbIt = createRowIterator(useDbRowId, result);
-                final RowIterator it = createDBRowIterator(useDbRowId, result);
+                final RowIterator it = createDBRowIterator(m_spec, m_conn, m_blobFactory, useDbRowId, result);
                 DataContainer buf = new DataContainer(m_spec);
                 while (it.hasNext()) {
                     buf.addRowToTable(it.next());
@@ -372,8 +372,9 @@ public class DBReaderImpl implements DBReader {
     }
 
     @SuppressWarnings("javadoc")
-    protected RowIterator createDBRowIterator(final boolean useDbRowId, final ResultSet result) throws SQLException {
-        return new DBRowIteratorImpl(this, result, useDbRowId);
+    protected RowIterator createDBRowIterator(final DataTableSpec spec, final DatabaseQueryConnectionSettings conn,
+        final BinaryObjectCellFactory blobFactory, final boolean useDbRowId, final ResultSet result) throws SQLException {
+        return new DBRowIteratorImpl(spec, conn, blobFactory, result, useDbRowId);
     }
 
     protected DataTableSpec createTableSpec(final ResultSetMetaData meta)

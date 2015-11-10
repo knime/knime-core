@@ -72,12 +72,14 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.blob.BinaryObjectCellFactory;
 import org.knime.core.data.blob.BinaryObjectDataValue;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.date.DateAndTimeCell;
@@ -88,6 +90,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -97,13 +100,11 @@ import org.knime.core.util.FileUtil;
 @SuppressWarnings("javadoc")
 public class DBRowIteratorImpl extends RowIterator {
 
-    private final DBReaderImpl m_databaseReaderConnection;
-
     protected final ResultSet m_result;
 
     private boolean m_hasExceptionReported = false;
 
-    private int m_rowCounter = 0;
+    private long m_rowCounter = 0;
 
     /** FIXME: Some database (such as sqlite) do NOT support methods such as
      * <code>getAsciiStream</code> nor <code>getBinaryStream</code> and will fail with an
@@ -118,17 +119,27 @@ public class DBRowIteratorImpl extends RowIterator {
     // fix for bug #5991
     private final boolean m_useDbRowId;
 
+    protected final DataTableSpec m_spec;
+
+    protected final DatabaseConnectionSettings m_conn;
+
+    protected final BinaryObjectCellFactory m_blobFactory;
+
     /**
-     * Creates new iterator.
-     * @param result result set to iterate
-     * @param useDbRowId <code>true</code> if the KNIME row id should based on the db row id
-     * @param databaseReaderConnection TK_TODO
+     * @param spec {@link DataTableSpec}
+     * @param conn {@link DatabaseConnectionSettings}
+     * @param blobFactory {@link BinaryObjectCellFactory}
+     * @param result {@link ResultSet}
+     * @param useDbRowId <code>true</code> if the db row id should be used
      */
-    protected DBRowIteratorImpl(final DBReaderImpl databaseReaderConnection, final ResultSet result, final boolean useDbRowId) {
-        m_databaseReaderConnection = databaseReaderConnection;
+    protected DBRowIteratorImpl(final DataTableSpec spec, final DatabaseConnectionSettings conn,
+        final BinaryObjectCellFactory blobFactory, final ResultSet result, final boolean useDbRowId) {
+        m_spec = spec;
+        m_conn = conn;
+        m_blobFactory = blobFactory;
         m_result = result;
-        m_streamException = new boolean[m_databaseReaderConnection.m_spec.getNumColumns()];
-        m_rowIdsStartWithZero = m_databaseReaderConnection.m_conn.getRowIdsStartWithZero();
+        m_streamException = new boolean[m_spec.getNumColumns()];
+        m_rowIdsStartWithZero = m_conn.getRowIdsStartWithZero();
         m_useDbRowId = useDbRowId;
     }
 
@@ -163,9 +174,9 @@ public class DBRowIteratorImpl extends RowIterator {
      */
     @Override
     public DataRow next() {
-        DataCell[] cells = new DataCell[m_databaseReaderConnection.m_spec.getNumColumns()];
+        DataCell[] cells = new DataCell[m_spec.getNumColumns()];
         for (int i = 0; i < cells.length; i++) {
-            DataType type = m_databaseReaderConnection.m_spec.getColumnSpec(i).getType();
+            DataType type = m_spec.getColumnSpec(i).getType();
             int dbType = Types.NULL;
             final DataCell cell;
             try {
@@ -347,13 +358,13 @@ public class DBRowIteratorImpl extends RowIterator {
             if (wasNull() || is == null) {
                 return DataType.getMissingCell();
             } else {
-                return m_databaseReaderConnection.m_blobFactory.create(is);
+                return m_blobFactory.create(is);
             }
         } catch (SQLException sql) {
             m_streamException[i] = true;
             handlerException("Can't read from BLOB stream, trying to read string... ", sql);
             StringCell cell = (StringCell) readString(i);
-            return m_databaseReaderConnection.m_blobFactory.create(cell.getStringValue().getBytes());
+            return m_blobFactory.create(cell.getStringValue().getBytes());
         }
     }
 
@@ -365,13 +376,13 @@ public class DBRowIteratorImpl extends RowIterator {
             if (wasNull() || is == null) {
                 return DataType.getMissingCell();
             } else {
-                return m_databaseReaderConnection.m_blobFactory.create(is);
+                return m_blobFactory.create(is);
             }
         } catch (SQLException sql) {
             m_streamException[i] = true;
             handlerException("Can't read from ASCII stream, trying to read string... ", sql);
             StringCell cell = (StringCell) readString(i);
-            return m_databaseReaderConnection.m_blobFactory.create(cell.getStringValue().getBytes());
+            return m_blobFactory.create(cell.getStringValue().getBytes());
         }
     }
 
@@ -383,13 +394,13 @@ public class DBRowIteratorImpl extends RowIterator {
             if (wasNull() || is == null) {
                 return DataType.getMissingCell();
             } else {
-                return m_databaseReaderConnection.m_blobFactory.create(is);
+                return m_blobFactory.create(is);
             }
         } catch (SQLException sql) {
             m_streamException[i] = true;
             handlerException("Can't read from BINARY stream, trying to read string... ", sql);
             StringCell cell = (StringCell) readString(i);
-            return m_databaseReaderConnection.m_blobFactory.create(cell.getStringValue().getBytes());
+            return m_blobFactory.create(cell.getStringValue().getBytes());
         }
     }
 
@@ -470,7 +481,7 @@ public class DBRowIteratorImpl extends RowIterator {
         if (wasNull() || bytes == null) {
             return DataType.getMissingCell();
         } else {
-            return m_databaseReaderConnection.m_blobFactory.create(bytes);
+            return m_blobFactory.create(bytes);
         }
     }
 
@@ -506,8 +517,7 @@ public class DBRowIteratorImpl extends RowIterator {
         if (wasNull() || date == null) {
             return DataType.getMissingCell();
         } else {
-            final long corrDate = date.getTime() + m_databaseReaderConnection.m_conn.getTimeZoneOffset(date.getTime());
-            return new DateAndTimeCell(corrDate, true, false, false);
+            return createDateCell(date, true, false, false);
         }
     }
 
@@ -516,8 +526,7 @@ public class DBRowIteratorImpl extends RowIterator {
         if (wasNull() || time == null) {
             return DataType.getMissingCell();
         } else {
-            final long corrTime = time.getTime() + m_databaseReaderConnection.m_conn.getTimeZoneOffset(time.getTime());
-            return new DateAndTimeCell(corrTime, false, true, true);
+            return createDateCell(time, false, true, true);
         }
     }
 
@@ -526,9 +535,21 @@ public class DBRowIteratorImpl extends RowIterator {
         if (wasNull() || timestamp == null) {
             return DataType.getMissingCell();
         } else {
-            final long corrTime = timestamp.getTime() + m_databaseReaderConnection.m_conn.getTimeZoneOffset(timestamp.getTime());
-            return new DateAndTimeCell(corrTime, true, true, true);
+            return createDateCell(timestamp, true, true, true);
         }
+    }
+
+    /**
+     * @param date the date to convert
+     * @param hasDate
+     * @param hasTime
+     * @param hasMillis
+     * @return the {@link DateAndTimeCell}
+     */
+    protected DateAndTimeCell createDateCell(final java.util.Date date, final boolean hasDate,
+        final boolean hasTime, final boolean hasMillis) {
+        final long corrTime = date.getTime() + m_conn.getTimeZoneOffset(date.getTime());
+        return new DateAndTimeCell(corrTime, hasDate, hasTime, hasMillis);
     }
 
     protected DataCell readArray(final int i) throws SQLException {
