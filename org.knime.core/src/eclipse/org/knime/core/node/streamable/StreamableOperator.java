@@ -79,7 +79,7 @@ public abstract class StreamableOperator {
      * an instance of {@link PortObjectInput}.
      *
      * <p>The <code>outputs</code> argument contains non-null output handles
-     * in either of the two cases: (i) none of the inputs is non-distributable
+     * in either of the two cases: (i) all of the inputs are non-distributable
      * (only one instance of a streamable operator that generates the final
      * output) or (ii) the corresponding output is distributable
      * ({@link NodeModel#getOutputPortRoles()}. Non-null output handles need
