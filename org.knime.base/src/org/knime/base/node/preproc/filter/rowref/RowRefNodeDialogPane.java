@@ -56,6 +56,7 @@ import org.knime.core.node.util.DataValueColumnFilter;
  *
  * @author Thomas Gabriel, University of Konstanz
  * @author Christian Dietz, University of Konstanz
+ * @since 3.1
  */
 public class RowRefNodeDialogPane extends DefaultNodeSettingsPane {
 

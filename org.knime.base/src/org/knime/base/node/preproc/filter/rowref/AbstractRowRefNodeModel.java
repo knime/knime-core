@@ -66,6 +66,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
  * possible, either the corresponding row IDs of the first table are included or excluded in the resulting output table.
  *
  * @author Christian Dietz, University of Konstanz
+ * @since 3.1
  */
 public abstract class AbstractRowRefNodeModel extends NodeModel {
 
