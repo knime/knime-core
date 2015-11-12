@@ -44,73 +44,22 @@
  */
 package org.knime.base.node.preproc.filter.columnref;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.NodeModel;
 
 /**
+ * {@link NodeModel} for the Reference Column Splitter node
+ *
  * @author Thomas Gabriel, University of Konstanz
  * @author Christian Dietz, University of Konstanz
+ * @since 3.1
  */
-public class ColumnFilterRefNodeModel extends AbstractColumnRefNodeModel {
-
-    /** Include columns. */
-    static final String INCLUDE = "Include columns from reference table";
-
-    /** Exclude columns. */
-    static final String EXCLUDE = "Exclude columns from reference table";
-
-    /**
-     * @return settings model for include/exclude columns
-     */
-    static SettingsModelString createInExcludeModel() {
-        return new SettingsModelString("inexclude", INCLUDE);
-    }
-
-    /** Settings model to included or exclude columns. */
-    private final SettingsModelString m_inexcudeColumns = createInExcludeModel();
+public class ColumnSplitRefNodeModel extends AbstractColumnRefNodeModel {
 
     /**
      * Creates a new node model of the Reference Column Filter node with two inputs and one output.
      */
-    public ColumnFilterRefNodeModel() {
-        super(false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean isInvertInclusion() {
-        return m_inexcudeColumns.getStringValue().equals(EXCLUDE);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        super.loadValidatedSettingsFrom(settings);
-        m_inexcudeColumns.loadSettingsFrom(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        super.saveSettingsTo(settings);
-        m_inexcudeColumns.saveSettingsTo(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        super.validateSettings(settings);
-        m_inexcudeColumns.validateSettings(settings);
+    public ColumnSplitRefNodeModel() {
+        super(true);
     }
 
 }

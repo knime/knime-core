@@ -1921,6 +1921,11 @@
             factory-class="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory"
             id="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column/column-filter"
+            factory-class="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory"
+            id="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory">
+      </node>
    </extension>
    
       
