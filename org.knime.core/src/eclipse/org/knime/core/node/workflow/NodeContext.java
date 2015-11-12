@@ -126,7 +126,8 @@ public final class NodeContext {
     public NodeContainer getNodeContainer() {
         NodeContainer cont = m_nodeContainerRef.get();
         if (KNIMEConstants.ASSERTIONS_ENABLED && cont == null) {
-            logger.debug("Node container has been garbage collected, you should not have such a context available");
+            logger.debugWithoutContext(
+                "Node container has been garbage collected, you should not have such a context available");
         }
         return cont;
     }

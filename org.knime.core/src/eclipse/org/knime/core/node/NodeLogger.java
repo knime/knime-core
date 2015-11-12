@@ -575,6 +575,19 @@ public final class NodeLogger {
         getLoggerInternal().debug(getLogObject(o));
     }
 
+
+    /**
+     * Write debugging message into this logger. The message is logged without a node context. This method should only
+     * be used when you know that there is no node context available.
+     *
+     * @param o The object to print.
+     * @since 3.1
+     */
+    public void debugWithoutContext(final Object o) {
+        m_logger.debug(o);
+    }
+
+
     /**
      * @param layout checks if any of the KNIME specific flags e.g. node id is set in the layout pattern and ensures
      * that the corresponding boolean flag is enabled.
