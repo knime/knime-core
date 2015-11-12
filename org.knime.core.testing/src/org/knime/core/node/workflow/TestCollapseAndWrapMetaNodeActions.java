@@ -40,72 +40,55 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
- * Created on Oct 4, 2013 by Berthold
+ * History
+ *   Mar 13, 2014 ("Patrick Winter"): created
  */
-package org.knime.workbench.editor2.commands;
+package org.knime.core.node.workflow;
 
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeAction;
 
 /**
- * Command to wrap a meta node into a subnode/wrappednode.
- * @author M. Berthold
+ * A couple nodes collapse into a meta node, then wrapped into subnode, undo, redo.
+ *
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class ConvertMetaNodeToSubNodeCommand extends AbstractKNIMECommand {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ExpandMetaNodeCommand.class);
+public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
 
-    private final NodeID m_id;
-    private MetaNodeToSubNodeAction m_metaNodeToSubNodeAction;
-
-    /**
-     * @param wfm the workflow manager holding the metanode
-     * @param id of node to be converted.
-     */
-    public ConvertMetaNodeToSubNodeCommand(final WorkflowManager wfm, final NodeID id) {
-        super(wfm);
-        m_id = id;
-    }
+    private NodeID m_columnFilter_2;
+    private NodeID m_columnFilter_3;
+    private NodeID m_columnSplitter_4;
 
     /** {@inheritDoc} */
     @Override
-    public boolean canExecute() {
-        if (!super.canExecute()) {
-            return false;
-        }
-        return getHostWFM().canRemoveNode(m_id);
+    protected void setUp() throws Exception {
+        super.setUp();
+        NodeID baseID = loadAndSetWorkflow();
+        m_columnFilter_2 = new NodeID(baseID, 2);
+        m_columnFilter_3 = new NodeID(baseID, 3);
+        m_columnSplitter_4 = new NodeID(baseID, 4);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void execute() {
-        try {
-            m_metaNodeToSubNodeAction = getHostWFM().convertMetaNodeToSubNode(m_id);
-        } catch (Exception e) {
-            String error = "Converting Metanode failed: " + e.getMessage();
-            LOGGER.error(error, e);
-            MessageDialog.openError(Display.getCurrent().getActiveShell(), "Convert failed", error);
-        }
-    }
+    /** Collect nodes, collapse them, convert to meta node and wrap/unwrap. */
+    public void testCollapseIntoMetaNodeThenWrapUnwrap() throws Exception {
+        WorkflowManager mgr = getManager();
+        // there is only one in the wfm
+        WorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
+        final NodeID[] nodes = new NodeID[] {m_columnFilter_2, m_columnFilter_3, m_columnSplitter_4};
+        WorkflowManager metaNode =
+                mgr.collapseIntoMetaNode(nodes, new WorkflowAnnotation[] {annotation}, "Test-Meta/Wrap Node");
+        assertFalse("Should have removed node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
+        assertTrue("No annotation expected", mgr.getWorkflowAnnotations().isEmpty());
+        mgr.getNodeContainer(metaNode.getID(), WorkflowManager.class, true);
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean canUndo() {
-        return m_metaNodeToSubNodeAction != null && m_metaNodeToSubNodeAction.canUndo();
-    }
+        MetaNodeToSubNodeAction convertObject = mgr.convertMetaNodeToSubNode(metaNode.getID());
+        mgr.getNodeContainer(metaNode.getID(), SubNodeContainer.class, true);
 
-    /** {@inheritDoc} */
-    @Override
-    public void undo() {
-        m_metaNodeToSubNodeAction.undo();
-        m_metaNodeToSubNodeAction = null;
+        assertTrue("Should be undo-able", convertObject.canUndo());
+        convertObject.undo();
+        mgr.getNodeContainer(metaNode.getID(), WorkflowManager.class, true);
+
     }
 
 }

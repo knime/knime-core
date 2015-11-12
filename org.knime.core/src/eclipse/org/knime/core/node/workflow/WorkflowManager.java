@@ -163,6 +163,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkU
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
+import org.knime.core.node.workflow.action.MetaNodeToSubNodeAction;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -3731,7 +3732,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return ID to the created sub node.
      * @since 2.10
      */
-    public NodeID convertMetaNodeToSubNode(final NodeID wfmID) {
+    public MetaNodeToSubNodeAction convertMetaNodeToSubNode(final NodeID wfmID) {
         try (WorkflowLock l = lock()) {
             //
             WorkflowManager subWFM = getNodeContainer(wfmID, WorkflowManager.class, true);
@@ -3740,6 +3741,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final Set<ConnectionContainer> connectionsBySource =
                     new LinkedHashSet<>(m_workflow.getConnectionsBySource(subWFM.getID()));
             NodeUIInformation uii = subWFM.getUIInformation();
+
+            WorkflowCopyContent cnt = new WorkflowCopyContent();
+            cnt.setNodeIDs(subWFM.getID());
+            cnt.setIncludeInOutConnections(true);
+            WorkflowPersistor undoPersistor = copy(true, cnt);
 
             removeNode(wfmID);
 
@@ -3759,7 +3765,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             subNC.setUIInformation(uii);
 
             configureNodeAndSuccessors(subNC.getID(), /*configureMyself=*/true);
-            return subNC.getID();
+            return new MetaNodeToSubNodeAction(this, subNC.getID(), undoPersistor);
         }
     }
 
