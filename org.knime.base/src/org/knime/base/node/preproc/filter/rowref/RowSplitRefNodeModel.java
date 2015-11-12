@@ -44,44 +44,18 @@
  */
 package org.knime.base.node.preproc.filter.rowref;
 
-import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
 /**
- * The dialog pane for the Reference Row Filter node which offers an
- * include and exclude option.
+ * The Reference Row Filter node allow the filtering of row IDs based on a second reference table. Two modes are
+ * possible, either the corresponding row IDs of the first table are included or excluded in the resulting output table.
  *
- * @author Thomas Gabriel, University of Konstanz
  * @author Christian Dietz, University of Konstanz
  */
-public class RowFilterRefNodeDialogPane extends RowRefNodeDialogPane {
-
-    /** Include rows. */
-    static final String INCLUDE = "Include rows from reference table";
-    /** Exclude rows. */
-    static final String EXCLUDE = "Exclude rows from reference table";
+public class RowSplitRefNodeModel extends AbstractRowRefNodeModel {
 
     /**
-     * Creates a new dialog pane with a radio button group to shows between
-     * include or exclude mode.
+     * Creates a new reference row filter node model with two inputs and one filtered output.
      */
-    public RowFilterRefNodeDialogPane() {
-        super();
-
-        final DialogComponentButtonGroup group = new DialogComponentButtonGroup(
-                createInExcludeModel(), true, INCLUDE,
-                new String[]{INCLUDE, EXCLUDE});
-        group.setToolTipText("Include or exclude rows in first table "
-                + "according to the second reference table.");
-
-        addDialogComponent(group);
+    public RowSplitRefNodeModel() {
+        super(true);
     }
-
-    /**
-     * @return setting model for include/exclude row IDs
-     */
-    static SettingsModelString createInExcludeModel() {
-        return new SettingsModelString("inexclude", INCLUDE);
-    }
-
 }

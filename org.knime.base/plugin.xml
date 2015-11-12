@@ -1915,6 +1915,12 @@
             factory-class="org.knime.base.node.io.database.binning.DBNumericBinnerNodeFactory"
             id="org.knime.base.node.io.database.binning.DBNumericBinnerNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/row/row-filter"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory"
+            id="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory">
+      </node>
    </extension>
    
       

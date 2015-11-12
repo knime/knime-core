@@ -44,44 +44,57 @@
  */
 package org.knime.base.node.preproc.filter.rowref;
 
-import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * The dialog pane for the Reference Row Filter node which offers an
- * include and exclude option.
+ * Factory for the creation of a Reference Row Split node.
  *
- * @author Thomas Gabriel, University of Konstanz
  * @author Christian Dietz, University of Konstanz
  */
-public class RowFilterRefNodeDialogPane extends RowRefNodeDialogPane {
-
-    /** Include rows. */
-    static final String INCLUDE = "Include rows from reference table";
-    /** Exclude rows. */
-    static final String EXCLUDE = "Exclude rows from reference table";
+public class RowSplitRefNodeFactory
+        extends NodeFactory<RowSplitRefNodeModel> {
 
     /**
-     * Creates a new dialog pane with a radio button group to shows between
-     * include or exclude mode.
+     * {@inheritDoc}
      */
-    public RowFilterRefNodeDialogPane() {
-        super();
-
-        final DialogComponentButtonGroup group = new DialogComponentButtonGroup(
-                createInExcludeModel(), true, INCLUDE,
-                new String[]{INCLUDE, EXCLUDE});
-        group.setToolTipText("Include or exclude rows in first table "
-                + "according to the second reference table.");
-
-        addDialogComponent(group);
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new RowRefNodeDialogPane();
     }
 
     /**
-     * @return setting model for include/exclude row IDs
+     * {@inheritDoc}
      */
-    static SettingsModelString createInExcludeModel() {
-        return new SettingsModelString("inexclude", INCLUDE);
+    @Override
+    public RowSplitRefNodeModel createNodeModel() {
+        return new RowSplitRefNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<RowSplitRefNodeModel> createNodeView(
+            final int index, final RowSplitRefNodeModel model) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
     }
 
 }
