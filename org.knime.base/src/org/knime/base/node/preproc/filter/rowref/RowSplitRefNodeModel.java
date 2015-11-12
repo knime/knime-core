@@ -49,6 +49,7 @@ package org.knime.base.node.preproc.filter.rowref;
  * possible, either the corresponding row IDs of the first table are included or excluded in the resulting output table.
  *
  * @author Christian Dietz, University of Konstanz
+ * @since 3.1
  */
 public class RowSplitRefNodeModel extends AbstractRowRefNodeModel {
 

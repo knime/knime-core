@@ -52,6 +52,7 @@ import org.knime.core.node.NodeView;
  * Factory for the creation of a Reference Row Split node.
  *
  * @author Christian Dietz, University of Konstanz
+ * @since 3.1
  */
 public class RowSplitRefNodeFactory
         extends NodeFactory<RowSplitRefNodeModel> {
