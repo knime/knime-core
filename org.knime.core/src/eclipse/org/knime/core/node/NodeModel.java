@@ -46,6 +46,7 @@ package org.knime.core.node;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -1656,10 +1657,16 @@ public abstract class NodeModel {
                 PortObject[] outObjects = ArrayUtils.remove(extendedOutData, 0);
 
                 for (int i = 0; i < outputs.length; i++) {
-                    if (getOutPortType(i).equals(BufferedDataTable.TYPE)) {
-                        ((RowOutput)outputs[i]).setFully((BufferedDataTable)outObjects[i]);
-                    } else {
-                        ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
+                    if (outObjects[i] != null) { //port objects happen to be null for instance at the loop end-node when the iteration is continued
+                        if (getOutPortType(i).equals(BufferedDataTable.TYPE) && outObjects[i] instanceof RowOutput) {
+                            //comment for 'instanceof RowOutput': some nodes' configure-method return null (e.g. Transpose),
+                            //hence a RowOutput cannot be created by the executor. This only happens in the default implementation, i.e. a node
+                            //doesn't override createStreamableOperator (sanity check in computeFinalOutputSpec-method)
+                            //and is not streamable nor distributed
+                            ((RowOutput)outputs[i]).setFully((BufferedDataTable)outObjects[i]);
+                        } else {
+                            ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
+                        }
                     }
                 }
             }
@@ -1741,10 +1748,31 @@ public abstract class NodeModel {
      * @throws InvalidSettingsException As described in the configure method.
      * @since 2.6
      */
-    public PortObjectSpec[] computeFinalOutputSpecs(
-            final StreamableOperatorInternals internals,
-            final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return configure(inSpecs);
+    public PortObjectSpec[] computeFinalOutputSpecs(final StreamableOperatorInternals internals,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        PortObjectSpec[] specs = configure(inSpecs);
+        //some nodes return a null-spec or a spec containing null-entries (e.g. Transpose)
+        //this is only possible, if the node is not streamable nor distributed (i.e. doesn't override
+        //createStreamableOperator(...)). We check for that here:
+        if (specs == null || Arrays.stream(specs).anyMatch(s -> s == null)) {
+            //spec or at least one spec entry is null -> createStreamableOperator must NOT be overriden
+            //check it via reflection
+            try {
+                Method m =
+                    this.getClass().getMethod("createStreamableOperator", PartitionInfo.class, PortObjectSpec[].class);
+                if (m.getDeclaringClass() != NodeModel.class) {
+                    //method has been overriden
+                    throw new IllegalStateException("Nodes' \"configure\"-method returns null!"
+                        + " Node must not be streamed (don't override the \"createStreamableOperator\"-method).");
+                }
+            } catch (NoSuchMethodException | SecurityException ex) {
+                // as long as the signature of the createStreamableOperator-method
+                // doesn't change, this should not happen
+                throw new RuntimeException(ex);
+            }
+
+        }
+        return specs;
     }
 
     /**
