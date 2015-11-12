@@ -15,10 +15,10 @@
    </extension>
    <extension
          id="KNIME_PRODUCT"
-         name="KNIME Workbench - Standalone Version"
+         name="KNIME Analytics Platform"
          point="org.eclipse.core.runtime.products">
       <product
-            name="KNIME"
+            name="KNIME Analytics Platform"
             application="org.knime.product.KNIME_APPLICATION"
             description="KNIME Analytics Platform">
          <property
