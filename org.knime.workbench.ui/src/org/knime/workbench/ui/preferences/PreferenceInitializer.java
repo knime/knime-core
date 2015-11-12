@@ -90,7 +90,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.P_DEFAULT_NODE_LABEL, "Node");
 
         int defaultFontHeight = 8;
-        Display current = Display.getCurrent();
+        //Fix for Bug 6401: getCurrent() worked in 2.12 but in 3.0 a worker thread
+        //without display element calls it, which returns null. Therefore getDefault()
+        Display current = Display.getDefault();
         if (current != null) {
             Font systemFont = current.getSystemFont();
             FontData[] systemFontData = systemFont.getFontData();
