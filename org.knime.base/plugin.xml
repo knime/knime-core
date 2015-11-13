@@ -1066,7 +1066,13 @@
             after="org.knime.base.node.viz.roc.ROCNodeFactory"
             category-path="/analytics/mining/modeleval"
             factory-class="org.knime.base.node.viz.enrichment.EnrichmentPlotterFactory"
-            id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>
+            id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"
+            deprecated="true" />
+      <node
+            after="org.knime.base.node.viz.roc.ROCNodeFactory"
+            category-path="/analytics/mining/modeleval"
+            factory-class="org.knime.base.node.viz.enrichment2.EnrichmentPlotterFactory"
+            id="org.knime.chem.node.viz.enrich2.EnrichmentPlotterFactory"/>
        <node
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"

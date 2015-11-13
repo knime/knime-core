@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.base.node.viz.enrichment;
+package org.knime.base.node.viz.enrichment2;
 
 import java.awt.HeadlessException;
 import java.awt.Toolkit;
@@ -60,8 +60,9 @@ import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.node.viz.enrichment.EnrichmentPlotterSettings.Curve;
-import org.knime.base.node.viz.enrichment.EnrichmentPlotterSettings.PlotMode;
+import org.apache.commons.lang.ArrayUtils;
+import org.knime.base.node.viz.enrichment2.EnrichmentPlotterSettings.Curve;
+import org.knime.base.node.viz.enrichment2.EnrichmentPlotterSettings.PlotMode;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -84,50 +85,48 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.MutableInteger;
 
 /**
- * This class is the model for the enrichment plotter node. It does the
- * pre-calculation for the view, i.e. it sorts the the data according to the
- * selected columns and computes the y-values for the enrichment curves.
+ * This class is the model for the enrichment plotter node. It does the pre-calculation for the view, i.e. it sorts the
+ * the data according to the selected columns and computes the y-values for the enrichment curves.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @author Patrick Winter, University of Konstanz
  */
-public class EnrichmentPlotterModel extends NodeModel {
+class EnrichmentPlotterModel extends NodeModel {
     private List<EnrichmentPlot> m_curves = new ArrayList<EnrichmentPlot>();
 
     private static final DataTableSpec AREA_OUT_SPEC;
-
-    private static final DataTableSpec DISCRATE_OUT_SPEC;
-
-    private static final double[] DISCRATE_POINTS =
-            {0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50,
-                    60, 80, 100};
 
     // maximum x-resolution for the graphs
     private static final int MAX_RESOLUTION;
 
     static {
-        DataColumnSpec dcs =
-                new DataColumnSpecCreator("Area", DoubleCell.TYPE).createSpec();
+        DataColumnSpec dcs = new DataColumnSpecCreator("Area", DoubleCell.TYPE).createSpec();
         AREA_OUT_SPEC = new DataTableSpec(dcs);
-
-        DataColumnSpec[] cs = new DataColumnSpec[DISCRATE_POINTS.length];
-        for (int i = 0; i < cs.length; i++) {
-            cs[i] =
-                    new DataColumnSpecCreator("Discovery rate at "
-                            + DISCRATE_POINTS[i] + "%", DoubleCell.TYPE)
-                            .createSpec();
-        }
-
-        DISCRATE_OUT_SPEC = new DataTableSpec(cs);
 
         int res;
         try {
-            res =
-                    (int)(Toolkit.getDefaultToolkit().getScreenSize()
-                            .getWidth() * 3);
+            res = (int)(Toolkit.getDefaultToolkit().getScreenSize().getWidth() * 3);
         } catch (HeadlessException ex) {
             res = 4000;
         }
         MAX_RESOLUTION = res;
+    }
+
+    private DataTableSpec getDiscrateOutSpec() {
+
+        DataColumnSpec[] cs = new DataColumnSpec[m_settings.getFractionSizes().length * 2];
+        for (int i = 0; i < cs.length / 2; i++) {
+            cs[i] = new DataColumnSpecCreator("Discovery rate at " + m_settings.getFractionSizes()[i] + "%",
+                DoubleCell.TYPE).createSpec();
+        }
+        for (int i = 0; i < cs.length / 2; i++) {
+            cs[i + cs.length / 2] =
+                new DataColumnSpecCreator("Enrichment factor at " + m_settings.getFractionSizes()[i] + "%",
+                    DoubleCell.TYPE).createSpec();
+        }
+
+        return new DataTableSpec(cs);
+
     }
 
     private static class Helper implements Comparable<Helper> {
@@ -213,8 +212,7 @@ public class EnrichmentPlotterModel extends NodeModel {
          * @param y the curve's y-values
          * @param area the curve's area
          */
-        EnrichmentPlot(final String name, final double[] x, final double[] y,
-                final double area) {
+        EnrichmentPlot(final String name, final double[] x, final double[] y, final double area) {
             m_name = name;
             m_x = x;
             m_y = y;
@@ -258,8 +256,7 @@ public class EnrichmentPlotterModel extends NodeModel {
         }
     }
 
-    final EnrichmentPlotterSettings m_settings =
-            new EnrichmentPlotterSettings();
+    final EnrichmentPlotterSettings m_settings = new EnrichmentPlotterSettings();
 
     /**
      * Creates a new model for the enrichment plotter node.
@@ -272,8 +269,7 @@ public class EnrichmentPlotterModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         if (m_settings.getCurveCount() == 0) {
             throw new InvalidSettingsException("No curves defined in dialog.");
         }
@@ -281,52 +277,43 @@ public class EnrichmentPlotterModel extends NodeModel {
         for (int i = 0; i < m_settings.getCurveCount(); i++) {
             Curve c = m_settings.getCurve(i);
             if (inSpecs[0].findColumnIndex(c.getSortColumn()) == -1) {
-                throw new InvalidSettingsException("Sort column '"
-                        + c.getSortColumn() + " ' does not exist");
+                throw new InvalidSettingsException("Sort column '" + c.getSortColumn() + " ' does not exist");
             }
 
             if (inSpecs[0].findColumnIndex(c.getActivityColumn()) == -1) {
-                throw new InvalidSettingsException("Activity/cluster column '"
-                        + c.getActivityColumn() + " ' does not exist");
+                throw new InvalidSettingsException(
+                    "Activity/cluster column '" + c.getActivityColumn() + " ' does not exist");
             }
 
             if ((m_settings.plotMode() != PlotMode.PlotClusters)
-                    && !inSpecs[0].getColumnSpec(c.getActivityColumn())
-                            .getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException(
-                        "Activity column is not numeric");
+                && !inSpecs[0].getColumnSpec(c.getActivityColumn()).getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Activity column is not numeric");
             }
         }
 
-        return new DataTableSpec[]{AREA_OUT_SPEC, DISCRATE_OUT_SPEC};
+        return new DataTableSpec[]{AREA_OUT_SPEC, getDiscrateOutSpec()};
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws Exception {
         final double rowCount = inData[0].size();
-        final BufferedDataContainer areaOutCont =
-                exec.createDataContainer(AREA_OUT_SPEC);
-        final BufferedDataContainer discrateOutCont =
-                exec.createDataContainer(DISCRATE_OUT_SPEC);
+        final BufferedDataContainer areaOutCont = exec.createDataContainer(AREA_OUT_SPEC);
+        final BufferedDataContainer discrateOutCont = exec.createDataContainer(getDiscrateOutSpec());
+        final double[] fractionSizes = m_settings.getFractionSizes();
 
         for (int i = 0; i < m_settings.getCurveCount(); i++) {
-            final ExecutionMonitor sexec =
-                    exec.createSubProgress(1.0 / m_settings.getCurveCount());
+            final ExecutionMonitor sexec = exec.createSubProgress(1.0 / m_settings.getCurveCount());
             exec.setMessage("Generating curve " + (i + 1));
 
             final Curve c = m_settings.getCurve(i);
             final Helper[] curve = new Helper[KnowsRowCountTable.checkRowCount(inData[0].size())];
 
-            final int sortIndex =
-                    inData[0].getDataTableSpec().findColumnIndex(
-                            c.getSortColumn());
-            final int actIndex =
-                    inData[0].getDataTableSpec().findColumnIndex(
-                            c.getActivityColumn());
+            final int sortIndex = inData[0].getDataTableSpec().findColumnIndex(c.getSortColumn());
+            final int actIndex = inData[0].getDataTableSpec().findColumnIndex(c.getActivityColumn());
 
             int k = 0, maxK = 0;
             for (DataRow row : inData[0]) {
@@ -341,8 +328,7 @@ public class EnrichmentPlotterModel extends NodeModel {
                 if (c1.isMissing()) {
                     continue;
                 } else {
-                    curve[maxK] =
-                            new Helper(((DoubleValue)c1).getDoubleValue(), c2);
+                    curve[maxK] = new Helper(((DoubleValue)c1).getDoubleValue(), c2);
                 }
                 maxK++;
             }
@@ -369,18 +355,15 @@ public class EnrichmentPlotterModel extends NodeModel {
             int lastK = 0;
             double y = 0, area = 0;
             int nextHitRatePoint = 0;
-            final double[] hitRateValues = new double[DISCRATE_POINTS.length];
-            final HashMap<DataCell, MutableInteger> clusters =
-                new HashMap<DataCell, MutableInteger>();
+            final double[] hitRateValues = new double[fractionSizes.length];
+            final HashMap<DataCell, MutableInteger> clusters = new HashMap<DataCell, MutableInteger>();
 
             for (k = 1; k <= maxK; k++) {
                 final Helper h = curve[k - 1];
                 if (m_settings.plotMode() == PlotMode.PlotSum) {
                     y += ((DoubleValue)h.b).getDoubleValue();
                 } else if (m_settings.plotMode() == PlotMode.PlotHits) {
-                    if (!h.b.isMissing()
-                            && (((DoubleValue)h.b).getDoubleValue() >= m_settings
-                                    .hitThreshold())) {
+                    if (!h.b.isMissing() && (((DoubleValue)h.b).getDoubleValue() >= m_settings.hitThreshold())) {
                         y++;
                     }
                 } else if (!h.b.isMissing()) {
@@ -401,9 +384,8 @@ public class EnrichmentPlotterModel extends NodeModel {
                     yValues[lastK] = y;
                 }
 
-                if ((nextHitRatePoint < DISCRATE_POINTS.length)
-                        && (k == (int)Math.floor(maxK
-                                * DISCRATE_POINTS[nextHitRatePoint] / 100))) {
+                if ((nextHitRatePoint < fractionSizes.length)
+                    && (k == (int)Math.floor(maxK * fractionSizes[nextHitRatePoint] / 100))) {
                     hitRateValues[nextHitRatePoint] = y;
                     nextHitRatePoint++;
                 }
@@ -412,23 +394,30 @@ public class EnrichmentPlotterModel extends NodeModel {
             yValues[yValues.length - 1] = y;
             area /= y;
 
-            m_curves.add(new EnrichmentPlot(c.getSortColumn() + " vs "
-                    + c.getActivityColumn(), xValues, yValues, area));
-            areaOutCont.addRowToTable(new DefaultRow(new RowKey(c.toString()),
-                    new DoubleCell(area)));
+            m_curves
+                .add(new EnrichmentPlot(c.getSortColumn() + " vs " + c.getActivityColumn(), xValues, yValues, area));
+            areaOutCont.addRowToTable(new DefaultRow(new RowKey(c.toString()), new DoubleCell(area)));
 
             for (int j = 0; j < hitRateValues.length; j++) {
                 hitRateValues[j] /= y;
             }
 
-            discrateOutCont.addRowToTable(new DefaultRow(new RowKey(c
-                    .toString()), hitRateValues));
+            double[] enrichmentFactors = new double[hitRateValues.length];
+            for (int j = 0; j < enrichmentFactors.length; j++) {
+                enrichmentFactors[j] = calculateEnrichmentFactor(hitRateValues[j], fractionSizes[j]);
+            }
+
+            discrateOutCont.addRowToTable(
+                new DefaultRow(new RowKey(c.toString()), ArrayUtils.addAll(hitRateValues, enrichmentFactors)));
         }
 
         areaOutCont.close();
         discrateOutCont.close();
-        return new BufferedDataTable[]{areaOutCont.getTable(),
-                discrateOutCont.getTable()};
+        return new BufferedDataTable[]{areaOutCont.getTable(), discrateOutCont.getTable()};
+    }
+
+    private double calculateEnrichmentFactor(final double hitRate, final double discratePoint) {
+        return hitRate / (discratePoint / 100);
     }
 
     /**
@@ -436,32 +425,29 @@ public class EnrichmentPlotterModel extends NodeModel {
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         File f = new File(nodeInternDir, "curves.ser.gz");
         if (!f.exists()) {
             throw new IOException("Could not find internal data file");
         }
 
-        ObjectInputStream in =
-                new ObjectInputStream(new GZIPInputStream(
-                        new FileInputStream(f)));
+        ObjectInputStream in = new ObjectInputStream(new GZIPInputStream(new FileInputStream(f)));
         try {
             m_curves = (List<EnrichmentPlot>)in.readObject();
         } catch (ClassNotFoundException ex) {
             // should not happen at all
             throw new IOException(ex.getLocalizedMessage());
+        } finally {
+            in.close();
         }
-        in.close();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_settings.loadSettings(settings);
     }
 
@@ -477,13 +463,10 @@ public class EnrichmentPlotterModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        ObjectOutputStream out =
-                new ObjectOutputStream(new GZIPOutputStream(
-                        new FileOutputStream(new File(nodeInternDir,
-                                "curves.ser.gz"))));
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
+        ObjectOutputStream out = new ObjectOutputStream(
+            new GZIPOutputStream(new FileOutputStream(new File(nodeInternDir, "curves.ser.gz"))));
         out.writeObject(m_curves);
         out.close();
     }
@@ -500,27 +483,23 @@ public class EnrichmentPlotterModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         EnrichmentPlotterSettings s = new EnrichmentPlotterSettings();
         s.loadSettings(settings);
         for (int i = 0; i < s.getCurveCount(); i++) {
-            if (s.getCurve(i).getActivityColumn().equals(
-                    s.getCurve(i).getSortColumn())) {
-                throw new InvalidSettingsException("Activity and sort column "
-                        + " are identical: "
-                        + s.getCurve(i).getActivityColumn());
+            if (s.getCurve(i).getActivityColumn().equals(s.getCurve(i).getSortColumn())) {
+                throw new InvalidSettingsException(
+                    "Activity and sort column " + " are identical: " + s.getCurve(i).getActivityColumn());
             }
         }
     }
 
     /**
-     * Returns a list with all pre-calculated curves that should be shown in the
-     * view.
+     * Returns a list with all pre-calculated curves that should be shown in the view.
      *
      * @return a list with enrichment curves
      */
-    List<EnrichmentPlot> getCurves() {
+        List<EnrichmentPlot> getCurves() {
         return m_curves;
     }
 }

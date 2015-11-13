@@ -42,9 +42,11 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.base.node.viz.enrichment;
+package org.knime.base.node.viz.enrichment2;
 
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -54,11 +56,11 @@ import org.knime.core.node.NodeSettingsWO;
  * This class holds the settings for the enrichment plotter node.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @author Patrick Winter, University of Konstanz
  */
-public class EnrichmentPlotterSettings {
+class EnrichmentPlotterSettings {
     /**
-     * A simple container that holds the necessary information for specifying a
-     * curve that should be plotted.
+     * A simple container that holds the necessary information for specifying a curve that should be plotted.
      *
      * @author Thorsten Meinl, University of Konstanz
      */
@@ -70,8 +72,8 @@ public class EnrichmentPlotterSettings {
         private final String m_hitColumn;
 
         /**
-         * <code>true</code> if the sort column should be sorted descendingly,
-         * <code>false</code> if it should be sorted ascendingly.
+         * <code>true</code> if the sort column should be sorted descendingly, <code>false</code> if it should be sorted
+         * ascendingly.
          */
         private final boolean m_sortDescending;
 
@@ -80,12 +82,10 @@ public class EnrichmentPlotterSettings {
          *
          * @param sortColumn the column by which the table should be sorted
          * @param hitColumn the column with the hit values
-         * @param sortDescending <code>true</code> if the
-         *            <code>sortColumn</code> should be sorted descending,
+         * @param sortDescending <code>true</code> if the <code>sortColumn</code> should be sorted descending,
          *            <code>false</code> if it should be sorted ascending
          */
-        public Curve(final String sortColumn, final String hitColumn,
-                final boolean sortDescending) {
+        public Curve(final String sortColumn, final String hitColumn, final boolean sortDescending) {
             m_sortColumn = sortColumn;
             m_hitColumn = hitColumn;
             m_sortDescending = sortDescending;
@@ -145,8 +145,7 @@ public class EnrichmentPlotterSettings {
          */
         @Override
         public String toString() {
-            return m_sortColumn + (m_sortDescending ? " (DESC)" : "") + " vs. "
-                    + m_hitColumn;
+            return m_sortColumn + (m_sortDescending ? " (DESC)" : "") + " vs. " + m_hitColumn;
         }
     }
 
@@ -156,11 +155,9 @@ public class EnrichmentPlotterSettings {
      * @author Thorsten Meinl, University of Konstanz
      */
     public static enum PlotMode {
-        /** Plot the sum of values in the activity column. */
-        PlotSum,
-        /** Plot the sum of hits in the activity column. */
-        PlotHits,
-        /** Plot the number of discovered clusters in the cluster column. */
+            /** Plot the sum of values in the activity column. */
+        PlotSum, /** Plot the sum of hits in the activity column. */
+        PlotHits, /** Plot the number of discovered clusters in the cluster column. */
         PlotClusters
     }
 
@@ -172,17 +169,22 @@ public class EnrichmentPlotterSettings {
 
     private int m_minClusterMembers = 1;
 
+    private static final String CFG_FRACTION_SIZES = "fractionSizes";
+
+    private static final double[] DEFAULT_FRACTION_SIZES =
+        {0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, 60, 80, 100};
+
+    private double[] m_fractionSizes = DEFAULT_FRACTION_SIZES;
+
     /**
      * Adds a new curve to the settings.
      *
      * @param sortColumn the column by which the table should be sorted
      * @param activityColumn the column with the activity or cluster values
-     * @param sortDescending <code>true</code> if the <code>sortColumn</code>
-     *            should be sorted descending, <code>false</code> if it should
-     *            be sorted ascending
+     * @param sortDescending <code>true</code> if the <code>sortColumn</code> should be sorted descending,
+     *            <code>false</code> if it should be sorted ascending
      */
-    public void addCurve(final String sortColumn, final String activityColumn,
-            final boolean sortDescending) {
+    public void addCurve(final String sortColumn, final String activityColumn, final boolean sortDescending) {
         Curve c = new Curve(sortColumn, activityColumn, sortDescending);
         if (!m_curves.contains(c)) {
             m_curves.add(c);
@@ -212,8 +214,8 @@ public class EnrichmentPlotterSettings {
      * Removes the given curve from the settings.
      *
      * @param curve a curve
-     * @return <code>true</code> if the curve was removed, <code>false</code>
-     *         otherwise (likely because the curve does not exist)
+     * @return <code>true</code> if the curve was removed, <code>false</code> otherwise (likely because the curve does
+     *         not exist)
      */
     public boolean removeCurve(final Curve curve) {
         return m_curves.remove(curve);
@@ -231,14 +233,14 @@ public class EnrichmentPlotterSettings {
         for (Curve c : m_curves) {
             settings.addString("curve_" + i + "_sort", c.getSortColumn());
             settings.addString("curve_" + i + "_act", c.getActivityColumn());
-            settings.addBoolean("curve_" + i + "_descending", c
-                    .isSortDescending());
+            settings.addBoolean("curve_" + i + "_descending", c.isSortDescending());
             i++;
         }
 
         settings.addString("plotMode", m_plotMode.name());
         settings.addDouble("hitThreshold", m_hitThreshold);
         settings.addInt("minClusterMembers", m_minClusterMembers);
+        settings.addDoubleArray(CFG_FRACTION_SIZES, m_fractionSizes);
     }
 
     /**
@@ -247,8 +249,7 @@ public class EnrichmentPlotterSettings {
      * @param settings the node settings
      * @throws InvalidSettingsException if the settings are invalid
      */
-    public void loadSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_curves.clear();
         int curveCount = settings.getInt("curveCount");
 
@@ -261,8 +262,7 @@ public class EnrichmentPlotterSettings {
                 // try old settings
                 hit = settings.getString("curve_" + i + "_hit");
             }
-            boolean sortDescending =
-                    settings.getBoolean("curve_" + i + "_descending");
+            boolean sortDescending = settings.getBoolean("curve_" + i + "_descending");
             m_curves.add(new Curve(sort, hit, sortDescending));
         }
 
@@ -278,6 +278,7 @@ public class EnrichmentPlotterSettings {
             }
         }
         m_minClusterMembers = settings.getInt("minClusterMembers", 1);
+        m_fractionSizes = settings.getDoubleArray(CFG_FRACTION_SIZES);
     }
 
     /**
@@ -293,8 +294,7 @@ public class EnrichmentPlotterSettings {
             try {
                 String sort = settings.getString("curve_" + i + "_sort");
                 String hit = settings.getString("curve_" + i + "_act");
-                boolean sortDescending =
-                        settings.getBoolean("curve_" + i + "_descending");
+                boolean sortDescending = settings.getBoolean("curve_" + i + "_descending");
                 m_curves.add(new Curve(sort, hit, sortDescending));
             } catch (InvalidSettingsException ex) {
                 // ignore it
@@ -303,9 +303,8 @@ public class EnrichmentPlotterSettings {
 
         m_hitThreshold = settings.getDouble("hitThreshold", 5.5);
         m_minClusterMembers = settings.getInt("minClusterMembers", 1);
-        m_plotMode =
-                PlotMode.valueOf(settings.getString("plotMode",
-                        PlotMode.PlotHits.name()));
+        m_plotMode = PlotMode.valueOf(settings.getString("plotMode", PlotMode.PlotHits.name()));
+        m_fractionSizes = settings.getDoubleArray(CFG_FRACTION_SIZES, DEFAULT_FRACTION_SIZES);
     }
 
     /**
@@ -327,9 +326,8 @@ public class EnrichmentPlotterSettings {
     }
 
     /**
-     * Returns the threshold above and including which a data point is
-     * considered a hit. This settings is only relevant if {@link #plotMode()}
-     * is {@link PlotMode#PlotHits}.
+     * Returns the threshold above and including which a data point is considered a hit. This settings is only relevant
+     * if {@link #plotMode()} is {@link PlotMode#PlotHits}.
      *
      * @return the hit threshold
      */
@@ -338,9 +336,8 @@ public class EnrichmentPlotterSettings {
     }
 
     /**
-     * Sets the threshold above and including which a data point is considered a
-     * hit. This settings is only relevant if {@link #plotMode()} is
-     * {@link PlotMode#PlotHits}.
+     * Sets the threshold above and including which a data point is considered a hit. This settings is only relevant if
+     * {@link #plotMode()} is {@link PlotMode#PlotHits}.
      *
      * @param thres the hit threshold
      */
@@ -348,10 +345,9 @@ public class EnrichmentPlotterSettings {
         m_hitThreshold = thres;
     }
 
-
     /**
-     * Returns the minimum number of molecules from the same cluster that have
-     * to be found so that a cluster is declared to be found.
+     * Returns the minimum number of molecules from the same cluster that have to be found so that a cluster is declared
+     * to be found.
      *
      * @return the minimum number of cluster members
      */
@@ -360,12 +356,62 @@ public class EnrichmentPlotterSettings {
     }
 
     /**
-     * Sets the minimum number of molecules from the same cluster that have to
-     * be found so that a cluster is declared to be found.
+     * Sets the minimum number of molecules from the same cluster that have to be found so that a cluster is declared to
+     * be found.
      *
      * @param min the minimum number of cluster members
      */
     public void minClusterMembers(final int min) {
         m_minClusterMembers = min;
+    }
+
+    /**
+     * @return The fraction sizes
+     */
+    public double[] getFractionSizes() {
+        return m_fractionSizes;
+    }
+
+    /**
+     * @return The list of fraction sizes in form of a comma separated string
+     */
+    public String getFractionSizesAsString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < m_fractionSizes.length; i++) {
+            String fractionSize = "" + m_fractionSizes[i];
+            if (fractionSize.endsWith(".0")) {
+                fractionSize = fractionSize.replace(".0", "");
+            }
+            sb.append(fractionSize);
+            if (i + 1 != m_fractionSizes.length) {
+                sb.append(",");
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * @param fractionSizesString The list of fraction sizes in form of a comma separated string
+     * @throws InvalidSettingsException If the format of the given string is wrong or the fraction sizes are invalid
+     */
+    public void setFractionSizesFromString(final String fractionSizesString) throws InvalidSettingsException {
+        String[] fractionSizeStrings = fractionSizesString.split(",");
+        Set<Double> fractionSizes = new TreeSet<Double>();
+        for (int i = 0; i < fractionSizeStrings.length; i++) {
+            try {
+                double fractionSize = Double.parseDouble(fractionSizeStrings[i].trim());
+                if (fractionSize <= 0 || fractionSize > 100) {
+                    throw new InvalidSettingsException("All fraction sizes must lie in the interval (0,100]");
+                }
+                fractionSizes.add(fractionSize);
+            } catch (NumberFormatException e) {
+                throw new InvalidSettingsException("Fraction sizes must be a list of numbers separated by a comma");
+            }
+        }
+        m_fractionSizes = new double[fractionSizes.size()];
+        int i = 0;
+        for (Double point : fractionSizes) {
+            m_fractionSizes[i++] = point;
+        }
     }
 }

@@ -54,6 +54,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public class EnrichmentPlotterFactory extends
     NodeFactory<EnrichmentPlotterModel> {
     /**

@@ -84,6 +84,7 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public class EnrichmentPlotterDialog extends NodeDialogPane {
     /**
      * The model for the list with the curves.
