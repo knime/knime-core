@@ -55,27 +55,27 @@ import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlOptions;
 import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.node.v212.InPort;
-import org.knime.node.v212.KnimeNodeDocument;
-import org.knime.node.v212.OutPort;
-import org.knime.node.v212.View;
-import org.knime.node.v212.Views;
+import org.knime.node.v31.InPort;
+import org.knime.node.v31.KnimeNodeDocument;
+import org.knime.node.v31.OutPort;
+import org.knime.node.v31.View;
+import org.knime.node.v31.Views;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * Implementation of {@link NodeDescription} for node descriptions introduced with 2.12. It uses XMLBeans to extract the
+ * Implementation of {@link NodeDescription} for node descriptions introduced with 3.1. It uses XMLBeans to extract the
  * information from the XML file.<br>
  * If assertions are enabled (see {@link KNIMEConstants#ASSERTIONS_ENABLED} it also checks the contents of the XML for
  * against the XML schema and reports errors via the logger.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.12
+ * @since 3.1
  */
-public final class NodeDescription212Proxy extends NodeDescription {
+public final class NodeDescription31Proxy extends NodeDescription {
     private static final XmlOptions OPTIONS = new XmlOptions();
 
-    private static final NodeLogger logger = NodeLogger.getLogger(NodeDescription212Proxy.class);
+    private static final NodeLogger logger = NodeLogger.getLogger(NodeDescription31Proxy.class);
 
     static {
         Map<String, String> namespaceMap = new HashMap<String, String>(1);
@@ -93,7 +93,7 @@ public final class NodeDescription212Proxy extends NodeDescription {
      * @param doc the XML document of the node description XML file
      * @throws XmlException if something goes wrong while analyzing the XML structure
      */
-    public NodeDescription212Proxy(final Document doc) throws XmlException {
+    public NodeDescription31Proxy(final Document doc) throws XmlException {
         m_document = KnimeNodeDocument.Factory.parse(doc.getDocumentElement(), OPTIONS);
         setIsDeprecated(m_document.getKnimeNode().getDeprecated());
         validate();
@@ -106,7 +106,7 @@ public final class NodeDescription212Proxy extends NodeDescription {
      *
      * @param doc a knime node document
      */
-    public NodeDescription212Proxy(final KnimeNodeDocument doc) {
+    public NodeDescription31Proxy(final KnimeNodeDocument doc) {
         m_document = doc;
         setIsDeprecated(m_document.getKnimeNode().getDeprecated());
         if (KNIMEConstants.ASSERTIONS_ENABLED) {

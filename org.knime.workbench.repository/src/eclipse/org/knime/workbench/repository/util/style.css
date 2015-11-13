@@ -1,3 +1,6 @@
+/* Import font */
+@import url(https://fonts.googleapis.com/css?family=Roboto:400,700);
+
 body.origin {
      
      font-family: 'Roboto',sans-serif;
@@ -482,10 +485,32 @@ table.introtable {
     border-collapse:collapse;
 }
 
+table.introtable table {
+	margin: -0.5em;
+	border: none;
+	border-collapse: collapse;
+}
 
-table.introtable tr td,th {
+
+table.introtable tr td, 
+table.introtable tr th {
     padding: 0.5em 0.5em;
     border: 1px solid #666666;
+}
+
+table.introtable table tr:not(:last-child) {
+	border: none;
+	border-bottom: 1px solid #666666;
+}
+
+table.introtable table tr td,
+table.introtable table tr th {
+	border: none;
+}
+    
+table.introtable table tr td:not(:last-child),
+table.introtable table tr th:not(:last-child) {
+    border-right: 1px solid #666666;
 }
 
 
@@ -505,11 +530,12 @@ td{
 }
 
 a{
-	color: #000;
+	color: #FF9000;
+	text-decoration: none;
 }
 	
-a:visited{
-	color: #666;
+a:hover{
+	text-decoration: underline;
 }
 
 .warn{
@@ -703,11 +729,8 @@ li.knime-node {
 	margin-left: 4px;
 }
 
-a {
-	text-decoration: none;
-}
-a:visited {
-	color: black;
+.container a {
+	color: #000;
 }
 
 #menu_header{
