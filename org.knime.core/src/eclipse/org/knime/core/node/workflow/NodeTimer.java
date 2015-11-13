@@ -62,6 +62,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -95,6 +97,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EclipseUtil;
+import org.osgi.framework.Version;
 import org.osgi.service.prefs.Preferences;
 
 /**
@@ -119,6 +122,7 @@ public final class NodeTimer {
     public static final class GlobalNodeStats {
 
         private static final String N_A = "n/a";
+        private static final String NODE_NAME_SEP = "#";
 
         private static final NodeLogger LOGGER = NodeLogger.getLogger(GlobalNodeStats.class);
 
@@ -140,7 +144,7 @@ public final class NodeTimer {
         private long m_timeOfLastSend = m_timeOfLastSave;
         private static final long SAVEINTERVAL = 15*60*1000;  // save no more than every 15mins
         private static final long SENDINTERVAL = 24*60*60*1000; // only send every 24h
-        private static final String FILENAME = "nodeusage.json";
+        private static final String FILENAME = "nodeusage_3.0.json";
 
         private static final boolean DISABLE_GLOBAL_TIMER = Boolean.getBoolean("knime.globaltimer.disable");
 
@@ -291,18 +295,44 @@ public final class NodeTimer {
             job.add("created", m_created);
             JsonObjectBuilder job2 = Json.createObjectBuilder();
             synchronized (this) {
-                for (String cname : m_globalNodeStats.keySet()) {
-                    JsonObjectBuilder job3 = Json.createObjectBuilder();
-                    NodeStats ns = m_globalNodeStats.get(cname);
-
-                    if (ns != null) {
-                        job3.add("nrexecs", ns.executionCount);
-                        job3.add("exectime", ns.executionTime);
-                        job3.add("nrcreated", ns.creationCount);
-                        job3.add("successor", ns.likelySuccessor);
-                        job2.add(cname, job3);
+                    JsonArrayBuilder jab = Json.createArrayBuilder();
+                    for (String cname : m_globalNodeStats.keySet()) {
+                        if (!cname.matches(".+" + NODE_NAME_SEP + ".+")) {
+                            // don't consider subnodes, metanodes or other weird things
+                            continue;
+                        }
+                        JsonObjectBuilder job3 = Json.createObjectBuilder();
+                        NodeStats ns = m_globalNodeStats.get(cname);
+                        if (ns != null) {
+                            job3.add("id", cname);
+                            job3.add("nrexecs", ns.executionCount);
+                            job3.add("exectime", ns.executionTime);
+                            job3.add("nrcreated", ns.creationCount);
+                            job3.add("successor", ns.likelySuccessor);
+                            jab.add(job3);
+                        }
                     }
-                }
+                    job2.add("nodes", jab);
+
+                    // meta nodes
+                    JsonObjectBuilder jobMeta = Json.createObjectBuilder();
+                    NodeStats ns = m_globalNodeStats.get("NodeContainer");
+                    if (ns != null) {
+                        jobMeta.add("nrexecs", ns.executionCount);
+                        jobMeta.add("exectime", ns.executionTime);
+                        jobMeta.add("nrcreated", ns.creationCount);
+                    }
+                    job2.add("metaNodes", jobMeta);
+
+                    // sub nodes
+                    JsonObjectBuilder jobSub = Json.createObjectBuilder();
+                    ns = m_globalNodeStats.get(SubNodeContainer.class.getName());
+                    if (ns != null) {
+                        jobSub.add("nrexecs", ns.executionCount);
+                        jobSub.add("exectime", ns.executionTime);
+                        jobSub.add("nrcreated", ns.creationCount);
+                    }
+                    job2.add("wrappedNodes", jobSub);
             }
             job.add("nodestats", job2);
             job.add("uptime", getAvgUpTime());
@@ -441,19 +471,35 @@ public final class NodeTimer {
                 try (JsonReader jr = Json.createReader(new FileInputStream(propfile))) {
                     jo = jr.readObject();
                 }
+                String version = "0.0.0";
                 for (String key : jo.keySet()) {
                     switch (key) {
                         case "version":
-                            // ignored (for now)
+                            version = jo.getString(key);
+                            if (compareVersionString(version, "3.0.1") < 0) {
+                                // ignore file created before 3.0.1, as the structure has changed
+                                LOGGER.debug("Ignoring usage file content, because version was before 3.0.1. Starting counts from scratch.");
+                                resetCounts();
+                                return;
+                            }
                             break;
                         case "created":
                             m_created = jo.getString(key);
                             break;
                         case "nodestats":
                             JsonObject jo2 = jo.getJsonObject(key);
-                            for (String key2 : jo2.keySet()) {
-                                // key represents name of NodeModel
-                                JsonObject job3 = jo2.getJsonObject(key2);
+
+                            // regular nodes
+                            JsonArray jab = jo2.getJsonArray("nodes");
+                            if (jab == null) {
+                                // secondary check for changed structure
+                                LOGGER.debug("Ignoring usage file content, because of missing 'nodes' field. Starting counts from scratch.");
+                                resetCounts();
+                                return;
+                            }
+                            for (int curNode = 0; curNode < jab.size(); curNode++) {
+                                JsonObject job3 = jab.getJsonObject(curNode);
+                                String nodeID = job3.getString("id");
                                 int execCount = job3.getInt("nrexecs", 0);
                                 JsonNumber num = job3.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
@@ -464,8 +510,36 @@ public final class NodeTimer {
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
                                 ns.likelySuccessor = successor;
-                                m_globalNodeStats.put(key2, ns);
+                                m_globalNodeStats.put(nodeID, ns);
                             }
+
+                            // meta nodes
+                            JsonObject jobMeta = jo2.getJsonObject("metaNodes");
+                            if (!jobMeta.isEmpty()) {
+                                int execCount = jobMeta.getInt("nrexecs", 0);
+                                JsonNumber num = jobMeta.getJsonNumber("exectime");
+                                Long time = num == null ? 0 : num.longValue();
+                                int creationCount = jobMeta.getInt("nrcreated", 0);
+                                NodeStats ns = new NodeStats();
+                                ns.executionCount = execCount;
+                                ns.executionTime = time;
+                                ns.creationCount = creationCount;
+                                m_globalNodeStats.put("NodeContainer", ns);
+                            }
+
+                            JsonObject jubSub = jo2.getJsonObject("wrappedNodes");
+                            if (!jubSub.isEmpty()) {
+                                int execCount = jubSub.getInt("nrexecs", 0);
+                                JsonNumber num = jubSub.getJsonNumber("exectime");
+                                Long time = num == null ? 0 : num.longValue();
+                                int creationCount = jubSub.getInt("nrcreated", 0);
+                                NodeStats ns = new NodeStats();
+                                ns.executionCount = execCount;
+                                ns.executionTime = time;
+                                ns.creationCount = creationCount;
+                                m_globalNodeStats.put(SubNodeContainer.class.getName(), ns);
+                            }
+
                             break;
                         case "uptime":
                             m_avgUpTime = jo.getJsonNumber(key).longValue();
@@ -486,10 +560,28 @@ public final class NodeTimer {
                 }
                 LOGGER.debug("Successfully read node usage stats from file: " + propfile.getCanonicalPath());
             } catch (Exception e) {
-                LOGGER.warn("Failed reading node usage file", e);
+                LOGGER.warn("Failed reading node usage file. Starting counts from scratch.", e);
+                resetCounts();
             }
         }
+
+        private void resetCounts() {
+            m_created = DATE_FORMAT.format(new Date());
+            m_avgUpTime = 0;
+            m_launches = 0;
+            m_crashes = 0;
+            m_globalNodeStats = new LinkedHashMap<String, NodeTimer.GlobalNodeStats.NodeStats>();
+        }
+
+        private Integer compareVersionString(final String str1, final String str2)
+        {
+            Version v1 = new Version(str1);
+            Version v2 = new Version(str2);
+            return Integer.signum(v1.compareTo(v2));
+        }
     }
+
+
     public static final GlobalNodeStats GLOBAL_TIMER = new GlobalNodeStats();
 
     private static String getCanonicalName(final NodeContainer nc) {
@@ -499,7 +591,7 @@ public final class NodeTimer {
             //changed in 3.0.1: name consists of factory class name + node name
             String className = node.getNode().getFactory().getClass().getName();
             String nodeName = node.getName();
-            cname = className + "#" + nodeName;
+            cname = className + GlobalNodeStats.NODE_NAME_SEP + nodeName;
         } else if (nc instanceof SubNodeContainer) {
             cname = nc.getClass().getName();
         }
