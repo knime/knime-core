@@ -92,7 +92,15 @@ public class InsertMetaNodeCommand extends CreateMetaNodeCommand {
      */
     @Override
     public boolean canExecute() {
-        return super.canExecute() && m_delete.canExecute() && m_ih.insertNode();
+        return super.canExecute() && m_delete.canExecute() && m_ih.canInsertNode(true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canRedo() {
+        return super.canExecute() && m_delete.canExecute() && m_ih.canInsertNode(false);
     }
 
     /**

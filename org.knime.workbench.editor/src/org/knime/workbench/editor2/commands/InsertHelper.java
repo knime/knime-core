@@ -80,9 +80,12 @@ public class InsertHelper {
 
     /**
      * Checks execution status of downstream nodes and pops up reset warning if enabled.
+     *
+     * @param askForReset <code>true</code> if the user should be asked whether executed nodes that are affected by the
+     *            insertion are allowed to be reset. If <code>false</code> this question is omitted.
      * @return if new node can be inserted
      */
-    public boolean insertNode() {
+    public boolean canInsertNode(final boolean askForReset) {
         NodeID destNode = m_edge.getDest();
         if (!hostWFM.canRemoveConnection(m_edge)) {
             return false;
@@ -94,7 +97,7 @@ public class InsertHelper {
         } else {
             isDestinationExecuted = hostWFM.findNodeContainer(destNode).getNodeContainerState().isExecuted();
         }
-        if (isDestinationExecuted) {
+        if (isDestinationExecuted && askForReset) {
             IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
             if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
                     || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
