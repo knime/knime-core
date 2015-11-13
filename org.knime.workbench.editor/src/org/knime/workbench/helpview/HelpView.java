@@ -47,6 +47,7 @@
  */
 package org.knime.workbench.helpview;
 
+import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
@@ -96,7 +97,7 @@ public class HelpView extends ViewPart implements ISelectionListener,
 
     private boolean m_isFallback;
 
-    private IStructuredSelection m_lastSelection;
+    private WeakReference<IStructuredSelection> m_lastSelectionReference;
 
     /**
      * {@inheritDoc}
@@ -155,11 +156,12 @@ public class HelpView extends ViewPart implements ISelectionListener,
 
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection structSel = (IStructuredSelection)selection;
+            IStructuredSelection lastSel = m_lastSelectionReference == null ? null : m_lastSelectionReference.get();
             // we do not clear our content if nothing is selected.
-            if (structSel.size() < 1 || structSel.equals(m_lastSelection)) {
+            if (structSel.size() < 1 || structSel.equals(lastSel)) {
                 return;
             }
-            m_lastSelection = structSel;
+            m_lastSelectionReference = new WeakReference<>(structSel);
 
             // we display the full description only if a single node is selected
             boolean useSingleLine;
