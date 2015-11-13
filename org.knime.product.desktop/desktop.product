@@ -48,6 +48,7 @@ All other trademarks are the property of their respective owners.
 -Dorg.eclipse.swt.internal.carbon.smallFonts
       </vmArgsMac>
       <vmArgsWin>-Dorg.eclipse.swt.browser.IEVersion=10001
+-Dsun.awt.noerasebackground=true
       </vmArgsWin>
    </launcherArgs>
 
