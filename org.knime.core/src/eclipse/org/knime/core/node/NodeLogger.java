@@ -443,25 +443,23 @@ public final class NodeLogger {
     /** Write start logging message to info logger of this class. */
     private static void startMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
-        l.info("#############################################################");
-        l.info("#                                                           #");
+        l.info("#########################################################################################");
+        l.info("#                                                                                       #");
         l.info("# "
-                + ("Welcome to KNIME v" + KNIMEConstants.VERSION + " (Build "
+                + ("Welcome to the KNIME Analytics Platform v" + KNIMEConstants.VERSION + " (Build "
                         + KNIMEConstants.BUILD_DATE
-                        + ")                        ").substring(0, 62) + " #");
-        l.info("# Based on Eclipse, http://www.eclipse.org                  #");
-        l.info("#                                                           #");
-        l.info("#############################################################");
-        l.info("#                                                           #");
+                        + ")                                          ").substring(0, 85) + " #");
+        l.info("# Based on Eclipse, http://www.eclipse.org                                              #");
+        l.info("#                                                                                       #");
+        l.info("#########################################################################################");
+        l.info("#                                                                                       #");
         copyrightMessage();
-        l.info("#                                                           #");
-        l.info("#############################################################");
+        l.info("#                                                                                       #");
+        l.info("#########################################################################################");
         if (LOG_FILE_APPENDER instanceof LogfileAppender) {
-            l.info("# For more details see the KNIME log file:"
-                    + "                  #");
+            l.info("# For more details see the KNIME log file:                                              #");
             l.info("# " + ((LogfileAppender)LOG_FILE_APPENDER).getFile());
-            l.info("#-----------------------------------------------"
-                    + "------------#");
+            l.info("#---------------------------------------------------------------------------------------#");
         }
 
         l.info("# logging date=" + new Date());
@@ -470,29 +468,26 @@ public final class NodeLogger {
         l.info("# java.vendor=" + System.getProperty("java.vendor"));
         l.info("# os.name=" + System.getProperty("os.name"));
         l.info("# os.arch=" + System.getProperty("os.arch"));
-        l.info("# number of CPUs="
-                        + Runtime.getRuntime().availableProcessors());
-        l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED
-                ? "on" : "off"));
+        l.info("# number of CPUs=" + Runtime.getRuntime().availableProcessors());
+        l.info("# assertions=" + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off"));
         l.info("# host=" + getHostname());
         try {
             l.info("# username=" + User.getUsername());
         } catch (Exception ex) {
             l.info("# username=<unknown>");
         }
-        l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024)
-                + "MB");
+        l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024) + "MB");
         l.info("# application=" + OSGIHelper.getApplicationName());
         l.info("# ID=" + KNIMEConstants.getKNIMEInstanceID());
-        l.info("#############################################################");
+        l.info("#########################################################################################");
     }
 
     /** Write copyright message. */
     private static void copyrightMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
-        l.info("# Copyright by KNIME GmbH, Konstanz, Germany               #");
-        l.info("# Website: http://www.knime.org                            #");
-        l.info("# E-mail: contact@knime.org                                #");
+        l.info("# Copyright by KNIME GmbH, Konstanz, Germany and others.                                #");
+        l.info("# Website: http://www.knime.org                                                         #");
+        l.info("# E-mail: contact@knime.org                                                             #");
     }
 
     /** The Log4J logger to which all messages are logged. Do not access it directly if you want to log a message
