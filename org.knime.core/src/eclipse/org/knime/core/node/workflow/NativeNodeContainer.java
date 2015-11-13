@@ -472,6 +472,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         synchronized (m_nodeMutex) {
             super.mimicRemoteExecuted(status);
             setExecutionEnvironment(null);
+            closeFileStoreHandlerAfterExecute(status.isSuccess());
         }
 
     }
