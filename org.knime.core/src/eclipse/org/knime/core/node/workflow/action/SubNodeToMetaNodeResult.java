@@ -55,13 +55,13 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
- * Result object of {@link WorkflowManager#convertMetaNodeToSubNode(org.knime.core.node.workflow.NodeID)}
+ * Result object of {@link WorkflowManager#convertSubNodeToMetaNode(NodeID)}.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @noreference This class is not intended to be referenced by clients.
  * @since 3.1
  */
-public final class MetaNodeToSubNodeAction {
+public final class SubNodeToMetaNodeResult {
 
     private NodeID m_nodeID;
     private WorkflowPersistor m_undoPersistor;
@@ -72,7 +72,7 @@ public final class MetaNodeToSubNodeAction {
      * @param nodeID the id of the meta node to wrap.
      * @param undoPersistor The persistor to undo the operation.
      */
-    public MetaNodeToSubNodeAction(final WorkflowManager wfm, final NodeID nodeID, final WorkflowPersistor undoPersistor) {
+    public SubNodeToMetaNodeResult(final WorkflowManager wfm, final NodeID nodeID, final WorkflowPersistor undoPersistor) {
         m_wfm = CheckUtils.checkArgumentNotNull(wfm);
         m_nodeID = CheckUtils.checkArgumentNotNull(nodeID);
         m_undoPersistor = CheckUtils.checkArgumentNotNull(undoPersistor);

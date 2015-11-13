@@ -47,7 +47,10 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.action.MetaNodeToSubNodeAction;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
+
+import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
+import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 
 /**
  * A couple nodes collapse into a meta node, then wrapped into subnode, undo, redo.
@@ -59,6 +62,8 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
     private NodeID m_columnFilter_2;
     private NodeID m_columnFilter_3;
     private NodeID m_columnSplitter_4;
+    private NodeID m_javaEdit_7;
+    private NodeID m_tableView_6;
 
     /** {@inheritDoc} */
     @Override
@@ -68,26 +73,67 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
         m_columnFilter_2 = new NodeID(baseID, 2);
         m_columnFilter_3 = new NodeID(baseID, 3);
         m_columnSplitter_4 = new NodeID(baseID, 4);
+        m_javaEdit_7 = new NodeID(baseID, 7);
+        m_tableView_6 = new NodeID(baseID, 6);
     }
 
     /** Collect nodes, collapse them, convert to meta node and wrap/unwrap. */
     public void testCollapseIntoMetaNodeThenWrapUnwrap() throws Exception {
         WorkflowManager mgr = getManager();
+        executeAllAndWait();
+        checkState(mgr, EXECUTED);
+
+        mgr.resetAndConfigureAll();
         // there is only one in the wfm
         WorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
         final NodeID[] nodes = new NodeID[] {m_columnFilter_2, m_columnFilter_3, m_columnSplitter_4};
         WorkflowManager metaNode =
                 mgr.collapseIntoMetaNode(nodes, new WorkflowAnnotation[] {annotation}, "Test-Meta/Wrap Node");
+        NodeID metaSubID = metaNode.getID();
         assertFalse("Should have removed node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
         assertTrue("No annotation expected", mgr.getWorkflowAnnotations().isEmpty());
-        mgr.getNodeContainer(metaNode.getID(), WorkflowManager.class, true);
+        mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
 
-        MetaNodeToSubNodeAction convertObject = mgr.convertMetaNodeToSubNode(metaNode.getID());
-        mgr.getNodeContainer(metaNode.getID(), SubNodeContainer.class, true);
+        executeAllAndWait();
+        checkState(mgr, EXECUTED);
+        mgr.resetAndConfigureNode(metaSubID);
+
+        MetaNodeToSubNodeResult convertObject = mgr.convertMetaNodeToSubNode(metaSubID);
+        mgr.getNodeContainer(metaSubID, SubNodeContainer.class, true);
+        executeAllAndWait();
+        checkState(mgr, EXECUTED);
+        mgr.resetAndConfigureNode(metaSubID);
+
 
         assertTrue("Should be undo-able", convertObject.canUndo());
         convertObject.undo();
-        mgr.getNodeContainer(metaNode.getID(), WorkflowManager.class, true);
+        mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
+        executeAllAndWait();
+        checkState(mgr, EXECUTED);
+        mgr.resetAndConfigureNode(metaSubID);
+
+        convertObject = mgr.convertMetaNodeToSubNode(metaSubID);
+        mgr.addConnection(m_javaEdit_7, 1, metaSubID, 0); // no flow var ports at '0' for meta nodes
+        mgr.addConnection(metaSubID, 0, m_tableView_6, 0); // no flow var ports at '0' for meta nodes
+
+        assertEquals("wrong number inputs", 3, mgr.getIncomingConnectionsFor(metaSubID).size());
+        assertEquals("wrong number outputs", 3, mgr.getOutgoingConnectionsFor(metaSubID).size());
+
+        executeAllAndWait();
+        checkState(mgr, EXECUTED);
+        mgr.resetAndConfigureNode(metaSubID);
+
+        SubNodeToMetaNodeResult convertSubNodeToMetaNodeResult = mgr.convertSubNodeToMetaNode(metaSubID);
+        mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
+        assertEquals("wrong number inputs", 2, mgr.getIncomingConnectionsFor(metaSubID).size());
+        assertEquals("wrong number outputs", 2, mgr.getOutgoingConnectionsFor(metaSubID).size());
+        executeAllAndWait();
+        checkState(mgr, EXECUTED);
+
+        convertSubNodeToMetaNodeResult.undo();
+        mgr.getNodeContainer(metaSubID, SubNodeContainer.class, true);
+        executeAllAndWait();
+        checkState(mgr, EXECUTED);
 
     }
 

@@ -55,8 +55,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -114,6 +116,7 @@ import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitTyp
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
+import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
@@ -1677,6 +1680,45 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         final boolean isUndoableDeleteCommand) {
         return new CopySubNodeContainerPersistor(this,
             tableRep, fileStoreHandlerRepository, preserveDeletableFlags, isUndoableDeleteCommand);
+    }
+
+    /** @return a persistor containing all but the virtual nodes and that is also fixing the in/out connections
+     * once the node is unwrapped to a meta node. */
+    WorkflowPersistor getConvertToMetaNodeCopyPersistor() {
+        assert isLockedByCurrentThread();
+        Collection<WorkflowAnnotation> workflowAnnotations = m_wfm.getWorkflowAnnotations();
+        // all but virtual in and output node
+        NodeID[] nodes = m_wfm.getNodeContainers().stream().map(nc -> nc.getID())
+                .filter(id -> id.getIndex() != m_virtualInNodeIDSuffix)
+                .filter(id -> id.getIndex() != m_virtualOutNodeIDSuffix)
+                .toArray(NodeID[]::new);
+        WorkflowCopyContent cnt = new WorkflowCopyContent();
+        cnt.setNodeIDs(nodes);
+        cnt.setAnnotation(workflowAnnotations.toArray(new WorkflowAnnotation[workflowAnnotations.size()]));
+        cnt.setIncludeInOutConnections(true);
+        WorkflowPersistor persistor = m_wfm.copy(true, cnt);
+        final Set<ConnectionContainerTemplate> additionalConnectionSet = persistor.getAdditionalConnectionSet();
+        for (Iterator<ConnectionContainerTemplate> it = additionalConnectionSet.iterator(); it.hasNext();) {
+            ConnectionContainerTemplate c = it.next();
+            if (c.getSourceSuffix() == m_virtualInNodeIDSuffix) {
+                if (c.getSourcePort() == 0) {
+                    it.remove();
+                    continue;
+                }
+                c.setSourceSuffix(-1);
+                c.setSourcePort(c.getSourcePort() - 1);
+            }
+
+            if (c.getDestSuffix() == m_virtualOutNodeIDSuffix) {
+                if (c.getDestPort() == 0) {
+                    it.remove();
+                    continue;
+                }
+                c.setDestSuffix(-1);
+                c.setDestPort(c.getDestPort() - 1);
+            }
+        }
+        return persistor;
     }
 
     /* -------------------- Credentials/Stacks ------------------ */

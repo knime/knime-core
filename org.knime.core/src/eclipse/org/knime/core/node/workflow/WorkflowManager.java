@@ -47,6 +47,7 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.knime.core.node.util.CheckUtils.checkState;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_QUEUED;
@@ -95,6 +96,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
@@ -163,7 +165,8 @@ import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkU
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
-import org.knime.core.node.workflow.action.MetaNodeToSubNodeAction;
+import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
+import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -587,7 +590,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WorkflowManager createAndAddProject(final String name, final WorkflowCreationHelper creationHelper) {
         WorkflowManager wfm = createAndAddSubWorkflow(
-            new PortType[0], new PortType[0], name, true, creationHelper.getWorkflowContext());
+            new PortType[0], new PortType[0], name, true, creationHelper.getWorkflowContext(), null);
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -750,29 +753,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
             final PortType[] outPorts, final String name) {
-        return createAndAddSubWorkflow(inPorts, outPorts, name, false, null);
+        return createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null);
     }
 
     /** Adds new empty meta node to this WFM. */
-    private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
-            final PortType[] outPorts, final String name, final boolean isNewProject, final WorkflowContext context) {
+    private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts, final PortType[] outPorts,
+        final String name, final boolean isNewProject, final WorkflowContext context, final NodeID idOrNull) {
         final boolean hasPorts = inPorts.length != 0 || outPorts.length != 0;
         if (this == ROOT) {
-            if (hasPorts) {
-                throw new IllegalStateException("Can't create sub workflow on root workflow manager, "
-                        + "use createAndAddProject() instead");
-            }
-            if (!isNewProject) {
-                throw new IllegalStateException("Children of ROOT workflow manager must have 'isProject' flag set");
-            }
+            CheckUtils.checkState(!hasPorts,
+                "Can't create sub workflow on root workflow manager, use createAndAddProject() instead");
+            CheckUtils.checkState(isNewProject, "Children of ROOT workflow manager must have 'isProject' flag set");
         }
-        if (isNewProject && hasPorts) {
-            throw new IllegalStateException("Projects must not have ports");
-        }
+        CheckUtils.checkState(!(isNewProject && hasPorts), "Projects must not have ports");
         NodeID newID;
         WorkflowManager wfm;
         try (WorkflowLock lock = lock()) {
-            newID = m_workflow.createUniqueID();
+            if (idOrNull != null) {
+                CheckUtils.checkArgument(idOrNull.hasSamePrefix(getID()), "Not the same prefix");
+                CheckUtils.checkArgument(!containsNodeContainer(idOrNull), "Already contains node with given ID");
+                newID = idOrNull;
+            } else {
+                newID = m_workflow.createUniqueID();
+            }
             HashMap<Integer, ContainerTable> globalTableRepository = isNewProject ? null : m_globalTableRepository;
             WorkflowFileStoreHandlerRepository fileStoreRepository = isNewProject ? null : m_fileStoreHandlerRepository;
             wfm = new WorkflowManager(null, this, newID, inPorts, outPorts, isNewProject, context, name,
@@ -3732,9 +3735,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return ID to the created sub node.
      * @since 2.10
      */
-    public MetaNodeToSubNodeAction convertMetaNodeToSubNode(final NodeID wfmID) {
+    public MetaNodeToSubNodeResult convertMetaNodeToSubNode(final NodeID wfmID) {
         try (WorkflowLock l = lock()) {
-            //
             WorkflowManager subWFM = getNodeContainer(wfmID, WorkflowManager.class, true);
             final Set<ConnectionContainer> connectionsByDestination =
                     new LinkedHashSet<>(m_workflow.getConnectionsByDest(subWFM.getID()));
@@ -3754,18 +3756,76 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
             // rewire connections TO the old metanode:
             for (ConnectionContainer cc : connectionsByDestination) {
-                this.addConnection(cc.getSource(), cc.getSourcePort(), subNC.getID(), cc.getDestPort() + 1);
+                ConnectionContainer newConnection = addConnection(
+                    cc.getSource(), cc.getSourcePort(), subNC.getID(), cc.getDestPort() + 1);
+                newConnection.setUIInfo(cc.getUIInfo());
             }
 
             // rewire connections FROM the sub workflow
             for (ConnectionContainer cc : connectionsBySource) {
-                this.addConnection(subNC.getID(), cc.getSourcePort() + 1, cc.getDest(), cc.getDestPort());
+                ConnectionContainer newConnection = addConnection(
+                    subNC.getID(), cc.getSourcePort() + 1, cc.getDest(), cc.getDestPort());
+                newConnection.setUIInfo(cc.getUIInfo());
             }
             // move SubNode to position of old Metanode (and remove it)
             subNC.setUIInformation(uii);
 
             configureNodeAndSuccessors(subNC.getID(), /*configureMyself=*/true);
-            return new MetaNodeToSubNodeAction(this, subNC.getID(), undoPersistor);
+            return new MetaNodeToSubNodeResult(this, subNC.getID(), undoPersistor);
+        }
+    }
+
+    /** Unwrap a selected subnode into a meta node.
+     * @param subnodeID Subnode to unwrap.
+     * @return The result object for undo.
+     * @throws IllegalStateException If it cannot perform the operation (e.g. node executing)
+     * @since 3.1
+     */
+    public SubNodeToMetaNodeResult convertSubNodeToMetaNode(final NodeID subnodeID) {
+        try (WorkflowLock l = lock()) {
+            SubNodeContainer subnode = getNodeContainer(subnodeID, SubNodeContainer.class, true);
+            checkState(!subnode.getInternalState().isExecutionInProgress(), "Can't unwrap; node is executing");
+            checkState(canRemoveNode(subnodeID), "Cannot unwrap; node can't be removed");
+
+            WorkflowCopyContent undoCopyCnt = new WorkflowCopyContent();
+            undoCopyCnt.setNodeIDs(subnode.getID());
+            undoCopyCnt.setIncludeInOutConnections(true);
+            WorkflowPersistor undoPersistor = copy(true, undoCopyCnt);
+
+            WorkflowPersistor fromSubnodePersistor = subnode.getConvertToMetaNodeCopyPersistor();
+
+            Set<ConnectionContainer> outgoingConnections = getOutgoingConnectionsFor(subnodeID);
+            Set<ConnectionContainer> incomingConnections = getIncomingConnectionsFor(subnodeID);
+            PortType[] inPorts = IntStream.range(1, subnode.getNrInPorts())
+                    .mapToObj(i -> subnode.getInPort(i).getPortType()).toArray(PortType[]::new);
+            PortType[] outPorts = IntStream.range(1, subnode.getNrOutPorts())
+                    .mapToObj(i -> subnode.getOutPort(i).getPortType()).toArray(PortType[]::new);
+            String name = subnode.getName();
+            NodeUIInformation uiInformation = subnode.getUIInformation();
+
+            removeNode(subnodeID);
+
+            WorkflowManager metaNode = createAndAddSubWorkflow(inPorts, outPorts, name, false, null, subnodeID);
+            metaNode.setUIInformation(uiInformation);
+            metaNode.paste(fromSubnodePersistor);
+
+            for (ConnectionContainer c : incomingConnections) {
+                if (c.getDestPort() != 0) {
+                    ConnectionContainer newConnection =
+                            addConnection(c.getSource(), c.getSourcePort(), subnodeID, c.getDestPort() - 1);
+                    newConnection.setUIInfo(c.getUIInfo());
+                }
+            }
+
+            for (ConnectionContainer c : outgoingConnections) {
+                if (c.getSourcePort() != 0) {
+                    ConnectionContainer newConnection =
+                            addConnection(subnodeID, c.getSourcePort() - 1, c.getDest(), c.getDestPort());
+                    newConnection.setUIInfo(c.getUIInfo());
+                }
+            }
+
+            return new SubNodeToMetaNodeResult(this, subnodeID, undoPersistor);
         }
     }
 

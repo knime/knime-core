@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,70 +43,52 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Oct 4, 2013 by Berthold
+ * History
+ *   Nov 12, 2015 (wiswedel): created
  */
-package org.knime.workbench.editor2.commands;
+package org.knime.core.node.workflow.action;
 
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
+import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
- * Command to wrap a meta node into a subnode/wrappednode.
- * @author M. Berthold
+ * Result object of {@link WorkflowManager#convertMetaNodeToSubNode(org.knime.core.node.workflow.NodeID)}
+ *
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
+ * @since 3.1
  */
-public class ConvertMetaNodeToSubNodeCommand extends AbstractKNIMECommand {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ConvertMetaNodeToSubNodeCommand.class);
+public final class MetaNodeToSubNodeResult {
 
-    private final NodeID m_id;
-    private MetaNodeToSubNodeResult m_metaNodeToSubNodeResult;
+    private NodeID m_nodeID;
+    private WorkflowPersistor m_undoPersistor;
+    private WorkflowManager m_wfm;
 
-    /**
-     * @param wfm the workflow manager holding the metanode
-     * @param id of node to be converted.
+    /** Construct action object - only to be called from WFM.
+     * @param wfm The workflow manager
+     * @param nodeID the id of the meta node to wrap.
+     * @param undoPersistor The persistor to undo the operation.
      */
-    public ConvertMetaNodeToSubNodeCommand(final WorkflowManager wfm, final NodeID id) {
-        super(wfm);
-        m_id = id;
+    public MetaNodeToSubNodeResult(final WorkflowManager wfm, final NodeID nodeID, final WorkflowPersistor undoPersistor) {
+        m_wfm = CheckUtils.checkArgumentNotNull(wfm);
+        m_nodeID = CheckUtils.checkArgumentNotNull(nodeID);
+        m_undoPersistor = CheckUtils.checkArgumentNotNull(undoPersistor);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean canExecute() {
-        if (!super.canExecute()) {
-            return false;
-        }
-        return getHostWFM().canRemoveNode(m_id);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void execute() {
-        try {
-            m_metaNodeToSubNodeResult = getHostWFM().convertMetaNodeToSubNode(m_id);
-        } catch (Exception e) {
-            String error = "Converting Metanode failed: " + e.getMessage();
-            LOGGER.error(error, e);
-            MessageDialog.openError(Display.getCurrent().getActiveShell(), "Convert failed", error);
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
+    /** @return true if undo-able, that is node can be removed (hence converted, then removed). */
     public boolean canUndo() {
-        return m_metaNodeToSubNodeResult != null && m_metaNodeToSubNodeResult.canUndo();
+        return m_wfm.canRemoveNode(m_nodeID);
     }
 
-    /** {@inheritDoc} */
-    @Override
+    /** Perform the undo. */
     public void undo() {
-        m_metaNodeToSubNodeResult.undo();
-        m_metaNodeToSubNodeResult = null;
+        try (WorkflowLock lock = m_wfm.lock()) { // prevent events to be sent too early
+            m_wfm.removeNode(m_nodeID);
+            m_wfm.paste(m_undoPersistor);
+        }
     }
 
 }

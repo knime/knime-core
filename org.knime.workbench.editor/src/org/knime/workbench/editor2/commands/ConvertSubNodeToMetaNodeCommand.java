@@ -51,23 +51,24 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
+import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 
 /**
- * Command to wrap a meta node into a subnode/wrappednode.
- * @author M. Berthold
+ * Command to unwrap a sub node into a meta node.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class ConvertMetaNodeToSubNodeCommand extends AbstractKNIMECommand {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ConvertMetaNodeToSubNodeCommand.class);
+public class ConvertSubNodeToMetaNodeCommand extends AbstractKNIMECommand {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ConvertSubNodeToMetaNodeCommand.class);
 
     private final NodeID m_id;
-    private MetaNodeToSubNodeResult m_metaNodeToSubNodeResult;
+    private SubNodeToMetaNodeResult m_subNodeToMetaNodeResult;
 
     /**
      * @param wfm the workflow manager holding the metanode
      * @param id of node to be converted.
      */
-    public ConvertMetaNodeToSubNodeCommand(final WorkflowManager wfm, final NodeID id) {
+    public ConvertSubNodeToMetaNodeCommand(final WorkflowManager wfm, final NodeID id) {
         super(wfm);
         m_id = id;
     }
@@ -87,9 +88,9 @@ public class ConvertMetaNodeToSubNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            m_metaNodeToSubNodeResult = getHostWFM().convertMetaNodeToSubNode(m_id);
+            m_subNodeToMetaNodeResult = getHostWFM().convertSubNodeToMetaNode(m_id);
         } catch (Exception e) {
-            String error = "Converting Metanode failed: " + e.getMessage();
+            String error = "Unwrapping failed: " + e.getMessage();
             LOGGER.error(error, e);
             MessageDialog.openError(Display.getCurrent().getActiveShell(), "Convert failed", error);
         }
@@ -98,14 +99,14 @@ public class ConvertMetaNodeToSubNodeCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        return m_metaNodeToSubNodeResult != null && m_metaNodeToSubNodeResult.canUndo();
+        return m_subNodeToMetaNodeResult != null && m_subNodeToMetaNodeResult.canUndo();
     }
 
     /** {@inheritDoc} */
     @Override
     public void undo() {
-        m_metaNodeToSubNodeResult.undo();
-        m_metaNodeToSubNodeResult = null;
+        m_subNodeToMetaNodeResult.undo();
+        m_subNodeToMetaNodeResult = null;
     }
 
 }

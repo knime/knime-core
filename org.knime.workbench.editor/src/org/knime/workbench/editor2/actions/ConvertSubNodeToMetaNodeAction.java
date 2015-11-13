@@ -50,29 +50,29 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.commands.ConvertMetaNodeToSubNodeCommand;
-import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
+import org.knime.workbench.editor2.commands.ConvertSubNodeToMetaNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /** Convert meta node to a sub node.
  *
  * @author M. Berthold
  */
-public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
+public class ConvertSubNodeToMetaNodeAction extends AbstractNodeAction {
 
     /**
      * unique ID for this action.
      */
-    public static final String ID = "knime.action.convertmetanodetosubnode";
+    public static final String ID = "knime.action.convertsubnodetometanode";
 
     /**
      * @param editor The workflow editor
      */
-    public ConvertMetaNodeToSubNodeAction(final WorkflowEditor editor) {
+    public ConvertSubNodeToMetaNodeAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -89,7 +89,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Wrap";
+        return "Unwrap";
     }
 
     /**
@@ -97,7 +97,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_wrap.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_unwrap.png");
     }
 
     /**
@@ -105,7 +105,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Converts this metanode to a functional, sharable unit";
+        return "Converts this wrappednode to a metanode";
     }
 
     /**
@@ -122,9 +122,9 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
         if (parts.length != 1) {
             return false;
         }
-        if (parts[0].getNodeContainer() instanceof WorkflowManager) {
-            WorkflowManager wm = (WorkflowManager)parts[0].getNodeContainer();
-            return !wm.isWriteProtected();
+        if (parts[0].getNodeContainer() instanceof SubNodeContainer) {
+            SubNodeContainer subnode = (SubNodeContainer)parts[0].getNodeContainer();
+            return !subnode.isWriteProtected();
         }
         return false;
     }
@@ -142,30 +142,30 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
 
         try {
             WorkflowManager manager = getManager();
-            WorkflowManager metaNode = (WorkflowManager)nodeParts[0].getNodeContainer();
-            if (!metaNode.unlock(new GUIWorkflowCipherPrompt())) {
-                return;
-            }
+            SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getNodeContainer();
+//            if (!subNode.unlock(new GUIWorkflowCipherPrompt())) {
+//                return;
+//            }
             // before we do anything, let's see if the convert will reset the meta node
-            if (manager.canResetNode(metaNode.getID())) {
+            if (manager.canResetNode(subNode.getID())) {
                 // yes: ask if we can reset, otherwise bail
                 MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.OK | SWT.CANCEL);
-                mb.setMessage("Executed Nodes inside Meta Node will be reset - are you sure?");
+                mb.setMessage("Executed Nodes inside WrappedNode will be reset - are you sure?");
                 mb.setText("Reset Executed Nodes");
                 int dialogreturn = mb.open();
                 if (dialogreturn == SWT.CANCEL) {
                     return;
                 }
                 // perform reset
-                if (manager.canResetNode(metaNode.getID())) {
-                    manager.resetAndConfigureNode(metaNode.getID());
+                if (manager.canResetNode(subNode.getID())) {
+                    manager.resetAndConfigureNode(subNode.getID());
                 }
             }
-            ConvertMetaNodeToSubNodeCommand cmnc = new ConvertMetaNodeToSubNodeCommand(manager, metaNode.getID());
+            ConvertSubNodeToMetaNodeCommand cmnc = new ConvertSubNodeToMetaNodeCommand(manager, subNode.getID());
             execute(cmnc);
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.ERROR);
-            mb.setMessage("Sorry, converting Meta Node failed: " + e.getMessage());
+            mb.setMessage("Sorry, Unwrapping WrappedNode failed: " + e.getMessage());
             mb.setText("Convert failed");
             mb.open();
         }

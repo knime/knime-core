@@ -79,6 +79,7 @@ import org.knime.workbench.editor2.actions.ChangeSubNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
 import org.knime.workbench.editor2.actions.ConvertMetaNodeToSubNodeAction;
+import org.knime.workbench.editor2.actions.ConvertSubNodeToMetaNodeAction;
 import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.DisconnectSubNodeLinkAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
@@ -355,7 +356,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                         ((AbstractNodeAction)action).update();
                     }
 
-                    // TO FUNCTIONAL UNIT (META NODE)
+                    // WRAP
                     action = m_actionRegistry.getAction(ConvertMetaNodeToSubNodeAction.ID);
                     metanodeMenuMgr.appendToGroup(GROUP_METANODE, action);
                     ((AbstractNodeAction)action).update();
@@ -381,6 +382,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     subnodeMenuMgr.appendToGroup(GROUP_SUBNODE, action);
                     ((AbstractNodeAction)action).update();
 
+                    // UNWRAP
+                    action = m_actionRegistry.getAction(ConvertSubNodeToMetaNodeAction.ID);
+                    subnodeMenuMgr.appendToGroup(GROUP_SUBNODE, action);
+                    ((AbstractNodeAction)action).update();
                 }
 
                 // add port views

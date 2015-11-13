@@ -194,6 +194,7 @@ import org.knime.workbench.editor2.actions.ChangeSubNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
 import org.knime.workbench.editor2.actions.ConvertMetaNodeToSubNodeAction;
+import org.knime.workbench.editor2.actions.ConvertSubNodeToMetaNodeAction;
 import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
 import org.knime.workbench.editor2.actions.DefaultOpenViewAction;
@@ -666,7 +667,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
         ExpandMetaNodeAction expand = new ExpandMetaNodeAction(this);
         ExpandSubNodeAction expandSub = new ExpandSubNodeAction(this);
-        ConvertMetaNodeToSubNodeAction convert = new ConvertMetaNodeToSubNodeAction(this);
+        ConvertMetaNodeToSubNodeAction wrap = new ConvertMetaNodeToSubNodeAction(this);
+        ConvertSubNodeToMetaNodeAction unWrap = new ConvertSubNodeToMetaNodeAction(this);
 
         // register the actions
         m_actionRegistry.registerAction(undo);
@@ -700,7 +702,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(collapse);
         m_actionRegistry.registerAction(expand);
         m_actionRegistry.registerAction(expandSub);
-        m_actionRegistry.registerAction(convert);
+        m_actionRegistry.registerAction(wrap);
+        m_actionRegistry.registerAction(unWrap);
 
         m_actionRegistry.registerAction(metaNodeReConfigure);
         m_actionRegistry.registerAction(metaNodeChangeLink);
@@ -741,7 +744,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(showNodeIdAction.getId());
         m_editorActions.add(collapse.getId());
         m_editorActions.add(expand.getId());
-        m_editorActions.add(convert.getId());
+        m_editorActions.add(unWrap.getId());
 
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
