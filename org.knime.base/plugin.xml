@@ -1932,6 +1932,12 @@
             factory-class="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory"
             id="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/row/row-transform"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.rank.RankNodeFactory"
+            id="org.knime.base.node.preproc.rank.RankNodeFactory">
+      </node>
    </extension>
    
       
