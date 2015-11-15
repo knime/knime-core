@@ -51,6 +51,7 @@ package org.knime.core.node.port.database.pivoting;
 import java.util.List;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.port.database.StatementManipulator;
 
 /**
@@ -90,9 +91,17 @@ public class PivotData {
             if (i != 0) {
                 buf.append(" AND ");
             }
-            buf.append(m_statementManipulator.quoteIdentifier(m_myCols.get(i).getName()));
-            buf.append("='");
-            buf.append(m_myVals.get(i) + "'");
+            final DataColumnSpec col = m_myCols.get(i);
+            buf.append(m_statementManipulator.quoteIdentifier(col.getName()));
+            buf.append("=");
+            final boolean quoteVal = !col.getType().isCompatible(DoubleValue.class);
+            if (quoteVal) {
+                buf.append("'");
+            }
+            buf.append(m_myVals.get(i));
+            if (quoteVal) {
+                buf.append("'");
+            }
         }
         return buf.toString();
     }
