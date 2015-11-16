@@ -280,7 +280,7 @@ class ConcatenateTableFactory {
             res[i] = m_tables.get(i).getTable();
         }
         //don't check for duplicates since this already has been done
-        return exec.createConcatenateTable(exec, false, res);
+        return exec.createConcatenateTable(exec, Optional.empty(), false, res);
     }
 
     /**

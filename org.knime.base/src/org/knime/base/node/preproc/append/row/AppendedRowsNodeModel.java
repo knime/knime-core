@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -64,12 +65,15 @@ import org.knime.base.data.filter.column.FilterColumnRowInput;
 import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.append.AppendedRowsIterator;
 import org.knime.core.data.append.AppendedRowsRowInput;
 import org.knime.core.data.append.AppendedRowsTable;
 import org.knime.core.data.append.AppendedRowsTable.DuplicatePolicy;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -122,6 +126,9 @@ public class AppendedRowsNodeModel extends NodeModel {
     /** NodeSettings key: Use only the intersection of columns. */
     static final String CFG_INTERSECT_COLUMNS = "intersection_of_columns";
 
+    /** Config key: Just virtually wrap the tables or not */
+    static final String CFG_WRAP_TABLES = "wrap_tables";
+
     private boolean m_isFailOnDuplicate = false;
 
     private boolean m_isAppendSuffix = true;
@@ -129,6 +136,8 @@ public class AppendedRowsNodeModel extends NodeModel {
     private String m_suffix = "_dup";
 
     private boolean m_isIntersection;
+
+    private boolean m_wrapTables;
 
     private boolean m_enableHiliting;
 
@@ -174,18 +183,47 @@ public class AppendedRowsNodeModel extends NodeModel {
 
         // remove all null tables first (optional input data)
         BufferedDataTable[] noNullArray = noNullArray(rawInData);
-        long totalRowCount = 0L;
-        RowInput[] inputs = new RowInput[noNullArray.length];
         DataTableSpec[] noNullSpecs = new DataTableSpec[noNullArray.length];
         for (int i = 0; i < noNullArray.length; i++) {
-            totalRowCount += noNullArray[i].size();
-            inputs[i] = new DataTableRowInput(noNullArray[i]);
             noNullSpecs[i] = noNullArray[i].getDataTableSpec();
         }
-        DataTableSpec outputSpec = getOutputSpec(noNullSpecs);
-        BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(exec.createDataContainer(outputSpec));
-        run(inputs, output, exec, totalRowCount);
-        return new BufferedDataTable[]{output.getDataTable()};
+
+        if (m_wrapTables) {
+            //just wrap the tables virtually instead of traversing it and copying the rows
+
+            //virtually create the concatenated table (no traverse necessary)
+            Optional<String> suffix = m_isAppendSuffix ? Optional.of(m_suffix) : Optional.empty();
+            BufferedDataTable concatTable = exec.createConcatenateTable(exec, suffix, m_isFailOnDuplicate, noNullArray);
+            if (m_isIntersection) {
+                //wrap the table and filter the non-intersecting columns
+                DataTableSpec actualOutSpec = getOutputSpec(noNullSpecs);
+                DataTableSpec currentOutSpec = concatTable.getDataTableSpec();
+                String[] intersectCols = getIntersection(actualOutSpec, currentOutSpec);
+                ColumnRearranger cr = new ColumnRearranger(currentOutSpec);
+                cr.keepOnly(intersectCols);
+                concatTable = exec.createColumnRearrangeTable(concatTable, cr, exec);
+            }
+            if (m_enableHiliting) {
+                AppendedRowsTable tmp = new AppendedRowsTable(DuplicatePolicy.Fail, null, noNullArray);
+                Map<RowKey, Set<RowKey>> map =
+                    createHiliteTranslationMap(createDuplicateMap(tmp, exec, m_suffix == null ? "" : m_suffix));
+                m_hiliteTranslator.setMapper(new DefaultHiLiteMapper(map));
+            }
+            return new BufferedDataTable[]{concatTable};
+        } else {
+            //traverse the table and copy the rows
+            long totalRowCount = 0L;
+            RowInput[] inputs = new RowInput[noNullArray.length];
+            for (int i = 0; i < noNullArray.length; i++) {
+                totalRowCount += noNullArray[i].size();
+                inputs[i] = new DataTableRowInput(noNullArray[i]);
+            }
+            DataTableSpec outputSpec = getOutputSpec(noNullSpecs);
+            BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(exec.createDataContainer(outputSpec));
+            run(inputs, output, exec, totalRowCount);
+            return new BufferedDataTable[]{output.getDataTable()};
+        }
+
     }
 
     private static BufferedDataTable[] noNullArray(final BufferedDataTable[] rawInData) {
@@ -226,13 +264,13 @@ public class AppendedRowsNodeModel extends NodeModel {
             corrected = inputs;
         }
 
-        DuplicatePolicy duplPolicy;
+        AppendedRowsTable.DuplicatePolicy duplPolicy;
         if (m_isFailOnDuplicate) {
-            duplPolicy = DuplicatePolicy.Fail;
+            duplPolicy = AppendedRowsTable.DuplicatePolicy.Fail;
         } else if (m_isAppendSuffix) {
-            duplPolicy = DuplicatePolicy.AppendSuffix;
+            duplPolicy = AppendedRowsTable.DuplicatePolicy.AppendSuffix;
         } else {
-            duplPolicy = DuplicatePolicy.Skip;
+            duplPolicy = AppendedRowsTable.DuplicatePolicy.Skip;
         }
         AppendedRowsRowInput appendedInput = AppendedRowsRowInput.create(corrected,
             duplPolicy, m_suffix, exec, totalRowCount);
@@ -252,25 +290,7 @@ public class AppendedRowsNodeModel extends NodeModel {
             setWarningMessage("Filtered out " + appendedInput.getNrRowsSkipped() + " duplicate row(s).");
         }
         if (m_enableHiliting) {
-            // create hilite translation map
-            Map<RowKey, Set<RowKey>> map = new HashMap<RowKey, Set<RowKey>>();
-            // map of all RowKeys and duplicate RowKeys in the resulting table
-            Map<RowKey, RowKey> dupMap = appendedInput.getDuplicateNameMap();
-            for (Map.Entry<RowKey, RowKey> e : dupMap.entrySet()) {
-                // if a duplicate key
-                if (!e.getKey().equals(e.getValue())) {
-                    Set<RowKey> set = Collections.singleton(e.getValue());
-                    // put duplicate key and original key into map
-                    map.put(e.getKey(), set);
-                } else {
-                    // skip duplicate keys
-                    if (!dupMap.containsKey(new RowKey(e.getKey().getString()
-                            + m_suffix))) {
-                        Set<RowKey> set = Collections.singleton(e.getValue());
-                        map.put(e.getKey(), set);
-                    }
-                }
-            }
+            Map<RowKey, Set<RowKey>> map = createHiliteTranslationMap(appendedInput.getDuplicateNameMap());
             m_hiliteTranslator.setMapper(new DefaultHiLiteMapper(map));
         }
     }
@@ -334,29 +354,38 @@ public class AppendedRowsNodeModel extends NodeModel {
     @Override
     public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new StreamableOperator() {
-            @Override
-            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
-                final ExecutionContext exec) throws Exception {
-                List<RowInput> noNullList = new ArrayList<RowInput>();
-                for (PortInput p : inputs) {
-                    if (p != null) {
-                        noNullList.add((RowInput)p);
+        if (m_wrapTables) {
+            return super.createStreamableOperator(partitionInfo, inSpecs);
+        } else {
+            return new StreamableOperator() {
+                @Override
+                public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                    throws Exception {
+                    List<RowInput> noNullList = new ArrayList<RowInput>();
+                    for (PortInput p : inputs) {
+                        if (p != null) {
+                            noNullList.add((RowInput)p);
+                        }
                     }
+                    RowInput[] rowInputs = noNullList.toArray(new RowInput[noNullList.size()]);
+                    run(rowInputs, (RowOutput)outputs[0], exec, -1);
                 }
-                RowInput[] rowInputs = noNullList.toArray(new RowInput[noNullList.size()]);
-                run(rowInputs, (RowOutput)outputs[0], exec, -1);
-            }
-        };
+            };
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     public InputPortRole[] getInputPortRoles() {
         InputPortRole[] result = new InputPortRole[getNrInPorts()];
-        Arrays.fill(result, InputPortRole.NONDISTRIBUTED_STREAMABLE);
+        if (m_wrapTables) {
+            Arrays.fill(result, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE);
+        } else {
+            Arrays.fill(result, InputPortRole.NONDISTRIBUTED_STREAMABLE);
+        }
         return result;
     }
+
 
     /**
      * {@inheritDoc}
@@ -371,6 +400,9 @@ public class AppendedRowsNodeModel extends NodeModel {
             settings.addString(CFG_SUFFIX, m_suffix);
         }
         settings.addBoolean(CFG_HILITING, m_enableHiliting);
+
+        // added in v3.1
+        settings.addBoolean(CFG_WRAP_TABLES, m_wrapTables);
     }
 
     /**
@@ -414,6 +446,9 @@ public class AppendedRowsNodeModel extends NodeModel {
             m_suffix = settings.getString(CFG_SUFFIX, m_suffix);
         }
         m_enableHiliting = settings.getBoolean(CFG_HILITING, false);
+
+        //added in v3.1
+        m_wrapTables = settings.getBoolean(CFG_WRAP_TABLES, false);
     }
 
     /**
@@ -491,5 +526,46 @@ public class AppendedRowsNodeModel extends NodeModel {
         } else {
             return m_dftHiliteHandler;
         }
+    }
+
+    private Map<RowKey, RowKey> createDuplicateMap(final DataTable table, final ExecutionContext exec, final String suffix) throws CanceledExecutionException {
+        Map<RowKey, RowKey> duplicateMap = new HashMap<RowKey, RowKey>();
+
+        RowIterator it = table.iterator();
+        DataRow row;
+        while (it.hasNext()) {
+            row = it.next();
+            RowKey origKey = row.getKey();
+            RowKey key = origKey;
+            while (duplicateMap.containsKey(key)) {
+                exec.checkCanceled();
+                String newId = key.toString() + suffix;
+                key = new RowKey(newId);
+            }
+            duplicateMap.put(key, origKey);
+        }
+        return duplicateMap;
+    }
+
+    private Map<RowKey, Set<RowKey>> createHiliteTranslationMap(final Map<RowKey, RowKey> dupMap) {
+     // create hilite translation map
+        Map<RowKey, Set<RowKey>> map = new HashMap<RowKey, Set<RowKey>>();
+        // map of all RowKeys and duplicate RowKeys in the resulting table
+        for (Map.Entry<RowKey, RowKey> e : dupMap.entrySet()) {
+            // if a duplicate key
+            if (!e.getKey().equals(e.getValue())) {
+                Set<RowKey> set = Collections.singleton(e.getValue());
+                // put duplicate key and original key into map
+                map.put(e.getKey(), set);
+            } else {
+                // skip duplicate keys
+                if (!dupMap.containsKey(new RowKey(e.getKey().getString()
+                        + m_suffix))) {
+                    Set<RowKey> set = Collections.singleton(e.getValue());
+                    map.put(e.getKey(), set);
+                }
+            }
+        }
+        return map;
     }
 }

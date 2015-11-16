@@ -48,6 +48,7 @@ package org.knime.core.node;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -464,13 +465,15 @@ public class ExecutionContext extends ExecutionMonitor {
      * inserted accordingly.
      *
      * <p>
-     * If the check for duplicates is desired, the {@link org.knime.core.data.RowKey RowKeys} must be unique, other wise this method throws an exception
+     * If the pre-check for duplicates is NOT desired, the {@link org.knime.core.data.RowKey RowKeys} must either be
+     * unique or a suffix needs to be appended. Otherwise this method throws an exception
      *
      *
      * @param exec For cancel checks (this method iterates all rows to ensure uniqueness) and progress.
-     * @param checkForDuplicates specifies whether a check for row key duplicates should be done. If
-     *            <code>true</code> a check will be done. If <code>false</code> the row key MUST NOT contain duplicates over all tables
-     *            and has to be ensured beforehand.
+     * @param rowKeyDuplicateSuffix if set, the given suffix will be appended to row key duplicates.
+     * @param duplicatesPreCheck if for duplicates should be checked BEFORE creating the result table. If
+     *            <code>false</code> the row keys of the input tables MUST either be unique over all tables or
+     *            a suffix appended.
      * @param tables An array of tables to concatenate, must not be <code>null</code> or empty.
      * @return The concatenated table.
      * @throws CanceledExecutionException If canceled.
@@ -479,9 +482,12 @@ public class ExecutionContext extends ExecutionMonitor {
      * @throws NullPointerException If any argument is <code>null</code>.
      * @since 3.1
      */
-    public BufferedDataTable createConcatenateTable(final ExecutionMonitor exec, final boolean checkForDuplicates, final BufferedDataTable... tables)
+    public BufferedDataTable createConcatenateTable(final ExecutionMonitor exec,
+        final Optional<String> rowKeyDuplicateSuffix, final boolean duplicatesPreCheck,
+        final BufferedDataTable... tables)
         throws CanceledExecutionException {
-        ConcatenateTable t = ConcatenateTable.create(exec, checkForDuplicates, tables);
+        ConcatenateTable t =
+            ConcatenateTable.create(exec, rowKeyDuplicateSuffix, duplicatesPreCheck, tables);
         BufferedDataTable out = new BufferedDataTable(t);
         out.setOwnerRecursively(m_node);
         return out;

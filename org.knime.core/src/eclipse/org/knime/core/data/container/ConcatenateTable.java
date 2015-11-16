@@ -48,11 +48,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.append.AppendedRowsTable;
+import org.knime.core.data.append.AppendedRowsTable.DuplicatePolicy;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -73,32 +75,46 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     private static final String CFG_REFERENCE_IDS = "table_reference_IDS";
     private static final String CFG_ROW_COUNT = "table_rowcount";
     private static final String CFG_ROW_COUNT_L = "table_rowcount_long";
+    private static final String CFG_DUPLICATE_ROW_KEY_SUFFIX = "duplicate_row_key_suffix";
 
     private AppendedRowsTable m_tablesWrapper;
     private long m_rowCount;
     private BufferedDataTable[] m_tables;
     private DataTableSpec m_spec;
+    private String m_rowKeyDuplicateSuffix;
 
-    private ConcatenateTable(final BufferedDataTable[] tables, final long rowCount) {
+    private ConcatenateTable(final BufferedDataTable[] tables,
+        final String rowKeyDuplicateSuffix, final long rowCount) {
         m_rowCount = rowCount;
+        m_rowKeyDuplicateSuffix = rowKeyDuplicateSuffix;
 
-        // check whether all specs are the same and pass that spec using createSpec(specs);
+        // check whether all specs are the same
         DataTableSpec firstSpec = tables[0].getDataTableSpec();
+        boolean allTableSpecsMatch = true;
         for (int i = 1; i < tables.length; i++) {
             if (!firstSpec.equalStructure(tables[i].getDataTableSpec())) {
-                //table specs don't match -> we need to use the AppendedRowsTable
-                //create a new wrapper table without duplicate checking (was done already on creation)
-                m_tablesWrapper = new AppendedRowsTable(AppendedRowsTable.DuplicatePolicy.Fail, null, tables);
-                m_spec = m_tablesWrapper.getDataTableSpec();
+                allTableSpecsMatch = false;
+                break;
             }
         }
-        if(m_tablesWrapper == null) {
-            //all table specs are equal
+        if (allTableSpecsMatch && rowKeyDuplicateSuffix == null) {
+            //all table specs are equal AND no special duplicate policy required
             DataTableSpec[] specs = new DataTableSpec[tables.length];
             for (int i = 0; i < specs.length; i++) {
                 specs[i] = tables[i].getDataTableSpec();
             }
             m_spec = createSpec(specs);
+        } else {
+            //table specs don't match or a special duplicate policy is required -> we need to use the AppendedRowsTable
+            //create a new wrapper table without duplicate checking (was done already on creation)
+            DuplicatePolicy dp;
+            if (rowKeyDuplicateSuffix != null) {
+                dp = DuplicatePolicy.AppendSuffix;
+            } else {
+                dp = DuplicatePolicy.Fail;
+            }
+            m_tablesWrapper = new AppendedRowsTable(dp, rowKeyDuplicateSuffix, tables);
+            m_spec = m_tablesWrapper.getDataTableSpec();
         }
         m_tables = tables;
     }
@@ -195,6 +211,9 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         } else {
             subSettings.addLong(CFG_ROW_COUNT_L, m_rowCount);
         }
+
+        //duplicate handling settings
+        subSettings.addString(CFG_DUPLICATE_ROW_KEY_SUFFIX, m_rowKeyDuplicateSuffix);
     }
 
     /** Restore table form node settings object.
@@ -215,42 +234,44 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         for (int i = 0; i < tables.length; i++) {
             tables[i] = BufferedDataTable.getDataTable(tblRep, referenceIDs[i]);
         }
-        return new ConcatenateTable(tables, rowCount);
+        String dupSuffix = subSettings.getString(CFG_DUPLICATE_ROW_KEY_SUFFIX, null);
+        return new ConcatenateTable(tables, dupSuffix, rowCount);
     }
 
     /**
-     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables.
+     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables only if
+     * desired AND duplicate rows are not to be skipped and a duplicate suffix is not set.
      *
      * @param mon for progress info/cancellation
-     * @param checkForDuplicates if for duplicates should be checked. If <code>false</code> the row keys of the input
-     *            tables MUST be unique over all tables!
+     * @param rowKeyDuplicateSuffix if set, the given suffix
+     *            will be appended to row key duplicates.
+     * @param duplicatesPreCheck if for duplicates should be checked BEFORE creating the result table. If
+     *            <code>false</code> the row keys of the input tables MUST either be unique over all tables or
+     *            a suffix appended.
      * @param tables Tables to put together.
      * @return The new table.
      * @throws CanceledExecutionException If cancelled.
      * @since 3.1
      */
-    public static ConcatenateTable create(final ExecutionMonitor mon, final boolean checkForDuplicates,
-        final BufferedDataTable... tables) throws CanceledExecutionException {
-        if(checkForDuplicates) {
-            return ConcatenateTable.create(mon, tables);
-        } else {
-            long rowCount = 0;
-            for (int i = 0; i < tables.length; i++) {
-                rowCount += tables[i].size();
-            }
-            return new ConcatenateTable(tables, rowCount);
+    public static ConcatenateTable create(final ExecutionMonitor mon, final Optional<String> rowKeyDuplicateSuffix,
+        final boolean duplicatesPreCheck, final BufferedDataTable... tables) throws CanceledExecutionException {
+        long rowCount = 0;
+        for (int i = 0; i < tables.length; i++) {
+            rowCount += tables[i].size();
         }
+        if (duplicatesPreCheck && !rowKeyDuplicateSuffix.isPresent()) {
+            checkForDuplicates(mon, tables, rowCount);
+        }
+        return new ConcatenateTable(tables, rowKeyDuplicateSuffix.orElse(null), rowCount);
     }
 
     /**
-     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables.
+     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables before creating it.
      *
      * @param mon for progress info/cancellation
      * @param tables Tables to put together.
      * @return The new table.
      * @throws CanceledExecutionException If cancelled.
-     * @throws IOException
-     * @throws DuplicateKeyException
      */
     public static ConcatenateTable create(final ExecutionMonitor mon, final BufferedDataTable... tables)
         throws CanceledExecutionException {
@@ -258,6 +279,12 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         for (int i = 0; i < tables.length; i++) {
             rowCount += tables[i].size();
         }
+        checkForDuplicates(mon, tables, rowCount);
+        return new ConcatenateTable(tables, null, rowCount);
+    }
+
+    private static void checkForDuplicates(final ExecutionMonitor mon, final BufferedDataTable[] tables,
+        final long rowCount) throws CanceledExecutionException {
         DuplicateChecker check = new DuplicateChecker();
         int r = 0;
         for (int i = 0; i < tables.length; i++) {
@@ -266,8 +293,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
                 try {
                     check.addKey(key.toString());
                 } catch (DuplicateKeyException | IOException ex) {
-                    throw new IllegalArgumentException("Duplicate row key \""
-                            + key + "\" in table with index " + i);
+                    throw new IllegalArgumentException("Duplicate row key \"" + key + "\" in table with index " + i);
                 }
                 r++;
                 mon.setProgress(r / (double)rowCount,
@@ -280,7 +306,6 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         } catch (DuplicateKeyException | IOException ex) {
             throw new IllegalArgumentException("Duplicate row keys");
         }
-        return new ConcatenateTable(tables, rowCount);
     }
 
     /** Creates merged table spec.

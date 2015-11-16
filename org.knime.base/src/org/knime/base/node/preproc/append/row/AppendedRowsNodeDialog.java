@@ -48,6 +48,7 @@
 package org.knime.base.node.preproc.append.row;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -90,6 +91,8 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
 
     private final JCheckBox m_enableHiliting;
 
+    private final JCheckBox m_wrapTables;
+
     /**
      * Constructor to init the gui and set a title.
      */
@@ -117,6 +120,16 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
                 + " duplicates are encountered");
         m_failOnDuplicateButton.addActionListener(actionListener);
         buttonGroup.add(m_failOnDuplicateButton);
+        //reset color in case it was dyed red to show the user that a
+        //selection was done automatically (if wrap table was selected -> see onWrapTablesSelectionChanged())
+        m_appendSuffixButton.addActionListener(l -> {
+            m_failOnDuplicateButton.setBackground(m_skipRowButton.getBackground());
+            m_appendSuffixButton.setBackground(m_skipRowButton.getBackground());
+        });
+        m_failOnDuplicateButton.addActionListener(l -> {
+            m_failOnDuplicateButton.setBackground(m_skipRowButton.getBackground());
+            m_appendSuffixButton.setBackground(m_skipRowButton.getBackground());
+        });
         JPanel panel = new JPanel(new GridLayout(0, 1));
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
         centerPanel.setBorder(BorderFactory
@@ -157,7 +170,28 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         m_enableHiliting = new JCheckBox("Enable hiliting");
         hilitePanel.add(m_enableHiliting);
         panel.add(hilitePanel, BorderLayout.CENTER);
+
+        JPanel wrapTablesPanel = new JPanel(new BorderLayout());
+        wrapTablesPanel.setBorder(BorderFactory
+                .createTitledBorder("Result"));
+        m_wrapTables = new JCheckBox("Do virtually");
+        m_wrapTables.addActionListener(l -> onWrapTablesSelectionChanged());
+        wrapTablesPanel.add(m_wrapTables);
+        panel.add(wrapTablesPanel, BorderLayout.CENTER);
+
         addTab("Settings", panel);
+    }
+
+    private void onWrapTablesSelectionChanged() {
+        if(m_skipRowButton.isSelected() && m_wrapTables.isSelected()) {
+            //change selection here since skipping rows
+            //is not allowed if the tables are to be wrapped
+            m_skipRowButton.setEnabled(false);
+            m_appendSuffixButton.setBackground(Color.red);
+            m_failOnDuplicateButton.setBackground(Color.red);
+        } else {
+            m_skipRowButton.setEnabled(!m_wrapTables.isSelected());
+        }
     }
 
     /**
@@ -191,6 +225,10 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
         }
         m_enableHiliting.setSelected(settings.getBoolean(
                 AppendedRowsNodeModel.CFG_HILITING, false));
+
+        //added in v3.1
+        m_wrapTables.setSelected(settings.getBoolean(AppendedRowsNodeModel.CFG_WRAP_TABLES, false));
+        m_skipRowButton.setEnabled(!m_wrapTables.isSelected());
     }
 
     /**
@@ -199,6 +237,10 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
+        if(m_skipRowButton.isSelected() && m_wrapTables.isSelected()) {
+            throw new InvalidSettingsException(
+                "Rows with duplicate row ID cannot be skipped if concatenate operation is to be done virtually.");
+        }
         boolean isFailOnDuplicate = m_failOnDuplicateButton.isSelected();
         boolean isSuffix = m_appendSuffixButton.isSelected();
         boolean isIntersection = m_useInterSectionButton.isSelected();
@@ -211,5 +253,6 @@ public class AppendedRowsNodeDialog extends NodeDialogPane {
                 isIntersection);
         settings.addBoolean(AppendedRowsNodeModel.CFG_HILITING,
                 m_enableHiliting.isSelected());
+        settings.addBoolean(AppendedRowsNodeModel.CFG_WRAP_TABLES, m_wrapTables.isSelected());
     }
 }
