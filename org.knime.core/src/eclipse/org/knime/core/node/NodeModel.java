@@ -1658,7 +1658,7 @@ public abstract class NodeModel {
 
                 for (int i = 0; i < outputs.length; i++) {
                     if (outObjects[i] != null) { //port objects happen to be null for instance at the loop end-node when the iteration is continued
-                        if (getOutPortType(i).equals(BufferedDataTable.TYPE) && outObjects[i] instanceof RowOutput) {
+                        if (getOutPortType(i).equals(BufferedDataTable.TYPE) && outputs[i] instanceof RowOutput) {
                             //comment for 'instanceof RowOutput': some nodes' configure-method return null (e.g. Transpose),
                             //hence a RowOutput cannot be created by the executor. This only happens in the default implementation, i.e. a node
                             //doesn't override createStreamableOperator (sanity check in computeFinalOutputSpec-method)
