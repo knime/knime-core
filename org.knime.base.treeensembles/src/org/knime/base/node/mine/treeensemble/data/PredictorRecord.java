@@ -50,21 +50,29 @@ package org.knime.base.node.mine.treeensemble.data;
 import java.util.Map;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class PredictorRecord {
 
+    /**
+     *
+     */
     public static final Object NULL = new Object();
 
     private final Map<String, Object> m_valueMap;
 
     /**
+     * @param map
      *  */
     public PredictorRecord(final Map<String, Object> map) {
         m_valueMap = map;
     }
 
+    /**
+     * @param attributeIdentifier
+     * @return the object that attributeIdentifier represents
+     */
     public Object getValue(final String attributeIdentifier) {
         Object result = m_valueMap.get(attributeIdentifier);
         if (result == null) {

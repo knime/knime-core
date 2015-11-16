@@ -112,6 +112,12 @@ public final class TreeEnsemblePredictor {
         }
     }
 
+    /**
+     * Sets the out of bag filter. The arguments must not be null.
+     *
+     * @param modelRowSamples
+     * @param targetColumnData
+     */
     public void setOutofBagFilter(final RowSample[] modelRowSamples, final TreeTargetColumnData targetColumnData) {
         if (modelRowSamples == null || targetColumnData == null) {
             throw new NullPointerException("Argument must not be null.");
@@ -154,10 +160,19 @@ public final class TreeEnsemblePredictor {
         return m_modelSpec;
     }
 
+    /**
+     * @return true if <b>this<b> has an out of bag filter
+     */
     public boolean hasOutOfBagFilter() {
         return m_modelLearnRowSamples != null;
     }
 
+    /**
+     * @param key
+     * @param modelIndex
+     * @return true if the row with rowkey <b>key</b> in model with index <b>modelIndex</b>
+     * is part of the training data for this model
+     */
     public boolean isRowPartOfTrainingData(final RowKey key, final int modelIndex) {
         assert m_modelLearnRowSamples != null : "no out of bag filter set";
         Integer indexInteger = m_rowKeyToLearnIndex.get(key);

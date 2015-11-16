@@ -61,19 +61,20 @@ import org.knime.base.node.util.DoubleFormat;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class TreeNumericColumnData extends TreeAttributeColumnData {
+public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
 
-    private final double[] m_sortedData;
-
+//    private final double[] m_sortedData;
+//
     private final int[] m_originalIndexInColumnList;
 
     TreeNumericColumnData(final TreeNumericColumnMetaData metaData,
-        final TreeEnsembleLearnerConfiguration configuration, final double[] sortedData,
+        final TreeEnsembleLearnerConfiguration configuration,
         final int[] orginalIndexInColumnList) {
         super(metaData, configuration);
-        m_sortedData = sortedData;
+//        m_sortedData = sortedData;
         m_originalIndexInColumnList = orginalIndexInColumnList;
     }
+
 
     /** {@inheritDoc} */
     @Override
@@ -81,14 +82,22 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         return (TreeNumericColumnMetaData)super.getMetaData();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * Gets the value for <b>index</b> in the sorted column
+     * @param index
+     * @return value for <b>index</b> in sorted column
+     */
+    public abstract double getSorted(int index);
+
     @Override
-    public NumericSplitCandidate calcBestSplitClassification(final double[] rowWeights,
-        final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn) {
+    public NumericSplitCandidate calcBestSplitClassification(final TreeNodeMembershipController membershipController,
+        final double[] rowWeights, final ClassificationPriors targetPriors,
+        final TreeTargetNominalColumnData targetColumn) {
         final NominalValueRepresentation[] targetVals = targetColumn.getMetaData().getValues();
         final int[] originalIndexInColumnList = m_originalIndexInColumnList;
         final boolean useAverageSplitPoints = getConfiguration().isUseAverageSplitPoints();
         final int minChildNodeSize = getConfiguration().getMinChildSize();
+//        final TreeColumnMembershipController columnMembershipController = membershipController.getControllerForColumn(this);
 
         // distribution of target for each attribute value
         final int targetCounts = targetVals.length;
@@ -113,18 +122,25 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         double lastSeenValue = Double.NEGATIVE_INFINITY;
         boolean mustTestOnNextValueChange = false;
         int lastSeenTarget = -1;
+
+//        int length = columnMembershipController.getLength();
+        int length = originalIndexInColumnList.length;
         // main loop: iterate the entire sorted column, search for reasonable
         // split points (i.e. where the attribute value changes and value of the
         // target column), and for each split point compute the information
         // gain, keep the one that maximizes the split
-        for (int i = 0; i < m_originalIndexInColumnList.length; i++) {
-            final int originalIndex = originalIndexInColumnList[i];
+        for (int index = 0; index < length; index++) {
+//        for (; columnMembershipController.isValidIndex(); columnMembershipController.goToNext()) {
+//            int index = columnMembershipController.getCurrent();
+//            final int originalIndex = originalIndexInColumnList[columnMembershipController.getSortedIndex(i)];
+            final int originalIndex = originalIndexInColumnList[index];
             final double weight = rowWeights[originalIndex];
             if (weight < EPSILON) {
                 // ignore record: not in current branch or not in sample
                 continue;
             }
-            final double value = m_sortedData[i];
+//            final double value = m_sortedData[columnMembershipController.getSortedIndex(i)];
+            final double value = getSorted(index);
             final int target = targetColumn.getValueFor(originalIndex);
             final boolean hasValueChanged = (value - lastSeenValue) >= EPSILON;
             final boolean hasTargetChanged = lastSeenTarget != target;
@@ -179,13 +195,14 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         return new NumericSplitCandidate(this, bestSplit, bestGainValueForSplit);
     }
 
-    /** {@inheritDoc} */
     @Override
-    public SplitCandidate calcBestSplitRegression(final double[] rowWeights, final RegressionPriors targetPriors,
+    public SplitCandidate calcBestSplitRegression(final TreeNodeMembershipController membershipController,
+        final double[] rowWeights, final RegressionPriors targetPriors,
         final TreeTargetNumericColumnData targetColumn) {
         final int[] originalIndexInColumnList = m_originalIndexInColumnList;
         final boolean useAverageSplitPoints = getConfiguration().isUseAverageSplitPoints();
         final int minChildNodeSize = getConfiguration().getMinChildSize();
+//        final TreeColumnMembershipController columnMembershipController = membershipController.getControllerForColumn(this);
 
         final double ySumTotal = targetPriors.getYSum();
         final double nrRecordsTotal = targetPriors.getNrRecords();
@@ -204,20 +221,25 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         double lastSeenValue = Double.NEGATIVE_INFINITY;
         double lastSeenWeight = -1.0;
 
+//        int length = columnMembershipController.getLength();
+        int length = originalIndexInColumnList.length;
+
         // main loop: iterate the entire sorted column, and for each split point
         // compute the gain, keep the one that maximizes the split
-        for (int i = 0; i < m_originalIndexInColumnList.length; i++) {
+        for (int i = 0; i < length; i++) {
+//            final int originalIndex = originalIndexInColumnList[columnMembershipController.getSortedIndex(i)];
             final int originalIndex = originalIndexInColumnList[i];
             final double weight = rowWeights[originalIndex];
             if (weight < EPSILON) {
                 // ignore record: not in current branch or not in sample
                 continue;
             } else if (Math.floor(weight) != weight) {
-                throw new UnsupportedOperationException("weighted records (missing values?) not supported, "
-                    + "weight is " + weight);
+                throw new UnsupportedOperationException(
+                    "weighted records (missing values?) not supported, " + "weight is " + weight);
             }
 
-            final double value = m_sortedData[i];
+//            final double value = m_sortedData[columnMembershipController.getSortedIndex(i)];
+            final double value = getSorted(i);
 
             if (lastSeenWeight > 0.0) {
                 ySumLeft += lastSeenWeight * lastSeenY;
@@ -227,9 +249,8 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
                 nrRecordsRight -= lastSeenWeight;
 
                 if (nrRecordsLeft >= minChildNodeSize && nrRecordsRight >= minChildNodeSize && lastSeenValue < value) {
-                    double criterion =
-                        (ySumLeft * ySumLeft / nrRecordsLeft) + (ySumRight * ySumRight / nrRecordsRight)
-                            - criterionTotal;
+                    double criterion = (ySumLeft * ySumLeft / nrRecordsLeft) + (ySumRight * ySumRight / nrRecordsRight)
+                        - criterionTotal;
                     if (criterion > bestImprovement) {
                         bestImprovement = criterion;
                         bestSplit = useAverageSplitPoints ? getCenter(lastSeenValue, value) : lastSeenValue;
@@ -260,15 +281,14 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         return left + 0.5 * (right - left);
     }
 
-    /** {@inheritDoc} */
     @Override
     public void updateChildMemberships(final TreeNodeCondition childCondition, final double[] parentMemberships,
         final double[] childMembershipsToUpdate) {
         final TreeNodeNumericCondition numCondition = (TreeNodeNumericCondition)childCondition;
         final NumericOperator numOperator = numCondition.getNumericOperator();
         final double splitValue = numCondition.getSplitValue();
-        for (int i = 0; i < m_sortedData.length; i++) {
-            final double value = m_sortedData[i];
+        for (int i = 0; i < m_originalIndexInColumnList.length; i++) {
+            final double value = getSorted(i);
             final int originalColIndex = m_originalIndexInColumnList[i];
             boolean matches;
             switch (numOperator) {
@@ -289,7 +309,46 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         }
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TreeNodeMembershipController getChildNodeMembershipController(final TreeNodeCondition childCondition,
+        final TreeNodeMembershipController parentController) {
+
+        return parentController;
+//        final TreeNodeNumericCondition numCondition = (TreeNodeNumericCondition)childCondition;
+//        final NumericOperator numOperator = numCondition.getNumericOperator();
+//        final double splitValue = numCondition.getSplitValue();
+//        TreeColumnMembershipController columnController = parentController.getControllerForColumn(this);
+//        int length = columnController.getLength();
+//        ArrayList<Integer> childOriginalIndices = new ArrayList<Integer>();
+//
+//        for (int i = 0; i < length; i++) {
+//            int index = columnController.getSortedIndex(i);
+//            final double value = m_sortedData[index];
+//            final int originalColIndex = m_originalIndexInColumnList[index];
+//            boolean matches;
+//            switch (numOperator) {
+//                case LessThanOrEqual:
+//                    matches = value <= splitValue;
+//                    break;
+//                case LargerThan:
+//                    matches = value > splitValue;
+//                    break;
+//                default:
+//                    throw new IllegalStateException("Unknown operator " + numOperator);
+//            }
+//            if (matches) {
+//                childOriginalIndices.add(originalColIndex);
+//            }
+//        }
+//
+//        return parentController.createChildTreeNodeMembershipController(
+//            childOriginalIndices.toArray(new Integer[childOriginalIndices.size()]));
+    }
+
+
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder(getMetaData().getAttributeName());
@@ -299,7 +358,7 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         for (int i = 0; i < length; i++) {
             int trueIndex = m_originalIndexInColumnList[i];
             if (trueIndex < sample.length) {
-                sample[trueIndex] = DoubleFormat.formatDouble(m_sortedData[i]);
+                sample[trueIndex] = DoubleFormat.formatDouble(getSorted(i));
             }
         }
         for (int i = 0; i < sample.length; i++) {
@@ -312,6 +371,14 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         b.append("]");
         return b.toString();
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getOriginalIndicesInColumnList() {
+        return m_originalIndexInColumnList;
     }
 
 }

@@ -52,7 +52,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeAttributeColumnData extends TreeColumnData {
@@ -61,6 +61,7 @@ public abstract class TreeAttributeColumnData extends TreeColumnData {
 
     /**
      * @param metaData
+     * @param configuration
      */
     protected TreeAttributeColumnData(final TreeAttributeColumnMetaData metaData,
         final TreeEnsembleLearnerConfiguration configuration) {
@@ -74,18 +75,57 @@ public abstract class TreeAttributeColumnData extends TreeColumnData {
         return (TreeAttributeColumnMetaData)super.getMetaData();
     }
 
-    /** @return the configuration */
+    /**
+     * @return the configuration
+     */
     protected final TreeEnsembleLearnerConfiguration getConfiguration() {
         return m_configuration;
     }
 
-    public abstract SplitCandidate calcBestSplitClassification(final double[] rowWeights,
-        final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn);
+    /**
+     * @return an array containing for each index in the column the original index in the table.
+     */
+    public abstract int[] getOriginalIndicesInColumnList();
 
-    public abstract SplitCandidate calcBestSplitRegression(final double[] rowWeights,
-        final RegressionPriors targetPriors, final TreeTargetNumericColumnData targetColumn);
+    /**
+     * Calculates the best split candidate for classification
+     *
+     * @param membershipController
+     * @param rowWeights
+     * @param targetPriors
+     * @param targetColumn
+     * @return best split candidate for classification
+     */
+    public abstract SplitCandidate calcBestSplitClassification(final TreeNodeMembershipController membershipController,
+        final double[] rowWeights, final ClassificationPriors targetPriors,
+        final TreeTargetNominalColumnData targetColumn);
 
+    /**
+     * Calculates the best split candidate for regression
+     *
+     * @param membershipController
+     * @param rowWeights
+     * @param targetPriors
+     * @param targetColumn
+     * @return best split candidate for regression
+     */
+    public abstract SplitCandidate calcBestSplitRegression(final TreeNodeMembershipController membershipController,
+        final double[] rowWeights, final RegressionPriors targetPriors, final TreeTargetNumericColumnData targetColumn);
+
+    /**
+     * @param childCondition
+     * @param parentMemberships
+     * @param childMembershipsToUpdate
+     */
     public abstract void updateChildMemberships(final TreeNodeCondition childCondition,
         final double[] parentMemberships, final double[] childMembershipsToUpdate);
+
+    /**
+     * @param childCondition
+     * @param parentController
+     * @return a child controller containing only indices that satisfy <b>childCondition</b>
+     */
+    public abstract TreeNodeMembershipController getChildNodeMembershipController(
+        final TreeNodeCondition childCondition, final TreeNodeMembershipController parentController);
 
 }

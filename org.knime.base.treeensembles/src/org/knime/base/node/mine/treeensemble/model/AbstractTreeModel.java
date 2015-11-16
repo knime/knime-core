@@ -56,8 +56,9 @@ import java.util.List;
 import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @param <N> Implementation of AbstractTreeNode (Regression or Classification)
  */
 public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
 
@@ -81,6 +82,12 @@ public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
         return m_rootNode.toString();
     }
 
+    /**
+     * Finds the matching node for <b>record</b>
+     *
+     * @param record
+     * @return TreeNode that matches the values of <b>record</b>
+     */
     public N findMatchingNode(final PredictorRecord record) {
         N matchingNode = m_rootNode;
         N nextChild;
@@ -90,6 +97,10 @@ public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
         return matchingNode;
     }
 
+    /**
+     * @param level
+     * @return the TreeNodes on <b>level</b>
+     */
     public Iterable<N> getTreeNodes(final int level) {
         if (level == 0) {
             return Collections.singleton(m_rootNode);
@@ -102,6 +113,12 @@ public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
         return result;
     }
 
+    /**
+     * Saves the model to DataOutputStream <b>out</b>
+     *
+     * @param out
+     * @throws IOException
+     */
     public void save(final DataOutputStream out) throws IOException {
         m_rootNode.save(out);
     }

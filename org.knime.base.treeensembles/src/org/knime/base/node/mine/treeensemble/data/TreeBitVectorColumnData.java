@@ -57,7 +57,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
@@ -85,7 +85,7 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public SplitCandidate calcBestSplitClassification(final double[] rowWeights,
+    public SplitCandidate calcBestSplitClassification(final TreeNodeMembershipController membershipController, final double[] rowWeights,
         final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn) {
         final NominalValueRepresentation[] targetVals = targetColumn.getMetaData().getValues();
         final IImpurity impurityCriterion = targetPriors.getImpurityCriterion();
@@ -127,7 +127,7 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public SplitCandidate calcBestSplitRegression(final double[] rowWeights, final RegressionPriors targetPriors,
+    public SplitCandidate calcBestSplitRegression(final TreeNodeMembershipController membershipController, final double[] rowWeights, final RegressionPriors targetPriors,
         final TreeTargetNumericColumnData targetColumn) {
         final double ySumTotal = targetPriors.getYSum();
         final double nrRecordsTotal = targetPriors.getNrRecords();
@@ -181,6 +181,28 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
                 assert childMembershipsToUpdate[i] == parentMemberships[i];
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getOriginalIndicesInColumnList() {
+        int[] originalIndices = new int[m_columnBitSet.size()];
+        for (int i = 0; i < originalIndices.length; i++) {
+            originalIndices[i] = i;
+        }
+        return originalIndices;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TreeNodeMembershipController getChildNodeMembershipController(final TreeNodeCondition childCondition,
+        final TreeNodeMembershipController parentController) {
+        // TODO Auto-generated method stub
+        return parentController;
     }
 
 }

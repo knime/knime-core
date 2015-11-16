@@ -54,6 +54,7 @@ import org.knime.base.node.mine.treeensemble.data.ClassificationPriors;
 import org.knime.base.node.mine.treeensemble.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble.data.TreeColumnData;
 import org.knime.base.node.mine.treeensemble.data.TreeData;
+import org.knime.base.node.mine.treeensemble.data.TreeNodeMembershipController;
 import org.knime.base.node.mine.treeensemble.data.TreeTargetNominalColumnData;
 import org.knime.base.node.mine.treeensemble.model.TreeModelClassification;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeClassification;
@@ -68,7 +69,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class TreeLearnerClassification extends AbstractTreeLearner {
@@ -100,8 +101,10 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
         }
         ClassificationPriors targetPriors = targetColumn.getDistribution(dataMemberships, config);
         BitSet forbiddenColumnSet = new BitSet(data.getNrAttributes());
+//        TreeNodeMembershipController rootMembershipController = new TreeNodeMembershipController(data, dataMemberships);
+        TreeNodeMembershipController rootMembershipController = null;
         TreeNodeClassification rootNode =
-            buildTreeNode(exec, 0, dataMemberships, TreeNodeSignature.ROOT_SIGNATURE, targetPriors, forbiddenColumnSet);
+            buildTreeNode(exec, 0, dataMemberships, TreeNodeSignature.ROOT_SIGNATURE, targetPriors, forbiddenColumnSet, rootMembershipController);
         assert forbiddenColumnSet.cardinality() == 0;
         rootNode.setTreeNodeCondition(TreeNodeTrueCondition.INSTANCE);
         return new TreeModelClassification(rootNode);
@@ -109,7 +112,7 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
 
     private SplitCandidate findBestSplitClassification(final int currentDepth, final double[] rowSampleWeights,
         final TreeNodeSignature treeNodeSignature, final ClassificationPriors targetPriors,
-        final BitSet forbiddenColumnSet) {
+        final BitSet forbiddenColumnSet, final TreeNodeMembershipController membershipController) {
         final TreeData data = getData();
         final ColumnSampleStrategy colSamplingStrategy = getColSamplingStrategy();
         final TreeEnsembleLearnerConfiguration config = getConfig();
@@ -131,7 +134,7 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
         SplitCandidate splitCandidate = null;
         if (currentDepth == 0 && config.getHardCodedRootColumn() != null) {
             final TreeAttributeColumnData rootColumn = data.getColumn(config.getHardCodedRootColumn());
-            return rootColumn.calcBestSplitClassification(rowSampleWeights, targetPriors, targetColumn);
+            return rootColumn.calcBestSplitClassification(membershipController, rowSampleWeights, targetPriors, targetColumn);
         } else {
             double bestGainValue = 0.0;
             final ColumnSample columnSample = colSamplingStrategy.getColumnSampleForTreeNode(treeNodeSignature);
@@ -140,7 +143,7 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
                     continue;
                 }
                 SplitCandidate currentColSplit =
-                    col.calcBestSplitClassification(rowSampleWeights, targetPriors, targetColumn);
+                    col.calcBestSplitClassification(membershipController, rowSampleWeights, targetPriors, targetColumn);
                 if (currentColSplit != null) {
                     double gainValue = currentColSplit.getGainValue();
                     if (gainValue > bestGainValue) {
@@ -155,13 +158,13 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
 
     private TreeNodeClassification buildTreeNode(final ExecutionMonitor exec, final int currentDepth,
         final double[] rowSampleWeights, final TreeNodeSignature treeNodeSignature,
-        final ClassificationPriors targetPriors, final BitSet forbiddenColumnSet) throws CanceledExecutionException {
+        final ClassificationPriors targetPriors, final BitSet forbiddenColumnSet, final TreeNodeMembershipController membershipController) throws CanceledExecutionException {
         final TreeData data = getData();
         final TreeEnsembleLearnerConfiguration config = getConfig();
         exec.checkCanceled();
         SplitCandidate bestSplit =
             findBestSplitClassification(currentDepth, rowSampleWeights, treeNodeSignature, targetPriors,
-                forbiddenColumnSet);
+                forbiddenColumnSet, membershipController);
         if (bestSplit == null) {
             return new TreeNodeClassification(treeNodeSignature, targetPriors, getConfig());
         }
@@ -184,11 +187,13 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
             System.arraycopy(dataMemberships, 0, childMemberships, 0, dataMemberships.length);
             TreeNodeCondition cond = childConditions[i];
             splitColumn.updateChildMemberships(cond, dataMemberships, childMemberships);
+//            TreeNodeMembershipController childMembershipController = membershipController.createChildTreeNodeMembershipController(childMemberships);
+            TreeNodeMembershipController childMembershipController = null;
             ClassificationPriors childTargetPriors = targetColumn.getDistribution(childMemberships, config);
             TreeNodeSignature childSignature = treeNodeSignature.createChildSignature((short)i);
             childNodes[i] =
                 buildTreeNode(exec, currentDepth + 1, childMemberships, childSignature, childTargetPriors,
-                    forbiddenColumnSet);
+                    forbiddenColumnSet, childMembershipController);
             childNodes[i].setTreeNodeCondition(cond);
         }
         if (markAttributeAsForbidden) {

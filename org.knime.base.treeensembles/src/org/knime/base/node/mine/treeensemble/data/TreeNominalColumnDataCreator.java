@@ -59,7 +59,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.RowKey;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeNominalColumnDataCreator implements TreeAttributeColumnDataCreator {
@@ -148,5 +148,5 @@ public class TreeNominalColumnDataCreator implements TreeAttributeColumnDataCrea
             }
             return diff;
         }
-    };
+    }
 }

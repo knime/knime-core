@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.mine.treeensemble.learner;
 
-import org.knime.base.node.mine.treeensemble.data.TreeNumericColumnData;
+import org.knime.base.node.mine.treeensemble.data.TreeOrdinaryNumericColumnData;
 
 /**
  * 
@@ -63,7 +63,7 @@ public class GainImpurity implements IImpurity {
     /** {@inheritDoc} */
     @Override
     public final double getPartitionImpurity(final double[] targetCounts, final double partitionWeight) {
-        return TreeNumericColumnData.entropy(targetCounts, partitionWeight);
+        return TreeOrdinaryNumericColumnData.entropy(targetCounts, partitionWeight);
     }
 
     /** {@inheritDoc} */

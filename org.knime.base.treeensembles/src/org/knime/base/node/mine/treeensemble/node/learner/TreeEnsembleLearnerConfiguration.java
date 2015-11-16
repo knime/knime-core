@@ -79,6 +79,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -135,8 +136,28 @@ public class TreeEnsembleLearnerConfiguration {
 
     private static final String KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES = "saveTargetDistributionInNodes";
 
+    /**
+     * Enum that lists the available split criteria for classification tasks.
+     *
+     */
     public enum SplitCriterion {
-        InformationGain("Information Gain"), InformationGainRatio("Information Gain Ratio"), Gini("Gini Index");
+        /**
+         * Information Gain
+         * See https://en.wikipedia.org/wiki/Information_gain_ratio for further information on the subject.
+         */
+        InformationGain("Information Gain"),
+
+        /**
+         * Information Gain Ratio
+         * See https://en.wikipedia.org/wiki/Information_gain_ratio for further information on the subject.
+         */
+        InformationGainRatio("Information Gain Ratio"),
+
+        /**
+         * Gini Index
+         * See https://en.wikipedia.org/wiki/Gini_coefficient for further information on the subject.
+         */
+        Gini("Gini Index");
 
         private final String m_string;
 
@@ -148,11 +169,34 @@ public class TreeEnsembleLearnerConfiguration {
         @Override
         public String toString() {
             return m_string;
-        };
+        }
     }
 
+    /**
+     * Enum that lists the available column sampling modes.
+     *
+     */
     public enum ColumnSamplingMode {
-        Linear, SquareRoot, Absolute, None
+
+        /**
+         * Use a linear fraction of the available attributes for training
+         */
+        Linear,
+
+        /**
+         * Use the sqrt of the number of available attributes for training (standard for random forests)
+         */
+        SquareRoot,
+
+        /**
+         * Use an absolute number of the available attributes for training
+         */
+        Absolute,
+
+        /**
+         * Use the full set of available attributes for training
+         */
+        None
     }
 
     /** indicates max level parameter is not defined. */
@@ -166,18 +210,39 @@ public class TreeEnsembleLearnerConfiguration {
 
     static final int DEF_MAX_LEVEL = MAX_LEVEL_INFINITE;
 
+    /**
+     * Default for data fraction
+     */
     public static final double DEF_DATA_FRACTION = 1.0;
 
+    /**
+     * Default for column/attribute fraction
+     */
     public static final double DEF_COLUMN_FRACTION = 1.0;
 
+    /**
+     * Default column sampling mode (SquareRoot)
+     */
     public static final ColumnSamplingMode DEF_COLUMN_SAMPLING_MODE = ColumnSamplingMode.SquareRoot;
 
+    /**
+     * Default value for absolute column sampling mode
+     */
     public static final int DEF_COLUMN_ABSOLUTE = 10;
 
+    /**
+     * Default number of models
+     */
     public static final int DEF_NR_MODELS = 100;
 
+    /**
+     * Default for the use of average split points in numeric attributes
+     */
     public static final boolean DEF_AVERAGE_SPLIT_POINTS = true;
 
+    /**
+     * Default for saving the target distribution in each node
+     */
     public static final boolean DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES = false;
 
     private String m_targetColumn;
@@ -226,6 +291,7 @@ public class TreeEnsembleLearnerConfiguration {
     private final boolean m_isRegression;
 
     /**
+     * @param isRegression
      *  */
     public TreeEnsembleLearnerConfiguration(final boolean isRegression) {
         m_isRegression = isRegression;
@@ -478,6 +544,9 @@ public class TreeEnsembleLearnerConfiguration {
         return m_splitCriterion;
     }
 
+    /**
+     * @return an instance of the currently chosen impurity criterion
+     */
     public IImpurity createImpurityCriterion() {
         switch (m_splitCriterion) {
             case InformationGain:
@@ -491,7 +560,8 @@ public class TreeEnsembleLearnerConfiguration {
         }
     }
 
-    /** @param splitCriterion the splitCriterion to set */
+    /** @param splitCriterion the splitCriterion to set
+     * @throws InvalidSettingsException */
     public void setSplitCriterion(final SplitCriterion splitCriterion) throws InvalidSettingsException {
         if (splitCriterion == null) {
             throw new InvalidSettingsException("Split Criterion must not be null");
@@ -516,6 +586,7 @@ public class TreeEnsembleLearnerConfiguration {
     public String getFingerprintColumn() {
         return m_fingerprintColumn;
     }
+
 
     /**
      * @param fingerprintColumn the fingerprintColumn to set, see {@link #getFingerprintColumn()}.
@@ -598,6 +669,10 @@ public class TreeEnsembleLearnerConfiguration {
         m_ignoreColumnsWithoutDomain = value;
     }
 
+    /**
+     * Saves the settings.
+     * @param settings
+     */
     public void save(final NodeSettingsWO settings) {
         settings.addString(KEY_TARGET_COLUMN, m_targetColumn);
         String seedS = m_seed == null ? null : Long.toString(m_seed);
@@ -623,6 +698,12 @@ public class TreeEnsembleLearnerConfiguration {
         settings.addBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, m_saveTargetDistributionInNodes);
     }
 
+    /**
+     * Loads the settings.
+     * Inteded for the use in the NodeModel.
+     * @param settings
+     * @throws InvalidSettingsException
+     */
     public void loadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         setTargetColumn(settings.getString(KEY_TARGET_COLUMN));
         String seedS = settings.getString(KEY_SEED);
@@ -694,6 +775,14 @@ public class TreeEnsembleLearnerConfiguration {
         setSaveTargetDistributionInNodes(settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, true));
     }
 
+    /**
+     * Loads the settings.
+     * Intended for the use in the NodeDialog
+     *
+     * @param settings
+     * @param inSpec
+     * @throws NotConfigurableException
+     */
     public void loadInDialog(final NodeSettingsRO settings, final DataTableSpec inSpec) throws NotConfigurableException {
         String defTargetColumn = null;
         String defFingerprintColumn = null;
@@ -707,7 +796,7 @@ public class TreeEnsembleLearnerConfiguration {
             DataColumnSpec colSpec = inSpec.getColumnSpec(i);
             DataType colType = colSpec.getType();
             String colName = colSpec.getName();
-            if (colType.isCompatible(BitVectorValue.class)) {
+            if (colType.isCompatible(BitVectorValue.class) || colType.isCompatible(ByteVectorValue.class)) {
                 defFingerprintColumn = colName;
             } else if (colType.isCompatible(NominalValue.class) || colType.isCompatible(DoubleValue.class)) {
                 if (colType.isCompatible(targetClass)) {
@@ -727,7 +816,7 @@ public class TreeEnsembleLearnerConfiguration {
         }
         if (!hasAttributeColumns && defFingerprintColumn == null) {
             throw new NotConfigurableException("No appropriate learning column "
-                + "in input (need to have at least one additional " + "numeric/categorical column or fingerprint data)");
+                + "in input (need to have at least one additional " + "numeric/categorical column, fingerprint data or byte vector data)");
         }
 
         // assign fields:
@@ -862,6 +951,11 @@ public class TreeEnsembleLearnerConfiguration {
             settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES);
     }
 
+    /**
+     * @param spec
+     * @return ColumnRearranger that filters out all columns not part of the learning columns.
+     * @throws InvalidSettingsException
+     */
     public FilterLearnColumnRearranger filterLearnColumns(final DataTableSpec spec) throws InvalidSettingsException {
         // TODO return type should be a derived class of ColumnRearranger
         // (ColumnRearranger is a final class in v2.5)
@@ -944,9 +1038,10 @@ public class TreeEnsembleLearnerConfiguration {
                 throw new InvalidSettingsException("Some selected attributes " + "are not present in the input table: "
                     + missings);
             }
-        } else { // use fingerprint data
+        } else {
+            // use fingerprint data
             DataColumnSpec fpCol = spec.getColumnSpec(m_fingerprintColumn);
-            if (fpCol == null || !fpCol.getType().isCompatible(BitVectorValue.class)) {
+            if (fpCol == null || !(fpCol.getType().isCompatible(BitVectorValue.class) || fpCol.getType().isCompatible(ByteVectorValue.class))) {
                 throw new InvalidSettingsException("Fingerprint columnn \"" + m_fingerprintColumn
                     + "\" does not exist or is not " + "of correct type.");
             }
@@ -990,21 +1085,37 @@ public class TreeEnsembleLearnerConfiguration {
         return false;
     }
 
+    /**
+     * @param learnSpec
+     * @return port object spec for TreeEnsemblePortObject
+     */
     public TreeEnsembleModelPortObjectSpec createPortObjectSpec(final DataTableSpec learnSpec) {
         return new TreeEnsembleModelPortObjectSpec(learnSpec);
     }
 
+    /**
+     * @return RandomData object
+     */
     public RandomData createRandomData() {
         long seed = m_seed == null ? System.currentTimeMillis() : m_seed;
         return createRandomData(seed);
     }
 
+    /**
+     * @param seed
+     * @return RandomData created from <b>seed</b>
+     */
     public static RandomData createRandomData(final long seed) {
         JDKRandomGenerator randomGenerator = new JDKRandomGenerator();
         randomGenerator.setSeed(seed);
         return new RandomDataImpl(randomGenerator);
     }
 
+    /**
+     * @param nrRows
+     * @param rd
+     * @return random row sample with <b>nrRows</b> rows based on RandomData <b>rd</b>
+     */
     public RowSample createRowSample(final int nrRows, final RandomData rd) {
         if (m_isDataSelectionWithReplacement) {
             return new SubsetWithReplacementRowSample(nrRows, m_dataFractionPerTree, rd);
@@ -1015,6 +1126,11 @@ public class TreeEnsembleLearnerConfiguration {
         }
     }
 
+    /**
+     * @param data
+     * @param rd
+     * @return Column sample strategy according to currently selected column sampling mode.
+     */
     public ColumnSampleStrategy createColumnSampleStrategy(final TreeData data, final RandomData rd) {
         final int totalColCount = data.getNrAttributes();
         int subsetSize;
@@ -1042,6 +1158,9 @@ public class TreeEnsembleLearnerConfiguration {
         }
     }
 
+    /**
+     * @return true if this configuration is for regression.
+     */
     public boolean isRegression() {
         return m_isRegression;
     }

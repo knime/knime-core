@@ -52,7 +52,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeMetaData {
@@ -78,11 +78,15 @@ public final class TreeMetaData {
         m_targetMetaData = targetMetaData;
     }
 
-    /** @return the attributesMetaData */
+    /** @param index
+     * @return the attributesMetaData */
     public TreeAttributeColumnMetaData getAttributeMetaData(final int index) {
         return m_attributesMetaData[index];
     }
 
+    /**
+     * @return number of attributes
+     */
     public int getNrAttributes() {
         return m_attributesMetaData.length;
     }
@@ -92,10 +96,17 @@ public final class TreeMetaData {
         return m_targetMetaData;
     }
 
+    /**
+     * @return true if regression model else false
+     */
     public boolean isRegression() {
         return m_targetMetaData instanceof TreeTargetNumericColumnMetaData;
     }
 
+    /**
+     * @param output
+     * @throws IOException
+     */
     public void save(final DataOutputStream output) throws IOException {
         output.writeInt(m_attributesMetaData.length);
         for (TreeAttributeColumnMetaData a : m_attributesMetaData) {
@@ -115,6 +126,9 @@ public final class TreeMetaData {
     }
 
     /**
+     * @param input
+     * @return the TreeMetaData loaded from <b>input</b>
+     * @throws IOException
      *  */
     public static TreeMetaData load(final DataInputStream input) throws IOException {
         int length = input.readInt();

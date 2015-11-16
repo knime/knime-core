@@ -66,7 +66,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.util.MutableInteger;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeClassification extends AbstractTreeNode {
@@ -77,11 +77,22 @@ public final class TreeNodeClassification extends AbstractTreeNode {
 
     private final double[] m_targetDistribution;
 
+    /**
+     * @param signature
+     * @param targetPriors
+     * @param configuration
+     */
     public TreeNodeClassification(final TreeNodeSignature signature, final ClassificationPriors targetPriors,
         final TreeEnsembleLearnerConfiguration configuration) {
         this(signature, targetPriors, EMPTY_CHILD_ARRAY, configuration);
     }
 
+    /**
+     * @param signature
+     * @param targetPriors
+     * @param childNodes
+     * @param configuration
+     */
     public TreeNodeClassification(final TreeNodeSignature signature, final ClassificationPriors targetPriors,
         final TreeNodeClassification[] childNodes, final TreeEnsembleLearnerConfiguration configuration) {
         super(signature, targetPriors.getTargetMetaData(), childNodes);
@@ -151,6 +162,12 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         return toStringRecursion("");
     }
 
+    /**
+     * recursively prints node and all its descendants
+     *
+     * @param indent
+     * @return String representation of node with all its descendants
+     */
     public String toStringRecursion(final String indent) {
         StringBuilder b = new StringBuilder();
         final TreeNodeCondition condition = getCondition();
@@ -191,6 +208,14 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         }
     }
 
+    /**
+     * Loads a node from input stream <b>in</b>
+     *
+     * @param in
+     * @param metaData
+     * @return a TreeNodeClassification
+     * @throws IOException
+     */
     public static TreeNodeClassification load(final TreeModelDataInputStream in, final TreeMetaData metaData)
         throws IOException {
         return new TreeNodeClassification(in, metaData);
@@ -203,8 +228,11 @@ public final class TreeNodeClassification extends AbstractTreeNode {
     }
 
     /**
+     * Creates DecisionTreeNode model that is used in Decision Tree of KNIME
+     *
+     * @param idGenerator
      * @param metaData
-     * @return
+     * @return a DecisionTreeNode
      */
     public DecisionTreeNode createDecisionTreeNode(final MutableInteger idGenerator, final TreeMetaData metaData) {
         DataCell majorityCell = new StringCell(getMajorityClassName());

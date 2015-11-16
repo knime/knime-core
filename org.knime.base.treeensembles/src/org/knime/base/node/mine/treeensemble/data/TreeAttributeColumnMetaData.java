@@ -52,7 +52,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeAttributeColumnMetaData extends TreeColumnMetaData {

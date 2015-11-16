@@ -50,11 +50,14 @@ package org.knime.base.node.mine.treeensemble.data;
 import org.knime.core.data.RowKey;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeTargetColumnData extends TreeColumnData {
 
+    /**
+     * Array containing the rowkeys
+     */
     protected final RowKey[] m_rowKeysAsArray;
 
     /**
@@ -71,10 +74,17 @@ public abstract class TreeTargetColumnData extends TreeColumnData {
         return (TreeTargetColumnMetaData)super.getMetaData();
     }
 
+    /**
+     * @return the number of rows in this column
+     */
     public int getNrRows() {
         return m_rowKeysAsArray.length;
     }
 
+    /**
+     * @param row
+     * @return rowkey for the row with index <b>row</b>
+     */
     public RowKey getRowKeyFor(final int row) {
         return m_rowKeysAsArray[row];
     }

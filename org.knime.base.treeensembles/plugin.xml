@@ -4,13 +4,13 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/analytics/mining/treeensemble"
+            category-path="/analytics/mining/treeensemble/classification"
             factory-class="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory"
-            category-path="/analytics/mining/treeensemble"
+            category-path="/analytics/mining/treeensemble/classification"
             factory-class="org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory">
       </node>
@@ -22,15 +22,51 @@
       </node>
       <node
             after="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory"
-            category-path="/analytics/mining/treeensemble"
+            category-path="/analytics/mining/treeensemble/regression"
             factory-class="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory"
-            category-path="/analytics/mining/treeensemble"
+            category-path="/analytics/mining/treeensemble/regression"
             factory-class="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/treeensemble/classification"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.randomforest.learner.classification.RandomForestClassificationLearnerNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.randomforest.learner.classification.RandomForestClassificationLearnerNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/treeensemble/regression"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.randomforest.learner.regression.RandomForestRegressionLearnerNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.randomforest.learner.regression.RandomForestRegressionLearnerNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/treeensemble/classification"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.randomforest.predictor.classification.RandomForestClassificationPredictorNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.randomforest.predictor.classification.RandomForestClassificationPredictorNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/treeensemble/regression"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.randomforest.predictor.regression.RandomForestRegressionPredictorNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.randomforest.predictor.regression.RandomForestRegressionPredictorNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/dtree"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.regressiontree.learner.RegressionTreeLearnerNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.regressiontree.learner.RegressionTreeLearnerNodeFactory">
+      </node>
+      <node
+            category-path="/analytics/mining/dtree"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.regressiontree.predictor.RegressionTreePredictorNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.regressiontree.predictor.RegressionTreePredictorNodeFactory">
       </node>
 <!--      <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
@@ -50,6 +86,23 @@
             after="dtree"
             locked="true">
       </category>
+      <category
+            after="classification"
+            description="regression (tree ensembles and random forest)"
+            icon="icons/missing.gif"
+            level-id="regression"
+            locked="true"
+            name="Regression"
+            path="analytics/mining/treeensemble">
+      </category>
+      <category
+            description="classification (tree ensembles and random forest)"
+            icon="icons/missing.gif"
+            level-id="classification"
+            locked="true"
+            name="Classification"
+            path="/analytics/mining/treeensemble">
+      </category>
    </extension>
    <extension
          point="org.knime.core.NodeFactoryClassMapper">
@@ -66,6 +119,14 @@
             objectSerializer="org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject$Serializer"
             specClass="org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec"
             specSerializer="org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec$Serializer">
+      </portType>
+      <portType
+            hidden="false"
+            name="Regression Tree"
+            objectClass="org.knime.base.node.mine.treeensemble.model.RegressionTreeModelPortObject"
+            objectSerializer="org.knime.base.node.mine.treeensemble.model.RegressionTreeModelPortObject$Serializer"
+            specClass="org.knime.base.node.mine.treeensemble.model.RegressionTreeModelPortObjectSpec"
+            specSerializer="org.knime.base.node.mine.treeensemble.model.RegressionTreeModelPortObjectSpec$Serializer">
       </portType>
    </extension>
 

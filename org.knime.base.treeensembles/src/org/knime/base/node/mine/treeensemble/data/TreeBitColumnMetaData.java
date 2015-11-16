@@ -52,11 +52,18 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeBitColumnMetaData extends TreeAttributeColumnMetaData {
 
+    /**
+     * A bit attribute represents multiple attribute, therefore this method constructs
+     * names of the format "Bit <b>bitPosition</b>"
+     *
+     * @param bitPosition
+     * @return column name for bit column
+     */
     public static final String getAttributeName(final int bitPosition) {
         return "Bit " + bitPosition;
     }

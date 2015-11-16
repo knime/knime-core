@@ -52,21 +52,37 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.RowKey;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface TreeAttributeColumnDataCreator {
 
+    /**
+     * @return true if missing values are accepted
+     */
     public boolean acceptsMissing();
 
+    /**
+     * Adds a cell to the column that is to be created
+     *
+     * @param rowKey
+     * @param cell
+     */
     public void add(RowKey rowKey, final DataCell cell);
 
+    /**
+     * Creates a TreeAttributeColumnData object containing all cells that previously have been added to this creator.
+     *
+     * @param attributeIndex
+     * @param configuration
+     * @return the TreeAttributeColumn containing all cells that previously have been added.
+     */
     public TreeAttributeColumnData createColumnData(int attributeIndex, TreeEnsembleLearnerConfiguration configuration);
 
     /**
-     * The number of attributes represented by this creators. For numeric and nominal this will be one, for bit vectors
-     * it will be number of bits.
-     * 
+     * The number of attributes represented by this creators. For numeric and nominal this will be one, for bit/byte vectors
+     * it will be number of bits/bytes.
+     *
      * @return Number attributes.
      */
     public int getNrAttributes();

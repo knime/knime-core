@@ -123,8 +123,8 @@ class TreeEnsembleShrinker {
         ExecutionMonitor predictionProgress = m_exec.createSubProgress(0.5);
         int current = 0;
         for (DataRow row : evaluationData) {
-            predictionProgress.setMessage("Predicting row " + (current + 1) + " of " + evaluationData.getRowCount());
-            predictionProgress.setProgress(current++/(double)evaluationData.getRowCount());
+            predictionProgress.setMessage("Predicting row " + (current + 1) + " of " + evaluationData.size());
+            predictionProgress.setProgress(current++/(double)evaluationData.size());
             PredictorRecord record =
                 m_initialEnsemble.createPredictorRecord(row,
                     m_initialEnsemble.getLearnAttributeSpec(evaluationData.getDataTableSpec()));

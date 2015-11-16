@@ -54,7 +54,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeNumericCondition;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeNumericCondition.NumericOperator;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class NumericSplitCandidate extends SplitCandidate {
@@ -62,10 +62,10 @@ public final class NumericSplitCandidate extends SplitCandidate {
     private final double m_splitValue;
 
     /**
-     * @param columnData
+     * @param treeNumericColumnData
      */
-    public NumericSplitCandidate(final TreeNumericColumnData columnData, final double splitValue, final double gainValue) {
-        super(columnData, gainValue);
+    public NumericSplitCandidate(final TreeNumericColumnData treeNumericColumnData, final double splitValue, final double gainValue) {
+        super(treeNumericColumnData, gainValue);
         m_splitValue = splitValue;
     }
 

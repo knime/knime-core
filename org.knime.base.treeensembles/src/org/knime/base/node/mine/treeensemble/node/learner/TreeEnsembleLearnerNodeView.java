@@ -107,6 +107,7 @@ import org.knime.core.util.SwingWorkerWithContext;
  * View to tree ensemble learner nodes (both classification and regression).
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @param <MODEL>
  */
 public final class TreeEnsembleLearnerNodeView<MODEL extends NodeModel & ViewContentProvider>
     extends NodeView<MODEL> implements HiLiteListener {
@@ -580,6 +581,9 @@ public final class TreeEnsembleLearnerNodeView<MODEL extends NodeModel & ViewCon
         private final DataTable m_hiliteRowSample;
 
         /**
+         * @param hiliteRowSample
+         * @param model
+         * @param index
          *  */
         public UpdateTreeWorker(final DataTable hiliteRowSample, final TreeEnsembleModel model, final int index) {
             m_hiliteRowSample = hiliteRowSample;

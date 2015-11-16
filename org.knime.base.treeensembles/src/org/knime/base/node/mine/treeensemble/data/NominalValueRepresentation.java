@@ -52,7 +52,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class NominalValueRepresentation {
@@ -100,6 +100,7 @@ public final class NominalValueRepresentation {
 
     /**
      * @param output
+     * @throws IOException
      */
     public void save(final DataOutputStream output) throws IOException {
         output.writeUTF(m_nominalValue);

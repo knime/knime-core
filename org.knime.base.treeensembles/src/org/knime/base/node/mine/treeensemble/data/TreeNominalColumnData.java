@@ -57,7 +57,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeNominalCondition;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNominalColumnData extends TreeAttributeColumnData {
@@ -82,7 +82,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public NominalSplitCandidate calcBestSplitClassification(final double[] rowWeights,
+    public NominalSplitCandidate calcBestSplitClassification(final TreeNodeMembershipController membershipController, final double[] rowWeights,
         final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn) {
         final NominalValueRepresentation[] targetVals = targetColumn.getMetaData().getValues();
         IImpurity impCriterion = targetPriors.getImpurityCriterion();
@@ -96,16 +96,26 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         final int[] originalIndexInColumnList = m_orginalIndexInColumnList;
         // number (sum) of total valid values
         double totalWeight = 0.0;
+
+//        TreeColumnMembershipController colController = membershipController.getControllerForColumn(this);
+//        int zeroWeightCounter = 0;
+//        int allRecordsCounter = 0;
+
         int start = 0;
         for (int att = 0; att < nomVals.length; att++) {
             int end = start + m_nominalValueCounts[att];
             Arrays.fill(targetCountsSplit, 0.0);
             double currentAttValWeight = 0.0;
             for (int index = start; index < end; index++) {
+//            int index = -1;
+//            while ( colController.isValidIndex() && (index = colController.getCurrent()) < end) {
                 final int originalIndex = originalIndexInColumnList[index];
                 final double weight = rowWeights[originalIndex];
+//                allRecordsCounter++;
+//                colController.goToNext();
                 if (weight < EPSILON) {
                     // ignore record: not in current branch or not in sample
+//                    zeroWeightCounter++;
                 } else {
                     int target = targetColumn.getValueFor(originalIndex);
                     targetCountsSplit[target] += weight;
@@ -124,7 +134,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public SplitCandidate calcBestSplitRegression(final double[] rowWeights, final RegressionPriors targetPriors,
+    public SplitCandidate calcBestSplitRegression(final TreeNodeMembershipController membershipController, final double[] rowWeights, final RegressionPriors targetPriors,
         final TreeTargetNumericColumnData targetColumn) {
         final NominalValueRepresentation[] nomVals = getMetaData().getValues();
         final double ySumTotal = targetPriors.getYSum();
@@ -151,7 +161,9 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                     weightSum += weight;
                 }
             }
-            criterionAfterSplit += ySum * ySum / weightSum;
+            if (weightSum > EPSILON) {
+                criterionAfterSplit += ySum * ySum / weightSum;
+            }
             sumWeightsAttributes[att] = weightSum;
             totalWeight += weightSum;
             start = end;
@@ -196,6 +208,16 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public TreeNodeMembershipController getChildNodeMembershipController(final TreeNodeCondition childCondition,
+        final TreeNodeMembershipController parentController) {
+        // TODO Auto-generated method stub
+        return parentController;
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
@@ -230,6 +252,14 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         }
         b.append("]");
         return b.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getOriginalIndicesInColumnList() {
+        return m_orginalIndexInColumnList;
     }
 
 }

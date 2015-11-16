@@ -60,14 +60,14 @@ import org.knime.base.node.mine.treeensemble.data.TreeNumericColumnMetaData;
 import org.knime.base.node.util.DoubleFormat;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
 
     public enum NumericOperator {
-        LessThanOrEqual("<=", (byte)'s', PMMLOperator.LESS_OR_EQUAL), LargerThan(">", (byte)'l',
-            PMMLOperator.GREATER_THAN);
+            LessThanOrEqual("<=", (byte)'s', PMMLOperator.LESS_OR_EQUAL),
+            LargerThan(">", (byte)'l', PMMLOperator.GREATER_THAN);
 
         private final String m_sign;
 
@@ -81,6 +81,10 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
             m_sign = sign;
             m_persistByte = persistByte;
             m_pmmlOperator = pmmlOperator;
+        }
+
+        public PMMLOperator getPMMLOperator() {
+            return m_pmmlOperator;
         }
 
         @Override
@@ -128,18 +132,24 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
         m_splitValue = input.readDouble();
     }
 
-    /** @return the column meta data */
+    /**
+     * @return the column meta data
+     */
     @Override
     public TreeNumericColumnMetaData getColumnMetaData() {
         return (TreeNumericColumnMetaData)super.getColumnMetaData();
     }
 
-    /** @return the splitValue */
+    /**
+     * @return the splitValue
+     */
     public double getSplitValue() {
         return m_splitValue;
     }
 
-    /** @return the numericOperator */
+    /**
+     * @return the numericOperator
+     */
     public NumericOperator getNumericOperator() {
         return m_numericOperator;
     }
@@ -151,11 +161,19 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
         if (value == null) {
             throw new UnsupportedOperationException("Missing values currently not supported");
         }
-        if (!(value instanceof Double)) {
+        if (!(value instanceof Integer || value instanceof Double)) {
             throw new IllegalArgumentException("Can't test numeric condition (" + toString()
                 + ") -- expected query object of type Double " + "but got " + value.getClass().getSimpleName());
         }
-        double v = (Double)value;
+
+        double v = 0;
+        if (value instanceof Integer) {
+            v = (Integer)value;
+        } else {
+            v = (Double)value;
+        }
+
+
         switch (m_numericOperator) {
             case LargerThan:
                 return v > m_splitValue;

@@ -55,7 +55,7 @@ import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeNodeCondition {

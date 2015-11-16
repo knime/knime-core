@@ -48,7 +48,7 @@
 package org.knime.base.node.mine.treeensemble.data;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeColumnData {
@@ -61,6 +61,7 @@ public abstract class TreeColumnData {
     private final TreeColumnMetaData m_metaData;
 
     /**
+     * @param metaData the meta data for this column
      *  */
     protected TreeColumnData(final TreeColumnMetaData metaData) {
         m_metaData = metaData;
@@ -74,7 +75,7 @@ public abstract class TreeColumnData {
     /**
      * @param weights
      * @param totalWeight
-     * @return
+     * @return the entropy for the given parameters
      */
     public static final double entropy(final double[] weights, final double totalWeight) {
         if (totalWeight < EPSILON) {

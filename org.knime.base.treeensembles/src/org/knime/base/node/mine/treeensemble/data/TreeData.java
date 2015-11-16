@@ -50,7 +50,7 @@ package org.knime.base.node.mine.treeensemble.data;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModel.TreeType;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeData {
@@ -79,6 +79,9 @@ public final class TreeData {
         m_metaData = new TreeMetaData(attMetaData, targetMetaData);
     }
 
+    /**
+     * @return the number of rows in the target column
+     */
     public int getNrRows() {
         return m_targetColumn.getNrRows();
     }
@@ -93,6 +96,10 @@ public final class TreeData {
         return m_columns;
     }
 
+    /**
+     * @param name of the column to return
+     * @return the column with name <b>name</b>
+     */
     public TreeAttributeColumnData getColumn(final String name) {
         for (TreeAttributeColumnData d : m_columns) {
             if (d.getMetaData().getAttributeName().equals(name)) {
@@ -107,6 +114,9 @@ public final class TreeData {
         return m_targetColumn;
     }
 
+    /**
+     * @return the number of attributes
+     */
     public int getNrAttributes() {
         return m_columns.length;
     }

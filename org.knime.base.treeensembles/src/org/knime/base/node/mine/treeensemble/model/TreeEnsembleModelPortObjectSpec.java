@@ -59,6 +59,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -192,6 +193,9 @@ public final class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObj
             }
             if (eType.isCompatible(BitVectorValue.class) && !aType.isCompatible(BitVectorValue.class)) {
                 errorType = "fingerprint/bitvector";
+            }
+            if (eType.isCompatible(ByteVectorValue.class) && !aType.isCompatible(ByteVectorValue.class)) {
+                errorType = "fingerprint/bytevector";
             }
             if (errorType != null) {
                 throw new InvalidSettingsException("Column \"" + colName + "\" does exist in the data but"

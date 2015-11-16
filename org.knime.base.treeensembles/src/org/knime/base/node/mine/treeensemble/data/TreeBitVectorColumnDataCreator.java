@@ -56,7 +56,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeBitVectorColumnDataCreator implements TreeAttributeColumnDataCreator {
@@ -65,7 +65,8 @@ public class TreeBitVectorColumnDataCreator implements TreeAttributeColumnDataCr
 
     private BitSet[] m_bitSets;
 
-    /** */
+    /**
+     * @param column  */
     public TreeBitVectorColumnDataCreator(final DataColumnSpec column) {
         if (!column.getType().isCompatible(BitVectorValue.class)) {
             throw new IllegalStateException("Can't derive bit vector data " + "from non-bitvector column: " + column);

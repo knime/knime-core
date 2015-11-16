@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.mine.treeensemble.learner;
 
-import org.knime.base.node.mine.treeensemble.data.TreeNumericColumnData;
+import org.knime.base.node.mine.treeensemble.data.TreeOrdinaryNumericColumnData;
 
 /**
  * 
@@ -65,8 +65,8 @@ public final class GainRatioImpurity extends GainImpurity {
     @Override
     public double getGain(final double priorImpurity, final double postSplitImpurity, final double[] partitionWeights,
         final double totalWeight) {
-        double attributeEntropy = TreeNumericColumnData.entropy(partitionWeights, totalWeight);
-        if (attributeEntropy < TreeNumericColumnData.EPSILON) {
+        double attributeEntropy = TreeOrdinaryNumericColumnData.entropy(partitionWeights, totalWeight);
+        if (attributeEntropy < TreeOrdinaryNumericColumnData.EPSILON) {
             // all elements in one partition
             return Double.NEGATIVE_INFINITY;
         }

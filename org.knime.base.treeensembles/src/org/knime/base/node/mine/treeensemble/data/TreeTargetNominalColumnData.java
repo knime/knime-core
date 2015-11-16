@@ -51,7 +51,7 @@ import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerCon
 import org.knime.core.data.RowKey;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeTargetNominalColumnData extends TreeTargetColumnData {
@@ -63,6 +63,13 @@ public final class TreeTargetNominalColumnData extends TreeTargetColumnData {
         m_data = data;
     }
 
+    /**
+     * Calculates the distribution of the target column for the given row weights.
+     *
+     * @param rowWeights
+     * @param config
+     * @return ClassificationPriors
+     */
     public ClassificationPriors
         getDistribution(final double[] rowWeights, final TreeEnsembleLearnerConfiguration config) {
         NominalValueRepresentation[] nominalValues = getMetaData().getValues();
@@ -90,6 +97,10 @@ public final class TreeTargetNominalColumnData extends TreeTargetColumnData {
             config.createImpurityCriterion());
     }
 
+    /**
+     * @param row
+     * @return The nominal target value for row <b>row</b>
+     */
     public int getValueFor(final int row) {
         return m_data[row];
     }

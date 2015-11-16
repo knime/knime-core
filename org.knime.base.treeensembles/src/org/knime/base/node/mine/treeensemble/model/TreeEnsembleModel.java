@@ -60,6 +60,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble.data.TreeBitColumnMetaData;
 import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
+import org.knime.base.node.mine.treeensemble.data.TreeNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -71,9 +72,11 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -89,12 +92,14 @@ public final class TreeEnsembleModel {
      * columns are real data columns or fake columns that originate from different bit positions.
      */
     public enum TreeType {
-        /** Bit vector / fingerprint type. */
-        BitVector((byte)0),
-        /**
-         * Normal type (i.e. normal data columns with numeric or nominal content).
-         */
-        Ordinary((byte)1);
+            /** Bit vector / fingerprint type. */
+        BitVector((byte)0), /**
+                             * Normal type (i.e. normal data columns with numeric or nominal content).
+                             */
+        Ordinary((byte)1),
+
+        /** Byte vector type. */
+        ByteVector((byte)2);
 
         private final byte m_persistByte;
 
@@ -102,11 +107,11 @@ public final class TreeEnsembleModel {
             m_persistByte = persistByte;
         }
 
-        private void save(final DataOutputStream out) throws IOException {
+        void save(final DataOutputStream out) throws IOException {
             out.writeByte(m_persistByte);
         }
 
-        private static TreeType load(final TreeModelDataInputStream in) throws IOException {
+        static TreeType load(final TreeModelDataInputStream in) throws IOException {
             byte persistByte = in.readByte();
             for (TreeType t : values()) {
                 if (t.m_persistByte == persistByte) {
@@ -149,17 +154,23 @@ public final class TreeEnsembleModel {
         m_containsClassDistribution = containsClassDistribution;
     }
 
-    /** @return the models */
+    /**
+     * @return the models
+     */
     public AbstractTreeModel<?> getTreeModel(final int index) {
         return m_models[index];
     }
 
-    /** @return the models */
+    /**
+     * @return the models
+     */
     public TreeModelClassification getTreeModelClassification(final int index) {
         return (TreeModelClassification)m_models[index];
     }
 
-    /** @return the models */
+    /**
+     * @return the models
+     */
     public TreeModelRegression getTreeModelRegression(final int index) {
         return (TreeModelRegression)m_models[index];
     }
@@ -168,12 +179,16 @@ public final class TreeEnsembleModel {
         return m_models.length;
     }
 
-    /** @return the metaData */
+    /**
+     * @return the metaData
+     */
     public TreeMetaData getMetaData() {
         return m_metaData;
     }
 
-    /** @return the type */
+    /**
+     * @return the type
+     */
     public TreeType getType() {
         return m_type;
     }
@@ -221,11 +236,19 @@ public final class TreeEnsembleModel {
                 int nrAttributes = getMetaData().getNrAttributes();
                 DataColumnSpec[] colSpecs = new DataColumnSpec[nrAttributes];
                 for (int i = 0; i < nrAttributes; i++) {
-                    colSpecs[i] =
-                        new DataColumnSpecCreator(TreeBitColumnMetaData.getAttributeName(i), StringCell.TYPE)
-                            .createSpec();
+                    colSpecs[i] = new DataColumnSpecCreator(TreeBitColumnMetaData.getAttributeName(i), StringCell.TYPE)
+                        .createSpec();
                 }
                 return new DataTableSpec(colSpecs);
+            case ByteVector:
+                int nrAttr = getMetaData().getNrAttributes();
+                DataColumnSpec[] bvColSpecs = new DataColumnSpec[nrAttr];
+                for (int i = 0; i < nrAttr; i++) {
+                    bvColSpecs[i] =
+                        new DataColumnSpecCreator(TreeNumericColumnMetaData.getAttributeName(i), IntCell.TYPE)
+                            .createSpec();
+                }
+                return new DataTableSpec(bvColSpecs);
             default:
                 throw new IllegalStateException("Type unknown (not implemented): " + type);
         }
@@ -255,6 +278,22 @@ public final class TreeEnsembleModel {
                     cells[i] = bv.get(i) ? trueCell : falseCell;
                 }
                 return new DefaultRow(learnRow.getKey(), cells);
+            case ByteVector:
+                DataCell cell = learnRow.getCell(0);
+                if (cell.isMissing()) {
+                    return null;
+                }
+                ByteVectorValue byteVector = (ByteVectorValue)cell;
+                final long bvLength = byteVector.length();
+                int nrAttr = getMetaData().getNrAttributes();
+                if (bvLength != nrAttr) {
+                    return null;
+                }
+                DataCell[] bvCells = new DataCell[nrAttr];
+                for (int i = 0; i < nrAttr; i++) {
+                    bvCells[i] = new IntCell(byteVector.get(i));
+                }
+                return new DefaultRow(learnRow.getKey(), bvCells);
             default:
                 throw new IllegalStateException("Type unknown (not implemented): " + type);
         }
@@ -266,9 +305,30 @@ public final class TreeEnsembleModel {
                 return createNominalNumericPredictorRecord(filterRow, learnSpec);
             case BitVector:
                 return createBitVectorPredictorRecord(filterRow);
+            case ByteVector:
+                return createByteVectorPredictorRecord(filterRow);
             default:
                 throw new IllegalStateException("Unknown tree type " + "(not implemented): " + m_type);
         }
+    }
+
+    private PredictorRecord createByteVectorPredictorRecord(final DataRow filterRow) {
+        assert filterRow.getNumCells() == 1 : "Expected one cell as byte vector data";
+        DataCell c = filterRow.getCell(0);
+        if (c.isMissing()) {
+            return null;
+        }
+        ByteVectorValue bv = (ByteVectorValue)c;
+        final long length = bv.length();
+        if (length != getMetaData().getNrAttributes()) {
+            throw new IllegalArgumentException("The byte-vector in " + filterRow.getKey().getString()
+                + " has the wrong length. (" + length + " instead of " + getMetaData().getNrAttributes() + ")");
+        }
+        Map<String, Object> valueMap = new LinkedHashMap<String, Object>((int)(length / 0.75 + 1.0));
+        for (int i = 0; i < length; i++) {
+            valueMap.put(TreeNumericColumnMetaData.getAttributeName(i), Integer.valueOf(bv.get(i)));
+        }
+        return new PredictorRecord(valueMap);
     }
 
     private PredictorRecord createBitVectorPredictorRecord(final DataRow filterRow) {
@@ -280,8 +340,8 @@ public final class TreeEnsembleModel {
         BitVectorValue bv = (BitVectorValue)c;
         final long length = bv.length();
         if (length != getMetaData().getNrAttributes()) {
-            // TODO indicate error message
-            return null;
+            throw new IllegalArgumentException("The bit-vector in " + filterRow.getKey().getString()
+                + " has the wrong length. (" + length + " instead of " + getMetaData().getNrAttributes() + ")");
         }
         Map<String, Object> valueMap = new LinkedHashMap<String, Object>((int)(length / 0.75 + 1.0));
         for (int i = 0; i < length; i++) {
@@ -290,7 +350,8 @@ public final class TreeEnsembleModel {
         return new PredictorRecord(valueMap);
     }
 
-    private PredictorRecord createNominalNumericPredictorRecord(final DataRow filterRow, final DataTableSpec trainSpec) {
+    private PredictorRecord createNominalNumericPredictorRecord(final DataRow filterRow,
+        final DataTableSpec trainSpec) {
         final int nrCols = trainSpec.getNumColumns();
         Map<String, Object> valueMap = new LinkedHashMap<String, Object>((int)(nrCols / 0.75 + 1.0));
         for (int i = 0; i < nrCols; i++) {
@@ -320,8 +381,8 @@ public final class TreeEnsembleModel {
      * @throws IOException ...
      * @throws CanceledExecutionException ...
      */
-    public void save(final OutputStream out, final ExecutionMonitor exec) throws IOException,
-        CanceledExecutionException {
+    public void save(final OutputStream out, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         // wrapping the (zip) output stream with a buffered stream reduces
         // the write operation from, e.g. 63s to 8s
         DataOutputStream dataOutput = new DataOutputStream(new BufferedOutputStream(out));
@@ -354,8 +415,8 @@ public final class TreeEnsembleModel {
      * @throws IOException ...
      * @throws CanceledExecutionException ...
      */
-    public static TreeEnsembleModel load(final InputStream in, final ExecutionMonitor exec) throws IOException,
-        CanceledExecutionException {
+    public static TreeEnsembleModel load(final InputStream in, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         // wrapping the argument (zip input) stream in a buffered stream
         // reduces read operation from, e.g. 42s to 2s
         TreeModelDataInputStream input =
@@ -379,9 +440,8 @@ public final class TreeEnsembleModel {
         for (int i = 0; i < nrModels; i++) {
             AbstractTreeModel singleModel;
             try {
-                singleModel =
-                    isRegression ? TreeModelRegression.load(input, metaData) : TreeModelClassification.load(input,
-                        metaData);
+                singleModel = isRegression ? TreeModelRegression.load(input, metaData)
+                    : TreeModelClassification.load(input, metaData);
                 if (input.readByte() != 0) {
                     throw new IOException("Model not terminated by 0 byte");
                 }

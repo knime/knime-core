@@ -60,6 +60,7 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -85,6 +86,11 @@ public class TreeDataCreator {
 
     private String m_viewMessage;
 
+    /**
+     * @param configuration
+     * @param learnSpec
+     * @param nrRows
+     */
     public TreeDataCreator(final TreeEnsembleLearnerConfiguration configuration, final DataTableSpec learnSpec,
         final int nrRows) {
         m_configuration = configuration;
@@ -108,7 +114,7 @@ public class TreeDataCreator {
                 m_attrColCreators[i] = new TreeNominalColumnDataCreator(col);
                 treeType = TreeType.Ordinary;
             } else if (colType.isCompatible(DoubleValue.class)) {
-                m_attrColCreators[i] = new TreeNumericColumnDataCreator(col);
+                m_attrColCreators[i] = new TreeOrdinaryNumericColumnDataCreator(col);
                 treeType = TreeType.Ordinary;
             } else if (colType.isCompatible(BitVectorValue.class)) {
                 m_attrColCreators[i] = new TreeBitVectorColumnDataCreator(col);
@@ -116,6 +122,12 @@ public class TreeDataCreator {
                     throw new IllegalStateException("Can't use multiple " + "columns for bit vector based tree");
                 }
                 treeType = TreeType.BitVector;
+            } else if (colType.isCompatible(ByteVectorValue.class)) {
+                m_attrColCreators[i] = new TreeByteNumericColumnDataCreator(col);
+                if (nrLearnCols > 1) {
+                    throw new IllegalStateException("Can't use multiple columns for byte vector based tree");
+                }
+                treeType = TreeType.ByteVector;
             } else {
                 throw new IllegalStateException("Unsupported column at index " + i + " (column \"" + col.getName()
                     + "\"): " + colType);
@@ -131,10 +143,21 @@ public class TreeDataCreator {
         m_treeType = treeType;
     }
 
+    /**
+     * Reads the data from <b>learnData</b> into memory.
+     * Each column is represented by a TreeColumnData object corresponding to its type
+     * and whether it is a attribute or target column.
+     *
+     * @param learnData
+     * @param configuration
+     * @param exec
+     * @return the TreeData object that holds all data in memory
+     * @throws CanceledExecutionException
+     */
     public TreeData readData(final BufferedDataTable learnData, final TreeEnsembleLearnerConfiguration configuration,
         final ExecutionMonitor exec) throws CanceledExecutionException {
         int index = 0;
-        final int nrRows = learnData.getRowCount();
+        final long nrRows = learnData.size();
         final int nrLearnCols = m_attrColCreators.length;
         final boolean[] supportMissings = new boolean[nrLearnCols];
         for (int i = 0; i < nrLearnCols; i++) {
@@ -181,13 +204,13 @@ public class TreeDataCreator {
         if (rejectedMissings > 0) {
             StringBuffer warnMsgBuilder = new StringBuffer();
             warnMsgBuilder.append(rejectedMissings).append("/");
-            warnMsgBuilder.append(learnData.getRowCount());
+            warnMsgBuilder.append(learnData.size());
             warnMsgBuilder.append(" row(s) were ignored because they ");
             warnMsgBuilder.append("contain missing values.");
             m_warningMessage = warnMsgBuilder.toString();
         }
-        CheckUtils.checkArgument(rejectedMissings < learnData.getRowCount(),
-            "No rows left after removing missing values (table has %d row(s))", learnData.getRowCount());
+        CheckUtils.checkArgument(rejectedMissings < learnData.size(),
+            "No rows left after removing missing values (table has %d row(s))", learnData.size());
         int nrLearnAttributes = 0;
         for (int i = 0; i < m_attrColCreators.length; i++) {
             nrLearnAttributes += m_attrColCreators[i].getNrAttributes();
@@ -207,7 +230,7 @@ public class TreeDataCreator {
     }
 
     /**
-     * @return
+     * @return the warning message
      */
     public String getAndClearWarningMessage() {
         String result = m_warningMessage;

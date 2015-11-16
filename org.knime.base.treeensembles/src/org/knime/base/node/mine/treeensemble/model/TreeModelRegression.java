@@ -55,7 +55,7 @@ import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 import org.knime.core.util.MutableInteger;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeModelRegression extends AbstractTreeModel<TreeNodeRegression> {
@@ -75,5 +75,7 @@ public class TreeModelRegression extends AbstractTreeModel<TreeNodeRegression> {
         DecisionTreeNode decTreeRoot = getRootNode().createDecisionTreeNode(new MutableInteger(0), metaData);
         return new DecisionTree(decTreeRoot, metaData.getTargetMetaData().getAttributeName());
     }
+
+
 
 }

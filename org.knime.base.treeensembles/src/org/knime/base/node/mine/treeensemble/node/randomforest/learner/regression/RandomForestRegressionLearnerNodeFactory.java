@@ -43,91 +43,50 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Dec 27, 2011 (wiswedel): created
+ *   Dec 25, 2011 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble.data;
+package org.knime.base.node.mine.treeensemble.node.randomforest.learner.regression;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowKey;
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeView;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class TreeNumericColumnDataCreator implements TreeAttributeColumnDataCreator {
-    private final DataColumnSpec m_column;
+public final class RandomForestRegressionLearnerNodeFactory extends NodeFactory<RandomForestRegressionLearnerNodeModel> {
 
-    private final List<Tuple> m_tuples;
-
-    TreeNumericColumnDataCreator(final DataColumnSpec column) {
-        m_column = column;
-        m_tuples = new ArrayList<Tuple>();
+    /** {@inheritDoc} */
+    @Override
+    public RandomForestRegressionLearnerNodeModel createNodeModel() {
+        return new RandomForestRegressionLearnerNodeModel();
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean acceptsMissing() {
-        return false;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void add(final RowKey rowKey, final DataCell cell) {
-        if (cell.isMissing()) {
-            throw new UnsupportedOperationException("missing vals not supported");
-        }
-        Tuple t = new Tuple();
-        t.m_value = ((DoubleValue)cell).getDoubleValue();
-        t.m_indexInColumn = m_tuples.size();
-        m_tuples.add(t);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public int getNrAttributes() {
+    protected int getNrNodeViews() {
         return 1;
     }
 
     /** {@inheritDoc} */
     @Override
-    public TreeNumericColumnData createColumnData(final int attributeIndex,
-        final TreeEnsembleLearnerConfiguration configuration) {
-        assert attributeIndex == 0;
-        Tuple[] tuples = m_tuples.toArray(new Tuple[m_tuples.size()]);
-        Arrays.sort(tuples);
-        double[] sortedData = new double[tuples.length];
-        int[] sortIndex = new int[tuples.length];
-        for (int i = 0; i < tuples.length; i++) {
-            Tuple t = tuples[i];
-            sortedData[i] = t.m_value;
-            sortIndex[i] = t.m_indexInColumn;
-        }
-        final String n = m_column.getName();
-        TreeNumericColumnMetaData metaData = new TreeNumericColumnMetaData(n);
-        return new TreeNumericColumnData(metaData, configuration, sortedData, sortIndex);
+    public NodeView<RandomForestRegressionLearnerNodeModel> createNodeView(final int viewIndex,
+        final RandomForestRegressionLearnerNodeModel nodeModel) {
+        return new TreeEnsembleLearnerNodeView<RandomForestRegressionLearnerNodeModel>(nodeModel);
     }
 
-    private static class Tuple implements Comparable<Tuple> {
-        private double m_value;
+    /** {@inheritDoc} */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
 
-        private int m_indexInColumn;
-
-        /** {@inheritDoc} */
-        @Override
-        public int compareTo(final Tuple o) {
-            int comp = Double.compare(m_value, o.m_value);
-            if (comp == 0) {
-                return m_indexInColumn - o.m_indexInColumn;
-            }
-            return comp;
-        }
-    };
+    /** {@inheritDoc} */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new RandomForestRegressionLearnerNodeDialogPane();
+    }
 
 }

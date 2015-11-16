@@ -52,7 +52,7 @@ import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.RowKey;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeTargetNumericColumnData extends TreeTargetColumnData {
@@ -71,10 +71,21 @@ public final class TreeTargetNumericColumnData extends TreeTargetColumnData {
         return (TreeTargetNumericColumnMetaData)super.getMetaData();
     }
 
+    /**
+     * @param row
+     * @return numeric target value for row <b>row</b>
+     */
     public double getValueFor(final int row) {
         return m_data[row];
     }
 
+    /**
+     * Calculates the priors for regression based on the provided <b>rowWeights</b>
+     *
+     * @param rowWeights
+     * @param config
+     * @return RegressionPriors
+     */
     public RegressionPriors getPriors(final double[] rowWeights, final TreeEnsembleLearnerConfiguration config) {
         double mean = 0.0;
         // sum of squares of differences from the (current) mean

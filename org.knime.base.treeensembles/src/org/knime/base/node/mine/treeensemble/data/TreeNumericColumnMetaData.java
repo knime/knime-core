@@ -52,10 +52,20 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNumericColumnMetaData extends TreeAttributeColumnMetaData {
+
+    /**
+     * Provides names in the format "Byte i" for artificial columns created from a byte vector column
+     *
+     * @param bytePosition
+     * @return name for artificial byte column
+     */
+    public static final String getAttributeName(final int bytePosition) {
+        return "Byte " + bytePosition;
+    }
 
     /**
      * @param attributeName
@@ -74,7 +84,7 @@ public final class TreeNumericColumnMetaData extends TreeAttributeColumnMetaData
 
     /** {@inheritDoc} */
     @Override
-    void saveContent(final DataOutputStream output) throws IOException {
+        void saveContent(final DataOutputStream output) throws IOException {
         // no internals
     }
 
