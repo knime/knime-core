@@ -115,6 +115,7 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
      *
      * @param tolerate <code>true</code> changes are tolerated and missing values are inserted for missing column in
      *            respective iterations <code>false</code> the node fails if table spec varies
+     * @since 3.1
      */
     public void tolerateChangingTableSpecs(final boolean tolerate) {
         m_tolerateChangingSpecs = tolerate;
@@ -126,6 +127,7 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
      * @return <code>true</code> changes are tolerated and missing values are inserted for missing column in respective
      *         iterations
      *         <code>false</code> the node fails if table spec varies
+     * @since 3.1
      */
     public boolean tolerateChangingTableSpecs() {
         return m_tolerateChangingSpecs;

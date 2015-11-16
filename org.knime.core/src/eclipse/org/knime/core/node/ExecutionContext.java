@@ -477,6 +477,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * @throws IllegalArgumentException If the table specs violate any constraint mentioned above, the row keys are not
      *             unique, or the array is empty.
      * @throws NullPointerException If any argument is <code>null</code>.
+     * @since 3.1
      */
     public BufferedDataTable createConcatenateTable(final ExecutionMonitor exec, final boolean checkForDuplicates, final BufferedDataTable... tables)
         throws CanceledExecutionException {
