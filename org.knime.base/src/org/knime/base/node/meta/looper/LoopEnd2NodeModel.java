@@ -46,18 +46,12 @@ package org.knime.base.node.meta.looper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.function.Function;
 
-import org.knime.base.data.append.column.AppendedColumnRow;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -75,19 +69,18 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  */
 public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
 
-    private BufferedDataContainer[] m_resultContainer = new BufferedDataContainer[2];
+    /* Overall row count port 1 */
+    private int m_count1 = 0;
 
-    private int m_count = 0;
+    /* Overall row count port 2 */
+    private int m_count2 = 0;
+
+    /* Current iteration */
+    private int m_iteration  = 0;
+
+    private ConcatenateTableFactory[] m_tableFactories  = new ConcatenateTableFactory[2];
 
     private final LoopEnd2NodeSettings m_settings = new LoopEnd2NodeSettings();
-
-    private BufferedDataTable[] m_emptyTable = new BufferedDataTable[2];
-
-    // array with most common super types throughout all tables
-    private DataType[] m_commonDataTypes1;
-
-    // array with most common super types throughout all tables
-    private DataType[] m_commonDataTypes2;
 
     /** Creates a new model. */
     public LoopEnd2NodeModel() {
@@ -98,46 +91,24 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         final DataTableSpec spec0;
-        if (m_settings.ignoreEmptyTables1() || m_settings.tolerateColumnTypes1()) {
+        if (m_settings.ignoreEmptyTables1() || m_settings.tolerateColumnTypes1() || m_settings.tolerateChangingTableSpecs1()) {
             spec0 = null;
         } else {
-            spec0 = createSpec(inSpecs[0], false);
+            ConcatenateTableFactory fac = new ConcatenateTableFactory(m_settings.ignoreEmptyTables1(),
+                m_settings.tolerateColumnTypes1(), m_settings.addIterationColumn(), false, Optional.empty());
+            spec0 = ConcatenateTableFactory.createSpec(inSpecs[0], m_settings.addIterationColumn(), false);
         }
         final DataTableSpec spec1;
-        if (m_settings.ignoreEmptyTables2() || m_settings.tolerateColumnTypes2()) {
+        if (m_settings.ignoreEmptyTables2() || m_settings.tolerateColumnTypes2() || m_settings.tolerateChangingTableSpecs2()) {
             spec1 = null;
         } else {
-            spec1 = createSpec(inSpecs[1], false);
+            spec1 = ConcatenateTableFactory.createSpec(inSpecs[1], m_settings.addIterationColumn(), false);
         }
         return new DataTableSpec[]{spec0, spec1};
     }
 
-    private DataTableSpec createSpec(final DataTableSpec inSpec, final boolean tolerate) {
-        final DataTableSpec outSpec;
-        if (tolerate) {
-            DataColumnSpec[] commonSpecs = new DataColumnSpec[inSpec.getNumColumns()];
-            for (int i = 0; i < commonSpecs.length; i++) {
-                DataColumnSpecCreator cr = new DataColumnSpecCreator(inSpec.getColumnSpec(i));
-                // init with most common types
-                cr.setType(DataType.getType(DataCell.class));
-                commonSpecs[i] = cr.createSpec();
-            }
-            outSpec = new DataTableSpec(commonSpecs);
-        } else {
-            outSpec = inSpec;
-        }
-        if (m_settings.addIterationColumn()) {
-            DataColumnSpecCreator crea = new DataColumnSpecCreator(
-                            DataTableSpec.getUniqueColumnName(outSpec, "Iteration"), IntCell.TYPE);
-            DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
-            return new DataTableSpec(outSpec, newSpec);
-        } else {
-            return outSpec;
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -152,186 +123,54 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
                    + "are trying to create an infinite loop!");
         }
 
-        boolean tolerate1 = m_settings.tolerateColumnTypes1();
-        boolean tolerate2 = m_settings.tolerateColumnTypes2();
+        if(m_tableFactories[0] == null) {
+            //first iteration -> create table factories
+            Optional<Function<RowKey, RowKey>> rowKeyFunc1;
+            Optional<Function<RowKey, RowKey>> rowKeyFunc2;
+            switch(m_settings.rowKeyPolicy()) {
+                case APPEND_SUFFIX:
+                    rowKeyFunc1 = Optional.of(k -> {return new RowKey(k.toString() + "#" + (m_iteration));});
+                    rowKeyFunc2 = Optional.of(k -> {return new RowKey(k.toString() + "#" + (m_iteration));});
+                    break;
+                case GENERATE_NEW:
+                    rowKeyFunc1 = Optional.of(k -> {return new RowKey("Row" + (m_count1++));});
+                    rowKeyFunc2 = Optional.of(k -> {return new RowKey("Row" + (m_count2++));});
+                    break;
+                case UNMODIFIED:
+                default:
+                    rowKeyFunc1 = Optional.empty();
+                    rowKeyFunc2 = Optional.empty();
+            }
 
-        final DataTableSpec inSpec1 = inData[0].getDataTableSpec();
-        final DataTableSpec inSpec2 = inData[1].getDataTableSpec();
-
-        if (m_settings.ignoreEmptyTables1() && inData[0].size() < 1) {
-            if (m_emptyTable[0] == null) {
-                BufferedDataContainer cont = exec.createDataContainer(createSpec(inSpec1, tolerate1));
-                cont.close();
-                m_emptyTable[0] = cont.getTable();
-            }
-        } else if (m_resultContainer[0] == null) {
-            m_resultContainer[0] = exec.createDataContainer(createSpec(inSpec1, tolerate1));
-        }
-        if (m_settings.ignoreEmptyTables2() && inData[1].size() < 1) {
-            if (m_emptyTable[1] == null) {
-                BufferedDataContainer cont = exec.createDataContainer(createSpec(inSpec2, tolerate2));
-                cont.close();
-                m_emptyTable[1] = cont.getTable();
-            }
-        } else if (m_resultContainer[1] == null) {
-            m_resultContainer[1] = exec.createDataContainer(createSpec(inSpec2, tolerate2));
+            m_tableFactories[0] =
+                new ConcatenateTableFactory(m_settings.ignoreEmptyTables1(), m_settings.tolerateColumnTypes1(),
+                    m_settings.addIterationColumn(), m_settings.tolerateChangingTableSpecs1(), rowKeyFunc1);
+            m_tableFactories[1] =
+                new ConcatenateTableFactory(m_settings.ignoreEmptyTables2(), m_settings.tolerateColumnTypes2(),
+                    m_settings.addIterationColumn(), m_settings.tolerateChangingTableSpecs2(), rowKeyFunc2);
         }
 
-        final IntCell currIterCell = new IntCell(m_count);
-        if (!m_settings.ignoreEmptyTables1() || inData[0].size() > 0) {
-            if (m_commonDataTypes1 == null) {
-                m_commonDataTypes1 = new DataType[inSpec1.getNumColumns()];
-            }
-            for (int i = 0; i < inSpec1.getNumColumns(); i++) {
-                final DataType type = inSpec1.getColumnSpec(i).getType();
-                if (m_commonDataTypes1[i] == null) {
-                    m_commonDataTypes1[i] = type;
-                } else {
-                    m_commonDataTypes1[i] = DataType.getCommonSuperType(m_commonDataTypes1[i], type);
-                }
-            }
-            checkSpec(createSpec(inSpec1, tolerate1), m_resultContainer[0].getTableSpec());
-            if (m_settings.addIterationColumn()) {
-                for (DataRow row : inData[0]) {
-                    AppendedColumnRow newRow = new AppendedColumnRow(
-                           createNewRow(row), currIterCell);
-                    m_resultContainer[0].addRowToTable(newRow);
-                }
-            } else {
-                for (DataRow row : inData[0]) {
-                    m_resultContainer[0].addRowToTable(createNewRow(row));
-                }
-            }
-        }
-        if (!m_settings.ignoreEmptyTables2() || inData[1].size() > 0) {
-            if (m_commonDataTypes2 == null) {
-                m_commonDataTypes2 = new DataType[inSpec2.getNumColumns()];
-            }
-            for (int i = 0; i < inSpec2.getNumColumns(); i++) {
-                final DataType type = inSpec2.getColumnSpec(i).getType();
-                if (m_commonDataTypes2[i] == null) {
-                    m_commonDataTypes2[i] = type;
-                } else {
-                    m_commonDataTypes2[i] = DataType.getCommonSuperType(m_commonDataTypes2[i], type);
-                }
-            }
-            checkSpec(createSpec(inSpec2, tolerate2), m_resultContainer[1].getTableSpec());
-            if (m_settings.addIterationColumn()) {
-                for (DataRow row : inData[1]) {
-                    AppendedColumnRow newRow = new AppendedColumnRow(
-                           createNewRow(row), currIterCell);
-                    m_resultContainer[1].addRowToTable(newRow);
-                }
-            } else {
-                for (DataRow row : inData[1]) {
-                    m_resultContainer[1].addRowToTable(createNewRow(row));
-                }
-            }
-        }
+        //add tables to factories
+        m_tableFactories[0].addTable(inData[0], exec);
+        m_tableFactories[1].addTable(inData[1], exec);
 
         final boolean terminateLoop =
             ((LoopStartNodeTerminator)this.getLoopStartNode()).terminateLoop();
         if (terminateLoop) {
-            // this was the last iteration - close container and continue
-            final BufferedDataTable[] outTables = new BufferedDataTable[2];
-            if (m_settings.ignoreEmptyTables1() && m_resultContainer[0] == null) {
-                outTables[0] = m_emptyTable[0];
-            } else {
-                m_resultContainer[0].close();
-                outTables[0] = m_resultContainer[0].getTable();
-            }
-            if (m_settings.ignoreEmptyTables2() && m_resultContainer[1] == null) {
-                outTables[1] = m_emptyTable[1];
-            } else {
-                m_resultContainer[1].close();
-                outTables[1] = m_resultContainer[1].getTable();
-            }
-
-            //bugfix 6482: if the table is empty and are to be ignored, no common data type for a column has to be set
-            if (tolerate1 && (inData[0].size() > 0 || !m_settings.ignoreEmptyTables1())) {
-                DataTableSpec outSpec = outTables[0].getSpec();
-                DataColumnSpec[] cspecs = new DataColumnSpec[outSpec.getNumColumns()];
-                for (int i = 0; i < m_commonDataTypes1.length; i++) {
-                    DataColumnSpecCreator cr = new DataColumnSpecCreator(outSpec.getColumnSpec(i));
-                    cr.setType(m_commonDataTypes1[i]);
-                    cspecs[i] = cr.createSpec();
-                }
-                // add iteration column spec as last column
-                if (m_settings.addIterationColumn()) {
-                    cspecs[cspecs.length - 1] = outSpec.getColumnSpec(cspecs.length - 1);
-                }
-                outTables[0] = exec.createSpecReplacerTable(outTables[0], new DataTableSpec(cspecs));
-            }
-
-            //bugfix 6482: if the table is empty and are to be ignored, no common data type for a column has to be set
-            if (tolerate2 && (inData[1].size() > 0 || !m_settings.ignoreEmptyTables2())) {
-                DataTableSpec outSpec = outTables[1].getSpec();
-                DataColumnSpec[] cspecs = new DataColumnSpec[outSpec.getNumColumns()];
-                for (int i = 0; i < m_commonDataTypes2.length; i++) {
-                    DataColumnSpecCreator cr = new DataColumnSpecCreator(outSpec.getColumnSpec(i));
-                    cr.setType(m_commonDataTypes2[i]);
-                    cspecs[i] = cr.createSpec();
-                }
-                // add iteration column spec as last column
-                if (m_settings.addIterationColumn()) {
-                    cspecs[cspecs.length - 1] = outSpec.getColumnSpec(cspecs.length - 1);
-                }
-                outTables[1] = exec.createSpecReplacerTable(outTables[1], new DataTableSpec(cspecs));
-            }
-
-            m_resultContainer = new BufferedDataContainer[2];
-            m_count = 0;
-
+            m_iteration = 0;
+            m_count1 = 0;
+            m_count2 = 0;
+            BufferedDataTable[] outTables = new BufferedDataTable[2];
+            outTables[0] = m_tableFactories[0].createTable(exec);
+            outTables[1] = m_tableFactories[1].createTable(exec);
             return outTables;
         } else {
             continueLoop();
-            m_count++;
+            m_iteration++;
             return new BufferedDataTable[2];
         }
     }
 
-    /**
-     * Checks if the two given specs are equal in structure and throws an exception if this is not the case.
-     *
-     * @param spec1 The spec to check
-     * @param spec2 The spec to check against
-     * @throws IllegalArgumentException If the two specs are not equal in structure
-     */
-    private void checkSpec(final DataTableSpec spec1, final DataTableSpec spec2) throws IllegalArgumentException {
-        if (!spec1
-                .equalStructure(spec2)) {
-            StringBuilder error =
-                    new StringBuilder(
-                            "Input table's structure differs from reference "
-                                    + "(first iteration) table: ");
-            if (spec1.getNumColumns() != spec2.getNumColumns()) {
-                error.append("different column counts ");
-                error.append(spec1.getNumColumns());
-                error.append(" vs. ").append(spec2.getNumColumns());
-            } else {
-                for (int i = 0; i < spec1.getNumColumns(); i++) {
-                    DataColumnSpec inCol = spec1.getColumnSpec(i);
-                    DataColumnSpec predCol = spec2.getColumnSpec(i);
-                    if (!inCol.equalStructure(predCol)) {
-                        error.append("Column ").append(i).append(" [");
-                        error.append(inCol).append("] vs. [");
-                        error.append(predCol).append("]");
-                    }
-                }
-            }
-            throw new IllegalArgumentException(error.toString());
-        }
-    }
-
-    private DataRow createNewRow(final DataRow row) {
-        RowKey newKey;
-        if (m_settings.uniqueRowIDs()) {
-            newKey = new RowKey(row.getKey() + "#" + m_count);
-        } else {
-            newKey = row.getKey();
-        }
-        return new DefaultRow(newKey, row);
-    }
 
     /**
      * {@inheritDoc}
@@ -357,11 +196,10 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
      */
     @Override
     protected void reset() {
-        m_resultContainer = new BufferedDataContainer[2];
-        m_emptyTable = new BufferedDataTable[2];
-        m_commonDataTypes1 = null;
-        m_commonDataTypes2 = null;
-        m_count = 0;
+        m_count1 = 0;
+        m_count2 = 0;
+        m_iteration = 0;
+        Arrays.fill(m_tableFactories, null);
     }
 
     /**

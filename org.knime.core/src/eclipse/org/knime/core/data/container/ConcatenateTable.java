@@ -47,12 +47,12 @@ package org.knime.core.data.container;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.append.AppendedRowsTable;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -60,10 +60,13 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.DuplicateChecker;
+import org.knime.core.util.DuplicateKeyException;
 
 /**
  *
  * @author Bernd Wiswedel, University of Konstanz
+ *
  */
 public final class ConcatenateTable implements KnowsRowCountTable {
     private static final String CFG_INTERNAL_META = "meta_internal";
@@ -71,14 +74,33 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     private static final String CFG_ROW_COUNT = "table_rowcount";
     private static final String CFG_ROW_COUNT_L = "table_rowcount_long";
 
-    private final BufferedDataTable[] m_tables;
-    private final DataTableSpec m_spec;
-    private final long m_rowCount;
+    private AppendedRowsTable m_tablesWrapper;
+    private long m_rowCount;
+    private BufferedDataTable[] m_tables;
+    private DataTableSpec m_spec;
 
-    private ConcatenateTable(final BufferedDataTable[] tables, final DataTableSpec spec, final long rowCount) {
-        m_tables = tables;
-        m_spec = spec;
+    private ConcatenateTable(final BufferedDataTable[] tables, final long rowCount) {
         m_rowCount = rowCount;
+
+        // check whether all specs are the same and pass that spec using createSpec(specs);
+        DataTableSpec firstSpec = tables[0].getDataTableSpec();
+        for (int i = 1; i < tables.length; i++) {
+            if (!firstSpec.equalStructure(tables[i].getDataTableSpec())) {
+                //table specs don't match -> we need to use the AppendedRowsTable
+                //create a new wrapper table without duplicate checking (was done already on creation)
+                m_tablesWrapper = new AppendedRowsTable(AppendedRowsTable.DuplicatePolicy.Fail, null, tables);
+                m_spec = m_tablesWrapper.getDataTableSpec();
+            }
+        }
+        if(m_tablesWrapper == null) {
+            //all table specs are equal
+            DataTableSpec[] specs = new DataTableSpec[tables.length];
+            for (int i = 0; i < specs.length; i++) {
+                specs[i] = tables[i].getDataTableSpec();
+            }
+            m_spec = createSpec(specs);
+        }
+        m_tables = tables;
     }
 
     /** Internal use.
@@ -134,7 +156,12 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     /** {@inheritDoc} */
     @Override
     public CloseableRowIterator iterator() {
-        return new MyIterator();
+        // return MyIterator if all specs are the same indicated by m_tablesWrapper == null
+        if(m_tablesWrapper == null) {
+            return new MyIterator();
+        } else {
+            return m_tablesWrapper.iterator(null, -1);
+        }
     }
 
     /** {@inheritDoc} */
@@ -188,41 +215,71 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         for (int i = 0; i < tables.length; i++) {
             tables[i] = BufferedDataTable.getDataTable(tblRep, referenceIDs[i]);
         }
-        return new ConcatenateTable(tables, spec, rowCount);
+        return new ConcatenateTable(tables, rowCount);
     }
 
-    /** Creates a new table from argument tables.
+    /**
+     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables.
+     *
      * @param mon for progress info/cancellation
+     * @param checkForDuplicates if for duplicates should be checked. If <code>false</code> the row keys of the input
+     *            tables MUST be unique over all tables!
      * @param tables Tables to put together.
      * @return The new table.
      * @throws CanceledExecutionException If cancelled.
      */
-    public static ConcatenateTable create(
-            final ExecutionMonitor mon, final BufferedDataTable... tables)
-            throws CanceledExecutionException {
-        DataTableSpec[] specs = new DataTableSpec[tables.length];
+    public static ConcatenateTable create(final ExecutionMonitor mon, final boolean checkForDuplicates,
+        final BufferedDataTable... tables) throws CanceledExecutionException {
+        if(checkForDuplicates) {
+            return ConcatenateTable.create(mon, tables);
+        } else {
+            long rowCount = 0;
+            for (int i = 0; i < tables.length; i++) {
+                rowCount += tables[i].size();
+            }
+            return new ConcatenateTable(tables, rowCount);
+        }
+    }
+
+    /**
+     * Creates a new table from argument tables. This methods checks for row key duplicates over all given tables.
+     *
+     * @param mon for progress info/cancellation
+     * @param tables Tables to put together.
+     * @return The new table.
+     * @throws CanceledExecutionException If cancelled.
+     * @throws IOException
+     * @throws DuplicateKeyException
+     */
+    public static ConcatenateTable create(final ExecutionMonitor mon, final BufferedDataTable... tables)
+        throws CanceledExecutionException {
         long rowCount = 0;
         for (int i = 0; i < tables.length; i++) {
-            specs[i] = tables[i].getDataTableSpec();
             rowCount += tables[i].size();
         }
-        DataTableSpec finalSpec = createSpec(specs);
-        HashSet<RowKey> hash = new HashSet<RowKey>();
+        DuplicateChecker check = new DuplicateChecker();
         int r = 0;
         for (int i = 0; i < tables.length; i++) {
             for (DataRow row : tables[i]) {
                 RowKey key = row.getKey();
-                if (!hash.add(key)) {
+                try {
+                    check.addKey(key.toString());
+                } catch (DuplicateKeyException | IOException ex) {
                     throw new IllegalArgumentException("Duplicate row key \""
                             + key + "\" in table with index " + i);
                 }
                 r++;
-                mon.setProgress(r / (double)rowCount, "Checking tables, row "
-                        + r + "/" + rowCount + " (\"" + row.getKey() + "\")");
+                mon.setProgress(r / (double)rowCount,
+                    "Checking tables, row " + r + "/" + rowCount + " (\"" + row.getKey() + "\")");
             }
             mon.checkCanceled();
         }
-        return new ConcatenateTable(tables, finalSpec, rowCount);
+        try {
+            check.checkForDuplicates();
+        } catch (DuplicateKeyException | IOException ex) {
+            throw new IllegalArgumentException("Duplicate row keys");
+        }
+        return new ConcatenateTable(tables, rowCount);
     }
 
     /** Creates merged table spec.

@@ -60,12 +60,12 @@ import java.util.Vector;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.data.append.row.AppendedRowsIterator;
 import org.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
-import org.knime.base.data.append.row.AppendedRowsTable;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.append.AppendedRowsIterator;
+import org.knime.core.data.append.AppendedRowsTable;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;

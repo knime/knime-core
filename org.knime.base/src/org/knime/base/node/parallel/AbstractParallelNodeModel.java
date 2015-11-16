@@ -52,10 +52,10 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-import org.knime.base.data.append.row.AppendedRowsTable;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.append.AppendedRowsTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.RowAppender;
 import org.knime.core.node.BufferedDataContainer;

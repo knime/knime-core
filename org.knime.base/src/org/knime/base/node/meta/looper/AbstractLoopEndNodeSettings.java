@@ -54,10 +54,42 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class AbstractLoopEndNodeSettings {
 
+    /** Specifies how to generate the row keys */
+    enum RowKeyPolicy {
+
+        /** Generates entirely new row keys, Row0, Row1, ... */
+        GENERATE_NEW("Generate new row IDs"),
+
+            /** Appends a suffix (#1, #2, ...) in order to unique the row keys */
+        APPEND_SUFFIX("Unique row IDs by appending a suffix"),
+
+            /** Leaves the row keys unmodified. Node execution fails if duplicates are detected. */
+        UNMODIFIED("Leave row IDs unmodified");
+
+        private String m_label;
+
+        /**
+         * Creates a new row key policy with a given label that
+         * will appear in the node dialog.
+         */
+        private RowKeyPolicy(final String label) {
+            m_label = label;
+        }
+
+        /**
+         * @return the label that will appear in the node dialog
+         */
+        String label() {
+            return m_label;
+        }
+
+    }
+
     private boolean m_addIterationColumn = true;
 
-    /** @since 2.3 */
-    private boolean m_uniqueRowIDs = true;
+    /** @since 3.1 */
+    private RowKeyPolicy m_rowKeyPolicy = RowKeyPolicy.APPEND_SUFFIX;
+
 
     /**
      *
@@ -71,10 +103,18 @@ public class AbstractLoopEndNodeSettings {
      *
      * @param b <code>true</code> if the iteration number is added,
      *            <code>false</code> otherwise
+     *
+     * Deprecated: use {@link #rowKeyPolicy(RowKeyPolicy)} instead
+     *
      * @since 2.3
      */
+    @Deprecated
     public void uniqueRowIDs(final boolean b) {
-        m_uniqueRowIDs = b;
+        if(b) {
+            m_rowKeyPolicy = RowKeyPolicy.APPEND_SUFFIX;
+        } else {
+            m_rowKeyPolicy = RowKeyPolicy.UNMODIFIED;
+        }
     }
 
     /**
@@ -82,10 +122,29 @@ public class AbstractLoopEndNodeSettings {
      *
      * @return <code>true</code> if the iteration number is added,
      *         <code>false</code> otherwise
+     * Deprecated: use {@link #rowKeyPolicy()} instead
+     *
      * @since 2.3
      */
+    @Deprecated
     public boolean uniqueRowIDs() {
-        return m_uniqueRowIDs;
+        return m_rowKeyPolicy == RowKeyPolicy.APPEND_SUFFIX;
+    }
+
+    /**
+     * @param the row key policy specifying whether row keys are to be newly generated, a suffix is appended or remain
+     *            unmodified
+     */
+    public void rowKeyPolicy(final RowKeyPolicy policy) {
+        m_rowKeyPolicy = policy;
+    }
+
+    /**
+     * @return the row key policy specifying whether row keys are to be newly generated, a suffix is appended or remain
+     *         unmodified
+     */
+    public RowKeyPolicy rowKeyPolicy() {
+        return m_rowKeyPolicy;
     }
 
     /**
@@ -117,7 +176,7 @@ public class AbstractLoopEndNodeSettings {
      */
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addBoolean("addIterationColumn", m_addIterationColumn);
-        settings.addBoolean("uniqueRowIDs", m_uniqueRowIDs);
+        settings.addString("rowKeyPolicy", m_rowKeyPolicy.name());
     }
 
     /**
@@ -127,7 +186,19 @@ public class AbstractLoopEndNodeSettings {
      */
     public void loadSettings(final NodeSettingsRO settings) {
         m_addIterationColumn = settings.getBoolean("addIterationColumn", true);
-        m_uniqueRowIDs = settings.getBoolean("uniqueRowIDs", true);
+
+        //old settings -> check for backwards compatibility
+        if (settings.containsKey("uniqueRowIDs")) {
+            boolean uniqueRowIDs = settings.getBoolean("uniqueRowIDs", false);
+            if (uniqueRowIDs) {
+                m_rowKeyPolicy = RowKeyPolicy.APPEND_SUFFIX;
+            } else {
+                m_rowKeyPolicy = RowKeyPolicy.UNMODIFIED;
+            }
+        } else {
+            String rowKeyPolicy = settings.getString("rowKeyPolicy", RowKeyPolicy.APPEND_SUFFIX.name());
+            m_rowKeyPolicy = RowKeyPolicy.valueOf(rowKeyPolicy);
+        }
     }
 
 }

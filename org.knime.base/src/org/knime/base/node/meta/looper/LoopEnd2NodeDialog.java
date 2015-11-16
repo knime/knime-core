@@ -61,6 +61,9 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
     private final JCheckBox m_tolerateColumnTypes1 = new JCheckBox("Allow variable column types at port 1");
     private final JCheckBox m_tolerateColumnTypes2 = new JCheckBox("Allow variable column types at port 2");
 
+    private final JCheckBox m_tolerateChangingSpecs1 = new JCheckBox("Tolerate changing table specifications at port 1");
+    private final JCheckBox m_tolerateChangingSpecs2 = new JCheckBox("Tolerate changing table specifications at port 2");
+
     /**
      *
      */
@@ -70,6 +73,8 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
         addComponent(m_ignoreEmptyTables2);
         addComponent(m_tolerateColumnTypes1);
         addComponent(m_tolerateColumnTypes2);
+        addComponent(m_tolerateChangingSpecs1);
+        addComponent(m_tolerateChangingSpecs2);
     }
 
     /**
@@ -81,6 +86,8 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
         settings.ignoreEmptyTables2(m_ignoreEmptyTables2.isSelected());
         settings.tolerateColumnTypes1(m_tolerateColumnTypes1.isSelected());
         settings.tolerateColumnTypes2(m_tolerateColumnTypes2.isSelected());
+        settings.tolerateChangingTableSpecs1(m_tolerateChangingSpecs1.isSelected());
+        settings.tolerateChangingTableSpecs2(m_tolerateChangingSpecs2.isSelected());
     }
 
     /**
@@ -92,6 +99,8 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
         m_ignoreEmptyTables2.setSelected(settings.ignoreEmptyTables2());
         m_tolerateColumnTypes1.setSelected(settings.tolerateColumnTypes1());
         m_tolerateColumnTypes2.setSelected(settings.tolerateColumnTypes2());
+        m_tolerateChangingSpecs1.setSelected(settings.tolerateChangingTableSpecs1());
+        m_tolerateChangingSpecs2.setSelected(settings.tolerateChangingTableSpecs2());
     }
 
 }

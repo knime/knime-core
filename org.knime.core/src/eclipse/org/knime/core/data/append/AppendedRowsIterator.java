@@ -43,7 +43,7 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.data.append.row;
+package org.knime.core.data.append;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,8 +51,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.knime.base.data.append.column.AppendedColumnRow;
-import org.knime.base.data.append.row.AppendedRowsTable.DuplicatePolicy;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -60,8 +58,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.append.AppendedRowsTable.DuplicatePolicy;
+import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.data.container.CloseableRowIterator;
-import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -70,12 +69,11 @@ import org.knime.core.util.Pair;
 
 /**
  * Iterator over an {@link AppendedRowsTable}.
- *
- * Deprecated: moved to core - use {@link org.knime.core.data.append.AppendedRowsIterator} instead.
+ * Has {@link BlobSupportDataRow} support.
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 3.1
  */
-@Deprecated
 public class AppendedRowsIterator extends CloseableRowIterator {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(AppendedRowsIterator.class);
@@ -305,11 +303,12 @@ public class AppendedRowsIterator extends CloseableRowIterator {
             nextRow = baseRow;
         }
         if (keyHasChanged) {
+            final boolean blobRow = (nextRow instanceof BlobSupportDataRow);
             DataCell[] cells = new DataCell[nextRow.getNumCells()];
             for (int i = 0; i < cells.length; i++) {
-                cells[i] = nextRow.getCell(i);
+                cells[i] = blobRow ? ((BlobSupportDataRow)nextRow).getRawCell(i) : nextRow.getCell(i);
             }
-            m_nextRow = new DefaultRow(key, cells);
+            m_nextRow = new BlobSupportDataRow(key, cells);
         } else {
             m_nextRow = nextRow;
         }

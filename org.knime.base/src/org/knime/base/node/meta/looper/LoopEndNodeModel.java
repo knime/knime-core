@@ -49,18 +49,11 @@ package org.knime.base.node.meta.looper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
+import java.util.function.Function;
 
-import org.knime.base.data.append.column.AppendedColumnRow;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -84,17 +77,18 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
 
     private long m_startTime;
 
-    private BufferedDataContainer m_resultContainer;
+    //overall row count
+    private long m_count = 0;
 
-    private int m_count;
+    //current iteration
+    private int m_iteration = 0;
+
+    /* Helper factory to collect the intermediate tables and create
+     * the final concatenated table. */
+    private ConcatenateTableFactory m_tableFactory;
 
     private final LoopEndNodeSettings m_settings = new LoopEndNodeSettings();
 
-    // store the first table in case all data tables are empty
-    private BufferedDataTable m_emptyTable = null;
-
-    // array with most common super types throughout all tables
-    private DataType[] m_commonDataTypes;
 
     /** Creates a new model. */
     public LoopEndNodeModel() {
@@ -107,36 +101,13 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_settings.ignoreEmptyTables() || m_settings.tolerateColumnTypes()) {
+        if (m_settings.ignoreEmptyTables() || m_settings.tolerateColumnTypes() || m_settings.tolerateChangingTableSpecs()) {
             return new DataTableSpec[]{null};
         } else {
-            return new DataTableSpec[]{createSpec(inSpecs[0])};
+            return new DataTableSpec[]{ConcatenateTableFactory.createSpec(inSpecs[0], m_settings.addIterationColumn(), false)};
         }
     }
 
-    private DataTableSpec createSpec(final DataTableSpec inSpec) {
-        final DataTableSpec outSpec;
-        if (m_settings.tolerateColumnTypes()) {
-            DataColumnSpec[] commonSpecs = new DataColumnSpec[inSpec.getNumColumns()];
-            for (int i = 0; i < commonSpecs.length; i++) {
-                DataColumnSpecCreator cr = new DataColumnSpecCreator(inSpec.getColumnSpec(i));
-                // init with most common types
-                cr.setType(DataType.getType(DataCell.class));
-                commonSpecs[i] = cr.createSpec();
-            }
-            outSpec = new DataTableSpec(commonSpecs);
-        } else {
-            outSpec = inSpec;
-        }
-        if (m_settings.addIterationColumn()) {
-            DataColumnSpecCreator crea = new DataColumnSpecCreator(
-                            DataTableSpec.getUniqueColumnName(outSpec, "Iteration"), IntCell.TYPE);
-            DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
-            return new DataTableSpec(outSpec, newSpec);
-        } else {
-            return outSpec;
-        }
-    }
 
     /** {@inheritDoc} */
     @Override
@@ -148,110 +119,42 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
                     + " to matching/corresponding Loop Start node. You"
                     + " are trying to create an infinite loop!");
         }
-        BufferedDataTable in = inData[0];
-        DataTableSpec inSpec = in.getSpec();
-        if (m_settings.ignoreEmptyTables() && in.size() < 1) {
-            if (m_emptyTable == null) {
-                BufferedDataContainer cont = exec.createDataContainer(createSpec(inSpec));
-                cont.close();
-                m_emptyTable = cont.getTable();
-            }
-        } else {
-            if (m_commonDataTypes == null) {
-                m_commonDataTypes = new DataType[inSpec.getNumColumns()];
-            }
-            for (int i = 0; i < inSpec.getNumColumns(); i++) {
-                final DataType type = inSpec.getColumnSpec(i).getType();
-                if (m_commonDataTypes[i] == null) {
-                    m_commonDataTypes[i] = type;
-                } else {
-                    m_commonDataTypes[i] = DataType.getCommonSuperType(m_commonDataTypes[i], type);
-                }
-            }
-            DataTableSpec amendedSpec = createSpec(inSpec);
-            if (m_resultContainer == null) {
-                // first time we are getting to this: open container
-                m_startTime = System.currentTimeMillis();
-                m_resultContainer = exec.createDataContainer(amendedSpec);
-            } else if (!amendedSpec.equalStructure(m_resultContainer.getTableSpec())) {
-                DataTableSpec predSpec = m_resultContainer.getTableSpec();
-                StringBuilder error = new StringBuilder(
-                    "Input table's structure differs from reference (first iteration) table: ");
-                if (amendedSpec.getNumColumns() != predSpec.getNumColumns()) {
-                    error.append("different column counts ");
-                    error.append(amendedSpec.getNumColumns());
-                    error.append(" vs. ").append(predSpec.getNumColumns());
-                } else {
-                    for (int i = 0; i < amendedSpec.getNumColumns(); i++) {
-                        DataColumnSpec inCol = amendedSpec.getColumnSpec(i);
-                        DataColumnSpec predCol = predSpec.getColumnSpec(i);
-                        if (!inCol.equalStructure(predCol)) {
-                            error.append("Column ").append(i).append(" [");
-                            error.append(inCol).append("] vs. [");
-                            error.append(predCol).append("]");
-                        }
-                    }
-                }
-                throw new IllegalArgumentException(error.toString());
-            }
 
-            if (m_settings.addIterationColumn()) {
-                IntCell currIterCell = new IntCell(m_count);
-                for (DataRow row : in) {
-                    AppendedColumnRow newRow = new AppendedColumnRow(createNewRow(row), currIterCell);
-                    m_resultContainer.addRowToTable(newRow);
-                }
-            } else {
-                for (DataRow row : in) {
-                    m_resultContainer.addRowToTable(createNewRow(row));
-                }
+        if(m_tableFactory == null) {
+            //first time we get here: create table factory
+            Optional<Function<RowKey, RowKey>> rowKeyFunc;
+            switch(m_settings.rowKeyPolicy()) {
+                case APPEND_SUFFIX:
+                    rowKeyFunc = Optional.of(k -> {return new RowKey(k.toString() + "#" + (m_iteration));});
+                    break;
+                case GENERATE_NEW:
+                    rowKeyFunc = Optional.of(k -> {return new RowKey("Row" + (m_count++));});
+                    break;
+                case UNMODIFIED:
+                default:
+                    rowKeyFunc = Optional.empty();
             }
+            m_tableFactory = new ConcatenateTableFactory(m_settings.ignoreEmptyTables(),
+                m_settings.tolerateColumnTypes(), m_settings.addIterationColumn(), m_settings.tolerateChangingTableSpecs(), rowKeyFunc);
+            m_startTime = System.currentTimeMillis();
         }
+
+        m_tableFactory.addTable(inData[0], exec);
 
         boolean terminateLoop = ((LoopStartNodeTerminator)this.getLoopStartNode()).terminateLoop();
         if (terminateLoop) {
-            if (m_settings.ignoreEmptyTables() && m_resultContainer == null) {
-                return new BufferedDataTable[]{m_emptyTable};
-            } else {
-                // this was the last iteration - close container and continue
-                m_resultContainer.close();
-                BufferedDataTable outTable = m_resultContainer.getTable();
-                if (m_settings.tolerateColumnTypes()) {
-                    DataTableSpec outSpec = outTable.getSpec();
-                    DataColumnSpec[] cspecs = new DataColumnSpec[outSpec.getNumColumns()];
-                    for (int i = 0; i < m_commonDataTypes.length; i++) {
-                        DataColumnSpecCreator cr = new DataColumnSpecCreator(outSpec.getColumnSpec(i));
-                        cr.setType(m_commonDataTypes[i]);
-                        cspecs[i] = cr.createSpec();
-                    }
-                    // add iteration column spec as last column
-                    if (m_settings.addIterationColumn()) {
-                        cspecs[cspecs.length - 1] = outSpec.getColumnSpec(cspecs.length - 1);
-                    }
-                    outTable = exec.createSpecReplacerTable(outTable, new DataTableSpec(cspecs));
-                }
-                m_resultContainer = null;
-                m_count = 0;
-                LOGGER.debug("Total loop execution time: " + (System.currentTimeMillis() - m_startTime) + "ms");
-                m_startTime = 0;
-                return new BufferedDataTable[]{outTable};
-            }
+            LOGGER.debug("Total loop execution time: " + (System.currentTimeMillis() - m_startTime) + "ms");
+            m_startTime = 0;
+            m_iteration = 0;
+            m_count = 0;
+            return new BufferedDataTable[]{m_tableFactory.createTable(exec)};
         } else {
+            m_iteration++;
             continueLoop();
-            m_count++;
             return new BufferedDataTable[1];
         }
     }
 
-    private DataRow createNewRow(final DataRow row) {
-        RowKey newKey;
-        if (m_settings.uniqueRowIDs()) {
-            newKey = new RowKey(row.getKey() + "#" + m_count);
-        } else {
-            newKey = row.getKey();
-        }
-        return new DefaultRow(newKey, row);
-    }
 
     /**
      * {@inheritDoc}
@@ -277,11 +180,10 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
      */
     @Override
     protected void reset() {
-        m_resultContainer = null;
-        m_emptyTable = null;
-        m_commonDataTypes = null;
-        m_count = 0;
         m_startTime = 0;
+        m_tableFactory = null;
+        m_count = 0;
+        m_iteration = 0;
     }
 
     /**

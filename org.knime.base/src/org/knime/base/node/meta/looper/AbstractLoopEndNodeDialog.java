@@ -48,11 +48,18 @@ package org.knime.base.node.meta.looper;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
+import java.util.Enumeration;
 
+import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 
+import org.knime.base.node.meta.looper.AbstractLoopEndNodeSettings.RowKeyPolicy;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -70,7 +77,8 @@ import org.knime.core.node.NotConfigurableException;
 public abstract class AbstractLoopEndNodeDialog<T extends AbstractLoopEndNodeSettings> extends NodeDialogPane {
 
     private final JCheckBox m_addIterationColumn = new JCheckBox("Add iteration column");
-    private final JCheckBox m_uniqueRowIDs = new JCheckBox("Uniquify row IDs");
+
+    private final ButtonGroup m_rowKeyPolicy = new ButtonGroup();
 
     private final T m_settings;
 
@@ -92,9 +100,19 @@ public abstract class AbstractLoopEndNodeDialog<T extends AbstractLoopEndNodeSet
         m_gbc.gridy = 0;
         m_gbc.anchor = GridBagConstraints.WEST;
         m_gbc.insets = new Insets(0, 0, 5, 0);
-        m_panel.add(m_addIterationColumn, m_gbc);
+
+        JPanel rkPolicyPanel = new JPanel(new GridLayout(RowKeyPolicy.values().length, 1));
+        rkPolicyPanel.setBorder(BorderFactory.createTitledBorder("Row key policy"));
+        for (RowKeyPolicy p : RowKeyPolicy.values()) {
+            JRadioButton rButton = new JRadioButton(p.label());
+            rButton.setActionCommand(p.name());
+            m_rowKeyPolicy.add(rButton);
+            rkPolicyPanel.add(rButton);
+        }
+        m_panel.add(rkPolicyPanel, m_gbc);
         m_gbc.gridy++;
-        m_panel.add(m_uniqueRowIDs, m_gbc);
+
+        m_panel.add(m_addIterationColumn, m_gbc);
 
         addTab("Standard settings", m_panel);
     }
@@ -116,7 +134,7 @@ public abstract class AbstractLoopEndNodeDialog<T extends AbstractLoopEndNodeSet
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         m_settings.addIterationColumn(m_addIterationColumn.isSelected());
-        m_settings.uniqueRowIDs(m_uniqueRowIDs.isSelected());
+        m_settings.rowKeyPolicy(RowKeyPolicy.valueOf(m_rowKeyPolicy.getSelection().getActionCommand()));
         addToSettings(m_settings);
         m_settings.saveSettings(settings);
     }
@@ -136,7 +154,11 @@ public abstract class AbstractLoopEndNodeDialog<T extends AbstractLoopEndNodeSet
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettings(settings);
         m_addIterationColumn.setSelected(m_settings.addIterationColumn());
-        m_uniqueRowIDs.setSelected(m_settings.uniqueRowIDs());
+        RowKeyPolicy p = m_settings.rowKeyPolicy();
+        for (Enumeration<AbstractButton> e = m_rowKeyPolicy.getElements(); e.hasMoreElements();) {
+            AbstractButton b = e.nextElement();
+            b.setSelected(b.getActionCommand().equals(p.name()));
+        }
         loadFromSettings(m_settings);
     }
 

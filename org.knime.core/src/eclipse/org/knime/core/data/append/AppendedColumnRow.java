@@ -43,7 +43,7 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.data.append.column;
+package org.knime.core.data.append;
 
 import java.util.Iterator;
 
@@ -57,11 +57,9 @@ import org.knime.core.data.def.DefaultCellIterator;
  * A {@link org.knime.core.data.DataRow} that is extended by one or more
  * cells.
  *
- * Deprecated: moved to core - use {@link org.knime.core.data.append.AppendedColumnRow} instead.
- *
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 3.1
  */
-@Deprecated
 public class AppendedColumnRow implements DataRow {
 
     private final DataRow m_baseRow;

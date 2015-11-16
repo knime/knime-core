@@ -43,14 +43,13 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.data.append.row;
+package org.knime.core.data.append;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.knime.base.data.append.row.AppendedRowsIterator.PairSupplier;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -61,6 +60,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.append.AppendedRowsIterator.PairSupplier;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.Pair;
@@ -78,18 +78,15 @@ import org.knime.core.util.Pair;
  * The order of colums of this table is determined by the order of the top table
  * (the first array argument in the constructor)
  *
- * Deprecated: moved to core - use {@link org.knime.core.data.append.AppendedRowsTable} instead.
- *
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 3.1
  */
-@Deprecated
 public class AppendedRowsTable implements DataTable {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(AppendedRowsTable.class);
 
     /** How to deal with duplicate row ids. */
-    @Deprecated
     public enum DuplicatePolicy {
         /** Skip duplicate occurrence. */
         Skip,

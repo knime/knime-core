@@ -64,6 +64,9 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
     /** @since 2.11 */
     private boolean m_tolerateColumnTypes = false;
 
+    /** @since 3.1 */
+    private boolean m_tolerateChangingSpecs = false;
+
     /**
      * Sets if iterations with empty tables are ignored in the output.
      *
@@ -106,6 +109,28 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
         return m_tolerateColumnTypes;
     }
 
+
+    /**
+     * Returns if changing tables specs are to be tolerated
+     *
+     * @param tolerate <code>true</code> changes are tolerated and missing values are inserted for missing column in
+     *            respective iterations <code>false</code> the node fails if table spec varies
+     */
+    public void tolerateChangingTableSpecs(final boolean tolerate) {
+        m_tolerateChangingSpecs = tolerate;
+    }
+
+    /**
+     * Returns if changing tables specs are to be tolerated
+     *
+     * @return <code>true</code> changes are tolerated and missing values are inserted for missing column in respective
+     *         iterations
+     *         <code>false</code> the node fails if table spec varies
+     */
+    public boolean tolerateChangingTableSpecs() {
+        return m_tolerateChangingSpecs;
+    }
+
     /**
      * Writes the settings into the node settings object.
      *
@@ -116,6 +141,7 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
         super.saveSettings(settings);
         settings.addBoolean("ignoreEmptyTables", m_ignoreEmptyTables);
         settings.addBoolean("tolerateColumnTypes", m_tolerateColumnTypes);
+        settings.addBoolean("tolerateChangingSpecs", m_tolerateChangingSpecs);
     }
 
     /**
@@ -128,5 +154,6 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
         super.loadSettings(settings);
         m_ignoreEmptyTables = settings.getBoolean("ignoreEmptyTables", false);
         m_tolerateColumnTypes = settings.getBoolean("tolerateColumnTypes", false);
+        m_tolerateChangingSpecs = settings.getBoolean("tolerateChangingSpecs", false);
     }
 }

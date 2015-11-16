@@ -43,18 +43,18 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.data.append.row;
+package org.knime.core.data.append;
 
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-import org.knime.base.data.append.row.AppendedRowsIterator.PairSupplier;
-import org.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
-import org.knime.base.data.append.row.AppendedRowsTable.DuplicatePolicy;
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.append.AppendedRowsIterator.PairSupplier;
+import org.knime.core.data.append.AppendedRowsIterator.RuntimeCanceledExecutionException;
+import org.knime.core.data.append.AppendedRowsTable.DuplicatePolicy;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.util.CheckUtils;
@@ -64,13 +64,10 @@ import org.knime.core.util.Pair;
  * Extended {@link RowInput} that pulls its data from an array of argument {@link RowInput}. For duplicate Row-ID
  * handling, column mis-matches etc. see {@link AppendedRowsTable} for details.
  *
- * Deprecated: moved to core - use {@link org.knime.core.data.append.AppendedRowsRowInput} instead.
- *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.12
+ * @since 3.1
  */
-@Deprecated
-public final class AppendedRowsRowInput extends RowInput {
+public class AppendedRowsRowInput extends RowInput {
 
     /** The iterator reading the data. */
     private final AppendedRowsIterator m_iterator;
@@ -116,7 +113,7 @@ public final class AppendedRowsRowInput extends RowInput {
 
     /**
      * @return number rows skipped as per duplicate handling.
-     * @see org.knime.base.data.append.row.AppendedRowsIterator#getNrRowsSkipped()
+     * @see org.knime.core.data.append.base.data.append.row.AppendedRowsIterator#getNrRowsSkipped()
      */
     public int getNrRowsSkipped() {
         return m_iterator.getNrRowsSkipped();
@@ -126,7 +123,7 @@ public final class AppendedRowsRowInput extends RowInput {
 
     /**
      * @return de-duplicate map, used for hilite translation
-     * @see org.knime.base.data.append.row.AppendedRowsIterator#getDuplicateNameMap()
+     * @see org.knime.core.data.append.base.data.append.row.AppendedRowsIterator#getDuplicateNameMap()
      */
     public Map<RowKey, RowKey> getDuplicateNameMap() {
         return m_iterator.getDuplicateNameMap();

@@ -40,55 +40,79 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * Created on Nov 28, 2013 by Patrick Winter, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.base.node.meta.looper;
+package org.knime.core.data.append;
 
-import javax.swing.JCheckBox;
+import java.util.Iterator;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultCellIterator;
+
 
 /**
+ * A row that takes a base row and re-sorts the cells in it according to an
+ * <code>int[]</code> parameter passed in the constructor.
  *
- * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * @author Bernd Wiswedel, University of Konstanz
+ * @since 3.1
  */
-public class LoopEndNodeDialog extends AbstractLoopEndNodeDialog<LoopEndNodeSettings> {
+public class ResortedCellsRow implements DataRow {
 
-    private final JCheckBox m_ignoreEmptyTables = new JCheckBox("Ignore empty input tables");
+    private final DataRow m_row;
 
-    private final JCheckBox m_tolerateColumnTypes = new JCheckBox("Allow variable column types");
+    private final int[] m_sort;
 
-    private final JCheckBox m_tolerateChangingSpecs = new JCheckBox("Tolerate changing table specifications");
-
-    /** Create a new dialog.  */
-    public LoopEndNodeDialog() {
-        super(new LoopEndNodeSettings());
-        addComponent(m_ignoreEmptyTables);
-        addComponent(m_tolerateColumnTypes);
-        addComponent(m_tolerateChangingSpecs);
+    /**
+     * Creates new row with <code>row</code> as underlying base row and
+     * <code>sort</code> the new sorting scheme. That is the old
+     * <code>i</code>-th entry becomes entry number <code>sort[i]</code>.
+     *
+     * @param row the base row
+     * @param sort the re-sorting
+     * @throws IllegalArgumentException if the lengths of arrays don't match
+     * @throws NullPointerException if either argument is <code>null</code>
+     */
+    protected ResortedCellsRow(final DataRow row, final int[] sort) {
+        if (row.getNumCells() != sort.length) {
+            throw new IllegalArgumentException("Length don't match.");
+        }
+        m_row = row;
+        m_sort = sort;
     }
 
     /**
      * {@inheritDoc}
-     * @since 2.9
      */
     @Override
-    protected void addToSettings(final LoopEndNodeSettings settings) {
-        settings.ignoreEmptyTables(m_ignoreEmptyTables.isSelected());
-        settings.tolerateColumnTypes(m_tolerateColumnTypes.isSelected());
-        settings.tolerateChangingTableSpecs(m_tolerateChangingSpecs.isSelected());
+    public int getNumCells() {
+        return m_row.getNumCells();
     }
 
     /**
      * {@inheritDoc}
-     * @since 2.9
      */
     @Override
-    protected void loadFromSettings(final LoopEndNodeSettings settings) {
-        m_ignoreEmptyTables.setSelected(settings.ignoreEmptyTables());
-        m_tolerateColumnTypes.setSelected(settings.tolerateColumnTypes());
-        m_tolerateChangingSpecs.setSelected(settings.tolerateChangingTableSpecs());
+    public RowKey getKey() {
+        return m_row.getKey();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataCell getCell(final int index) {
+        return m_row.getCell(m_sort[index]);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Iterator<DataCell> iterator() {
+        return new DefaultCellIterator(this);
+    }
 }

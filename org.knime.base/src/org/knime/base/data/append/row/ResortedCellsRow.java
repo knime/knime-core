@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.data.append.row;
 
@@ -56,9 +56,12 @@ import org.knime.core.data.def.DefaultCellIterator;
 /**
  * A row that takes a base row and re-sorts the cells in it according to an
  * <code>int[]</code> parameter passed in the constructor.
- * 
+ *
+ * Deprecated: moved to core - use {@link org.knime.core.data.append.ResortedCellsRow} instead.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@Deprecated
 public class ResortedCellsRow implements DataRow {
 
     private final DataRow m_row;
@@ -69,7 +72,7 @@ public class ResortedCellsRow implements DataRow {
      * Creates new row with <code>row</code> as underlying base row and
      * <code>sort</code> the new sorting scheme. That is the old
      * <code>i</code>-th entry becomes entry number <code>sort[i]</code>.
-     * 
+     *
      * @param row the base row
      * @param sort the re-sorting
      * @throws IllegalArgumentException if the lengths of arrays don't match
@@ -86,6 +89,7 @@ public class ResortedCellsRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getNumCells() {
         return m_row.getNumCells();
     }
@@ -93,6 +97,7 @@ public class ResortedCellsRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowKey getKey() {
         return m_row.getKey();
     }
@@ -100,6 +105,7 @@ public class ResortedCellsRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell getCell(final int index) {
         return m_row.getCell(m_sort[index]);
     }
@@ -107,6 +113,7 @@ public class ResortedCellsRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);
     }

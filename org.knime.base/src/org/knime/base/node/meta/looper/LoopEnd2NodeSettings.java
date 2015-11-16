@@ -71,6 +71,12 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
     /** @since 2.11 */
     private boolean m_tolerateColumnTypes2 = false;
 
+    /** @since 3.1 */
+    private boolean m_tolerateChangingSpecs1 = false;
+
+    /** @since 3.1 */
+    private boolean m_tolerateChangingSpecs2 = false;
+
     /**
      * Sets if iterations with empty tables are ignored in the first output port.
      *
@@ -155,6 +161,48 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
         return m_tolerateColumnTypes2;
     }
 
+    /**
+     * Returns if changing tables specs are to be tolerated at port 1.
+     *
+     * @param tolerate <code>true</code> changes are tolerated and missing values are inserted for missing column in
+     *            respective iterations <code>false</code> the node fails if table spec varies
+     */
+    public void tolerateChangingTableSpecs1(final boolean tolerate) {
+        m_tolerateChangingSpecs1 = tolerate;
+    }
+
+    /**
+     * Returns if changing tables specs are to be tolerated at port 1.
+     *
+     * @return <code>true</code> changes are tolerated and missing values are inserted for missing column in respective
+     *         iterations
+     *         <code>false</code> the node fails if table spec varies
+     */
+    public boolean tolerateChangingTableSpecs1() {
+        return m_tolerateChangingSpecs1;
+    }
+
+    /**
+     * Returns if changing tables specs are to be tolerated at port 2.
+     *
+     * @param tolerate <code>true</code> changes are tolerated and missing values are inserted for missing column in
+     *            respective iterations <code>false</code> the node fails if table spec varies
+     */
+    public void tolerateChangingTableSpecs2(final boolean tolerate) {
+        m_tolerateChangingSpecs2 = tolerate;
+    }
+
+    /**
+     * Returns if changing tables specs are to be tolerated at port 2.
+     *
+     * @return <code>true</code> changes are tolerated and missing values are inserted for missing column in respective
+     *         iterations
+     *         <code>false</code> the node fails if table spec varies
+     */
+    public boolean tolerateChangingTableSpecs2() {
+        return m_tolerateChangingSpecs2;
+    }
+
 
     /**
      * Writes the settings into the node settings object.
@@ -168,6 +216,8 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
         settings.addBoolean("ignoreEmptyTables2", m_ignoreEmptyTables2);
         settings.addBoolean("tolerateColumnTypes1", m_tolerateColumnTypes1);
         settings.addBoolean("tolerateColumnTypes2", m_tolerateColumnTypes2);
+        settings.addBoolean("tolerateChangingSpecs1", m_tolerateChangingSpecs1);
+        settings.addBoolean("tolerateChangingSpecs2", m_tolerateChangingSpecs2);
     }
 
     /**
@@ -182,5 +232,7 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
         m_ignoreEmptyTables2 = settings.getBoolean("ignoreEmptyTables2", true);
         m_tolerateColumnTypes1 = settings.getBoolean("tolerateColumnTypes1", false);
         m_tolerateColumnTypes2 = settings.getBoolean("tolerateColumnTypes2", false);
+        m_tolerateChangingSpecs1 = settings.getBoolean("tolerateChangingSpecs1", false);
+        m_tolerateChangingSpecs2 = settings.getBoolean("tolerateChangingSpecs2", false);
     }
 }

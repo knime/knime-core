@@ -60,16 +60,16 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
-import org.knime.base.data.append.row.AppendedRowsRowInput;
-import org.knime.base.data.append.row.AppendedRowsTable;
-import org.knime.base.data.append.row.AppendedRowsTable.DuplicatePolicy;
 import org.knime.base.data.filter.column.FilterColumnRowInput;
 import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.append.AppendedRowsIterator;
+import org.knime.core.data.append.AppendedRowsRowInput;
+import org.knime.core.data.append.AppendedRowsTable;
+import org.knime.core.data.append.AppendedRowsTable.DuplicatePolicy;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -243,7 +243,7 @@ public class AppendedRowsNodeModel extends NodeModel {
                 // may throw exception, also sets progress
                 output.push(next);
             }
-        } catch (RuntimeCanceledExecutionException rcee) {
+        } catch (AppendedRowsIterator.RuntimeCanceledExecutionException rcee) {
             throw rcee.getCause();
         } finally {
             output.close();
