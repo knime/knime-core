@@ -166,6 +166,7 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
      *
      * @param tolerate <code>true</code> changes are tolerated and missing values are inserted for missing column in
      *            respective iterations <code>false</code> the node fails if table spec varies
+     * @since 3.1
      */
     public void tolerateChangingTableSpecs1(final boolean tolerate) {
         m_tolerateChangingSpecs1 = tolerate;
@@ -177,6 +178,7 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
      * @return <code>true</code> changes are tolerated and missing values are inserted for missing column in respective
      *         iterations
      *         <code>false</code> the node fails if table spec varies
+     * @since 3.1
      */
     public boolean tolerateChangingTableSpecs1() {
         return m_tolerateChangingSpecs1;
@@ -187,6 +189,7 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
      *
      * @param tolerate <code>true</code> changes are tolerated and missing values are inserted for missing column in
      *            respective iterations <code>false</code> the node fails if table spec varies
+     * @since 3.1
      */
     public void tolerateChangingTableSpecs2(final boolean tolerate) {
         m_tolerateChangingSpecs2 = tolerate;
@@ -198,6 +201,7 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
      * @return <code>true</code> changes are tolerated and missing values are inserted for missing column in respective
      *         iterations
      *         <code>false</code> the node fails if table spec varies
+     * @since 3.1
      */
     public boolean tolerateChangingTableSpecs2() {
         return m_tolerateChangingSpecs2;
