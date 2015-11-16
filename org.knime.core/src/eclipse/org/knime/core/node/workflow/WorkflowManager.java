@@ -4925,6 +4925,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
        }
    }
 
+   /** @return true if all nodes in this workflow / meta node can be canceled.
+    * @since 3.1 */
+   public boolean canCancelAll() {
+       // added as part of fix for bug 6534 - this method is called often also indirectly via change events
+       // as part of a reset - do the best to not lock parent instance
+       if (isProject()) {
+           // does not acquire parent workflow lock
+           return getInternalState().isExecutionInProgress();
+       } else {
+           // acquires lock of parent instance ... which is the same as of this instance
+           return getParent().canCancelNode(this.getID());
+       }
+   }
+
     /** @return true if any node contained in this workflow is executable,
      * that is configured.
      */

@@ -130,7 +130,7 @@ public class CancelAllAction extends AbstractNodeAction {
         if (manager.getParent() == null) {
             return false;
         }
-        return manager.getParent().canCancelNode(manager.getID());
+        return manager.canCancelAll();
     }
 
     /**
