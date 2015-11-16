@@ -227,6 +227,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
      * @param tables Tables to put together.
      * @return The new table.
      * @throws CanceledExecutionException If cancelled.
+     * @since 3.1
      */
     public static ConcatenateTable create(final ExecutionMonitor mon, final boolean checkForDuplicates,
         final BufferedDataTable... tables) throws CanceledExecutionException {

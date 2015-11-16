@@ -134,6 +134,7 @@ public class AbstractLoopEndNodeSettings {
     /**
      * @param the row key policy specifying whether row keys are to be newly generated, a suffix is appended or remain
      *            unmodified
+     * @since 3.1
      */
     public void rowKeyPolicy(final RowKeyPolicy policy) {
         m_rowKeyPolicy = policy;
@@ -142,6 +143,7 @@ public class AbstractLoopEndNodeSettings {
     /**
      * @return the row key policy specifying whether row keys are to be newly generated, a suffix is appended or remain
      *         unmodified
+     * @since 3.1
      */
     public RowKeyPolicy rowKeyPolicy() {
         return m_rowKeyPolicy;
