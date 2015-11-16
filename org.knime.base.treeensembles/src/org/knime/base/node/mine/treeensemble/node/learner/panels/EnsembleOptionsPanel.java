@@ -74,7 +74,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class EnsembleOptionsPanel extends JPanel {
@@ -322,6 +322,11 @@ public class EnsembleOptionsPanel extends JPanel {
         add(ViewUtils.getInFlowLayout(FlowLayout.LEFT, m_seedTextField, m_newSeedButton), gbc);
     }
 
+    /**
+     * Load settings from config <b>cfg</b>
+     *
+     * @param cfg
+     */
     public void loadSettings(final TreeEnsembleLearnerConfiguration cfg) {
         m_nrModelsSpinner.setValue(cfg.getNrModels());
         double dataFrac = cfg.getDataFractionPerTree();
@@ -374,6 +379,12 @@ public class EnsembleOptionsPanel extends JPanel {
         m_seedTextField.setText(Long.toString(seed != null ? seed : System.currentTimeMillis()));
     }
 
+    /**
+     * Save settings to config <b>cfg</b>
+     *
+     * @param cfg
+     * @throws InvalidSettingsException
+     */
     public void saveSettings(final TreeEnsembleLearnerConfiguration cfg) throws InvalidSettingsException {
         cfg.setNrModels((Integer)m_nrModelsSpinner.getValue());
         double dataFrac;

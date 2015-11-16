@@ -94,10 +94,13 @@ final class TreeEnsembleRegressionPredictorNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        if (m_configuration == null) {
-            m_configuration = TreeEnsemblePredictorConfiguration.createDefault(true);
-        }
         TreeEnsembleModelPortObjectSpec modelSpec = (TreeEnsembleModelPortObjectSpec)inSpecs[0];
+        String targetColName = modelSpec.getTargetColumn().getName();
+        if (m_configuration == null) {
+            m_configuration = TreeEnsemblePredictorConfiguration.createDefault(false, targetColName);
+        } else if (!m_configuration.isChangePredictionColumnName()) {
+            m_configuration.setPredictionColumnName(TreeEnsemblePredictorConfiguration.getPredictColumnName(targetColName));
+        }
         modelSpec.assertTargetTypeMatches(true);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
         final TreeEnsemblePredictor pred = new TreeEnsemblePredictor(modelSpec, null, dataSpec, m_configuration);
@@ -176,14 +179,14 @@ final class TreeEnsembleRegressionPredictorNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(true);
+        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(true, "");
         config.loadInModel(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(true);
+        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(true, "");
         config.loadInModel(settings);
         m_configuration = config;
     }

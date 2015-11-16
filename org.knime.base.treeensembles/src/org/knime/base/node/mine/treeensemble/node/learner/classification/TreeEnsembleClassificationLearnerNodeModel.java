@@ -161,8 +161,8 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel
      */
     private TreeEnsemblePredictor createOutOfBagPredictor(final TreeEnsembleModelPortObjectSpec ensembleSpec,
         final TreeEnsembleModelPortObject ensembleModel, final DataTableSpec inSpec) throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration ooBConfig = new TreeEnsemblePredictorConfiguration(false);
         String targetColumn = m_configuration.getTargetColumn();
+        TreeEnsemblePredictorConfiguration ooBConfig = new TreeEnsemblePredictorConfiguration(false, targetColumn);
         String append = targetColumn + " (Out-of-bag)";
         ooBConfig.setPredictionColumnName(append);
         ooBConfig.setAppendPredictionConfidence(true);

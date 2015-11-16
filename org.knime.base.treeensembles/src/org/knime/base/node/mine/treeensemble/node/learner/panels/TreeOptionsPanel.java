@@ -106,6 +106,7 @@ public final class TreeOptionsPanel extends JPanel {
     private final AttributeSelectionPanel m_attributePanel;
 
     /**
+     * @param attributePanel
      *  */
     @SuppressWarnings("unchecked")
     public TreeOptionsPanel(final AttributeSelectionPanel attributePanel) {
@@ -222,6 +223,13 @@ public final class TreeOptionsPanel extends JPanel {
 
     }
 
+    /**
+     * Load settings from config <b>cfg</b> and table spec <b>inspec</b>
+     *
+     * @param inSpec
+     * @param cfg
+     * @throws NotConfigurableException
+     */
     public void loadSettingsFrom(final DataTableSpec inSpec, final TreeEnsembleLearnerConfiguration cfg)
         throws NotConfigurableException {
         int nrNominalCols = 0;
@@ -307,6 +315,12 @@ public final class TreeOptionsPanel extends JPanel {
         }
     }
 
+    /**
+     * Save settings in config <b>cfg</b>
+     *
+     * @param cfg
+     * @throws InvalidSettingsException
+     */
     public void saveSettings(final TreeEnsembleLearnerConfiguration cfg) throws InvalidSettingsException {
         cfg.setSplitCriterion((SplitCriterion)m_splitCriterionsBox.getSelectedItem());
         cfg.setUseAverageSplitPoints(m_useAverageSplitPointsChecker.isSelected());

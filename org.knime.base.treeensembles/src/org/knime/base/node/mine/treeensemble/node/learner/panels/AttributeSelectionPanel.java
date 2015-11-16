@@ -80,23 +80,25 @@ import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
+import org.knime.core.node.util.DataValueColumnFilter;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class AttributeSelectionPanel extends JPanel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(AttributeSelectionPanel.class);
 
-    static final DataTableSpec NO_VALID_INPUT_SPEC = new DataTableSpec(new DataColumnSpecCreator("<no valid input>",
-        StringCell.TYPE).createSpec(), new DataColumnSpecCreator("<no valid fingerprint input>",
-        DenseBitVectorCell.TYPE).createSpec());
+    static final DataTableSpec NO_VALID_INPUT_SPEC =
+        new DataTableSpec(new DataColumnSpecCreator("<no valid input>", StringCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("<no valid fingerprint input>", DenseBitVectorCell.TYPE).createSpec());
 
     private final ArrayList<ChangeListener> m_changeListenerList;
 
@@ -123,6 +125,7 @@ public final class AttributeSelectionPanel extends JPanel {
     private final boolean m_isRegression;
 
     /**
+     * @param isRegression
      *  */
     @SuppressWarnings("unchecked")
     public AttributeSelectionPanel(final boolean isRegression) {
@@ -137,7 +140,8 @@ public final class AttributeSelectionPanel extends JPanel {
                 }
             }
         });
-        m_fingerprintColumnBox = new ColumnSelectionComboxBox((Border)null, BitVectorValue.class);
+        m_fingerprintColumnBox = new ColumnSelectionComboxBox((Border)null,
+            new DataValueColumnFilter(BitVectorValue.class, ByteVectorValue.class));
         m_includeColumnsFilterPanel = new ColumnFilterPanel(true, NominalValue.class, DoubleValue.class);
 
         m_useFingerprintColumnRadio = new JRadioButton("Use fingerprint attribute");
@@ -166,9 +170,8 @@ public final class AttributeSelectionPanel extends JPanel {
             }
         });
         m_enableHiliteChecker.doClick();
-        m_saveTargetDistributionInNodesChecker =
-            new JCheckBox(
-                "Save target distribution in tree nodes (memory expensive - only important for tree view and PMML export)");
+        m_saveTargetDistributionInNodesChecker = new JCheckBox(
+            "Save target distribution in tree nodes (memory expensive - only important for tree view and PMML export)");
 
         m_changeListenerList = new ArrayList<ChangeListener>();
         m_isRegression = isRegression;
@@ -260,6 +263,13 @@ public final class AttributeSelectionPanel extends JPanel {
         m_changeListenerList.remove(listener);
     }
 
+    /**
+     * Load settings from config <b>cfg</b>
+     *
+     * @param inSpec
+     * @param cfg
+     * @throws NotConfigurableException
+     */
     public void loadSettingsFrom(final DataTableSpec inSpec, final TreeEnsembleLearnerConfiguration cfg)
         throws NotConfigurableException {
         m_lastTableSpec = null; // disabled automatic propagation of table specs
@@ -274,7 +284,7 @@ public final class AttributeSelectionPanel extends JPanel {
             }
         }
         boolean hasOrdinaryColumnsInInput = nrNominalCols > 1 || nrNumericCols > 0;
-        boolean hasFPColumnInInput = inSpec.containsCompatibleType(BitVectorValue.class);
+        boolean hasFPColumnInInput = inSpec.containsCompatibleType(BitVectorValue.class) || inSpec.containsCompatibleType(ByteVectorValue.class);
         m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
         DataTableSpec attSpec = removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
         String fpColumn = cfg.getFingerprintColumn();
@@ -324,6 +334,12 @@ public final class AttributeSelectionPanel extends JPanel {
         m_lastTableSpec = inSpec;
     }
 
+    /**
+     * Save settings to config <b>cfg</b>.
+     *
+     * @param cfg
+     * @throws InvalidSettingsException
+     */
     public void saveSettings(final TreeEnsembleLearnerConfiguration cfg) throws InvalidSettingsException {
         cfg.setTargetColumn(m_targetColumnBox.getSelectedColumn());
         if (m_useFingerprintColumnRadio.isSelected()) {
@@ -354,10 +370,10 @@ public final class AttributeSelectionPanel extends JPanel {
 
     /**
      * Get table spec excluding the currently selected target column.
-     * 
+     *
      * @return table spec with learn attributes
      */
-    DataTableSpec getCurrentAttributeSpec() {
+        DataTableSpec getCurrentAttributeSpec() {
         if (m_lastTableSpec == null) {
             throw new IllegalStateException("Not to be called during load");
         }
@@ -390,7 +406,7 @@ public final class AttributeSelectionPanel extends JPanel {
     /**
      * @return the isRegression
      */
-    boolean isRegression() {
+        boolean isRegression() {
         return m_isRegression;
     }
 

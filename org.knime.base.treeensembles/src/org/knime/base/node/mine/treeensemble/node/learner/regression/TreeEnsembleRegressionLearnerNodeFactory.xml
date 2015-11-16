@@ -29,9 +29,10 @@
       <option name="Attribute Selection">
         <p>Select the attributes to use learn the model. Two variants are possible.</p>
         <p>
-          <i>Fingerprint attribute</i> uses the different bit positions in the selected bit vector as learning 
-          attributes (for instance a bit vector of length 1024 is expanded to 1024 binary attributes). All bit vectors
-          in the selected column must have the same length. 
+          <i>Fingerprint attribute</i> uses the different bit/byte positions in the selected bit/byte vector as learning 
+          attributes (for instance a bit vector of length 1024 is expanded to 1024 binary attributes or 1024 long byte
+          vector is expanded to the corresponding number of numeric attributes). All vectors in the selected column must
+          have the same length. 
         </p>
         <p>
           <i>Column attributes</i> are nominal and numeric columns used as descriptors. Numeric columns are split in a

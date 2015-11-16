@@ -12,7 +12,7 @@
       <p>
         Learns an ensemble of decision trees (such as random forest variants). Each of the decision tree models is
         learned on a different set of rows (records) and/or a different set of columns (describing attributes), whereby 
-        the latter can also be a bit-vector descriptor (e.g. molecular fingerprint). The output model describes an
+        the latter can also be a bit/byte-vector descriptor (e.g. molecular fingerprint). The output model describes an
         ensemble of decision tree models and is applied in the corresponding predictor node using a simply majority 
         vote. 
       </p>
@@ -36,9 +36,7 @@
         <a href="http://cran.r-project.org/web/packages/randomForest/">Random Forest implementation available in R</a>.
         Known differences are in the missing value handling (currently not available in this node) and the split 
         creation for nominal attributes (the original Random Forest classifier uses binary nominal splits; this 
-        implementation creates child nodes for each possible split attribute). Note also, this implementation keeps
-        additional statistics for each split (class distribution), which can be seen in the view but which can also
-        increase the model size (in terms of MB on disc) quite a lot. 
+        implementation creates child nodes for each possible split attribute).  
       </p>
       <p>
         The decision tree construction takes place in main memory (all data and all models are kept in memory).
@@ -52,9 +50,10 @@
       <option name="Attribute Selection">
         <p>Select the attributes to use learn the model. Two variants are possible.</p>
         <p>
-          <i>Fingerprint attribute</i> uses the different bit positions in the selected bit vector as learning 
-          attributes (for instance a bit vector of length 1024 is expanded to 1024 binary attributes). All bit vectors
-          in the selected column must have the same length. 
+          <i>Fingerprint attribute</i> uses the different bit/byte positions in the selected bit/byte vector as learning 
+          attributes (for instance a bit vector of length 1024 is expanded to 1024 binary attributes or 1024 long byte
+          vector is expanded to the corresponding number of numeric attributes). All vectors in the selected column must
+          have the same length. 
         </p>
         <p>
           <i>Column attributes</i> are nominal and numeric columns used as descriptors. Numeric columns are split in a

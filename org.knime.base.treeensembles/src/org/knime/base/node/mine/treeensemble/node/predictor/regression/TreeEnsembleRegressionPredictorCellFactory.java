@@ -74,7 +74,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleRegressionPredictorCellFactory extends AbstractCellFactory {
@@ -95,12 +95,18 @@ public final class TreeEnsembleRegressionPredictorCellFactory extends AbstractCe
     }
 
     /**
+     * Creates a TreeEnsembleRegressionPredictorCellFactory from the provided <b>predictor</b>
+     *
+     * @param predictor
+     * @return an instance of TreeEnsembleRegressionPredictorCellFactory configured according to the settings of the provided
+     * <b>predictor<b>
+     * @throws InvalidSettingsException
      *  */
     public static TreeEnsembleRegressionPredictorCellFactory createFactory(final TreeEnsemblePredictor predictor)
         throws InvalidSettingsException {
         DataTableSpec testDataSpec = predictor.getDataSpec();
         TreeEnsembleModelPortObjectSpec modelSpec = predictor.getModelSpec();
-        TreeEnsembleModelPortObject modelObject = predictor.getModelObject();
+//        TreeEnsembleModelPortObject modelObject = predictor.getModelObject();
         TreeEnsemblePredictorConfiguration configuration = predictor.getConfiguration();
         UniqueNameGenerator nameGen = new UniqueNameGenerator(testDataSpec);
         List<DataColumnSpec> newColsList = new ArrayList<DataColumnSpec>();

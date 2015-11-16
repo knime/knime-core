@@ -75,7 +75,7 @@ import org.knime.core.util.MutableInteger;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleClassificationPredictorCellFactory extends AbstractCellFactory {
@@ -100,6 +100,11 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
     }
 
     /**
+     * Creates a TreeEnsembleClassificationPredictorCellFactory from the provided <b>predictor</b>
+     * @param predictor
+     * @return an instance of TreeEnsembleClassificationPredictorCellFactory configured according to the settings of the provided
+     * <b>predictor<b>
+     * @throws InvalidSettingsException
      *  */
     public static TreeEnsembleClassificationPredictorCellFactory createFactory(final TreeEnsemblePredictor predictor)
         throws InvalidSettingsException {
@@ -205,6 +210,7 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
         return result;
     }
 
+    @SuppressWarnings("serial")
     private static final class OccurrenceCounter<T> extends HashMap<T, MutableInteger> {
 
         public int add(final T object) {
