@@ -240,7 +240,7 @@ public final class OptionsPanel extends JPanel {
 
 //        m_useAverageSplitPointsChecker = new JCheckBox("Use mid point splits (only for numeric attributes)");
 
-        m_minNodeSizeSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+        m_minNodeSizeSpinner = new JSpinner(new SpinnerNumberModel(10, 1, Integer.MAX_VALUE, 1));
         m_minNodeSizeChecker = new JCheckBox("Minimum split node size");
         m_minNodeSizeChecker.addItemListener(new ItemListener() {
             @Override
@@ -644,7 +644,7 @@ public final class OptionsPanel extends JPanel {
             m_minNodeSizeChecker.doClick();
         }
         if (minNodeSize == TreeEnsembleLearnerConfiguration.MIN_NODE_SIZE_UNDEFINED) {
-            m_minNodeSizeSpinner.setValue(1);
+            m_minNodeSizeSpinner.setValue(10);
         } else {
             m_minNodeSizeSpinner.setValue(minNodeSize);
         }

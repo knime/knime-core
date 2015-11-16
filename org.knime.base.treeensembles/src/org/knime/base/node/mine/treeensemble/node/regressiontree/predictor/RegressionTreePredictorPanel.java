@@ -50,9 +50,12 @@ import java.awt.Insets;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -69,6 +72,7 @@ public final class RegressionTreePredictorPanel extends JPanel {
     /** Panel name. */
     public static final String PANEL_NAME = "Prediction Settings";
 
+    private final JCheckBox m_changePredictionColNameCheckbox;
     private final JTextField m_predictionColNameField;
 
     /**
@@ -87,6 +91,15 @@ public final class RegressionTreePredictorPanel extends JPanel {
                 }
             }
         });
+        m_changePredictionColNameCheckbox = new JCheckBox("Change prediction column name", false);
+        m_changePredictionColNameCheckbox.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent arg0) {
+                m_predictionColNameField.setEnabled(m_changePredictionColNameCheckbox.isSelected());
+            }
+
+        });
         initLayout();
     }
 
@@ -99,6 +112,10 @@ public final class RegressionTreePredictorPanel extends JPanel {
 
         gbc.gridx = 0;
         gbc.gridy = 0;
+
+        add(m_changePredictionColNameCheckbox);
+
+        gbc.gridy += 1;
         add(new JLabel("Prediction Column Name"), gbc);
         gbc.gridx += 1;
         add(m_predictionColNameField, gbc);
@@ -122,6 +139,8 @@ public final class RegressionTreePredictorPanel extends JPanel {
             colName = RegressionTreePredictorConfiguration.getPredictColumnName("");
         }
         m_predictionColNameField.setText(colName);
+        m_predictionColNameField.setEnabled(config.isChangePredictionColumnName());
+        m_changePredictionColNameCheckbox.setSelected(config.isChangePredictionColumnName());
     }
 
     /**
@@ -133,6 +152,7 @@ public final class RegressionTreePredictorPanel extends JPanel {
     public void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         RegressionTreePredictorConfiguration config = new RegressionTreePredictorConfiguration("");
         config.setPredictionColumnName(m_predictionColNameField.getText());
+        config.setChangePredictionColumnName(m_changePredictionColNameCheckbox.isSelected());
         config.save(settings);
     }
 

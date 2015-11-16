@@ -76,7 +76,7 @@ public final class RegressionTreePredictorConfiguration {
 
     private String m_predictionColumnName;
     private String m_targetColumnName;
-    private boolean m_changePredictionColumnName;
+    private boolean m_changePredictionColumnName = false;
 
     /**
      * @param targetColName name of the target column
