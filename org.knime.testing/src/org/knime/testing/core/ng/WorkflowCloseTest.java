@@ -48,15 +48,19 @@
 package org.knime.testing.core.ng;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.knime.core.data.container.BufferTracker;
 import org.knime.core.data.util.memory.MemoryAlert;
 import org.knime.core.data.util.memory.MemoryAlertListener;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.Pair;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
@@ -80,7 +84,6 @@ class WorkflowCloseTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            sendMemoryAlert(); // send memory alert to clean up open buffers
             m_context.getWorkflowManager().shutdown();
             m_context.getWorkflowManager().getParent().removeNode(m_context.getWorkflowManager().getID());
 
@@ -90,6 +93,14 @@ class WorkflowCloseTest extends WorkflowTest {
                 result.addFailure(this, new AssertionFailedError(openWorkflows.size()
                         + " dangling workflows detected: " + openWorkflows));
             }
+
+            Collection<Pair<NodeContainer, StackTraceElement[]>> openBuffers =
+                BufferTracker.getInstance().getOpenBuffers();
+            if (!openBuffers.isEmpty()) {
+                result.addFailure(this, new AssertionFailedError(openBuffers.size() + " open buffers detected: "
+                    + openBuffers.stream().map(p -> p.getFirst().getNameWithID()).collect(Collectors.joining(", "))));
+            }
+            BufferTracker.getInstance().clear();
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
