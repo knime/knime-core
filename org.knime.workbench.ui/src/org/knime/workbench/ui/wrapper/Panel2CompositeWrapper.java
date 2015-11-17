@@ -49,8 +49,10 @@ package org.knime.workbench.ui.wrapper;
 
 import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.Panel;
 import java.awt.event.FocusListener;
 
+import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 
 import org.eclipse.swt.SWT;
@@ -82,6 +84,7 @@ public class Panel2CompositeWrapper extends Composite {
     public Panel2CompositeWrapper(final Composite parent, final JComponent panel, final int style) {
         super(parent, style | SWT.EMBEDDED);
 
+
         final GridLayout gridLayout = new GridLayout();
         gridLayout.verticalSpacing = 0;
         gridLayout.marginWidth = 0;
@@ -91,8 +94,17 @@ public class Panel2CompositeWrapper extends Composite {
         setLayoutData(new GridData(GridData.FILL_BOTH));
 
         final Frame awtFrame = SWT_AWT.new_Frame(this);
-        // use panel as root
-        awtFrame.add(panel);
+        // The lightweight Swing panel must be wrapped into a heavyweight AWT container-panel
+        // otherwise the cursor changes when moving over a Swing component won't work correctly.
+        // bug 6516
+        final Panel heavyweightPanel = new Panel();
+        heavyweightPanel.setLayout(new BoxLayout(heavyweightPanel, BoxLayout.LINE_AXIS));
+        heavyweightPanel.setBackground(null);
+        // use heavyweight panel as root
+        heavyweightPanel.add(panel);
+        awtFrame.add(heavyweightPanel);
+
+
         // on some Linux systems tabs are not properly passed to AWT without the next line
         awtFrame.setFocusTraversalKeysEnabled(false);
 
@@ -130,7 +142,7 @@ public class Panel2CompositeWrapper extends Composite {
 
             @Override
             public void focusGained(final java.awt.event.FocusEvent e) {
-                final Dimension panelSize = panel.getSize();
+                final Dimension panelSize = heavyweightPanel.getSize();
                 if (!isDisposed()) {
                     getDisplay().asyncExec(new Runnable() {
                         @Override
@@ -145,6 +157,7 @@ public class Panel2CompositeWrapper extends Composite {
                                             // Set sizes on AWT frame and dialog panel if different from
                                             // wrapper component
                                             awtFrame.setSize(wrapperSize.x, wrapperSize.y);
+                                            heavyweightPanel.setSize(wrapperSize.x, wrapperSize.y);
                                             panel.setSize(wrapperSize.x, wrapperSize.y);
                                         }
                                     });
@@ -155,6 +168,7 @@ public class Panel2CompositeWrapper extends Composite {
                 }
             }
         };
+
         panel.addFocusListener(sizeFocusListener);
 
         // We reuse the panel on subsequent dialog opens but always create a new wrapper component.
