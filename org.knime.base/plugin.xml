@@ -1509,9 +1509,10 @@
       </node>        
       <node
             category-path="/flowcontrol/loopsupport"
-            factory-class="org.knime.base.node.meta.looper.LoopEndJoinNodeFactory"
-            id="org.knime.base.node.meta.looper.LoopEndJoinNodeFactory">
-      </node>  
+            deprecated="false"
+            factory-class="org.knime.base.node.meta.looper.LoopEndJoin2NodeFactory"
+            id="org.knime.base.node.meta.looper.LoopEndJoin2NodeFactory">
+      </node>
       <node
             category-path="/io/read"
             factory-class="org.knime.base.node.io.listfiles2.ListFilesNodeFactory"
