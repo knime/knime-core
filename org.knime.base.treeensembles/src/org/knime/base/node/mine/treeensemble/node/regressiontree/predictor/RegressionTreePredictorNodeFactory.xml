@@ -11,8 +11,12 @@
 		<intro>
             Applies regression from a regression tree model by using the mean of the individual predictions.
 		</intro>
-	    <option name="Response Column Name">
-	       Name of the 1st output column. It contains the mean response of all models. 
+		<option name="Change Prediction Column Name">
+			If this option is set, one can give a custom prediction column name, otherwise a default name of the format "Prediction (<i>targetColumn</i>)"
+			is used.
+		</option>
+	    <option name="Prediction Column Name">
+	       Name of the output column. It contains the predicted value based simple regression tree model. 
         </option>
 	</fullDescription>
 
