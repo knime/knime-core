@@ -78,17 +78,17 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
+final class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
 
+    /** See bug 6544 - columns 51+ always had " (Iter #1)" appended. True only for deprecated node. */
+    private final boolean m_appendIterSuffixForBackwardComp;
     private LoopEndJoinNodeConfiguration m_configuration;
     private BufferedDataTable m_currentAppendTable;
     private int m_iteration = 0;
 
-    /**
-     *
-     */
-    public LoopEndJoinNodeModel() {
+    LoopEndJoinNodeModel(final boolean appendIterSuffixForBackwardComp6544) {
         super(1, 1);
+        m_appendIterSuffixForBackwardComp = appendIterSuffixForBackwardComp6544;
     }
 
     /** {@inheritDoc} */
@@ -117,14 +117,14 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
         boolean continueLoop =
             !((LoopStartNodeTerminator)startNode).terminateLoop();
         if (m_currentAppendTable == null) {
-            m_currentAppendTable = copy(inData[0], exec);
+            m_currentAppendTable = copy(inData[0], false, exec);
         } else if (hasSameRowsInEachIteration) {
             boolean isCacheNew = m_iteration % 50 == 0;
             double amount = isCacheNew ? (1.0 / 3.0) : (1.0 / 2.0);
             ExecutionContext copyCtx = exec.createSubExecutionContext(amount);
             ExecutionContext joinCtx = exec.createSubExecutionContext(amount);
             exec.setProgress("Copying input");
-            BufferedDataTable t = copy(inData[0], copyCtx);
+            BufferedDataTable t = copy(inData[0], true, copyCtx);
             copyCtx.setProgress(1.0);
             exec.setProgress("Joining with previous input");
             m_currentAppendTable = exec.createJoinedTable(
@@ -134,7 +134,9 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
                 exec.setProgress("Caching intermediate results (iteration "
                         + m_iteration + ")");
                 ExecutionContext ctx = exec.createSubExecutionContext(amount);
-                m_currentAppendTable = copy(m_currentAppendTable, ctx);
+                //copy the whole table every 50 columns (avoids wrapping to much individual tables)
+                //In this case the whole table is copied and column names DON'T need to be made unique (bugfix 6544)
+                m_currentAppendTable = copy(m_currentAppendTable, m_appendIterSuffixForBackwardComp, ctx);
                 ctx.setProgress(1.0);
             }
         } else {
@@ -153,7 +155,7 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
             settings.setLeftJoinColumns(new String[] {"$RowID$"});
             settings.setRightJoinColumns(new String[] {"$RowID$"});
             BufferedDataTable left = m_currentAppendTable;
-            BufferedDataTable right = copy(inData[0],
+            BufferedDataTable right = copy(inData[0], true,
                     exec.createSubExecutionContext(0.1));
             Joiner joiner = new Joiner(left.getDataTableSpec(),
                     right.getDataTableSpec(), settings);
@@ -169,22 +171,23 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
         }
     }
 
-    private BufferedDataTable copy(final BufferedDataTable table,
+
+
+    /**
+     * Copies the given table into a new data container. If desired, the column names are made unique beforehand (see
+     * {@link #uniqueColumnNames(DataTableSpec)}.
+     */
+    private BufferedDataTable copy(final BufferedDataTable table, final boolean uniqueColumnNames,
             final ExecutionContext exec) throws CanceledExecutionException {
-        DataColumnSpec[] colSpecs = new DataColumnSpec[table.getDataTableSpec().getNumColumns()];
-        int i = 0;
-        for (DataColumnSpec cs : table.getDataTableSpec()) {
-            if ((m_currentAppendTable != null) && m_currentAppendTable.getDataTableSpec().containsName(cs.getName())) {
-                String newName = cs.getName() + " (Iter #" + m_iteration + ")";
-                colSpecs[i++] = new DataColumnSpecCreator(newName, cs.getType()).createSpec();
-            } else {
-                colSpecs[i++] = cs;
-            }
+
+        DataTableSpec spec;
+        if(uniqueColumnNames) {
+            spec = uniqueColumnNames(table.getDataTableSpec());
+        } else {
+            spec = table.getDataTableSpec();
         }
-
-
-        BufferedDataContainer container = exec.createDataContainer(new DataTableSpec(colSpecs));
-        i = 0;
+        BufferedDataContainer container = exec.createDataContainer(spec);
+        int i = 0;
         final double rowCount = table.size();
         for (DataRow r : table) {
             container.addRowToTable(r);
@@ -194,6 +197,24 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
         }
         container.close();
         return container.getTable();
+    }
+
+    /**
+     * Returns a column spec with unique column names with respect to the already collected columns
+     * (m_currentAppendTable). An "Iter # [m_iteration]" is appended to the duplicate column names.
+     */
+    private DataTableSpec uniqueColumnNames(final DataTableSpec spec) {
+        DataColumnSpec[] colSpecs = new DataColumnSpec[spec.getNumColumns()];
+        int i = 0;
+        for (DataColumnSpec cs : spec) {
+            if ((m_currentAppendTable != null) && m_currentAppendTable.getDataTableSpec().containsName(cs.getName())) {
+                String newName = cs.getName() + " (Iter #" + m_iteration + ")";
+                colSpecs[i++] = new DataColumnSpecCreator(newName, cs.getType()).createSpec();
+            } else {
+                colSpecs[i++] = cs;
+            }
+        }
+        return new DataTableSpec(colSpecs);
     }
 
     /** {@inheritDoc} */

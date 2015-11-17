@@ -56,8 +56,9 @@ import org.knime.core.node.NodeView;
  * (colum wise concatenation).
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.12
  */
-public class LoopEndJoinNodeFactory extends NodeFactory<LoopEndJoinNodeModel> {
+public final class LoopEndJoin2NodeFactory extends NodeFactory<LoopEndJoinNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -71,7 +72,7 @@ public class LoopEndJoinNodeFactory extends NodeFactory<LoopEndJoinNodeModel> {
      */
     @Override
     public LoopEndJoinNodeModel createNodeModel() {
-        return new LoopEndJoinNodeModel(true);
+        return new LoopEndJoinNodeModel(false);
     }
 
     /**
