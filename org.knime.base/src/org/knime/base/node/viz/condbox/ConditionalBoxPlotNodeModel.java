@@ -80,6 +80,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -244,9 +245,9 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         return colSpec;
     }
 
-    private DataContainer createOutputTable(final DataTableSpec tableSpec,
-            final DataColumnSpec[] colSpecs) {
-        DataContainer cont = new DataContainer(createOutputSpec(tableSpec));
+    private BufferedDataContainer createOutputTable(final DataTableSpec tableSpec,
+            final DataColumnSpec[] colSpecs, final ExecutionContext exec) {
+        BufferedDataContainer cont = exec.createDataContainer(createOutputSpec(tableSpec));
 
         RowKey[] rowKeys = new RowKey[BoxPlotNodeModel.SIZE];
         rowKeys[BoxPlotNodeModel.MIN] = new RowKey("Minimum");
@@ -389,6 +390,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
         DataContainer cont = new DataContainer(dts);
         cont.close();
         m_dataArray = new DefaultDataArray(cont.getTable(), 1, 2);
+        cont.dispose();
 
         if (ignoreMissingValues) {
             DataColumnSpec[] temp = new DataColumnSpec[colSpecs.length + 1];
@@ -412,9 +414,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
          * consider the input domain for normalization. */
         m_numColSpec = inData[0].getDataTableSpec().getColumnSpec(numericIndex);
 
-        return new BufferedDataTable[]{exec.createBufferedDataTable(
-                createOutputTable(inData[0].getDataTableSpec(), colSpecs)
-                        .getTable(), exec)};
+        return new BufferedDataTable[]{createOutputTable(inData[0].getDataTableSpec(), colSpecs, exec).getTable()};
 
     }
 

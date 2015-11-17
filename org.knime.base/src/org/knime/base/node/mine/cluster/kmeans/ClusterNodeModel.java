@@ -57,7 +57,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.knime.base.data.append.column.AppendedColumnRow;
 import org.knime.base.node.mine.cluster.PMMLClusterTranslator;
 import org.knime.base.node.mine.cluster.PMMLClusterTranslator.ComparisonMeasure;
 import org.knime.core.data.DataCell;
@@ -71,10 +70,12 @@ import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -391,7 +392,7 @@ public class ClusterNodeModel extends NodeModel {
             j++;
         } while (j < m_dimension);
         // create output container and also mapping for HiLiteing
-        DataContainer labeledInput = new DataContainer(createAppendedSpec(spec));
+        BufferedDataContainer labeledInput = exec.createDataContainer(createAppendedSpec(spec));
         for (DataRow row : inData) {
             int winner = findClosestPrototypeFor(row, clusters);
             DataCell cell = new StringCell(CLUSTER + winner);
@@ -407,7 +408,7 @@ public class ClusterNodeModel extends NodeModel {
         }
         labeledInput.close();
         m_translator.setMapper(new DefaultHiLiteMapper(mapping));
-        BufferedDataTable outData = exec.createBufferedDataTable(labeledInput.getTable(), exec);
+        BufferedDataTable outData = labeledInput.getTable();
 
         // handle the optional PMML input
         PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)data[1] : null;

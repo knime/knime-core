@@ -233,7 +233,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         // which means that every data point is one cluster
         List<ClusterNode> clusters = initClusters(inputData, exec);
         // store the distance per each fusion step
-        DataContainer fusionCont = new DataContainer(createFusionSpec());
+        DataContainer fusionCont = exec.createDataContainer(createFusionSpec());
         int iterationStep = 0;
 
         final HalfFloatMatrix cache;

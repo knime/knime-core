@@ -250,7 +250,7 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
 
         DataTableSpec tableSpec = new DataTableSpec(colSpec);
 
-        DataContainer cont = new DataContainer(tableSpec);
+        DataContainer cont = exec.createDataContainer(tableSpec);
 
         colSpec = new DataColumnSpec[2];
 
@@ -263,7 +263,7 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
 
         tableSpec = new DataTableSpec(colSpec);
 
-        DataContainer responseCont = new DataContainer(tableSpec);
+        DataContainer responseCont = exec.createDataContainer(tableSpec);
 
         long cumulativeCounter = 0;
 

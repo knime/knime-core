@@ -55,7 +55,6 @@ import java.util.concurrent.Future;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.append.AppendedRowsTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.RowAppender;
 import org.knime.core.node.BufferedDataContainer;
@@ -131,8 +130,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         final DataTableSpec[] outSpecs = prepareExecute(data);
 
-        final List<Future<DataContainer[]>> futures =
-                new ArrayList<Future<DataContainer[]>>();
+        final List<Future<BufferedDataContainer[]>> futures = new ArrayList<>();
         final BufferedDataTable[] additionalTables =
                 new BufferedDataTable[Math.max(0, data.length - 1)];
         System.arraycopy(data, 1, additionalTables, 0, additionalTables.length);
@@ -172,9 +170,9 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
                             chunks++;
                             final int temp2 = chunks;
                             futures.add(m_workers
-                                    .submit(new Callable<DataContainer[]>() {
+                                    .submit(new Callable<BufferedDataContainer[]>() {
                                         @Override
-                                        public DataContainer[] call()
+                                        public BufferedDataContainer[] call()
                                                 throws Exception {
                                             ExecutionMonitor subProg =
                                                     exec
@@ -183,13 +181,9 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
                                                                             / max);
                                             exec.setMessage("Processing chunk "
                                                     + temp2);
-                                            DataContainer[] result =
-                                                    new DataContainer[outSpecs.length];
+                                            BufferedDataContainer[] result = new BufferedDataContainer[outSpecs.length];
                                             for (int i = 0; i < outSpecs.length; i++) {
-                                                result[i] =
-                                                        new DataContainer(
-                                                                outSpecs[i],
-                                                                true, 0);
+                                                result[i] = exec.createDataContainer(outSpecs[i], true, 0);
                                             }
 
                                             executeByChunk(temp.getTable(),
@@ -228,20 +222,20 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             submitter.call();
         }
 
-        final DataTable[][] tempTables =
-                new DataTable[outSpecs.length][futures.size()];
+        final BufferedDataTable[][] tempTables =
+                new BufferedDataTable[outSpecs.length][futures.size()];
         int k = 0;
-        for (Future<DataContainer[]> results : futures) {
+        for (Future<BufferedDataContainer[]> results : futures) {
             try {
                 exec.checkCanceled();
             } catch (CanceledExecutionException ex) {
-                for (Future<DataContainer[]> cancel : futures) {
+                for (Future<BufferedDataContainer[]> cancel : futures) {
                     cancel.cancel(true);
                 }
                 throw ex;
             }
 
-            final DataContainer[] temp = results.get();
+            final BufferedDataContainer[] temp = results.get();
 
             if ((temp == null) || (temp.length != getNrOutPorts())) {
                 throw new IllegalStateException("Invalid result. Execution "
@@ -255,13 +249,12 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             k++;
         }
 
-        final AppendedRowsTable[] resultTables =
-                new AppendedRowsTable[outSpecs.length];
+        final BufferedDataTable[] resultTables = new BufferedDataTable[outSpecs.length];
         for (int i = 0; i < resultTables.length; i++) {
-            resultTables[i] = new AppendedRowsTable(tempTables[i]);
+            resultTables[i] = exec.createConcatenateTable(exec, tempTables[i]);
         }
 
-        return exec.createBufferedDataTables(resultTables, exec);
+        return resultTables;
     }
 
     /**
