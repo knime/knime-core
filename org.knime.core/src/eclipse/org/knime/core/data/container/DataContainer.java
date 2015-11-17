@@ -707,6 +707,15 @@ public class DataContainer implements RowAppender {
     }
 
     /**
+     * Disposes this container and all underlying resources.
+     *
+     * @since 3.1
+     */
+    public void dispose() {
+        m_table.clear();
+    }
+
+    /**
      * Returns the table holding the data. This method is identical to the getTable() method but is more specific with
      * respec to the return type. It's used in derived classes.
      *
