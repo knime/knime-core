@@ -491,6 +491,7 @@ class Buffer implements KNIMEStreamConstants {
         m_fileStoreHandler = fileStoreHandler;
         m_fileStoreHandlerRepository = fileStoreHandler.getFileStoreHandlerRepository();
         m_compressionFormat = IS_USE_GZIP ? CompressionFormat.Gzip : CompressionFormat.None;
+        BufferTracker.getInstance().bufferCreated(this);
     }
 
     /**
@@ -539,6 +540,7 @@ class Buffer implements KNIMEStreamConstants {
             ioe.initCause(ise);
             throw ioe;
         }
+        BufferTracker.getInstance().bufferCreated(this);
     }
 
     /**
@@ -1884,6 +1886,7 @@ class Buffer implements KNIMEStreamConstants {
 
     /** Clears the temp file. Any subsequent iteration will fail! */
     synchronized void clear() {
+        BufferTracker.getInstance().bufferCleared(this);
         m_list = null;
         unregisterMemoryAlertListener();
         if (m_binFile != null) {
