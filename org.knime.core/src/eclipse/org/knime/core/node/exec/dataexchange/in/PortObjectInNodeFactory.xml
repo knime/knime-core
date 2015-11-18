@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>PortObject Reference Reader</name>
+	<shortDescription>
+		Framework node to read a PortObject from a static repository.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+			This node is used in automatically generated workflows; it
+			is not meant to be used in a user-designed workflows.
+		</intro>
+	</fullDescription>
+
+	<ports>
+		<outPort index="0" name="Input object">
+			PortObject from static repository
+		</outPort>
+	</ports>
+</knimeNode>

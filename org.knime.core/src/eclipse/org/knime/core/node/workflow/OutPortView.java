@@ -304,6 +304,16 @@ public class OutPortView extends JFrame {
 
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void dispose() {
+        // release all - identified memory leak via
+        // sun.awt.AppContext -> ... Maps -> swing.RepaintManager -> ...> JTabbedPane -> ... -> WFM
+        m_tabbedPane.removeAll();
+        remove(m_tabbedPane);
+        super.dispose();
+    }
+
     /** Displays "loading port content". */
     @SuppressWarnings("serial")
     private static final class LoadingPanel extends JPanel {

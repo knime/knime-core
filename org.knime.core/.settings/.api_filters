@@ -151,6 +151,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/DatabaseUtility.java" type="org.knime.core.node.port.database.DatabaseUtility">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.12"/>
+                <message_argument value="3.0"/>
+                <message_argument value="isValid(Connection)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/database/aggregation/DBAggregationFunction.java" type="org.knime.core.node.port.database.aggregation.DBAggregationFunction">
         <filter id="403804204">
             <message_arguments>
@@ -193,6 +202,19 @@
         <filter id="337768515">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.ExecutionEnvironment"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NativeNodeContainer"/>
+                <message_argument value="createExecutionResult(ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createExecutionResult(ExecutionMonitor)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -271,6 +293,19 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowCreationHelper.java" type="org.knime.core.node.workflow.WorkflowCreationHelper">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowCreationHelper"/>
+                <message_argument value="setWorkflowContext(WorkflowContext)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setWorkflowContext(WorkflowContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter id="338792546">
             <message_arguments>
@@ -303,6 +338,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus"/>
                 <message_argument value="newFailure(String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/execresult/SubnodeContainerExecutionResult.java" type="org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.execresult.SubnodeContainerExecutionResult"/>
+                <message_argument value="getBaseID()"/>
             </message_arguments>
         </filter>
     </resource>

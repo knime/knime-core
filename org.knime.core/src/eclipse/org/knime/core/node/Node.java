@@ -1034,6 +1034,21 @@ public final class Node implements NodeModelWarningListener {
             return false;
         }
 
+        assignInternalHeldObjects(rawInData, exEnv, exec, newOutData);
+        return true;
+    } // execute
+
+    /** Called after execute to retrieve internal held objects from underlying NodeModel and to do some clean-up with
+     * previous objects. Only relevant for {@link BufferedDataTableHolder} and {@link PortObjectHolder}.
+     * @param rawInData Raw in data, potentially empty array for streaming executor
+     * @param exEnv exec environment or null
+     * @param exec Context - for wrapper table creation
+     * @param newOutData the output tables - used for lookup
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 3.1
+     */
+    public void assignInternalHeldObjects(final PortObject[] rawInData, final ExecutionEnvironment exEnv,
+        final ExecutionContext exec, final PortObject[] newOutData) {
         // there might be previous internal tables in a loop  (tables kept between loop iterations: eg group loop start)
         // or for interactive nodes that get re-executed (javascript table view)
         // they can be discarded if no longer needed; they are not part of the internal tables after this execution
@@ -1068,7 +1083,8 @@ public final class Node implements NodeModelWarningListener {
                         if (t != null && ArrayUtils.indexOf(newOutData, t) < 0) {
                             createErrorMessageAndNotify(String.format("Internally held port object at index %d (class "
                                     + "%s) is not part of any output", i, t.getClass().getSimpleName()));
-                            return false;
+                            // TODO all new port objects as part of the internals
+//                            return false;
                         }
                     }
                     m_internalHeldPortObjects[i] = t;
@@ -1086,8 +1102,7 @@ public final class Node implements NodeModelWarningListener {
                 t.clearSingle(this);
             }
         }
-        return true;
-    } // execute
+    }
 
     /**
      * @param exec The execution context.

@@ -79,14 +79,15 @@ import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
+import org.knime.core.data.container.VoidTable;
 import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.workflow.BufferedDataTableView;
 import org.knime.core.util.MutableBoolean;
 
@@ -228,6 +229,13 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @param table The reference.
      */
     BufferedDataTable(final JoinedTable table) {
+        this(table, generateNewID());
+    }
+
+    /** Creates a new buffered data table based on a "void" table.
+     * @param table The reference.
+     */
+    BufferedDataTable(final VoidTable table) {
         this(table, generateNewID());
     }
 
@@ -442,6 +450,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
     private static final String TABLE_TYPE_WRAPPED = "wrapped_table";
     private static final String TABLE_TYPE_CONCATENATE = "concatenate_table";
     private static final String TABLE_TYPE_JOINED = "joined_table";
+    private static final String TABLE_TYPE_VOID = "void_table";
     /** The table is referenced multiple times in a node, e.g. provided at
      * different outputs (possibly wrapped) or it is used as output-port table
      * and as internally held table. See bug 2117.
@@ -484,6 +493,8 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_WRAPPED);
             } else if (m_delegate instanceof JoinedTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_JOINED);
+            } else if (m_delegate instanceof VoidTable) {
+                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_VOID);
             } else if (m_delegate instanceof ConcatenateTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONCATENATE);
             } else {
@@ -677,6 +688,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
                                 id, bufferRep, fileStoreHandlerRepository));
             } else if (tableType.equals(TABLE_TYPE_JOINED)) {
                 JoinedTable jt = JoinedTable.load(s, spec, tblRep);
+                t = new BufferedDataTable(jt);
+            } else if (tableType.equals(TABLE_TYPE_VOID)) {
+                VoidTable jt = VoidTable.load(spec);
                 t = new BufferedDataTable(jt);
             } else if (tableType.equals(TABLE_TYPE_CONCATENATE)) {
                 ConcatenateTable ct = ConcatenateTable.load(s, spec, tblRep);

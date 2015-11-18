@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -110,6 +111,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.wizard.WizardNodeLayoutInfo;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -297,7 +299,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         super(parent, id);
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
-                parent.getContext(), name, parent.getGlobalTableRepository(), parent.getFileStoreHandlerRepository());
+                parent.getContext(), name, Optional.of(parent.getGlobalTableRepository()),
+                Optional.of(parent.getFileStoreHandlerRepository()));
         m_wfm.setJobManager(null);
         m_subnodeScopeContext = new FlowSubnodeScopeContext();
         m_subnodeScopeContext.setOwner(id);
@@ -414,12 +417,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /** Creates listener, adds it to m_wfm and sets the class field. */
     private NodeStateChangeListener createAndAddStateListener() {
-        NodeStateChangeListener listener = new NodeStateChangeListener() {
-            @Override
-            public void stateChanged(final NodeStateEvent state) {
-                onWFMStateChange(state);
-            }
-        };
+        NodeStateChangeListener listener = e -> onWFMStateChange(e);
         m_wfm.addNodeStateChangeListener(listener);
         return listener;
     }
@@ -1018,8 +1016,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
             case POSTEXECUTE:
-                runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuted(
-                    ((SubnodeContainerExecutionResult)status).getWorkflowExecutionResult()));
+                NodeContainerExecutionStatus wfmStatus = status instanceof SubnodeContainerExecutionResult ?
+                    ((SubnodeContainerExecutionResult)status).getWorkflowExecutionResult() : status;
+                runIfInExternalExecutor(() -> m_wfm.mimicRemoteExecuted(wfmStatus));
                 InternalNodeContainerState newState = status.isSuccess() ?
                     InternalNodeContainerState.EXECUTED : m_wfm.getInternalState();
                 setVirtualOutputIntoOutport(newState);
@@ -1545,11 +1544,18 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         checkInOutNodesAfterLoad(subNodePersistor, loadResult);
         // put data input output node if it was executed;
         final NativeNodeContainer virtualOutNode = getVirtualOutNode();
-        if (virtualOutNode.getInternalState().isExecuted()) {
+        LoadVersion l = nodePersistor instanceof FileSingleNodeContainerPersistor
+                ? ((FileSingleNodeContainerPersistor)nodePersistor).getLoadVersion() : LoadVersion.V3010;
+        if (l.isOlderThan(LoadVersion.V3010) && virtualOutNode.getInternalState().isExecuted()) {
             VirtualSubNodeOutputNodeModel outNodeModel = getVirtualOutNodeModel();
             PortObject[] outputData = new PortObject[virtualOutNode.getNrInPorts()];
             m_wfm.assembleInputData(getVirtualOutNodeID(), outputData);
             outNodeModel.postLoadExecute(ArrayUtils.removeAll(outputData, 0));
+            // allow node to receive the internal held objects so that the next save operation also persists the
+            // array of internal held objects - otherwise we get strange errors with nodes saved in 2.x, then loaded
+            // and saved in 3.1+ (and converted ... although unmodified)
+            getVirtualOutNode().getNode().assignInternalHeldObjects(outputData, null,
+                getVirtualOutNode().createExecutionContext(), new PortObject[0]);
         }
         setVirtualOutputIntoOutport(m_wfm.getInternalState());
         m_wfmStateChangeListener = createAndAddStateListener();
@@ -1799,9 +1805,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean isInactive() {
         return false;

@@ -134,6 +134,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             /** better subnode support, PortObjectHolder, FileStorePortObject w/ array file stores.
              * @since 2.10 */
             V2100("2.10.0"),
+            /** Subnode outputs as port object holder, "VoidTable".
+             * @since 3.1 */
+            V3010("3.1.0"),
             /** Try to be forward compatible.
              * @since 2.8 */
             FUTURE("<future>");
@@ -194,7 +197,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
     }
 
-    static final LoadVersion VERSION_LATEST = LoadVersion.V2100;
+    static final LoadVersion VERSION_LATEST = LoadVersion.V3010;
 
     /** Format used to save author/edit infos. */
     static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");

@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,15 +43,67 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Jun 5, 2009 (wiswedel): created
  */
-package org.knime.core.node.workflow.execresult;
+package org.knime.core.node.exec;
+
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeExecutionJob;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
 /**
+ * Execution job that applies a given execution result to a node container.
  *
- * @author Bernd Wiswedel, University of Konstanz
- * @deprecated Fully replaced by {@link NativeNodeContainerExecutionResult} (super class)
+ * @author Bernd Wiswedel, KNIME.com AG, Zurich, Switzerland
  */
-@Deprecated
-public class SingleNodeContainerExecutionResult extends NativeNodeContainerExecutionResult {
+final class CopyContentIntoTempFlowNodeExecutionJob extends NodeExecutionJob {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(CopyContentIntoTempFlowNodeExecutionJobManager.class);
+
+    private final NodeContainerExecutionResult m_ncResult;
+
+    /**
+     * Delegates to super constructor.
+     *
+     * @param nc Forwarded
+     * @param data Forwarded.
+     * @param ncResult Result to be applied during execution.
+     */
+    CopyContentIntoTempFlowNodeExecutionJob(final NodeContainer nc, final PortObject[] data,
+        final NodeContainerExecutionResult ncResult) {
+        super(nc, data);
+        m_ncResult = ncResult;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean cancel() {
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean isReConnecting() {
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NodeContainerExecutionStatus mainExecute() {
+        LoadResult lR = new LoadResult("load data into temp flow");
+        getNodeContainer().loadExecutionResult(m_ncResult, new ExecutionMonitor(), lR);
+        if (lR.hasErrors()) {
+            LOGGER.error("Errors loading temporary data into workflow (to be submitted to cluster):\n"
+                + lR.getFilteredError("", LoadResultEntryType.Warning));
+        }
+        return m_ncResult;
+    }
 
 }

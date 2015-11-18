@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,15 +43,65 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Jun 5, 2009 (wiswedel): created
  */
-package org.knime.core.node.workflow.execresult;
+package org.knime.core.node.exec;
+
+import java.net.URL;
+
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeExecutionJob;
+import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 
 /**
+ * Job manager that applies a given execution result to a node container. This manager is not visible to the user (not
+ * selectable). It is used to load the data of a partially executed meta node in the temporary sandbox workflow, which
+ * is then executed, for instance on a cluster.
  *
- * @author Bernd Wiswedel, University of Konstanz
- * @deprecated Fully replaced by {@link NativeNodeContainerExecutionResult} (super class)
+ * @noreference This class is not intended to be referenced by clients.
+ * @author Bernd Wiswedel, KNIME.com AG, Zurich, Switzerland
+ * @since 3.1
  */
-@Deprecated
-public class SingleNodeContainerExecutionResult extends NativeNodeContainerExecutionResult {
+final class CopyContentIntoTempFlowNodeExecutionJobManager extends AbstractNodeExecutionJobManager {
+
+    private final NodeContainerExecutionResult m_executionResult;
+
+    /** Create new instance given an execution result.
+     * @param executionResult To be applied to the node during the (pseudo-)execution.
+     */
+    CopyContentIntoTempFlowNodeExecutionJobManager(final NodeContainerExecutionResult executionResult) {
+        m_executionResult = CheckUtils.checkArgumentNotNull(executionResult, "Execution result must not be null");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public final NodeExecutionJob submitJob(final NodeContainer nc, final PortObject[] data) {
+        CopyContentIntoTempFlowNodeExecutionJob result = new CopyContentIntoTempFlowNodeExecutionJob(
+            nc, data, m_executionResult);
+        result.run();
+        return result;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getID() {
+        return CopyContentIntoTempFlowNodeExecutionJobManager.class.getName();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public URL getIcon() {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public URL getIconForWorkflow() {
+        return null;
+    }
 
 }

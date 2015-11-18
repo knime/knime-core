@@ -66,6 +66,13 @@ public class NodeExecutionResult implements NodeContentPersistor {
     private String m_warningMessage;
     private boolean m_needsResetAfterLoad;
 
+    /**
+     *
+     */
+    public NodeExecutionResult() {
+        System.class.toGenericString();
+    }
+
     /** {@inheritDoc} */
     @Override
     public PortObject[] getInternalHeldPortObjects() {

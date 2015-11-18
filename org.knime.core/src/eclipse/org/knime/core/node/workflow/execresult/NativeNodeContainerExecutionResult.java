@@ -45,12 +45,37 @@
  */
 package org.knime.core.node.workflow.execresult;
 
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.SingleNodeContainer;
+
 /**
- *
+ * Specialized execution result for {@link SingleNodeContainer}. Offers access
+ * to the node's execution result (containing port objects and possibly
+ * internals).
  * @author Bernd Wiswedel, University of Konstanz
- * @deprecated Fully replaced by {@link NativeNodeContainerExecutionResult} (super class)
+ * @since 3.1
  */
-@Deprecated
-public class SingleNodeContainerExecutionResult extends NativeNodeContainerExecutionResult {
+public class NativeNodeContainerExecutionResult extends NodeContainerExecutionResult {
+
+    private NodeExecutionResult m_nodeExecutionResult;
+
+    /** @return The execution result for the node. */
+    public NodeExecutionResult getNodeExecutionResult() {
+        return m_nodeExecutionResult;
+    }
+
+    /**
+     * @param nodeExecutionResult the result to set
+     * @throws NullPointerException If argument is null.
+     */
+    public void setNodeExecutionResult(final NodeExecutionResult nodeExecutionResult) {
+        m_nodeExecutionResult = CheckUtils.checkArgumentNotNull(nodeExecutionResult);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
+        throw new IllegalStateException(getClass().getSimpleName() + " has no children");
+    }
 
 }

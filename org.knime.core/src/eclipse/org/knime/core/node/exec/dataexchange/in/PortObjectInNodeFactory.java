@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,15 +43,68 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Oct 27, 2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.execresult;
+package org.knime.core.node.exec.dataexchange.in;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 
 /**
- *
- * @author Bernd Wiswedel, University of Konstanz
- * @deprecated Fully replaced by {@link NativeNodeContainerExecutionResult} (super class)
+ * Node that passes on a port object from a static repository.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
+ * @since 3.1
  */
-@Deprecated
-public class SingleNodeContainerExecutionResult extends NativeNodeContainerExecutionResult {
+public class PortObjectInNodeFactory extends NodeFactory<PortObjectInNodeModel> {
+
+    private final PortType m_type;
+
+    /** Creates new port object in factory for default ports (not BDT). */
+    public PortObjectInNodeFactory() {
+        this(PortObject.TYPE);
+    }
+
+    /** Creates factory for argument port type.
+     * @param type The port type to represent.
+     */
+    PortObjectInNodeFactory(final PortType type) {
+        m_type = type;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public PortObjectInNodeModel createNodeModel() {
+        return new PortObjectInNodeModel(m_type);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<PortObjectInNodeModel> createNodeView(final int viewIndex,
+            final PortObjectInNodeModel nodeModel) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean hasDialog() {
+        return false;
+    }
 
 }

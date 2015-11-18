@@ -46,6 +46,8 @@ package org.knime.core.node.workflow;
 
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.knime.core.node.util.CheckUtils;
+
 /**
  * Holds all information related to one connection between specific ports
  * of two nodes. It also holds additional information, which can be adjusted
@@ -95,19 +97,14 @@ public class ConnectionContainer implements ConnectionProgressListener {
      */
     public ConnectionContainer(final NodeID src, final int srcPort,
             final NodeID dest, final int destPort, final ConnectionType type) {
-        if (src == null || dest == null || type == null) {
-            throw new NullPointerException("Arguments must not be null.");
-        }
-        if (srcPort < 0 || destPort < 0) {
-            throw new IndexOutOfBoundsException("Port index must not be < 0:"
-                    + Math.min(srcPort, destPort));
-        }
-        m_source = src;
+        CheckUtils.checkArgument(srcPort >= 0 && destPort >= 0,
+                "Port index must not be < 0: %d", Math.min(srcPort, destPort));
+        m_source = CheckUtils.checkArgumentNotNull(src);
         m_sourcePort = srcPort;
-        m_dest = dest;
+        m_dest = CheckUtils.checkArgumentNotNull(dest);
         m_destPort = destPort;
         m_uiInfo = null;
-        m_type = type;
+        m_type = CheckUtils.checkArgumentNotNull(type);
     }
 
     /////////////////
@@ -192,17 +189,13 @@ public class ConnectionContainer implements ConnectionProgressListener {
      */
     public void addUIInformationListener(
             final ConnectionUIInformationListener l) {
-        if (l == null) {
-            throw new NullPointerException("Argument must not be null");
-        }
-        m_uiListeners.add(l);
+        m_uiListeners.add(CheckUtils.checkArgumentNotNull(l));
     }
 
     /** Remove a registered listener from the listener list.
      * @param l The listener to remove.
      */
-    public void removeUIInformationListener(
-            final ConnectionUIInformationListener l) {
+    public void removeUIInformationListener(final ConnectionUIInformationListener l) {
         m_uiListeners.remove(l);
     }
 
@@ -211,18 +204,14 @@ public class ConnectionContainer implements ConnectionProgressListener {
      * @param listener The listener to add, must not be null.
      */
     public void addProgressListener(final ConnectionProgressListener listener) {
-        if (listener == null) {
-            throw new NullPointerException("Argument must not be null");
-        }
-        m_progressListeners.add(listener);
+        m_progressListeners.add(CheckUtils.checkArgumentNotNull(listener));
     }
 
     /**
      * Removes a listener from the list of registered progress listeners.
      * @param listener The listener to remove
      */
-    public void removeProgressListener(
-            final ConnectionProgressListener listener) {
+    public void removeProgressListener(final ConnectionProgressListener listener) {
         m_progressListeners.remove(listener);
     }
 
@@ -250,18 +239,14 @@ public class ConnectionContainer implements ConnectionProgressListener {
      * @param evt The event to fire.
      */
     protected void notifyProgressListeners(final ConnectionProgressEvent evt) {
-        for (ConnectionProgressListener l : m_progressListeners) {
-            l.progressChanged(evt);
-        }
+        m_progressListeners.stream().forEach(l -> l.progressChanged(evt));
     }
 
     /** Notifies all registered listeners with the argument event.
      * @param evt The event to fire.
      */
     protected void notifyUIListeners(final ConnectionUIInformationEvent evt) {
-        for (ConnectionUIInformationListener l : m_uiListeners) {
-            l.connectionUIInformationChanged(evt);
-        }
+        m_uiListeners.stream().forEach(l -> l.connectionUIInformationChanged(evt));
     }
 
     /** {@inheritDoc} */

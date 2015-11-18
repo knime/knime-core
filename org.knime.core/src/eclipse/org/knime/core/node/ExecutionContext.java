@@ -62,6 +62,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
+import org.knime.core.data.container.VoidTable;
 import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
@@ -403,6 +404,21 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createWrappedTable(final BufferedDataTable in) {
         WrappedTable t = new WrappedTable(in);
         BufferedDataTable out = new BufferedDataTable(t);
+        out.setOwnerRecursively(m_node);
+        return out;
+    }
+
+    /** Create new "void" table. It's a framework method that is used by the streaming executor to populate the output
+     * of a node. It has a table specification but no data (which is also indicated in the view).
+     *
+     * <p>This method is hardly ever interesting for client implementations.
+     * @param spec The meta data.
+     * @return a new void table.
+     * @since 3.1
+     */
+    public BufferedDataTable createVoidTable(final DataTableSpec spec) {
+        VoidTable voidTable = VoidTable.create(spec);
+        BufferedDataTable out = new BufferedDataTable(voidTable);
         out.setOwnerRecursively(m_node);
         return out;
     }

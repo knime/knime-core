@@ -261,8 +261,7 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
        return m_buffer != null;
     }
 
-    private static final BufferedDataTable[] EMPTY_ARRAY =
-        new BufferedDataTable[0];
+    static final BufferedDataTable[] EMPTY_ARRAY = new BufferedDataTable[0];
 
     /**
      * Returns an empty array. This method is used internally.

@@ -69,12 +69,6 @@ public final class SubnodeContainerExecutionResult extends NodeContainerExecutio
         m_baseID = CheckUtils.checkArgumentNotNull(baseID, "ID must not be null");
     }
 
-    /**@return The base id of the subnode. Used to amend the node ids in
-     * {@link #getWorkflowExecutionResult()}. */
-    public NodeID getBaseID() {
-        return m_baseID;
-    }
-
     /** @return Inner workflow execution result set vi. */
     public WorkflowExecutionResult getWorkflowExecutionResult() {
         return m_workflowExecutionResult;

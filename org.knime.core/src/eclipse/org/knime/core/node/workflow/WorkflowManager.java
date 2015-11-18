@@ -83,6 +83,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -313,8 +314,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** The root of everything, a workflow with no in- or outputs.
      * This workflow holds the top level projects. */
-    public static final WorkflowManager ROOT = new WorkflowManager(
-        null, null, NodeID.ROOTID, new PortType[0], new PortType[0], true, null, "ROOT", null, null);
+    public static final WorkflowManager ROOT = new WorkflowManager(null, null, NodeID.ROOTID, new PortType[0],
+        new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty());
 
     /** dir where all tmp files of the flow live. Set in the workflow context. If not null, it must be discarded upon
      * workflow disposal. If null, the temp dir location in the context was set from someone else (the server e.g.) and
@@ -338,13 +339,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param isProject If this workflow manager is a project
      * @param context The context
      * @param name Name of this workflow manager
-     * @param globalTableRepository TODO
-     * @param fileStoreHandlerRepository TODO
+     * @param globalTableRepositoryOptional TODO
+     * @param fsHandlerRepositoryOptional TODO
      */
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
         final PortType[] inTypes, final PortType[] outTypes, final boolean isProject, final WorkflowContext context,
-        final String name, final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
+        final String name, final Optional<HashMap<Integer,ContainerTable>> globalTableRepositoryOptional,
+        final Optional<WorkflowFileStoreHandlerRepository> fsHandlerRepositoryOptional) {
         super(parent, id);
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         m_workflow = new Workflow(this, id);
@@ -362,8 +363,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (isProject) {
             // we can start a new table repository since there can not
             // be any dependencies to parent
-            m_globalTableRepository = new GlobalTableRepository();
-            m_fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
             // ...and we do not need to synchronize across unconnected workflows
             m_workflowLock = new WorkflowLock(this);
             m_workflowContext = context;
@@ -374,10 +373,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // ...synchronize across border
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             // otherwise we may have incoming and/or outgoing dependencies...
-            m_globalTableRepository = globalTableRepository;
-            m_fileStoreHandlerRepository = fileStoreHandlerRepository;
             m_workflowContext = context;
         }
+        m_globalTableRepository = globalTableRepositoryOptional.orElseGet(() -> new GlobalTableRepository());
+        m_fileStoreHandlerRepository = fsHandlerRepositoryOptional.orElseGet(() -> new WorkflowFileStoreHandlerRepository());
         m_credentialsStore = new CredentialsStore(this);
         // initialize listener list
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
@@ -590,7 +589,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WorkflowManager createAndAddProject(final String name, final WorkflowCreationHelper creationHelper) {
         WorkflowManager wfm = createAndAddSubWorkflow(
-            new PortType[0], new PortType[0], name, true, creationHelper.getWorkflowContext(), null);
+            new PortType[0], new PortType[0], name, true, creationHelper.getWorkflowContext(),
+            creationHelper.getGlobalTableRepository(), creationHelper.getFileStoreHandlerRepository(), null);
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -753,12 +753,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
             final PortType[] outPorts, final String name) {
-        return createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null);
+        return createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null, null, null);
     }
 
-    /** Adds new empty meta node to this WFM. */
+    /** Adds new empty meta node to this WFM.
+     * @param globalTableRepository TODO
+     * @param fileStoreHandlerRepository TODO*/
     private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts, final PortType[] outPorts,
-        final String name, final boolean isNewProject, final WorkflowContext context, final NodeID idOrNull) {
+        final String name, final boolean isNewProject, final WorkflowContext context,
+        final HashMap<Integer, ContainerTable> globalTableRepository,
+        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final NodeID idOrNull) {
         final boolean hasPorts = inPorts.length != 0 || outPorts.length != 0;
         if (this == ROOT) {
             CheckUtils.checkState(!hasPorts,
@@ -776,10 +780,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else {
                 newID = m_workflow.createUniqueID();
             }
-            HashMap<Integer, ContainerTable> globalTableRepository = isNewProject ? null : m_globalTableRepository;
-            WorkflowFileStoreHandlerRepository fileStoreRepository = isNewProject ? null : m_fileStoreHandlerRepository;
+            // TODO both args into one "data-repo" wrapper class
+            CheckUtils.checkArgument(!((globalTableRepository == null) ^ (fileStoreHandlerRepository == null)),
+                "Both args must be null or both args must be non-null");
+            Optional<HashMap<Integer, ContainerTable>> globalTableRepositoryOptional;
+            Optional<WorkflowFileStoreHandlerRepository> fileStoreRepositoryOptional;
+            if (isNewProject) {
+                globalTableRepositoryOptional = Optional.ofNullable(globalTableRepository);
+                fileStoreRepositoryOptional = Optional.ofNullable(fileStoreHandlerRepository);
+            } else {
+                globalTableRepositoryOptional = Optional.of(m_globalTableRepository);
+                fileStoreRepositoryOptional = Optional.of(m_fileStoreHandlerRepository);
+            }
             wfm = new WorkflowManager(null, this, newID, inPorts, outPorts, isNewProject, context, name,
-                globalTableRepository, fileStoreRepository);
+                globalTableRepositoryOptional, fileStoreRepositoryOptional);
             addNodeContainer(wfm, true);
             LOGGER.debug("Added new subworkflow " + newID);
         }
@@ -3805,7 +3819,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
             removeNode(subnodeID);
 
-            WorkflowManager metaNode = createAndAddSubWorkflow(inPorts, outPorts, name, false, null, subnodeID);
+            WorkflowManager metaNode = createAndAddSubWorkflow(
+                inPorts, outPorts, name, false, null, null, null, subnodeID);
             metaNode.setUIInformation(uiInformation);
             metaNode.paste(fromSubnodePersistor);
 
@@ -5399,13 +5414,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /**
      * @return global table repository for this WFM.
+     * @since 3.1
+     * @noreference This method is not intended to be referenced by clients.
      */
-    HashMap<Integer, ContainerTable> getGlobalTableRepository() {
+    public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
         return m_globalTableRepository;
     }
 
-    /** @return the fileStoreHandlerRepository for this meta node or project. */
-    WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
+    /** @return the fileStoreHandlerRepository for this meta node or project.
+     * @since 3.1
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
         return m_fileStoreHandlerRepository;
     }
 
@@ -8259,6 +8279,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         for (NodeContainer nc : m_workflow.getNodeValues()) {
             if (nc instanceof WorkflowManager) {
                 ((WorkflowManager)nc).setDirtyAll();
+            } else if (nc instanceof SubNodeContainer) {
+                ((SubNodeContainer)nc).setDirty();
+                ((SubNodeContainer)nc).getWorkflowManager().setDirtyAll();
             } else {
                 nc.setDirty();
             }
@@ -8575,6 +8598,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = getNodeContainer(reverseIt.previous());
                 nc.cleanup();
             }
+            getConnectionContainers().stream().forEach(c -> c.cleanup());
             if (m_tmpDir != null) {
                 // delete the flow temp dir that we created
                 KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {

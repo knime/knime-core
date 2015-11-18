@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,15 +43,23 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Aug 7, 2009 (wiswedel): created
  */
-package org.knime.core.node.workflow.execresult;
+package org.knime.core.node.exec.dataexchange.in;
+
+import org.knime.core.node.BufferedDataTable;
 
 /**
- *
- * @author Bernd Wiswedel, University of Konstanz
- * @deprecated Fully replaced by {@link NativeNodeContainerExecutionResult} (super class)
+ * Node that passes on a table from a static repository.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @noreference This class is not intended to be referenced by clients.
+ * @since 3.1
  */
-@Deprecated
-public class SingleNodeContainerExecutionResult extends NativeNodeContainerExecutionResult {
+public final class BDTInNodeFactory extends PortObjectInNodeFactory {
 
+    /** Calls super, sets BDT as type. */
+    public BDTInNodeFactory() {
+        super(BufferedDataTable.TYPE);
+    }
 }

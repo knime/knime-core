@@ -46,6 +46,12 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.HashMap;
+
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.node.util.CheckUtils;
+
 /**
  * Instances of this class are used during creation of new workflows. They contains meta information that is used to
  * create a workflow manager instance for the new workflow.
@@ -55,14 +61,17 @@ package org.knime.core.node.workflow;
  */
 public class WorkflowCreationHelper {
     private WorkflowContext m_context;
+    private HashMap<Integer, ContainerTable> m_globalTableRepository;
+    private WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
 
     /**
      * Sets the context for the workflow that is being created.
-     *
      * @param context a workflow context
+     * @return this (method chaining)
      */
-    public void setWorkflowContext(final WorkflowContext context) {
+    public WorkflowCreationHelper setWorkflowContext(final WorkflowContext context) {
         m_context = context;
+        return this;
     }
 
     /**
@@ -73,5 +82,43 @@ public class WorkflowCreationHelper {
      */
     public WorkflowContext getWorkflowContext() {
         return m_context;
+    }
+
+    /** Add data handelers use to init the workflow with. Both args are usually null but if one is non-null the
+     * other must not be null either. Used in "sandbox workflow" where the isolated workflow inherits the data
+     * handlers of the original workflow.
+     * @param globalTableRepository ...
+     * @param fileStoreHandlerRepository ...
+     * @return this (for method chaining)
+     * @since 3.1
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public WorkflowCreationHelper setDataHandlers(final HashMap<Integer, ContainerTable> globalTableRepository,
+        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
+        CheckUtils.checkArgument(!((globalTableRepository == null) ^ (fileStoreHandlerRepository == null)),
+            "Both args to be null or both args to be non-null");
+        m_globalTableRepository = globalTableRepository;
+        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+        return this;
+    }
+
+    /**
+     * @return the fileStoreHandlerRepository the handler as set by
+     * {@link #setDataHandlers(HashMap, WorkflowFileStoreHandlerRepository)}
+     * @since 3.1
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
+        return m_fileStoreHandlerRepository;
+    }
+
+    /**
+     * @return the globalTableRepository the repository as set by
+     * {@link #setDataHandlers(HashMap, WorkflowFileStoreHandlerRepository)}
+     * @since 3.1
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
+        return m_globalTableRepository;
     }
 }

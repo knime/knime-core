@@ -97,10 +97,10 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
-import org.knime.core.node.workflow.execresult.SingleNodeContainerExecutionResult;
 import org.w3c.dom.Element;
 
 /**
@@ -690,9 +690,9 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 innerFLC.setFileStoreHandler((ILoopStartWriteFileStoreHandler)newFSHandler);
             } else {
                 assert oldFSHandler instanceof IWriteFileStoreHandler : "Loop Start " + getNameWithID()
-                + " must have file store handler in iteration " + loopIteration;
-            newFSHandler = (IWriteFileStoreHandler)oldFSHandler;
-            // keep the old one
+                    + " must have file store handler in iteration " + loopIteration;
+                newFSHandler = (IWriteFileStoreHandler)oldFSHandler;
+                // keep the old one
             }
         } else {
             // ordinary node contained in loop
@@ -813,15 +813,15 @@ public class NativeNodeContainer extends SingleNodeContainer {
                         + " is alredy executed; won't load execution result");
                 return;
             }
-            if (!(execResult instanceof SingleNodeContainerExecutionResult)) {
+            if (!(execResult instanceof NativeNodeContainerExecutionResult)) {
                 throw new IllegalArgumentException("Argument must be instance "
-                        + "of \"" + SingleNodeContainerExecutionResult.
+                        + "of \"" + NativeNodeContainerExecutionResult.
                         class.getSimpleName() + "\": "
                         + execResult.getClass().getSimpleName());
             }
             super.loadExecutionResult(execResult, exec, loadResult);
-            SingleNodeContainerExecutionResult sncExecResult =
-                (SingleNodeContainerExecutionResult)execResult;
+            NativeNodeContainerExecutionResult sncExecResult =
+                (NativeNodeContainerExecutionResult)execResult;
             NodeExecutionResult nodeExecResult =
                 sncExecResult.getNodeExecutionResult();
             boolean success = sncExecResult.isSuccess();
@@ -850,10 +850,10 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public SingleNodeContainerExecutionResult createExecutionResult(
+    public NativeNodeContainerExecutionResult createExecutionResult(
             final ExecutionMonitor exec) throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
-            SingleNodeContainerExecutionResult result = new SingleNodeContainerExecutionResult();
+            NativeNodeContainerExecutionResult result = new NativeNodeContainerExecutionResult();
             super.saveExecutionResult(result);
             NodeContext.pushContext(this);
             try {

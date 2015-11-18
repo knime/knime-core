@@ -69,6 +69,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
@@ -91,7 +92,8 @@ import org.knime.core.node.workflow.FlowVariable;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
-public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel implements InactiveBranchConsumer {
+public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
+    implements InactiveBranchConsumer, PortObjectHolder {
 
     /** Holds the data (specs, objects, flow vars), gets update on reset, configure, execute. */
     private int m_numberOfPorts;
@@ -276,6 +278,20 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel 
      */
     public String[] getPortDescriptions() {
         return m_configuration.getPortDescriptions();
+    }
+
+    /** {@inheritDoc}
+     * @since 3.1*/
+    @Override
+    public PortObject[] getInternalPortObjects() {
+        return m_outputExchange.getPortObjects();
+    }
+
+    /** {@inheritDoc}
+     * @since 3.1*/
+    @Override
+    public void setInternalPortObjects(final PortObject[] portObjects) {
+        setNewExchange(new VirtualSubNodeExchange(portObjects, getVisibleFlowVariables()));
     }
 
 }

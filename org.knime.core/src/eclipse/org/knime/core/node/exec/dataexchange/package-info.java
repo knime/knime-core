@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,15 +43,11 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Oct 29, 2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.execresult;
-
-/**
- *
- * @author Bernd Wiswedel, University of Konstanz
- * @deprecated Fully replaced by {@link NativeNodeContainerExecutionResult} (super class)
- */
-@Deprecated
-public class SingleNodeContainerExecutionResult extends NativeNodeContainerExecutionResult {
-
-}
+/** Utility classes that are needed to move data into different workflows / contexts for
+ * 3rd party job manager execution.
+ * <p/>
+ * None of the classes are meant for public use. */
+package org.knime.core.node.exec.dataexchange;

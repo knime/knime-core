@@ -63,6 +63,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
@@ -166,7 +167,16 @@ final class PatternFilterPanelImpl<T> extends JPanel {
             public void caretUpdate(final CaretEvent e) {
                 if (!m_patternValue.equals(m_pattern.getText())) {
                     m_patternValue = m_pattern.getText();
-                    fireFilteringChangedEvent();
+                    // async update - see bug 6073
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            final int caretPosition = m_pattern.getCaretPosition();
+                            fireFilteringChangedEvent();
+                            m_pattern.requestFocus();
+                            m_pattern.setCaretPosition(caretPosition);
+                        }
+                    });
                 }
             }
         });
