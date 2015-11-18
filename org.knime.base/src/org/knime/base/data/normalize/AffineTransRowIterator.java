@@ -54,6 +54,8 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.util.CheckUtils;
 
 
 /**
@@ -82,6 +84,23 @@ public class AffineTransRowIterator extends RowIterator {
             throw new NullPointerException("Arguments must not be null.");
         }
         m_it = originalTable.iterator();
+        m_transtable = table;
+    }
+
+    /**
+     * Creates new row iterator given an AffineTransTable with its informations.
+     *
+     * @param rowInput the original rows that will be normalized.
+     * @param table the AffineTransformTable containing the information to
+     * normalize the input data.
+     */
+    AffineTransRowIterator(final RowInput rowInput,
+            final AffineTransTable table) {
+        if (rowInput == null || table == null) {
+            throw new NullPointerException("Arguments must not be null.");
+        }
+
+        m_it = new RowInputIterator(rowInput);
         m_transtable = table;
     }
 
@@ -155,5 +174,41 @@ public class AffineTransRowIterator extends RowIterator {
             }
         }
         return new DefaultRow(in.getKey(), cells);
+    }
+
+    /** Iterator on {@link RowInput}. {@link InterruptedException} is wrapped in {@link RuntimeException}. */
+    static final class RowInputIterator extends RowIterator {
+
+        private final RowInput m_input;
+
+        private DataRow m_internalNext;
+
+        RowInputIterator(final RowInput input) {
+            m_input = input;
+            internalNext();
+        }
+
+        private void internalNext() {
+            try {
+                m_internalNext = m_input.poll();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean hasNext() {
+            return m_internalNext != null;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public DataRow next() {
+            final DataRow result = m_internalNext;
+            CheckUtils.checkState(result != null, "No more rows");
+            internalNext();
+            return result;
+        }
     }
 }

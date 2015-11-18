@@ -54,6 +54,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.StreamableOperator;
 
 public class NormalizerPMMLApplyNodeModel extends NormalizerApplyNodeModel {
     /**
@@ -103,6 +107,33 @@ public class NormalizerPMMLApplyNodeModel extends NormalizerApplyNodeModel {
        }
        return new PortObject[]{model, bdt};
    }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+       throws InvalidSettingsException {
+       //PMML normalizer node is not streamable nor distributable since the data table spec is not available during during configure
+       //call default implementation of this method (delegated by the super-method)
+       return super.createStreamableOperator(partitionInfo, inSpecs);
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public InputPortRole[] getInputPortRoles() {
+       return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
+   }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.NONDISTRIBUTED, OutputPortRole.NONDISTRIBUTED};
+    }
 
 
    /**

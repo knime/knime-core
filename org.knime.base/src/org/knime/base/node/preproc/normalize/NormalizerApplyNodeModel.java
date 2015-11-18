@@ -59,6 +59,7 @@ import org.knime.base.data.normalize.NormalizerPortObject;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -70,6 +71,15 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  *
@@ -152,11 +162,61 @@ public class NormalizerApplyNodeModel extends NodeModel {
         }
         return new BufferedDataTable[]{bdt};
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        if (getNrOutPorts() == 2) {
+            //if outputs.length == 2 -> PMML normalizer apply-node that overrides this method
+            //by default call the default implementation of this method
+            return super.createStreamableOperator(partitionInfo, inSpecs);
+        } else {
+            return new StreamableOperator() {
+
+                @Override
+                public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                    throws Exception {
+                    assert outputs.length == 1;
+                    NormalizerPortObject model = (NormalizerPortObject)((PortObjectInput)inputs[0]).getPortObject();
+                    RowInput rowInput = (RowInput)inputs[1];
+                    AffineTransTable t = new AffineTransTable(rowInput, getAffineTrans(model.getConfiguration()));
+                    RowOutput rowOutput = (RowOutput)outputs[0];
+                    RowIterator it = t.iterator();
+                    while (it.hasNext()) {
+                        rowOutput.push(it.next());
+                    }
+                    if (t.getErrorMessage() != null) {
+                        //TODO collect error message from remote nodes if run distributed
+                        setWarningMessage(t.getErrorMessage());
+                    }
+                }
+            };
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.NONDISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+    }
+
     /**
      * Return the configuration with possible additional transformations made.
-     * 
-     * @param affineTransConfig the original affine transformation 
+     *
+     * @param affineTransConfig the original affine transformation
      * configuration.
      * @return the (possible modified) configuration.
      */

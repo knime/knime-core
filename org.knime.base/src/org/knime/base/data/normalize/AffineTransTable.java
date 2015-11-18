@@ -62,6 +62,8 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.RowInput;
 
 
 /**
@@ -79,7 +81,7 @@ public class AffineTransTable implements DataTable {
     /** A very small number. */
     public static final double VERY_SMALL = 1E-10;
     
-    private final DataTable m_table;
+    private final RowInput m_tableRows;
 
     private final DataTableSpec m_spec;
 
@@ -128,9 +130,23 @@ public class AffineTransTable implements DataTable {
      * @throws IllegalArgumentException If target cols in table are not
      * numeric.
      */
-    public AffineTransTable(final DataTable table, 
+    public AffineTransTable(final DataTable table,
             final AffineTransConfiguration configuration) {
-        DataTableSpec spec = table.getDataTableSpec();
+        this(new DataTableRowInput(table), configuration);
+    }
+
+    /** Creates new table, normalizing <code>table</code> (given as row input) with the configuration
+     * given by <code>configuration</code>.
+     * @param rowInput To be normalized
+     * @param configuration Normalization parameters.
+     * @throws NullPointerException If either arg is null.
+     * @throws IllegalArgumentException If target cols in table are not
+     * numeric.
+     * @since 3.1
+     */
+    public AffineTransTable(final RowInput rowInput,
+            final AffineTransConfiguration configuration) {
+        DataTableSpec spec = rowInput.getDataTableSpec();
         m_configuration = configuration;
         m_indicesInConfiguration = new int[spec.getNumColumns()];
         Arrays.fill(m_indicesInConfiguration, -1);
@@ -159,12 +175,13 @@ public class AffineTransTable implements DataTable {
                     + Arrays.toString(hash.keySet().toArray()));
         }
         m_spec = generateNewSpec(spec, m_configuration);
-        m_table = table;
+        m_tableRows = rowInput;
     }
     
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
@@ -186,8 +203,9 @@ public class AffineTransTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
-        return new AffineTransRowIterator(m_table, this);
+        return new AffineTransRowIterator(m_tableRows, this);
     }
 
     /**
