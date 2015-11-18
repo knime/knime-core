@@ -7,6 +7,12 @@
                 <message_argument value="2.12.0"/>
             </message_arguments>
         </filter>
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="3.0.1"/>
+                <message_argument value="3.0.0"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeModel">
         <filter id="305324134">
@@ -38,11 +44,26 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/meta/looper/LoopEndJoin2NodeFactory.java" type="org.knime.base.node.meta.looper.LoopEndJoin2NodeFactory">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="2.12"/>
+                <message_argument value="3.0"/>
+                <message_argument value="org.knime.base.node.meta.looper.LoopEndJoin2NodeFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/meta/looper/LoopEndJoinNodeModel.java" type="org.knime.base.node.meta.looper.LoopEndJoinNodeModel">
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.base.node.meta.looper.LoopEndJoinNodeModel"/>
                 <message_argument value="org.knime.base_2.12.2"/>
+            </message_arguments>
+        </filter>
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.meta.looper.LoopEndJoinNodeModel"/>
+                <message_argument value="org.knime.base_3.0.1"/>
             </message_arguments>
         </filter>
     </resource>
