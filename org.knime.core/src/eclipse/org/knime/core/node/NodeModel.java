@@ -46,7 +46,6 @@ package org.knime.core.node;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -1658,11 +1657,7 @@ public abstract class NodeModel {
 
                 for (int i = 0; i < outputs.length; i++) {
                     if (outObjects[i] != null) { //port objects happen to be null for instance at the loop end-node when the iteration is continued
-                        if (getOutPortType(i).equals(BufferedDataTable.TYPE) && outputs[i] instanceof RowOutput) {
-                            //comment for 'instanceof RowOutput': some nodes' configure-method return null (e.g. Transpose),
-                            //hence a RowOutput cannot be created by the executor. This only happens in the default implementation, i.e. a node
-                            //doesn't override createStreamableOperator (sanity check in computeFinalOutputSpec-method)
-                            //and is not streamable nor distributed
+                        if (getOutPortType(i).equals(BufferedDataTable.TYPE)) {
                             ((RowOutput)outputs[i]).setFully((BufferedDataTable)outObjects[i]);
                         } else {
                             ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
@@ -1720,59 +1715,34 @@ public abstract class NodeModel {
     }
 
     /**
-     * Streaming API (pending):
-     * Finally determines the specifiction of the output (tables). In most cases
-     * implementations just return the result of
-     * {@link #configure(PortObjectSpec[])} here (which is also the default
-     * implementation). In some cases the node needs access on the data to
-     * determine the output spec (e.g. for nodes such as "Transpose" or
-     * "One-to-Many"), which is iterated as described in
+     * Streaming API (pending): Finally determines the specifiction of the output (tables). In most cases
+     * implementations just return the result of {@link #configure(PortObjectSpec[])} here (which is also the default
+     * implementation). In some cases the node needs access on the data to determine the output spec (e.g. for nodes
+     * such as "Transpose" or "One-to-Many"), which is iterated as described in
      * {@link #iterate(StreamableOperatorInternals)}.
      *
-     * This method is called after
-     * {@linkplain #iterate(StreamableOperatorInternals) iterate} returns
-     * <code>false</code> to prepare the {@link RowOutput}. It will then call
-     * the
-     * {@link StreamableOperator#runFinal(
-     * PortInput[], PortOutput[], ExecutionContext)}
-     * method to compute the final output.
+     * This method is called after {@linkplain #iterate(StreamableOperatorInternals) iterate} returns <code>false</code>
+     * to prepare the {@link RowOutput}. It will then call the
+     * {@link StreamableOperator#runFinal( PortInput[], PortOutput[], ExecutionContext)} method to compute the final
+     * output.
      *
      * @param internals The internals of the last "intermediate" merge.
      * @param inSpecs The input specs.
      * @return The specs describing the outputs that are computed by
-     *         {@link StreamableOperator#runFinal(
-     *         PortInput[], PortOutput[], ExecutionContext)} and
-     *         {@link #finishStreamableExecution(
-     *         StreamableOperatorInternals, ExecutionContext, PortOutput[])},
-     *         never null (elements).
+     *         {@link StreamableOperator#runFinal( PortInput[], PortOutput[], ExecutionContext)} and
+     *         {@link #finishStreamableExecution( StreamableOperatorInternals, ExecutionContext, PortOutput[])}, never
+     *         null (elements). In the default implementation (i.e. for non-streamable or non-distributed nodes), this
+     *         might sometimes return <code>null</code> (e.g. Transpose-node). In that case (potential) result table can
+     *         only be transfered by {@link RowOutput#setFully(BufferedDataTable)} to the respective RowOutput. The
+     *         implementation of the RowOutput passed in the
+     *         {@link StreamableOperator#runFinal(PortInput[], PortOutput[], ExecutionContext)} has to take care of that
+     *         in order to comply with the streaming-API default implementation.
      * @throws InvalidSettingsException As described in the configure method.
      * @since 2.6
      */
     public PortObjectSpec[] computeFinalOutputSpecs(final StreamableOperatorInternals internals,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        PortObjectSpec[] specs = configure(inSpecs);
-        //some nodes return a null-spec or a spec containing null-entries (e.g. Transpose)
-        //this is only possible, if the node is not streamable nor distributed (i.e. doesn't override
-        //createStreamableOperator(...)). We check for that here:
-        if (specs == null || Arrays.stream(specs).anyMatch(s -> s == null)) {
-            //spec or at least one spec entry is null -> createStreamableOperator must NOT be overriden
-            //check it via reflection
-            try {
-                Method m =
-                    this.getClass().getMethod("createStreamableOperator", PartitionInfo.class, PortObjectSpec[].class);
-                if (m.getDeclaringClass() != NodeModel.class) {
-                    //method has been overriden
-                    throw new IllegalStateException("Nodes' \"configure\"-method returns null!"
-                        + " Node must not be streamed (don't override the \"createStreamableOperator\"-method).");
-                }
-            } catch (NoSuchMethodException | SecurityException ex) {
-                // as long as the signature of the createStreamableOperator-method
-                // doesn't change, this should not happen
-                throw new RuntimeException(ex);
-            }
-
-        }
-        return specs;
+        return configure(inSpecs);
     }
 
     /**
