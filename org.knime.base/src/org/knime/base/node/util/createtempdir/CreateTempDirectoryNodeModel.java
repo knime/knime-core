@@ -46,7 +46,11 @@
 package org.knime.base.node.util.createtempdir;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.knime.base.node.util.createtempdir.CreateTempDirectoryConfiguration.VarNameFileNamePair;
@@ -58,6 +62,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -65,6 +70,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.util.FileUtil;
@@ -75,15 +81,11 @@ import org.knime.core.util.FileUtil;
  */
 final class CreateTempDirectoryNodeModel extends NodeModel {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(CreateTempDirectoryNodeModel.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(CreateTempDirectoryNodeModel.class);
 
     private CreateTempDirectoryConfiguration m_configuration;
     private String m_id;
 
-    /**
-     *
-     */
     CreateTempDirectoryNodeModel() {
         super(new PortType[] {}, new PortType[] {FlowVariablePortObject.TYPE});
     }
@@ -219,24 +221,45 @@ final class CreateTempDirectoryNodeModel extends NodeModel {
         }
     }
 
+    private static String INTERNAL_FILE_NAME = "internals.xml";
+
     /** {@inheritDoc} */
     @Override
-    protected void loadInternals(
-            final File nodeInternDir, final ExecutionMonitor exec)
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        if (m_configuration.isDeleteOnReset()) {
-            setWarningMessage(
-                    "Did not restore content; consider to re-execute!");
+        File internalFile = new File(nodeInternDir, INTERNAL_FILE_NAME);
+        boolean issueWarning;
+        if (internalFile.exists()) { // not present before 3.1
+            // in most standard cases this isn't reasonable as the folder gets deleted when the flow is closed.
+            // however, it's useful if the node is run in a temporary workflow that is part of the streaming executor
+            try (InputStream in = new FileInputStream(internalFile)) {
+                NodeSettingsRO s = NodeSettings.loadFromXML(in);
+                m_id = CheckUtils.checkSettingNotNull(s.getString("temp-folder-id"), "id must not be null");
+                issueWarning = !computeFileName(m_id).exists();
+            } catch (InvalidSettingsException e) {
+                throw new IOException(e.getMessage(), e);
+            }
+        } else {
+            issueWarning = m_configuration.isDeleteOnReset();
         }
-        // no internals
+        if (issueWarning) {
+            setWarningMessage("Did not restore content; consider to re-execute!");
+        }
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveInternals(
-            final File nodeInternDir, final ExecutionMonitor exec)
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        // no internals, really
+        if (m_id != null) {
+            // added in 3.1
+            try (OutputStream w = new FileOutputStream(new File(nodeInternDir, INTERNAL_FILE_NAME))) {
+                NodeSettings s = new NodeSettings("temp-dir-node");
+                s.addString("temp-folder-id", m_id);
+                s.saveToXML(w);
+            }
+        }
+        // else this was a workflow saved in 2.x and then loaded and saved/converted in 3.1
     }
 
 }
