@@ -177,7 +177,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         m_quote.setPreferredSize(new Dimension(150, 25));
         m_quote.setColumns(6);
         quoteBox.add(Box.createHorizontalStrut(3));
-        quoteBox.add(new JLabel("(leave emtpy for none.)"));
+        quoteBox.add(new JLabel("(leave empty for none.)"));
         quoteBox.add(Box.createHorizontalGlue());
         settingsBox.add(quoteBox);
 
