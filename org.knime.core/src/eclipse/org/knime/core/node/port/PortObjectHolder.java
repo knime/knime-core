@@ -57,9 +57,7 @@ package org.knime.core.node.port;
  * loop iterations. For more details see the description of {@link org.knime.core.node.workflow.LoopStartNode}.
  *
  * <p>This interface is a generalization of {@link org.knime.core.node.BufferedDataTableHolder} - it allows
- * port objects to be held (including {@link org.knime.core.node.BufferedDataTable}). Internally held objects
- * (except for tables) must also be contained in one of the output ports (that is, returned in execute).
- * For all other type of objects consider to save them as part of the node internals.
+ * port objects to be held (including {@link org.knime.core.node.BufferedDataTable}).
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.10
@@ -68,7 +66,7 @@ public interface PortObjectHolder {
 
     /** The objects to be held internally and expected after the workflow got loaded. This method is called shortly
      * after #execute.
-     * @return the objects in an array of arbitrary size. It may be null  and may contain null objects. */
+     * @return the objects in an array of arbitrary size. It may be null and may contain null objects. */
     public PortObject[] getInternalPortObjects();
 
     /** Called when the workflow gets loaded, sets what was previously returned by the get method.

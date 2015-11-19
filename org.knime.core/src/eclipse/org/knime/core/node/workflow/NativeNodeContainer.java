@@ -810,7 +810,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         synchronized (m_nodeMutex) {
             if (InternalNodeContainerState.EXECUTED.equals(getInternalState())) {
                 LOGGER.debug(getNameWithID()
-                        + " is alredy executed; won't load execution result");
+                        + " is already executed; won't load execution result");
                 return;
             }
             if (!(execResult instanceof NativeNodeContainerExecutionResult)) {

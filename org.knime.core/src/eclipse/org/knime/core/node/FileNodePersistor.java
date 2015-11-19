@@ -48,6 +48,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,8 +57,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
@@ -72,7 +75,6 @@ import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
-import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpec.PortObjectSpecSerializer;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
@@ -80,6 +82,7 @@ import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
@@ -339,8 +342,8 @@ public class FileNodePersistor implements NodePersistor {
         final ExecutionMonitor exec, final int portIdx, final Map<Integer, BufferedDataTable> loadTblRep,
         final HashMap<Integer, ContainerTable> tblRep, final FileStoreHandlerRepository fileStoreHandlerRepository)
         throws IOException, InvalidSettingsException, CanceledExecutionException {
-        String specClass = settings.getString("port_spec_class");
-        String objectClass = loadPortObjectClassName(settings);
+        final String specClass = settings.getString("port_spec_class");
+        final String objectClass = loadPortObjectClassName(settings);
 
         PortType designatedType = node.getOutputType(portIdx);
         PortObjectSpec spec = null;
@@ -370,88 +373,8 @@ public class FileNodePersistor implements NodePersistor {
                 spec = BufferedDataTable.loadSpec(portDir);
             }
         } else {
-            exec.setMessage("Loading specification");
-            if (specClass != null) {
-                Class<?> cl;
-                try {
-                    cl = Class.forName(specClass);
-                } catch (ClassNotFoundException e) {
-                    throw new IOException("Can't load class \"" + specClass + "\"", e);
-                }
-                if (!PortObjectSpec.class.isAssignableFrom(cl)) {
-                    throw new IOException("Class \"" + cl.getSimpleName() + "\" is not a sub-class \""
-                        + PortObjectSpec.class.getSimpleName() + "\"");
-                }
-                ReferencedFile specDirRef = new ReferencedFile(portDir, settings.getString("port_spec_location"));
-                File specFile = specDirRef.getFile();
-                if (!specFile.isFile()) {
-                    throw new IOException("Can't read spec file " + specFile.getAbsolutePath());
-                }
-                PortObjectSpecZipInputStream in =
-                    PortUtil.getPortObjectSpecZipInputStream(new BufferedInputStream(new FileInputStream(specFile)));
-                PortObjectSpecSerializer<?> serializer =
-                    PortTypeRegistry.getInstance().getSpecSerializer(cl.asSubclass(PortObjectSpec.class)).get();
-                spec = serializer.loadPortObjectSpec(in);
-                in.close();
-                if (spec == null) {
-                    throw new IOException("Serializer \"" + serializer.getClass().getName() + "\" restored null spec ");
-                }
-            }
-            if (spec != null && objectClass != null) {
-                Class<?> cl;
-                try {
-                    cl = Class.forName(objectClass);
-                } catch (ClassNotFoundException e) {
-                    throw new IOException("Can't load port object class \"" + objectClass + "\"", e);
-                }
-                if (!PortObject.class.isAssignableFrom(cl)) {
-                    throw new IOException("Class \"" + cl.getSimpleName() + "\" is not a sub-class \""
-                        + PortObject.class.getSimpleName() + "\"");
-                }
-                ReferencedFile objectFileRef = new ReferencedFile(portDir, settings.getString("port_object_location"));
-                if (BufferedDataTable.class.equals(cl)) {
-                    File objectDir = objectFileRef.getFile();
-                    if (!objectDir.isDirectory()) {
-                        throw new IOException("Can't read directory " + objectDir.getAbsolutePath());
-                    }
-                    // can't be true, however as BDT can only be saved
-                    // for adequate port types (handled above)
-                    // we leave the code here for future versions..
-                    object = loadBufferedDataTable(objectFileRef, exec, loadTblRep, tblRep, fileStoreHandlerRepository);
-                    ((BufferedDataTable)object).setOwnerRecursively(node);
-                } else {
-                    File objectFile = objectFileRef.getFile();
-                    if (!objectFile.isFile()) {
-                        throw new IOException("Can't read file " + objectFile.getAbsolutePath());
-                    }
-                    // buffering both disc I/O and the gzip stream pays off
-                    PortObjectZipInputStream in =
-                        PortUtil.getPortObjectZipInputStream(new BufferedInputStream(new FileInputStream(objectFile)));
-                    PortObjectSerializer<?> serializer =
-                        PortTypeRegistry.getInstance().getObjectSerializer(cl.asSubclass(PortObject.class)).get();
-                    object = serializer.loadPortObject(in, spec, exec);
-                    if (object instanceof FileStorePortObject) {
-                        File fileStoreXML = new File(objectFile.getParent(), "filestore.xml");
-                        final ModelContentRO fileStoreModelContent =
-                                ModelContent.loadFromXML(new FileInputStream(fileStoreXML));
-                        List<FileStoreKey> fileStoreKeys = new ArrayList<FileStoreKey>();
-                        if (getLoadVersion().isOlderThan(LoadVersion.V2100)) {
-                            // only one filestore in <2.10 (bug 5227)
-                            FileStoreKey fileStoreKey = FileStoreKey.load(fileStoreModelContent);
-                            fileStoreKeys.add(fileStoreKey);
-                        } else {
-                            ModelContentRO keysContent = fileStoreModelContent.getModelContent("filestore_keys");
-                            for (String id : keysContent.keySet()) {
-                                ModelContentRO keyContent = keysContent.getModelContent(id);
-                                fileStoreKeys.add(FileStoreKey.load(keyContent));
-                            }
-                        }
-                        FileStoreUtil.retrieveFileStoreHandlerFrom(
-                            (FileStorePortObject)object, fileStoreKeys, fileStoreHandlerRepository);
-                    }
-                    in.close();
-                }
-            }
+            object = loadPortObject(portDir, settings, exec, fileStoreHandlerRepository).get();
+            spec = object != null ? object.getSpec() : null;
         }
         if (spec != null) {
             if (!designatedType.getPortObjectSpecClass().isInstance(spec) && !isInactive) {
@@ -475,6 +398,80 @@ public class FileNodePersistor implements NodePersistor {
         setPortObjectSpec(portIdx, spec);
         setPortObject(portIdx, object);
         setPortObjectSummary(portIdx, summary);
+    }
+
+    /**
+     * @param portDir
+     * @param settings
+     * @param exec
+     * @param fileStoreHandlerRepository
+     * @return
+     * @throws IOException
+     * @throws InvalidSettingsException
+     * @throws FileNotFoundException
+     * @throws CanceledExecutionException
+     */
+    private Optional<PortObject> loadPortObject(final ReferencedFile portDir, final NodeSettingsRO settings,
+        final ExecutionMonitor exec, final FileStoreHandlerRepository fileStoreHandlerRepository)
+            throws IOException, InvalidSettingsException, FileNotFoundException, CanceledExecutionException {
+        exec.setMessage("Loading port object");
+        final String specClass = settings.getString("port_spec_class");
+        final String objectClass = loadPortObjectClassName(settings);
+        PortObject object = null;
+        PortObjectSpec spec = null;
+        if (specClass != null) {
+            Class<? extends PortObjectSpec> cl = PortTypeRegistry.getInstance().getSpecClass(specClass)
+                    .orElseThrow(() ->  new IOException("Invalid spec class \"" + specClass + "\""));
+            ReferencedFile specDirRef = new ReferencedFile(portDir, settings.getString("port_spec_location"));
+            File specFile = specDirRef.getFile();
+            if (!specFile.isFile()) {
+                throw new IOException("Can't read spec file " + specFile.getAbsolutePath());
+            }
+            try (PortObjectSpecZipInputStream in = PortUtil.getPortObjectSpecZipInputStream(
+                new BufferedInputStream(new FileInputStream(specFile)))) {
+                PortObjectSpecSerializer<?> serializer = PortTypeRegistry.getInstance().getSpecSerializer(cl).get();
+                spec = serializer.loadPortObjectSpec(in);
+                if (spec == null) {
+                    throw new IOException("Serializer \"" + serializer.getClass().getName()
+                        + "\" restored null spec ");
+                }
+            }
+        }
+        if (spec != null && objectClass != null) {
+            Class<? extends PortObject> cl = PortTypeRegistry.getInstance().getObjectClass(objectClass)
+                    .orElseThrow(() -> new IOException("Invalid object class \"" + objectClass + "\""));
+            ReferencedFile objectFileRef = new ReferencedFile(portDir, settings.getString("port_object_location"));
+            File objectFile = objectFileRef.getFile();
+            if (!objectFile.isFile()) {
+                throw new IOException("Can't read file " + objectFile.getAbsolutePath());
+            }
+            // buffering both disc I/O and the gzip stream pays off
+            try (PortObjectZipInputStream in = PortUtil.getPortObjectZipInputStream(
+                new BufferedInputStream(new FileInputStream(objectFile)))) {
+                PortObjectSerializer<?> serializer = PortTypeRegistry.getInstance().getObjectSerializer(cl).get();
+                object = serializer.loadPortObject(in, spec, exec);
+            }
+            if (object instanceof FileStorePortObject) {
+                File fileStoreXML = new File(objectFile.getParent(), "filestore.xml");
+                final ModelContentRO fileStoreModelContent =
+                        ModelContent.loadFromXML(new FileInputStream(fileStoreXML));
+                List<FileStoreKey> fileStoreKeys = new ArrayList<FileStoreKey>();
+                if (getLoadVersion().isOlderThan(LoadVersion.V2100)) {
+                    // only one filestore in <2.10 (bug 5227)
+                    FileStoreKey fileStoreKey = FileStoreKey.load(fileStoreModelContent);
+                    fileStoreKeys.add(fileStoreKey);
+                } else {
+                    ModelContentRO keysContent = fileStoreModelContent.getModelContent("filestore_keys");
+                    for (String id : keysContent.keySet()) {
+                        ModelContentRO keyContent = keysContent.getModelContent(id);
+                        fileStoreKeys.add(FileStoreKey.load(keyContent));
+                    }
+                }
+                FileStoreUtil.retrieveFileStoreHandlerFrom(
+                    (FileStorePortObject)object, fileStoreKeys, fileStoreHandlerRepository);
+            }
+        }
+        return Optional.ofNullable(object);
     }
 
     private BufferedDataTable loadBufferedDataTable(final ReferencedFile objectDir, final ExecutionMonitor exec,
@@ -624,10 +621,8 @@ public class FileNodePersistor implements NodePersistor {
                 result[index] = null;
             } else {
                 ReferencedFile portDirRef = new ReferencedFile(subDirFile, location);
-                File portDir = portDirRef.getFile();
-                if (!portDir.isDirectory() || !portDir.canRead()) {
-                    throw new IOException("Cannot read table directory " + portDir.getAbsolutePath());
-                }
+                readDirectory(portDirRef.getFile());
+                portDirRef.getFile();
                 BufferedDataTable t =
                     loadBufferedDataTable(portDirRef, subProgress, loadTblRep, tblRep, fileStoreHandlerRepository);
                 t.setOwnerRecursively(node);
@@ -668,10 +663,7 @@ public class FileNodePersistor implements NodePersistor {
                 String location = singlePortSetting.getString("table_dir_location");
                 if (location != null) {
                     ReferencedFile portDirRef = new ReferencedFile(subDirFile, location);
-                    File portDir = portDirRef.getFile();
-                    if (!portDir.isDirectory() || !portDir.canRead()) {
-                        throw new IOException("Cannot read table directory " + portDir.getAbsolutePath());
-                    }
+                    readDirectory(portDirRef.getFile());
                     BufferedDataTable t = loadBufferedDataTable(
                         portDirRef, subProgress, loadTblRep, tblRep, fileStoreHandlerRepository);
                     t.setOwnerRecursively(node);
@@ -681,6 +673,14 @@ public class FileNodePersistor implements NodePersistor {
                 int outputPortIndex = singlePortSetting.getInt("outport");
                 CheckUtils.checkSetting(outputPortIndex >= 0, "Port index must not < 0: $d", outputPortIndex);
                 object = m_portObjects[outputPortIndex];
+            } else if ("non-table".equals(type)) {
+                String location = singlePortSetting.getString("port_dir_location");
+                ReferencedFile portDirRef = new ReferencedFile(subDirFile, location);
+                readDirectory(portDirRef.getFile());
+                object = loadPortObject(portDirRef, singlePortSetting, subProgress, fileStoreHandlerRepository)
+                        // not sure when this can actually happen
+                        .orElseThrow(() -> new IOException("Settings do not reference internal held port object"));
+
             } else {
                 CheckUtils.checkSetting(false, "Unknown object reference %s", type);
             }
@@ -755,9 +755,7 @@ public class FileNodePersistor implements NodePersistor {
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
             ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
             File dir = dirRef.getFile();
-            if (!(dir.isDirectory() && dir.canRead())) {
-                throw new IOException("Cannot read directory " + dir.getAbsolutePath());
-            }
+            readDirectory(dir);
             BufferedDataTable t = BufferedDataTable.loadFromFile(dirRef,
             /* ignored in 1.2.0+ */
             null, execMon, loadTblRep, tblRep, fileStoreHandlerRepository);
@@ -765,6 +763,7 @@ public class FileNodePersistor implements NodePersistor {
             return t;
         }
     }
+
 
     private PortObjectSpec loadPortObjectSpec(final Node node, final NodeSettingsRO settings, final int index)
         throws InvalidSettingsException, IOException {
@@ -802,9 +801,7 @@ public class FileNodePersistor implements NodePersistor {
             if (portSettings.getBoolean(CFG_HAS_SPEC_FILE, true)) {
                 ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
                 File dir = dirRef.getFile();
-                if (!(dir.isDirectory() && dir.canRead())) {
-                    throw new IOException("Cannot read directory " + dir.getAbsolutePath());
-                }
+                readDirectory(dir);
                 outSpec = BufferedDataTable.loadSpec(dirRef);
                 if (portSettings.containsKey(CFG_HAS_SPEC_FILE) && outSpec == null) {
                     throw new IOException("No spec file available for" + " outport " + index + ".");
@@ -1316,60 +1313,68 @@ public class FileNodePersistor implements NodePersistor {
         exec.setMessage("Saving internally held objects");
         for (int i = 0; i < internalTblsCount; i++) {
             PortObject t = internalObjects[i];
-            String tblName = "object_" + i;
+            String objName = "object_" + i;
             ExecutionMonitor subProgress = exec.createSubProgress(1.0 / internalTblsCount);
-            NodeSettingsWO singlePortSetting = portSettings.addNodeSettings(tblName);
+            NodeSettingsWO singlePortSetting = portSettings.addNodeSettings(objName);
+            ReferencedFile portDirRef = new ReferencedFile(subDirFile, objName);
+            File portDir = portDirRef.getFile();
             singlePortSetting.addInt("index", i);
             if (t == null) {
                 singlePortSetting.addString("type", "null");
             } else if (t instanceof BufferedDataTable) {
                 BufferedDataTable table = (BufferedDataTable)t;
-                String tblDirName = tblName;
-                ReferencedFile portDirRef = new ReferencedFile(subDirFile, tblDirName);
-                File portDir = portDirRef.getFile();
-                portDir.mkdir();
-                if (!portDir.isDirectory() || !portDir.canWrite()) {
-                    throw new IOException("Cannot write table directory " + portDir.getAbsolutePath());
-                }
-                saveBufferedDataTable(table, savedTableIDs, portDir, exec);
+                saveBufferedDataTable(table, savedTableIDs, createDirectory(portDir), exec);
                 singlePortSetting.addString("type", "table");
-                singlePortSetting.addString("table_dir_location", tblDirName);
+                singlePortSetting.addString("table_dir_location", objName);
             } else {
-                // other type of port object - must be contained in an output port
-                int outputPortIndex = -1;
-                for (int p = 0; p < node.getNrOutPorts(); p++) {
-                    if (node.getOutputObject(p) == t) {
-                        outputPortIndex = p;
-                        break;
-                    }
+                // other type of port object - object might be in output
+                int outputPortIndex = IntStream.range(0, node.getNrOutPorts())
+                        .filter(p -> node.getOutputObject(p) == t).findFirst().orElse(-1);
+                if (outputPortIndex >= 0) {
+                    singlePortSetting.addString("type", "referenced_output");
+                    singlePortSetting.addInt("outport", outputPortIndex);
+                } else {
+                    singlePortSetting.addString("type", "non-table");
+                    singlePortSetting.addString("port_dir_location", objName);
+                    savePortObject(t.getSpec(), t, createDirectory(portDir), singlePortSetting, exec);
                 }
-                if (outputPortIndex < 0) {
-                    // almost an assertion as same test is done in Node#execute
-                    String error = "Internally held port object (index " + i + ") not contained in output";
-                    NodeLogger.getLogger(FileNodePersistor.class).coding(error);
-                    throw new IOException(error);
-                }
-                singlePortSetting.addString("type", "referenced_output");
-                singlePortSetting.addInt("outport", outputPortIndex);
             }
             subProgress.setProgress(1.0);
         }
+    }
+
+    /** Check if argument is a directory and can be read, otherwise throws exception. */
+    private static File readDirectory(final File dir) throws IOException {
+        if (!(dir.isDirectory() && dir.canRead())) {
+            throw new IOException("Cannot read directory " + dir.getAbsolutePath());
+        }
+        return dir;
+    }
+
+    /** Create a directory, make sure it exists and return it. */
+    private static File createDirectory(final File portDir) throws IOException {
+        portDir.mkdir();
+        if (!portDir.isDirectory() || !portDir.canWrite()) {
+            throw new IOException("Cannot write directory " + portDir.getAbsolutePath());
+        }
+        return portDir;
     }
 
     private static void savePort(final Node node, final File portDir, final NodeSettingsWO settings,
         final Set<Integer> savedTableIDs, final ExecutionMonitor exec, final int portIdx, final boolean saveData)
         throws IOException, CanceledExecutionException {
         PortObjectSpec spec = node.getOutputSpec(portIdx);
-        settings.addString("port_spec_class", spec != null ? spec.getClass().getName() : null);
         PortObject object = node.getOutputObject(portIdx);
         String summary = node.getOutputObjectSummary(portIdx);
+
+        settings.addString("port_spec_class", spec != null ? spec.getClass().getName() : null);
         boolean isSaveObject = saveData && object != null;
         settings.addString("port_object_class", isSaveObject ? object.getClass().getName() : null);
         if (saveData && object != null) {
             settings.addString("port_object_summary", summary);
         }
         boolean isBDT =
-            object instanceof BufferedDataTable || node.getOutputType(portIdx).equals(BufferedDataTable.TYPE);
+                object instanceof BufferedDataTable || node.getOutputType(portIdx).equals(BufferedDataTable.TYPE);
         boolean isInactive = spec instanceof InactiveBranchPortObjectSpec;
         if (isBDT && !isInactive) {
             assert object == null || object instanceof BufferedDataTable : "Expected BufferedDataTable, got "
@@ -1379,66 +1384,59 @@ public class FileNodePersistor implements NodePersistor {
                 saveBufferedDataTable((BufferedDataTable)object, savedTableIDs, portDir, exec);
             }
         } else {
-            exec.setMessage("Saving specification");
             if (isSaveObject) {
+                exec.setMessage("Saving object");
                 assert spec != null : "Spec is null but port object is non-null (port " + portIdx + " of node "
-                    + node.getName() + ")";
-                if (!(object instanceof BufferedDataTable)) {
-                    String specDirName = "spec";
-                    String specFileName = "spec.zip";
-                    String specPath = specDirName + "/" + specFileName;
-                    File specDir = new File(portDir, specDirName);
-                    specDir.mkdir();
-                    if (!specDir.isDirectory() || !specDir.canWrite()) {
-                        throw new IOException("Can't create directory " + specDir.getAbsolutePath());
-                    }
+                        + node.getName() + ")";
+                savePortObject(spec, object, portDir, settings, exec);
+            }
+        }
+    }
 
-                    File specFile = new File(specDir, specFileName);
-                    PortObjectSpecZipOutputStream out =
-                        PortUtil.getPortObjectSpecZipOutputStream(new BufferedOutputStream(new FileOutputStream(
-                            specFile)));
-                    settings.addString("port_spec_location", specPath);
-                    PortObjectSpecSerializer serializer =
-                        PortTypeRegistry.getInstance().getSpecSerializer(spec.getClass()).get();
-                    serializer.savePortObjectSpec(spec, out);
-                    out.close();
+    private static void savePortObject(final PortObjectSpec spec, final PortObject object,
+        final File portDir, final NodeSettingsWO settings, final ExecutionMonitor exec)
+                throws IOException, FileNotFoundException, CanceledExecutionException {
+        settings.addString("port_spec_class", spec.getClass().getName());
+        settings.addString("port_object_class", object.getClass().getName());
+        String specDirName = "spec";
+        String specFileName = "spec.zip";
+        String specPath = specDirName + "/" + specFileName;
+        File specDir = createDirectory(new File(portDir, specDirName));
+
+        File specFile = new File(specDir, specFileName);
+        settings.addString("port_spec_location", specPath);
+        try (PortObjectSpecZipOutputStream out = PortUtil.getPortObjectSpecZipOutputStream(
+            new BufferedOutputStream(new FileOutputStream(specFile)))) {
+            PortObjectSpecSerializer serializer =
+                    PortTypeRegistry.getInstance().getSpecSerializer(spec.getClass()).get();
+            serializer.savePortObjectSpec(spec, out);
+        }
+
+        String objectDirName = null;
+        objectDirName = "object";
+        File objectDir = createDirectory(new File(portDir, objectDirName));
+        String objectPath;
+        String objectFileName = "portobject.zip";
+
+        objectPath = objectDirName + "/" + objectFileName;
+        settings.addString("port_object_location", objectPath);
+        File file = new File(objectDir, objectFileName);
+        try (PortObjectZipOutputStream out =
+            PortUtil.getPortObjectZipOutputStream(new BufferedOutputStream(new FileOutputStream(file)))) {
+            PortObjectSerializer serializer =
+                    PortTypeRegistry.getInstance().getObjectSerializer(object.getClass()).get();
+            serializer.savePortObject(object, out, exec);
+            if (object instanceof FileStorePortObject) {
+                List<FileStoreKey> fileStoreKeys = FileStoreUtil.translateToLocal((FileStorePortObject)object);
+                File fileStoreXML = new File(objectDir, "filestore.xml");
+                final ModelContent fileStoreModelContent = new ModelContent("filestore");
+                ModelContentWO keysContent = fileStoreModelContent.addModelContent("filestore_keys");
+                for (int i = 0; i < fileStoreKeys.size(); i++) {
+                    FileStoreKey key = fileStoreKeys.get(i);
+                    ModelContentWO keyContent = keysContent.addModelContent("filestore_key_" + i);
+                    key.save(keyContent);
                 }
-                String objectDirName = null;
-                objectDirName = "object";
-                File objectDir = new File(portDir, objectDirName);
-                objectDir.mkdir();
-                if (!objectDir.isDirectory() || !objectDir.canWrite()) {
-                    throw new IOException("Can't create directory " + objectDir.getAbsolutePath());
-                }
-                String objectPath;
-                // object is BDT, but port type is not BDT.TYPE - still though..
-                if (object instanceof BufferedDataTable) {
-                    objectPath = objectDirName;
-                    saveBufferedDataTable((BufferedDataTable)object, savedTableIDs, objectDir, exec);
-                } else {
-                    String objectFileName = "portobject.zip";
-                    objectPath = objectDirName + "/" + objectFileName;
-                    File file = new File(objectDir, objectFileName);
-                    PortObjectZipOutputStream out =
-                        PortUtil.getPortObjectZipOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
-                    PortObjectSerializer serializer =
-                        PortTypeRegistry.getInstance().getObjectSerializer(object.getClass()).get();
-                    serializer.savePortObject(object, out, exec);
-                    if (object instanceof FileStorePortObject) {
-                        List<FileStoreKey> fileStoreKeys = FileStoreUtil.translateToLocal((FileStorePortObject)object);
-                        File fileStoreXML = new File(objectDir, "filestore.xml");
-                        final ModelContent fileStoreModelContent = new ModelContent("filestore");
-                        ModelContentWO keysContent = fileStoreModelContent.addModelContent("filestore_keys");
-                        for (int i = 0; i < fileStoreKeys.size(); i++) {
-                            FileStoreKey key = fileStoreKeys.get(i);
-                            ModelContentWO keyContent = keysContent.addModelContent("filestore_key_" + i);
-                            key.save(keyContent);
-                        }
-                        fileStoreModelContent.saveToXML(new FileOutputStream(fileStoreXML));
-                    }
-                    out.close();
-                }
-                settings.addString("port_object_location", objectPath);
+                fileStoreModelContent.saveToXML(new FileOutputStream(fileStoreXML));
             }
         }
     }

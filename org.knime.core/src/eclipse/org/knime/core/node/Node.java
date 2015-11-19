@@ -1079,13 +1079,6 @@ public final class Node implements NodeModelWarningListener {
                                 break;
                             }
                         }
-                    } else {
-                        if (t != null && ArrayUtils.indexOf(newOutData, t) < 0) {
-                            createErrorMessageAndNotify(String.format("Internally held port object at index %d (class "
-                                    + "%s) is not part of any output", i, t.getClass().getSimpleName()));
-                            // TODO all new port objects as part of the internals
-//                            return false;
-                        }
                     }
                     m_internalHeldPortObjects[i] = t;
                 }

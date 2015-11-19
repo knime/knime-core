@@ -246,7 +246,7 @@ public final class PortTypeRegistry {
             return Optional.of(objectClass);
         } catch (ClassNotFoundException ex) {
             NodeLogger.getLogger(getClass())
-                .debug("Port object implementation '" + className + "' not found: " + ex.getMessage());
+                .debug("Port object implementation '" + className + "' not found: " + ex.getMessage(), ex);
         }
 
         return Optional.empty();
@@ -290,7 +290,7 @@ public final class PortTypeRegistry {
             return Optional.of(specClass);
         } catch (ClassNotFoundException ex) {
             NodeLogger.getLogger(getClass())
-                .debug("Port object specimplementation '" + className + "' not found: " + ex.getMessage());
+                .debug("Port object spec implementation '" + className + "' not found: " + ex.getMessage(), ex);
         }
 
         return Optional.empty();

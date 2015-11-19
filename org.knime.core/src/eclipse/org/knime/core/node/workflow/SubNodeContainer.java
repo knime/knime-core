@@ -46,6 +46,8 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -1091,6 +1093,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
         // put objects into output if state of WFM is executed
         boolean publishObjects = newState.isExecuted();
+        CheckUtils.checkState(!publishObjects || outputExchange != null, "state is %s, but exchange is null", newState);
+        CheckUtils.checkState(!publishObjects || outputExchange.getPortObjects() != null,
+                "state is %s, but exchange content is null", newState);
         // publishObjects implies that output node has data or is inactive
         assert !publishObjects || (isInactive || outputExchange != null) : "output node must have data or be inactive";
 
@@ -1176,7 +1181,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             if (innerResult.needsResetAfterLoad()) {
                 result.setNeedsResetAfterLoad();
             }
-            result.setSuccess(innerResult.isSuccess());
+            // innerResult is success as soon as one of the nodes is a success - be more strict here
+            result.setSuccess(innerResult.isSuccess() && getInternalState().equals(EXECUTED));
             result.setWorkflowExecutionResult(innerResult);
             return result;
         }
