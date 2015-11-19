@@ -111,7 +111,6 @@ import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowScopeContext;
 import org.knime.core.node.workflow.FlowTryCatchContext;
-import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -960,14 +959,10 @@ public final class Node implements NodeModelWarningListener {
                         Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
                         setOutPortObjects(outs, false, false);
                         createErrorMessageAndNotify("Execution failed in Try-Catch block: " + th.getMessage());
-                        // and push information onto stack so catch-node can report it:
-                        FlowObjectStack fos = getNodeModel().getOutgoingFlowObjectStack();
-                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
-                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, getName()));
-                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, th.getMessage()));
+                        // and store information catch-node can report it:
                         StringWriter thstack = new StringWriter();
                         th.printStackTrace(new PrintWriter(thstack));
-                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_STACKTRACE, thstack.toString()));
+                        tcslc.setError(getName(), th.getMessage(), thstack.toString());
                         return true;
                     }
                 }
@@ -1142,6 +1137,15 @@ public final class Node implements NodeModelWarningListener {
         final PortObject[] inData) throws Exception {
         // this may not have a NodeContext set (when run through 3rd party executor)
         return m_model.executeModel(inData, exEnv, exec);
+    }
+
+    /** Invokes the corresponding package scope method in class NodeModel. Put here to avoid adding API.
+     * @param model to call on.
+     * @return result of that call
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static FlowScopeContext invokePeekFlowScopeContext(final NodeModel model) {
+        return model.peekFlowScopeContext();
     }
 
     /** Called after execute in order to put the computed result into the

@@ -1284,6 +1284,22 @@ public abstract class NodeModel {
         }
     }
 
+    /** Get the FlowScopeContext on top leaving the variable stack unmodified.
+     * @return The FlowScopeContext
+     * @throws NoSuchElementException If no FlowScopeContext exists
+     */
+    final FlowScopeContext peekFlowScopeContext() {
+        FlowScopeContext fsc = null;
+        fsc = m_outgoingFlowObjectStack.peek(FlowScopeContext.class);
+        if (fsc == null) {
+            fsc = m_flowObjectStack.peek(FlowScopeContext.class);
+        }
+        if (fsc == null) {
+            throw new NoSuchElementException();
+        }
+        return fsc;
+    }
+
     /** Put a new variable of type integer onto the stack. If such variable
      * already exists, its value will be (virtually) overwritten.
      * @param name The name of the variable.

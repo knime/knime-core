@@ -70,11 +70,9 @@ import org.knime.core.node.workflow.ScopeStartNode;
  *
  * @author M. Berthold, University of Konstanz
  */
-public class GenericTryNodeModel extends NodeModel
-implements ScopeStartNode {
+public class GenericTryNodeModel extends NodeModel implements ScopeStartNode<FlowTryCatchContext> {
 
-//    private static final NodeLogger LOGGER = NodeLogger
-//            .getLogger(GenericTryNodeModel.class);
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(GenericTryNodeModel.class);
 
     /**
      * One input, one output.
@@ -82,8 +80,7 @@ implements ScopeStartNode {
      * @param ptype type of ports.
      */
     protected GenericTryNodeModel(final PortType ptype) {
-        super(new PortType[] {ptype},
-              new PortType[] {ptype});
+        super(new PortType[] {ptype}, new PortType[] {ptype});
     }
 
     /**
@@ -92,9 +89,12 @@ implements ScopeStartNode {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        // framework should push marker object (@see TryCatchFlowLoopContext) onto stack
-        // pass through spec
-        pushFlowVariableInt(FlowTryCatchContext.ERROR_FLAG, 0);
+
+        // framework should push marker object (@see FlowTryCatchContext) onto stack
+        // will be filled with information if a node failure is encountered and read
+        // by the corresponding end node.
+
+        // pass through spec.
         return new PortObjectSpec[]{inSpecs[0]};
     }
 

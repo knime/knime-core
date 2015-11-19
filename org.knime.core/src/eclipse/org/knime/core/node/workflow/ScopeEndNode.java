@@ -47,12 +47,35 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.Node;
+import org.knime.core.node.NodeModel;
+
 /**
  * Complement to {@link ScopeStartNode}.
  *
  * @author M. Berthold, University of Konstanz
  * @since 2.8
+ * @param <T> parameterized on the particular scope context implementation
  */
-public interface ScopeEndNode {
-    // marker interface only
+public interface ScopeEndNode<T extends FlowScopeContext> {
+
+    /**
+     * @return T the scope context put onto the stack by the matching ScopeStartNode
+     *   or null if something was wrong (illegally wired loops should have been
+     *   reported elsewhere - IllegalLoopExecption is only thrown/caught inside core)
+     * @since 3.1
+     */
+    default public T getFlowContext() {
+        if (this instanceof NodeModel) {
+            NodeModel m = (NodeModel)this;
+            FlowScopeContext fsc = Node.invokePeekFlowScopeContext(m);
+            try {
+                return (T)fsc;
+            } catch (ClassCastException cce) {
+                return null;
+            }
+        } else {
+            throw new IllegalStateException("Not a " + NodeModel.class.getSimpleName());
+        }
+    }
 }

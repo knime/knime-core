@@ -79,10 +79,9 @@ import org.knime.core.node.workflow.ScopeEndNode;
  * @author M. Berthold, University of Konstanz
  */
 public class GenericCatchNodeModel extends NodeModel
-implements ScopeEndNode, InactiveBranchConsumer {
+implements ScopeEndNode<FlowTryCatchContext>, InactiveBranchConsumer {
 
-//    private static final NodeLogger LOGGER = NodeLogger
-//            .getLogger(GenericCatchNodeModel.class);
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(GenericCatchNodeModel.class);
 
     // new since 2.11
     private SettingsModelBoolean m_alwaysPop = GenericCatchNodeDialog.getAlwaysPopulate();
@@ -96,8 +95,7 @@ implements ScopeEndNode, InactiveBranchConsumer {
      * @param ptype type of ports.
      */
     protected GenericCatchNodeModel(final PortType ptype) {
-        super(new PortType[] {ptype, ptype},
-              new PortType[] {ptype, FlowVariablePortObject.TYPE});
+        super(new PortType[] {ptype, ptype}, new PortType[] {ptype, FlowVariablePortObject.TYPE});
     }
 
     /** Generic constructor.
@@ -110,8 +108,7 @@ implements ScopeEndNode, InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         if (m_alwaysPop.getBooleanValue()) {
             pushFlowVariableString("FailingNode", m_defaultVariable.getStringValue());
             pushFlowVariableString("FailingNodeMessage", m_defaultText.getStringValue());
@@ -130,21 +127,19 @@ implements ScopeEndNode, InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws Exception {
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         if (!(inData[0] instanceof InactiveBranchPortObject)) {
             // main branch is active - no failure so far...
             return new PortObject[]{inData[0], FlowVariablePortObject.INSTANCE};
         }
         // main branch inactive, grab spec from alternative (default) input
-        // and put error reasons on stack (we need to peek them explicitly
-        // and push them on the stack again so that they don't get removed
-        // when the TryCatchScopeObject gets poped).
-        if (peekFlowVariableInt(FlowTryCatchContext.ERROR_FLAG) == 1) {
-            pushFlowVariableString("FailingNode", peekFlowVariableString(FlowTryCatchContext.ERROR_NODE));
-            pushFlowVariableString("FailingNodeMessage", peekFlowVariableString(FlowTryCatchContext.ERROR_REASON));
-            pushFlowVariableString("FailingNodeStackTrace",
-                                   peekFlowVariableString(FlowTryCatchContext.ERROR_STACKTRACE));
+        // and push error reasons on stack (they come from the ScopeObject
+        // which will we removed after this node, closing the scope).
+        FlowTryCatchContext ftcc = getFlowContext();
+        if ((ftcc != null) && (ftcc.hasErrorCaught())) {
+            pushFlowVariableString("FailingNode", ftcc.getNode());
+            pushFlowVariableString("FailingNodeMessage", ftcc.getReason());
+            pushFlowVariableString("FailingNodeStackTrace", ftcc.getStacktrace());
         } else if (m_alwaysPop.getBooleanValue()) {
             pushFlowVariableString("FailingNode", m_defaultVariable.getStringValue());
             pushFlowVariableString("FailingNodeMessage", m_defaultText.getStringValue());
@@ -168,8 +163,7 @@ implements ScopeEndNode, InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (settings.containsKey(m_defaultText.getKey())) {
             m_alwaysPop.validateSettings(settings);
             m_defaultText.validateSettings(settings);
@@ -182,8 +176,7 @@ implements ScopeEndNode, InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (settings.containsKey(m_defaultText.getKey())) {
             m_alwaysPop.loadSettingsFrom(settings);
             m_defaultText.loadSettingsFrom(settings);
@@ -203,18 +196,16 @@ implements ScopeEndNode, InactiveBranchConsumer {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
     }
 
 }

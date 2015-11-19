@@ -45,20 +45,68 @@
  */
 package org.knime.core.node.workflow;
 
-/** Pushed on top of the stack inside a try-catch construct.
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.util.ConvenienceMethods;
+
+/** Pushed on top of the stack inside a try-catch construct. Stores reasons
+ * for failures that are caught by the WorkflowManager to be reported by
+ * the catch node.
  *
  * @author M. Berthold, KNIME.com, Zurich, Switzerland
  * @since 2.8
  */
 public final class FlowTryCatchContext extends FlowScopeContext {
-    // marker class. @see FlowLoopContext for proper implementation
-    // of hashCode and equals when members are added.
 
-    /* static variable names for information put on the stack by the WFM */
-    public static String ERROR_FLAG = "_error_caught";
-    public static String ERROR_NODE = "_error_node";
-    public static String ERROR_REASON = "_error_reason";
-    public static String ERROR_STACKTRACE = "_error_stacktrace";
+    /* variables for information retrieved by the WFM */
+    private boolean m_errorCaught = false;
+    private String m_node;
+    private String m_reason;
+    private String m_stacktrace;
+
+    /** Store information about an error that was caught.
+     * @param node
+     * @param reason
+     * @param stacktrace
+     * @since 3.1
+     */
+    public void setError(final String node, final String reason, final String stacktrace) {
+        m_errorCaught = true;
+        m_node = CheckUtils.checkArgumentNotNull(node);
+        m_reason = CheckUtils.checkArgumentNotNull(reason);
+        m_stacktrace = stacktrace;
+    }
+
+    /**
+     * @return true if an error was caught
+     * @since 3.1
+     */
+    public boolean hasErrorCaught() {
+        return m_errorCaught;
+    }
+
+    /**
+     * @return node
+     * @since 3.1
+     */
+    public String getNode() {
+        return m_node;
+    }
+
+    /**
+     * @return reason
+     * @since 3.1
+     */
+    public String getReason() {
+        return m_reason;
+    }
+
+    /**
+     * @return stacktrace
+     * @since 3.1
+     */
+    public String getStacktrace() {
+        return m_stacktrace;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -69,13 +117,28 @@ public final class FlowTryCatchContext extends FlowScopeContext {
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
+        if (m_errorCaught) {
+            return super.hashCode() + m_node.hashCode() + m_reason.hashCode() + m_stacktrace.hashCode();
+        }
         return super.hashCode();
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
-        return super.equals(obj);
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (!obj.getClass().equals(getClass())) {
+            return false;
+        }
+        FlowTryCatchContext ftcc = (FlowTryCatchContext) obj;
+        return super.equals(obj)
+            && ConvenienceMethods.areEqual(ftcc.m_node, m_node)
+            && ConvenienceMethods.areEqual(ftcc.m_reason, m_reason)
+            && ConvenienceMethods.areEqual(ftcc.m_stacktrace, m_stacktrace);
     }
-
 }

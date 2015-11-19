@@ -53,11 +53,13 @@ package org.knime.core.node.workflow;
  * details, in this case making sure variables put onto the stack inside
  * the scope are removed when leaving it again.
  *
- * Derivatives of this interface, such as {@link LoopStartNode} additional functionality on top of the scope.
+ * Derivatives of this interface, such as {@link LoopStartNode} add functionality
+ * on top of the scope.
  *
  * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
+ * @param <T> parameterized on the particular scope context implementation
  * @since 2.8
  */
-public interface ScopeStartNode {
+public interface ScopeStartNode<T extends FlowScopeContext> {
     // marker interface only
 }

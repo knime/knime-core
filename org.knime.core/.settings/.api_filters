@@ -205,6 +205,32 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FlowTryCatchContext.java" type="org.knime.core.node.workflow.FlowTryCatchContext">
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FlowTryCatchContext"/>
+                <message_argument value="ERROR_FLAG"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FlowTryCatchContext"/>
+                <message_argument value="ERROR_NODE"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FlowTryCatchContext"/>
+                <message_argument value="ERROR_REASON"/>
+            </message_arguments>
+        </filter>
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FlowTryCatchContext"/>
+                <message_argument value="ERROR_STACKTRACE"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
         <filter id="338792546">
             <message_arguments>
@@ -275,6 +301,14 @@
         <filter id="1211105284">
             <message_arguments>
                 <message_argument value="isHalted()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ScopeEndNode.java" type="org.knime.core.node.workflow.ScopeEndNode">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ScopeEndNode"/>
+                <message_argument value="getFlowContext()"/>
             </message_arguments>
         </filter>
     </resource>
