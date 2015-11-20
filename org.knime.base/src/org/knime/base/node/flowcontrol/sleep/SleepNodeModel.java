@@ -51,7 +51,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
@@ -74,6 +73,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.util.FileUtil;
 
 /**
  * A simple breakpoint node which allows to halt execution when a certain condition on the input table is fulfilled
@@ -174,6 +174,7 @@ public class SleepNodeModel extends NodeModel {
 
         if (m_selection == 0) {
             // wait for
+            exec.setMessage("Waiting for " + (m_waittime / 1000) + " seconds");
             waitFor(m_waittime);
         } else if (m_selection == 1) {
             // wait to
@@ -182,11 +183,17 @@ public class SleepNodeModel extends NodeModel {
             if (c.getTimeInMillis() - System.currentTimeMillis() <= 0) {
                 c.add(Calendar.DAY_OF_YEAR, 1);
             }
+            exec.setMessage("Waiting until " + c.getTime());
             final long sleepTime = c.getTimeInMillis() - System.currentTimeMillis();
             waitFor(sleepTime);
         } else if (m_selection == 2) {
             WatchService w = FileSystems.getDefault().newWatchService();
-            Path p = Paths.get(m_filePath);
+            Path p = FileUtil.resolveToPath(FileUtil.toURL(m_filePath));
+            if (p == null) {
+                throw new IllegalArgumentException("File location '" + m_filePath + "' is not a local file.");
+            }
+
+            exec.setMessage("Waiting for file '" + p + "'");
             Path fileName = p.subpath(p.getNameCount() - 1, p.getNameCount());
             Path parent = p.getParent();
             Kind<Path> e = null;

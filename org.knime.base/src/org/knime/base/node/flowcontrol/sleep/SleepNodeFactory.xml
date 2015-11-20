@@ -15,7 +15,9 @@
         </intro>
         <option name="Wait for time:">The node waits for the entered time (HH:mm:ss). </option>
         <option name="Wait to time:">The node waits until the entered time of day has passed. </option>
-        <option name="Wait for file:">The node waits until the selected file either gets created, modified or deleted.</option>
+		<option name="Wait for file:">The node waits until the selected file (or URL that
+			points to a local file) either gets created, modified or deleted.
+		</option>
         
     </fullDescription>
         
