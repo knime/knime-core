@@ -373,7 +373,7 @@ public class FileNodePersistor implements NodePersistor {
                 spec = BufferedDataTable.loadSpec(portDir);
             }
         } else {
-            object = loadPortObject(portDir, settings, exec, fileStoreHandlerRepository).get();
+            object = loadPortObject(portDir, settings, exec, fileStoreHandlerRepository).orElse(null);
             spec = object != null ? object.getSpec() : null;
         }
         if (spec != null) {
