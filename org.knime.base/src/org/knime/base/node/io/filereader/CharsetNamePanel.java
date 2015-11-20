@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.08.2007 (ohl): created
  */
@@ -69,7 +69,7 @@ import javax.swing.event.DocumentListener;
 /**
  * Implements the tab panel for the character set settings (in the advanced
  * settings dialog).
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class CharsetNamePanel extends JPanel {
@@ -103,10 +103,11 @@ public class CharsetNamePanel extends JPanel {
     /**
      * Creates a panel to select the character set name and initializes it from
      * the passed object.
-     * 
+     *
      * @param settings the settings to initialize to panel from
+     * @since 3.1
      */
-    CharsetNamePanel(final FileReaderSettings settings) {
+    public CharsetNamePanel(final FileReaderSettings settings) {
         this.setSize(520, 375);
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(Box.createVerticalStrut(20));
@@ -122,7 +123,7 @@ public class CharsetNamePanel extends JPanel {
     }
 
     private Container getSelectionPanel() {
- 
+
         m_group = new ButtonGroup();
         /*
          * use action commands that are valid charset names (we use them later
@@ -132,6 +133,7 @@ public class CharsetNamePanel extends JPanel {
         m_default.setToolTipText("uses the default decoding set by the "
                 + "operating system");
         m_default.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 buttonsChanged();
             }
@@ -141,11 +143,12 @@ public class CharsetNamePanel extends JPanel {
         defaultBox.add(Box.createHorizontalStrut(20));
         defaultBox.add(m_default);
         defaultBox.add(Box.createHorizontalGlue());
-        
+
         m_iso8859 = new JRadioButton("ISO-8859-1");
         m_iso8859.setToolTipText("ISO Latin Alphabet No. 1, "
                 + "a.k.a. ISO-LATIN-1");
         m_iso8859.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 buttonsChanged();
             }
@@ -155,10 +158,11 @@ public class CharsetNamePanel extends JPanel {
         iso8859Box.add(Box.createHorizontalStrut(20));
         iso8859Box.add(m_iso8859);
         iso8859Box.add(Box.createHorizontalGlue());
-        
+
         m_utf8 = new JRadioButton("UTF-8");
         m_utf8.setToolTipText("Eight-bit UCS Transformation Format");
         m_utf8.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 buttonsChanged();
             }
@@ -168,11 +172,12 @@ public class CharsetNamePanel extends JPanel {
         utf8Box.add(Box.createHorizontalStrut(20));
         utf8Box.add(m_utf8);
         utf8Box.add(Box.createHorizontalGlue());
-        
+
         m_utf16le = new JRadioButton("UTF-16LE");
         m_utf16le.setToolTipText("Sixteen-bit UCS Transformation Format, "
                 + "little-endian byte order");
         m_utf16le.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 buttonsChanged();
             }
@@ -182,11 +187,12 @@ public class CharsetNamePanel extends JPanel {
         utf16leBox.add(Box.createHorizontalStrut(20));
         utf16leBox.add(m_utf16le);
         utf16leBox.add(Box.createHorizontalGlue());
-        
+
         m_utf16be = new JRadioButton("UTF-16BE");
         m_utf16be.setToolTipText("Sixteen-bit UCS Transformation Format, "
                 + "big-endian byte order");
         m_utf16be.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 buttonsChanged();
             }
@@ -196,12 +202,13 @@ public class CharsetNamePanel extends JPanel {
         utf16beBox.add(Box.createHorizontalStrut(20));
         utf16beBox.add(m_utf16be);
         utf16beBox.add(Box.createHorizontalGlue());
-        
+
         m_utf16 = new JRadioButton("UTF-16");
         m_utf16.setToolTipText("Sixteen-bit UCS Transformation Format, "
                 + "byte order identified by an optional "
                 + "byte-order mark in the file");
         m_utf16.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 buttonsChanged();
             }
@@ -216,6 +223,7 @@ public class CharsetNamePanel extends JPanel {
         m_custom.setToolTipText("Enter a valid charset name supported by "
                 + "the Java Virtual Machine");
         m_custom.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 buttonsChanged();
             }
@@ -226,14 +234,17 @@ public class CharsetNamePanel extends JPanel {
         m_customName.setPreferredSize(new Dimension(250, 25));
         m_customName.setMaximumSize(new Dimension(250, 25));
         m_customName.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 checkCustomCharsetName();
             }
 
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 checkCustomCharsetName();
             }
 
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 checkCustomCharsetName();
             }
@@ -245,7 +256,7 @@ public class CharsetNamePanel extends JPanel {
         customBox.add(m_customName);
         customBox.add(Box.createHorizontalGlue());
 
-        
+
         JPanel result = new JPanel();
         result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
         result.setBorder(BorderFactory.createTitledBorder(BorderFactory
@@ -272,7 +283,7 @@ public class CharsetNamePanel extends JPanel {
     /**
      * Tests the entered charset name (if the textfield is enabled), and colors
      * the textfield in case of an error.
-     * 
+     *
      * @return true if the entered charset name is supported or the textfield is
      *         disabled.
      */
@@ -293,7 +304,7 @@ public class CharsetNamePanel extends JPanel {
         } catch (IllegalArgumentException iae) {
             m_customName.setForeground(Color.RED);
             return false;
-        } 
+        }
     }
 
     private Container getTextBox() {
@@ -301,7 +312,11 @@ public class CharsetNamePanel extends JPanel {
         return result;
     }
 
-    private void loadSettings(final FileReaderSettings settings) {
+    /**
+     * @param settings
+     * @since 3.1
+     */
+    public void loadSettings(final FileReaderSettings settings) {
         String csName = settings.getCharsetName();
 
         if (csName == null) {
@@ -328,12 +343,13 @@ public class CharsetNamePanel extends JPanel {
 
     /**
      * Checks if the settings in the panel are good for applying them.
-     * 
+     *
      * @return null if all settings are okay, or an error message if settings
      *         can't be taken over.
-     * 
+     * @since 3.1
+     *
      */
-    String checkSettings() {
+    public String checkSettings() {
 
         boolean foundIt = false;
         Enumeration<AbstractButton> buttons = m_group.getElements();
@@ -362,11 +378,12 @@ public class CharsetNamePanel extends JPanel {
 
     /**
      * Writes the current settings of the panel into the passed settings object.
-     * 
+     *
      * @param settings the object to write settings in
      * @return true if the new settings are different from the one passed in.
+     * @since 3.1
      */
-    boolean overrideSettings(final FileReaderSettings settings) {
+    public boolean overrideSettings(final FileReaderSettings settings) {
         String oldCSN = settings.getCharsetName();
         String newCSN = null;
 

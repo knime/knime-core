@@ -296,7 +296,12 @@ public class CSVWriterNodeModel extends NodeModel {
             tempOut = new GZIPOutputStream(tempOut);
         }
         tempOut = new BufferedOutputStream(tempOut);
-        CSVWriter tableWriter = new CSVWriter(new OutputStreamWriter(tempOut, Charset.defaultCharset()), writerSettings);
+        Charset charSet = Charset.defaultCharset();
+        String encoding = writerSettings.getCharacterEncoding();
+        if (encoding != null) {
+            charSet = Charset.forName(encoding);
+        }
+        CSVWriter tableWriter = new CSVWriter(new OutputStreamWriter(tempOut, charSet), writerSettings);
         // write the comment header, if we are supposed to
         String tableName;
         if (input == null) {

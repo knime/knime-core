@@ -67,6 +67,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.io.csvwriter.FileWriterNodeSettings.FileOverwritePolicy;
+import org.knime.base.node.io.filereader.CharsetNamePanel;
+import org.knime.base.node.io.filereader.FileReaderSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -104,6 +106,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     private final QuotePanel m_quotePanel;
 
     private final AdvancedPanel m_advancedPanel;
+
+    private final CharsetNamePanel m_encodingPanel;
 
     private final CommentPanel m_commentPanel;
 
@@ -275,6 +279,10 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
 
         m_decSeparatorPanel = new DecimalSeparatorPanel();
         addTab("Decimal Separator", m_decSeparatorPanel);
+
+        m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
+        addTab("Encoding", m_encodingPanel);
+
     }
 
     /** Checks whether or not the "on file exists" check should be enabled. */
@@ -321,7 +329,14 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_advancedPanel.loadValuesIntoPanel(newValues);
         m_commentPanel.loadValuesIntoPanel(newValues);
         m_decSeparatorPanel.loadValuesIntoPanel(newValues);
+        m_encodingPanel.loadSettings(getEncodingSettings(newValues));
         checkCheckerState();
+    }
+
+    private FileReaderSettings getEncodingSettings(final FileWriterNodeSettings settings) {
+        FileReaderSettings s = new FileReaderSettings();
+        s.setCharsetName(settings.getCharacterEncoding());
+        return s;
     }
 
     /**
@@ -354,6 +369,13 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_advancedPanel.saveValuesFromPanelInto(values);
         m_commentPanel.saveValuesFromPanelInto(values);
         m_decSeparatorPanel.saveValuesFromPanelInto(values);
+        String errMsg = m_encodingPanel.checkSettings();
+        if (errMsg != null) {
+            throw new InvalidSettingsException(errMsg);
+        }
+        FileReaderSettings s = new FileReaderSettings();
+        m_encodingPanel.overrideSettings(s);
+        values.setCharacterEncoding(s.getCharsetName());
 
         values.saveSettingsTo(settings);
     }

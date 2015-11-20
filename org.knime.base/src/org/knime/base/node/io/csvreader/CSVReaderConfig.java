@@ -70,6 +70,7 @@ final class CSVReaderConfig {
     private boolean m_supportShortLines;
     private long m_limitRowsCount;
     private int m_skipFirstLinesCount;
+    private String m_charSet;
 
 
     /**
@@ -87,6 +88,7 @@ final class CSVReaderConfig {
         m_supportShortLines = false;
         m_limitRowsCount = -1L;
         m_skipFirstLinesCount = -1;
+        m_charSet = null; // uses default encoding
     }
 
     /** Load settings, used in dialog (no errors).
@@ -103,6 +105,7 @@ final class CSVReaderConfig {
         m_supportShortLines = settings.getBoolean("supportShortLines", m_supportShortLines);
         m_limitRowsCount = settings.getLong("limitRowsCount", m_limitRowsCount);
         m_skipFirstLinesCount = settings.getInt("skipFirstLinesCount", m_skipFirstLinesCount);
+        m_charSet = settings.getString("characterSetName", null); // if key doesn't exist use default encoding
     }
 
     /** Load in model, fail if settings are invalid.
@@ -123,6 +126,8 @@ final class CSVReaderConfig {
         // added in 2.8
         m_limitRowsCount = settings.getLong("limitRowsCount", m_limitRowsCount);
         m_skipFirstLinesCount = settings.getInt("skipFirstLinesCount", m_skipFirstLinesCount);
+        // added in 3.1
+        m_charSet = settings.getString("characterSetName", null);
     }
 
     /** Save configuration to argument.
@@ -141,6 +146,7 @@ final class CSVReaderConfig {
         settings.addBoolean("supportShortLines", m_supportShortLines);
         settings.addLong("limitRowsCount", m_limitRowsCount);
         settings.addInt("skipFirstLinesCount", m_skipFirstLinesCount);
+        settings.addString("characterSetName", m_charSet);
     }
 
     /** @return the location */
@@ -245,6 +251,13 @@ final class CSVReaderConfig {
         m_skipFirstLinesCount = value;
     }
 
+    /** @return the set encoding, or null if the default character set should be used. */
+    String getCharSetName() {
+        return m_charSet;
+    }
 
-
+    /** @param charSet name of the new encoding, or null if the default should be used. */
+    void setCharSetName(final String charSet) {
+        m_charSet = charSet;
+    }
 }

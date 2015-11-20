@@ -120,6 +120,8 @@ public class FileWriterSettings {
 
     private static final String CFGKEY_LINEENDING = "lineEndingMode";
 
+    private static final String CFGKEY_CHARENCODING = "charSet";
+
     private String m_colSeparator;
 
     private String m_missValuePattern;
@@ -145,6 +147,8 @@ public class FileWriterSettings {
 
     private LineEnding m_lineEnding;
 
+    private String m_encoding; // if null, default encoding is used
+
     /**
      * Creates a settings object with default settings (backward compatible to
      * the old CSV writer). I. e. Comma as separator, always quote with double
@@ -166,6 +170,7 @@ public class FileWriterSettings {
         m_decimalSeparator = '.';
 
         m_lineEnding = LineEnding.SYST;
+        m_encoding = null; // uses the default
     }
 
     /**
@@ -188,6 +193,7 @@ public class FileWriterSettings {
 
         m_decimalSeparator = settings.m_decimalSeparator;
         m_lineEnding = settings.m_lineEnding;
+        m_encoding = settings.m_encoding;
     }
 
     /**
@@ -232,6 +238,8 @@ public class FileWriterSettings {
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException("Specified line ending mode ('" + lineMode + "') is unknown.");
         }
+        // since 3.1
+        m_encoding = settings.getString(CFGKEY_CHARENCODING, null);
     }
 
     /**
@@ -257,6 +265,7 @@ public class FileWriterSettings {
 
         settings.addChar(CFGKEY_DEC_SEPARATOR, m_decimalSeparator);
         settings.addString(CFGKEY_LINEENDING, m_lineEnding.name());
+        settings.addString(CFGKEY_CHARENCODING, m_encoding);
     }
 
     /*
@@ -439,6 +448,24 @@ public class FileWriterSettings {
      */
     public void setLineEndingMode(final LineEnding mode) {
         m_lineEnding = mode;
+    }
+
+    /**
+     * Character set - or null if default encoding should be used.
+     * @return character set - or null if default encoding should be used.
+     * @since 3.1
+     */
+    public String getCharacterEncoding() {
+        return m_encoding;
+    }
+
+    /**
+     * The new char set - can be null indicating default encoding.
+     * @param charSet or null.
+     * @since 3.1
+     */
+    public void setCharacterEncoding(final String charSet) {
+        m_encoding = charSet;
     }
 
     /**

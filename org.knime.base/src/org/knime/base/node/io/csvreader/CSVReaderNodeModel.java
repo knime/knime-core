@@ -160,6 +160,8 @@ final class CSVReaderNodeModel extends NodeModel {
         long limitRowsCount = m_config.getLimitRowsCount();
         settings.setMaximumNumberOfRowsToRead(limitRowsCount);
 
+        settings.setCharsetName(m_config.getCharSetName());
+
         final ExecutionMonitor analyseExec = exec.createSubProgress(0.5);
         final ExecutionContext readExec = exec.createSubExecutionContext(0.5);
         exec.setMessage("Analyzing file");

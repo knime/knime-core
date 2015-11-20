@@ -63,6 +63,8 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
+import org.knime.base.node.io.filereader.CharsetNamePanel;
+import org.knime.base.node.io.filereader.FileReaderSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -91,6 +93,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
     private final JSpinner m_limitRowsSpinner;
     private final JCheckBox m_skipFirstLinesChecker;
     private final JSpinner m_skipFirstLinesSpinner;
+    private final CharsetNamePanel m_encodingPanel;
 
 
     /** Create new dialog, init layout. */
@@ -130,6 +133,8 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         panel.add(centerPanel, BorderLayout.CENTER);
         panel.add(new JLabel(" "), BorderLayout.WEST);
         addTab("CSV Reader", panel);
+        m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
+        addTab("CSV Reader Encoding", m_encodingPanel);
     }
 
     private JPanel createPanel() {
@@ -210,8 +215,14 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
             m_limitRowsChecker.setSelected(false);
             m_limitRowsSpinner.setValue(50);
         }
+        m_encodingPanel.loadSettings(getEncodingSettings(config));
     }
 
+    private FileReaderSettings getEncodingSettings(final CSVReaderConfig settings) {
+        FileReaderSettings s = new FileReaderSettings();
+        s.setCharsetName(settings.getCharSetName());
+        return s;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -231,6 +242,10 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         config.setSkipFirstLinesCount(skiptFirstLines);
         int limitRows = (Integer)(m_limitRowsChecker.isSelected() ? m_limitRowsSpinner.getValue() : -1);
         config.setLimitRowsCount(limitRows);
+        FileReaderSettings s = new FileReaderSettings();
+        m_encodingPanel.overrideSettings(s);
+        config.setCharSetName(s.getCharsetName());
+
         config.saveSettingsTo(settings);
         m_filePanel.addToHistory();
     }
