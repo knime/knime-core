@@ -74,7 +74,11 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
     int getVirtualOutNodeIDSuffix();
 
     /** @since 2.10 */
+    @Deprecated
     Map<Integer, WizardNodeLayoutInfo> getLayoutInfo();
+
+    /** @since 3.1 */
+    String getLayoutJSONString();
 
     MetaNodeTemplateInformation getTemplateInformation();
 }

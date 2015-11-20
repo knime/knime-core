@@ -98,6 +98,8 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     private Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
 
+    private String m_layoutJSONString;
+
     private MetaNodeTemplateInformation m_templateInformation;
 
     /**
@@ -196,9 +198,19 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
     }
 
     /** {@inheritDoc} */
+    @Deprecated
     @Override
     public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
         return m_layoutInfo;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.1
+     */
+    @Override
+    public String getLayoutJSONString() {
+        return m_layoutJSONString;
     }
 
     /** {@inheritDoc} */
@@ -341,6 +353,9 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             setDirtyAfterLoad();
         }
 
+        // added in 3.1, load with default value
+        m_layoutJSONString = nodeSettings.getString("layoutJSON", "");
+
         m_workflowPersistor.preLoadNodeContainer(parentPersistor, parentSettings, result);
     }
 
@@ -476,6 +491,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             curLayoutInfoSettings.addInt("nodeID", layoutIDs[i]);
             WizardNodeLayoutInfo.saveToNodeSettings(curLayoutInfoSettings, layoutInfoMap.get(layoutIDs[i]));
         }
+        settings.addString("layoutJSON", subnodeNC.getLayoutJSONString());
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
         FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, saveHelper);
     }

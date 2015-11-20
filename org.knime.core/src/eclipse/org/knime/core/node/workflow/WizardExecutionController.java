@@ -78,7 +78,6 @@ import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.util.Pair;
 
@@ -456,7 +455,7 @@ public final class WizardExecutionController extends ExecutionController {
             }
         }
         NodeIDSuffix pageID = NodeIDSuffix.create(manager.getID(), subWFM.getID());
-        return new WizardPageContent(pageID.toString(), resultMap, subNC.getLayoutInfo());
+        return new WizardPageContent(pageID.toString(), resultMap, subNC.getLayoutJSONString());
     }
 
     /** ...
@@ -711,7 +710,7 @@ public final class WizardExecutionController extends ExecutionController {
 
         private final String m_pageNodeID;
         private final Map<String, WizardNode> m_pageMap;
-        private final Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
+        private final String m_layoutInfo;
 
         /**
          * @param pageNodeID
@@ -720,7 +719,7 @@ public final class WizardExecutionController extends ExecutionController {
          */
         @SuppressWarnings("rawtypes")
         WizardPageContent(final String pageNodeID, final Map<String, WizardNode> pageMap,
-            final Map<Integer, WizardNodeLayoutInfo> layoutInfo) {
+            final String layoutInfo) {
             m_pageNodeID = pageNodeID;
             m_pageMap = pageMap;
             m_layoutInfo = layoutInfo;
@@ -743,8 +742,9 @@ public final class WizardExecutionController extends ExecutionController {
 
         /**
          * @return the layoutInfo
+         * @since 3.1
          */
-        public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
+        public String getLayoutInfo() {
             return m_layoutInfo;
         }
 

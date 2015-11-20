@@ -247,8 +247,10 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * is triggered via {@link #performExecuteNode(PortObject[])} or reset via {@link #performReset()}. */
     private boolean m_isPerformingActionCalledFromParent;
 
-    /** Layout info for wizard nodes. */
+    /** Legacy layout info for wizard nodes. */
     private Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
+    /** JSON layout info for wizard nodes. */
+    private String m_layoutJSONString;
 
     private MetaNodeTemplateInformation m_templateInformation;
 
@@ -281,6 +283,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
         m_layoutInfo = persistor.getLayoutInfo();
+        m_layoutJSONString = persistor.getLayoutJSONString();
         PortType[] inTypes = new PortType[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
             inTypes[i] = inPortTemplates[i].getPortType();
@@ -1782,7 +1785,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /**
      * @return the layoutInfo
      * @since 2.10
+     * @deprecated use {@link #getLayoutJSONString()} instead
      */
+    @Deprecated
     public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
         if (m_layoutInfo == null) {
             m_layoutInfo = new HashMap<Integer, WizardNodeLayoutInfo>();
@@ -1793,13 +1798,39 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /**
      * @param layoutInfo the layoutInfo to set
      * @since 2.10
+     * @deprecated use {@link #setLayoutJSONString(String)} instead
      */
+    @Deprecated
     public void setLayoutInfo(final Map<Integer, WizardNodeLayoutInfo> layoutInfo) {
         if (ObjectUtils.notEqual(m_layoutInfo, layoutInfo)) {
             m_layoutInfo = layoutInfo;
             setDirty();
         }
     }
+
+    /**
+     * @return the layoutJSONString
+     * @since 3.1
+     */
+    public String getLayoutJSONString() {
+        if (m_layoutJSONString == null) {
+            m_layoutJSONString = "";
+        }
+        return m_layoutJSONString;
+    }
+
+    /**
+     * @param layoutJSONString the layoutJSONString to set
+     * @since 3.1
+     */
+    public void setLayoutJSONString(final String layoutJSONString) {
+        if (!StringUtils.equals(m_layoutJSONString, layoutJSONString)) {
+            m_layoutJSONString = layoutJSONString;
+            setDirty();
+        }
+    }
+
+
 
     /* -------------- SingleNodeContainer methods without meaningful equivalent --------- */
 

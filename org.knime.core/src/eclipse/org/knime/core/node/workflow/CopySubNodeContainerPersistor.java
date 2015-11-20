@@ -72,6 +72,7 @@ public class CopySubNodeContainerPersistor
     private final int m_virtualInNodeIDSuffix;
     private final int m_virtualOutNodeIDSuffix;
     private final Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
+    private final String m_layoutJSONString;
     private final MetaNodeTemplateInformation m_templateInformation;
 
     /**
@@ -112,6 +113,7 @@ public class CopySubNodeContainerPersistor
             WizardNodeLayoutInfo newInfo = layoutEntry.getValue().clone();
             m_layoutInfo.put(id, newInfo);
         }
+        m_layoutJSONString = new String(original.getLayoutJSONString());
         m_templateInformation = original.getTemplateInformation().clone();
     }
 
@@ -159,9 +161,19 @@ public class CopySubNodeContainerPersistor
     }
 
     /** {@inheritDoc} */
+    @Deprecated
     @Override
     public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
         return m_layoutInfo;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.1
+     */
+    @Override
+    public String getLayoutJSONString() {
+        return m_layoutJSONString;
     }
 
     /**

@@ -327,6 +327,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WizardExecutionController.java" type="org.knime.core.node.workflow.WizardExecutionController$WizardPageContent">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WizardExecutionController.WizardPageContent"/>
+                <message_argument value="getLayoutInfo()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowCreationHelper.java" type="org.knime.core.node.workflow.WorkflowCreationHelper">
         <filter id="338792546">
             <message_arguments>
