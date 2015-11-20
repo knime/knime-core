@@ -21,7 +21,6 @@
             id="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory"
             category-path="/analytics/mining/treeensemble/regression"
             factory-class="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory">
