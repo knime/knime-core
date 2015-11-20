@@ -57,7 +57,6 @@ import java.util.Map;
 
 import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -71,7 +70,7 @@ import org.knime.workbench.core.util.ImageRepository;
 public class SubnodeLayoutWizard extends Wizard {
 
     private final SubNodeContainer m_subNodeContainer;
-    private SubnodeLayoutPage m_page;
+    private SubnodeLayoutJSONEditorPage m_page;
 
     /**
      * @param container the subnode container
@@ -102,7 +101,7 @@ public class SubnodeLayoutWizard extends Wizard {
             }
         }
         Collections.sort(nodeIDs);
-        m_page = new SubnodeLayoutPage("Change the layout configuration");
+        m_page = new SubnodeLayoutJSONEditorPage("Change the layout configuration");
         m_page.setNodes(wfManager, m_subNodeContainer, nodeIDs);
         addPage(m_page);
     }
@@ -112,7 +111,7 @@ public class SubnodeLayoutWizard extends Wizard {
      */
     @Override
     public boolean canFinish() {
-        if (m_page == null || !m_page.isLayoutMapValid()) {
+        if (m_page == null || !m_page.isJSONValid()) {
             return false;
         }
         return super.canFinish();
@@ -123,9 +122,9 @@ public class SubnodeLayoutWizard extends Wizard {
      */
     @Override
     public boolean performFinish() {
-        if (m_page.isLayoutMapValid()) {
-            Map<Integer, WizardNodeLayoutInfo>layoutInfo = m_page.getLayoutMap();
-            m_subNodeContainer.setLayoutInfo(layoutInfo);
+        if (m_page.isJSONValid()) {
+            String layout = m_page.getJsonDocument();
+            m_subNodeContainer.setLayoutJSONString(layout);
             return true;
         } else {
             return false;
