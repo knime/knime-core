@@ -1093,11 +1093,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
         // put objects into output if state of WFM is executed
         boolean publishObjects = newState.isExecuted();
-        CheckUtils.checkState(!publishObjects || outputExchange != null, "state is %s, but exchange is null", newState);
-        CheckUtils.checkState(!publishObjects || outputExchange.getPortObjects() != null,
-                "state is %s, but exchange content is null", newState);
         // publishObjects implies that output node has data or is inactive
-        assert !publishObjects || (isInactive || outputExchange != null) : "output node must have data or be inactive";
+        assert !publishObjects || (isInactive || (outputExchange != null && outputExchange.getPortObjects() != null)) :
+            String.format("output node must have data or be inactive, status: %s, inactive: %b, exhange is null: %b, "
+                + "exchange content is null: %s", newState, isInactive, outputExchange == null,
+                outputExchange == null ? "<invalid>" : String.valueOf(outputExchange.getPortObjects() == null));
 
         boolean publishSpecs = (isInactive || outputExchange != null)
                 && (newState.isConfigured() || newState.isExecuted() || newState.isExecutionInProgress());
