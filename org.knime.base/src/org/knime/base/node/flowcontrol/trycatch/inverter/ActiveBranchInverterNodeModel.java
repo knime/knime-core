@@ -77,7 +77,7 @@ public class ActiveBranchInverterNodeModel extends NodeModel implements Inactive
      * One variable input, one variable output.
      */
     protected ActiveBranchInverterNodeModel() {
-        super(new PortType[] {FlowVariablePortObject.TYPE}, new PortType[] {FlowVariablePortObject.TYPE});
+        super(new PortType[] {FlowVariablePortObject.TYPE_OPTIONAL}, new PortType[] {FlowVariablePortObject.TYPE});
     }
 
     /**
@@ -95,7 +95,7 @@ public class ActiveBranchInverterNodeModel extends NodeModel implements Inactive
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         assert inData.length == 1;
         PortObject outData = InactiveBranchPortObject.INSTANCE;
-        if (inData[0].equals(InactiveBranchPortObject.INSTANCE)) {
+        if (InactiveBranchPortObject.INSTANCE.equals(inData[0])) {
             outData = FlowVariablePortObject.INSTANCE;
         }
         return new PortObject[]{outData};
