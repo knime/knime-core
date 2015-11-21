@@ -672,7 +672,7 @@ public class FileNodePersistor implements NodePersistor {
             } else if ("referenced_output".equals(type)) {
                 int outputPortIndex = singlePortSetting.getInt("outport");
                 CheckUtils.checkSetting(outputPortIndex >= 0, "Port index must not < 0: $d", outputPortIndex);
-                object = m_portObjects[outputPortIndex];
+                object = getPortObject(outputPortIndex);
             } else if ("non-table".equals(type)) {
                 String location = singlePortSetting.getString("port_dir_location");
                 ReferencedFile portDirRef = new ReferencedFile(subDirFile, location);
@@ -1117,9 +1117,7 @@ public class FileNodePersistor implements NodePersistor {
     }
 
     private void checkPortIndexOnSet(final int index) {
-        if (index == 0) {
-            throw new IllegalStateException("Must not set content of port 0;" + "it's the framework port");
-        }
+        CheckUtils.checkState(index > 0, "Must not set content of port 0; it's the framework port: " + index);
     }
 
     /** {@inheritDoc} */
