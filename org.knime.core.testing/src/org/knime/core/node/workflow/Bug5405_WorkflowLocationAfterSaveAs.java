@@ -47,11 +47,11 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.util.HashMap;
 
-import junit.framework.Assert;
-
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
+
+import junit.framework.Assert;
 
 /**
  * Tests Save As.
@@ -101,6 +101,9 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
         manager.saveAs(saveAsFolder, new ExecutionMonitor());
         Assert.assertEquals(saveAsFolder, manager.getNodeContainerDirectory().getFile());
         Assert.assertEquals(saveAsFolder, manager.getContext().getCurrentLocation());
+
+        // if this fails (= assertion thrown) this means the workflow format has changed and all nodes are dirty
+        // when save-as is called.
         Assert.assertFalse(fileReaderTable.isOpen());
 
         executeAndWait(m_diffChecker3);
