@@ -61,6 +61,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 
@@ -85,7 +86,8 @@ public class ActiveBranchInverterNodeModel extends NodeModel implements Inactive
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return inSpecs;
+        // optional input might not be connected - so fix it
+        return new PortObjectSpec[] {inSpecs[0] == null ? FlowVariablePortObjectSpec.INSTANCE : inSpecs[0]};
     }
 
     /**
