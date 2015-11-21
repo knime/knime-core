@@ -109,7 +109,7 @@ public final class LargeFile {
         return m_fileStore;
     }
 
-    public void flushToFileStore() throws IOException {
+    public synchronized void flushToFileStore() throws IOException {
         if (m_binaryContent != null) {
             FileUtils.writeByteArrayToFile(m_fileStore.getFile(), m_binaryContent);
             m_binaryContent = null;
