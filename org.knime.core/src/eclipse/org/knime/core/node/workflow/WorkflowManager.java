@@ -2414,6 +2414,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             SingleNodeContainer snc = (SingleNodeContainer)nc;
             snc.saveNodeSettingsToDefault();
+            snc.setDirty();
         }
     }
 
@@ -8743,7 +8744,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 : Collections.unmodifiableList(m_workflowVariables);
     }
 
-    /* @return stack of workflow variables. */
+    /** {@inheritDoc} */
+    @Override
+    public
+    FlowObjectStack getFlowObjectStack() {
+        return getWorkflowVariableStack();
+    }
+
+    /** @return stack of workflow variables. */
     private FlowObjectStack getWorkflowVariableStack() {
         // assemble new stack
         FlowObjectStack sos = new FlowObjectStack(getID());

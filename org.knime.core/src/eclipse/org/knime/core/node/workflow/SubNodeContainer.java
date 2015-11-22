@@ -552,6 +552,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return new NodeID(m_wfm.getID(), m_virtualOutNodeIDSuffix);
     }
 
+    /** Used by test framework to enforce a programmatically collapsed subnode to export all flow variables. */
+    void updateOutputConfigurationToIncludeAllFlowVariables() {
+        try (WorkflowLock lock = lock()) {
+            getVirtualOutNodeModel().updateConfigIncludeAllFlowVariables();
+            getWorkflowManager().saveNodeSettingsToDefault(getVirtualOutNodeID());
+        }
+    }
     /* -------------------- NodeContainer info properties -------------- */
 
     @SuppressWarnings("rawtypes")

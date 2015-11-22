@@ -141,6 +141,9 @@ final class FlowObjectStackView extends JPanel {
                     case STRING:
                         o = v.getStringValue();
                         break;
+                    case CREDENTIALS:
+                        o = v.getCredentialsValue();
+                        break;
                     default:
                         o = "Unknown Type: " + v.getType();
                     }

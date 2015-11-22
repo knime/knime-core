@@ -367,19 +367,32 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                 + " type " + type);
     }
 
-    /** Get all (visible!) variables on the stack in a non-modifiable map.
+    /** Get all (visible!) variables on the stack in a non-modifiable map. This map is filtered for double, string,
+     * int variables to guarantee backward compatibility.
      * This method is used to show available variables to the user.
      * @return Such a map.
      */
     public Map<String, FlowVariable> getAvailableFlowVariables() {
-        LinkedHashMap<String, FlowVariable> hash =
-            new LinkedHashMap<String, FlowVariable>();
+        return getAvailableFlowVariables(Type.DOUBLE, Type.INTEGER, Type.STRING);
+    }
+
+    /** Get all flow variables filtered according to the argument. Not meant for public use.
+     * @param types The types to filter for (non-null)
+     * @return A map with variables.
+     * @since 3.1
+     */
+    public Map<String, FlowVariable> getAvailableFlowVariables(final FlowVariable.Type... types) {
+        LinkedHashMap<String, FlowVariable> hash = new LinkedHashMap<String, FlowVariable>();
+        List<Type> typesAsList = Arrays.asList(types);
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             FlowObject e = m_stack.get(i);
             if (!(e instanceof FlowVariable)) {
                 continue;
             }
             FlowVariable v = (FlowVariable)e;
+            if (!typesAsList.contains(v.getType())) {
+                continue;
+            }
             if (!hash.containsKey(v.getName())) {
                 hash.put(v.getName(), v);
             }

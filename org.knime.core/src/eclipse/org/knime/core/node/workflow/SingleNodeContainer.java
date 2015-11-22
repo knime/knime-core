@@ -748,9 +748,9 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 LOGGER.coding("SNC settings from persistor are null, using default");
                 sncSettings = new SingleNodeContainerSettings();
             }
+            m_settings = sncSettings;
             WorkflowCopyContent result = performLoadContent(
                 persistor, tblRep, inStack, exec, loadResult, preserveNodeMessage);
-            m_settings = sncSettings;
             return result;
         }
     }
@@ -798,7 +798,6 @@ public abstract class SingleNodeContainer extends NodeContainer {
             NodeContext.removeLastContext();
         }
         m_settings.setModelSettings(modelSettings);
-        setDirty();
     }
 
     /** Save settings of specific implementation.
@@ -926,12 +925,6 @@ public abstract class SingleNodeContainer extends NodeContainer {
      *        node is a loop start node)
      */
     abstract void setFlowObjectStack(final FlowObjectStack st, final FlowObjectStack outgoingStack);
-
-
-    /**
-     * @return current FlowObjectStack
-     */
-    public abstract FlowObjectStack getFlowObjectStack();
 
     /** Delegates to node to get flow variables that are added or modified
      * by the node.

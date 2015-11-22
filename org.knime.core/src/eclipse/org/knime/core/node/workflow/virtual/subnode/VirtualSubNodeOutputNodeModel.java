@@ -66,6 +66,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.ExtendedScopeNodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -81,9 +82,13 @@ import org.knime.core.node.streamable.PortObjectInput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
+import org.knime.core.node.workflow.WorkflowLoadHelper;
 
 
 
@@ -93,7 +98,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * @since 2.10
  */
 public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
-    implements InactiveBranchConsumer, PortObjectHolder {
+    implements InactiveBranchConsumer, PortObjectHolder, CredentialsNode {
 
     /** Holds the data (specs, objects, flow vars), gets update on reset, configure, execute. */
     private int m_numberOfPorts;
@@ -191,10 +196,16 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
      * @return
      */
     private Collection<FlowVariable> getVisibleFlowVariables() {
-        Map<String, FlowVariable> filter = new LinkedHashMap<>(getAvailableFlowVariables());
+        Map<String, FlowVariable> filter = new LinkedHashMap<>(
+                Node.invokeGetAvailableFlowVariables(this, Type.values()));
         FilterResult result = m_configuration.getFilterConfiguration().applyTo(filter);
         filter.keySet().retainAll(Arrays.asList(result.getIncludes()));
         return filter.values();
+    }
+
+    /** @return the configuration - used in test framework, no API.*/
+    VirtualSubNodeOutputConfiguration getConfiguration() {
+        return m_configuration;
     }
 
     /** Called when workflow is loaded to fill the exchange field.
@@ -266,6 +277,12 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
         return false;
     }
 
+    /** Called by testing framework to force all available flow variables into output.
+     * @since 3.1 */
+    public void updateConfigIncludeAllFlowVariables() {
+        CheckUtils.checkState(m_configuration != null, "No configuration available");
+        m_configuration.getFilterConfiguration().loadDefaults(getAvailableFlowVariables(), true);
+    }
     /**
      * @return Names of the ports
      */
@@ -292,6 +309,16 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     @Override
     public void setInternalPortObjects(final PortObject[] portObjects) {
         setNewExchange(new VirtualSubNodeExchange(portObjects, getVisibleFlowVariables()));
+    }
+
+    /** {@inheritDoc}
+     * @since 3.1*/
+    @Override
+    public void doAfterLoadFromDisc(final WorkflowLoadHelper loadHelper,
+        final boolean isExecuted, final boolean isInactive) {
+        if (isExecuted) {
+            setNewExchange(new VirtualSubNodeExchange(m_outputExchange.getPortObjects(), getVisibleFlowVariables()));
+        }
     }
 
 }

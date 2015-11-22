@@ -59,6 +59,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -111,6 +112,7 @@ import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowScopeContext;
 import org.knime.core.node.workflow.FlowTryCatchContext;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -1146,6 +1148,39 @@ public final class Node implements NodeModelWarningListener {
      */
     public static FlowScopeContext invokePeekFlowScopeContext(final NodeModel model) {
         return model.peekFlowScopeContext();
+    }
+
+    /** Invokes the corresponding package scope method in class NodeModel. Put here to avoid adding API.
+     * @param model to call on.
+     * @param v method argument
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static void invokePushFlowVariable(final NodeModel model, final FlowVariable v) {
+        model.pushFlowVariable(v);
+    }
+
+    /** Invokes the corresponding package scope method in class NodeModel. Put here to avoid adding API.
+     * @param model to call on.
+     * @param types method argument
+     * @return result of that invocation.
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 3.1
+     */
+    public static Map<String, FlowVariable> invokeGetAvailableFlowVariables(
+        final NodeModel model, final FlowVariable.Type...types) {
+        return model.getAvailableFlowVariables(types);
+    }
+
+    /** Invokes the corresponding package scope method in class NodeDialogPane. Put here to avoid adding API.
+     * @param dialog to call on.
+     * @param types method argument
+     * @return result of that invocation.
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 3.1
+     */
+    public static Map<String, FlowVariable> invokeGetAvailableFlowVariables(
+        final NodeDialogPane dialog, final FlowVariable.Type...types) {
+        return dialog.getAvailableFlowVariables(types);
     }
 
     /** Called after execute in order to put the computed result into the

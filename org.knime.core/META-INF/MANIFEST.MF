@@ -11,6 +11,7 @@ Bundle-Activator: org.knime.core.internal.CorePlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: log4j,
  org.knime.core,
+ org.knime.core.node.workflow,
  org.knime.core.data,
  org.knime.core.data.append,
  org.knime.core.data.blob,

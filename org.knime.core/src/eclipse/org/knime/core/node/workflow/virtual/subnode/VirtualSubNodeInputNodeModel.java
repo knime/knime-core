@@ -61,6 +61,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.ExtendedScopeNodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -79,6 +80,7 @@ import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
 import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
@@ -192,7 +194,8 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
     private void pushFlowVariables() throws InvalidSettingsException {
         String prefix = m_configuration.getFlowVariablePrefix() == null ? "" : m_configuration.getFlowVariablePrefix();
         FlowVariableFilterConfiguration filterConfiguration = m_configuration.getFilterConfiguration();
-        Map<String, FlowVariable> availableVariables = getSubNodeContainerFlowObjectStack().getAvailableFlowVariables();
+        Map<String, FlowVariable> availableVariables =
+                getSubNodeContainerFlowObjectStack().getAvailableFlowVariables(Type.values());
         FilterResult filtered = filterConfiguration.applyTo(availableVariables);
         for (String include : filtered.getIncludes()) {
             FlowVariable f = availableVariables.get(include);
@@ -204,19 +207,8 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
                 case Local:
                 default:
             }
-            switch (f.getType()) {
-            case DOUBLE:
-                pushFlowVariableDouble(prefix + f.getName(), f.getDoubleValue());
-                break;
-            case INTEGER:
-                pushFlowVariableInt(prefix + f.getName(), f.getIntValue());
-                break;
-            case STRING:
-                pushFlowVariableString(prefix + f.getName(), f.getStringValue());
-                break;
-            default:
-                throw new InvalidSettingsException("Unsupported flow variable type: " + f.getType());
-            }
+            final String name = prefix + f.getName();
+            Node.invokePushFlowVariable(this, f.withNewName(name));
         }
     }
 

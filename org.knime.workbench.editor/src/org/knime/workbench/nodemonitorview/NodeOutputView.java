@@ -612,7 +612,7 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
             // for normal nodes port 0 is available (hidden variable OutPort!)
             FlowObjectStack fos = nc.getOutPort(0).getFlowObjectStack();
             if (fos != null) {
-                fvs = fos.getAvailableFlowVariables().values();
+                fvs = fos.getAvailableFlowVariables(org.knime.core.node.workflow.FlowVariable.Type.values()).values();
             } else {
                 fvs = null;
             }

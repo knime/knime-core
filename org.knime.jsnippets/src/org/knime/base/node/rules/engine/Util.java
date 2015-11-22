@@ -126,6 +126,8 @@ public final class Util {
                     key = 'S';
                     val = Type.STRING;
                     break;
+                case CREDENTIALS:
+                    continue;
                 default:
                     throw new IllegalStateException("Unhandled workflow variable type: " + type);
             }

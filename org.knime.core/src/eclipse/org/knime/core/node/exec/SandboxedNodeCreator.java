@@ -78,6 +78,7 @@ import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
@@ -196,7 +197,8 @@ public final class SandboxedNodeCreator {
         List<FlowVariable> flowVars = new ArrayList<FlowVariable>();
         if (m_nc instanceof SingleNodeContainer) {
             final FlowObjectStack flowObjectStack = ((SingleNodeContainer)m_nc).getFlowObjectStack();
-            final Collection<FlowVariable> flowVarsIn = flowObjectStack.getAvailableFlowVariables().values();
+            final Collection<FlowVariable> flowVarsIn =
+                    flowObjectStack.getAvailableFlowVariables(Type.values()).values();
             flowVarsIn.stream().filter(fv -> !fv.isGlobalConstant()).forEachOrdered(fv -> flowVars.add(fv));
             // getAvailableFlowVariables returns top down, make sure iterations on list return oldest entry first
             // (will be pushed onto node stack using an iterator)

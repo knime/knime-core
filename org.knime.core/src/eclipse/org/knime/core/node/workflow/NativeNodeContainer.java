@@ -95,6 +95,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
@@ -796,8 +797,16 @@ public class NativeNodeContainer extends SingleNodeContainer {
     WorkflowCopyContent performLoadContent(final SingleNodeContainerPersistor nodePersistor,
         final Map<Integer, BufferedDataTable> tblRep, final FlowObjectStack inStack, final ExecutionMonitor exec,
         final LoadResult loadResult, final boolean preserveNodeMessage) throws CanceledExecutionException {
-        if (nodePersistor.getMetaPersistor().getState().equals(InternalNodeContainerState.EXECUTED)) {
+        boolean isExecuted = nodePersistor.getMetaPersistor().getState().equals(InternalNodeContainerState.EXECUTED);
+        if (isExecuted) {
             m_node.putOutputTablesIntoGlobalRepository(getParent().getGlobalTableRepository());
+        }
+        if (m_node.isModelCompatibleTo(CredentialsNode.class)
+                && nodePersistor instanceof FileSingleNodeContainerPersistor) {
+            CredentialsNode credNode = (CredentialsNode)m_node.getNodeModel();
+            credNode.doAfterLoadFromDisc(((FileSingleNodeContainerPersistor)nodePersistor).getLoadHelper(),
+                isExecuted, isInactive());
+            saveNodeSettingsToDefault();
         }
         return null;
     }

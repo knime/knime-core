@@ -109,8 +109,12 @@ public abstract class WorkflowTestCase extends TestCase {
     }
 
     protected WorkflowManager loadWorkflow(final File workflowDir, final ExecutionMonitor exec) throws Exception {
-        WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(workflowDir, exec,
-            new WorkflowLoadHelper(workflowDir), false);
+        return loadWorkflow(workflowDir, exec, new WorkflowLoadHelper(workflowDir));
+    }
+
+    protected WorkflowManager loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper) throws Exception {
+        WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(workflowDir, exec, loadHelper, false);
         WorkflowManager m = loadResult.getWorkflowManager();
         if (m == null) {
             throw new Exception("Errors reading workflow: "

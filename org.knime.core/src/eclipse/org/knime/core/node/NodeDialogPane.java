@@ -105,6 +105,7 @@ import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -306,9 +307,15 @@ public abstract class NodeDialogPane {
     /** @return available flow variables in a non-modifiable map
      *           (ensured to be not null) . */
     public final Map<String, FlowVariable> getAvailableFlowVariables() {
+        return getAvailableFlowVariables(Type.STRING, Type.DOUBLE, Type.INTEGER);
+    }
+
+    /** @param types Type filter (include)
+     * @return available flow variables in a non-modifiable map (ensured to be not null). */
+    final Map<String, FlowVariable> getAvailableFlowVariables(final FlowVariable.Type...types) {
         Map<String, FlowVariable> result = null;
         if (m_flowObjectStack != null) {
-            result = m_flowObjectStack.getAvailableFlowVariables();
+            result = m_flowObjectStack.getAvailableFlowVariables(types);
         }
         if (result == null) {
             result = Collections.emptyMap();

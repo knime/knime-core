@@ -93,6 +93,7 @@ import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeGraphAnnotation;
@@ -544,7 +545,7 @@ public class NodeMonitorView extends ViewPart
             // for normal nodes port 0 is available (hidden variable OutPort!)
             FlowObjectStack fos = nc.getOutPort(0).getFlowObjectStack();
             if (fos != null) {
-                fvs = fos.getAvailableFlowVariables().values();
+                fvs = fos.getAvailableFlowVariables(Type.values()).values();
             } else {
                 fvs = null;
             }

@@ -50,7 +50,9 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue;
 
 /**
  * FlowVariable holding local variables of basic types which can
@@ -73,8 +75,11 @@ public final class FlowVariable extends FlowObject {
         /** int type. */
         INTEGER,
         /** String type. */
-        STRING
-    };
+        STRING,
+        /** Credentials, currently filtered from {@link FlowObjectStack#getAvailableFlowVariables()}.
+         * @since 3.1 */
+        CREDENTIALS;
+    }
 
     /** Scope of variable. */
     public static enum Scope {
@@ -130,6 +135,7 @@ public final class FlowVariable extends FlowObject {
     private String m_valueS = null;
     private double m_valueD = Double.NaN;
     private int m_valueI = 0;
+    private CredentialsFlowVariableValue m_valueCredentials;
 
 
     private FlowVariable(final String name, final Type type,
@@ -209,6 +215,17 @@ public final class FlowVariable extends FlowObject {
         m_valueI = valueI;
     }
 
+    /** create new FlowVariable representing a credentials object. (Flow Scope)
+     *
+     * @param name of the variable
+     * @param valueC credentials object (usually has the same name except for name uniquification in subnode).
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    public FlowVariable(final String name, final CredentialsFlowVariableValue valueC) {
+        this(name, Type.CREDENTIALS, Scope.Flow);
+        m_valueCredentials = CheckUtils.checkArgumentNotNull(valueC);
+    }
+
     /**
      * @return name of variable.
      */
@@ -264,6 +281,18 @@ public final class FlowVariable extends FlowObject {
         return m_valueI;
     }
 
+    /** Temporary workaround to represent credentials in flow variables. This is a framework method that is going
+     * to change in future versions.
+     * @return the valueCredentials or null.
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    CredentialsFlowVariableValue getCredentialsValue() {
+        if (m_type != Type.CREDENTIALS) {
+            return null;
+        }
+        return m_valueCredentials;
+    }
+
     /**
      * @return value of the variable as string (independent of type).
      * @since 2.6
@@ -273,6 +302,7 @@ public final class FlowVariable extends FlowObject {
         case DOUBLE: return Double.toString(m_valueD);
         case INTEGER: return Integer.toString(m_valueI);
         case STRING: return m_valueS;
+        case CREDENTIALS: return "Credentials: " + m_valueCredentials.getName();
         }
         return "invalid type";
     }
@@ -293,6 +323,10 @@ public final class FlowVariable extends FlowObject {
             break;
         case STRING:
             settings.addString("value", getStringValue());
+            break;
+        case CREDENTIALS:
+            NodeSettingsWO subSettings = settings.addNodeSettings("value");
+            m_valueCredentials.save(subSettings);
             break;
         default:
             assert false : "Unknown variable type: " + getType();
@@ -330,10 +364,29 @@ public final class FlowVariable extends FlowObject {
         case STRING:
             v = new FlowVariable(name, sub.getString("value"));
             break;
+        case CREDENTIALS:
+            NodeSettingsRO subSettings = sub.getNodeSettings("value");
+            CredentialsFlowVariableValue credentialsValue = CredentialsFlowVariableValue.load(subSettings);
+            v = new FlowVariable(name, credentialsValue);
+            break;
         default:
             throw new InvalidSettingsException("Unknown type " + varType);
         }
         return v;
+    }
+
+    /** Clones this object, setting a new name (used in subnode, puts a unique identifier).
+     * @param name new identifier, not null.
+     * @return a 'clone' of this with a new name.
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public FlowVariable withNewName(final String name) {
+        FlowVariable clone = new FlowVariable(name, m_type, m_scope);
+        clone.m_valueD = m_valueD;
+        clone.m_valueI = m_valueI;
+        clone.m_valueS = m_valueS;
+        clone.m_valueCredentials = m_valueCredentials;
+        return clone;
     }
 
     /** {@inheritDoc} */
@@ -344,6 +397,7 @@ public final class FlowVariable extends FlowObject {
         case DOUBLE: value = Double.toString(m_valueD); break;
         case INTEGER: value = Integer.toString(m_valueI); break;
         case STRING: value = m_valueS; break;
+        case CREDENTIALS: value = m_valueCredentials.toString(); break;
         default: throw new InternalError("m_type must not be null");
         }
         return m_name + "\" (" + m_type + ": " + value + ")";
@@ -377,6 +431,9 @@ public final class FlowVariable extends FlowObject {
         case STRING:
             valueEqual = ConvenienceMethods.areEqual(
                     v.getStringValue(), getStringValue());
+            break;
+        case CREDENTIALS:
+            valueEqual = ConvenienceMethods.areEqual(v.getCredentialsValue(), getCredentialsValue());
             break;
         default:
             throw new IllegalStateException("Unsupported variable type "

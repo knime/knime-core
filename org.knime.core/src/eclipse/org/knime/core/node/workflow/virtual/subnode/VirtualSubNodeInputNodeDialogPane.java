@@ -53,6 +53,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Map;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -64,12 +65,15 @@ import javax.swing.border.TitledBorder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
 import org.knime.core.node.util.filter.variable.FlowVariableFilterPanel;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * Dialog to sub node input. Shows currently only a twin list to allow the user to select variables to
@@ -217,13 +221,15 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) {
         VirtualSubNodeInputConfiguration configuration =
             new VirtualSubNodeInputConfiguration(m_portDescriptionPanels.length);
-        configuration.loadConfigurationInDialog(settings, getAvailableFlowVariables());
+        final Map<String, FlowVariable> availableVariables = Node.invokeGetAvailableFlowVariables(
+            this, Type.values());
+        configuration.loadConfigurationInDialog(settings, availableVariables);
         String prefix = configuration.getFlowVariablePrefix();
         if ((prefix != null) != m_variablePrefixChecker.isSelected()) {
             m_variablePrefixChecker.doClick();
         }
         m_variablePrefixTextField.setText(prefix == null ? "outer." : prefix);
-        m_variableFilterPanel.loadConfiguration(configuration.getFilterConfiguration(), getAvailableFlowVariables());
+        m_variableFilterPanel.loadConfiguration(configuration.getFilterConfiguration(), availableVariables);
         m_subNodeDescription.setText(configuration.getSubNodeDescription());
         String[] portNames = configuration.getPortNames();
         String[] portDescriptions = configuration.getPortDescriptions();

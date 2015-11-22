@@ -162,6 +162,8 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
             || Type.INTEGER.equals(actualType);
         case INTEGER:
             return Type.INTEGER.equals(actualType);
+        case CREDENTIALS:
+            return false;
         default:
             assert false : "unknown type: " + desiredType;
             return false;
@@ -549,6 +551,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                                 + varName + "\") as char "
                                 + "(settings parameter \"" + key + "\")");
                     }
+                    break;
+                case xtransientstring:
+                    String transientS = getStringVariable(varName, variables);
+                    counterpart.addTransientString(key, transientS);
                     break;
                 case xstring:
                     String s = getStringVariable(varName, variables);

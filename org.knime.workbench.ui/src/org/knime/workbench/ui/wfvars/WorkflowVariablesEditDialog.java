@@ -44,6 +44,8 @@
  */
 package org.knime.workbench.ui.wfvars;
 
+import java.util.Arrays;
+
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -62,6 +64,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Scope;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * Let the user add or edit a workflow variable with name, type and default
@@ -161,7 +164,7 @@ public class WorkflowVariablesEditDialog extends Dialog {
 
         m_typeSelectionCtrl = new Combo(twoColComp,
                 SWT.DROP_DOWN | SWT.READ_ONLY);
-        for (FlowVariable.Type t : FlowVariable.Type.values()) {
+        for (FlowVariable.Type t : Arrays.asList(Type.DOUBLE, Type.INTEGER, Type.STRING)) {
             m_typeSelectionCtrl.add(t.name());
         }
         m_typeSelectionCtrl.addSelectionListener(new SelectionListener() {

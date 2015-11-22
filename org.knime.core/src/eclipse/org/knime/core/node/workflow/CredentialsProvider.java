@@ -48,8 +48,12 @@
 package org.knime.core.node.workflow;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Map;
 
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 
 /** Provides available credential variables for a workflow. Credentials are
@@ -78,11 +82,8 @@ public final class CredentialsProvider {
      */
     CredentialsProvider(final NodeContainer client,
             final CredentialsStore store) {
-        if (client == null || store == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_store = store;
-        m_client = client;
+        m_store = CheckUtils.checkArgumentNotNull(store);
+        m_client = CheckUtils.checkArgumentNotNull(client);
     }
 
     /** Read a credentials variable from the store.
@@ -92,7 +93,15 @@ public final class CredentialsProvider {
      * (no such credentials)
      */
     public ICredentials get(final String name) {
-        return m_store.get(name, m_client);
+        if (m_store.contains(name)) {
+            return m_store.get(name, m_client);
+        } else {
+            FlowObjectStack flowVarStack = m_client.getFlowObjectStack();
+            Map<String, FlowVariable> credentialsStackMap = flowVarStack.getAvailableFlowVariables(Type.CREDENTIALS);
+            FlowVariable variable = credentialsStackMap.get(name);
+            variable = CheckUtils.checkArgumentNotNull(variable, "No credentials stored to name \"%s\"", name);
+            return variable.getCredentialsValue();
+        }
     }
 
     /** List all credentials variables available in the workflow. The names
@@ -101,7 +110,10 @@ public final class CredentialsProvider {
      * @return the collection of valid credentials identifiers.
      */
     public Collection<String> listNames() {
-        return m_store.listNames();
+        LinkedHashSet<String> names = new LinkedHashSet<>(m_store.listNames());
+        FlowObjectStack flowObjectStack = m_client.getFlowObjectStack();
+        names.addAll(flowObjectStack.getAvailableFlowVariables(Type.CREDENTIALS).keySet());
+        return names;
     }
 
     /** @return the client */

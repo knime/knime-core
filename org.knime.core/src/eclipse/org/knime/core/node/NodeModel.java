@@ -1260,9 +1260,8 @@ public abstract class NodeModel {
      * @param value The assignment value for the variable
      * @throws NullPointerException If the name argument is null.
      */
-    protected final void pushFlowVariableDouble(
-            final String name, final double value) {
-        m_outgoingFlowObjectStack.push(new FlowVariable(name, value));
+    protected final void pushFlowVariableDouble(final String name, final double value) {
+        pushFlowVariable(new FlowVariable(name, value));
     }
 
     /** Get the value of the double variable with the given name leaving the
@@ -1306,9 +1305,12 @@ public abstract class NodeModel {
      * @param value The assignment value for the variable
      * @throws NullPointerException If the name argument is null.
      */
-    protected final void pushFlowVariableInt(
-            final String name, final int value) {
-        m_outgoingFlowObjectStack.push(new FlowVariable(name, value));
+    protected final void pushFlowVariableInt(final String name, final int value) {
+        pushFlowVariable(new FlowVariable(name, value));
+    }
+
+    final void pushFlowVariable(final FlowVariable variable) {
+        m_outgoingFlowObjectStack.push(variable);
     }
 
     /** Get the value of the integer variable with the given name leaving the
@@ -1338,7 +1340,7 @@ public abstract class NodeModel {
      */
     protected final void pushFlowVariableString(
             final String name, final String value) {
-        m_outgoingFlowObjectStack.push(new FlowVariable(name, value));
+        pushFlowVariable(new FlowVariable(name, value));
     }
 
     FlowObjectStack getFlowObjectStack() {
@@ -1358,26 +1360,44 @@ public abstract class NodeModel {
         return m_outgoingFlowObjectStack;
     }
 
-    /** Get all flow variables currently available at this node. The keys of the
-     * returned map will be the identifiers of the flow variables and the values
-     * the flow variables itself. The map is non-modifiable.
+    /** Get all primitive flow variables currently available at this node. The keys of the returned map will be
+     * the identifiers of the flow variables and the values the flow variables itself. The map is non-modifiable.
      *
-     * <p>The map contains all flow variables, i.e. the variables that are
-     * provided as part of (all) input connections and the variables that were
-     * pushed onto the stack by this node itself (which is different from
-     * the {@link NodeDialogPane#getAvailableFlowVariables()} method, which
-     * only returns the variables provided at the input.
-     * @return A new map of available flow variables in a non-modifiable map
-     *         (never null).
+     * <p>The map contains all flow variables, i.e. the variables that are provided as part of (all) input connections
+     * and the variables that were pushed onto the stack by this node itself (which is different from the
+     * {@link NodeDialogPane#getAvailableFlowVariables()} method, which only returns variables provided at the input.
+     *
+     * @return A new map of available flow variables in a non-modifiable map (never null).
      * @since 2.3.3
      */
     public final Map<String, FlowVariable> getAvailableFlowVariables() {
-        Map<String, FlowVariable> result =
-            new LinkedHashMap<String, FlowVariable>();
+        Map<String, FlowVariable> result = new LinkedHashMap<String, FlowVariable>();
         if (m_flowObjectStack != null) {
             result.putAll(m_flowObjectStack.getAvailableFlowVariables());
-            result.putAll(
-                    m_outgoingFlowObjectStack.getAvailableFlowVariables());
+            result.putAll(m_outgoingFlowObjectStack.getAvailableFlowVariables());
+        }
+        return Collections.unmodifiableMap(result);
+    }
+
+    /** Get all flow variables if they are one of the given types. Keys are the names, values are the flow variable
+     * itself.
+     *
+     * <p>The map contains all flow variables, i.e. the variables that are provided as part of (all) input connections
+     * and the variables that were pushed onto the stack by this node itself (which is different from the
+     * {@link NodeDialogPane#getAvailableFlowVariables()} method, which only returns variables provided at the input.
+     *
+     * <p>The class {@link FlowVariable} is subject to change and hence the use of this method is discouraged. In most
+     * cases it's sufficient to retrieve primitive variables using {@link #getAvailableFlowVariables()}.
+
+     * @param types The type list - a variable whose type is in the argument list is filtered (= part of the result)
+     * @return A new map of available flow variables in a non-modifiable map (never null).
+     * @since 3.1
+     */
+    final Map<String, FlowVariable> getAvailableFlowVariables(final FlowVariable.Type... types) {
+        Map<String, FlowVariable> result = new LinkedHashMap<String, FlowVariable>();
+        if (m_flowObjectStack != null) {
+            result.putAll(m_flowObjectStack.getAvailableFlowVariables(types));
+            result.putAll(m_outgoingFlowObjectStack.getAvailableFlowVariables(types));
         }
         return Collections.unmodifiableMap(result);
     }
