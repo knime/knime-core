@@ -52,6 +52,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -341,7 +342,9 @@ public class WrappedNodeDialog extends Dialog {
                     // close dialog on ESC
                     doCancel();
                 }
-                if (ke.keyCode == SWT.CTRL) {
+                // this locks the WFM so avoid calling it each time.
+                Predicate<NodeContainer> canExecutePredicate = n -> n.getParent().canExecuteNode(n.getID());
+                if (ke.keyCode == SWT.CTRL && canExecutePredicate.test(m_nodeContainer)) {
                     // change OK button label, when CTRL is pressed
                     btnOK.setText("OK - Execute");
                 }
@@ -350,7 +353,7 @@ public class WrappedNodeDialog extends Dialog {
                     btnOK.forceFocus();
                     // force OK - Execute when CTRL and ENTER is pressed
                     // open first out-port view if SHIFT is pressed
-                    doOK(ke, true, (ke.stateMask & SWT.SHIFT) != 0);
+                    doOK(ke, canExecutePredicate.test(m_nodeContainer), (ke.stateMask & SWT.SHIFT) != 0);
                     // reset ok button state/label
                     if (!ke.doit) {
                         btnOK.setText("OK");
