@@ -522,4 +522,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         return subNodeManagerOrNull;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dispose() {
+        super.dispose();
+        m_actionRegistry.dispose();
+    }
+
 }
