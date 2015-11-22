@@ -155,6 +155,9 @@ public class ExecuteAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        if (!isEnabled()) { // for some reason hitting F7 bypasses the enable status
+            return;
+        }
         LOGGER.debug("Creating execution job for " + nodeParts.length
                 + " node(s)...");
         WorkflowManager manager = getManager();
