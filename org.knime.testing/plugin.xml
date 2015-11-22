@@ -38,6 +38,11 @@
       </node>
       <node
             category-path="/testing"
+            factory-class="org.knime.testing.node.credentialsvalidate.CredentialsValidateNodeFactory"
+            id="org.knime.testing.node.credentialsvalidate.CredentialsValidateNodeFactory">
+      </node>
+      <node
+            category-path="/testing"
             factory-class="org.knime.testing.node.datagenerator.TestDataNodeFactory"
             id="org.knime.testing.node.datagenerator.TestDataNodeFactory">
       </node>
