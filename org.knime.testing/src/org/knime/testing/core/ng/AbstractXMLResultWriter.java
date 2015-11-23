@@ -220,12 +220,12 @@ public abstract class AbstractXMLResultWriter implements TestListener {
 
             Element failure = doc.createElement(type);
             tc.appendChild(failure);
-            failure.setAttribute("message", f.exceptionMessage());
+            failure.setAttribute("message", replaceInvalidCharacters(f.exceptionMessage()));
             failure.setAttribute("type", f.thrownException().getClass().getName());
 
             StringWriter buf = new StringWriter();
             f.thrownException().printStackTrace(new PrintWriter(buf));
-            failure.appendChild(doc.createTextNode(buf.toString()));
+            failure.appendChild(doc.createTextNode(replaceInvalidCharacters(buf.toString())));
         }
     }
 
@@ -259,4 +259,29 @@ public abstract class AbstractXMLResultWriter implements TestListener {
      * @throws IOException if an I/O error occurs while writing the results
      */
     public abstract void addResult(WorkflowTestResult result) throws TransformerException, IOException;
+
+    /**
+     * Replaces characters that are invalid in XML 1.0 with an replacement notation. A <code>null</code> string is
+     * replaced by an empty string.
+     *
+     * @param input any input string
+     * @return the replaces string, never <code>null</code>
+     */
+    protected static String replaceInvalidCharacters(final String input) {
+        if (input == null) {
+            return "";
+        }
+        char[] in = input.toCharArray();
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < in.length; i++) {
+            char c = in[i];
+            if ((c != 9) && (c != '\r') && (c != '\n') && ((c < 32) || (c > 0xd7ff))) {
+                buf.append("&#").append(Integer.toHexString(c)).append(';');
+            } else {
+                buf.append(c);
+            }
+        }
+
+        return buf.toString();
+    }
 }
