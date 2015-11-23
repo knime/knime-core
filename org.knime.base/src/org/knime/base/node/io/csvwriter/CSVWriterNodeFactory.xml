@@ -134,6 +134,13 @@
             can enforce a certain line ending to generate a file that is readable on a different operating system. 
         </option>
 		</tab>
+	    <tab name="Encoding">
+        <description>
+	        To write a csv file with a different encoding, you can select a character set in this tab (UTF-8, 
+	        UTF-16, etc.), or specify any other encoding supported by your Java VM. The default value uses the default
+	        encoding of the Java VM, which may depend on the locale or the Java property &quot;file.encoding&quot;
+        </description>
+	    </tab>
 	</fullDescription>
 	
 	<ports>

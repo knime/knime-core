@@ -52,6 +52,14 @@
           If enabled, only the specified number of data rows are read. The column header row (if selected) is 
           not taken into account.    
 		</option>
+	    <tab name="Encoding">
+        <description>
+            To read a csv file that contains characters in a different encoding, you can select the character set in this tab (UTF-8, 
+            UTF-16, etc.), or specify any other encoding supported by your Java VM. The default value uses the default
+            encoding of the Java VM, which may depend on the locale or the Java property &quot;file.encoding&quot;
+        </description>
+        </tab>
+		
 	</fullDescription>
 	<ports>
 		<outPort index="0" name="File Table">
