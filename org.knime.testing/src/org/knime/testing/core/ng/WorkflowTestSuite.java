@@ -57,13 +57,13 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 
-import junit.framework.TestListener;
-import junit.framework.TestResult;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.testing.core.TestrunConfiguration;
+
+import junit.framework.TestListener;
+import junit.framework.TestResult;
 
 /**
  *
@@ -93,6 +93,22 @@ public class WorkflowTestSuite extends WorkflowTest {
      * Creates a new suite of workflow tests. Which tests are actually executed is determined by the given run
      * configuration.
      *
+     * @param workflowName the name of the workflow/testsuite.
+     * @param workflowDir the workflow file (<tt>workflow.knime</tt>)
+     * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
+     * @param runConfig run configuration for all test flows
+     * @param monitor progress monitor, may be <code>null</code>
+     * @throws IOException if an I/O error occurs while setting up the test suite
+     */
+    public WorkflowTestSuite(final String workflowName, final File workflowDir, final File testcaseRoot,
+        final TestrunConfiguration runConfig, final IProgressMonitor monitor) throws IOException {
+        this(workflowName, workflowDir, testcaseRoot, runConfig, monitor, new WorkflowTestContext(runConfig));
+    }
+
+    /**
+     * Creates a new suite of workflow tests. Which tests are actually executed is determined by the given run
+     * configuration.
+     *
      * @param workflowDir the workflow file (<tt>workflow.knime</tt>)
      * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
      * @param runConfig run configuration for all test flows
@@ -101,14 +117,31 @@ public class WorkflowTestSuite extends WorkflowTest {
      * @throws IOException if an I/O error occurs while setting up the test suite
      */
     protected WorkflowTestSuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig,
-                                final IProgressMonitor monitor, final WorkflowTestContext testContext)
-                                                                                                      throws IOException {
-        super(getWorkflowName(workflowDir, testcaseRoot), monitor, testContext);
+        final IProgressMonitor monitor, final WorkflowTestContext testContext) throws IOException {
+        this(getWorkflowName(workflowDir, testcaseRoot), workflowDir, testcaseRoot, runConfig, monitor, testContext);
+    }
+
+    /**
+     * Creates a new suite of workflow tests. Which tests are actually executed is determined by the given run
+     * configuration.
+     *
+     * @param workflowName the name of the workflow/testsuite
+     * @param workflowDir the workflow file (<tt>workflow.knime</tt>)
+     * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
+     * @param runConfig run configuration for all test flows
+     * @param monitor progress monitor, may be <code>null</code>
+     * @param testContext the test context that should be used
+     * @throws IOException if an I/O error occurs while setting up the test suite
+     */
+    protected WorkflowTestSuite(final String workflowName, final File workflowDir, final File testcaseRoot,
+        final TestrunConfiguration runConfig, final IProgressMonitor monitor, final WorkflowTestContext testContext)
+            throws IOException {
+        super(workflowName, monitor, testContext);
 
         initTestsuite(workflowDir, testcaseRoot, runConfig);
     }
 
-    private static String getWorkflowName(final File workflowDir, final File testcaseRoot) {
+    static String getWorkflowName(final File workflowDir, final File testcaseRoot) {
         if (workflowDir.equals(testcaseRoot)) {
             return workflowDir.getName();
         } else {
@@ -183,9 +216,10 @@ public class WorkflowTestSuite extends WorkflowTest {
         m_logger.info("================= Starting testflow " + getName() + " =================");
 
         OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
-        Formatter format = new Formatter();
-        format.format("================= Average load: %02.2f =================", osBean.getSystemLoadAverage());
-        m_logger.info(format.out());
+        try (Formatter format = new Formatter()) {
+            format.format("================= Average load: %02.2f =================", osBean.getSystemLoadAverage());
+            m_logger.info(format.out());
+        }
 
         result.startTest(this);
         try {
@@ -272,11 +306,12 @@ public class WorkflowTestSuite extends WorkflowTest {
     private void logMemoryStatus() {
         MemoryUsage usage = getHeapUsage();
 
-        Formatter formatter = new Formatter();
-        formatter.format("===== Memory statistics: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free ====",
-            usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
-            (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
-        m_logger.info(formatter.out().toString());
+        try (Formatter formatter = new Formatter()) {
+            formatter.format("===== Memory statistics: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free ====",
+                usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
+                (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
+            m_logger.info(formatter.out().toString());
+        }
     }
 
     /**
@@ -285,7 +320,7 @@ public class WorkflowTestSuite extends WorkflowTest {
      * available!
      *
      * @param workflowDir the workflow's directory
-     * @param testcaseRoot the testcase root directory (used a the mountpoint root)
+     * @param testcaseRoot the testcase root directory (used as the mountpoint root)
      * @param runConfig the run configuration
      *
      * @return a new workflow test

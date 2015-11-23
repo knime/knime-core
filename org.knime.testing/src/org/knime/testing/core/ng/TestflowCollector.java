@@ -142,7 +142,7 @@ public class TestflowCollector {
         Collection<File> rootDirSnapshot = new ArrayList<File>(m_testRootDirs);
         // m_testRootDirs may be changed during search for zipped workflows
         for (File dir : rootDirSnapshot) {
-            searchDirectory(dir, dir, workflowTests, runConfiguration);
+            searchDirectory(dir, dir, dir, workflowTests, runConfiguration);
         }
 
         return workflowTests;
@@ -152,13 +152,14 @@ public class TestflowCollector {
      * Searches in the directory and subdirectories for workflow.knime files..
      *
      * @param currentDir the current directory for the search
-     * @param rootDir the root directory of all workflows
+     * @param rootDir the root directory in which the search started
+     * @param mountpointRoot the root directory of all workflows
      * @param tests a collection into which the found testflows are added
      * @param runConfiguration configuration how the testflows should be run
      * @throws IOException if an I/O error occurs
      */
-    private void searchDirectory(final File currentDir, final File rootDir, final Collection<WorkflowTestSuite> tests,
-        final TestrunConfiguration runConfiguration) throws IOException {
+    private void searchDirectory(final File currentDir, final File rootDir, final File mountpointRoot,
+        final Collection<WorkflowTestSuite> tests, final TestrunConfiguration runConfiguration) throws IOException {
         File workflowFile = new File(currentDir, WorkflowPersistor.WORKFLOW_FILE);
         File templateFile = new File(currentDir, WorkflowPersistor.TEMPLATE_FILE);
 
@@ -169,7 +170,8 @@ public class TestflowCollector {
             String workflowPath = currentDir.getAbsolutePath().substring(rootDir.getAbsolutePath().length());
             if (workflowName.matches(m_namePattern) && workflowPath.matches(m_pathPattern)) {
                 WorkflowTestSuite testCase =
-                    new WorkflowTestSuite(workflowFile.getParentFile(), rootDir, runConfiguration, null);
+                    new WorkflowTestSuite(WorkflowTestSuite.getWorkflowName(currentDir, rootDir), currentDir,
+                        mountpointRoot, runConfiguration, null);
                 tests.add(testCase);
             } else {
                 logger.info("Skipping testcase '" + workflowPath + "' (doesn't match name pattern '" + m_namePattern
@@ -185,7 +187,7 @@ public class TestflowCollector {
             Arrays.sort(dirList);
 
             for (int i = 0; i < dirList.length; i++) {
-                searchDirectory(dirList[i], rootDir, tests, runConfiguration);
+                searchDirectory(dirList[i], rootDir, mountpointRoot, tests, runConfiguration);
             }
 
             // check for zipped workflow(group)s
@@ -199,11 +201,11 @@ public class TestflowCollector {
                 String workflowName = zipList[i].getName();
                 String workflowPath = zipList[i].getAbsolutePath().substring(rootDir.getAbsolutePath().length());
 
-                if (workflowName.matches(m_namePattern) && workflowPath.matches(workflowPath)) {
+                if (workflowName.matches(m_namePattern) && workflowPath.matches(m_pathPattern)) {
                     File tempDir = FileUtil.createTempDir("UnzippedTestflows");
                     m_testRootDirs.add(tempDir);
                     FileUtil.unzip(zipList[i], tempDir);
-                    searchDirectory(tempDir, rootDir, tests, runConfiguration);
+                    searchDirectory(tempDir, tempDir, mountpointRoot, tests, runConfiguration);
                 }
             }
         }
