@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./mlp.ico" type = "Learner">
+<knimeNode icon="./mlp.png" type = "Learner">
 <name>RProp MLP Learner</name>
 <shortDescription>
 	    Builds and learns an MLP with resilient backpropagation.

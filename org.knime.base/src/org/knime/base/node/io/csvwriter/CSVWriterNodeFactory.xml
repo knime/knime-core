@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode icon="csvwriter.ico" type="Sink"
+<knimeNode icon="csvwriter.png" type="Sink"
     xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
 	<name>CSV Writer</name>
