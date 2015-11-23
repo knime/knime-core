@@ -45,6 +45,7 @@
  */
 package org.knime.workbench.ui.preferences;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -70,6 +71,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         IPreferenceStore store = KNIMEUIPlugin.getDefault()
                 .getPreferenceStore();
 
+        System.out.println("Display = " + Display.getDefault());
         store.setDefault(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS, false);
 
         store.setDefault(PreferenceConstants.P_CONFIRM_RESET, true);
@@ -89,17 +91,25 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(PreferenceConstants.P_DEFAULT_NODE_LABEL, "Node");
 
-        int defaultFontHeight = 8;
-        Display current = Display.getCurrent();
-        if (current != null) {
-            Font systemFont = current.getSystemFont();
-            FontData[] systemFontData = systemFont.getFontData();
-            if (systemFontData.length >= 1) {
-                defaultFontHeight = systemFontData[0].getHeight();
+        final Display current  = Display.getDefault();
+        store.setDefault(PreferenceConstants.P_NODE_LABEL_FONT_SIZE, 8);
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                if (current != null) {
+                    Font systemFont = current.getSystemFont();
+                    FontData[] systemFontData = systemFont.getFontData();
+                    if (systemFontData.length >= 1) {
+                        store.setDefault(PreferenceConstants.P_NODE_LABEL_FONT_SIZE, systemFontData[0].getHeight());
+                    }
+                }
             }
+        };
+        if (Platform.OS_WIN32.equals(Platform.getOS())) {
+            current.asyncExec(r);
+        } else {
+            r.run();
         }
-        store.setDefault(
-                PreferenceConstants.P_NODE_LABEL_FONT_SIZE, defaultFontHeight);
 
         store.setDefault(PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD,
                 MessageDialogWithToggle.PROMPT);
