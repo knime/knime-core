@@ -316,7 +316,9 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     @Override
     public void doAfterLoadFromDisc(final WorkflowLoadHelper loadHelper,
         final boolean isExecuted, final boolean isInactive) {
-        if (isExecuted) {
+        // before 3.1 it didn't implement POHolder so node output exchange set although executed
+        // otherwise we could assert isExecute --> m_outputExchange != null
+        if (isExecuted && m_outputExchange != null) {
             setNewExchange(new VirtualSubNodeExchange(m_outputExchange.getPortObjects(), getVisibleFlowVariables()));
         }
     }
