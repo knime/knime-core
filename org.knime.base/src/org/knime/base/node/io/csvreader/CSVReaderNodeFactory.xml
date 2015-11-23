@@ -23,41 +23,43 @@
           scans the input file during node configuration (in the dialog).
         </p>
 		</intro>
-		<option name="Column Delimiter">
-		  The character string delimiting columns. Use '\t' for tab character. 
-		</option>
-		<option name="Row Delimiter">
-          The character string delimiting rows. Use '\n' for new line character.  
-		</option>
-		<option name="Quote Char">
-          The quote character.  
-		</option>
-		<option name="Comment Char">
-          A character indicating line comments.  
-		</option>
-		<option name="Has Column Header">
-          Select this box if the first row contains column name headers.  
-		</option>
-		<option name="Has Row Header">
-          Select this box if the first column contains row name headers 
-          (no duplicates allowed).  
-		</option>
-		<option name="Support Short Lines">
-          Select this box if some rows may be shorter than others (filled with missings).  
-		</option>
-		<option name="Skip first lines">
-          If enabled, the specified number of lines are skipped in the input file before the parsing starts.   
-		</option>
-		<option name="Limit rows">
-          If enabled, only the specified number of data rows are read. The column header row (if selected) is 
-          not taken into account.    
-		</option>
-	    <tab name="Encoding">
-        <description>
-            To read a csv file that contains characters in a different encoding, you can select the character set in this tab (UTF-8, 
-            UTF-16, etc.), or specify any other encoding supported by your Java VM. The default value uses the default
-            encoding of the Java VM, which may depend on the locale or the Java property &quot;file.encoding&quot;
-        </description>
+		<tab name="CSV Reader">
+			<option name="Column Delimiter">
+			  The character string delimiting columns. Use '\t' for tab character. 
+			</option>
+			<option name="Row Delimiter">
+	          The character string delimiting rows. Use '\n' for new line character.  
+			</option>
+			<option name="Quote Char">
+	          The quote character.  
+			</option>
+			<option name="Comment Char">
+	          A character indicating line comments.  
+			</option>
+			<option name="Has Column Header">
+	          Select this box if the first row contains column name headers.  
+			</option>
+			<option name="Has Row Header">
+	          Select this box if the first column contains row name headers 
+	          (no duplicates allowed).  
+			</option>
+			<option name="Support Short Lines">
+	          Select this box if some rows may be shorter than others (filled with missings).  
+			</option>
+			<option name="Skip first lines">
+	          If enabled, the specified number of lines are skipped in the input file before the parsing starts.   
+			</option>
+			<option name="Limit rows">
+	          If enabled, only the specified number of data rows are read. The column header row (if selected) is 
+	          not taken into account.    
+			</option>
+		</tab>
+	    <tab name="CSV Reader Encoding">
+	        <option name="Encoding">
+	            To read a csv file that contains characters in a different encoding, you can select the character set in this tab (UTF-8, 
+	            UTF-16, etc.), or specify any other encoding supported by your Java VM. The default value uses the default
+	            encoding of the Java VM, which may depend on the locale or the Java property &quot;file.encoding&quot;
+	        </option>
         </tab>
 		
 	</fullDescription>
