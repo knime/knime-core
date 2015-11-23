@@ -85,6 +85,7 @@ class TreeViewerUpdater {
             Display.getCurrent().setCursorLocation(new Point(bounds.x - 2, bounds.y - 2));
         }
 
+        viewer.getControl().setRedraw(false);
         try {
             viewer.collapseAll();
         } finally {
@@ -98,10 +99,48 @@ class TreeViewerUpdater {
     }
 
     /** Updates and filters the tree
+    *
+    * @param shouldExpand whether the tree should be expanded
+    */
+   static void update(final TreeViewer viewer, final boolean shouldExpand) {
+
+       Point backup = null;
+
+       if (IS_OS_WINDOWS) {
+           Rectangle bounds = viewer.getTree().getParent().getShell().getBounds();
+           // Bug 2809 -
+           // on windows the search is much slower if the cursor is within the KNIME window.
+           // so we just set it somewhere outside and restore it afterwards
+           backup = Display.getCurrent().getCursorLocation();
+           Display.getCurrent().setCursorLocation(new Point(bounds.x - 2, bounds.y - 2));
+       }
+       viewer.getControl().setRedraw(false);
+       try {
+           viewer.refresh();
+           if (shouldExpand) {
+               viewer.expandAll();
+           }
+           //scroll to root
+           if (viewer.getTree().getItemCount() > 0) {
+               TreeItem item = viewer.getTree().getItem(0);
+               viewer.getTree().showItem(item);
+           }
+       } finally {
+           if (backup != null) {
+               Display.getCurrent().setCursorLocation(backup);
+           }
+
+           viewer.getControl().setRedraw(true);
+       }
+   }
+
+    /** Optionally collapses, updates and filters and again expands the tree.
      *
      * @param shouldExpand whether the tree should be expanded
+     * @param update whether the tree should be updated (live update)
+     * @param collapse whether the tree should be collapsed completely before updating it
      */
-    static void update(final TreeViewer viewer, final boolean shouldExpand) {
+    static void collapseAndUpdate(final TreeViewer viewer,final boolean update, final boolean collapse, final boolean shouldExpand) {
 
         Point backup = null;
 
@@ -114,15 +153,22 @@ class TreeViewerUpdater {
             Display.getCurrent().setCursorLocation(new Point(bounds.x - 2, bounds.y - 2));
         }
         viewer.getControl().setRedraw(false);
+
         try {
-            viewer.refresh();
-            if (shouldExpand) {
-                viewer.expandAll();
+            if (collapse) {
+                viewer.collapseAll();
             }
-            //scroll to root
-            if (viewer.getTree().getItemCount() > 0) {
-                TreeItem item = viewer.getTree().getItem(0);
-                viewer.getTree().showItem(item);
+
+            if (update) {
+                viewer.refresh();
+                if (shouldExpand) {
+                    viewer.expandAll();
+                }
+                //scroll to root
+                if (viewer.getTree().getItemCount() > 0) {
+                    TreeItem item = viewer.getTree().getItem(0);
+                    viewer.getTree().showItem(item);
+                }
             }
         } finally {
             if (backup != null) {

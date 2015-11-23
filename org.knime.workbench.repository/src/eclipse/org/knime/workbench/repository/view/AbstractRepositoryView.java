@@ -429,9 +429,6 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     protected void fillLocalToolBar(final IToolBarManager manager) {
 
 
-        //associate the filter to use with the viewer
-        m_viewer.addFilter(m_textInfoFilter);
-
         //whether the fuzzy search or standard search is to be used
         m_fuzzySearchButton = new FuzzySearchAction(() -> {
             onFuzzySearchButtonClicked(m_fuzzyTextInfoFilter, m_textInfoFilter);

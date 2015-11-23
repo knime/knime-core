@@ -101,6 +101,7 @@ public class FilterViewContributionItem extends ControlContribution implements K
     public FilterViewContributionItem(final TreeViewer viewer, final TextualViewFilter filter, final boolean liveUpdate) {
         super("org.knime.workbench.repository.view.FilterViewContributionItem");
         m_viewer = viewer;
+        m_viewer.addFilter(filter);
         m_filter = filter;
         m_liveUpdate = liveUpdate;
     }
@@ -170,20 +171,13 @@ public class FilterViewContributionItem extends ControlContribution implements K
             str = "";
             update = true;
         }
-
         m_filter.setQueryString(str);
-        if(m_callback != null) {
-            m_callback.run();
-        }
-
+        TreeViewerUpdater.collapseAndUpdate(m_viewer, update | str.length() == 0, str.length() == 0,
+            shouldExpand | str.length() != 0);
         if (str.length() == 0) {
-            TreeViewerUpdater.collapseAll(m_viewer);
+            m_viewer.collapseAll();
             shouldExpand = false;
             update = true;
-        }
-
-        if (update) {
-            TreeViewerUpdater.update(m_viewer, shouldExpand);
         }
     }
 
