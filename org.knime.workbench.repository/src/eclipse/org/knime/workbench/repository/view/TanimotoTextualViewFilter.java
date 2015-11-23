@@ -50,7 +50,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.knime.workbench.repository.model.AbstractNodeTemplate;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
@@ -63,13 +62,11 @@ import org.knime.workbench.repository.model.Root;
  *
  * @author Marcel Hanser, KNIME.com, Zurich, Switzerland
  */
-final class TanimotoTextualViewFilter extends ViewerFilter {
+final class TanimotoTextualViewFilter extends TextualViewFilter {
     /**
      * Upper excluding bound of distances to a query a node may have to be labeled as a match.
      */
     private static final double UPPER_DISTANCE_BOUND = 0.85;
-
-    private String m_query;
 
     /**
      * {@inheritDoc}
@@ -88,7 +85,8 @@ final class TanimotoTextualViewFilter extends ViewerFilter {
     /**
      * Copied from {@link TextualViewFilter}.
      */
-    private boolean doSelect(final Object parentElement, final Object element, final boolean recurse) {
+    @Override
+    protected boolean doSelect(final Object parentElement, final Object element, final boolean recurse) {
         boolean selectThis = false;
         // Node Template : Match against name
         if (element instanceof AbstractNodeTemplate) {
@@ -143,35 +141,19 @@ final class TanimotoTextualViewFilter extends ViewerFilter {
      * @param test String to test
      * @return <code>true</code> if the test is contained in the m_query String (ignoring case)
      */
-    private boolean match(final String test) {
+    @Override
+    protected boolean match(final String test) {
         if (test == null) {
             return false;
         }
-        boolean contains = test.toUpperCase().contains(m_query);
+        boolean contains = test.toUpperCase().contains(getQueryString());
         if (!contains) {
-            return computeTanimotoBiGramDistance(test, m_query) < UPPER_DISTANCE_BOUND;
+            return computeTanimotoBiGramDistance(test, getQueryString()) < UPPER_DISTANCE_BOUND;
         } else {
             return true;
         }
     }
 
-    /**
-     * Set the query String that is responsible for selecting nodes/categories.
-     *
-     * @param query The query string
-     */
-    public void setQueryString(final String query) {
-        m_query = query.toUpperCase();
-    }
-
-    /**
-     * Returns is this filter has a non-empty query, i.e. if item should be filtered out.
-     *
-     * @return <code>true</code> if a non-empty query exists, <code>false</code> otherwise
-     */
-    public boolean hasNonEmptyQuery() {
-        return (m_query != null) && (m_query.length() > 0);
-    }
 
     /**
      * Copied from the Tanimoto BiGram distance from the distmatrix package.
@@ -230,11 +212,12 @@ final class TanimotoTextualViewFilter extends ViewerFilter {
      * @return a comparator computing the tanimoto n-gram distance with each given string. The one with the smaller
      *         distance wins.
      */
+    @Override
     public Comparator<String> createComparator() {
         // Actually there seems to be a concurrent execution somewhere,
         // so i decided to use a thread safe implementation.
         if (hasNonEmptyQuery()) {
-            final String currentQuery = m_query;
+            final String currentQuery = getQueryString();
 
             return new Comparator<String>() {
 

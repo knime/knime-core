@@ -47,6 +47,7 @@
  */
 package org.knime.workbench.repository.view;
 
+import java.lang.reflect.Method;
 import java.util.ConcurrentModificationException;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -65,6 +66,8 @@ import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
@@ -86,13 +89,18 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.util.KNIMEJob;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.RepositoryFactory;
 import org.knime.workbench.repository.RepositoryManager;
+import org.knime.workbench.repository.model.AbstractRepositoryObject;
 import org.knime.workbench.repository.model.Category;
+import org.knime.workbench.repository.model.IContainerObject;
+import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
@@ -104,9 +112,16 @@ import org.osgi.framework.FrameworkUtil;
  *
  * @author Florian Georg, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
+ * @author Martin Horn, University of Konstanz
  */
 public abstract class AbstractRepositoryView extends ViewPart implements RepositoryManager.Listener {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractRepositoryView.class);
+
+    /**
+     * The key to store/access the additional information about the streaming-ability of a node, as stored optionally
+     * with an {@link AbstractRepositoryObject}.
+     */
+    final static String KEY_INFO_STREAMABLE = "info_streamable";
 
     /**
      * The tree component for showing the repository contents. It will be initialized in
@@ -118,12 +133,28 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
 
     private FilterViewContributionItem m_toolbarFilterCombo;
 
+    private FilterStreamableNodesAction m_filterStreamNodesButton;
+
+    private ShowAdditionalInfoAction m_showAddInfoButton;
+
+    private FuzzySearchAction m_fuzzySearchButton;
+
     private static final Boolean NON_INSTANT_SEARCH = Boolean
         .getBoolean(KNIMEConstants.PROPERTY_REPOSITORY_NON_INSTANT_SEARCH);
 
     private int m_nodeCounter = 0;
 
     private long m_lastViewUpdate = 0;
+
+    /* indicator whether the additional information for each repository object already has been determined */
+    private boolean m_additionalInfoAvailable = false;
+
+    /*text filter combined with 'additional info' filter (e.g. streaming) */
+    private AdditionalInfoViewFilter m_textInfoFilter;
+
+    /* fuzzy text filter combined with 'additional info' filter (e.g. streaming) */
+    private AdditionalInfoViewFilter m_fuzzyTextInfoFilter;
+
 
     /**
      * The constructor.
@@ -178,7 +209,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         m_viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
         m_viewer.getControl().setToolTipText("Loading node repository...");
         m_viewer.setContentProvider(new RepositoryContentProvider());
-        m_viewer.setLabelProvider(new RepositoryLabelProvider());
+        m_viewer.setLabelProvider(new RepositoryStyledLabelProvider(new RepositoryLabelProvider(), false));
         m_viewer.setInput("Loading node repository...");
         contributeToActionBars();
         hookContextMenu();
@@ -230,6 +261,73 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                 }
             }
         });
+        onReadingRepositoryDone();
+    }
+
+    /* called as soon as the repository has been read entirely */
+    private void onReadingRepositoryDone() {
+        m_filterStreamNodesButton.setEnabled(true);
+        m_showAddInfoButton.setEnabled(true);
+    }
+
+    /**
+     * This methods recursively retrieves and enriches the repository objects with additional information,
+     * e.g. number of ports, whether the node is streamable and/or distributable, etc.
+     * Should be called only after the repository content was already loaded with {@link #readRepository(Composite, IProgressMonitor)}.
+     */
+    protected void enrichWithAdditionalInfo(final IRepositoryObject parent, final IProgressMonitor monitor, final boolean updateTreeStructure) {
+        if(monitor.isCanceled()) {
+            return;
+        }
+        if (!m_additionalInfoAvailable) {
+            if (parent instanceof IContainerObject) {
+                IRepositoryObject[] children = ((IContainerObject)parent).getChildren();
+                for (IRepositoryObject child : children) {
+                    enrichWithAdditionalInfo(child, monitor, updateTreeStructure);
+                }
+            } else if (parent instanceof NodeTemplate) {
+                NodeTemplate nodeTemplate = (NodeTemplate)parent;
+                try {
+                    NodeFactory<? extends NodeModel> nf = nodeTemplate.createFactoryInstance();
+                    NodeModel nm = nf.createNodeModel();
+                    //check whether the current node model overrides the #createStreamableOperator-method
+                    Method m = nm.getClass().getMethod("createStreamableOperator", PartitionInfo.class,
+                        PortObjectSpec[].class);
+                    if (m.getDeclaringClass() != NodeModel.class) {
+                        //method has been overriden -> node is probably streamable or distributable
+                        nodeTemplate.addAdditionalInfo(KEY_INFO_STREAMABLE, "streamable");
+                    }
+
+                    //possible TODO: parse xml description and get some more additional information (e.g. short description, ...)
+                    //                    nodeTemplate.addAdditionalInfo(KEY_INFO_SHORT_DESCRIPTION,
+                    //                        "this could be the short description, number of ports etc.");
+                } catch (Exception e) {
+                    LOGGER.error("Unable to instantiate the selected node " + nodeTemplate.getFactory().getName(), e);
+                    return;
+                }
+
+                if (!updateTreeStructure) {
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!m_viewer.getControl().isDisposed()) {
+                                m_viewer.update(parent, null);
+                            }
+                        }
+                    });
+                } else {
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!m_viewer.getControl().isDisposed()) {
+                                m_viewer.update(parent, null);
+                                TreeViewerUpdater.update(m_viewer, true);
+                            }
+                        }
+                    });
+                }
+            }
+        }
     }
 
     private void hookDoubleClickAction() {
@@ -277,6 +375,8 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     }
 
     private void contributeToActionBars() {
+        initializeFilters();
+
         // Create drill down adapter
         IActionBars bars = getViewSite().getActionBars();
         fillLocalPullDown(bars.getMenuManager());
@@ -286,6 +386,22 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
 
     private void fillLocalPullDown(final IMenuManager manager) {
         // register drill down actions
+
+        //button that activates/deactivates the filter for streamable nodes
+        m_filterStreamNodesButton = new FilterStreamableNodesAction(() -> {
+            onFilterStreamableNodesClicked(m_textInfoFilter, m_fuzzyTextInfoFilter);
+        });
+        m_filterStreamNodesButton.setEnabled(false);
+
+        //toggles whether the additional information should be displayed
+        m_showAddInfoButton = new ShowAdditionalInfoAction(() -> {
+            onShowAdditionalInfoClicked();
+        });
+        m_showAddInfoButton.setEnabled(false);
+
+        manager.add(m_showAddInfoButton);
+        manager.add(m_filterStreamNodesButton);
+
         manager.add(new Separator());
     }
 
@@ -311,14 +427,185 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
      * @param manager the toolbar manager
      */
     protected void fillLocalToolBar(final IToolBarManager manager) {
-        manager.add(new QuickNodeInsertionAction());
+
+
+        //associate the filter to use with the viewer
+        m_viewer.addFilter(m_textInfoFilter);
+
+        //whether the fuzzy search or standard search is to be used
+        m_fuzzySearchButton = new FuzzySearchAction(() -> {
+            onFuzzySearchButtonClicked(m_fuzzyTextInfoFilter, m_textInfoFilter);
+        });
+
+        //        manager.add(new QuickNodeInsertionAction());
+        manager.add(m_fuzzySearchButton);
+
         manager.add(new Separator());
 
-        // create the combo contribution item that can filter our view
+        // create the combo contribution item that provides the query string
         m_toolbarFilterCombo =
-            new FilterViewContributionItem(m_viewer, new RepositoryViewFilter(), !NON_INSTANT_SEARCH);
+            new FilterViewContributionItem(m_viewer, m_textInfoFilter.getDelegateFilter(), !NON_INSTANT_SEARCH);
+        m_toolbarFilterCombo.setQueryChangedCallback(() -> {
+            if (m_fuzzySearchButton.isChecked()) {
+                // if the query string is empty, use the category tree, otherwise show the node list (in case fuzzy search is activated)
+                if (m_fuzzyTextInfoFilter.getDelegateFilter().hasNonEmptyQuery()) {
+                    if (!(m_viewer.getContentProvider() instanceof ListRepositoryContentProvider)) {
+                        //only change the content provider if its not a list content provider already
+                        m_viewer.setContentProvider(new ListRepositoryContentProvider());
+
+                        //sync the additional info to be shown
+                        onShowAdditionalInfoClicked();
+                    }
+                    m_viewer.setComparator(
+                        new ViewerComparator(m_fuzzyTextInfoFilter.getDelegateFilter().createComparator()));
+                } else {
+                    if (!(m_viewer.getContentProvider() instanceof RepositoryContentProvider)) {
+                        //only change the content provider if its not a tree content provider already
+                        m_viewer.setContentProvider(new RepositoryContentProvider());
+                        m_viewer.setComparator(null);
+
+                        //sync the additional info to be shown
+                        onShowAdditionalInfoClicked();
+                    }
+                }
+
+            }
+        });
         manager.add(m_toolbarFilterCombo);
         manager.add(new Separator());
+    }
+
+    private void initializeFilters() {
+        //prepare the filters to be shared between different items, or combined
+
+        //text only filter
+        final RepositoryViewFilter textFilter = new RepositoryViewFilter();
+
+        //fuzzy text filter
+        final TanimotoTextualViewFilter fuzzyFilter = new TanimotoTextualViewFilter();
+
+        //text filter combined with 'additional info' filter (e.g. streaming)
+        m_textInfoFilter = new AdditionalInfoViewFilter(textFilter, KEY_INFO_STREAMABLE);
+
+        //fuzzy text filter combinded with the 'additional info' filter (e.g. streaming)
+        m_fuzzyTextInfoFilter = new AdditionalInfoViewFilter(fuzzyFilter, KEY_INFO_STREAMABLE);
+    }
+
+    /* action to be performed if the "Fuzzy Search" button is clicked */
+    private void onFuzzySearchButtonClicked(final AdditionalInfoViewFilter extFuzzyFilter, final AdditionalInfoViewFilter extTextFilter) {
+        if (m_fuzzySearchButton.isChecked()) {
+            m_viewer.setFilters(new ViewerFilter[]{extFuzzyFilter});
+            m_toolbarFilterCombo.setFilter(extFuzzyFilter.getDelegateFilter());
+
+            //sync streamable filter settings
+            extTextFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
+            extFuzzyFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
+
+            //transfer the search query
+            extFuzzyFilter.getDelegateFilter().setQueryString(extTextFilter.getDelegateFilter().getQueryString());
+
+            //set the content provider. If search query is empty, show the tree, otherwise the list
+            if(extTextFilter.getDelegateFilter().hasNonEmptyQuery()) {
+                m_viewer.setContentProvider(new ListRepositoryContentProvider());
+                m_viewer.setComparator(new ViewerComparator(extFuzzyFilter.getDelegateFilter().createComparator()));
+            } else {
+                m_viewer.setContentProvider(new RepositoryContentProvider());
+                m_viewer.setComparator(null);
+            }
+        } else {
+            m_viewer.setContentProvider(new RepositoryContentProvider());
+            m_viewer.setFilters(new ViewerFilter[]{extTextFilter});
+            m_toolbarFilterCombo.setFilter(extTextFilter.getDelegateFilter());
+
+            //sync streamable filter settings
+            extTextFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
+            extFuzzyFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
+
+            //transfer the search query
+            extTextFilter.getDelegateFilter().setQueryString(extFuzzyFilter.getDelegateFilter().getQueryString());
+            m_viewer.setComparator(null);
+        }
+
+        //sync the additional info info
+        //mainly to set the right label provider
+        onShowAdditionalInfoClicked();
+
+        if (extTextFilter.getDelegateFilter().hasNonEmptyQuery()) {
+            TreeViewerUpdater.update(m_viewer, true);
+        }
+    }
+
+    /* action to be performed if the "Show Additional Info" button is clicked */
+    private void onShowAdditionalInfoClicked() {
+        boolean showCategory =
+                m_fuzzySearchButton.isChecked() && m_fuzzyTextInfoFilter.getDelegateFilter().hasNonEmptyQuery();
+        if (m_showAddInfoButton.isChecked()) {
+            m_viewer.setLabelProvider(
+                new RepositoryStyledLabelProvider(new RepositoryLabelProvider(), showCategory, KEY_INFO_STREAMABLE));
+        } else {
+            m_viewer.setLabelProvider(
+                new RepositoryStyledLabelProvider(new RepositoryLabelProvider(), showCategory));
+        }
+        //ensure that the additional information is available and load it lazily if not
+        if (!m_additionalInfoAvailable && m_showAddInfoButton.isChecked()) {
+            m_showAddInfoButton.setEnabled(false);
+            m_filterStreamNodesButton.setEnabled(false);
+            final Job nodeInfoUpdater =
+                new KNIMEJob("Additional Node Info Repository Loader", FrameworkUtil.getBundle(getClass())) {
+                    @Override
+                    protected IStatus run(final IProgressMonitor monitor) {
+                        enrichWithAdditionalInfo(RepositoryManager.INSTANCE.getRoot(), monitor, false);
+                        m_additionalInfoAvailable = true;
+                        m_showAddInfoButton.setEnabled(true);
+                        m_filterStreamNodesButton.setEnabled(true);
+                        return Status.OK_STATUS;
+                    }
+                };
+            nodeInfoUpdater.setSystem(true);
+            nodeInfoUpdater.schedule();
+        }
+    }
+
+    /* action to be performed if the "Filter Streamable Nodes" button is clicked */
+    private void onFilterStreamableNodesClicked(final AdditionalInfoViewFilter infoTextFilter,
+        final AdditionalInfoViewFilter infoFuzzyFilter) {
+        //ensure that the additional information is available and load it lazily if not
+        if (!m_additionalInfoAvailable && m_filterStreamNodesButton.isChecked()) {
+            m_filterStreamNodesButton.setEnabled(false);
+            m_showAddInfoButton.setEnabled(false);
+            final Job nodeInfoUpdater =
+                new KNIMEJob("Additional Node Info Repository Loader", FrameworkUtil.getBundle(getClass())) {
+                @Override
+                protected IStatus run(final IProgressMonitor monitor) {
+                    m_nodeCounter = 0;
+                    //set filters
+                    infoTextFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
+                    infoFuzzyFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
+                    enrichWithAdditionalInfo(RepositoryManager.INSTANCE.getRoot(), monitor, true);
+                    m_additionalInfoAvailable = true;
+                    m_filterStreamNodesButton.setEnabled(true);
+                    m_showAddInfoButton.setEnabled(true);
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!m_viewer.getControl().isDisposed()) {
+                                //update view
+                                TreeViewerUpdater.update(m_viewer, true);
+                            }
+                        }
+                    });
+                    return Status.OK_STATUS;
+                }
+            };
+            nodeInfoUpdater.setSystem(true);
+            nodeInfoUpdater.schedule();
+        } else {
+            //set filter
+            infoTextFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
+            infoFuzzyFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
+            //update view
+            TreeViewerUpdater.update(m_viewer, true);
+        }
     }
 
     /**

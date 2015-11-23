@@ -185,7 +185,7 @@ public class QuickNodeInsertionHandler extends AbstractHandler {
 
                     ColumnViewerToolTipSupport.enableFor(m_viewer);
                     m_viewer.setContentProvider(new ListRepositoryContentProvider());
-                    m_viewer.setLabelProvider(new RepositoryStyledLabelProvider(new RepositoryLabelProvider()));
+                    m_viewer.setLabelProvider(new RepositoryStyledLabelProvider(new RepositoryLabelProvider(), true));
                     m_viewer.setInput("Loading node repository...");
                     m_viewer.getTable().setLayoutData(new GridData(GridData.FILL_BOTH));
                     m_repositoryViewFilter = new TanimotoTextualViewFilter();

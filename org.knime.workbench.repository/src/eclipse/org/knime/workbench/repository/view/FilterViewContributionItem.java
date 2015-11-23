@@ -49,7 +49,6 @@ package org.knime.workbench.repository.view;
 
 import java.util.Arrays;
 
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.ControlContribution;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
@@ -57,13 +56,9 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.TreeItem;
 
 /**
  * Contribution Item within the RepositoryView. This registers a <code>RepositoryViewFilter</code> on the viewer, that
@@ -78,11 +73,11 @@ public class FilterViewContributionItem extends ControlContribution implements K
 
     private Combo m_combo;
 
-    private final TextualViewFilter m_filter;
+    private TextualViewFilter m_filter;
 
     private final boolean m_liveUpdate;
 
-    private static final boolean IS_OS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
+    private Runnable m_callback = null;
 
     /**
      * Creates the contribution item.
@@ -107,7 +102,6 @@ public class FilterViewContributionItem extends ControlContribution implements K
         super("org.knime.workbench.repository.view.FilterViewContributionItem");
         m_viewer = viewer;
         m_filter = filter;
-        m_viewer.addFilter(m_filter);
         m_liveUpdate = liveUpdate;
     }
 
@@ -177,42 +171,19 @@ public class FilterViewContributionItem extends ControlContribution implements K
             update = true;
         }
 
-        Point backup = null;
-
-        if (IS_OS_WINDOWS) {
-            Rectangle bounds = m_viewer.getTree().getParent().getShell().getBounds();
-            // Bug 2809 -
-            // on windows the search is much slower if the cursor is within the KNIME window.
-            // so we just set it somewhere outside and restore it afterwards
-            backup = Display.getCurrent().getCursorLocation();
-            Display.getCurrent().setCursorLocation(new Point(bounds.x - 2, bounds.y - 2));
+        m_filter.setQueryString(str);
+        if(m_callback != null) {
+            m_callback.run();
         }
-        m_viewer.getControl().setRedraw(false);
-        try {
-            if (str.length() == 0) {
-                m_viewer.collapseAll();
-                shouldExpand = false;
-                update = true;
-            }
-            m_filter.setQueryString(str);
 
-            if (update) {
-                m_viewer.refresh();
-                if (shouldExpand) {
-                    m_viewer.expandAll();
-                }
-                //scroll to root
-                if (m_viewer.getTree().getItemCount() > 0) {
-                    TreeItem item = m_viewer.getTree().getItem(0);
-                    m_viewer.getTree().showItem(item);
-                }
-            }
-        } finally {
-            if (backup != null) {
-                Display.getCurrent().setCursorLocation(backup);
-            }
+        if (str.length() == 0) {
+            TreeViewerUpdater.collapseAll(m_viewer);
+            shouldExpand = false;
+            update = true;
+        }
 
-            m_viewer.getControl().setRedraw(true);
+        if (update) {
+            TreeViewerUpdater.update(m_viewer, shouldExpand);
         }
     }
 
@@ -236,6 +207,21 @@ public class FilterViewContributionItem extends ControlContribution implements K
     protected TextualViewFilter getFilter() {
         return m_filter;
     }
+
+    /**
+     * @param filter the new filter to be used
+     */
+    void setFilter(final TextualViewFilter filter) {
+        m_filter = filter;
+    }
+
+    /**
+     * @param a callback that is called whenever the search query has changed
+     */
+    void setQueryChangedCallback(final Runnable c) {
+        m_callback  = c;
+    }
+
 
     /**
      * @return the liveUpdate

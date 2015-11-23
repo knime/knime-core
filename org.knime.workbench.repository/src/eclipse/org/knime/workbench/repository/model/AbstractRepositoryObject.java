@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.repository.model;
 
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Abstract base implementation of a generic repository object.
@@ -64,6 +66,8 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     private String m_afterID = "";
 
     private String m_contributingPlugin;
+
+    private Map<String, String> m_additionalInfo;
 
 
     /**
@@ -87,6 +91,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
         m_id = id;
         m_name = name;
         m_contributingPlugin = contributingPlugin;
+        m_additionalInfo = new HashMap<String, String>();
     }
 
     /**
@@ -100,6 +105,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
         this.m_id = copy.m_id;
         this.m_afterID = copy.m_afterID;
         this.m_contributingPlugin = copy.m_contributingPlugin;
+        this.m_additionalInfo = copy.m_additionalInfo;
     }
 
     /**
@@ -208,6 +214,28 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
      */
     public void setAfterID(final String id) {
         m_afterID = id;
+    }
+
+    /**
+     * Adds additional infos to the repo object, that is, e.g., additionally displayed in the node repository.
+     *
+     * @param info
+     *
+     * @since 3.1
+     */
+    public void addAdditionalInfo(final String key,final String info) {
+        m_additionalInfo.put(key, info);
+    }
+
+    /**
+     *
+     * @param key
+     * @return the info stored under the given key, returns <code>null</code> if there is no info for the given key
+     *
+     * @since 3.1
+     */
+    public String getAdditionalInfo(final String key) {
+        return m_additionalInfo.get(key);
     }
 
     /**

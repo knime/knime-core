@@ -55,6 +55,7 @@ import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.NodeFactory;
+import org.knime.workbench.repository.model.AbstractRepositoryObject;
 import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.NodeTemplate;
@@ -71,12 +72,23 @@ final class RepositoryStyledLabelProvider extends StyledCellLabelProvider implem
 
     private RepositoryLabelProvider m_provider;
 
+    private boolean m_appendCategory;
+
+    private String[] m_appendAdditionalInfoKeys;
+
     /**
+     *
      * @param provider the usual {@link RepositoryLabelProvider} which provides the node name and the icon
+     * @param appendCategory if the category should be appended additionally (in a lighter color)
+     * @param the keys of the additional information to be appended. If the additional information is not available (see
+     *            {@link AbstractRepositoryObject#getAdditionalInfo(String)}), it won't be appended.
      */
-    RepositoryStyledLabelProvider(final RepositoryLabelProvider provider) {
+    RepositoryStyledLabelProvider(final RepositoryLabelProvider provider, final boolean appendCategory,
+        final String... appendAdditionalInfoKeys) {
         super();
         this.m_provider = provider;
+        m_appendCategory = appendCategory;
+        m_appendAdditionalInfoKeys = appendAdditionalInfoKeys;
     }
 
     /**
@@ -97,10 +109,25 @@ final class RepositoryStyledLabelProvider extends StyledCellLabelProvider implem
         if (obj instanceof IRepositoryObject) {
 
             StyledString styledString = new StyledString(m_provider.getText(obj));
-            //receive the category string.
-            String categoryString = getCategoryString((IRepositoryObject)obj);
-            if (!categoryString.isEmpty()) {
-                styledString.append(String.format("\t - %s", categoryString), StyledString.DECORATIONS_STYLER);
+
+            if (m_appendCategory) {
+                //receive the category string.
+                String categoryString = getCategoryString((IRepositoryObject)obj);
+                if (!categoryString.isEmpty()) {
+                    styledString.append(String.format("\t - %s", categoryString), StyledString.DECORATIONS_STYLER);
+                }
+            }
+            if (m_appendAdditionalInfoKeys.length > 0) {
+                if (obj instanceof AbstractRepositoryObject) {
+                    AbstractRepositoryObject aro = (AbstractRepositoryObject)obj;
+                    for (String key : m_appendAdditionalInfoKeys) {
+                        if (aro.getAdditionalInfo(key) != null) {
+                            styledString.append(
+                                String.format("\t [%s]", ((AbstractRepositoryObject)obj).getAdditionalInfo(key)),
+                                StyledString.QUALIFIER_STYLER);
+                        }
+                    }
+                }
             }
             cell.setText(styledString.toString());
             cell.setStyleRanges(styledString.getStyleRanges());

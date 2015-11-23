@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,99 +41,49 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 7, 2015 (albrecht): created
  */
-
 package org.knime.workbench.repository.view;
 
-import java.util.Comparator;
-
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
+import org.eclipse.jface.action.Action;
 
 /**
- *
- * @author Dominik Morent, KNIME.com, Zurich, Switzerland
- *
+ * @author Martin Horn, University of Konstanz
  */
-public abstract class TextualViewFilter extends ViewerFilter {
-    private String m_query;
+class FilterStreamableNodesAction extends Action {
+
+
+    private Runnable m_callback;
+
+    /**
+     * @param callback call back if the button has been clicked
+     *
+     */
+    public FilterStreamableNodesAction(final Runnable callback) {
+        super("Show Streamable Nodes Only");
+
+        //this somehow magically turns it into a toggle button
+        setChecked(false);
+        m_callback = callback;
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean select(final Viewer viewer, final Object parentElement,
-            final Object element) {
-
-        // this means that the filter has been cleared
-        if (!hasNonEmptyQuery()) {
-            return true;
-        }
-        // call helper method
-        return doSelect(parentElement, element, true);
+    public void run() {
+        m_callback.run();
     }
 
     /**
-     * Determines if an element shall be selected or not.
-     *
-     * @param parentElement the parent element
-     * @param element the element to check for selection
-     * @param recursive whether to recurse into elements or not
-     * @return <code>true</code> if the element should be selected
+     * {@inheritDoc}
      */
-    protected abstract boolean doSelect(Object parentElement,
-            Object element, boolean recursive) ;
-
-    /**
-     *
-     * @param test String to test
-     * @return <code>true</code> if the test is contained in the m_query
-     *         String (ignoring case)
-     */
-    protected boolean match(final String test) {
-        if (test == null) {
-            return false;
-        }
-        return test.toUpperCase().contains(m_query);
+    @Override
+    public String getToolTipText() {
+            return "Filter Streamable Nodes";
     }
 
-    /**
-     * Set the query String that is responsible for selecting nodes/categories.
-     *
-     * @param query The query string
-     */
-    public void setQueryString(final String query) {
-        if (query != null) {
-            m_query = query.toUpperCase();
-        } else {
-            m_query = null;
-        }
-    }
-
-    /**
-     * @return the currently used query string
-     */
-    String getQueryString() {
-        return m_query;
-    }
-
-    /**
-     * Returns is this filter has a non-empty query, i.e. if item should be
-     * filtered out.
-     *
-     * @return <code>true</code> if a non-empty query exists, <code>false</code>
-     *         otherwise
-     */
-    public boolean hasNonEmptyQuery() {
-        return (m_query != null) && (m_query.length() > 0);
-    }
-
-    /**
-     * @return a comparator that determines the sorting of the items, <code>null</code> if no comparator should be used
-     *         and the default sorting retained. The default implementation returns <code>null</code>.
-     */
-    public Comparator<String> createComparator() {
-       return null;
-    }
 }

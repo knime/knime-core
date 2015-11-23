@@ -50,17 +50,22 @@ package org.knime.workbench.repository.view;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.IRepositoryObject;
+import org.knime.workbench.repository.model.Root;
 
 /**
  * List ContentProvider for the quick node insertion dialog. It returns all nodes ignoring the categories.
  *
  * @author Marcel Hanser, University of Konstanz
+ * @author Martin Horn, University of Konstanz
  */
-public class ListRepositoryContentProvider implements IStructuredContentProvider {
+public class ListRepositoryContentProvider implements ITreeContentProvider {
+    private Object m_root;
+    private Object[] m_allElements;
+
     /**
      * {@inheritDoc}
      */
@@ -68,7 +73,9 @@ public class ListRepositoryContentProvider implements IStructuredContentProvider
     public Object[] getElements(final Object inputElement) {
         ArrayList<Object> list = new ArrayList<>();
         getObjects(inputElement, list);
-        return list.toArray();
+        m_root = inputElement;
+        m_allElements = list.toArray();
+        return m_allElements;
     }
 
     /**
@@ -102,5 +109,41 @@ public class ListRepositoryContentProvider implements IStructuredContentProvider
     @Override
     public void inputChanged(final Viewer viewer, final Object oldInput, final Object newInput) {
         // do nothing
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object[] getChildren(final Object parentElement) {
+        if (parentElement instanceof Root) {
+            return m_allElements;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object getParent(final Object element) {
+        if(element instanceof Root) {
+            return null;
+        } else {
+            return m_root;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasChildren(final Object element) {
+        if(element instanceof Root) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
