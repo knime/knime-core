@@ -92,6 +92,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         final Display defaultDisplay = Display.getDefault();
         store.setDefault(PreferenceConstants.P_NODE_LABEL_FONT_SIZE, 8);
+        // run this async as there were strange exception on windows, even if in swt thread, see bug 6401
         defaultDisplay.asyncExec(new Runnable() {
             @Override
             public void run() {
