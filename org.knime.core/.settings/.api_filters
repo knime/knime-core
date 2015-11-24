@@ -198,6 +198,19 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/streamable/StreamableFunction.java" type="org.knime.core.node.streamable.StreamableFunction">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.streamable.StreamableFunction"/>
+                <message_argument value="finish()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="finish(boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/ExecutionEnvironment.java" type="org.knime.core.node.workflow.ExecutionEnvironment">
         <filter id="337768515">
             <message_arguments>
