@@ -568,11 +568,11 @@ public class WorkflowEditor extends GraphicalEditor implements
                 hist.remove(wfmInput);
             }
         }
-        setWorkflowManager(null); // unregisters wfm listeners
         if (m_autoSaveJob != null) {
             m_autoSaveJob.cancel();
             m_autoSaveJob = null;
         }
+        setWorkflowManager(null); // unregisters wfm listeners
         if (autoSaveDirectory != null) {
             KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
                 @Override
@@ -1818,7 +1818,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 jobMonitor.done();
                 return Status.OK_STATUS;
             } catch (Exception e) {
-                final String error = "Failed auto-saving " + m_manager.getNameWithID();
+                final String error = "Failed auto-saving " + (m_manager == null ? "<null>" : m_manager.getNameWithID());
                 LOGGER.error(error, e);
                 return new Status(IStatus.ERROR, KNIMEEditorPlugin.PLUGIN_ID, error, e);
             } finally {
