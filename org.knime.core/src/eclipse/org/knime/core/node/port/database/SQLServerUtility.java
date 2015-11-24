@@ -82,8 +82,7 @@ public class SQLServerUtility extends DatabaseUtility {
 
         @Override
         public String randomRows(final String sql, final long count) {
-            final String tmp = limitRows(sql, count);
-            return tmp + " ORDER BY rand()";
+            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName() + " ORDER BY NEWID()";
         }
 
         /**
