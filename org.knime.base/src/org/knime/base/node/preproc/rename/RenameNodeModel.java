@@ -66,9 +66,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -76,7 +76,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class RenameNodeModel extends NodeModel {
+public class RenameNodeModel extends SimpleStreamableFunctionNodeModel {
     /**
      * Config identifier for the NodeSettings object contained in the NodeSettings which contains the settings.
      */
@@ -85,12 +85,6 @@ public class RenameNodeModel extends NodeModel {
     /** contains settings for each individual column. */
     private RenameConfiguration m_config;
 
-    /**
-     * Create new model, does nothing fancy.
-     */
-    public RenameNodeModel() {
-        super(1, 1);
-    }
 
     /**
      * {@inheritDoc}
@@ -128,6 +122,22 @@ public class RenameNodeModel extends NodeModel {
         BufferedDataTable in = inData[0];
         DataTableSpec inSpec = in.getDataTableSpec();
         final DataTableSpec outSpec = configure(new DataTableSpec[]{inSpec})[0];
+
+        // a data table wrapper that returns the "right" DTS (no iteration)
+        BufferedDataTable out = exec.createSpecReplacerTable(in, outSpec);
+
+        //create replace columns if a column type has changed (toString)
+        ColumnRearranger colre = createColumnRearranger(inSpec, outSpec);
+        if(colre!=null) {
+            out = exec.createColumnRearrangeTable(in, colre, exec);
+        }
+        return new BufferedDataTable[]{out};
+    }
+
+    /**
+     * @return the colrearranger that replaces the respective columns, or <code>null</code> if no column has to be replaced
+     */
+    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec, final DataTableSpec outSpec) {
         // indices of columns where to use the toString method
         // (for those columns it is not sufficient to just change the column
         // type, we do need to change the cells, too)
@@ -144,8 +154,7 @@ public class RenameNodeModel extends NodeModel {
                 toStringColumns.add(outSpec.getColumnSpec(i));
             }
         }
-        // a data table wrapper that returns the "right" DTS (no iteration)
-        BufferedDataTable out = exec.createSpecReplacerTable(in, outSpec);
+
         // depending on whether we have to change some of the columns, we
         // create a ReplacedColumnsTable
         if (!toStringColumnsIndex.isEmpty()) {
@@ -155,11 +164,25 @@ public class RenameNodeModel extends NodeModel {
                 changedColumnsIndex[i] = toStringColumnsIndex.get(i);
             }
             ToStringCellsFactory cellsFactory = new ToStringCellsFactory(changedColumns, changedColumnsIndex);
-            ColumnRearranger rearranger = new ColumnRearranger(out.getSpec());
+            ColumnRearranger rearranger = new ColumnRearranger(outSpec);
             rearranger.replace(cellsFactory, changedColumnsIndex);
-            out = exec.createColumnRearrangeTable(out, rearranger, exec);
+            return rearranger;
+        } else {
+            return null;
         }
-        return new BufferedDataTable[]{out};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) throws InvalidSettingsException {
+        DataTableSpec outSpec = configure(new DataTableSpec[]{inSpec})[0];
+        ColumnRearranger colre = createColumnRearranger(inSpec, outSpec);
+        if (colre == null) {
+            colre = new ColumnRearranger(outSpec);
+        }
+        return colre;
     }
 
     /**
