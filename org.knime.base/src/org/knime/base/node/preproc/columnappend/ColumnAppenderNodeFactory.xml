@@ -19,19 +19,16 @@
 		keys and table lengths"-option below. When in doubt, use the Joiner.
 		<br></br>
 		If the input tables share some column names, the offending column
-		names from the bottom table will be appended with "(#1)".
-		<br></br>
-		<br></br>
-		Hint for streaming: the node is only streamable if the option
-		"Identical row keys and table lengths" is NOT checked.
+		names from the bottom table will be appended with "(#1)".		
 	</intro>
 	<tab name="Options">
 		<option name="Identical row keys and table lengths">
 			If the row keys in both input tables exactly match (i.e. the row key
 			names, their order, and their number have to match) this option can
 			be checked in
-			order to allow a faster execution with less memory consumption. However,
-			the node won't be streamable.
+			order to allow a faster execution with less memory consumption. If the row
+			keys (names, order, number) don't match exactly the node execution will
+			fail.
 			<br></br>
 			<br></br>
 			If the option

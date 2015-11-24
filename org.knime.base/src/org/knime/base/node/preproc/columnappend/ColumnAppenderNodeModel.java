@@ -54,6 +54,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -178,6 +179,9 @@ final class ColumnAppenderNodeModel extends NodeModel {
         while (rowIt1.hasNext() && rowIt2.hasNext()) {
             DataRow row1 = rowIt1.next();
             DataRow row2 = rowIt2.next();
+            if (m_wrapTable.getBooleanValue() && !row1.getKey().equals(row2.getKey())) {
+                errorDifferingRowKeys(rowCount, row1.getKey(), row2.getKey());
+            }
             ArrayList<DataCell> cells = new ArrayList<DataCell>(numColsTotal);
             for (DataCell cell : row1) {
                 cells.add(cell);
@@ -191,14 +195,15 @@ final class ColumnAppenderNodeModel extends NodeModel {
             } else if(useRowKeysFromSecondTable) {
                 res = new DefaultRow(row2.getKey(), cells);
             } else {
-                res = new DefaultRow("Row" + (rowCount++), cells);
+                res = new DefaultRow("Row" + (rowCount), cells);
             }
             output.consume(res);
+            rowCount++;
 
         }
 
         /* --add missing cells if row counts mismatch --*/
-        int extraRowsTab1 = 0;
+        long extraRowsTab1 = 0;
         while (((rowIt1.hasNext() && useRowKeysFromFirstTable) || (rowIt1.hasNext() && generateRowKeys)) && !rowIt2.hasNext()) {
             progress.check();
 
@@ -212,8 +217,8 @@ final class ColumnAppenderNodeModel extends NodeModel {
             }
 
             DefaultRow res;
-            if(generateRowKeys) {
-                res = new DefaultRow("Row" + (rowCount++), cells);
+            if (generateRowKeys) {
+                res = new DefaultRow("Row" + (rowCount + extraRowsTab1), cells);
             } else {
                 res = new DefaultRow(row.getKey(), cells);
             }
@@ -221,7 +226,7 @@ final class ColumnAppenderNodeModel extends NodeModel {
             extraRowsTab1++;
         }
 
-        int extraRowsTab2 = 0;
+        long extraRowsTab2 = 0;
         while (((rowIt2.hasNext() && useRowKeysFromSecondTable) || (rowIt2.hasNext() && generateRowKeys)) && !rowIt1.hasNext()) {
 
             progress.check();
@@ -235,8 +240,8 @@ final class ColumnAppenderNodeModel extends NodeModel {
                 cells.add(cell);
             }
             DefaultRow res;
-            if(generateRowKeys) {
-                res = new DefaultRow("Row" + (rowCount++), cells);
+            if (generateRowKeys) {
+                res = new DefaultRow("Row" + (rowCount + extraRowsTab2), cells);
             } else {
                 res = new DefaultRow(row.getKey(), cells);
             }
@@ -264,6 +269,22 @@ final class ColumnAppenderNodeModel extends NodeModel {
                 setWarningMessage("Both tables differ in length! Missing values have been added accordingly.");
             }
         }
+
+        //throw error messages if the "wrap"-option is set and tables vary in size
+        if(m_wrapTable.getBooleanValue()) {
+            errorDifferingTableSize(rowCount + extraRowsTab1, rowCount + extraRowsTab2);
+        }
+    }
+
+    private static void errorDifferingTableSize(final long rowCnt1, final long rowCnt2) {
+        throw new IllegalArgumentException("Tables can't be joined, non "
+                + "matching row counts: " + rowCnt1 + " vs. "
+                + rowCnt2);
+    }
+
+    private static void errorDifferingRowKeys(final long rowIndex, final RowKey leftKey, final RowKey rightKey) {
+        throw new IllegalArgumentException("Tables contain non-matching rows or are sorted "
+            + "differently, keys in row " + rowIndex + " do not match: \"" + leftKey + "\" vs. \"" + rightKey + "\"");
     }
 
     /**
@@ -360,12 +381,6 @@ final class ColumnAppenderNodeModel extends NodeModel {
     public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
 
-        if (m_wrapTable.getBooleanValue()) {
-            //tables have to be wrapped
-            return super.createStreamableOperator(partitionInfo, inSpecs);
-        }
-
-        //result table is newly created
         return new StreamableOperator() {
 
             @Override
@@ -381,8 +396,9 @@ final class ColumnAppenderNodeModel extends NodeModel {
                 CustomRowIterator tableIt2 = new CustomRowIteratorImpl2(in2);
 
                 compute(tableIt1, tableIt2,
-                    in1.getDataTableSpec().getNumColumns() + in2.getDataTableSpec().getNumColumns(),
-                    row -> out.push(row), () -> {
+                    in1.getDataTableSpec().getNumColumns() + in2.getDataTableSpec().getNumColumns(), row -> {
+                    out.push(row);
+                } , () -> {
                 });
 
                 //poll all the remaining rows if there are any but don't do anything with them
@@ -396,18 +412,14 @@ final class ColumnAppenderNodeModel extends NodeModel {
         };
     }
 
+
     /**
      * {@inheritDoc}
      */
     @Override
     public InputPortRole[] getInputPortRoles() {
-        if (m_wrapTable.getBooleanValue()) {
-            //if the table is wrapped -> not streamable nor distributable
-            return super.getInputPortRoles();
-        } else {
             //in-ports are non-distributed since it can't be guaranteed that the chunks at each port are of identical size
             return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_STREAMABLE, InputPortRole.NONDISTRIBUTED_STREAMABLE};
-        }
     }
 
     /**
@@ -415,11 +427,7 @@ final class ColumnAppenderNodeModel extends NodeModel {
      */
     @Override
     public OutputPortRole[] getOutputPortRoles() {
-        if (m_wrapTable.getBooleanValue()) {
-            return super.getOutputPortRoles();
-        } else {
             return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
-        }
     }
 
     //////////////// HELPER CLASSES /////////////////////
