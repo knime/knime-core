@@ -118,6 +118,13 @@ public class AutoBinner {
     }
 
     /**
+     * @return the settings
+     */
+    protected AutoBinnerLearnSettings getSettings() {
+        return m_settings;
+    }
+
+    /**
      * Determine bins.
      *
      * @param data the input data
@@ -203,11 +210,10 @@ public class AutoBinner {
     }
 
     /**
-     * @param binCount
-     * @param min
-     * @param max
-     * @param edges
-     * @return
+     * @param binCount number of bins
+     * @param min minimum value
+     * @param max maximum value
+     * @return the boundaries
      */
     public static double[] calculateBounds(final int binCount, final double min, final double max) {
         double[] edges = new double[binCount + 1];
@@ -326,7 +332,11 @@ public class AutoBinner {
         return edges;
     }
 
-    private PMMLPreprocDiscretize createDisretizeOp(final Map<String, double[]> edgesMap) {
+    /**
+     * @param edgesMap the boundary map
+     * @return the {@link PMMLPreprocDiscretize} model
+     */
+    protected PMMLPreprocDiscretize createDisretizeOp(final Map<String, double[]> edgesMap) {
         Map<String, List<PMMLDiscretizeBin>> binMap = createBins(edgesMap);
 
         List<String> names = new ArrayList<String>();
@@ -476,6 +486,7 @@ public class AutoBinner {
      * This formatted should not be changed, since it may result in a different output of the binning labels.
      */
     protected class BinnerNumberFormat {
+        /**Constructor.*/
         protected BinnerNumberFormat() {
             // no op
         }
@@ -516,6 +527,10 @@ public class AutoBinner {
             }
         }
 
+        /**
+         * @param d the double to format
+         * @return the formated value
+         */
         public String advancedFormat(final double d) {
             BigDecimal bd = new BigDecimal(d);
             switch (m_settings.getPrecisionMode()) {
@@ -545,6 +560,9 @@ public class AutoBinner {
             return m_smallFormat;
         }
 
+        /**
+         * @return the default format
+         */
         public NumberFormat getDefaultFormat() {
             return m_defaultFormat;
         }

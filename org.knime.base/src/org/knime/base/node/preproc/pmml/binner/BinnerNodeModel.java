@@ -76,8 +76,9 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  * columns.
  *
  * @author Thomas Gabriel, University of Konstanz
+ * @since 3.1
  */
-final class BinnerNodeModel extends NodeModel {
+public class BinnerNodeModel extends NodeModel {
     // private static final NodeLogger LOGGER =
     // NodeLogger.getLogger(BinnerNodeModel.class);
 
@@ -103,20 +104,24 @@ final class BinnerNodeModel extends NodeModel {
     /** Keeps index of the output port which is 0. */
     static final int OUTPORT = 0;
 
-    private boolean m_pmmlInEnabled;
+    private final boolean m_pmmlInEnabled;
+
+    private final boolean m_pmmlOutEnabled;
 
     /** Creates a new binner. */
-    BinnerNodeModel() {
-        this(true);
-    }
+  BinnerNodeModel() {
+      this(true, true);
+  }
 
-    /** Creates a new binner. */
-    BinnerNodeModel(final boolean pmmlInEnabled) {
+    /** Creates a new binner.
+     * @param pmmlInEnabled
+     * @param pmmlOutEnabled */
+   protected BinnerNodeModel(final boolean pmmlInEnabled, final boolean pmmlOutEnabled) {
         super(pmmlInEnabled ? new PortType[] {BufferedDataTable.TYPE,
                 PMMLPortObject.TYPE_OPTIONAL} : new PortType[] {BufferedDataTable.TYPE},
-                new PortType[] {BufferedDataTable.TYPE, PMMLPortObject.TYPE});
-
+            pmmlOutEnabled ? new PortType[] {BufferedDataTable.TYPE, PMMLPortObject.TYPE} : new PortType[] {BufferedDataTable.TYPE});
         m_pmmlInEnabled = pmmlInEnabled;
+        m_pmmlOutEnabled = pmmlOutEnabled;
     }
 
     /**
@@ -127,9 +132,13 @@ final class BinnerNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         BufferedDataTable inData = (BufferedDataTable)inPorts[DATA_INPORT];
         DataTableSpec spec = inData.getDataTableSpec();
-        ColumnRearranger colReg = createColReg(spec);
+        ColumnRearranger colReg = createColumnRearranger(spec);
         BufferedDataTable buf = exec.createColumnRearrangeTable(inData,
                 colReg, exec);
+
+        if (!m_pmmlOutEnabled) {
+            return new PortObject[]{buf};
+        }
 
         // handle the optional PMML in port (can be null)
         PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inPorts[1] : null;
@@ -190,13 +199,16 @@ final class BinnerNodeModel extends NodeModel {
             super.setWarningMessage("No column select for binning.");
         }
         // generate numeric binned table spec
-        DataTableSpec outDataSpec = createColReg(inDataSpec).createSpec();
+        DataTableSpec outDataSpec = createColumnRearranger(inDataSpec).createSpec();
+        if (!m_pmmlOutEnabled) {
+            return new PortObjectSpec[]{outDataSpec};
+        }
         PMMLPortObjectSpecCreator pmmlSpecCreator
             = new PMMLPortObjectSpecCreator(inModelSpec, outDataSpec);
         return new PortObjectSpec[]{outDataSpec, pmmlSpecCreator.createSpec()};
     }
 
-    private ColumnRearranger createColReg(final DataTableSpec spec) {
+    private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
         ColumnRearranger colreg = new ColumnRearranger(spec);
         for (String columnKey : m_columnToBins.keySet()) {
             Bin[] bins = m_columnToBins.get(columnKey);

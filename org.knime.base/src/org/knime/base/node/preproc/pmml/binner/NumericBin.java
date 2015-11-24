@@ -182,8 +182,9 @@ public class NumericBin implements Bin {
      *
      * @param bin read settings from
      * @throws InvalidSettingsException if slots could not be read
+     * @since 3.1
      */
-    NumericBin(final NodeSettingsRO bin) throws InvalidSettingsException {
+    public NumericBin(final NodeSettingsRO bin) throws InvalidSettingsException {
         this(bin.getString(BIN_NAME), bin.getBoolean(LEFT_OPEN), bin
                 .getDouble(LEFT_VALUE), bin.getBoolean(RIGHT_OPEN), bin
                 .getDouble(RIGHT_VALUE));

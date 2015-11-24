@@ -60,7 +60,7 @@ public final class BinnerNodeFactory2 extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new BinnerNodeModel(false);
+        return new BinnerNodeModel(false, true);
     }
 
     /**

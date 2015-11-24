@@ -58,7 +58,9 @@ import org.knime.core.node.NodeSettingsWO;
  * Delegates bin access function to lokal structure.
  *
  * @author Thomas Gabriel, University of Konstanz
+ *  @deprecated use {@link org.knime.base.node.preproc.pmml.binner.NumericBin} instead
  */
+@Deprecated
 public class NumericBin implements Bin {
     /** Key for left value interval. */
     private static final String LEFT_VALUE = "left_value";

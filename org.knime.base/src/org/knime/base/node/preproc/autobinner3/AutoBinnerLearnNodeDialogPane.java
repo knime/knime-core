@@ -87,7 +87,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
  *
  * @author Heiko Hofer
  */
-final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
+public class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
     private final AutoBinnerLearnSettings m_settings;
 
     private DataColumnSpecFilterPanel m_filterPanel;
@@ -127,9 +127,18 @@ final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
     /**
      * Creates a new binner dialog.
      */
-    AutoBinnerLearnNodeDialogPane() {
+    public AutoBinnerLearnNodeDialogPane() {
+        this(true);
+    }
+
+    /**
+     * Creates a new binner dialog.
+     *
+     * @param supportsQuantile
+     */
+    public AutoBinnerLearnNodeDialogPane(final boolean supportsQuantile) {
         m_settings = new AutoBinnerLearnSettings();
-        addTab("Auto Binner Settings", createAutoBinnerSettingsTab());
+        addTab("Auto Binner Settings", createAutoBinnerSettingsTab(supportsQuantile));
         addTab("Number Format Settings", createNumberFormatSettingsTab());
     }
 
@@ -218,11 +227,7 @@ final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
         return roundingModes.toArray(new RoundingMode[roundingModes.size()]);
     }
 
-    /**
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private JPanel createAutoBinnerSettingsTab() {
+    private JPanel createAutoBinnerSettingsTab(final boolean supportsQuantile) {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
@@ -239,7 +244,7 @@ final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
         p.add(m_filterPanel, c);
 
         c.gridy++;
-        p.add(createMethodUIControls(), c);
+        p.add(createMethodUIControls(supportsQuantile), c);
 
         c.gridy++;
         p.add(createBinNamingUIControls(), c);
@@ -254,7 +259,7 @@ final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
         return p;
     }
 
-    private JPanel createMethodUIControls() {
+    private JPanel createMethodUIControls(final boolean supportsQuantile) {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
@@ -266,6 +271,7 @@ final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
         c.gridy = 0;
         c.gridx = 0;
         c.gridwidth = GridBagConstraints.REMAINDER;
+
         m_methodFixedNumber = new JRadioButton("Fixed number of bins");
         m_methodFixedNumber.addActionListener(new ActionListener() {
             @Override
@@ -275,7 +281,10 @@ final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
                 m_sampleQuantiles.setEnabled(!m_methodFixedNumber.isSelected());
             }
         });
-        p.add(m_methodFixedNumber, c);
+
+        if (supportsQuantile) {
+            p.add(m_methodFixedNumber, c);
+        }
 
         c.gridy++;
         //JPanel numBinsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
@@ -298,12 +307,14 @@ final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
         gbc.weightx = 0;
         gbc.gridx = 0;
         gbc.gridy++;
-        numBinsPanel.add(new JLabel("Equal:"), gbc);
-        gbc.gridx++;
         m_equalityMethod = new JComboBox<EqualityMethod>(EqualityMethod.values());
-        numBinsPanel.add(m_equalityMethod, gbc);
-        numBinsPanel.setBorder(BorderFactory.createEmptyBorder(0, 17, 0, 0));
-        p.add(numBinsPanel, c);
+        if (supportsQuantile) {
+            numBinsPanel.add(new JLabel("Equal:"), gbc);
+            gbc.gridx++;
+            numBinsPanel.add(m_equalityMethod, gbc);
+            numBinsPanel.setBorder(BorderFactory.createEmptyBorder(0, 17, 0, 0));
+            p.add(numBinsPanel, c);
+        }
 
         c.gridy++;
         c.gridx = 0;
@@ -317,7 +328,9 @@ final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
                 m_sampleQuantiles.setEnabled(m_methodSampleQuantiles.isSelected());
             }
         });
-        p.add(m_methodSampleQuantiles, c);
+        if (supportsQuantile) {
+            p.add(m_methodSampleQuantiles, c);
+        }
 
         c.gridy++;
         JPanel quantilesPanel = new JPanel(new GridBagLayout());
@@ -334,13 +347,17 @@ final class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
         c.gridy = gridy;
         c.gridx = 0;
         c.gridwidth = 1;
-        p.add(quantilesPanel, c);
+        if (supportsQuantile) {
+            p.add(quantilesPanel, c);
+        }
 
         ButtonGroup method = new ButtonGroup();
         method.add(m_methodFixedNumber);
         method.add(m_methodSampleQuantiles);
 
-        p.setBorder(BorderFactory.createTitledBorder("Binning Method"));
+        if (supportsQuantile) {
+            p.setBorder(BorderFactory.createTitledBorder("Binning Method"));
+        }
         return p;
     }
 

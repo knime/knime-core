@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.08.2005 (gabriel): created
  */
@@ -63,10 +63,11 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * Factory to generate binned string cells from a selected column which can be
  * either replaced or appended.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
+ * @since 3.1
  */
-final class BinnerColumnFactory implements CellFactory {
+public final class BinnerColumnFactory implements CellFactory {
 
     private final int m_columnIdx;
 
@@ -79,27 +80,27 @@ final class BinnerColumnFactory implements CellFactory {
     /**
      * A binned column created by name and a number of bins. The new, binned
      * column is either append or replaced in the current table.
-     * 
+     *
      * @param columnIdx the column index to bin
      * @param name the new binned column name
      * @param bins a set of bins
      * @param append append or replace column
      */
-    BinnerColumnFactory(final int columnIdx, final Bin[] bins,
+    public BinnerColumnFactory(final int columnIdx, final Bin[] bins,
             final String name, final boolean append) {
         m_columnIdx = columnIdx;
         m_bins = bins;
-        // ensures that all bin names are available as possible values 
+        // ensures that all bin names are available as possible values
         // in the column spec, the buffereddatatable will iterate all values
-        // (and hence determine the possible values) but some of the names 
+        // (and hence determine the possible values) but some of the names
         // might not be used in the table (no value for this bin)
         StringCell[] binNames = new StringCell[bins.length];
         for (int i = 0; i < binNames.length; i++) {
             binNames[i] = new StringCell(bins[i].getBinName());
         }
-        DataColumnDomain dom = 
+        DataColumnDomain dom =
             new DataColumnDomainCreator(binNames).createDomain();
-        DataColumnSpecCreator specCreator = 
+        DataColumnSpecCreator specCreator =
             new DataColumnSpecCreator(name, StringCell.TYPE);
         specCreator.setDomain(dom);
         m_columnSpec = specCreator.createSpec();
@@ -136,7 +137,7 @@ final class BinnerColumnFactory implements CellFactory {
 
     /**
      * Return <code>Bin</code> for index.
-     * 
+     *
      * @param index for this index
      * @return the assigned bin
      */
@@ -147,7 +148,7 @@ final class BinnerColumnFactory implements CellFactory {
     /**
      * Apply a value to this bining trying to cover it at all available
      * <code>Bin</code>s.
-     * 
+     *
      * @param cell the value to cover
      * @return the bin's name as DataCell which cover's this value
      */
@@ -181,7 +182,7 @@ final class BinnerColumnFactory implements CellFactory {
 
         /**
          * Save this bin.
-         * 
+         *
          * @param set to this settings
          */
         void saveToSettings(NodeSettingsWO set);
@@ -191,6 +192,7 @@ final class BinnerColumnFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell[] getCells(final DataRow row) {
         DataCell cell = row.getCell(m_columnIdx);
         return new DataCell[]{apply(cell)};
@@ -199,6 +201,7 @@ final class BinnerColumnFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataColumnSpec[] getColumnSpecs() {
         return new DataColumnSpec[]{m_columnSpec};
     }
@@ -206,6 +209,7 @@ final class BinnerColumnFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress(1.0 * curRowNr / rowCount, "Binning row: "
