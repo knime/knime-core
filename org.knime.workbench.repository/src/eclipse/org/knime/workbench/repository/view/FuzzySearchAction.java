@@ -49,8 +49,10 @@
 package org.knime.workbench.repository.view;
 
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
+import org.knime.workbench.repository.KNIMERepositoryPlugin;
 
 /**
  * Toggle button the determines whether the fuzzy search modus (with node list) or default text search (with node tree)
@@ -63,6 +65,10 @@ class FuzzySearchAction extends Action {
 
     private Runnable m_callback;
 
+    private static final IPreferenceStore PREF_STORE = KNIMERepositoryPlugin.getDefault().getPreferenceStore();
+
+    private static final String P_FUZZY_SEARCH = "fuzzy_search";
+
     /**
      * @param callback call back if the button has been clicked
      *
@@ -71,6 +77,9 @@ class FuzzySearchAction extends Action {
         setImageDescriptor(ImageRepository.getIconDescriptor(SharedImages.Search));
         //this somehow magically turns it into a toggle button
         setChecked(false);
+
+        //load state from preference store
+        setChecked(PREF_STORE.getBoolean(P_FUZZY_SEARCH));
         m_callback = callback;
     }
 
@@ -80,6 +89,9 @@ class FuzzySearchAction extends Action {
     @Override
     public void run() {
         m_callback.run();
+
+        //store state in the preference store
+        PREF_STORE.setValue(P_FUZZY_SEARCH, isChecked());
     }
 
     /**

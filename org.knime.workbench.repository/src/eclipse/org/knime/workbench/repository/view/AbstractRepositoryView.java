@@ -434,43 +434,20 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
             onFuzzySearchButtonClicked(m_fuzzyTextInfoFilter, m_textInfoFilter);
         });
 
-        //        manager.add(new QuickNodeInsertionAction());
         manager.add(m_fuzzySearchButton);
 
         manager.add(new Separator());
 
         // create the combo contribution item that provides the query string
-        m_toolbarFilterCombo =
-            new FilterViewContributionItem(m_viewer, m_textInfoFilter.getDelegateFilter(), !NON_INSTANT_SEARCH);
+        m_toolbarFilterCombo = new FilterViewContributionItem(m_viewer, m_fuzzySearchButton.isChecked()
+            ? m_fuzzyTextInfoFilter.getDelegateFilter() : m_textInfoFilter.getDelegateFilter(), !NON_INSTANT_SEARCH);
         m_toolbarFilterCombo.setQueryChangedCallback(() -> {
-            if (m_fuzzySearchButton.isChecked()) {
-                // if the query string is empty, use the category tree, otherwise show the node list (in case fuzzy search is activated)
-                if (m_fuzzyTextInfoFilter.getDelegateFilter().hasNonEmptyQuery()) {
-                    if (!(m_viewer.getContentProvider() instanceof ListRepositoryContentProvider)) {
-                        //only change the content provider if its not a list content provider already
-                        m_viewer.setContentProvider(new ListRepositoryContentProvider());
-
-                        //sync the additional info to be shown
-                        onShowAdditionalInfoClicked();
-                    }
-                    m_viewer.setComparator(
-                        new ViewerComparator(m_fuzzyTextInfoFilter.getDelegateFilter().createComparator()));
-                } else {
-                    if (!(m_viewer.getContentProvider() instanceof RepositoryContentProvider)) {
-                        //only change the content provider if its not a tree content provider already
-                        m_viewer.setContentProvider(new RepositoryContentProvider());
-                        m_viewer.setComparator(null);
-
-                        //sync the additional info to be shown
-                        onShowAdditionalInfoClicked();
-                    }
-                }
-
-            }
+            onSearchQueryChanged();
         });
         manager.add(m_toolbarFilterCombo);
         manager.add(new Separator());
     }
+
 
     private void initializeFilters() {
         //prepare the filters to be shared between different items, or combined
@@ -486,6 +463,34 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
 
         //fuzzy text filter combinded with the 'additional info' filter (e.g. streaming)
         m_fuzzyTextInfoFilter = new AdditionalInfoViewFilter(fuzzyFilter, KEY_INFO_STREAMABLE);
+    }
+
+    /* called whenever the search query changes (no matter in what search mode, i.e. fuzzy or text) */
+    private void onSearchQueryChanged() {
+        if (m_fuzzySearchButton.isChecked()) {
+            // if the query string is empty, use the category tree, otherwise show the node list (in case fuzzy search is activated)
+            if (m_fuzzyTextInfoFilter.getDelegateFilter().hasNonEmptyQuery()) {
+                if (!(m_viewer.getContentProvider() instanceof ListRepositoryContentProvider)) {
+                    //only change the content provider if its not a list content provider already
+                    m_viewer.setContentProvider(new ListRepositoryContentProvider());
+
+                    //sync the additional info to be shown
+                    onShowAdditionalInfoClicked();
+                }
+                m_viewer.setComparator(
+                    new ViewerComparator(m_fuzzyTextInfoFilter.getDelegateFilter().createComparator()));
+            } else {
+                if (!(m_viewer.getContentProvider() instanceof RepositoryContentProvider)) {
+                    //only change the content provider if its not a tree content provider already
+                    m_viewer.setContentProvider(new RepositoryContentProvider());
+                    m_viewer.setComparator(null);
+
+                    //sync the additional info to be shown
+                    onShowAdditionalInfoClicked();
+                }
+            }
+
+        }
     }
 
     /* action to be performed if the "Fuzzy Search" button is clicked */
