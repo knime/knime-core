@@ -104,16 +104,20 @@ public abstract class StreamableFunction extends StreamableOperator {
         RowInput rowInput = ((RowInput)inputs[m_inportIndex]);
         RowOutput rowOutput = ((RowOutput)outputs[m_outportIndex]);
         init(ctx);
-        DataRow inputRow;
-        long index = 0;
-        while ((inputRow = rowInput.poll()) != null) {
-            rowOutput.push(compute(inputRow));
-            ctx.setMessage(String.format("Row %d (\"%s\"))",
-                    ++index, inputRow.getKey()));
+        boolean success = false;
+        try {
+            DataRow inputRow;
+            long index = 0;
+            while ((inputRow = rowInput.poll()) != null) {
+                rowOutput.push(compute(inputRow));
+                ctx.setMessage(String.format("Row %d (\"%s\"))", ++index, inputRow.getKey()));
+            }
+            rowInput.close();
+            rowOutput.close();
+            success = true;
+        } finally {
+            finish(success);
         }
-        rowInput.close();
-        rowOutput.close();
-        finish();
     }
 
     /** Called once before the execution starts. Allows sub-classes to init file store factory etc.
@@ -131,8 +135,11 @@ public abstract class StreamableFunction extends StreamableOperator {
      * @throws Exception if that fails. */
     public abstract DataRow compute(final DataRow input) throws Exception;
 
-    /** Called after all rows have been (successfully) processed.  */
-    public void finish() {
+    /** Called after all rows have been processed.
+     * @param success a flag indicating whether (for the current chunk) the computation completed
+     * normally without exception. Most implementations will ignore this flag as there is no
+     * indication for a global success state. */
+    public void finish(final boolean success) {
         // no op
     }
 

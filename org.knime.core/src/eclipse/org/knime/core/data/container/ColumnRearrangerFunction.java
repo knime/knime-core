@@ -124,8 +124,8 @@ final class ColumnRearrangerFunction extends StreamableFunction {
 
     /** {@inheritDoc} */
     @Override
-    public void finish() {
-        super.finish();
+    public void finish(final boolean success) {
+        super.finish(success);
         RearrangeColumnsTable.finishProcessing(m_newColumnsMapping);
 
     }

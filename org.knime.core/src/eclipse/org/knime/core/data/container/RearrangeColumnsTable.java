@@ -345,6 +345,7 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
                 }
             } finally {
                 container.close();
+                finishProcessing(newColsProducerMapping);
             }
             appendTable = container.getBufferedTable();
             appendTableSpec = appendTable.getDataTableSpec();
@@ -378,7 +379,6 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
             }
         }
         DataTableSpec spec = new DataTableSpec(colSpecs);
-        finishProcessing(newColsProducerMapping);
         return new RearrangeColumnsTable(table, includesIndex, isFromRefTable, spec, appendTable);
     }
 

@@ -232,10 +232,9 @@ public abstract class AbstractCellFactory implements CellFactory {
         return m_colSpecs;
     }
 
-    /** Called after all rows have been processed (successfully).
-     * Subclasses may override it to, e.g. set warning messages etc.
-     * @since 2.6
-     */
+    /** Called after all rows have been processed (either successfully or failed).
+     * Subclasses may override it to, e.g. set warning messages, release memory listeners etc.
+     * @since 2.6 */
     public void afterProcessing() {
         // no op, possibly overwritten
     }
