@@ -70,7 +70,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         IPreferenceStore store = KNIMEUIPlugin.getDefault()
                 .getPreferenceStore();
 
-        System.out.println("Display = " + Display.getDefault());
         store.setDefault(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS, false);
 
         store.setDefault(PreferenceConstants.P_CONFIRM_RESET, true);
