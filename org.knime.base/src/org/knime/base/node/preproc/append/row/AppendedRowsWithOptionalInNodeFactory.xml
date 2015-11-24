@@ -16,7 +16,8 @@
         <option name="Skip Rows"> Duplicate row identifiers (RowID) occurring in the 
             second table are not appended to the output table. This option is 
             relatively memory intensive as it needs to cache the row IDs in
-            order to find duplicates.</option>
+            order to find duplicates. Furthermore a full data
+			duplication is needed.</option>
         <option name="Append suffix"> The output table will contain all rows, but
             duplicate row identifiers are labeled with a suffix. Similar to
             the "Skip Rows" option this method is also memory intensive. </option>
@@ -35,12 +36,6 @@
             Enables hiliting between both inputs and the concatenated output
             table.
         </option>
-        <option name="Do virtually">If checked, the tables are just concatenated
-			virtually. No additional memory is required since no rows are copied.
-			Furthermore, if hiliting is disabled and 'Append Suffix' chosen the
-			input tables don't have to be traversed. This is the fastest way to concatenate the tables.
-			However, streaming is not possible if tables are concatenated virtually.
-		</option>
 		</fullDescription>
     <ports>
         <inPort index="0" name="First table to concatenate">Table contributing the rows of the first part of the output table.</inPort>

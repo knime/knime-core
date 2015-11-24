@@ -126,9 +126,6 @@ public class AppendedRowsNodeModel extends NodeModel {
     /** NodeSettings key: Use only the intersection of columns. */
     static final String CFG_INTERSECT_COLUMNS = "intersection_of_columns";
 
-    /** Config key: Just virtually wrap the tables or not */
-    static final String CFG_WRAP_TABLES = "wrap_tables";
-
     private boolean m_isFailOnDuplicate = false;
 
     private boolean m_isAppendSuffix = true;
@@ -136,8 +133,6 @@ public class AppendedRowsNodeModel extends NodeModel {
     private String m_suffix = "_dup";
 
     private boolean m_isIntersection;
-
-    private boolean m_wrapTables;
 
     private boolean m_enableHiliting;
 
@@ -188,7 +183,8 @@ public class AppendedRowsNodeModel extends NodeModel {
             noNullSpecs[i] = noNullArray[i].getDataTableSpec();
         }
 
-        if (m_wrapTables) {
+        //table can only be wrapped if a suffix is to be append or the node fails in case of duplicate row ID's
+        if (m_isAppendSuffix || m_isFailOnDuplicate) {
             //just wrap the tables virtually instead of traversing it and copying the rows
 
             //virtually create the concatenated table (no traverse necessary)
@@ -354,9 +350,6 @@ public class AppendedRowsNodeModel extends NodeModel {
     @Override
     public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        if (m_wrapTables) {
-            return super.createStreamableOperator(partitionInfo, inSpecs);
-        } else {
             return new StreamableOperator() {
                 @Override
                 public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
@@ -371,18 +364,13 @@ public class AppendedRowsNodeModel extends NodeModel {
                     run(rowInputs, (RowOutput)outputs[0], exec, -1);
                 }
             };
-        }
     }
 
     /** {@inheritDoc} */
     @Override
     public InputPortRole[] getInputPortRoles() {
         InputPortRole[] result = new InputPortRole[getNrInPorts()];
-        if (m_wrapTables) {
-            Arrays.fill(result, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE);
-        } else {
-            Arrays.fill(result, InputPortRole.NONDISTRIBUTED_STREAMABLE);
-        }
+        Arrays.fill(result, InputPortRole.NONDISTRIBUTED_STREAMABLE);
         return result;
     }
 
@@ -400,9 +388,6 @@ public class AppendedRowsNodeModel extends NodeModel {
             settings.addString(CFG_SUFFIX, m_suffix);
         }
         settings.addBoolean(CFG_HILITING, m_enableHiliting);
-
-        // added in v3.1
-        settings.addBoolean(CFG_WRAP_TABLES, m_wrapTables);
     }
 
     /**
@@ -446,9 +431,6 @@ public class AppendedRowsNodeModel extends NodeModel {
             m_suffix = settings.getString(CFG_SUFFIX, m_suffix);
         }
         m_enableHiliting = settings.getBoolean(CFG_HILITING, false);
-
-        //added in v3.1
-        m_wrapTables = settings.getBoolean(CFG_WRAP_TABLES, false);
     }
 
     /**
