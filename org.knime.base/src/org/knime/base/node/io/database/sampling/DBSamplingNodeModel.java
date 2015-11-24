@@ -235,7 +235,7 @@ final class DBSamplingNodeModel extends DBNodeModel {
             return new DatabasePortObjectSpec(tableSpec, connectionSettings.createConnectionModel());
         } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException
                 | IOException e1) {
-            throw new InvalidSettingsException("Failure during query generation. Error: " + e1.getMessage());
+            throw new InvalidSettingsException("Failure during query generation. Error: " + e1.getMessage(), e1);
         }
     }
 
@@ -262,13 +262,7 @@ final class DBSamplingNodeModel extends DBNodeModel {
                     }
                 }
             }
-            if (totalCount == 0) {
-                throw new InvalidSettingsException("Input query does not return any rows.");
-            }
-            if (absolute && m_absoluteCount.getIntValue() > totalCount) {
-                setWarningMessage("Input query contains less rows than requested. Node returns input query.");
-                return query;
-            }
+
             exec.setProgress(0.7, "Calculating limits.");
             exec.checkCanceled();
             long valueToLimit;
@@ -277,6 +271,12 @@ final class DBSamplingNodeModel extends DBNodeModel {
             } else {
                 valueToLimit = Math.round(m_relativeFraction.getDoubleValue() / 100 * totalCount);
             }
+
+            if (valueToLimit >= totalCount) {
+                setWarningMessage("Input query does not contain more rows than requested. Node returns input query.");
+                return query;
+            }
+
             exec.setProgress(0.9, "Creating query.");
             exec.checkCanceled();
             resultQuery.append(manipulator.getSamplingStatement(query, valueToLimit, useRandomSampling));
@@ -318,13 +318,6 @@ final class DBSamplingNodeModel extends DBNodeModel {
 
         });
 
-        if (totalCount == 0) {
-            throw new InvalidSettingsException("Input query does not return any rows.");
-        }
-        if (absolute && m_absoluteCount.getIntValue() > totalCount) {
-            setWarningMessage("Input query contains less rows than requested. Node returns input query.");
-            return query;
-        }
 
         exec.setProgress(0.7, "Stratified sampling: calculating limits.");
         long sum = 0;
@@ -337,6 +330,12 @@ final class DBSamplingNodeModel extends DBNodeModel {
             fraction = m_relativeFraction.getDoubleValue() / 100.0;
             absoluteCount = (long)(fraction * totalCount);
         }
+
+        if (absoluteCount >= totalCount) {
+            setWarningMessage("Input query does not contain more rows than requested. Node returns input query.");
+            return query;
+        }
+
         final Map<Object, Long> classNamesAndLimits = new LinkedHashMap<>(classNamesAndCount);
         for (Object className : classNames) {
             exec.checkCanceled();
