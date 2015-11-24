@@ -213,7 +213,7 @@ public abstract class Pane {
      * @param settings where the dialog configuration is saved
      * @param specs the data table specs
      * @throws InvalidSettingsException thrown if the settings are invalid
-     * @throws NotConfigurableException throw if the dialog can not be configured
+     * @throws NotConfigurableException throw if the dialog cannot be configured
      */
     public abstract void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws InvalidSettingsException, NotConfigurableException;

@@ -68,7 +68,7 @@ import org.knime.workbench.KNIMEEditorPlugin;
  * {@link WorkflowEditor} to Load/save a workflow with a progress bar. NOTE: As
  * the {@link UIManager} holds a reference to this runnable an own class file is
  * necessary such that all references to the created workflow manager can be
- * deleted, otherwise the manager can not be deleted later and the memory can
+ * deleted, otherwise the manager cannot be deleted later and the memory can
  * not be freed.
  *
  * @author Christoph Sieb, University of Konstanz

@@ -94,7 +94,7 @@ public final class DataColumnSpecCreator {
     /** Keeps the column domain with additional meta-info. */
     private DataColumnDomain m_domain;
 
-    /** Contains column annotations, can not be null. */
+    /** Contains column annotations, cannot be null. */
     private DataColumnProperties m_properties;
 
     /** Holds the SizeHandler if one was set or null. */
@@ -170,7 +170,7 @@ public final class DataColumnSpecCreator {
      *
      * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec...)
      * @throws IllegalArgumentException if the structure (type and name) does
-     *             not match, if the domain can not be merged, if the Color-,
+     *             not match, if the domain cannot be merged, if the Color-,
      *             Shape- or SizeHandlers are different or the sub element
      *             names are not equal.
      */

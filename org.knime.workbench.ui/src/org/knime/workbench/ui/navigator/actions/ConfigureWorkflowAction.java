@@ -90,7 +90,7 @@ public class ConfigureWorkflowAction extends AbstractWorkflowAction {
                             MessageDialog.openError(
                                     Display.getDefault().getActiveShell(),
                                     "Workflow Not Configurable",
-                                    "This workflow can not be configured: "
+                                    "This workflow cannot be configured: "
                                     + nce.getMessage());
                         }
                     });

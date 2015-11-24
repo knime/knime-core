@@ -321,7 +321,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
             String output =  ((NodeContainer)element).getName()
                 + " (#" + ((NodeContainer)element).getID().getIndex() + ")";
             // meta nodes are as object (workflow open) represented with ":"
-            // then it can not be found
+            // then it cannot be found
             return output.replace(":", "_");
         }
         // query the element for its label

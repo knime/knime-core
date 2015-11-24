@@ -106,7 +106,7 @@ public class DBSorterNodeDialog extends NodeDialogPane {
      * @param ports the input port objects
      *
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
-     * @throws NotConfigurableException if the dialog can not be opened.
+     * @throws NotConfigurableException if the dialog cannot be opened.
      */
     @SuppressWarnings("javadoc")
     @Override

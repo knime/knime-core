@@ -114,7 +114,7 @@ public final class DialogComponentFlowVariableNameSelection extends DialogCompon
      * @param flowVarTypes The types of flow variables which are added to
      * combobox.
      *
-     * @throws IllegalArgumentException Collection of FlowVariables can not be null
+     * @throws IllegalArgumentException Collection of FlowVariables cannot be null
      */
     public DialogComponentFlowVariableNameSelection(
             final SettingsModelString model, final String label,

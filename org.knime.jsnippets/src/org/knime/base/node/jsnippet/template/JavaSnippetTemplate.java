@@ -253,7 +253,7 @@ public class JavaSnippetTemplate implements JSnippetTemplate {
     /**
      * @param metaCategory the class name
      * @return the {@link Class} or <code>null</code>
-     * @throws ClassNotFoundException if the class can not be found
+     * @throws ClassNotFoundException if the class cannot be found
      */
     protected Class<? extends Object> getMetaCategoryClass(final String metaCategory) throws ClassNotFoundException {
         return metaCategory != null

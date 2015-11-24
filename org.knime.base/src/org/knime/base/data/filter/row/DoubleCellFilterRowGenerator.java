@@ -128,7 +128,7 @@ public class DoubleCellFilterRowGenerator implements FilterRowGenerator {
      * @param doubleValue the double value border
      * @param mask the interval mask
      * @throws IllegalArgumentException if the column index is negative or the
-     *             mask can not composed from <code>IN + LEFT</code>,
+     *             mask cannot composed from <code>IN + LEFT</code>,
      *             <code>IN + RIGHT</code>, <code>OUT + LEFT</code>, or
      *             <code>OUT + RIGHT</code>
      */
@@ -177,7 +177,7 @@ public class DoubleCellFilterRowGenerator implements FilterRowGenerator {
      * @param doubleRight the right border value
      * @param maskRight the right mask
      * @throws IllegalArgumentException if the column index is negative, right
-     *             and left border overlap, left or right mask can not be
+     *             and left border overlap, left or right mask cannot be
      *             composed, or the mask conflict by referring to the same
      *             direction
      */

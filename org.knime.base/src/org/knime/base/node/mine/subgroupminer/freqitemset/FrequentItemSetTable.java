@@ -65,7 +65,7 @@ import org.knime.core.data.RowIterator;
 
 /**
  * A FrequentItemSetTable adds a sorting functionality to the normal DataTable.
- * This can not be done by the SorterNode, since the rows of a
+ * This cannot be done by the SorterNode, since the rows of a
  * FrequentItemSetTable are of variable length ( the rest is filled with empty
  * cells) and the user is able to sort by itemset length.
  *

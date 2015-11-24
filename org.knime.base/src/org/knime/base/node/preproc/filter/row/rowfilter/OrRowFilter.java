@@ -112,7 +112,7 @@ public class OrRowFilter extends RowFilter {
     }
 
     /**
-     * The row filter created by this constructor can not be used without
+     * The row filter created by this constructor cannot be used without
      * setting two input filters by loading settings from a config object.
      */
     public OrRowFilter() {

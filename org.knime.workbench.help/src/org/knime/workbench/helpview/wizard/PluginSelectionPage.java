@@ -318,7 +318,7 @@ public class PluginSelectionPage extends WizardPage {
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
-                // should never happen, since task can not be cancelled
+                // should never happen, since task cannot be cancelled
                 e.printStackTrace();
             }
         }

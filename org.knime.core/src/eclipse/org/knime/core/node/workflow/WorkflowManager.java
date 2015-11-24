@@ -361,7 +361,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         boolean noPorts = m_inPorts.length == 0 && m_outPorts.length == 0;
         assert !isProject || noPorts; // projects must not have ports
         if (isProject) {
-            // we can start a new table repository since there can not
+            // we can start a new table repository since there cannot
             // be any dependencies to parent
             // ...and we do not need to synchronize across unconnected workflows
             m_workflowLock = new WorkflowLock(this);
@@ -2638,7 +2638,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // 1) executed? - done (and happy)
             if (nc.getInternalState().equals(EXECUTED)) {
                 // everything fine: found "source" of chain executed
-                // Note that we can not assume that an executing metanode
+                // Note that we cannot assume that an executing metanode
                 // is also a good thing: the port this one is connected
                 // to may still be idle! So we test for "executing" later
                 // for SNC's only (step 3)
@@ -2971,7 +2971,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             NodeID startID = m_workflow.getMatchingLoopStart(endID);
                             loopBodyNodes = m_workflow.findAllNodesConnectedToLoopBody(startID, endID);
                         } catch (IllegalLoopException ile) {
-                            // loop is incorrectly wired. We can not restart potentially dangling branches
+                            // loop is incorrectly wired. We cannot restart potentially dangling branches
                             latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR,
                                 "Loop Body wired incorrectly (" + ile.getMessage() + ").");
                             LOGGER.error(latestNodeMessage.getMessage(), ile);
@@ -3102,7 +3102,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeID id = nai.getID();
             NodeContainer currNode = m_workflow.getNode(id);
             if (currNode.getInternalState().isExecutionInProgress()) {
-                // stop right here - loop can not yet be restarted!
+                // stop right here - loop cannot yet be restarted!
                 currNode.addWaitingLoop(slc);
                 return;
             }
@@ -3555,7 +3555,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param wfmID the id of the metanode to be expanded
      * @return copied content containing nodes and annotations
-     * @throws IllegalArgumentException if expand can not be done
+     * @throws IllegalArgumentException if expand cannot be done
      */
     public WorkflowCopyContent expandMetaNode(final NodeID wfmID) throws IllegalArgumentException {
         // TODO: This should probably be the same as for subnode extraction ... proper return value/undo
@@ -3566,7 +3566,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param nodeID ID of the node containing the sub workflow
      * @return copied content containing nodes and annotations
-     * @throws IllegalStateException if expand can not be done
+     * @throws IllegalStateException if expand cannot be done
      * @since 2.12
      * @noreference This method is not intended to be referenced by clients.
      */
@@ -3852,7 +3852,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * back into inports of the new Metanode).
      *
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
-     * @return null or reason why this can not be done as string.
+     * @return null or reason why this cannot be done as string.
      */
     public String canCollapseNodesIntoMetaNode(final NodeID[] orgIDs) {
         try (WorkflowLock lock = lock()) {
@@ -3861,7 +3861,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // Check if we are allowed to move (=delete) all those nodes
             for (NodeID id : orgIDs) {
                 if (!canRemoveNode(id)) {
-                    // we can not - bail!
+                    // we cannot - bail!
                     return "Cannot move all selected nodes (successor executing?).";
                 }
             }
@@ -3869,7 +3869,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (NodeID id : orgIDs) {
                 NodeContainer nc = getNodeContainer(id);
                 if (EXECUTED.equals(nc.getInternalState())) {
-                    // we can not - bail!
+                    // we cannot - bail!
                     return "Cannot move executed nodes (reset first).";
                 }
             }
@@ -3944,7 +3944,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param orgAnnos the workflow annotations to be moved
      * @param name of the new metanode
      * @return newly create metanode
-     * @throws IllegalArgumentException if collapse can not be done
+     * @throws IllegalArgumentException if collapse cannot be done
      */
     public WorkflowManager collapseIntoMetaNode(final NodeID[] orgIDs,
             final WorkflowAnnotation[] orgAnnos, final String name)

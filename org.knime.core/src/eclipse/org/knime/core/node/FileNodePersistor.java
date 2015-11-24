@@ -348,7 +348,7 @@ public class FileNodePersistor implements NodePersistor {
         PortType designatedType = node.getOutputType(portIdx);
         PortObjectSpec spec = null;
         PortObject object = null;
-        // this can not be simplified as BDT must be loaded as BDT even if
+        // this cannot be simplified as BDT must be loaded as BDT even if
         // the port type is not BDT (but general PortObject)
         boolean isBDT =
             (BufferedDataTable.TYPE.getPortObjectClass().getName().equals(objectClass) && BufferedDataTable.TYPE

@@ -83,7 +83,7 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
 /**
  * A runnable which is used by the {@link WorkflowEditor} to load a workflow with a progress bar. NOTE: As the
  * {@link UIManager} holds a reference to this runnable an own class file is necessary such that all references to the
- * created workflow manager can be deleted, otherwise the manager can not be deleted later and the memory can not be
+ * created workflow manager can be deleted, otherwise the manager cannot be deleted later and the memory cannot be
  * freed.
  *
  * @author Christoph Sieb, University of Konstanz
@@ -258,7 +258,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
             }
             // IMPORTANT: Remove the reference to the file and the
-            // editor!!! Otherwise the memory can not be freed later
+            // editor!!! Otherwise the memory cannot be freed later
             m_editor = null;
             m_workflowFile = null;
             m_mountpointRoot = null;

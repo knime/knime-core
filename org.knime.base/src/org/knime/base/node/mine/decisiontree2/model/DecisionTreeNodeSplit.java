@@ -258,7 +258,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             assert (m_previousIndex != -1);
             DataCell cell = row.getCell(m_previousIndex);
             if (cell.isMissing()) {
-                // we can not determine the split at this node because value is missing
+                // we cannot determine the split at this node because value is missing
                 return getNodeClassWeights();
             }
             return getClassCounts(cell, row, spec);
@@ -280,7 +280,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             assert (m_previousIndex != -1);
             DataCell cell = row.getCell(m_previousIndex);
             if (cell.isMissing()) {
-                // we can not determine the split at this node because value is missing
+                // we cannot determine the split at this node because value is missing
                 return this;
             }
             return getWinnerNode(cell, row, spec);
@@ -364,7 +364,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             assert (m_previousIndex != -1);
             DataCell cell = row.getCell(m_previousIndex);
             if (cell.isMissing()) {
-                // if we can not determine the split at this node because
+                // if we cannot determine the split at this node because
                 // value is missing, we add the row to each child
                 // with the weight proportional to the number of
                 // records belonging to each node
@@ -418,7 +418,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             assert (m_previousIndex != -1);
             DataCell cell = row.getCell(m_previousIndex);
             if (cell.isMissing()) {
-                // of we can not determine the split at this node because
+                // of we cannot determine the split at this node because
                 // value is missing, we add the row to each child
                 // with the weight proportional to the number of
                 // records belonging to each node

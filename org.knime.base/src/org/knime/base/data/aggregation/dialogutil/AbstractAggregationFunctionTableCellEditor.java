@@ -143,7 +143,7 @@ public abstract class AbstractAggregationFunctionTableCellEditor<F extends Aggre
      *                          highlighting
      * @param   row             the row of the cell being edited
      * @param   column          the column of the cell being edited
-     * @return the {@link AggregationMethod} of the selected value or <code>null</code> if it can not be retrieved
+     * @return the {@link AggregationMethod} of the selected value or <code>null</code> if it cannot be retrieved
      */
     protected abstract AggregationFunction getSelectedAggregationMethod(JTable table, R value, boolean isSelected,
         int row, int column);
@@ -163,7 +163,7 @@ public abstract class AbstractAggregationFunctionTableCellEditor<F extends Aggre
      * @param   row             the row of the cell being edited
      * @param   column          the column of the cell being edited
      * @return the {@link DataType} of the row to determine the supported {@link AggregationMethod}s that are displayed
-     * in the drop down box or <code>null</code> if it can not be retrieved
+     * in the drop down box or <code>null</code> if it cannot be retrieved
      */
     protected abstract DataType getDataType(JTable table, R value, boolean isSelected, int row, int column);
 

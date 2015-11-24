@@ -518,7 +518,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             // check if there is at least one numeric column selected
             if (m_includedColumns.isEnabled()
                     && m_includedColumns.getIncludeList().isEmpty()) {
-                // the includeColumns model can not be empty
+                // the includeColumns model cannot be empty
                 // through the dialog (see #validateSettings)
                 // only case where !m_fromString and includeColumns evaluates
                 // to true is for old workflows.

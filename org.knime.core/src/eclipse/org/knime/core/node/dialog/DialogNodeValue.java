@@ -77,7 +77,7 @@ public interface DialogNodeValue {
     public abstract void loadFromNodeSettingsInDialog(final NodeSettingsRO settings);
 
     /** Parses the value from command line - default implement will just fail as 'complex' nodes such as the column
-     * filter can not be parameterized via commandline. Simple nodes (integer &amp; string input, ...) will just parse
+     * filter cannot be parameterized via commandline. Simple nodes (integer &amp; string input, ...) will just parse
      * the value.
      * @param fromCmdLine Argument as per commandline.
      * @throws UnsupportedOperationException ... as per above.

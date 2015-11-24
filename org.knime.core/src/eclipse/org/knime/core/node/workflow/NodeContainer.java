@@ -151,7 +151,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     private boolean m_isDeletable;
 
-    /** this list will hold FlowObjects of loops in the pipeline which can not
+    /** this list will hold FlowObjects of loops in the pipeline which cannot
      * be executed before this one is not done - usually these are loops
      * with "dangling" branches, e.g. a chain of nodes leaving the loop.
      */
@@ -537,7 +537,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     /** Called from {@link #queue(PortObject[])} to set state from marked to queued. It's overwritten in
      * {@link SubNodeContainer} to be more ignorant with state checks.
      * @return true if the state transition was done and the node can now be executed. False if it was marked but
-     * it can not be executed (coming from {@link InternalNodeContainerState#UNCONFIGURED_MARKEDFOREXEC}). The calling
+     * it cannot be executed (coming from {@link InternalNodeContainerState#UNCONFIGURED_MARKEDFOREXEC}). The calling
      * code will then clear the mark flags.
      * @throws IllegalStateException If not coming from 'marked' state. */
     boolean performStateTransitionQUEUED() {
@@ -908,7 +908,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * a JFrame oder another GUI element.
      *
      * @return A dialog pane for the corresponding node.
-     * @throws NotConfigurableException if node can not be configured
+     * @throws NotConfigurableException if node cannot be configured
      */
     public NodeDialogPane getDialogPaneWithSettings()
         throws NotConfigurableException {
@@ -955,7 +955,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /** Launch a node dialog in its own JFrame (a JDialog).
      *
-     * @throws NotConfigurableException if node can not be configured
+     * @throws NotConfigurableException if node cannot be configured
      */
     public void openDialogInJFrame()
     throws NotConfigurableException {

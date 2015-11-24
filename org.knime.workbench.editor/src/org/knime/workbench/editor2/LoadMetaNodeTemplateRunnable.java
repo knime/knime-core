@@ -68,8 +68,8 @@ import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
  * A runnable which is used by the {@link WorkflowEditor} to load a workflow
  * with a progress bar. NOTE: As the {@link UIManager} holds a reference to this
  * runnable an own class file is necessary such that all references to the
- * created workflow manager can be deleted, otherwise the manager can not be
- * deleted later and the memory can not be freed.
+ * created workflow manager can be deleted, otherwise the manager cannot be
+ * deleted later and the memory cannot be freed.
  *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, University of Konstanz
@@ -161,7 +161,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
             throw new RuntimeException(ex);
         } finally {
             // IMPORTANT: Remove the reference to the file and the
-            // editor!!! Otherwise the memory can not be freed later
+            // editor!!! Otherwise the memory cannot be freed later
             m_parentWFM = null;
             m_templateKNIMEFolder = null;
         }

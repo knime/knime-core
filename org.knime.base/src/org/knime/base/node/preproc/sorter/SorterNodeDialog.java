@@ -106,7 +106,7 @@ public class SorterNodeDialog extends NodeDialogPane {
      * @param specs the input specs
      *
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
-     * @throws NotConfigurableException if the dialog can not be opened.
+     * @throws NotConfigurableException if the dialog cannot be opened.
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,

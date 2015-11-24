@@ -87,7 +87,7 @@ public final class OSGIHelper {
      * Returns the bundle that contains the given class.
      *
      * @param cls a class
-     * @return a bundle or <code>null</code> if the bundle can not be determined
+     * @return a bundle or <code>null</code> if the bundle cannot be determined
      */
     public static Bundle getBundle(final Class<?> cls) {
         if (hasOSGIFramework()) {

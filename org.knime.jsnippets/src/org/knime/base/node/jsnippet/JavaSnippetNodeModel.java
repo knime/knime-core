@@ -311,7 +311,7 @@ public class JavaSnippetNodeModel extends NodeModel {
     public InputPortRole[] getInputPortRoles() {
         InputPortRole inputPortRole = InputPortRole.DISTRIBUTED_STREAMABLE;
         if (usesRowIndex()) {
-            //rowindex field is used, can not be distributed
+            //rowindex field is used, cannot be distributed
             inputPortRole = InputPortRole.NONDISTRIBUTED_STREAMABLE;
             LOGGER
                 .warn("The ROWINDEX field is used in the snippet. Calculations cannot be done in distributed manner!");

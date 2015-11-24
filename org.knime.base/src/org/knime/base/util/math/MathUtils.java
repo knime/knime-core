@@ -387,7 +387,7 @@ public final class MathUtils {
      * @param aOrig the original matrix
      * @return the inverse matrix
      * @throws ArithmeticException if the matrix is not a square matrix or the
-     *             inverse can not be computed (because of linear dependencies)
+     *             inverse cannot be computed (because of linear dependencies)
      * @throws NullPointerException if the argument is <code>null</code> or
      *             contains <code>null</code> elements
      */

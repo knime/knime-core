@@ -342,7 +342,7 @@ public class WorkflowVariablesDialog extends Dialog {
         if (selectedVar.isGlobalConstant()) {
             MessageDialog.openError(getParentShell(), "Global Constant",
                     selectedVar.getName()
-                    + " is a global constant " + "and can not be modified!");
+                    + " is a global constant " + "and cannot be modified!");
             return;
         }
         WorkflowVariablesEditDialog dialog = new WorkflowVariablesEditDialog();
@@ -364,7 +364,7 @@ public class WorkflowVariablesDialog extends Dialog {
             MessageDialog.openError(getParentShell(),
                     "Global Constant", var.getName()
                             + " is a global constant "
-                            + "and can not be removed!");
+                            + "and cannot be removed!");
             return;
         }
         // remember that something has changed

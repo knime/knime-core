@@ -322,7 +322,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
             if (this.isMissing() && o.isMissing()) {
                 return true;
             }
-            // if only one of both cells is missing they can not be equal
+            // if only one of both cells is missing they cannot be equal
             if (this.isMissing() || o.isMissing()) {
                 return false;
             }

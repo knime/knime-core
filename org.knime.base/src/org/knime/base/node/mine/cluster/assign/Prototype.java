@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   13.01.2006 (cebron): created
  */
@@ -59,33 +59,33 @@ import org.knime.core.node.ModelContentWO;
 
 /**
  * This class represents a prototype.
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class Prototype {
-    
+
     /**
-     * Name of the config-object, where the {@link Prototype}s should be 
+     * Name of the config-object, where the {@link Prototype}s should be
      * stored.
      */
     public static final String CFG_PROTOTYPE = "Prototypes";
-    
+
     /**
      * Key to store the columns used for clustering in the PredParams.
      */
     public static final String CFG_COLUMNSUSED = "colsused";
-    
+
     /*
      * Key to save/load the label of the prototype to/from ModelContent.
      */
     private static final String MODELCFG_LABEL = "Label";
-    
+
     /*
      * Key to save/load the values of the prototype to/from ModelContent.
      */
     private static final String MODELCFG_VALUES = "Values";
-    
-    
+
+
     /*
      * Actual values of the Prototype.
      */
@@ -98,7 +98,7 @@ public class Prototype {
 
     /**
      * Prototype is initialized with double values.
-     * 
+     *
      * @param values for initialization.
      */
     public Prototype(final double[] values) {
@@ -107,7 +107,7 @@ public class Prototype {
 
     /**
      * Prototype is initialized with double values and label.
-     * 
+     *
      * @param values of the cluster prototype.
      * @param classlabel of the cluster prototype.
      */
@@ -117,7 +117,7 @@ public class Prototype {
     }
 
     /**
-     * 
+     *
      * @return the actual label of the cluster prototype.
      */
     public DataCell getLabel() {
@@ -125,7 +125,7 @@ public class Prototype {
     }
 
     /**
-     * 
+     *
      * @return actual values of this prototype.
      */
     public double[] getValues() {
@@ -135,7 +135,7 @@ public class Prototype {
     /**
      * Computes the distance between this prototype and a given {@link DataRow}.
      * Ignores all DataCells that are not compatible to DoubleValue.
-     * 
+     *
      * @param row to compare.
      * @param indices to use.
      * @return distance value.
@@ -155,16 +155,16 @@ public class Prototype {
         Distance dist = Distance.getInstance();
         return dist.compute(m_values, values);
     }
-    
+
     /**
      * Computes the distance between this prototype and a given {@link DataRow}.
      * Ignores all DataCells that are not compatible to DoubleValue.
-     * 
+     *
      * @param row to compare.
      * @param indices to use.
      * @return distance value.
      */
-    public double getSquaredEuclideanDistance(final DataRow row, 
+    public double getSquaredEuclideanDistance(final DataRow row,
             final int[] indices) {
         //TODO: Allow arbitrary distance objects as parameter
         double[] values = new double[indices.length];
@@ -180,11 +180,11 @@ public class Prototype {
         Distance dist = Distance.getInstance();
         return dist.computeSquaredEuclidean(m_values, values);
     }
-    
+
     /**
      * Computes the distance between this prototype and a given {@link DataRow}.
      * Ignores all DataCells that are not compatible to DoubleValue.
-     * 
+     *
      * @param row to compare.
      * @return distance value.
      */
@@ -208,7 +208,7 @@ public class Prototype {
         }
         return sb.toString();
     }
-    
+
     /**
      * Saves the {@link Prototype} to a {@link ModelContentWO} object.
      * @param model the ModelContent to save to.
@@ -217,11 +217,11 @@ public class Prototype {
         model.addDataCell(MODELCFG_LABEL, m_label);
         model.addDoubleArray(MODELCFG_VALUES, m_values);
     }
-    
+
     /**
      * @param model ModelContent containing information of the {@link Prototype}
      * @return new {@link Prototype}
-     * @throws InvalidSettingsException if the settings can not be retrieved.
+     * @throws InvalidSettingsException if the settings cannot be retrieved.
      */
     public static Prototype loadFrom(final ModelContentRO model)
             throws InvalidSettingsException {
@@ -229,5 +229,5 @@ public class Prototype {
         double[] values = model.getDoubleArray(MODELCFG_VALUES);
         return new Prototype(values, label);
     }
-    
+
 }

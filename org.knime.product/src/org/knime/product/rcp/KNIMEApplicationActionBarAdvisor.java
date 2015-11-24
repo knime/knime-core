@@ -466,7 +466,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
             return null;
         }
         if (!vDesc.getAllowMultiple()) {
-            // views that can not be instantiated multiple times are ignored
+            // views that cannot be instantiated multiple times are ignored
             return null;
         }
 

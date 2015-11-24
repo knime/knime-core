@@ -230,7 +230,7 @@ public final class RepositoryManager {
                         // if the plugin is null, the plugin could not
                         // be activated maybe due to a not
                         // activateable plugin
-                        // (plugin class can not be found)
+                        // (plugin class cannot be found)
                         message =
                                 message + " The corresponding plugin "
                                         + "bundle could not be activated!";
@@ -409,7 +409,7 @@ public final class RepositoryManager {
                         || (bundle.getState() != Bundle.ACTIVE)) {
                     // if the plugin is null, the plugin could not
                     // be activated maybe due to a not
-                    // activateable plugin (plugin class can not be found)
+                    // activateable plugin (plugin class cannot be found)
                     message +=
                             " The corresponding plugin "
                                     + "bundle could not be activated!";
@@ -485,7 +485,7 @@ public final class RepositoryManager {
                         || (bundle.getState() != Bundle.ACTIVE)) {
                     // if the plugin is null, the plugin could not
                     // be activated maybe due to a not
-                    // activateable plugin (plugin class can not be found)
+                    // activateable plugin (plugin class cannot be found)
                     message += " The corresponding plugin "
                             + "bundle could not be activated!";
                 }

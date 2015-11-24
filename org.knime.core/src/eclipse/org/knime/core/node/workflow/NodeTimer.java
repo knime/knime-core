@@ -232,7 +232,7 @@ public final class NodeTimer {
             return dtsc.createSpec();
         }
         public synchronized BufferedDataTable getGlobalStatsTable(final ExecutionContext exec) {
-            // TODO: double check that we can not possibly run into a deadlock via the ExecutionContext?!
+            // TODO: double check that we cannot possibly run into a deadlock via the ExecutionContext?!
             //  (if so: copy data first...)
             BufferedDataContainer result = exec.createDataContainer(getGlobalStatsSpecs());
             int rowcount = 0;

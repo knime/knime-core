@@ -203,7 +203,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
                         }
                     }
                 }
-                // check if there is another reason why we can not collapse
+                // check if there is another reason why we cannot collapse
                 String res = manager.canCollapseNodesIntoMetaNode(nodeIds);
                 if (res != null) {
                     throw new IllegalArgumentException(res);

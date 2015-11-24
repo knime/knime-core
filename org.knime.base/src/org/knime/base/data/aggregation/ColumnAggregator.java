@@ -292,7 +292,7 @@ public class ColumnAggregator extends AggregationMethodDecorator {
             if (aggrCol.hasOptionalSettings()) {
                 try {
                     //TK_TODO: We should use a settings key but a running number to allow the user to change the columns
-                    //to aggregate via flow variables. However we can not do this now because of backward compatibility
+                    //to aggregate via flow variables. However we cannot do this now because of backward compatibility
                     NodeSettingsRO operatorSetting = operatorSettings.getNodeSettings(createSettingsKey(idMap, aggrCol));
                     if (spec != null) {
                         //this method is called from the dialog

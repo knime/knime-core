@@ -979,7 +979,7 @@ public final class FileUtil {
      *            <code>null</code> if its value shouldn't be changed
      * @param ownerOnly If <code>true</code>, the read permission applies only
      *            to the owner's read permission; otherwise, it applies to
-     *            everybody. If the underlying file system can not distinguish
+     *            everybody. If the underlying file system cannot distinguish
      *            the owner's read permission from that of others, then the
      *            permission will apply to everybody, regardless of this value.
      * @return <code>true</code> if and only if the operation succeeded. The

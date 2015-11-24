@@ -67,7 +67,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 /**
  * A runnable which is used by the {@link WorkflowEditor} to save a workflow with a progress bar. NOTE: As the
  * {@link UIManager} holds a reference to this runnable an own class file is necessary sucht that all references to the
- * created workflow manager can be deleted, otherwise the manager can not be deleted later and the memeory can not be
+ * created workflow manager can be deleted, otherwise the manager cannot be deleted later and the memeory cannot be
  * freed.
  *
  * @author Christoph Sieb, University of Konstanz

@@ -254,7 +254,7 @@ class Workflow {
     /** Add a connection.
     *
     * @param cc the connection to be added.
-    * @throws IllegalArgumentException if connection can not be added.
+    * @throws IllegalArgumentException if connection cannot be added.
     */
     synchronized void addConnection(final ConnectionContainer cc) throws IllegalArgumentException {
         clearGraphAnnotationCache();

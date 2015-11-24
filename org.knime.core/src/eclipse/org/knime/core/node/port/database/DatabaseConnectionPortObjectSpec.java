@@ -168,7 +168,7 @@ public class DatabaseConnectionPortObjectSpec implements PortObjectSpec {
             final DatabaseConnectionSettings cs = getConnectionSettings(null);
             return cs.getDatabaseIdentifier();
         } catch (InvalidSettingsException e) {
-            // we can not get the identifier
+            // we cannot get the identifier
         }
         return null;
     }

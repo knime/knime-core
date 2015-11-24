@@ -1003,7 +1003,7 @@ public final class Node implements NodeModelWarningListener {
                     return false;
                 }
                 if (!peekfsc.isInactiveScope()) {
-                    // we can not handle this case: the End scope node needs
+                    // we cannot handle this case: the End scope node needs
                     // to trigger re-execution which it won't in an inactive
                     // branch
                     createErrorMessageAndNotify("Active Scope End node in inactive branch not allowed.");

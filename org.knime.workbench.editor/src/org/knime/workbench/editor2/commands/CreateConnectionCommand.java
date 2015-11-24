@@ -282,7 +282,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
         WorkflowManager wm = getHostWFM();
 
         // let the workflow manager check if the connection can be created
-        // in case it can not an exception is thrown which is caught and
+        // in case it cannot an exception is thrown which is caught and
         // displayed to the user
         try {
             // if target nodeport is already connected

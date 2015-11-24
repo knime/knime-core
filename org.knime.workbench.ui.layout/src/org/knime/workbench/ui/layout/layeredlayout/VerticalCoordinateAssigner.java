@@ -230,7 +230,7 @@ public class VerticalCoordinateAssigner {
             // no conflicts possible since there cannot be any inner segments
             return;
         }
-        // inner segments can not occur between first and second layer, and
+        // inner segments cannot occur between first and second layer, and
         // next-to-last and last layer
         for (int i = 1; i < m_layers.size() - 2; i++) {
             int k0 = 0;

@@ -186,7 +186,7 @@ public abstract class DataCell implements DataValue, Serializable {
             return true;
         }
 
-        // if only one of both cells is missing they can not be equal
+        // if only one of both cells is missing they cannot be equal
         if (thisDelegate.isMissing() || otherDelegate.isMissing()) {
             return false;
         }
