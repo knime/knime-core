@@ -252,7 +252,7 @@ final class DBSamplingNodeModel extends DBNodeModel {
             final StringBuilder resultQuery = new StringBuilder();
             exec.setProgress(0.2, "Calculating number of rows.");
             long totalCount = 0;
-            final String countQuery = "SELECT COUNT(*) FROM (" + query + ") T";
+            final String countQuery = "SELECT COUNT(*) FROM (" + query + ") samplingTable_" + Math.abs(hashCode());
             try (ResultSet valueSet = connection.createStatement().executeQuery(countQuery);) {
                 exec.checkCanceled();
                 while (valueSet.next()) {
@@ -279,8 +279,7 @@ final class DBSamplingNodeModel extends DBNodeModel {
             }
             exec.setProgress(0.9, "Creating query.");
             exec.checkCanceled();
-            final String sql = "SELECT * FROM (" + query + ") T ";
-            resultQuery.append(manipulator.getSamplingStatement(sql, valueToLimit, useRandomSampling));
+            resultQuery.append(manipulator.getSamplingStatement(query, valueToLimit, useRandomSampling));
             return resultQuery.toString();
         }
     }
@@ -290,9 +289,11 @@ final class DBSamplingNodeModel extends DBNodeModel {
         final ExecutionMonitor exec) throws SQLException, InvalidSettingsException, CanceledExecutionException {
 
         exec.setProgress(0.2, "Stratified sampling: calculating number of rows per class.");
+        String tableName = "samplingTable_" + Math.abs(hashCode());
         final String classNamesAndCountQuery =
-            "SELECT T." + manipulator.quoteIdentifier(m_classColumnName.getStringValue()) + ", COUNT(*) FROM (" + query
-                + ") T GROUP BY T." + manipulator.quoteIdentifier(m_classColumnName.getStringValue());
+            "SELECT " + tableName + "." + manipulator.quoteIdentifier(m_classColumnName.getStringValue())
+                + ", COUNT(*) FROM (" + query + ") " + tableName + " GROUP BY " + tableName + "."
+                + manipulator.quoteIdentifier(m_classColumnName.getStringValue());
         long totalCount = 0;
         final Map<Object, Long> classNamesAndCount = new LinkedHashMap<>();
         try (ResultSet valueSet = connection.createStatement().executeQuery(classNamesAndCountQuery)) {
@@ -373,7 +374,7 @@ final class DBSamplingNodeModel extends DBNodeModel {
             exec.checkCanceled();
             final Object className = classes.getKey();
             final long valueToLimit = classes.getValue().longValue();
-            final String sql = "SELECT * FROM (" + query + ") T WHERE T."
+            final String sql = "SELECT * FROM (" + query + ") " + tableName + " WHERE " + tableName + "."
                 + manipulator.quoteIdentifier(m_classColumnName.getStringValue()) + "='" + className + "'";
 
             resultQuery.append(manipulator.getSamplingStatement(sql, valueToLimit, useRandomSampling));
