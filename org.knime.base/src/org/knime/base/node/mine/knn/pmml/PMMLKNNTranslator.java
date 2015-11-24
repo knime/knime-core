@@ -50,7 +50,7 @@
 package org.knime.base.node.mine.knn.pmml;
 
 import java.math.BigInteger;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import org.apache.xmlbeans.SchemaType;
 import org.dmg.pmml.COMPAREFUNCTION;
@@ -122,7 +122,7 @@ public class PMMLKNNTranslator implements PMMLTranslator {
      */
     @Override
     public SchemaType exportTo(final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
-        HashMap<Integer, String> columnNames = new HashMap<Integer, String>();
+        LinkedHashMap<Integer, String> columnNames = new LinkedHashMap<Integer, String>();
         DataTableSpec tSpec = m_table.getDataTableSpec();
 
         // Find learning columns and store them in the map for later
