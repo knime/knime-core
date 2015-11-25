@@ -57,9 +57,11 @@ import javax.swing.event.ChangeListener;
 import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -72,9 +74,21 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  * The node model of the row key manipulation node. The node allows the user
@@ -252,56 +266,18 @@ public class RowKeyNodeModel2 extends NodeModel {
         }
         final BufferedDataTable data = inData[DATA_IN_PORT];
         BufferedDataTable outData = null;
-        final boolean ensureUniqueness = m_ensureUniqueness.isEnabled() && m_ensureUniqueness.getBooleanValue();
-        final boolean handleMissing = m_handleMissingVals.isEnabled() && m_handleMissingVals.getBooleanValue();
-        final boolean removeRowKeyCol = m_removeRowKeyCol.isEnabled() && m_removeRowKeyCol.getBooleanValue();
-        if (m_replaceKey.getBooleanValue()) {
-            LOGGER.debug("The user wants to replace the row ID with the"
-                    + " column " + m_newColumnName.getStringValue()
-                    + " optional appended column name"
-                    + m_appendRowKey.getBooleanValue());
-            if (m_newRowKeyColumn.getStringValue() != null) {
-                // the user wants a new column as rowkey column
-                final int colIdx = data.getDataTableSpec().findColumnIndex(
-                        m_newRowKeyColumn.getStringValue());
-                if (colIdx < 0) {
-                    throw new InvalidSettingsException("No column with name: "
-                            + m_newColumnName.getStringValue()
-                            + " exists. Please select a valid column name.");
-                }
-            }
-            DataColumnSpec newColSpec = null;
-            if (m_appendRowKey.getBooleanValue()) {
-                final String newColName = m_newColumnName.getStringValue();
-                newColSpec = createAppendRowKeyColSpec(newColName);
-            }
-            final RowKeyUtil2 util = new RowKeyUtil2();
-            outData = util.changeRowKey(data, exec,
-                    m_newRowKeyColumn.getStringValue(),
-                    m_appendRowKey.getBooleanValue(), newColSpec,
-                    ensureUniqueness, handleMissing, removeRowKeyCol,
-                    m_enableHilite.getBooleanValue());
-            if (m_enableHilite.getBooleanValue()) {
-                m_hilite.setMapper(new DefaultHiLiteMapper(
-                        util.getHiliteMapping()));
-            }
-            final int missingValueCounter = util.getMissingValueCounter();
-            final int duplicatesCounter = util.getDuplicatesCounter();
-            final StringBuilder warningMsg = new StringBuilder();
-            if (duplicatesCounter > 0) {
-                warningMsg.append(duplicatesCounter
-                        + " duplicate(s) now unique. ");
-            }
-            if (missingValueCounter > 0) {
-                warningMsg.append(missingValueCounter
-                        + " missing value(s) replaced with "
-                        + RowKeyUtil2.MISSING_VALUE_REPLACEMENT + ".");
-            }
-            if (warningMsg.length() > 0) {
-                setWarningMessage(warningMsg.toString());
-            }
-            LOGGER.debug("Row ID replaced successfully");
 
+        if (m_replaceKey.getBooleanValue()) {
+            //create outspec
+            DataTableSpec outSpec = configure(new DataTableSpec[]{data.getDataTableSpec()})[DATA_IN_PORT];
+
+            //create table
+            final BufferedDataContainer newContainer = exec.createDataContainer(outSpec, true);
+            RowInput rowInput = new DataTableRowInput(data);
+            RowOutput rowOutput = new BufferedDataTableRowOutput(newContainer);
+            replaceKey(rowInput, rowOutput, outSpec.getNumColumns(), data.getRowCount(), exec);
+            newContainer.close();
+            outData =  newContainer.getTable();
         } else if (m_appendRowKey.getBooleanValue()) {
             LOGGER.debug("The user only wants to append a new column with "
                     + "name " + m_newColumnName);
@@ -324,6 +300,119 @@ public class RowKeyNodeModel2 extends NodeModel {
         }
         LOGGER.debug("Exiting execute(inData, exec) of class RowKeyNodeModel.");
         return new BufferedDataTable[]{outData};
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        LOGGER.debug("Entering createStreamableOperator-method of class RowKeyNodeModel");
+        if (m_replaceKey.getBooleanValue()) {
+
+            DataTableSpec outSpec = (DataTableSpec) configure(inSpecs)[DATA_OUT_PORT];
+            return new StreamableOperator() {
+
+                @Override
+                public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                    RowInput rowInput = (RowInput) inputs[DATA_IN_PORT];
+                    RowOutput rowOutput = (RowOutput) outputs[DATA_OUT_PORT];
+                    replaceKey(rowInput, rowOutput, outSpec.getNumColumns(), -1, exec);
+                }
+            };
+        } else if (m_appendRowKey.getBooleanValue()) {
+            LOGGER.debug("The user only wants to append a new column with "
+                    + "name " + m_newColumnName);
+            // the user wants only a column with the given name which
+            //contains the rowkey as value
+            final DataTableSpec tableSpec = (DataTableSpec) inSpecs[DATA_IN_PORT];
+            final String newColumnName = m_newColumnName.getStringValue();
+            final ColumnRearranger c = RowKeyUtil2.createColumnRearranger(
+                    tableSpec, newColumnName, StringCell.TYPE);
+            return c.createStreamableFunction();
+        } else {
+            //the user doesn't want to do anything at all so we simply pass
+            //the given data
+            return new StreamableFunction() {
+                @Override
+                public DataRow compute(final DataRow input) throws Exception {
+                    return input;
+                }
+            };
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        //only streamable for now -> to be distributed more effort needed to ensure the uniqueness of row keys
+         return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.NONDISTRIBUTED};
+    }
+
+    /* called if the row key is to be replaced */
+    private void replaceKey(final RowInput rowInput, final RowOutput rowOutput, final int totalNoOfOutCols,
+        final int totalNoOfRows, final ExecutionContext exec) throws Exception {
+        assert m_replaceKey.getBooleanValue();
+
+        final boolean ensureUniqueness = m_ensureUniqueness.isEnabled() && m_ensureUniqueness.getBooleanValue();
+        final boolean handleMissing = m_handleMissingVals.isEnabled() && m_handleMissingVals.getBooleanValue();
+        final boolean removeRowKeyCol = m_removeRowKeyCol.isEnabled() && m_removeRowKeyCol.getBooleanValue();
+
+        LOGGER.debug("The user wants to replace the row ID with the"
+                + " column " + m_newColumnName.getStringValue()
+                + " optional appended column name"
+                + m_appendRowKey.getBooleanValue());
+        if (m_newRowKeyColumn.getStringValue() != null) {
+            // the user wants a new column as rowkey column
+            final int colIdx = rowInput.getDataTableSpec().findColumnIndex(
+                    m_newRowKeyColumn.getStringValue());
+            if (colIdx < 0) {
+                throw new InvalidSettingsException("No column with name: "
+                        + m_newColumnName.getStringValue()
+                        + " exists. Please select a valid column name.");
+            }
+        }
+        DataColumnSpec newColSpec = null;
+        if (m_appendRowKey.getBooleanValue()) {
+            final String newColName = m_newColumnName.getStringValue();
+            newColSpec = createAppendRowKeyColSpec(newColName);
+        }
+        final RowKeyUtil2 util = new RowKeyUtil2();
+        util.changeRowKey(rowInput, rowOutput, exec, m_newRowKeyColumn.getStringValue(),
+            m_appendRowKey.getBooleanValue(), newColSpec, ensureUniqueness, handleMissing, removeRowKeyCol,
+            m_enableHilite.getBooleanValue(), totalNoOfOutCols, totalNoOfRows);
+        if (m_enableHilite.getBooleanValue()) {
+            m_hilite.setMapper(new DefaultHiLiteMapper(
+                    util.getHiliteMapping()));
+        }
+        final int missingValueCounter = util.getMissingValueCounter();
+        final int duplicatesCounter = util.getDuplicatesCounter();
+        final StringBuilder warningMsg = new StringBuilder();
+        if (duplicatesCounter > 0) {
+            warningMsg.append(duplicatesCounter
+                    + " duplicate(s) now unique. ");
+        }
+        if (missingValueCounter > 0) {
+            warningMsg.append(missingValueCounter
+                    + " missing value(s) replaced with "
+                    + RowKeyUtil2.MISSING_VALUE_REPLACEMENT + ".");
+        }
+        if (warningMsg.length() > 0) {
+            setWarningMessage(warningMsg.toString());
+        }
+        LOGGER.debug("Row ID replaced successfully");
     }
 
     /**

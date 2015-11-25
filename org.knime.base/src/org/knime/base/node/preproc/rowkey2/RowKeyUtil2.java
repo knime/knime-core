@@ -70,6 +70,10 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.util.MutableInteger;
 
 /**
@@ -162,22 +166,62 @@ public class RowKeyUtil2 {
             final boolean ensureUniqueness, final boolean replaceMissingVals,
             final boolean removeRowKeyCol, final boolean hiliteMap)
     throws Exception {
-        LOGGER.debug("Entering changeRowKey(inData, exec, selRowKeyColName, "
-                + "newColName) of class RowKeyUtil.");
-        final DataTableSpec inSpec = inData.getDataTableSpec();
-        DataTableSpec outSpec = inSpec;
+        LOGGER.debug("Entering changeRowKey(inData, exec, selRowKeyColName, " + "newColName) of class RowKeyUtil.");
+        DataTableSpec outSpec = inData.getDataTableSpec();
         if (removeRowKeyCol) {
             outSpec = createTableSpec(outSpec, selRowKeyColName);
         }
         if (appendColumn) {
             if (newColSpec == null) {
-                throw new NullPointerException(
-                        "NewColumnSpec must not be null");
+                throw new NullPointerException("NewColumnSpec must not be null");
             }
             outSpec = AppendedColumnTable.getTableSpec(outSpec, newColSpec);
         }
         final BufferedDataContainer newContainer = exec.createDataContainer(outSpec, true);
-        final int noOfCols = outSpec.getNumColumns();
+        RowInput rowInput = new DataTableRowInput(inData);
+        RowOutput rowOutput = new BufferedDataTableRowOutput(newContainer);
+        changeRowKey(rowInput, rowOutput, exec, selRowKeyColName, appendColumn, newColSpec, ensureUniqueness,
+            replaceMissingVals, removeRowKeyCol, hiliteMap, outSpec.getNumColumns(),
+            inData.getRowCount());
+        newContainer.close();
+        return newContainer.getTable();
+    }
+
+
+    /**
+     * <p>
+     * Replaces the row key by the values of the column with the given name and appends a new column with the old key
+     * values if the <code>newColName</code> variable is a non empty <code>String</code>.
+     * </p>
+     * <p>
+     * Call the {@link RowKeyUtil2#getDuplicatesCounter()} and {@link RowKeyUtil2#getMissingValueCounter()} methods to
+     * get information about the replaced duplicates and missing values after this method is completed.
+     * </p>
+     * @param inData in data rows a {@link RowInput}
+     * @param outData output as {@link RowOutput}
+     * @param exec the {@link ExecutionContext} to check for cancel and to provide status messages
+     * @param selRowKeyColName the name of the column which should replace the row key or <code>null</code> if a new one
+     *            should be created
+     * @param appendColumn <code>true</code> if a new column should be created
+     * @param newColSpec the {@link DataColumnSpec} of the new column or <code>null</code> if no column should be
+     *            created at all
+     * @param ensureUniqueness if set to <code>true</code> the method ensures the uniqueness of the row key even if the
+     *            values of the selected row aren't unique
+     * @param replaceMissingVals if set to <code>true</code> the method replaces missing values with ?
+     * @param removeRowKeyCol removes the selected row key column if set to <code>true</code>
+     * @param hiliteMap <code>true</code> if a map should be maintained that maps the new row id to the old row id
+     * @param totalNoOfOutColumns number of columns in the output table
+     * @param totalNoOfRows number of rows in the data table, -1 if not available
+     * @throws Exception if the cancel button was pressed or the input data isn't valid.
+     * @since 3.1
+     */
+    void changeRowKey(final RowInput inData, final RowOutput outData, final ExecutionContext exec,
+        final String selRowKeyColName, final boolean appendColumn, final DataColumnSpec newColSpec,
+        final boolean ensureUniqueness, final boolean replaceMissingVals, final boolean removeRowKeyCol,
+        final boolean hiliteMap, final int totalNoOfOutColumns, final int totalNoOfRows) throws Exception {
+        LOGGER.debug("Entering changeRowKey(inData, exec, selRowKeyColName, " + "newColName) of class RowKeyUtil.");
+        final DataTableSpec inSpec = inData.getDataTableSpec();
+
         final int newRowKeyColIdx;
         if (selRowKeyColName != null) {
             newRowKeyColIdx = inSpec.findColumnIndex(selRowKeyColName);
@@ -187,22 +231,22 @@ public class RowKeyUtil2 {
         } else {
             newRowKeyColIdx = -1;
         }
-        final int totalNoOfRows = inData.getRowCount();
         if (hiliteMap) {
             m_hiliteMapping = new HashMap<RowKey, Set<RowKey>>(totalNoOfRows);
         }
         final Map<String, MutableInteger> vals =
-            new HashMap<String, MutableInteger>(totalNoOfRows);
+            new HashMap<String, MutableInteger>(totalNoOfRows > 0 ? totalNoOfRows : 100);
         final double progressPerRow = 1.0 / totalNoOfRows;
         //update the progress monitor every percent
-        final int checkPoint = Math.max((totalNoOfRows  / 1000), 1);
+        final int checkPoint = Math.max((totalNoOfRows / 1000), 1);
         int rowCounter = 0;
         exec.setProgress(0.0, "Processing data...");
         m_missingValueCounter = 0;
         m_duplicatesCounter = 0;
-        for (final DataRow row : inData) {
+        DataRow row;
+        while ((row = inData.poll()) != null) {
             rowCounter++;
-            final DataCell[] cells = new DataCell[noOfCols];
+            final DataCell[] cells = new DataCell[totalNoOfOutColumns];
             int newCellCounter = 0;
             for (int i = 0, length = inSpec.getNumColumns(); i < length; i++) {
                 if (removeRowKeyCol && i == newRowKeyColIdx) {
@@ -211,7 +255,7 @@ public class RowKeyUtil2 {
                 cells[newCellCounter++] = row.getCell(i);
             }
             if (appendColumn) {
-                cells[noOfCols - 1] = new StringCell(row.getKey().getString());
+                cells[totalNoOfOutColumns - 1] = new StringCell(row.getKey().getString());
             }
             final RowKey newKeyVal;
             if (newRowKeyColIdx >= 0) {
@@ -222,8 +266,7 @@ public class RowKeyUtil2 {
                         key = MISSING_VALUE_REPLACEMENT;
                         m_missingValueCounter++;
                     } else {
-                        throw new InvalidSettingsException(
-                                "Missing value found in row " + rowCounter);
+                        throw new InvalidSettingsException("Missing value found in row " + rowCounter);
                     }
                 } else {
                     key = keyCell.toString();
@@ -234,8 +277,7 @@ public class RowKeyUtil2 {
                             m_duplicatesCounter++;
                         }
                         StringBuilder uniqueKey = new StringBuilder(key);
-                        final MutableInteger index =
-                            vals.get(uniqueKey.toString());
+                        final MutableInteger index = vals.get(uniqueKey.toString());
                         while (vals.containsKey(uniqueKey.toString())) {
                             index.inc();
                             uniqueKey = new StringBuilder(key);
@@ -255,7 +297,7 @@ public class RowKeyUtil2 {
             }
 
             final DefaultRow newRow = new DefaultRow(newKeyVal, cells);
-            newContainer.addRowToTable(newRow);
+            outData.push(newRow);
             if (hiliteMap) {
                 final Set<RowKey> oldKeys = new HashSet<RowKey>(1);
                 oldKeys.add(row.getKey());
@@ -263,14 +305,16 @@ public class RowKeyUtil2 {
             }
             exec.checkCanceled();
             if (rowCounter % checkPoint == 0) {
-                exec.setProgress(progressPerRow * rowCounter,
-                        rowCounter + " rows of " + totalNoOfRows
-                        + " rows processed.");
+                if (totalNoOfRows > 0) {
+                    exec.setProgress(progressPerRow * rowCounter,
+                        rowCounter + " rows of " + totalNoOfRows + " rows processed.");
+                } else {
+                    exec.setProgress(progressPerRow * rowCounter, rowCounter + " rows processed.");
+                }
             }
         }
         exec.setProgress(1.0, "Finished");
-        newContainer.close();
-        return newContainer.getTable();
+
     }
 
     /**
