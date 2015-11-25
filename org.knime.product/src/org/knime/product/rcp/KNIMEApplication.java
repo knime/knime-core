@@ -281,9 +281,12 @@ public class KNIMEApplication implements IApplication {
                 }
                 // by this point it has been determined that the workspace is
                 // already in use -- force the user to choose again
+
+                // file is only needed to display the correct workspace path
+                final File workspaceDirectory = new File(workspaceUrl.toURI());
                 MessageDialog.openError(null,
                                         IDEWorkbenchMessages.IDEApplication_workspaceInUseTitle,
-                                        IDEWorkbenchMessages.IDEApplication_workspaceInUseMessage);
+                                        NLS.bind(IDEWorkbenchMessages.IDEApplication_workspaceInUseMessage, workspaceDirectory.getAbsolutePath()));
             } catch (Exception e) {
                 MessageDialog
                         .openError(
