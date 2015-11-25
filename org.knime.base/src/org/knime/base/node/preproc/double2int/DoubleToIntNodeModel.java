@@ -72,21 +72,23 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionWithInternalsNodeModel;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
- * The NodeModel for the Number to String Node that converts doubles
- * to integers.
+ * The NodeModel for the Number to String Node that converts doubles to integers.
  *
  * @author cebron, University of Konstanz
  * @author adae, University of Konstanz
  */
-public class DoubleToIntNodeModel extends NodeModel {
+public class DoubleToIntNodeModel
+    extends SimpleStreamableFunctionWithInternalsNodeModel<SimpleStreamableOperatorInternals> {
+
     /**
      * Key for the included columns in the NodeSettings.
      */
@@ -101,6 +103,7 @@ public class DoubleToIntNodeModel extends NodeModel {
      * Key for the flooring (cutting) the integer.
      */
     public static final String CFG_FLOOR = "floor";
+
     /**
      * Key for rounding the integer.
      */
@@ -108,6 +111,7 @@ public class DoubleToIntNodeModel extends NodeModel {
 
     /**
      * Key for setting whether to produce long or int.
+     *
      * @since 2.11
      */
     public static final String CFG_LONG = "long";
@@ -120,66 +124,34 @@ public class DoubleToIntNodeModel extends NodeModel {
     /*
      * If true, long instead of integer is produced from the double values.
      */
-    private SettingsModelBoolean m_prodLong =
-            new SettingsModelBoolean(CFG_LONG, false);
+    private SettingsModelBoolean m_prodLong = new SettingsModelBoolean(CFG_LONG, false);
 
     /*
      * The included columns.
      */
-    private SettingsModelFilterString m_inclCols =
-            new SettingsModelFilterString(CFG_INCLUDED_COLUMNS);
+    private SettingsModelFilterString m_inclCols = new SettingsModelFilterString(CFG_INCLUDED_COLUMNS);
 
-    private SettingsModelString m_calctype
-                    = DoubleToIntNodeDialog.getCalcTypeModel();
-
-    private String m_warningMessage;
+    private SettingsModelString m_calctype = DoubleToIntNodeDialog.getCalcTypeModel();
 
     /**
-     * Constructor with one inport and one outport.
+     * Default constructor.
      */
     public DoubleToIntNodeModel() {
-        super(1, 1);
+        super(SimpleStreamableOperatorInternals.class);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-        StringBuilder warnings = new StringBuilder();
-        List<String> inclcols = m_inclCols.getIncludeList();
-        if (inclcols.size() == 0) {
-            warnings.append("No columns selected");
-        }
-        // find indices to work on.
-        Vector<Integer> indicesvec = new Vector<Integer>();
-
-        for (int i = 0; i < inclcols.size(); i++) {
-            int colIndex = inSpecs[0].findColumnIndex(inclcols.get(i));
-            if (colIndex >= 0) {
-                DataType type = inSpecs[0].getColumnSpec(colIndex).getType();
-                if (type.isCompatible(DoubleValue.class)) {
-                    indicesvec.add(colIndex);
-                } else {
-                    warnings.append("Ignoring column \'"
-                            + inSpecs[0].getColumnSpec(colIndex).getName()
-                            + "\'\n");
-                }
-            } else {
-                throw new InvalidSettingsException("Column index for "
-                        + inclcols.get(i) + " not found.");
-            }
-        }
-        if (warnings.length() > 0) {
-            setWarningMessage(warnings.toString());
-        }
-        int[] indices = new int[indicesvec.size()];
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = indicesvec.get(i);
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        WarningMessage warningMessage = new WarningMessage();
+        int[] indices = findIndices(inSpecs[0], warningMessage);
+        if (warningMessage.get() != null) {
+            setWarningMessage(warningMessage.get());
         }
         ConverterFactory converterFac =
-                new ConverterFactory(indices, m_prodLong.getBooleanValue(), inSpecs[0]);
+            new ConverterFactory(indices, m_prodLong.getBooleanValue(), inSpecs[0], warningMessage);
         ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
         colre.replace(converterFac, indices);
         DataTableSpec newspec = colre.createSpec();
@@ -190,62 +162,136 @@ public class DoubleToIntNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        StringBuilder warnings = new StringBuilder();
-        // find indices to work on.
-        DataTableSpec inspec = inData[0].getDataTableSpec();
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws Exception {
         List<String> inclcols = m_inclCols.getIncludeList();
         if (inclcols.size() == 0) {
             // nothing to convert, let's return the input table.
-            setWarningMessage("No columns selected,"
-                    + " returning input DataTable.");
+            setWarningMessage("No columns selected," + " returning input DataTable.");
             return new BufferedDataTable[]{inData[0]};
         }
+
+        DataTableSpec inspec = inData[0].getDataTableSpec();
+        WarningMessage warningMessage = new WarningMessage();
+        int[] indices = findIndices(inspec, warningMessage);
+
+        ConverterFactory converterFac;
+        String calctype = m_calctype.getStringValue();
+        if (calctype.equals(CFG_CEIL)) {
+            converterFac = new CeilConverterFactory(indices, m_prodLong.getBooleanValue(), inspec, warningMessage);
+        } else if (calctype.equals(CFG_FLOOR)) {
+            converterFac = new FloorConverterFactory(indices, m_prodLong.getBooleanValue(), inspec, warningMessage);
+        } else {
+            converterFac = new ConverterFactory(indices, m_prodLong.getBooleanValue(), inspec, warningMessage);
+        }
+        ColumnRearranger colre = new ColumnRearranger(inspec);
+        colre.replace(converterFac, indices);
+
+        BufferedDataTable resultTable = exec.createColumnRearrangeTable(inData[0], colre, exec);
+
+        if (warningMessage.get() != null) {
+            setWarningMessage(warningMessage.get());
+        }
+        return new BufferedDataTable[]{resultTable};
+    }
+
+    private int[] findIndices(final DataTableSpec spec, final WarningMessage warnings) throws InvalidSettingsException {
+        List<String> inclcols = m_inclCols.getIncludeList();
+        if (inclcols.size() == 0) {
+            warnings.append("No columns selected");
+        }
+        // find indices to work on.
         Vector<Integer> indicesvec = new Vector<Integer>();
+
         for (int i = 0; i < inclcols.size(); i++) {
-            int colIndex = inspec.findColumnIndex(inclcols.get(i));
+            int colIndex = spec.findColumnIndex(inclcols.get(i));
             if (colIndex >= 0) {
-                DataType type = inspec.getColumnSpec(colIndex).getType();
+                DataType type = spec.getColumnSpec(colIndex).getType();
                 if (type.isCompatible(DoubleValue.class)) {
                     indicesvec.add(colIndex);
                 } else {
-                    warnings
-                            .append("Ignoring column \'"
-                                    + inspec.getColumnSpec(colIndex).getName()
-                                    + "\'\n");
+                    warnings.append("Ignoring column \'" + spec.getColumnSpec(colIndex).getName() + "\'\n");
                 }
             } else {
-                throw new Exception("Column index for " + inclcols.get(i)
-                        + " not found.");
+                throw new InvalidSettingsException("Column index for " + inclcols.get(i) + " not found.");
             }
         }
         int[] indices = new int[indicesvec.size()];
         for (int i = 0; i < indices.length; i++) {
             indices[i] = indicesvec.get(i);
         }
+        return indices;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.1
+     */
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec,
+        final SimpleStreamableOperatorInternals emptyInternals) throws InvalidSettingsException {
+        WarningMessage warningMessage = (WarningMessage)emptyInternals;
+        int[] indices = findIndices(spec, warningMessage);
         ConverterFactory converterFac;
         String calctype = m_calctype.getStringValue();
         if (calctype.equals(CFG_CEIL)) {
-            converterFac = new CeilConverterFactory(indices, m_prodLong.getBooleanValue(), inspec);
+            converterFac = new CeilConverterFactory(indices, m_prodLong.getBooleanValue(), spec, warningMessage);
         } else if (calctype.equals(CFG_FLOOR)) {
-            converterFac = new FloorConverterFactory(indices,  m_prodLong.getBooleanValue(), inspec);
+            converterFac = new FloorConverterFactory(indices, m_prodLong.getBooleanValue(), spec, warningMessage);
         } else {
-            converterFac = new ConverterFactory(indices, m_prodLong.getBooleanValue(), inspec);
+            converterFac = new ConverterFactory(indices, m_prodLong.getBooleanValue(), spec, warningMessage);
         }
-        ColumnRearranger colre = new ColumnRearranger(inspec);
+
+        ColumnRearranger colre = new ColumnRearranger(spec);
         colre.replace(converterFac, indices);
 
-        BufferedDataTable resultTable =
-                exec.createColumnRearrangeTable(inData[0], colre, exec);
+        return colre;
+    }
 
-        if (m_warningMessage != null) {
-            warnings.append(m_warningMessage);
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.1
+     */
+    @Override
+    protected SimpleStreamableOperatorInternals createStreamingOperatorInternals() {
+        return new WarningMessage();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.1
+     */
+    @Override
+    protected SimpleStreamableOperatorInternals
+        mergeStreamingOperatorInternals(final SimpleStreamableOperatorInternals[] operatorInternals) {
+        // merge warning messages from potentially different partitions -> essentially concatenate the messages
+        StringBuilder sb = new StringBuilder();
+        for (SimpleStreamableOperatorInternals oi : operatorInternals) {
+            WarningMessage wm = (WarningMessage)oi;
+            if (wm.get() != null) {
+                sb.append(wm.get());
+                sb.append("\n");
+            }
         }
-        if (warnings.length() > 0) {
-            setWarningMessage(warnings.toString());
+        WarningMessage res = new WarningMessage();
+        res.set(sb.toString());
+        return res;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.1
+     */
+    @Override
+    protected void finishStreamableExecution(final SimpleStreamableOperatorInternals operatorInternals) {
+        WarningMessage warningMessage = (WarningMessage)operatorInternals;
+        if (warningMessage.get() != null && warningMessage.get().length() > 0) {
+            setWarningMessage(warningMessage.get());
         }
-        return new BufferedDataTable[]{resultTable};
     }
 
     /**
@@ -253,15 +299,13 @@ public class DoubleToIntNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_warningMessage = null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_inclCols.loadSettingsFrom(settings);
         m_calctype.loadSettingsFrom(settings);
 
@@ -287,8 +331,7 @@ public class DoubleToIntNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_inclCols.validateSettings(settings);
         m_calctype.validateSettings(settings);
 
@@ -300,23 +343,20 @@ public class DoubleToIntNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
     }
 
     /**
-     * The CellFactory to produce the new converted cells.
-     * Standard rounding.
+     * The CellFactory to produce the new converted cells. Standard rounding.
      *
      * @author cebron, University of Konstanz
      * @author adae, University of Konstanz
@@ -338,14 +378,21 @@ public class DoubleToIntNodeModel extends NodeModel {
          */
         private boolean m_createLong;
 
+        /*
+         * A warning message during execution
+         */
+        private WarningMessage m_warningMessage;
+
         /**
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
          */
-        ConverterFactory(final int[] colindices, final boolean createLong, final DataTableSpec spec) {
+        ConverterFactory(final int[] colindices, final boolean createLong, final DataTableSpec spec,
+            final WarningMessage warningMessage) {
             m_colindices = colindices;
             m_spec = spec;
             m_createLong = createLong;
+            m_warningMessage = warningMessage;
         }
 
         /**
@@ -370,17 +417,16 @@ public class DoubleToIntNodeModel extends NodeModel {
                     double d = ((DoubleValue)dc).getDoubleValue();
                     if (m_createLong) {
                         if ((d > Long.MAX_VALUE) || (d < Long.MIN_VALUE)) {
-                            m_warningMessage =
-                                "The table contains double values that are outside the value range for longs.";
+                            m_warningMessage
+                                .set("The table contains double values that are outside the value range for longs.");
                             newcells[i] = new MissingCell("Double value " + d + " is out of long range");
                         } else {
                             newcells[i] = new LongCell(getRoundedLongValue(d));
                         }
                     } else {
                         if ((d > Integer.MAX_VALUE) || (d < Integer.MIN_VALUE)) {
-                            m_warningMessage =
-                                "The table contains double values that are outside the value range for"
-                                    + " integers. Consider enabling long values in the dialog.";
+                            m_warningMessage.set("The table contains double values that are outside the value range for"
+                                + " integers. Consider enabling long values in the dialog.");
                             newcells[i] = new MissingCell("Double value " + d + " is out of integer range");
                         } else {
                             newcells[i] = new IntCell(getRoundedValue(d));
@@ -398,15 +444,13 @@ public class DoubleToIntNodeModel extends NodeModel {
          */
         @Override
         public DataColumnSpec[] getColumnSpecs() {
-            DataColumnSpec[] newcolspecs =
-                    new DataColumnSpec[m_colindices.length];
+            DataColumnSpec[] newcolspecs = new DataColumnSpec[m_colindices.length];
             for (int i = 0; i < newcolspecs.length; i++) {
                 DataColumnSpec colspec = m_spec.getColumnSpec(m_colindices[i]);
                 DataColumnSpecCreator colspeccreator = null;
                 // change DataType to IntCell
                 colspeccreator =
-                        new DataColumnSpecCreator(colspec.getName(),
-                                m_createLong ? LongCell.TYPE : IntCell.TYPE);
+                    new DataColumnSpecCreator(colspec.getName(), m_createLong ? LongCell.TYPE : IntCell.TYPE);
                 newcolspecs[i] = colspeccreator.createSpec();
             }
             return newcolspecs;
@@ -416,8 +460,8 @@ public class DoubleToIntNodeModel extends NodeModel {
          * {@inheritDoc}
          */
         @Override
-        public void setProgress(final int curRowNr, final int rowCount,
-                final RowKey lastKey, final ExecutionMonitor exec) {
+        public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey,
+            final ExecutionMonitor exec) {
             exec.setProgress((double)curRowNr / (double)rowCount, "Converting");
         }
 
@@ -440,8 +484,7 @@ public class DoubleToIntNodeModel extends NodeModel {
     } // end ConverterFactory
 
     /**
-     * This Factory produces integer cells rounded to floor
-     * (next smaller int).
+     * This Factory produces integer cells rounded to floor (next smaller int).
      *
      * @author adae, University of Konstanz
      */
@@ -450,11 +493,10 @@ public class DoubleToIntNodeModel extends NodeModel {
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
          */
-        FloorConverterFactory(final int[] colindices, final boolean createLong,
-                            final DataTableSpec spec) {
-            super(colindices, createLong, spec);
+        FloorConverterFactory(final int[] colindices, final boolean createLong, final DataTableSpec spec,
+            final WarningMessage message) {
+            super(colindices, createLong, spec, message);
         }
-
 
         @Override
         public int getRoundedValue(final double val) {
@@ -468,8 +510,7 @@ public class DoubleToIntNodeModel extends NodeModel {
     }
 
     /**
-     * This Factory produces integer cells rounded to ceil
-     * (next bigger int).
+     * This Factory produces integer cells rounded to ceil (next bigger int).
      *
      * @author adae, University of Konstanz
      */
@@ -478,9 +519,9 @@ public class DoubleToIntNodeModel extends NodeModel {
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
          */
-        CeilConverterFactory(final int[] colindices, final boolean createLong,
-                                final DataTableSpec spec) {
-            super(colindices, createLong, spec);
+        CeilConverterFactory(final int[] colindices, final boolean createLong, final DataTableSpec spec,
+            final WarningMessage message) {
+            super(colindices, createLong, spec, message);
         }
 
         @Override
@@ -493,4 +534,50 @@ public class DoubleToIntNodeModel extends NodeModel {
             return (long)Math.ceil(val);
         }
     }
+
+    /*
+     * Helper class to represent a warning message that is stored in SimpleStreamableOperatorInternals-object.
+     */
+    private class WarningMessage extends SimpleStreamableOperatorInternals {
+
+        private static final String CONFIG_KEY = "warningmessage";
+
+        /**
+         * @return the warning message, can be <code>null</code>
+         */
+            String get() {
+            try {
+                return this.getConfig().getString(CONFIG_KEY).trim();
+            } catch (InvalidSettingsException e) {
+                return null;
+            }
+        }
+
+        void set(final String message) {
+            this.getConfig().addString(CONFIG_KEY, message);
+        }
+
+        /**
+         * Appends the given warning message to existing ones and puts a '\n' in between. Or sets the given message if
+         * no message was set so far.
+         */
+            void append(final String message) {
+            try {
+                if (this.getConfig().getString(CONFIG_KEY) == null) {
+                    set("");
+                }
+            } catch (InvalidSettingsException e) {
+                set("");
+            }
+
+            try {
+                this.getConfig().addString(CONFIG_KEY, this.getConfig().getString(CONFIG_KEY) + message + "\n");
+            } catch (InvalidSettingsException e) {
+                // should not happen
+                throw new RuntimeException(e);
+            }
+        }
+
+    }
+
 }
