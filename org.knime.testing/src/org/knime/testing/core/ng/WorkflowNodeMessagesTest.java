@@ -49,15 +49,15 @@ package org.knime.testing.core.ng;
 
 import java.util.regex.Pattern;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestResult;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.TestResult;
 
 /**
  * Testcase that check all node messages after execution. Unexpected or wrong messages are reported as failures.
@@ -116,7 +116,7 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
 
         Pattern expectedErrorMessage = flowConfiguration.getNodeErrorMessage(node.getID());
         if (expectedErrorMessage != null) {
-            if (!expectedErrorMessage.matcher(nodeMessage.getMessage()).matches()) {
+            if (!expectedErrorMessage.matcher(nodeMessage.getMessage().trim()).matches()) {
                 String error =
                     "Node '" + node.getNameWithID() + "' has unexpected error message: expected '"
                         + TestflowConfiguration.patternToString(expectedErrorMessage) + "', got '"
@@ -131,7 +131,7 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
 
         Pattern expectedWarningMessage = flowConfiguration.getNodeWarningMessage(node.getID());
         if (expectedWarningMessage != null) {
-            if (!expectedWarningMessage.matcher(nodeMessage.getMessage()).matches()) {
+            if (!expectedWarningMessage.matcher(nodeMessage.getMessage().trim()).matches()) {
                 String error =
                     "Node '" + node.getNameWithID() + "' has unexpected warning message: expected '"
                         + TestflowConfiguration.patternToString(expectedWarningMessage) + "', got '"

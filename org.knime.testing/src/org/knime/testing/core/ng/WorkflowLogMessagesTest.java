@@ -54,9 +54,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestResult;
-
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -65,6 +62,9 @@ import org.apache.log4j.varia.LevelRangeFilter;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.EclipseUtil;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.TestResult;
 
 /**
  * Testcase that checks for expected log messages and reported unexpected ERRORs and FATALs. An appender to the root
@@ -180,7 +180,7 @@ class WorkflowLogMessagesTest extends WorkflowTest {
 
 
         for (LoggingEvent logEvent : m_logEvents) {
-            String message = logEvent.getRenderedMessage();
+            String message = logEvent.getRenderedMessage().trim();
 
             boolean expected = false;
             List<Pattern> currentList = occurrenceMap.get(logEvent.getLevel());
@@ -198,7 +198,7 @@ class WorkflowLogMessagesTest extends WorkflowTest {
 
             if (!expected && logEvent.getLevel().isGreaterOrEqual(Level.ERROR)) {
                 result.addFailure(this, new AssertionFailedError("Unexpected " + logEvent.getLevel() + " logged: "
-                        + logEvent.getRenderedMessage()));
+                        + logEvent.getRenderedMessage().trim()));
             }
         }
 
