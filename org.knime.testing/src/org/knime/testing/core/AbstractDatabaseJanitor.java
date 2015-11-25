@@ -117,8 +117,8 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
         m_port = port;
         m_username = username;
         m_password = password;
-        m_dbName = "knime_testing_" + m_dateFormat.format(new Date()) + "_" + Long.toHexString(RAND.nextLong()) +
-                "_" + KNIMEConstants.VERSION.replace('.', '_');
+        m_dbName = "knime_testing_" + m_dateFormat.format(new Date()) + "_" + Integer.toHexString(RAND.nextInt()) +
+                "_" + KNIMEConstants.VERSION.replace('.', '_').replace("_v\\d+$", "");
     }
 
     /**
