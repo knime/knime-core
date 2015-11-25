@@ -76,8 +76,6 @@ import org.knime.core.node.port.database.aggregation.function.SumDistinctDBAggre
 import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.postgresql.ArrayAggDBAggregationFunction;
-import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
-import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 
 /**
  * Database utility for PostgreSQL.
@@ -92,7 +90,7 @@ public class PostgreSQLUtility extends DatabaseUtility {
          * Constructor of class {@link PostgreSQLStatementManipulator}.
          */
         public PostgreSQLStatementManipulator() {
-            super(CasePivotStatementGenerator.getINSTANCE(), CaseBinningStatementGenerator.getINSTANCE());
+            super(true);
         }
         /**
          * {@inheritDoc}
@@ -154,6 +152,14 @@ public class PostgreSQLUtility extends DatabaseUtility {
 
     @Override
     public boolean supportsRandomSampling() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean supportsCase() {
         return true;
     }
 }

@@ -43,25 +43,25 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.node.io.database.binning;
+package org.knime.base.node.io.database.binning.auto;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The node factory of the database sampling node.
+ * The node factory of the Database Auto-Binner node.
  *
  * @author Lara Gorini
  */
-public final class DBNumericBinnerNodeFactory extends NodeFactory<DBNumericBinnerNodeModel> {
+public final class DBAutoBinnerNodeFactory extends NodeFactory<DBAutoBinnerNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBNumericBinnerNodeModel createNodeModel() {
-        return new DBNumericBinnerNodeModel();
+    public DBAutoBinnerNodeModel createNodeModel() {
+        return new DBAutoBinnerNodeModel();
     }
 
     /**
@@ -76,7 +76,7 @@ public final class DBNumericBinnerNodeFactory extends NodeFactory<DBNumericBinne
      * {@inheritDoc}
      */
     @Override
-    public NodeView<DBNumericBinnerNodeModel> createNodeView(final int viewIndex, final DBNumericBinnerNodeModel nodeModel) {
+    public NodeView<DBAutoBinnerNodeModel> createNodeView(final int viewIndex, final DBAutoBinnerNodeModel nodeModel) {
         return null;
     }
 
@@ -93,6 +93,6 @@ public final class DBNumericBinnerNodeFactory extends NodeFactory<DBNumericBinne
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DBNumericBinnerNodeDialog();
+        return new DBAutoBinnerNodeDialog();
     }
 }

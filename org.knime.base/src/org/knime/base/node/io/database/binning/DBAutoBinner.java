@@ -48,16 +48,49 @@
  */
 package org.knime.base.node.io.database.binning;
 
-import java.text.NumberFormat;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.dmg.pmml.DiscretizeBinDocument.DiscretizeBin;
+import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
+import org.knime.base.node.io.database.binning.auto.DBAutoBinnerNodeModel;
+import org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretize;
+import org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizeBin;
+import org.knime.base.node.preproc.autobinner.pmml.PMMLInterval;
+import org.knime.base.node.preproc.autobinner.pmml.PMMLInterval.Closure;
+import org.knime.base.node.preproc.autobinner.pmml.PMMLPreprocDiscretize;
 import org.knime.base.node.preproc.autobinner3.AutoBinner;
 import org.knime.base.node.preproc.autobinner3.AutoBinnerLearnSettings;
+import org.knime.base.node.preproc.pmml.binner.BinnerColumnFactory.Bin;
+import org.knime.base.node.preproc.pmml.binner.NumericBin;
+import org.knime.base.node.preproc.pmml.binner.PMMLBinningTranslator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.util.Pair;
 
 /**
+ * This class is an extension of class {@link AutoBinner}.
  *
- * @author Lara
+ * @author Lara Gorini
  */
 public class DBAutoBinner extends AutoBinner {
 
@@ -71,71 +104,256 @@ public class DBAutoBinner extends AutoBinner {
         super(settings, spec);
     }
 
-
-
     /**
-     * @param edges
-     * @param binNaming
-     * @return
+     * This method creates a {@link PMMLPreprocDiscretize} object and is used in {@link DBAutoBinnerNodeModel}
+     *
+     * @param connection Connection to database
+     * @param query Input database table
+     * @param statementManipulator {@link StatementManipulator} to use
+     * @param dataTableSpec DataTableSpec of incoming {@link BufferedDataTable}
+     * @return a {@link PMMLPreprocDiscretize} object containing required parameters for binning operation
+     * @throws SQLException
      */
-    public String[] nameBins(final double[] edges, final AutoBinnerLearnSettings.BinNaming binNaming) {
-        DBBinnerNumberFormat formatter = new DBBinnerNumberFormat();
-        String[] binNames = new String[edges.length - 1];
-        switch (binNaming) {
-            case edges:
-                binNames[0] = "'[" + formatter.format(edges[0]) + "," + formatter.format(edges[1]) + "]'";
-                for (int i = 1; i < binNames.length; i++) {
-                    binNames[i] = "'(" + formatter.format(edges[i]) + "," + formatter.format(edges[i + 1]) + "]'";
+    public PMMLPreprocDiscretize createPMMLPrepocDiscretize(final Connection connection, final String query,
+        final StatementManipulator statementManipulator, final DataTableSpec dataTableSpec) throws SQLException {
+        AutoBinnerLearnSettings settings = getSettings();
+        String[] includeCols = settings.getFilterConfiguration().applyTo(dataTableSpec).getIncludes();
+
+        double max = 0;
+        double min = 0;
+        StringBuilder minMaxQuery = new StringBuilder();
+        minMaxQuery.append("SELECT");
+        for (int i = 0; i < includeCols.length; i++) {
+            minMaxQuery.append(" MAX(" + statementManipulator.quoteIdentifier(includeCols[i]) + ") "
+                + statementManipulator.quoteIdentifier("max_" + includeCols[i]) + ",");
+            minMaxQuery.append(" MIN(" + statementManipulator.quoteIdentifier(includeCols[i]) + ") "
+                + statementManipulator.quoteIdentifier("min_" + includeCols[i]));
+            if (i < includeCols.length - 1) {
+                minMaxQuery.append(",");
+            }
+        }
+        minMaxQuery.append(" FROM (" + query + ") T");
+        HashMap<String, Pair<Double, Double>> maxAndMin = new LinkedHashMap<>();
+        try (ResultSet valueSet = connection.createStatement().executeQuery(minMaxQuery.toString());) {
+            while (valueSet.next()) {
+                for (int i = 0; i < includeCols.length; i++) {
+                    max = valueSet.getDouble("max_" + includeCols[i]);
+                    min = valueSet.getDouble("min_" + includeCols[i]);
+                    maxAndMin.put(includeCols[i], new Pair<Double, Double>(min, max));
                 }
-                break;
-            case numbered:
-                for (int i = 0; i < binNames.length; i++) {
-                    binNames[i] = "'Bin " + (i + 1) + "'";
-                }
-                break;
-            case midpoints:
-                binNames[0] = formatter.format((edges[1] - edges[0]) / 2 + edges[0]);
-                for (int i = 1; i < binNames.length; i++) {
-                    binNames[i] = "'" + formatter.format((edges[i + 1] - edges[i]) / 2 + edges[i]) + "'";
-                }
-                break;
-            default:
-                for (int i = 0; i < binNames.length; i++) {
-                    binNames[i] = "'Bin " + (i + 1) + "'";
-                }
-                break;
+            }
+        }
+        int number = settings.getBinCount();
+        Map<String, double[]> edgesMap = new LinkedHashMap<>();
+        for (Entry<String, Pair<Double, Double>> entry : maxAndMin.entrySet()) {
+            double[] edges =
+                AutoBinner.calculateBounds(number, entry.getValue().getFirst(), entry.getValue().getSecond());
+            edgesMap.put(entry.getKey(), edges);
         }
 
-        return binNames;
+        return createDisretizeOp(edgesMap);
     }
 
     /**
+     * This method translates a {@link PMMLPreprocDiscretize} object into {@link PMMLPortObject}.
      *
-     * @author Lara
+     * @param pmmlDiscretize {@link PMMLPreprocDiscretize} object
+     * @param dataTableSpec {@link DataTableSpec} if incoming {@link BufferedDataTable}
+     * @return a {@link PMMLPortObject} containing required parameters for binning operation
      */
-    private class DBBinnerNumberFormat extends AutoBinner.BinnerNumberFormat {
+    public static PMMLPortObject translate(final PMMLPreprocDiscretize pmmlDiscretize,
+        final DataTableSpec dataTableSpec) {
 
-        @Override
-        public String format(final double d) {
-            if (d == 0.0) {
-                return "0";
-            }
-            if (Double.isInfinite(d) || Double.isNaN(d)) {
-                return Double.toString(d);
-            }
-            NumberFormat format;
-            double abs = Math.abs(d);
-            if (abs < 0.0001) {
-                format = getSmallFormat();
-            } else {
-                format = getDefaultFormat();
-            }
-            synchronized (format) {
-                return format.format(d);
+        final Map<String, Bin[]> columnToBins = new HashMap<>();
+        final Map<String, String> columnToAppend = new HashMap<>();
 
+        List<String> replacedColumnNames = pmmlDiscretize.getConfiguration().getNames();
+        for (String replacedColumnName : replacedColumnNames) {
+            PMMLDiscretize discretize = pmmlDiscretize.getConfiguration().getDiscretize(replacedColumnName);
+            List<PMMLDiscretizeBin> bins = discretize.getBins();
+            String originalColumnName = discretize.getField();
+
+            if (replacedColumnName.equals(originalColumnName)) { // wenn replaced, dann nicht anhängen
+                columnToAppend.put(originalColumnName, null);
+            } else { // nicht replaced -> anhängen
+                columnToAppend.put(originalColumnName, replacedColumnName);
             }
+
+            NumericBin[] numericBin = new NumericBin[bins.size()];
+            int counter = 0;
+            for (PMMLDiscretizeBin bin : bins) {
+                String binName = bin.getBinValue();
+                List<PMMLInterval> intervals = bin.getIntervals();
+                boolean leftOpen = false;
+                boolean rightOpen = false;
+                double leftMargin = 0;
+                double rightMargin = 0;
+                //always returns only one interval
+                for (PMMLInterval interval : intervals) {
+                    Closure closure = interval.getClosure();
+                    switch (closure) {
+                        case openClosed:
+                            leftOpen = true;
+                            rightOpen = false;
+                            break;
+                        case openOpen:
+                            leftOpen = true;
+                            rightOpen = true;
+                            break;
+                        case closedOpen:
+                            leftOpen = false;
+                            rightOpen = true;
+                        case closedClosed:
+                            leftOpen = false;
+                            rightOpen = false;
+                            break;
+                        default:
+                            leftOpen = true;
+                            rightOpen = false;
+                            break;
+                    }
+                    leftMargin = interval.getLeftMargin();
+                    rightMargin = interval.getRightMargin();
+                }
+
+                numericBin[counter] = new NumericBin(binName, leftOpen, leftMargin, rightOpen, rightMargin);
+                counter++;
+            }
+            columnToBins.put(originalColumnName, numericBin);
         }
 
+        //ColumnRearranger createColReg = createColReg(dataTableSpec, columnToBins, columnToAppended);
+        DataTableSpec newDataTableSpec = createNewDataTableSpec(dataTableSpec, columnToAppend);
+        PMMLPortObjectSpecCreator pmmlSpecCreator = new PMMLPortObjectSpecCreator(newDataTableSpec);
+        PMMLPortObject pmmlPortObject = new PMMLPortObject(pmmlSpecCreator.createSpec(), null, newDataTableSpec);
+        PMMLBinningTranslator trans =
+            new PMMLBinningTranslator(columnToBins, columnToAppend, new DerivedFieldMapper(pmmlPortObject));
+        TransformationDictionary exportToTransDict = trans.exportToTransDict();
+        pmmlPortObject.addGlobalTransformations(exportToTransDict);
+        return pmmlPortObject;
+
+    }
+
+    /**
+     * This method creates a new {@link DataTableSpec} holding columns which were appended
+     *
+     * @param dataTableSpec Incoming {@link DataTableSpec}
+     * @param columnToAppend Map of Strings containing name of target column as key and name of binned column which has
+     *            to be appended as value. If target column is not be appended, value is null
+     * @return {@link DataTableSpec} containing target and binned columns
+     */
+    public static DataTableSpec createNewDataTableSpec(final DataTableSpec dataTableSpec,
+        final Map<String, String> columnToAppend) {
+        List<DataColumnSpec> origDataColumnSpecs = new LinkedList<>();
+        for (int i = 0; i < dataTableSpec.getNumColumns(); i++) {
+            origDataColumnSpecs.add(dataTableSpec.getColumnSpec(i));
+        }
+        List<DataColumnSpec> addDataColumnSpecs = new LinkedList<>();
+        for (String column : columnToAppend.keySet()) {
+            String replacedColumnName = columnToAppend.get(column);
+            if (replacedColumnName != null) {
+                addDataColumnSpecs.add(new DataColumnSpecCreator(replacedColumnName, StringCell.TYPE).createSpec());
+            }
+        }
+        origDataColumnSpecs.addAll(addDataColumnSpecs);
+        DataTableSpec newDataTableSpec =
+            new DataTableSpec(origDataColumnSpecs.toArray(new DataColumnSpec[origDataColumnSpecs.size()]));
+        return newDataTableSpec;
+
+    }
+
+    /**
+     * This method translates a {@link PMMLPortObject} into a {@link DBBinnerMaps} object which holds several Maps
+     * needed to create a binner statement in {@link StatementManipulator}
+     *
+     * @param pmmlPortObject A {@link PMMLPortObject} containing all necessary information about binning operation
+     * @param dataTableSpec Incoming {@link DataTableSpec}
+     * @return a {@link DBBinnerMaps} object containing required parameters for {@link StatementManipulator}
+     */
+    public static DBBinnerMaps intoBinnerMaps(final PMMLPortObject pmmlPortObject, final DataTableSpec dataTableSpec) {
+
+        Map<String, List<Double[]>> limitsMap = new LinkedHashMap<>();
+        Map<String, List<Boolean[]>> includeMap = new LinkedHashMap<>();
+        Map<String, List<String>> namingMap = new LinkedHashMap<>();
+        Map<String, String> appendMap = new LinkedHashMap<>();
+
+        DerivedField[] derivedFields = pmmlPortObject.getDerivedFields();
+        for (int i = 0; i < derivedFields.length; i++) { // each column has its own derived fields
+
+            List<Double[]> limits = new LinkedList<>();
+            List<String> names = new LinkedList<>();
+            List<Boolean[]> includes = new LinkedList<>();
+
+            List<DiscretizeBin> discretizeBinList = derivedFields[i].getDiscretize().getDiscretizeBinList();
+            String replacedColumnName = DataTableSpec.getUniqueColumnName(dataTableSpec, derivedFields[i].getName());
+            String originalColumnName = derivedFields[i].getDiscretize().getField();
+            for (DiscretizeBin discBin : discretizeBinList) {
+                limits.add(new Double[]{discBin.getInterval().getLeftMargin(), discBin.getInterval().getRightMargin()});
+                names.add(discBin.getBinValue());
+                boolean leftOpen;
+                boolean rightOpen;
+                int closure = discBin.getInterval().xgetClosure().enumValue().intValue();
+                /*
+                 *static final int INT_OPEN_CLOSED = 1;
+                 *static final int INT_OPEN_OPEN = 2;
+                 *static final int INT_CLOSED_OPEN = 3;
+                 *static final int INT_CLOSED_CLOSED = 4;
+                 */
+                switch (closure) {
+                    case 1:
+                        leftOpen = true;
+                        rightOpen = false;
+                        break;
+                    case 2:
+                        leftOpen = true;
+                        rightOpen = true;
+                        break;
+                    case 3:
+                        leftOpen = false;
+                        rightOpen = true;
+                        break;
+                    case 4:
+                        leftOpen = false;
+                        rightOpen = false;
+                        break;
+                    default:
+                        leftOpen = true;
+                        rightOpen = false;
+                        break;
+                }
+                includes.add(new Boolean[]{leftOpen, rightOpen});
+            }
+
+            limits.get(0)[0] = Double.NEGATIVE_INFINITY;
+            limits.set(0, limits.get(0));
+
+            limits.get(limits.size() - 1)[1] = Double.POSITIVE_INFINITY;
+            limits.set(limits.size() - 1, limits.get(limits.size() - 1));
+
+            limitsMap.put(originalColumnName, limits);
+            namingMap.put(originalColumnName, names);
+            includeMap.put(originalColumnName, includes);
+            if (replacedColumnName.matches("(.*)" + originalColumnName + "\\*" + "(.*)")) {
+                appendMap.put(originalColumnName, null);
+            } else {
+                appendMap.put(originalColumnName, replacedColumnName);
+            }
+        }
+        DBBinnerMaps maps = new DBBinnerMaps(limitsMap, includeMap, namingMap, appendMap);
+        return maps;
+    }
+
+    /**
+     * Method filters columns.
+     *
+     * @param includeCols Columns that are included
+     * @param allColumns All columns
+     * @return Columns that are included in allColumns but not in includeCols
+     */
+    public static String[] filter(final String[] includeCols, final String[] allColumns) {
+        final Set<String> allCols = new LinkedHashSet<>(Arrays.asList(allColumns));
+        allCols.removeAll(Arrays.asList(includeCols));
+        return allCols.toArray(new String[0]);
     }
 
 }

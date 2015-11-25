@@ -42,29 +42,28 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.base.node.io.database.binning;
+package org.knime.base.node.io.database.binning.numeric;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
 import org.knime.base.node.io.database.DBNodeModel;
-import org.knime.base.node.preproc.binner.NumericBin;
+import org.knime.base.node.io.database.binning.DBAutoBinner;
+import org.knime.base.node.io.database.binning.DBBinnerMaps;
+import org.knime.base.node.preproc.pmml.binner.NumericBin;
+import org.knime.base.node.preproc.pmml.binner.PMMLBinningTranslator;
+import org.knime.base.node.preproc.pmml.binner.BinnerColumnFactory.Bin;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -76,7 +75,16 @@ import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
+/**
+ * Node Model of Database Numeric-Binner
+ *
+ * @author Lara Gorini
+ */
 final class DBNumericBinnerNodeModel extends DBNodeModel {
 
     /** Key for binned columns. */
@@ -86,13 +94,13 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
     static final String IS_APPENDED = "_is_appended";
 
     /** Selected columns for binning. */
-    private final Map<String, NumericBin[]> m_columnToBins = new HashMap<>();
+    private final Map<String, Bin[]> m_columnToBins = new HashMap<>();
 
     private final Map<String, String> m_columnToAppended = new HashMap<>();
 
     /** Creates a new binner. */
     DBNumericBinnerNodeModel() {
-        super(new PortType[]{DatabasePortObject.TYPE}, new PortType[]{DatabasePortObject.TYPE});
+        super(new PortType[]{DatabasePortObject.TYPE}, new PortType[]{DatabasePortObject.TYPE, PMMLPortObject.TYPE});
     }
 
     /**
@@ -131,7 +139,7 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
             } else {
                 settings.addString(columnKey + IS_APPENDED, null);
             }
-            NumericBin[] bins = m_columnToBins.get(columnKey);
+            Bin[] bins = m_columnToBins.get(columnKey);
             for (int b = 0; b < bins.length; b++) {
                 NodeSettingsWO bin = column.addNodeSettings(bins[b].getBinName() + "_" + b);
                 bins[b].saveToSettings(bin);
@@ -214,9 +222,49 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
     protected final PortObject[] execute(final PortObject[] inData, final ExecutionContext exec)
         throws CanceledExecutionException, Exception {
         exec.setMessage("Retrieving metadata from database");
-        final DatabasePortObject dbObject = (DatabasePortObject)inData[0];
-        final DatabasePortObject outObject = new DatabasePortObject(createDbOutSpec(dbObject.getSpec(), exec));
-        return new PortObject[]{outObject};
+        final DatabasePortObject inDatabasePortObject = (DatabasePortObject)inData[0];
+        final DatabasePortObjectSpec inDatabasePortObjectSpec = inDatabasePortObject.getSpec();
+        DatabaseQueryConnectionSettings connectionSettings =
+            inDatabasePortObject.getConnectionSettings(getCredentialsProvider());
+        DataTableSpec outDataTableSpec =
+            DBAutoBinner.createNewDataTableSpec(inDatabasePortObjectSpec.getDataTableSpec(), m_columnToAppended);
+        PMMLPortObject outPMMLPortObject =
+            createPMMLPortObject(inDatabasePortObjectSpec.getDataTableSpec(), outDataTableSpec);
+        DBBinnerMaps binnerMaps =
+            DBAutoBinner.intoBinnerMaps(outPMMLPortObject, inDatabasePortObjectSpec.getDataTableSpec());
+        DatabasePortObjectSpec outDatabasePortObjectSpec =
+            createDatabasePortObjectSpec(connectionSettings, inDatabasePortObjectSpec, binnerMaps);
+        return new PortObject[]{new DatabasePortObject(outDatabasePortObjectSpec), outPMMLPortObject};
+    }
+
+    private DatabasePortObjectSpec createDatabasePortObjectSpec(DatabaseQueryConnectionSettings connectionSettings,
+        final DatabasePortObjectSpec inDatabasePortObjectSpec, final DBBinnerMaps binnerMaps)
+            throws InvalidSettingsException, SQLException, BadPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, IOException {
+
+        final StatementManipulator statementManipulator = connectionSettings.getUtility().getStatementManipulator();
+        final Connection connection = connectionSettings.createConnection(getCredentialsProvider());
+        final String newQuery = createQuery(connection, connectionSettings.getQuery(), statementManipulator,
+            inDatabasePortObjectSpec.getDataTableSpec(), binnerMaps);
+        connectionSettings = createDBQueryConnection(inDatabasePortObjectSpec, newQuery);
+        final DatabaseQueryConnectionSettings querySettings =
+            new DatabaseQueryConnectionSettings(connectionSettings, newQuery);
+        DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
+        DataTableSpec outDataTableSpec = conn.getDataTableSpec(getCredentialsProvider());
+        DatabasePortObjectSpec outDatabasePortObjectSpec =
+            new DatabasePortObjectSpec(outDataTableSpec, connectionSettings.createConnectionModel());
+        return outDatabasePortObjectSpec;
+    }
+
+    private PMMLPortObject createPMMLPortObject(final DataTableSpec inDataTableSpec,
+        final DataTableSpec outDataTableSpec) {
+        PMMLPortObjectSpec initPMMLSpec = new PMMLPortObjectSpecCreator(outDataTableSpec).createSpec();
+        PMMLPortObject initPMMLPortObject = new PMMLPortObject(initPMMLSpec, null, outDataTableSpec);
+        PMMLBinningTranslator pmmlBinningTranslator =
+            new PMMLBinningTranslator(m_columnToBins, m_columnToAppended, new DerivedFieldMapper(initPMMLPortObject));
+        PMMLPortObject outPMMLPortObject = new PMMLPortObject(initPMMLSpec, initPMMLPortObject, inDataTableSpec);
+        outPMMLPortObject.addGlobalTransformations(pmmlBinningTranslator.exportToTransDict());
+        return outPMMLPortObject;
     }
 
     /**
@@ -224,118 +272,42 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        final DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec)inSpecs[0];
-        boolean suppCase;
-        try {
-            suppCase = dbSpec.getConnectionSettings(getCredentialsProvider()).getUtility().supportsCase();
-        } catch (InvalidSettingsException e) {
-            throw new InvalidSettingsException(e.getMessage());
-        }
-
-        return new PortObjectSpec[]{dbSpec};
-    }
-
-    /**
-     * @param inSpec Spec of the input database object
-     * @param exec The {@link ExecutionMonitor}
-     * @return Spec of the output database object
-     * @throws InvalidSettingsException if the current settings are invalid
-     * @throws CanceledExecutionException if execution is canceled
-     */
-    private DatabasePortObjectSpec createDbOutSpec(final DatabasePortObjectSpec inSpec, final ExecutionMonitor exec)
-        throws InvalidSettingsException, CanceledExecutionException {
-        DatabaseQueryConnectionSettings connectionSettings = inSpec.getConnectionSettings(getCredentialsProvider());
-        final StatementManipulator statementManipulator = connectionSettings.getUtility().getStatementManipulator();
-        try {
-            Connection connection = connectionSettings.createConnection(getCredentialsProvider());
-            String newQuery = createQuery(connection, connectionSettings.getQuery(), statementManipulator,
-                inSpec.getDataTableSpec(), exec);
-            connectionSettings = createDBQueryConnection(inSpec, newQuery);
-            DatabaseQueryConnectionSettings querySettings =
-                new DatabaseQueryConnectionSettings(connectionSettings, newQuery);
-            DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
-            DataTableSpec tableSpec;
-            exec.setMessage("Retrieving result specification.");
-            tableSpec = conn.getDataTableSpec(getCredentialsProvider());
-            return new DatabasePortObjectSpec(tableSpec, connectionSettings.createConnectionModel());
-        } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException
-                | IOException e1) {
-            throw new InvalidSettingsException("Failure during query generation. Error: " + e1.getMessage());
-        }
-    }
-
-    /**
-     * @param connection
-     * @param query
-     * @param statementManipulator
-     * @param dataTableSpec
-     * @param exec
-     * @return
-     */
-    private String createQuery(final Connection connection, final String query,
-        final StatementManipulator statementManipulator, final DataTableSpec dataTableSpec, final ExecutionMonitor exec)
-            throws SQLException {
-
-        Map<String, Double[][]> limitsMap = new LinkedHashMap<>();
-        Map<String, Boolean[][]> includeMap = new LinkedHashMap<>();
-        Map<String, String[]> namingMap = new LinkedHashMap<>();
-        for(Entry<String, NumericBin[]> entry : m_columnToBins.entrySet()) {
-            String column = entry.getKey();
-            int number = m_columnToBins.get(column).length;
-            Double[][] limits = new Double[number][2];
-            Boolean[][] include = new Boolean[number][2];
-            String[] naming = new String[number];
-            NumericBin[] bins = entry.getValue();
-            for(int i=0; i < bins.length; i++) {
-                limits[i][0]=   bins[i].getLeftValue();
-                limits[i][1] =  bins[i].getRightValue();
-                include[i][0] = bins[i].isLeftOpen();
-                include[i][1] = bins[i].isRightOpen();
-                naming[i] = "'" + bins[i].getBinName() + "'";
-                limitsMap.put(column, limits);
-                includeMap.put(column, include);
-                namingMap.put(column, naming);
+        final DatabasePortObjectSpec inDatabasePortObjectSpec = (DatabasePortObjectSpec)inSpecs[0];
+        DatabaseQueryConnectionSettings connectionSettings =
+            inDatabasePortObjectSpec.getConnectionSettings(getCredentialsProvider());
+        boolean suppCase = connectionSettings.getUtility().supportsCase();
+        if (!suppCase) {
+            if (m_columnToBins.keySet().size() > 1) {
+                throw new InvalidSettingsException(
+                    "Database does not support \"CASE\". Please choose only one column.");
             }
         }
+        DataTableSpec outDataTableSpec =
+            DBAutoBinner.createNewDataTableSpec(inDatabasePortObjectSpec.getDataTableSpec(), m_columnToAppended);
+        PMMLPortObject outPMMLPortObject =
+            createPMMLPortObject(inDatabasePortObjectSpec.getDataTableSpec(), outDataTableSpec);
+        DBBinnerMaps binnerMaps =
+            DBAutoBinner.intoBinnerMaps(outPMMLPortObject, inDatabasePortObjectSpec.getDataTableSpec());
+        DatabasePortObjectSpec outDatabasePortObjectSpec = null;
+        try {
+            outDatabasePortObjectSpec =
+                createDatabasePortObjectSpec(connectionSettings, inDatabasePortObjectSpec, binnerMaps);
+        } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException | IOException e) {
+            // TODO Auto-generated catch block
+        }
+        return new PortObjectSpec[]{outDatabasePortObjectSpec, outPMMLPortObject.getSpec()};
+    }
 
-        Map<String, String> appendMap = new LinkedHashMap<>(m_columnToAppended);
-
+    private String createQuery(final Connection connection, final String query,
+        final StatementManipulator statementManipulator, final DataTableSpec dataTableSpec,
+        final DBBinnerMaps binnerMaps) throws SQLException {
         String[] includeCols = m_columnToBins.keySet().toArray(new String[m_columnToBins.keySet().size()]);
         String[] allColumns = dataTableSpec.getColumnNames();
-        String[] excludeCols = filter(includeCols, allColumns);
-        String result = statementManipulator.getBinnerStatement(query, includeCols, excludeCols, limitsMap, includeMap, namingMap, appendMap);
-
-
+        String[] excludeCols = DBAutoBinner.filter(includeCols, allColumns);
+        String result =
+            statementManipulator.getBinnerStatement(query, includeCols, excludeCols, binnerMaps.getLimitsMap(),
+                binnerMaps.getIncludeMap(), binnerMaps.getNamingMap(), binnerMaps.getAppendMap());
         return result;
-    }
-
-    /**
-     * @param includeCols
-     * @param allColumns
-     * @return
-     */
-    private String[] filter(final String[] includeCols, final String[] allColumns) {
-        List<String> excludeColsList = new LinkedList<>();
-        for (int i = 0; i < allColumns.length; i++) {
-            for (int j = 0; j < includeCols.length; j++) {
-                if (allColumns[i].equals(includeCols[j])) {
-                    if (excludeColsList.contains(allColumns[i])) {
-                        excludeColsList.remove(allColumns[i]);
-                        break;
-                    } else {
-                        break;
-                    }
-                } else {
-                    if (!excludeColsList.contains(allColumns[i])) {
-                        excludeColsList.add(allColumns[i]);
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-        String[] excludeCols = excludeColsList.toArray(new String[excludeColsList.size()]);
-        return excludeCols;
     }
 
 }

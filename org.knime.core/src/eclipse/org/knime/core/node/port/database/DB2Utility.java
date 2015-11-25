@@ -49,8 +49,6 @@
 package org.knime.core.node.port.database;
 
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
-import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 
 
 /**
@@ -66,7 +64,7 @@ public class DB2Utility extends DatabaseUtility {
          * Constructor of class {@link DB2StatementManipulator}.
          */
        public DB2StatementManipulator() {
-           super(CasePivotStatementGenerator.getINSTANCE(), CaseBinningStatementGenerator.getINSTANCE());
+           super(true);
        }
 
         /**

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./binner.png" type="Manipulator">
-	<name>Database Auto-Binner</name>
+	<name>Database Numeric-Binner</name>
 	
 	<shortDescription>
 	    Group values of numeric columns categorized string type.
@@ -16,6 +16,9 @@
 	    borders are consistent. In addition, each column is either replaced with
 	    the binned, string-type column, or a new binned, string-type column 
 	    is appended.
+	    <br/>
+	    <b>Please note, that if the underlying database does not support "CASE" statements,
+				binning of only one column is supported.</b>
 		</intro>
 		
 		<option name="Select Column: ">
@@ -29,7 +32,10 @@
         automatically defined to infinitely cover the entire numeric axes in 
         this direction. Furthermore, each bin's left and right value can be 
         included or excluded from this bin by selecting the desired bracket:
-        '[' or ']'.
+        '[' or ']'. 
+        <br/>
+        <b>Please note, that if the underlying database does not support "CASE" statements,
+				binning of only one column is supported.</b>
         
 		</option>
 		<option name="Append new column: ">
@@ -42,5 +48,6 @@
 	<ports>
 		<inPort index="0" name="Input Data">Data to define bins</inPort>
 		<outPort index="0" name="Binned Data">Data with bins defined</outPort>
-	</ports>	
+	    <outPort index="1" name="PMML Model">PMML document containing binning parameters.</outPort>
+	</ports>
 </knimeNode>

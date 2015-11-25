@@ -301,20 +301,20 @@ public class AutoBinnerLearnNodeDialogPane extends NodeDialogPane {
         gbc.gridx++;
         m_numBins = new JSpinner(new SpinnerNumberModel(5, 1, Integer.MAX_VALUE, 1));
         numBinsPanel.add(m_numBins, gbc);
-        gbc.weightx = 1;
-        gbc.gridx++;
-        numBinsPanel.add(new JLabel(), gbc);
-        gbc.weightx = 0;
-        gbc.gridx = 0;
-        gbc.gridy++;
         m_equalityMethod = new JComboBox<EqualityMethod>(EqualityMethod.values());
         if (supportsQuantile) {
+            gbc.weightx = 1;
+            gbc.gridx++;
+            numBinsPanel.add(new JLabel(), gbc);
+            gbc.weightx = 0;
+            gbc.gridx = 0;
+            gbc.gridy++;
             numBinsPanel.add(new JLabel("Equal:"), gbc);
             gbc.gridx++;
             numBinsPanel.add(m_equalityMethod, gbc);
             numBinsPanel.setBorder(BorderFactory.createEmptyBorder(0, 17, 0, 0));
-            p.add(numBinsPanel, c);
         }
+        p.add(numBinsPanel, c);
 
         c.gridy++;
         c.gridx = 0;

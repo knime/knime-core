@@ -1913,14 +1913,37 @@
       </node>
       <node
             category-path="/database/database-manipulation"
-            factory-class="org.knime.base.node.io.database.binning.DBBinnerNodeFactory"
-            id="org.knime.base.node.io.database.binning.DBBinnerNodeFactory">
+            factory-class="org.knime.base.node.io.database.binning.auto.DBAutoBinnerNodeFactory"
+            id="org.knime.base.node.io.database.binning.auto.DBAutoBinnerNodeFactory">
       </node>
       <node
             category-path="/database/database-manipulation"
             deprecated="false"
-            factory-class="org.knime.base.node.io.database.binning.DBNumericBinnerNodeFactory"
-            id="org.knime.base.node.io.database.binning.DBNumericBinnerNodeFactory">
+            factory-class="org.knime.base.node.io.database.binning.numeric.DBNumericBinnerNodeFactory"
+            id="org.knime.base.node.io.database.binning.numeric.DBNumericBinnerNodeFactory">
+      </node>
+      <node
+            category-path="/database/database-manipulation"
+            deprecated="false"
+            factory-class="org.knime.base.node.io.database.binning.apply.DBApplyBinnerNodeFactory"
+            id="org.knime.base.node.io.database.binning.apply.DBApplyBinnerNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/row/row-filter"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory"
+            id="org.knime.base.node.preproc.filter.rowref.RowSplitRefNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-filter"
+            factory-class="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory"
+            id="org.knime.base.node.preproc.filter.columnref.ColumnSplitRefNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/row/row-transform"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.rank.RankNodeFactory"
+            id="org.knime.base.node.preproc.rank.RankNodeFactory">
       </node>
       <node
             category-path="/manipulation/row/row-filter"

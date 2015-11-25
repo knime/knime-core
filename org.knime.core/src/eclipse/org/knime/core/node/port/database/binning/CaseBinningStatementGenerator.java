@@ -48,14 +48,15 @@
  */
 package org.knime.core.node.port.database.binning;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.knime.core.node.port.database.StatementManipulator;
 
 /**
+ * Class to create a SQL binning statement for databases which support "CASE"
  *
- * @author Lara
+ * @author Lara Gorini
  * @since 3.1
  */
 public class CaseBinningStatementGenerator extends DefaultBinningStatementGenerator {
@@ -70,25 +71,28 @@ public class CaseBinningStatementGenerator extends DefaultBinningStatementGenera
     }
 
     @Override
-    public String getBinnerStatement(final StatementManipulator sm, final String query, final String[] includeCols,
-        final String[] excludeCols, final Map<String, Double[][]> limitsMap, final Map<String, Boolean[][]> includeMap,
-        final Map<String, String[]> namingMap, final Map<String, String> appendMap) {
+    public String getBinnerStatement(final StatementManipulator sm, final String query, final String[] binnedCols,
+        final String[] additionalCols, final Map<String, List<Double[]>> limitsMap,
+        final Map<String, List<Boolean[]>> includeMap, final Map<String, List<String>> namingMap,
+        final Map<String, String> appendMap) {
+
+        if (binnedCols.length == 0) {
+            return query;
+        }
 
         StringBuilder selectQuery = new StringBuilder();
         selectQuery.append("SELECT ");
-        for (int i = 0; i < excludeCols.length; i++) {
-            selectQuery.append(sm.quoteIdentifier(excludeCols[i]) + ", ");
+        for (int i = 0; i < additionalCols.length; i++) {
+            selectQuery.append(sm.quoteIdentifier(additionalCols[i]) + ", ");
         }
 
         StringBuilder caseQuery = new StringBuilder();
         int counter = 0;
 
-        for (Entry<String, Double[][]> entry : limitsMap.entrySet()) {
-
-            String selColumn = entry.getKey();
-            Double[][] limits = entry.getValue();
-            Boolean[][] include = includeMap.get(selColumn);
-            String[] naming = namingMap.get(selColumn);
+        for (String selColumn : limitsMap.keySet()) {
+            List<Double[]> limits = limitsMap.get(selColumn);
+            List<Boolean[]> include = includeMap.get(selColumn);
+            List<String> naming = namingMap.get(selColumn);
             String appendColumn = appendMap.get(selColumn);
 
             boolean append = appendColumn != null;
@@ -101,30 +105,31 @@ public class CaseBinningStatementGenerator extends DefaultBinningStatementGenera
 
             String leftBorder;
             String rightBorder;
-            for (int i = 0; i < limits.length; i++) {
-                if (include[i][0]) {
+            for (int i = 0; i < limits.size(); i++) {
+                if (include.get(i)[0]) {
                     leftBorder = ">=";
                 } else {
                     leftBorder = ">";
                 }
-                if (include[i][1]) {
+                if (include.get(i)[1]) {
                     rightBorder = "<=";
                 } else {
                     rightBorder = "<";
                 }
 
-                if (limits[0][0] == Double.NEGATIVE_INFINITY && limits[0][1] == Double.POSITIVE_INFINITY) { //(inf, inf)
+                if (limits.get(0)[0] == Double.NEGATIVE_INFINITY && limits.get(0)[1] == Double.POSITIVE_INFINITY) { //(inf, inf)
                     caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + " = " + sm.quoteIdentifier(selColumn)
-                        + " THEN " + naming[0]);
-                } else if (limits[i][0] == Double.NEGATIVE_INFINITY) {//(inf, x] or (inf, x)
-                    caseQuery.append(
-                        " WHEN " + sm.quoteIdentifier(selColumn) + rightBorder + limits[i][1] + " THEN " + naming[i]);
-                } else if (limits[i][1] == Double.POSITIVE_INFINITY) { //[x, inf) or (x, inf)
-                    caseQuery.append(
-                        " WHEN " + sm.quoteIdentifier(selColumn) + leftBorder + limits[i][0] + " THEN " + naming[i]);
+                        + " THEN '" + naming.get(0) + "'");
+                } else if (limits.get(i)[0] == Double.NEGATIVE_INFINITY) {//(inf, x] or (inf, x)
+                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + rightBorder + limits.get(i)[1]
+                        + " THEN '" + naming.get(i) + "'");
+                } else if (limits.get(i)[1] == Double.POSITIVE_INFINITY) { //[x, inf) or (x, inf)
+                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + leftBorder + limits.get(i)[0]
+                        + " THEN '" + naming.get(i) + "'");
                 } else {
-                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + leftBorder + limits[i][0] + " AND "
-                        + sm.quoteIdentifier(selColumn) + rightBorder + limits[i][1] + " THEN " + naming[i]);
+                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + leftBorder + limits.get(i)[0] + " AND "
+                        + sm.quoteIdentifier(selColumn) + rightBorder + limits.get(i)[1] + " THEN '" + naming.get(i)
+                        + "'");
                 }
             }
 

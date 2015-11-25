@@ -66,8 +66,6 @@ import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggreg
 import org.knime.core.node.port.database.aggregation.function.SumDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
-import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
-import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 
 /**
  * Database utility for MySQL.
@@ -83,7 +81,7 @@ public class MySQLUtility extends DatabaseUtility {
          * Constructor of class {@link MySQLStatementManipulator}.
          */
        public MySQLStatementManipulator () {
-           super(CasePivotStatementGenerator.getINSTANCE(), CaseBinningStatementGenerator.getINSTANCE());
+           super(true);
        }
 
 
@@ -198,6 +196,14 @@ public class MySQLUtility extends DatabaseUtility {
 
     @Override
     public boolean supportsRandomSampling() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean supportsCase() {
         return true;
     }
 }

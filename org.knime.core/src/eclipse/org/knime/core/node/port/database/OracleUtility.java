@@ -48,8 +48,6 @@
 package org.knime.core.node.port.database;
 
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
-import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 
 
 /**
@@ -66,7 +64,7 @@ public class OracleUtility extends DatabaseUtility {
          * Constructor of class {@link OracleStatementManipulator}.
          */
        public OracleStatementManipulator() {
-           super(CasePivotStatementGenerator.getINSTANCE(), CaseBinningStatementGenerator.getINSTANCE());
+           super(true);
        }
 
 
@@ -151,6 +149,14 @@ public class OracleUtility extends DatabaseUtility {
 
     @Override
     public boolean supportsRandomSampling() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean supportsCase() {
         return true;
     }
 }

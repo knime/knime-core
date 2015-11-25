@@ -48,23 +48,20 @@
  */
 package org.knime.core.node.port.database.binning;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.knime.core.node.port.database.StatementManipulator;
 
 /**
+ * Class to create a SQL binning statement with basic SQL syntax.
  *
- * @author Lara
+ * @author Lara Gorini
  * @since 3.1
  */
 public class DefaultBinningStatementGenerator implements BinningStatamentGenerator {
 
     private static final DefaultBinningStatementGenerator INSTANCE = new DefaultBinningStatementGenerator();
-
-    /**
-     * // * Constructor of DefaultPivotStatementGenerator //
-     */
 
     /**
      * @return the iNSTANCE
@@ -77,84 +74,85 @@ public class DefaultBinningStatementGenerator implements BinningStatamentGenerat
      * {@inheritDoc}
      */
     @Override
-    public String getBinnerStatement(final StatementManipulator sm, final String query, final String[] includeCols,
-        final String[] excludeCols, final Map<String, Double[][]> limitsMap, final Map<String, Boolean[][]> includeMap,
-        final Map<String, String[]> namingMap, final Map<String, String> appendMap) {
+    public String getBinnerStatement(final StatementManipulator sm, final String query, final String[] binnedCols,
+        final String[] additionalCols, final Map<String, List<Double[]>> limitsMap,
+        final Map<String, List<Boolean[]>> includeMap, final Map<String, List<String>> namingMap,
+        final Map<String, String> appendMap) {
 
-        // with Default Statement only one column can be binned!!
-        Double[][] limits = null;
-        Boolean[][] include = null;
-        String selColumn = null;
-        String[] naming = null;
-        String append = null;
-
-        for (Entry<String, Double[][]> entry : limitsMap.entrySet()) {
-            selColumn = entry.getKey();
-            limits = entry.getValue();
-            include = includeMap.get(selColumn);
-            naming = namingMap.get(selColumn);
-            append = appendMap.get(selColumn);
-        }
-
-        StringBuilder selectQuery = new StringBuilder();
-        selectQuery.append("SELECT ");
-        for (int j = 0; j < excludeCols.length; j++) {
-            selectQuery.append(sm.quoteIdentifier(excludeCols[j]) + ", ");
-        }
-
-        if (append != null) {
-            for (int i = 0; i < includeCols.length; i++) {
-                selectQuery.append(sm.quoteIdentifier(includeCols[i]) + ", ");
-            }
-        } else {
-            append = selColumn;
+        if (binnedCols.length == 0) {
+            return query;
         }
 
         StringBuilder resultQuery = new StringBuilder();
 
-        if (limits[0][0] == Double.NEGATIVE_INFINITY && limits[0][1] == Double.POSITIVE_INFINITY) { //(inf, inf)
-            selectQuery.append(naming[0] + " " + sm.quoteIdentifier(append) + " FROM (" + query + ") T WHERE "
-                + sm.quoteIdentifier(selColumn) + "=" + sm.quoteIdentifier(selColumn));
-            resultQuery.append(selectQuery);
-            return resultQuery.toString();
-        }
+        // with Default Statement only one column can be binned!!
+        for (String selColumn : limitsMap.keySet()) {
+            List<Double[]> limits = null;
+            List<Boolean[]> include = null;
+            List<String> naming = null;
+            String append = null;
 
-        for (int i = 0; i < limits.length; i++) {
+            limits = limitsMap.get(selColumn);
+            include = includeMap.get(selColumn);
+            naming = namingMap.get(selColumn);
+            append = appendMap.get(selColumn);
 
-            String leftBorder;
-            String rightBorder;
-            if (include[i][0]) {
-                leftBorder = ">=";
+            StringBuilder selectQuery = new StringBuilder();
+            selectQuery.append("SELECT ");
+            for (int j = 0; j < additionalCols.length; j++) {
+                selectQuery.append(sm.quoteIdentifier(additionalCols[j]) + ", ");
+            }
+
+            if (append != null) {
+                for (int i = 0; i < binnedCols.length; i++) {
+                    selectQuery.append(sm.quoteIdentifier(binnedCols[i]) + ", ");
+                }
             } else {
-                leftBorder = ">";
+                append = selColumn;
             }
-            if (include[i][1]) {
-                rightBorder = "<=";
 
-            } else {
-                rightBorder = "<";
+            if (limits.get(0)[0] == Double.NEGATIVE_INFINITY && limits.get(0)[1] == Double.POSITIVE_INFINITY) { //(inf, inf)
+                selectQuery.append("'" + naming.get(0) + "' " + sm.quoteIdentifier(append) + " FROM (" + query
+                    + ") T WHERE " + sm.quoteIdentifier(selColumn) + "=" + sm.quoteIdentifier(selColumn));
+                resultQuery.append(selectQuery);
+                return resultQuery.toString();
             }
-            StringBuilder whenQuery = new StringBuilder();
 
-            if (limits[i][0] == Double.NEGATIVE_INFINITY) {//(inf, x] or (inf, x)
-                whenQuery.append(naming[i] + " " + sm.quoteIdentifier(append) + " FROM (" + query + ") T WHERE "
-                    + sm.quoteIdentifier(selColumn) + rightBorder + limits[i][1]);
-            } else if (limits[i][1] == Double.POSITIVE_INFINITY) { //[x, inf) or (x, inf)
-                whenQuery.append(naming[i] + " " + sm.quoteIdentifier(append) + " FROM (" + query + ") T WHERE "
-                    + sm.quoteIdentifier(selColumn) + leftBorder + limits[i][0]);
-            } else {
-                whenQuery.append(naming[i] + " " + sm.quoteIdentifier(append) + " FROM (" + query + ") T WHERE "
-                    + sm.quoteIdentifier(selColumn) + leftBorder + limits[i][0] + " AND "
-                    + sm.quoteIdentifier(selColumn) + rightBorder + limits[i][1]);
+            for (int i = 0; i < limits.size(); i++) {
+
+                String leftBorder;
+                String rightBorder;
+                if (include.get(i)[0]) {
+                    leftBorder = ">=";
+                } else {
+                    leftBorder = ">";
+                }
+                if (include.get(i)[1]) {
+                    rightBorder = "<=";
+                } else {
+                    rightBorder = "<";
+                }
+                StringBuilder whenQuery = new StringBuilder();
+
+                if (limits.get(i)[0] == Double.NEGATIVE_INFINITY) {//(inf, x] or (inf, x)
+                    whenQuery.append("'" + naming.get(i) + "' " + sm.quoteIdentifier(append) + " FROM (" + query
+                        + ") T WHERE " + sm.quoteIdentifier(selColumn) + rightBorder + limits.get(i)[1]);
+                } else if (limits.get(i)[1] == Double.POSITIVE_INFINITY) { //[x, inf) or (x, inf)
+                    whenQuery.append("'" + naming.get(i) + "' " + sm.quoteIdentifier(append) + " FROM (" + query
+                        + ") T WHERE " + sm.quoteIdentifier(selColumn) + leftBorder + limits.get(i)[0]);
+                } else {
+                    whenQuery.append("'" + naming.get(i) + "' " + sm.quoteIdentifier(append) + " FROM (" + query
+                        + ") T WHERE " + sm.quoteIdentifier(selColumn) + leftBorder + limits.get(i)[0] + " AND "
+                        + sm.quoteIdentifier(selColumn) + rightBorder + limits.get(i)[1]);
+                }
+                if (i < limits.size() - 1) {
+                    whenQuery.append(" UNION ALL ");
+                }
+                resultQuery.append(selectQuery);
+                resultQuery.append(whenQuery);
             }
-            if (i < limits.length - 1) {
-                whenQuery.append(" UNION ALL ");
-            }
-            resultQuery.append(selectQuery);
-            resultQuery.append(whenQuery);
         }
         return resultQuery.toString();
-
     }
 
 }

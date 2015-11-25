@@ -63,6 +63,14 @@ import org.knime.core.node.port.database.aggregation.function.sqlite.TotalDBAggr
  */
 public class SQLiteUtility extends DatabaseUtility {
     private static class SQLiteStatementManipulator extends StatementManipulator {
+
+        /**
+         * Constructor.
+         */
+        public SQLiteStatementManipulator() {
+            super(false);
+        }
+
         /**
          * {@inheritDoc}
          */

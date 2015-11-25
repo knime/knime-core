@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,38 +40,31 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   Sep 30, 2015 (Lara): created
+ * ------------------------------------------------------------------------
  */
-package org.knime.core.node.port.database.binning;
+package org.knime.base.node.io.database.binning.numeric;
 
-import java.util.List;
-import java.util.Map;
-
-import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.base.node.preproc.pmml.binner.BinnerNodeDialogPane;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabasePortObjectSpec;
 
 /**
  *
  * @author Lara Gorini
- * @since 3.1
  */
-public interface BinningStatamentGenerator {
+public class DBNumericBinnerNodeDialog extends BinnerNodeDialogPane {
 
-    /**
-     * @param statementManipulator The {@link StatementManipulator} to use
-     * @param query The input query
-     * @param binnedCols Names of columns that are binned
-     * @param additionalCols Names of columns that are not binned but should be selected
-     * @param limitsMap Map containing limits of bins as values
-     * @param includeMap Map containing boolean which indicates if edge is open (true) or closed (false)
-     * @param namingMap Map containing names of bins as values
-     * @param appendMap Map containing names of columns that should be appended as values (can be null).
-     * @return a SQL statement for binning
-     */
-    public String getBinnerStatement(StatementManipulator statementManipulator, String query, String[] binnedCols,
-        String[] additionalCols, Map<String, List<Double[]>> limitsMap, Map<String, List<Boolean[]>> includeMap,
-        Map<String, List<String>> namingMap, Map<String, String> appendMap);
-
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+        throws NotConfigurableException {
+        DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec)specs[0];
+        DataTableSpec spec = null;
+        if (dbSpec != null) {
+            spec = dbSpec.getDataTableSpec();
+        }
+        super.loadSettingsFrom(settings, new PortObjectSpec[]{spec});
+    }
 }

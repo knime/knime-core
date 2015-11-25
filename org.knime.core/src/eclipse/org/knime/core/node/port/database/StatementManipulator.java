@@ -59,7 +59,9 @@ import java.util.regex.Pattern;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.binning.BinningStatamentGenerator;
+import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
 import org.knime.core.node.port.database.binning.DefaultBinningStatementGenerator;
+import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
 import org.knime.core.node.port.database.pivoting.DefaultPivotStatementGenerator;
 import org.knime.core.node.port.database.pivoting.PivotColumnNameGenerator;
 import org.knime.core.node.port.database.pivoting.PivotStatementGenerator;
@@ -86,13 +88,25 @@ public class StatementManipulator {
     }
 
     /**
-     * @param pivot
-     * @param binning
+     * @param supportsCase <code>true</code> if "CASE" statements can be used in SQL statements
+     * @since 3.1
+     */
+    public StatementManipulator(final boolean supportsCase) {
+        this(supportsCase ? CasePivotStatementGenerator.getINSTANCE() : DefaultPivotStatementGenerator.getINSTANCE(),
+            supportsCase ? CaseBinningStatementGenerator.getINSTANCE() : DefaultBinningStatementGenerator.getINSTANCE());
+    }
+
+    /**
+     * @param pivot {@link PivotStatementGenerator} implementation
+     * @param binning {@link BinningStatamentGenerator} implementation
      * @since 3.1
      */
     protected StatementManipulator(final PivotStatementGenerator pivot, final BinningStatamentGenerator binning) {
         if (pivot == null) {
             throw new IllegalArgumentException("PivotStatementGenerator must not be null");
+        }
+        if (binning == null) {
+            throw new IllegalArgumentException("BinningStatementGenerator must not be null");
         }
         m_pivot = pivot;
         m_binning = binning;
@@ -293,19 +307,20 @@ public class StatementManipulator {
 
 
     /**
-     * @param query
-     * @param includeCols
-     * @param excludeCols
-     * @param columnNames
-     * @param limitsMap
-     * @param includeMap
-     * @param appendMap
-     * @param namingMap
-     * @return
+     * Returns a SQL statement for binning
+     *
+     * @param query The input query
+     * @param includeCols Names of columns that are binned
+     * @param excludeCols Names of columns that are not binned
+     * @param limitsMap Map containing limits of bins as values
+     * @param includeMap Map containing boolean which indicates if edge is open (true) or closed (false)
+     * @param namingMap Map containing names of bins as values
+     * @param appendMap Map containing names of columns that should be appended as values (can be null).
+     * @return a SQL statement for binning
      * @since 3.1
      */
-    public String getBinnerStatement(final String query, final String[] includeCols, final String[] excludeCols, final Map<String, Double[][]> limitsMap,
-        final Map<String, Boolean[][]> includeMap, final Map<String, String[]> namingMap, final Map<String, String> appendMap) {
-        return m_binning.getBinnerStatement(this, query, includeCols, excludeCols, limitsMap, includeMap, namingMap, appendMap);
+    public String getBinnerStatement(final String query, final String[] includeCols, final String[] excludeCols, final Map<String, List<Double[]>> limitsMap,
+        final Map<String, List<Boolean[]>> includeMap, final Map<String, List<String>> namingMap, final Map<String, String> appendMap) {
+        return m_binning.getBinnerStatement(this, query, includeCols, excludeCols, limitsMap, includeMap , namingMap, appendMap);
     }
 }
