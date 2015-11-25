@@ -610,6 +610,15 @@ public class StyledTextEditor extends CellEditor {
                 m_styledText.setMargins(annotationBorderSize, annotationBorderSize, annotationBorderSize,
                     annotationBorderSize);
             }
+            // for workflow annotations set the default font to the size stored in the annotation
+            Font defFont;
+            int defFontSize = wa.getDefaultFontSize();
+            if (defFontSize < 0) {
+                defFont = AnnotationEditPart.getWorkflowAnnotationDefaultFont(); // uses the size from the pref page
+            } else {
+                defFont = AnnotationEditPart.getWorkflowAnnotationDefaultFont(defFontSize);
+            }
+            setDefaultFont(defFont);
         }
         m_styledText.setAlignment(alignment);
         m_styledText.setText(text);

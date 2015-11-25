@@ -79,6 +79,10 @@ public class AnnotationData implements Cloneable {
      * @since 3.0 */
     public static final int VERSION_20151012 = 20151012;
 
+    /** Released with 3.1: store default font size in annotation.
+     * @since 3.1 */
+    public static final int VERSION_20151123 = 20151123;
+
     /**  */
     private String m_text = "";
 
@@ -106,7 +110,9 @@ public class AnnotationData implements Cloneable {
 
     private int m_borderColor = 0;
 
-    private int m_version = VERSION_20151012;
+    private int m_defaultFontSize = -1;
+
+    private int m_version = VERSION_20151123;
 
     /** @return the text */
     public final String getText() {
@@ -248,6 +254,25 @@ public class AnnotationData implements Cloneable {
         setHeight(height);
     }
 
+    /**
+     * Set the default font size for this annotation.
+     * @param size new default size
+     * @since 3.1
+     */
+    public final void setDefaultFontSize(final int size) {
+        m_defaultFontSize = size;
+    }
+
+    /**
+     * Return the default font size for this annotation, or -1 if size from pref page should be used. (For old versions
+     * only.)
+     * @return the default font size for this annotation, or -1 if size from pref page should be used
+     * @since 3.1
+     */
+    public final int getDefaultFontSize() {
+        return m_defaultFontSize;
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
@@ -301,6 +326,9 @@ public class AnnotationData implements Cloneable {
         if (!ConvenienceMethods.areEqual(m_text, other.m_text)) {
             return false;
         }
+        if (m_defaultFontSize != other.m_defaultFontSize) {
+            return false;
+        }
         return true;
     }
 
@@ -317,6 +345,7 @@ public class AnnotationData implements Cloneable {
         result ^= m_y;
         result ^= m_borderColor;
         result ^= m_borderSize;
+        result ^= m_defaultFontSize;
         result ^= Arrays.hashCode(m_styleRanges);
         if (m_text != null) {
             result ^= m_text.hashCode();
@@ -341,6 +370,7 @@ public class AnnotationData implements Cloneable {
         setAlignment(otherData.getAlignment());
         setBorderSize(otherData.getBorderSize());
         setBorderColor(otherData.getBorderColor());
+        setDefaultFontSize(otherData.getDefaultFontSize());
         m_version = otherData.getVersion();
         StyleRange[] otherStyles = otherData.getStyleRanges();
         StyleRange[] myStyles = cloneStyleRanges(otherStyles);
@@ -383,6 +413,7 @@ public class AnnotationData implements Cloneable {
         config.addString("alignment", getAlignment().toString());
         config.addInt("borderSize", m_borderSize);
         config.addInt("borderColor", m_borderColor);
+        config.addInt("defFontSize", m_defaultFontSize);
         config.addInt("annotation-version", m_version);
         NodeSettingsWO styleConfigs = config.addNodeSettings("styles");
         int i = 0;
@@ -406,6 +437,7 @@ public class AnnotationData implements Cloneable {
         int height = config.getInt("height");
         int borderSize = config.getInt("borderSize", 0); // default to 0 for backward compatibility
         int borderColor = config.getInt("borderColor", 0); // default for backward compatibility
+        int defFontSize = config.getInt("defFontSize", -1); // default for backward compatibility
         m_version = config.getInt("annotation-version", VERSION_OLD); // added in 3.0
         TextAlignment alignment = TextAlignment.LEFT;
         if (loadVersion.ordinal() >= FileWorkflowPersistor.LoadVersion.V250.ordinal()) {
@@ -421,6 +453,7 @@ public class AnnotationData implements Cloneable {
         setAlignment(alignment);
         setBorderSize(borderSize);
         setBorderColor(borderColor);
+        setDefaultFontSize(defFontSize);
         NodeSettingsRO styleConfigs = config.getNodeSettings("styles");
         StyleRange[] styles = new StyleRange[styleConfigs.getChildCount()];
         int i = 0;

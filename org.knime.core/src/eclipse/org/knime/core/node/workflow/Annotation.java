@@ -133,6 +133,15 @@ public abstract class Annotation implements UIInformation {
     }
 
     /**
+     * @return the default font size for this annotation, or -1 if size from pref page should be used (for old
+     * annotations only)
+     * @since 3.1
+     */
+    public final int getDefaultFontSize() {
+        return m_data.getDefaultFontSize();
+    }
+
+    /**
      * @return The version to guarantee backward compatible look.
      * @see org.knime.core.node.workflow.AnnotationData#getVersion()
      * @since 3.0

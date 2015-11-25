@@ -144,8 +144,14 @@ public class NodeAnnotationFigure extends Figure {
             defaultFont = AnnotationEditPart.getNodeAnnotationDefaultFont();
         } else if (annotation.getVersion() < AnnotationData.VERSION_20151012) {
             defaultFont = FontStore.INSTANCE.getSystemDefaultFont();
-        } else {
+        } else if (annotation.getVersion() < AnnotationData.VERSION_20151123) {
             defaultFont = AnnotationEditPart.getWorkflowAnnotationDefaultFont();
+        } else {
+            if (annotation.getDefaultFontSize() < 0) {
+                defaultFont = AnnotationEditPart.getWorkflowAnnotationDefaultFont();
+            } else {
+                defaultFont = AnnotationEditPart.getWorkflowAnnotationDefaultFont(annotation.getDefaultFontSize());
+            }
         }
         for (AnnotationData.StyleRange r : sr) {
             // create text from last range to beginning of this range

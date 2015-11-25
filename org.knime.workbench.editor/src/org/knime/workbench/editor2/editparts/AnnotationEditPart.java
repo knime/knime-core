@@ -244,6 +244,17 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
+     * If no font is set, this one should be used for workflow annotations.
+     * @param size size
+     * @return the default font for workflow annotation
+     */
+    public static Font getWorkflowAnnotationDefaultFont(final int size) {
+        // its the default font.
+        return FontStore.INSTANCE.getDefaultFont(size);
+    }
+
+
+    /**
     * If no font is set, this one should be used for node annotations.
     * page for node labels.
     *
@@ -405,6 +416,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         result.setBgColor(colorToRGBint(s.getBackground()));
         result.setBorderColor(AnnotationEditPart.colorToRGBint(s.getMarginColor()));
         result.setBorderSize(s.getRightMargin()); // annotations have the same margin top/left/right/bottom.
+        result.setDefaultFontSize(s.getFont().getFontData()[0].getHeight());
         TextAlignment alignment;
         switch (s.getAlignment()) {
         case SWT.RIGHT:
