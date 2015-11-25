@@ -78,6 +78,15 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.util.MutableDouble;
 import org.knime.core.util.MutableInteger;
 
@@ -216,30 +225,72 @@ public class KnnNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        int classColIndex =
-                inData[0].getDataTableSpec().findColumnIndex(
-                        m_settings.classColumn());
+        ColumnRearranger c = createRearranger(inData[0], inData[1].getDataTableSpec(), exec, inData[1].size());
+        BufferedDataTable out =
+                exec.createColumnRearrangeTable(inData[1], c,
+                        exec.createSubProgress(0.6));
+        return new BufferedDataTable[]{out};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                 BufferedDataTable trainData = (BufferedDataTable) ((PortObjectInput) inputs[0]).getPortObject();
+                 ColumnRearranger c = createRearranger(trainData, (DataTableSpec) inSpecs[1], exec, -1);
+                 StreamableFunction func = c.createStreamableFunction(1, 0);
+                 func.runFinal(inputs, outputs, exec);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE, InputPortRole.NONDISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.NONDISTRIBUTED};
+    }
+
+    /*
+     * Creates a column rearranger. NOTE: This call possibly involves heavier calculations since the kd-tree is determined here based on the training data.
+     * @param numRowsTable2 - can be -1 if can't be determined (streaming)
+     */
+    private ColumnRearranger createRearranger(final BufferedDataTable trainData, final DataTableSpec inSpec2,
+        final ExecutionContext exec, final long numRowsTable2)
+            throws CanceledExecutionException, InvalidSettingsException {
+        int classColIndex = trainData.getDataTableSpec().findColumnIndex(m_settings.classColumn());
         if (classColIndex == -1) {
             throw new InvalidSettingsException("Invalid class column chosen.");
         }
 
         List<Integer> featureColumns = new ArrayList<Integer>();
         Map<Integer, Integer> firstToSecond = new HashMap<Integer, Integer>();
-        checkInputTables(new DataTableSpec[]{inData[0].getDataTableSpec(),
-                inData[1].getDataTableSpec()}, featureColumns, firstToSecond);
+        checkInputTables(new DataTableSpec[]{trainData.getDataTableSpec(), inSpec2}, featureColumns, firstToSecond);
 
-        KDTreeBuilder<DataCell> treeBuilder =
-                new KDTreeBuilder<DataCell>(featureColumns.size());
+        KDTreeBuilder<DataCell> treeBuilder = new KDTreeBuilder<DataCell>(featureColumns.size());
         int count = 0;
-        for (DataRow currentRow : inData[0]) {
+        for (DataRow currentRow : trainData) {
             exec.checkCanceled();
-            exec.setProgress(0.1 * count * inData[0].size(),
-                    "Reading row " + currentRow.getKey());
+            exec.setProgress(0.1 * count * trainData.size(), "Reading row " + currentRow.getKey());
 
             double[] features = createFeatureVector(currentRow, featureColumns);
             if (features == null) {
-                setWarningMessage("Input table contains missing values, the "
-                        + "affected rows are ignored.");
+                setWarningMessage("Input table contains missing values, the " + "affected rows are ignored.");
             } else {
                 DataCell thisClassCell = currentRow.getCell(classColIndex);
                 // and finally add data
@@ -248,8 +299,7 @@ public class KnnNodeModel extends NodeModel {
                 // compute the majority class for breaking possible ties later
                 MutableInteger t = m_classDistribution.get(thisClassCell);
                 if (t == null) {
-                    m_classDistribution.put(thisClassCell,
-                            new MutableInteger(1));
+                    m_classDistribution.put(thisClassCell, new MutableInteger(1));
                 } else {
                     t.inc();
                 }
@@ -257,30 +307,21 @@ public class KnnNodeModel extends NodeModel {
         }
 
         // and now use it to classify the test data...
-        DataTableSpec inSpec = inData[1].getDataTableSpec();
-        DataColumnSpec classColumnSpec =
-                inData[0].getDataTableSpec().getColumnSpec(classColIndex);
+        DataColumnSpec classColumnSpec = trainData.getDataTableSpec().getColumnSpec(classColIndex);
 
         exec.setMessage("Building kd-tree");
-        KDTree<DataCell> tree =
-                treeBuilder.buildTree(exec.createSubProgress(0.3));
+        KDTree<DataCell> tree = treeBuilder.buildTree(exec.createSubProgress(0.3));
 
         if (tree.size() < m_settings.k()) {
-            setWarningMessage("There are only " + tree.size()
-                    + " patterns in the input table, but " + m_settings.k()
-                    + " nearest neighbours were requested for classification."
-                    + " The prediction will be the majority class for all"
-                    + " input patterns.");
+            setWarningMessage("There are only " + tree.size() + " patterns in the input table, but " + m_settings.k()
+                + " nearest neighbours were requested for classification."
+                + " The prediction will be the majority class for all" + " input patterns.");
         }
 
         exec.setMessage("Classifying");
         ColumnRearranger c =
-                createRearranger(inSpec, classColumnSpec, featureColumns,
-                        firstToSecond, tree, inData[1].size());
-        BufferedDataTable out =
-                exec.createColumnRearrangeTable(inData[1], c,
-                        exec.createSubProgress(0.6));
-        return new BufferedDataTable[]{out};
+            createRearranger(inSpec2, classColumnSpec, featureColumns, firstToSecond, tree, numRowsTable2);
+        return c;
     }
 
     /**
@@ -337,6 +378,9 @@ public class KnnNodeModel extends NodeModel {
         // nothing to do
     }
 
+    /*
+     * @param maxRows - can be -1 if can't be determined (streaming)
+     */
     private ColumnRearranger createRearranger(final DataTableSpec in,
             final DataColumnSpec classColumnSpec,
             final List<Integer> featureColumns,
@@ -385,8 +429,11 @@ public class KnnNodeModel extends NodeModel {
             @Override
             public void setProgress(final long curRowNr, final long rowCount,
                     final RowKey lastKey, final ExecutionMonitor exec) {
-                exec.setProgress(curRowNr / maxRows, "Classifying row "
-                        + lastKey);
+                if (maxRows > 0) {
+                    exec.setProgress(curRowNr / maxRows, "Classifying row " + lastKey);
+                } else {
+                    exec.setProgress("Classifying row " + lastKey);
+                }
             }
 
             @Override
