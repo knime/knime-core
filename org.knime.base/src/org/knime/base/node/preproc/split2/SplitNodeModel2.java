@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
@@ -62,6 +63,16 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
@@ -126,6 +137,63 @@ public class SplitNodeModel2 extends NodeModel {
         outs[0] = exec.createColumnRearrangeTable(in, a[0], exec);
         outs[1] = exec.createColumnRearrangeTable(in, a[1], exec);
         return outs;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        if (m_conf == null) {
+            m_conf = createColFilterConf();
+        }
+        final DataTableSpec inSpec = (DataTableSpec) inSpecs[0];
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                ColumnRearranger[] a = createColumnRearrangers(inSpec);
+                StreamableFunction func1 = a[0].createStreamableFunction(0, 0);
+                StreamableFunction func2 = a[1].createStreamableFunction(0, 1);
+
+                //use both functions to actually do it
+                RowInput rowInput = ((RowInput)inputs[0]);
+                RowOutput rowOutput1 = ((RowOutput)outputs[0]);
+                RowOutput rowOutput2 = ((RowOutput)outputs[1]);
+                func1.init(exec);
+                func2.init(exec);
+                DataRow inputRow;
+                long index = 0;
+                while ((inputRow = rowInput.poll()) != null) {
+                    rowOutput1.push(func1.compute(inputRow));
+                    rowOutput2.push(func2.compute(inputRow));
+                    exec.setMessage(String.format("Row %d (\"%s\"))",
+                            ++index, inputRow.getKey()));
+                }
+                rowInput.close();
+                rowOutput1.close();
+                rowOutput2.close();
+                func1.finish(true);
+                func2.finish(true);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED, OutputPortRole.DISTRIBUTED};
     }
 
     /** {@inheritDoc} */
