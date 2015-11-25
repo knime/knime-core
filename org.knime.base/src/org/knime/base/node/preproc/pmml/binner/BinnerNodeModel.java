@@ -70,6 +70,14 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortObjectOutput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  * Bins numeric columns into intervals which are then returned as string-type
@@ -142,18 +150,63 @@ public class BinnerNodeModel extends NodeModel {
 
         // handle the optional PMML in port (can be null)
         PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inPorts[1] : null;
-        PMMLBinningTranslator trans = new PMMLBinningTranslator(m_columnToBins,
-                m_columnToAppended,
-                new DerivedFieldMapper(inPMMLPort));
-
-        PMMLPortObjectSpecCreator pmmlSpecCreator
-                = new PMMLPortObjectSpecCreator(inPMMLPort,
-                        buf.getDataTableSpec());
-        PMMLPortObject outPMMLPort = new PMMLPortObject(
-                pmmlSpecCreator.createSpec(), inPMMLPort, spec);
-        outPMMLPort.addGlobalTransformations(trans.exportToTransDict());
+        PMMLPortObject outPMMLPort = createPMMLModel(inPMMLPort, buf.getDataTableSpec());
 
         return new PortObject[]{buf, outPMMLPort};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                ColumnRearranger colre = createColumnRearranger((DataTableSpec)inSpecs[0]);
+                colre.createStreamableFunction(0, 0).runFinal(inputs, outputs, exec);
+
+                if (m_pmmlOutEnabled) {
+                    // handle the optional PMML in port (can be null)
+                    PMMLPortObject inPMMLPort =
+                        m_pmmlInEnabled ? (PMMLPortObject)((PortObjectInput)inputs[1]).getPortObject() : null;
+                    PMMLPortObject outPMMLPort = createPMMLModel(inPMMLPort, colre.createSpec());
+                    ((PortObjectOutput) outputs[1]).setPortObject(outPMMLPort);
+                }
+            }
+        };
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        InputPortRole[] roles = new InputPortRole[getNrInPorts()];
+        roles[0] = InputPortRole.DISTRIBUTED_STREAMABLE;
+        if(m_pmmlOutEnabled) {
+            roles[0] = InputPortRole.NONDISTRIBUTED_STREAMABLE;
+        }
+        if(m_pmmlInEnabled) {
+            roles[1] = InputPortRole.NONDISTRIBUTED_NONSTREAMABLE;
+        }
+        return roles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        OutputPortRole[] roles = new OutputPortRole[getNrOutPorts()];
+        roles[0] = OutputPortRole.DISTRIBUTED;
+        if(m_pmmlOutEnabled) {
+            roles[1] = OutputPortRole.NONDISTRIBUTED;
+        }
+        return roles;
     }
 
     /**
@@ -234,6 +287,19 @@ public class BinnerNodeModel extends NodeModel {
             }
         }
         return colreg;
+    }
+
+    /**
+     * Creates the pmml port object.
+     * @param the in-port pmml object. Can be <code>null</code> (optional in-port)
+     */
+    private PMMLPortObject createPMMLModel(final PMMLPortObject inPMMLPort, final DataTableSpec outSpec) {
+        PMMLBinningTranslator trans =
+            new PMMLBinningTranslator(m_columnToBins, m_columnToAppended, new DerivedFieldMapper(inPMMLPort));
+        PMMLPortObjectSpecCreator pmmlSpecCreator = new PMMLPortObjectSpecCreator(inPMMLPort, outSpec);
+        PMMLPortObject outPMMLPort = new PMMLPortObject(pmmlSpecCreator.createSpec(), inPMMLPort, outSpec);
+        outPMMLPort.addGlobalTransformations(trans.exportToTransDict());
+        return outPMMLPort;
     }
 
     /**
