@@ -441,6 +441,9 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         // create the combo contribution item that provides the query string
         m_toolbarFilterCombo = new FilterViewContributionItem(m_viewer, m_fuzzySearchButton.isChecked()
             ? m_fuzzyTextInfoFilter.getDelegateFilter() : m_textInfoFilter.getDelegateFilter(), !NON_INSTANT_SEARCH);
+        //set the streamable-node filter (that wraps the other one)
+        m_viewer
+            .setFilters(new ViewerFilter[]{m_fuzzySearchButton.isChecked() ? m_fuzzyTextInfoFilter : m_textInfoFilter});
         m_toolbarFilterCombo.setQueryChangedCallback(() -> {
             onSearchQueryChanged();
         });
