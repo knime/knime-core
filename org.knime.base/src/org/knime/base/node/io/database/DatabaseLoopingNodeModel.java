@@ -81,6 +81,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.util.MutableInteger;
 
@@ -211,6 +212,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         BufferedDataContainer buf = null;
         final String oQuery = getQuery();
         final Collection<DataCell> curSet = new LinkedHashSet<>();
+        final DBReader load = loadConnectionSettings(inData[getNrInPorts()-1]);
         try {
             final int noValues = m_noValues.getIntValue();
             MutableInteger rowCnt = new MutableInteger(0);
@@ -233,10 +235,10 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                     }
                     String newQuery = oQuery.replaceAll(
                             IN_PLACE_HOLDER, queryValues.toString());
-                    setQuery(newQuery);
+                    load.updateQuery(newQuery);
                     exec.setProgress(values.size() * (double)noValues / rowCount, "Selecting all values \""
                         + queryValues + "\"...");
-                    final BufferedDataTable table = getResultTable(exec, inData);
+                    final BufferedDataTable table = getResultTable(exec, inData, load);
                     if (buf == null) {
                         DataTableSpec resSpec = table.getDataTableSpec();
                         buf = exec.createDataContainer(createSpec(resSpec,

@@ -123,7 +123,8 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         exec.setProgress("Opening database connection...");
         try {
             exec.setProgress("Reading data from database...");
-            final BufferedDataTable result = getResultTable(exec, inData);
+            DBReader load = loadConnectionSettings(inData[getNrInPorts()-1]);
+            final BufferedDataTable result = getResultTable(exec, inData, load);
             setLastSpec(result.getDataTableSpec());
             return new BufferedDataTable[]{result};
         } catch (CanceledExecutionException cee) {
@@ -137,20 +138,25 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
     /**
      * @param exec {@link ExecutionContext} to create the table
      * @param inData
+     * @param load
      * @return the result table for the
      * @throws CanceledExecutionException
      * @throws SQLException
      * @throws InvalidSettingsException
      */
-    protected BufferedDataTable getResultTable(final ExecutionContext exec, final PortObject[] inData)
+    protected BufferedDataTable getResultTable(final ExecutionContext exec, final PortObject[] inData, final DBReader load)
         throws CanceledExecutionException, SQLException, InvalidSettingsException {
-        DBReader load = loadConnectionSettings(inData[getNrInPorts()-1]);
         CredentialsProvider cp = getCredentialsProvider();
         final BufferedDataTable result = load.createTable(exec, cp);
         return result;
     }
 
-    private DBReader loadConnectionSettings(final PortObject dbPortObject) throws InvalidSettingsException {
+    /**
+     * @param dbPortObject
+     * @return
+     * @throws InvalidSettingsException
+     */
+    protected DBReader loadConnectionSettings(final PortObject dbPortObject) throws InvalidSettingsException {
         String query = parseQuery(m_settings.getQuery());
         DatabaseQueryConnectionSettings connSettings;
         if ((dbPortObject instanceof DatabaseConnectionPortObject)) {

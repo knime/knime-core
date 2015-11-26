@@ -79,6 +79,11 @@ public interface DBReader {
     DatabaseQueryConnectionSettings getQueryConnection();
 
     /**
+     * @param query the new query to execute
+     */
+    void updateQuery(String query);
+
+    /**
      * Returns the database meta data on the connection.
      * @param cp CredentialsProvider to receive user/password from
      * @return DatabaseMetaData on this connection

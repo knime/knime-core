@@ -120,6 +120,14 @@ public class DBReaderImpl implements DBReader {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateQuery(final String query) {
+        m_conn.setQuery(query);
+    }
+
+    /**
      * Returns the database meta data on the connection.
      * @param cp CredentialsProvider to receive user/password from
      * @return DatabaseMetaData on this connection
