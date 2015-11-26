@@ -641,8 +641,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
             // can be null if run through 3rd party executor
             // might be not an IWriteFileStoreHandler if restored loop is executed
             // (this will result in a failure before model#execute is called)
-            assert !success || fsh == null
-            : "must not be " + fsh.getClass().getSimpleName() + " in execute";
+            assert !success || fsh == null : String.format("Must not be \"%s\" in execute, node \"%s\"",
+                fsh.getClass().getSimpleName(), getNameWithID());
             LOGGER.debug("Can't close file store handler, not writable: "
                     + (fsh == null ? "<null>" : fsh.getClass().getSimpleName()));
         }

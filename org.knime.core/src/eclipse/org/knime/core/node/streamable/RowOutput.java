@@ -65,6 +65,7 @@ public abstract class RowOutput extends PortOutput {
      *
      * @param row Row to add.
      * @throws InterruptedException If canceled.
+     * @throws OutputClosedException If no consumer is to consume the generated output.
      */
     public abstract void push(final DataRow row) throws InterruptedException;
 
@@ -88,5 +89,14 @@ public abstract class RowOutput extends PortOutput {
      * @throws InterruptedException If canceled.
      */
     public abstract void close() throws InterruptedException;
+
+    /** Thrown by {@link RowOutput#push(DataRow)} in case the output is closed. For instance, when all consuming
+     * nodes have consumed enough input (e.g. a row filter filtering the first x rows) or there are no consumers at all.
+     */
+    @SuppressWarnings("serial")
+    public static class OutputClosedException extends RuntimeException {
+
+
+    }
 
 }
