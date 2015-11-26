@@ -314,6 +314,7 @@ public class RowKeyUtil2 {
             }
         }
         exec.setProgress(1.0, "Finished");
+        outData.close();
 
     }
 
