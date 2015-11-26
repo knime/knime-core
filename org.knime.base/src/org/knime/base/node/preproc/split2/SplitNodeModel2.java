@@ -52,7 +52,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
@@ -161,21 +160,8 @@ public class SplitNodeModel2 extends NodeModel {
                 RowInput rowInput = ((RowInput)inputs[0]);
                 RowOutput rowOutput1 = ((RowOutput)outputs[0]);
                 RowOutput rowOutput2 = ((RowOutput)outputs[1]);
-                func1.init(exec);
-                func2.init(exec);
-                DataRow inputRow;
-                long index = 0;
-                while ((inputRow = rowInput.poll()) != null) {
-                    rowOutput1.push(func1.compute(inputRow));
-                    rowOutput2.push(func2.compute(inputRow));
-                    exec.setMessage(String.format("Row %d (\"%s\"))",
-                            ++index, inputRow.getKey()));
-                }
-                rowInput.close();
-                rowOutput1.close();
-                rowOutput2.close();
-                func1.finish(true);
-                func2.finish(true);
+
+                StreamableFunction.runFinalInterwoven(rowInput, func1, rowOutput1, func2, rowOutput2, exec);
             }
         };
     }
