@@ -143,4 +143,35 @@ public abstract class StreamableFunction extends StreamableOperator {
         // no op
     }
 
+    /**
+     * Helper function to run two {@link StreamableFunction}s that use the same input but different outputs.
+     *
+     * @param input the input
+     * @param func1 first streamable function
+     * @param output1 output for the first streamable function
+     * @param func2 second streamable function
+     * @param output2 output for the second streamable function
+     * @param exec for file store creation
+     * @throws Exception
+     * @since 3.1
+     */
+    public static void runFinalInterwoven(final RowInput input, final StreamableFunction func1, final RowOutput output1,
+        final StreamableFunction func2, final RowOutput output2, final ExecutionContext exec) throws Exception {
+        func1.init(exec);
+        func2.init(exec);
+        DataRow inputRow;
+        long index = 0;
+        while ((inputRow = input.poll()) != null) {
+            output1.push(func1.compute(inputRow));
+            output2.push(func2.compute(inputRow));
+            exec.setMessage(String.format("Row %d (\"%s\"))",
+                    ++index, inputRow.getKey()));
+        }
+        input.close();
+        output1.close();
+        output2.close();
+        func1.finish(true);
+        func2.finish(true);
+    }
+
 }
