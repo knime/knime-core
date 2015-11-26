@@ -46,6 +46,7 @@ package org.knime.base.node.preproc.filter.columnref;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -66,6 +67,9 @@ import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.PortInput;
 import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableOperator;
 
 /**
@@ -139,10 +143,15 @@ public class AbstractColumnRefNodeModel extends NodeModel {
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
                 throws Exception {
                 ColumnRearranger[] cr = createRearranger((DataTableSpec)inSpecs[0], (DataTableSpec)inSpecs[1]);
-                cr[0].createStreamableFunction(0, 0).runFinal(inputs, outputs, exec);
-
+                StreamableFunction func1 = cr[0].createStreamableFunction(0, 0);
                 if (m_isSplitter) {
-                    cr[1].createStreamableFunction(0, 1).runFinal(inputs, outputs, exec);
+                    StreamableFunction func2 = cr[1].createStreamableFunction(0, 1);
+                    RowInput rowInput = ((RowInput)inputs[0]);
+                    RowOutput rowOutput1 = ((RowOutput)outputs[0]);
+                    RowOutput rowOutput2 = ((RowOutput)outputs[1]);
+                    StreamableFunction.runFinalInterwoven(rowInput, func1, rowOutput1, func2, rowOutput2, exec);
+                } else {
+                    func1.runFinal(inputs, outputs, exec);
                 }
             }
         };
@@ -161,7 +170,9 @@ public class AbstractColumnRefNodeModel extends NodeModel {
      */
     @Override
     public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+        OutputPortRole[] roles = new OutputPortRole[getNrOutPorts()];
+        Arrays.fill(roles, OutputPortRole.DISTRIBUTED);
+        return roles;
     }
 
     /**
