@@ -173,9 +173,9 @@ public class DBAutoBinner extends AutoBinner {
             List<PMMLDiscretizeBin> bins = discretize.getBins();
             String originalColumnName = discretize.getField();
 
-            if (replacedColumnName.equals(originalColumnName)) { // wenn replaced, dann nicht anh‰ngen
+            if (replacedColumnName.equals(originalColumnName)) { // wenn replaced, dann nicht anh√§ngen
                 columnToAppend.put(originalColumnName, null);
-            } else { // nicht replaced -> anh‰ngen
+            } else { // nicht replaced -> anh√§ngen
                 columnToAppend.put(originalColumnName, replacedColumnName);
             }
 
