@@ -92,6 +92,7 @@ public abstract class RowOutput extends PortOutput {
 
     /** Thrown by {@link RowOutput#push(DataRow)} in case the output is closed. For instance, when all consuming
      * nodes have consumed enough input (e.g. a row filter filtering the first x rows) or there are no consumers at all.
+     * @since 3.1
      */
     @SuppressWarnings("serial")
     public static class OutputClosedException extends RuntimeException {
