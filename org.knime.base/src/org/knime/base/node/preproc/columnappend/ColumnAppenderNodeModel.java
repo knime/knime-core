@@ -408,6 +408,10 @@ final class ColumnAppenderNodeModel extends NodeModel {
                 while (tableIt2.hasNext()) {
                     tableIt2.next();
                 }
+
+                in1.close();
+                in2.close();
+                out.close();
             }
         };
     }
