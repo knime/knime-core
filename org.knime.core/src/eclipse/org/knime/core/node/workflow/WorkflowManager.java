@@ -7334,7 +7334,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     public WorkflowExecutionResult createExecutionResult(final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        synchronized (m_nodeMutex) {
+        try (WorkflowLock lock = lock()) {
             WorkflowExecutionResult result = new WorkflowExecutionResult(getID());
             super.saveExecutionResult(result);
             Set<NodeID> bfsSortedSet = m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet();

@@ -1184,7 +1184,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     @Override
     public SubnodeContainerExecutionResult createExecutionResult(final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        synchronized (m_nodeMutex) {
+        try (WorkflowLock lock = lock()) {
             SubnodeContainerExecutionResult result = new SubnodeContainerExecutionResult(getID());
             super.saveExecutionResult(result);
             WorkflowExecutionResult innerResult = m_wfm.createExecutionResult(exec);
