@@ -55,7 +55,9 @@ import java.awt.Panel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.BoxLayout;
 import javax.swing.JApplet;
@@ -74,26 +76,31 @@ import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.js.core.layout.bs.JSONLayoutColumn;
+import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
 import org.knime.js.core.layout.bs.JSONLayoutRow;
 import org.knime.js.core.layout.bs.JSONLayoutViewContent;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
@@ -103,21 +110,17 @@ import com.fasterxml.jackson.databind.ObjectReader;
  */
 public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
+    private static NodeLogger LOGGER = NodeLogger.getLogger(SubnodeLayoutJSONEditorPage.class);
+
     private WorkflowManager m_wfManager;
-
     private SubNodeContainer m_subNodeContainer;
-
     private List<NodeID> m_viewNodes;
-
     private String m_jsonDocument;
-
     private Label m_statusLine;
-
     private RSyntaxTextArea m_textArea;
-
     private int m_caretPosition = 5;
-
     private Text m_text;
+    private List<Integer> m_documentNodeIDs = new ArrayList<Integer>();
 
     /**
      * @param pageName
@@ -207,6 +210,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                             public void run() {
                                 if (m_statusLine != null && !m_statusLine.isDisposed()) {
                                     m_statusLine.setText("");
+                                    isJSONValid();
                                 }
                             }
                         });
@@ -242,6 +246,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                     m_jsonDocument = m_text.getText();
                     if (m_statusLine != null && !m_statusLine.isDisposed()) {
                         m_statusLine.setText("");
+                        isJSONValid();
                     }
                 }
             });
@@ -252,14 +257,11 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         m_statusLine = new Label(composite, SWT.SHADOW_NONE | SWT.WRAP);
         GridData statusGridData = new GridData(SWT.LEFT | SWT.FILL, SWT.BOTTOM, true, false);
         int maxHeight = new PixelConverter(m_statusLine).convertHeightInCharsToPixels(3);
-        statusGridData.heightHint = maxHeight;
+        statusGridData.heightHint = maxHeight + 5;
         // seems to have no impact on the layout. The height will still be 3 rows (at least on Windows 8)
         statusGridData.minimumHeight = new PixelConverter(m_statusLine).convertHeightInCharsToPixels(1);
         m_statusLine.setLayoutData(statusGridData);
-
-        if (!(Thread.currentThread() == composite.getDisplay().getThread())) {
-            System.out.println("Currently not running in the Display Thread");
-        }
+        compareNodeIDs();
 
         setControl(composite);
 
@@ -275,24 +277,33 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         m_wfManager = manager;
         m_subNodeContainer = subnodeContainer;
         m_viewNodes = viewNodes;
-
+        JSONLayoutPage page = null;
         String layout = m_subNodeContainer.getLayoutJSONString();
         if (layout != null && !layout.trim().isEmpty()) {
             try {
                 ObjectMapper mapper = JSONLayoutPage.getConfiguredObjectMapper();
-                Object oLayout = mapper.readValue(layout, Object.class);
-                m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(oLayout);
+                page = mapper.readValue(layout, JSONLayoutPage.class);
+                m_jsonDocument = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
             } catch (IOException e) {
-                // TODO log error
+                LOGGER.error("Error parsing layout. Pretty printing not possible: " + e.getMessage(), e);
+                m_jsonDocument = layout;
             }
         }
 
         if (m_jsonDocument == null || m_jsonDocument.trim().isEmpty()) {
-            generateInitialJson();
+            page = generateInitialJson();
+        }
+        if (page != null) {
+            m_documentNodeIDs.clear();
+            for (JSONLayoutRow row : page.getRows()) {
+                populateDocumentNodeIDs(row);
+            }
         }
     }
 
-    private void generateInitialJson() {
+
+
+    private JSONLayoutPage generateInitialJson() {
         JSONLayoutPage page = new JSONLayoutPage();
         List<JSONLayoutRow> rows = new ArrayList<JSONLayoutRow>();
         page.setRows(rows);
@@ -302,7 +313,9 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             JSONLayoutViewContent view = new JSONLayoutViewContent();
             view.setNodeID(Integer.toString(nodeID.getIndex()));
             col.setContent(Arrays.asList(new JSONLayoutViewContent[]{view}));
-            col.setWidthMD(12);
+            try {
+                col.setWidthMD(12);
+            } catch (JsonMappingException e) { /* do nothing */ }
             row.addColumn(col);
             rows.add(row);
         }
@@ -310,8 +323,88 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         try {
             String initialJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(page);
             m_jsonDocument = initialJson;
+            return page;
         } catch (JsonProcessingException e) {
-            // TODO log error
+            LOGGER.error("Could not create initial layout: " + e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private void populateDocumentNodeIDs(final JSONLayoutContent content) {
+        if (content instanceof JSONLayoutRow) {
+            JSONLayoutRow row = (JSONLayoutRow)content;
+            if (row.getColumns() != null && row.getColumns().size() > 0) {
+                for (JSONLayoutColumn col : row.getColumns()) {
+                    if (col.getContent() != null && col.getContent().size() > 0) {
+                        for (JSONLayoutContent c : col.getContent()) {
+                            populateDocumentNodeIDs(c);
+                        }
+                    }
+                }
+            }
+        } else if (content instanceof JSONLayoutViewContent) {
+            String id = ((JSONLayoutViewContent)content).getNodeID();
+            if (id != null && !id.isEmpty()) {
+                m_documentNodeIDs.add(Integer.parseInt(id));
+            }
+        }
+    }
+
+    private void compareNodeIDs() {
+        Set<Integer> missingIDs = new HashSet<Integer>();
+        Set<Integer> notExistingIDs = new HashSet<Integer>(m_documentNodeIDs);
+        Set<Integer> duplicateIDCheck = new HashSet<Integer>(m_documentNodeIDs);
+        Set<Integer> duplicateIDs = new HashSet<Integer>();
+        for (NodeID id : m_viewNodes) {
+            Integer i = new Integer(id.getIndex());
+            if (m_documentNodeIDs.contains(i)) {
+                notExistingIDs.remove(i);
+            } else {
+                missingIDs.add(i);
+            }
+        }
+        for (Integer id : m_documentNodeIDs) {
+            if (!duplicateIDCheck.remove(id)) {
+                duplicateIDs.add(id);
+            }
+        }
+        StringBuilder error = new StringBuilder();
+        if (notExistingIDs.size() > 0) {
+            error.append("Node IDs referenced in layout, but do not exist in node: ");
+            for (Integer id : notExistingIDs) {
+                error.append(id);
+                error.append(", ");
+            }
+            error.setLength(error.length() - 2);
+            if (missingIDs.size() > 0 || duplicateIDs.size() > 0) {
+                error.append("\n");
+            }
+        }
+        if (missingIDs.size() > 0) {
+            error.append("Node IDs missing in layout: ");
+            for (Integer id : missingIDs) {
+                error.append(id);
+                error.append(", ");
+            }
+            error.setLength(error.length() -2);
+            if (duplicateIDs.size() > 0) {
+                error.append("\n");
+            }
+        }
+        if (duplicateIDs.size() > 0) {
+            error.append("Multiple references to node IDs: ");
+            for (Integer id : duplicateIDs) {
+                error.append(id);
+                error.append(", ");
+            }
+            error.setLength(error.length() - 2);
+        }
+        if (error.length() > 0 && m_statusLine != null && !m_statusLine.isDisposed()) {
+            int textWidth = isWindows() ? m_textArea.getSize().width : m_text.getSize().x;
+            Point newSize = m_statusLine.computeSize(textWidth, m_statusLine.getSize().y, true);
+            m_statusLine.setSize(newSize);
+            m_statusLine.setForeground(new Color(Display.getCurrent(), 255, 140, 0));
+            m_statusLine.setText(error.toString());
         }
     }
 
@@ -324,9 +417,15 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
         try {
             String json = isWindows() ? m_textArea.getText() : m_jsonDocument;
             JSONLayoutPage page = reader.readValue(json);
-            // TODO add more checks in objects (e.g. column widths)
+            m_documentNodeIDs.clear();
+            if (page.getRows() != null) {
+                for (JSONLayoutRow row : page.getRows()) {
+                    populateDocumentNodeIDs(row);
+                }
+                compareNodeIDs();
+            }
             return true;
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException e) {
             String errorMessage;
             if (e instanceof JsonProcessingException) {
                 JsonProcessingException jsonException = (JsonProcessingException)e;
@@ -351,10 +450,13 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
                 String message = e.getMessage();
                 errorMessage = message;
             }
-            m_statusLine.setText(errorMessage);
-            int textWidth = isWindows() ? m_textArea.getSize().width : m_text.getSize().x;
-            Point newSize = m_statusLine.computeSize(textWidth, m_statusLine.getSize().y, true);
-            m_statusLine.setSize(newSize);
+            if (m_statusLine != null && !m_statusLine.isDisposed()) {
+                m_statusLine.setForeground(new Color(Display.getCurrent(), 255, 0, 0));
+                m_statusLine.setText(errorMessage);
+                int textWidth = isWindows() ? m_textArea.getSize().width : m_text.getSize().x;
+                Point newSize = m_statusLine.computeSize(textWidth, m_statusLine.getSize().y, true);
+                m_statusLine.setSize(newSize);
+            }
         }
         return false;
     }
