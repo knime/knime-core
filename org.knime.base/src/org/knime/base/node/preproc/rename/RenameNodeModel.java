@@ -129,7 +129,7 @@ public class RenameNodeModel extends SimpleStreamableFunctionNodeModel {
         //create replace columns if a column type has changed (toString)
         ColumnRearranger colre = createColumnRearranger(inSpec, outSpec);
         if(colre!=null) {
-            out = exec.createColumnRearrangeTable(in, colre, exec);
+            out = exec.createColumnRearrangeTable(out, colre, exec);
         }
         return new BufferedDataTable[]{out};
     }
