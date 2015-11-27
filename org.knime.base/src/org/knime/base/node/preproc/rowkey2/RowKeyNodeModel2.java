@@ -312,7 +312,7 @@ public class RowKeyNodeModel2 extends NodeModel {
         LOGGER.debug("Entering createStreamableOperator-method of class RowKeyNodeModel");
         if (m_replaceKey.getBooleanValue()) {
 
-            DataTableSpec outSpec = (DataTableSpec) configure(inSpecs)[DATA_OUT_PORT];
+            DataTableSpec outSpec = configure((DataTableSpec) inSpecs[DATA_IN_PORT], true);
             return new StreamableOperator() {
 
                 @Override
