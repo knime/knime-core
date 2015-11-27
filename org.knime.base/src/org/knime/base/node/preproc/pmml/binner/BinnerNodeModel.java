@@ -150,7 +150,7 @@ public class BinnerNodeModel extends NodeModel {
 
         // handle the optional PMML in port (can be null)
         PMMLPortObject inPMMLPort = m_pmmlInEnabled ? (PMMLPortObject)inPorts[1] : null;
-        PMMLPortObject outPMMLPort = createPMMLModel(inPMMLPort, buf.getDataTableSpec());
+        PMMLPortObject outPMMLPort = createPMMLModel(inPMMLPort, spec, buf.getDataTableSpec());
 
         return new PortObject[]{buf, outPMMLPort};
     }
@@ -172,7 +172,7 @@ public class BinnerNodeModel extends NodeModel {
                     // handle the optional PMML in port (can be null)
                     PMMLPortObject inPMMLPort =
                         m_pmmlInEnabled ? (PMMLPortObject)((PortObjectInput)inputs[1]).getPortObject() : null;
-                    PMMLPortObject outPMMLPort = createPMMLModel(inPMMLPort, colre.createSpec());
+                    PMMLPortObject outPMMLPort = createPMMLModel(inPMMLPort, (DataTableSpec) inSpecs[0], colre.createSpec());
                     ((PortObjectOutput) outputs[1]).setPortObject(outPMMLPort);
                 }
             }
@@ -293,11 +293,11 @@ public class BinnerNodeModel extends NodeModel {
      * Creates the pmml port object.
      * @param the in-port pmml object. Can be <code>null</code> (optional in-port)
      */
-    private PMMLPortObject createPMMLModel(final PMMLPortObject inPMMLPort, final DataTableSpec outSpec) {
+    private PMMLPortObject createPMMLModel(final PMMLPortObject inPMMLPort, final DataTableSpec inSpec, final DataTableSpec outSpec) {
         PMMLBinningTranslator trans =
             new PMMLBinningTranslator(m_columnToBins, m_columnToAppended, new DerivedFieldMapper(inPMMLPort));
         PMMLPortObjectSpecCreator pmmlSpecCreator = new PMMLPortObjectSpecCreator(inPMMLPort, outSpec);
-        PMMLPortObject outPMMLPort = new PMMLPortObject(pmmlSpecCreator.createSpec(), inPMMLPort, outSpec);
+        PMMLPortObject outPMMLPort = new PMMLPortObject(pmmlSpecCreator.createSpec(), inPMMLPort, inSpec);
         outPMMLPort.addGlobalTransformations(trans.exportToTransDict());
         return outPMMLPort;
     }
