@@ -48,6 +48,7 @@
  */
 package org.knime.workbench.editor2.subnode;
 
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Panel;
@@ -57,6 +58,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.BoxLayout;
+import javax.swing.JApplet;
+import javax.swing.JRootPane;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
@@ -137,7 +140,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
         if (isWindows()) {
 
-            Composite embedComposite = new Composite(composite, SWT.EMBEDDED);
+            Composite embedComposite = new Composite(composite, SWT.EMBEDDED | SWT.NO_BACKGROUND);
             final GridLayout gridLayout = new GridLayout();
             gridLayout.verticalSpacing = 0;
             gridLayout.marginWidth = 0;
@@ -151,6 +154,14 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             frame.add(heavyWeightPanel);
             frame.setFocusTraversalKeysEnabled(false);
 
+            // Use JApplet with JRootPane as layer in between heavyweightPanel and RTextScrollPane
+            // This reduces flicker on resize in RSyntaxTextArea
+            JApplet applet = new JApplet();
+            JRootPane root = applet.getRootPane();
+            Container contentPane = root.getContentPane();
+            contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
+            heavyWeightPanel.add(applet);
+
             m_textArea = new RSyntaxTextArea(10, 60);
             m_textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON);
             m_textArea.setCodeFoldingEnabled(true);
@@ -160,7 +171,7 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             m_textArea.setText(m_jsonDocument);
             m_textArea.setEditable(true);
             m_textArea.setEnabled(true);
-            heavyWeightPanel.add(sp);
+            contentPane.add(sp);
 
             Dimension size = sp.getPreferredSize();
             embedComposite.setSize(size.width, size.height);
@@ -290,7 +301,6 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
             JSONLayoutColumn col = new JSONLayoutColumn();
             JSONLayoutViewContent view = new JSONLayoutViewContent();
             view.setNodeID(Integer.toString(nodeID.getIndex()));
-            //view.setUseAspectRatioResize(true);
             col.setContent(Arrays.asList(new JSONLayoutViewContent[]{view}));
             col.setWidthMD(12);
             row.addColumn(col);
