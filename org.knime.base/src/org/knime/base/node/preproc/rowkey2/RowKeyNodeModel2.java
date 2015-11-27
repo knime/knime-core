@@ -269,7 +269,7 @@ public class RowKeyNodeModel2 extends NodeModel {
 
         if (m_replaceKey.getBooleanValue()) {
             //create outspec
-            DataTableSpec outSpec = configure(new DataTableSpec[]{data.getDataTableSpec()})[DATA_IN_PORT];
+            DataTableSpec outSpec = configure(data.getDataTableSpec(), true);
 
             //create table
             final BufferedDataContainer newContainer = exec.createDataContainer(outSpec, true);
@@ -516,28 +516,35 @@ public class RowKeyNodeModel2 extends NodeModel {
         assert (inSpecs != null && inSpecs.length == 1
                 && inSpecs[DATA_IN_PORT] != null);
         DataTableSpec spec = inSpecs[DATA_IN_PORT];
-        validateInput(spec, m_appendRowKey.getBooleanValue(),
-                m_newColumnName.getStringValue(),
-                m_replaceKey.getBooleanValue(),
-                m_newRowKeyColumn.getStringValue(),
-                m_removeRowKeyCol.getBooleanValue());
+        return new DataTableSpec[]{configure(spec, false)};
+    }
+
+    /**
+     * Determines the outspec. Called from within the configure and execute-method.
+     *
+     * @param spec the original table spec
+     * @param silent if <code>true</code>, no warning messages will be set (makes sense if being called from the execute
+     *            method)
+     * @return the out spec
+     * @throws InvalidSettingsException
+     */
+    private DataTableSpec configure(final DataTableSpec spec, final boolean silent) throws InvalidSettingsException {
+        validateInput(spec, m_appendRowKey.getBooleanValue(), m_newColumnName.getStringValue(),
+            m_replaceKey.getBooleanValue(), m_newRowKeyColumn.getStringValue(), m_removeRowKeyCol.getBooleanValue());
+        DataTableSpec resSpec = spec;
         if (m_replaceKey.getBooleanValue()) {
-            final String selRowKey =
-                m_newRowKeyColumn.getStringValue();
-            if (selRowKey == null) {
-                setWarningMessage(
-                        "No row key column selected generate a new one");
+            final String selRowKey = m_newRowKeyColumn.getStringValue();
+            if (selRowKey == null && !silent) {
+                setWarningMessage("No row key column selected generate a new one");
             } else if (m_removeRowKeyCol.getBooleanValue()) {
-                spec = RowKeyUtil2.createTableSpec(spec, selRowKey);
+                resSpec = RowKeyUtil2.createTableSpec(resSpec, selRowKey);
             }
         }
         if (m_appendRowKey.getBooleanValue()) {
-            final DataColumnSpec colSpec = createAppendRowKeyColSpec(
-                    m_newColumnName.getStringValue());
-            spec = AppendedColumnTable.getTableSpec(spec,
-                    colSpec);
+            final DataColumnSpec colSpec = createAppendRowKeyColSpec(m_newColumnName.getStringValue());
+            resSpec = AppendedColumnTable.getTableSpec(resSpec, colSpec);
         }
-        return new DataTableSpec[]{spec};
+        return resSpec;
     }
 
     /**
