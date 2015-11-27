@@ -120,7 +120,7 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
         }
         NodeContainer nc = nodes[0].getNodeContainer();
         if (nc instanceof SubNodeContainer) {
-            return true;
+            return !((SubNodeContainer)nc).isWriteProtected();
         }
         return false;
     }

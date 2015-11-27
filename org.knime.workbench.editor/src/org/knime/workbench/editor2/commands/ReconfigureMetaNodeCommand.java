@@ -126,7 +126,18 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
             return false;
         }
         NodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
+        boolean isWriteProtected;
+        if (nc instanceof WorkflowManager) {
+            isWriteProtected = ((WorkflowManager)nc).isWriteProtected();
+        } else if (nc instanceof SubNodeContainer) {
+            isWriteProtected = ((SubNodeContainer)nc).isWriteProtected();
+        } else {
+            return false;
+        }
         if (!(nc instanceof WorkflowManager) && !(nc instanceof SubNodeContainer)) {
+            return false;
+        }
+        if (isWriteProtected) {
             return false;
         }
         // at least one thing to change should be set
