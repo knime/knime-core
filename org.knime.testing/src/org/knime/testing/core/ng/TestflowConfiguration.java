@@ -176,7 +176,7 @@ class TestflowConfiguration {
             NodeID nodeId = createCompleteNodeID(e.getKey());
             try {
                 NodeContainer cont = m_manager.findNodeContainer(nodeId);
-                Pattern pattern = createPatternFromMessage(e.getValue());
+                Pattern pattern = createPatternFromMessage(e.getValue().trim());
                 m_nodeErrorMessages.put(nodeId, pattern);
                 if (!cont.getNodeContainerState().isExecuted() && !(cont instanceof WorkflowManager)) {
                     // error status on node also creates an error in the log if the node is not already executed
@@ -193,7 +193,7 @@ class TestflowConfiguration {
             NodeID nodeId = createCompleteNodeID(e.getKey());
             try {
                 NodeContainer cont = m_manager.findNodeContainer(nodeId);
-                Pattern pattern = createPatternFromMessage(e.getValue());
+                Pattern pattern = createPatternFromMessage(e.getValue().trim());
                 m_nodeWarningMessages.put(nodeId, pattern);
                 if (!cont.getNodeContainerState().isExecuted() && !(cont instanceof WorkflowManager)) {
                     // warning status on node also creates an error in the log if the node is not already executed
