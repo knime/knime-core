@@ -791,7 +791,7 @@
              category-path="/analytics/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"
              id="org.knime.base.node.mine.regression.linear2.predict.GeneralRegressionPredictorNodeFactory"
-             after="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory2"/> 
+             after="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3"/> 
 	    <node
 	          after="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
 	          category-path="/io/read"
@@ -1870,9 +1870,15 @@
       </node>
       <node
             category-path="/analytics/statistics/regression"
-            deprecated="false"
+            deprecated="true"
             factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory2"
             id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory2">
+      </node>
+      <node
+            category-path="/analytics/statistics/regression"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3"
+            id="org.knime.base.node.mine.regression.logistic.learner3.LogRegLearnerNodeFactory3">
       </node>
       <node
             category-path="/analytics/mining/nn/mlp"

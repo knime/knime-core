@@ -46,6 +46,8 @@
  */
 package org.knime.base.node.mine.regression;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +72,8 @@ public  class RegressionTrainingDataIterator implements Iterator<RegressionTrain
     /** If true an exception is thrown when a missing cell is observed. */
     private boolean m_failOnMissing;
 
+    private Map<? extends Integer, ? extends Integer> m_vectorLengths;
+
     /**
      * @param iter the underlying iterator
      * @param parameterCount number of parameters which will be generated
@@ -87,12 +91,34 @@ public  class RegressionTrainingDataIterator implements Iterator<RegressionTrain
             final Map<Integer, Boolean> isNominal,
             final Map<Integer, List<DataCell>> domainValues,
             final boolean failOnMissing) {
+        this(iter, target, parameterCount, learningCols, isNominal, domainValues, Collections.emptyMap(), failOnMissing);
+    }
+    /**
+     * @param iter the underlying iterator
+     * @param parameterCount number of parameters which will be generated
+     * from the learning columns
+     * @param learningCols indices of the learning columns
+     * @param isNominal whether a learning column is nominal
+     * @param domainValues the domain values of the nominal learning columns
+     * @param target the index of the target value
+     * @param vectorLengths the vector (maximal) lengths for the vector columns.
+     * @param failOnMissing when true an exception is thrown when a missing cell is observed
+     * @since 3.1
+     */
+    public RegressionTrainingDataIterator(final Iterator<DataRow> iter,
+        final int target,
+        final int parameterCount,
+        final List<Integer> learningCols,
+        final Map<Integer, Boolean> isNominal,
+        final Map<Integer, List<DataCell>> domainValues,
+        final Map<? extends Integer, ? extends Integer> vectorLengths, final boolean failOnMissing) {
         m_iter = iter;
         m_target = target;
         m_parameterCount = parameterCount;
         m_learningCols = learningCols;
         m_isNominal = isNominal;
         m_domainValues = domainValues;
+        m_vectorLengths = Collections.unmodifiableMap(new HashMap<>(vectorLengths));
         m_failOnMissing = failOnMissing;
     }
 
@@ -111,7 +137,7 @@ public  class RegressionTrainingDataIterator implements Iterator<RegressionTrain
     public RegressionTrainingRow next() {
         return new RegressionTrainingRow(m_iter.next(), m_target,
                 m_parameterCount, m_learningCols,
-                m_isNominal, m_domainValues, m_failOnMissing);
+                m_isNominal, m_domainValues, m_vectorLengths, m_failOnMissing);
     }
 
     /**

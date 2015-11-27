@@ -47,7 +47,9 @@
  */
 package org.knime.base.node.mine.regression.pmmlgreg;
 
-
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  *
@@ -100,6 +102,9 @@ public final class PMMLGeneralRegressionContent {
 
     private PMMLPredictor[] m_covariateList;
 
+    //Since 3.1
+    private final Map<String, Integer> m_vectorLengths = new LinkedHashMap<>();
+
     private PMMLPPCell[] m_ppMatrix;
 
     private PMMLPCovCell[] m_pCovMatrix;
@@ -128,11 +133,36 @@ public final class PMMLGeneralRegressionContent {
      * @param paramMatrix parameter matrix
      */
     public PMMLGeneralRegressionContent(
+        final ModelType modelType, final String modelName,
+        final FunctionName functionName, final String algorithmName,
+        final PMMLParameter[] parameterList,
+        final PMMLPredictor[] factorList,
+        final PMMLPredictor[] covariateList, final PMMLPPCell[] ppMatrix,
+        final PMMLPCovCell[] pCovMatrix, final PMMLPCell[] paramMatrix) {
+        this(modelType, modelName, functionName, algorithmName, parameterList, factorList, covariateList, Collections.emptyMap(), ppMatrix, pCovMatrix, paramMatrix);
+    }
+    /**
+     * @param modelType the type of the regression model
+     * @param modelName the name of the model
+     * @param functionName either regression of classification
+     * @param algorithmName the name of the algorithm
+     * @param parameterList the list of parameters
+     * @param factorList the list of factor names
+     * @param covariateList the list of covariate names
+     * @param vectorLengths the lengths of vector factors
+     * @param ppMatrix Predictor-to-Parameter correlation matrix
+     * @param pCovMatrix matrix of parameter estimate covariates
+     * @param paramMatrix parameter matrix
+     * @since 3.1
+     */
+    public PMMLGeneralRegressionContent(
             final ModelType modelType, final String modelName,
             final FunctionName functionName, final String algorithmName,
             final PMMLParameter[] parameterList,
             final PMMLPredictor[] factorList,
-            final PMMLPredictor[] covariateList, final PMMLPPCell[] ppMatrix,
+            final PMMLPredictor[] covariateList,
+            final Map<? extends String, ? extends Integer> vectorLengths,
+            final PMMLPPCell[] ppMatrix,
             final PMMLPCovCell[] pCovMatrix, final PMMLPCell[] paramMatrix) {
         m_modelType = modelType;
         m_modelName = modelName;
@@ -141,6 +171,7 @@ public final class PMMLGeneralRegressionContent {
         m_parameterList = parameterList;
         m_factorList = factorList;
         m_covariateList = covariateList;
+        m_vectorLengths.putAll(vectorLengths);
         m_ppMatrix = ppMatrix;
         m_pCovMatrix = pCovMatrix;
         m_paramMatrix = paramMatrix;
@@ -319,5 +350,24 @@ public final class PMMLGeneralRegressionContent {
      */
     public void setOffsetValue(final Double offsetValue) {
         m_offsetValue = offsetValue;
+    }
+
+    /**
+     * @return the vectorLengths
+     * @since 3.1
+     */
+    public Map<? extends String, ? extends Integer> getVectorLengths() {
+        return Collections.unmodifiableMap(m_vectorLengths);
+    }
+
+    /**
+     * Replaces the values of {@link #getVectorLengths()} with the new values from {@code newVectorLengths}. (Should
+     * only be called from {@link PMMLGeneralRegressionTranslator#initializeFrom(org.dmg.pmml.PMMLDocument)})
+     *
+     * @param newVectorLengths The new values, cannot be {@code null}.
+     */
+    void updateVectorLengths(final Map<? extends String, ? extends Integer> newVectorLengths) {
+        m_vectorLengths.clear();
+        m_vectorLengths.putAll(newVectorLengths);
     }
 }

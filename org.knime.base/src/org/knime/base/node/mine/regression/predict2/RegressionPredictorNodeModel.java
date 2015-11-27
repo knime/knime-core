@@ -50,6 +50,8 @@ package org.knime.base.node.mine.regression.predict2;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
@@ -64,6 +66,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -143,8 +147,11 @@ public final class RegressionPredictorNodeModel extends NodeModel {
         PMMLPortObject port = (PMMLPortObject)inData[0];
         List<Node> models = port.getPMMLValue().getModels(PMMLModelType.GeneralRegressionModel);
         if (models.isEmpty()) {
+            LOGGER.warn("No regression models in the input PMML.");
+            @SuppressWarnings("deprecation")
             org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel regrPredictor =
                     new org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel();
+            @SuppressWarnings("deprecation")
             PortObject[] regrPredOut = regrPredictor.execute(inData, exec);
             if (regrPredOut.length > 0 && regrPredOut[0] instanceof BufferedDataTable) {
                 BufferedDataTable regrPredOutTable = (BufferedDataTable)regrPredOut[0];
@@ -291,18 +298,29 @@ public final class RegressionPredictorNodeModel extends NodeModel {
 
         // check if all covariates are in the given data table and that they
         // are numeric values
+        Pattern pattern = Pattern.compile("(.*)\\[\\d+\\]");
         for (PMMLPredictor covariate : content.getCovariateList()) {
             DataColumnSpec columnSpec =
                     inDataSpec.getColumnSpec(covariate.getName());
             if (null == columnSpec) {
-                throw new InvalidSettingsException("The column \""
-                        + covariate.getName()
-                        + "\" is in the model but not in given table.");
+                Matcher matcher = pattern.matcher(covariate.getName());
+                boolean found = matcher.matches();
+                columnSpec = inDataSpec.getColumnSpec(matcher.group(1));
+                found = found && null != columnSpec;
+                if (!found) {
+                    throw new InvalidSettingsException("The column \""
+                            + covariate.getName()
+                            + "\" is in the model but not in given table.");
+                }
             }
-            if (!columnSpec.getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException("The column \""
-                        + covariate.getName()
-                        + "\" is supposed to be numeric.");
+            if (columnSpec != null && !columnSpec.getType().isCompatible(DoubleValue.class)
+                && !(content.getVectorLengths().containsKey(columnSpec.getName())
+                    && ((columnSpec.getType().isCollectionType()
+                        && columnSpec.getType().getCollectionElementType().isCompatible(DoubleValue.class))
+                        || columnSpec.getType().isCompatible(BitVectorValue.class)
+                        || columnSpec.getType().isCompatible(ByteVectorValue.class)))) {
+                throw new InvalidSettingsException(
+                    "The column \"" + covariate.getName() + "\" is supposed to be numeric.");
             }
         }
 

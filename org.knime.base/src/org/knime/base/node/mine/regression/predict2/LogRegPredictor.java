@@ -55,11 +55,17 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.knime.base.node.mine.regression.RegressionTrainingRow;
+import org.knime.base.node.mine.regression.RegressionTrainingRow.MissingHandling;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLParameter;
+import org.knime.base.node.mine.regression.pmmlgreg.VectorHandling;
+import org.knime.base.node.mine.regression.pmmlgreg.VectorHandling.NameAndIndex;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -90,6 +96,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
     private Map<String, Integer> m_parameterI;
     private List<String> m_parameters;
     private List<String> m_predictors;
+    private Map<? extends String, ? extends Integer> m_vectorLengths;
     private DataTableSpec m_trainingSpec;
     private Set<String> m_factors;
     private Map<String, List<DataCell>> m_values;
@@ -103,6 +110,8 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
     private Map<Integer, Integer> m_targetCategoryIndex;
     /** the number of domain values of the target column. */
     private int m_targetDomainValuesCount;
+    /** from label to column name */
+    private Map<String, String> m_baseLabelToColName;
 
     /**
      * This constructor should be used when executing the node. Use it when
@@ -125,16 +134,29 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
 
         m_includeProbs = settings.getIncludeProbabilities();
         m_content = content;
+        m_baseLabelToColName = Arrays.asList(m_content.getParameterList()).stream().collect(Collectors.toMap(k -> k.getName(), v->{
+            final String param = v.getLabel();
+            return param.matches("(.*?)\\[(\\d+)\\]") ?
+                param.substring(0, param.lastIndexOf('['))
+                : param;}));
         m_ppMatrix = new PPMatrix(m_content.getPPMatrix());
         m_parameters = new ArrayList<String>();
         m_predictors = new ArrayList<String>();
+        m_vectorLengths = m_content.getVectorLengths();
         m_parameterI = new HashMap<String, Integer>();
         for (PMMLParameter parameter : m_content.getParameterList()) {
             m_parameters.add(parameter.getName());
             String predictor = m_ppMatrix.getPredictor(parameter.getName());
-            m_predictors.add(predictor);
-            m_parameterI.put(parameter.getName(),
-                    inSpec.findColumnIndex(predictor));
+            Optional<NameAndIndex> vni = VectorHandling.parse(parameter.getLabel());
+            if (vni.isPresent() && m_vectorLengths.containsKey(vni.get().getName())) {
+                m_parameterI.put(parameter.getName(),
+                    inSpec.findColumnIndex(vni.get().getName()));
+                m_predictors.add(parameter.getLabel());
+            } else {
+                m_predictors.add(predictor);
+                m_parameterI.put(parameter.getName(),
+                        inSpec.findColumnIndex(predictor));
+            }
         }
 
         m_trainingSpec = portSpec.getDataTableSpec();
@@ -220,6 +242,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
         if (hasMissingValues(row)) {
             return createMissingOutput();
         }
+        final MissingHandling missingHandling = new MissingHandling(true);
 
         DataCell[] cells = m_includeProbs
                                 ? new DataCell[1 + m_targetDomainValuesCount]
@@ -227,17 +250,15 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
         Arrays.fill(cells, new IntCell(0));
 
         // column vector
-        Matrix x = new Matrix(1, m_parameters.size());
+        final Matrix x = new Matrix(1, m_parameters.size());
         for (int i = 0; i < m_parameters.size(); i++) {
             String parameter = m_parameters.get(i);
             String predictor = null;
             String value = null;
             boolean rowIsEmpty = true;
-            for (Iterator<String> iter = m_predictors.iterator();
-            iter.hasNext();) {
+            for (final Iterator<String> iter = m_predictors.iterator(); iter.hasNext();) {
                 predictor = iter.next();
-                value =
-                    m_ppMatrix.getValue(parameter, predictor, null);
+                value = m_ppMatrix.getValue(parameter, predictor, null);
                 if (null != value) {
                     rowIsEmpty = false;
                     break;
@@ -252,7 +273,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
                         row.getCell(m_parameterI.get(parameter));
                     int index = values.indexOf(cell);
                     // these are design variables
-                    /* When building ageneral regression model, for each
+                    /* When building a general regression model, for each
                     categorical fields, there is one category used as the
                     default baseline and therefore it didn't show in the
                     ParameterList in PMML. This design for the training is fine,
@@ -264,9 +285,21 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
                         x.set(0, i + index - 1, 1);
                         i += values.size() - 2;
                     }
+                } else if (m_baseLabelToColName.containsKey(parameter) && m_vectorLengths.containsKey(m_baseLabelToColName.get(parameter))) {
+                    final DataCell cell = row.getCell(m_parameterI.get(parameter));
+                    Optional<NameAndIndex> vectorValue = VectorHandling.parse(predictor);
+                    if (vectorValue.isPresent()) {
+                        int j = vectorValue.get().getIndex();
+
+                        value = m_ppMatrix.getValue(parameter, predictor, null);
+                        double exponent = Integer.valueOf(value);
+                        double radix = RegressionTrainingRow.getValue(cell, j, missingHandling);
+                        x.set(0, i, Math.pow(radix, exponent));
+                    }
                 } else {
                     DataCell cell =
-                        row.getCell(m_parameterI.get(parameter));
+                            row.getCell(m_parameterI.get(parameter));
+
                     double radix = ((DoubleValue)cell).getDoubleValue();
                     double exponent = Integer.valueOf(value);
                     x.set(0, i, Math.pow(radix, exponent));
@@ -341,19 +374,14 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
     }
 
     private Matrix getBetaMatrix() {
-        ParamMatrix paramMatrix =
-            new ParamMatrix(m_content.getParamMatrix());
-        Matrix beta = new Matrix(m_parameters.size(),
-                m_targetCategories.size());
-        for (int i = 0; i < m_parameters.size(); i++) {
-            for (int k = 0; k < m_targetCategories.size() - 1; k++) {
-                double value = paramMatrix.getBeta(m_parameters.get(i),
-                        m_targetCategories.get(k).toString());
+        ParamMatrix paramMatrix = new ParamMatrix(m_content.getParamMatrix());
+        Matrix beta = new Matrix(m_parameters.size(), m_targetCategories.size());
+        for (int k = 0; k < m_targetCategories.size() - 1; k++) {
+            for (int i = 0; i < m_parameters.size(); i++) {
+                double value = paramMatrix.getBeta(m_parameters.get(i), m_targetCategories.get(k).toString());
                 beta.set(i, k, value);
             }
         }
         return beta;
     }
-
-
 }

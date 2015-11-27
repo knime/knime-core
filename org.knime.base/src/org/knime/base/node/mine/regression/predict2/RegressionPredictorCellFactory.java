@@ -66,6 +66,8 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
@@ -99,12 +101,13 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
             String learningCol = learningColSpec.getName();
             if (tableSpec.containsName(learningCol)) {
                 DataColumnSpec colSpec = tableSpec.getColumnSpec(learningCol);
-                if (learningColSpec.getType().isCompatible(NominalValue.class)
-                    && !colSpec.getType().isCompatible(NominalValue.class)) {
+                if (learningColSpec.getType().isCompatible(NominalValue.class)) {
+                    if (!colSpec.getType().isCompatible(BitVectorValue.class) && !colSpec.getType().isCompatible(ByteVectorValue.class) && !colSpec.getType().isCompatible(NominalValue.class)) {
                     throw new InvalidSettingsException("The column \""
                             + learningCol + "\" in the table of prediction "
                             + "is expected to be  compatible with "
                             + "\"NominalValue\".");
+                    }
                 } else if (learningColSpec.getType().isCompatible(
                         DoubleValue.class)
                         && !colSpec.getType().isCompatible(DoubleValue.class)) {

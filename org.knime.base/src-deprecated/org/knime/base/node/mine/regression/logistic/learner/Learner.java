@@ -300,7 +300,7 @@ final class Learner {
         final int rC, final int tcC, final ExecutionMonitor exec)
                 throws CanceledExecutionException {
         Iterator<RegressionTrainingRow> iter = data.iterator();
-        int rowCount = 0;
+        long rowCount = 0;
         int dim = (rC + 1) * (tcC - 1);
         RealMatrix xTwx = new Array2DRowRealMatrix(dim, dim);
         RealMatrix xTyu = new Array2DRowRealMatrix(dim, 1);
@@ -308,7 +308,7 @@ final class Learner {
         RealMatrix x = new Array2DRowRealMatrix(1, rC + 1);
         RealMatrix eBetaTx = new Array2DRowRealMatrix(1, tcC - 1);
         RealMatrix pi = new Array2DRowRealMatrix(1, tcC - 1);
-        final int totalRowCount = data.getRowCount();
+        final long totalRowCount = data.getRowCount();
         while (iter.hasNext()) {
             rowCount++;
             RegressionTrainingRow row = iter.next();

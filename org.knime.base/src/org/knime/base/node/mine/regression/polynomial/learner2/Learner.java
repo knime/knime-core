@@ -154,9 +154,9 @@ final class Learner extends RegressionStatisticsLearner {
     @Override
     protected void processTable(final ExecutionMonitor exec, final RegressionTrainingData trainingData, final SummaryStatistics[] stats,
         final UpdatingMultipleLinearRegression regr) throws CanceledExecutionException {
-        int r = 1;
+        long r = 1;
         double progress = 0;
-        final int rowCount = trainingData.getRowCount();
+        final long rowCount = trainingData.getRowCount();
         for (RegressionTrainingRow row : trainingData) {
             exec.checkCanceled();
             if (!row.hasMissingCells()) {

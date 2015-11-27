@@ -46,13 +46,28 @@
 package org.knime.base.node.mine.regression.pmmlgreg;
 
 import java.math.BigInteger;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 
 import org.apache.xmlbeans.SchemaType;
+import org.dmg.pmml.ApplyDocument.Apply;
+import org.dmg.pmml.ConstantDocument.Constant;
 import org.dmg.pmml.CovariateListDocument.CovariateList;
+import org.dmg.pmml.DATATYPE;
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.dmg.pmml.FactorListDocument.FactorList;
+import org.dmg.pmml.FieldRefDocument.FieldRef;
 import org.dmg.pmml.GeneralRegressionModelDocument.GeneralRegressionModel;
 import org.dmg.pmml.GeneralRegressionModelDocument.GeneralRegressionModel.ModelType;
+import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
 import org.dmg.pmml.MININGFUNCTION;
+import org.dmg.pmml.OPTYPE;
 import org.dmg.pmml.PCellDocument.PCell;
 import org.dmg.pmml.PCovCellDocument.PCovCell;
 import org.dmg.pmml.PCovMatrixDocument.PCovMatrix;
@@ -64,6 +79,13 @@ import org.dmg.pmml.ParameterDocument.Parameter;
 import org.dmg.pmml.ParameterListDocument.ParameterList;
 import org.dmg.pmml.PredictorDocument.Predictor;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
+import org.knime.base.node.mine.regression.pmmlgreg.VectorHandling.NameAndIndex;
+import org.knime.core.data.DataColumnProperties;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.StringValue;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
@@ -77,31 +99,27 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  *
  */
 public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(PMMLGeneralRegressionTranslator.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(PMMLGeneralRegressionTranslator.class);
 
     private final PMMLGeneralRegressionContent m_content;
 
     private DerivedFieldMapper m_nameMapper;
 
     /**
-     * Creates a new PMML content translator for general regression models.
-     * For usage with the {@link #initializeFrom(PMMLDocument)} method.
+     * Creates a new PMML content translator for general regression models. For usage with the
+     * {@link #initializeFrom(PMMLDocument)} method.
      */
     public PMMLGeneralRegressionTranslator() {
-       this(new PMMLGeneralRegressionContent());
+        this(new PMMLGeneralRegressionContent());
     }
 
     /**
-     * Creates a new PMML content translator for general regression models.
-     * For usage with the {@link #exportTo(PMMLDocument, PMMLPortObjectSpec)}
-     * method.
+     * Creates a new PMML content translator for general regression models. For usage with the
+     * {@link #exportTo(PMMLDocument, PMMLPortObjectSpec)} method.
      *
      * @param content the regression content for the model
      */
-    public PMMLGeneralRegressionTranslator(
-            final PMMLGeneralRegressionContent content) {
+    public PMMLGeneralRegressionTranslator(final PMMLGeneralRegressionContent content) {
         m_content = content;
     }
 
@@ -111,158 +129,251 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
     @Override
     public void initializeFrom(final PMMLDocument pmmlDoc) {
         m_nameMapper = new DerivedFieldMapper(pmmlDoc);
-        GeneralRegressionModel[] models
-                = pmmlDoc.getPMML().getGeneralRegressionModelArray();
-        if (models.length == 0) {
-            throw new IllegalArgumentException("No general regression model"
-                + " provided.");
-        } else if (models.length > 1) {
-            LOGGER.warn("Multiple general regression models found. "
-                + "Only the first model is considered.");
+        List<GeneralRegressionModel> models = pmmlDoc.getPMML().getGeneralRegressionModelList();
+        if (models.isEmpty()) {
+            throw new IllegalArgumentException("No general regression model" + " provided.");
+        } else if (models.size() > 1) {
+            LOGGER.warn("Multiple general regression models found. " + "Only the first model is considered.");
         }
-        GeneralRegressionModel reg = models[0];
+        GeneralRegressionModel reg = models.get(0);
 
         // read the content type
-       PMMLGeneralRegressionContent.ModelType modelType =
-            getKNIMERegModelType(reg.getModelType());
-       m_content.setModelType(modelType);
+        PMMLGeneralRegressionContent.ModelType modelType = getKNIMERegModelType(reg.getModelType());
+        m_content.setModelType(modelType);
 
-       // read the function name
-       FunctionName functionName = getKNIMEFunctionName(reg.getFunctionName());
-       m_content.setFunctionName(functionName);
+        // read the function name
+        FunctionName functionName = getKNIMEFunctionName(reg.getFunctionName());
+        m_content.setFunctionName(functionName);
 
-       m_content.setAlgorithmName(reg.getAlgorithmName());
-       m_content.setModelName(reg.getModelName());
-       if (reg.getCumulativeLink() != null) {
-           throw new IllegalArgumentException("The attribute \"cumulativeLink\""
-                   + " is currently not supported.");
-       }
-       m_content.setTargetReferenceCategory(reg.getTargetReferenceCategory());
-       if (reg.isSetOffsetValue()) {
-           m_content.setOffsetValue(reg.getOffsetValue());
-       }
+        m_content.setAlgorithmName(reg.getAlgorithmName());
+        m_content.setModelName(reg.getModelName());
+        if (reg.getCumulativeLink() != null) {
+            throw new IllegalArgumentException("The attribute \"cumulativeLink\"" + " is currently not supported.");
+        }
+        m_content.setTargetReferenceCategory(reg.getTargetReferenceCategory());
+        if (reg.isSetOffsetValue()) {
+            m_content.setOffsetValue(reg.getOffsetValue());
+        }
+        if (reg.getLocalTransformations() != null && reg.getLocalTransformations().getDerivedFieldList() != null) {
+            updateVectorLengthsBasedOnDerivedFields(reg.getLocalTransformations().getDerivedFieldList());
+        }
+        //        final Stream<String> vectorLengthsAsJsonAsString = reg.getMiningSchema().getExtensionList().stream()
+        //                .filter(e -> e.getExtender().equals(EXTENDER) && e.getName().equals(VECTOR_COLUMNS_WITH_LENGTH)).map(v -> v.getValue());
+        //        vectorLengthsAsJsonAsString
+        //            .forEachOrdered(jsonAsString -> m_content.updateVectorLengths(
+        //                Json.createReader(new StringReader(jsonAsString)).readObject().entrySet().stream().collect(
+        //                    Collectors.toMap(Entry::getKey, entry -> ((JsonNumber)entry.getValue()).intValueExact()))));
+        // read the parameter list
+        ParameterList pmmlParamList = reg.getParameterList();
+        if (pmmlParamList != null && pmmlParamList.sizeOfParameterArray() > 0) {
+            List<Parameter> pmmlParam = pmmlParamList.getParameterList();
+            PMMLParameter[] paramList = new PMMLParameter[pmmlParam.size()];
+            for (int i = 0; i < pmmlParam.size(); i++) {
+                String name = m_nameMapper.getColumnName(pmmlParam.get(i).getName());
+                String label = pmmlParam.get(i).getLabel();
+                if (label == null) {
+                    paramList[i] = new PMMLParameter(name);
+                } else {
+                    paramList[i] = new PMMLParameter(name, label);
+                }
+            }
+            m_content.setParameterList(paramList);
+        } else {
+            m_content.setParameterList(new PMMLParameter[0]);
+        }
 
-       // read the parameter list
-       ParameterList pmmlParamList = reg.getParameterList();
-       if (pmmlParamList != null && pmmlParamList.sizeOfParameterArray() > 0) {
-           Parameter[] pmmlParam = pmmlParamList.getParameterArray();
-           PMMLParameter[] paramList = new PMMLParameter[pmmlParam.length];
-           for (int i = 0; i < pmmlParam.length; i++) {
-               String name = m_nameMapper.getColumnName(pmmlParam[i].getName());
-               String label = pmmlParam[i].getLabel();
-               if (label == null) {
-                   paramList[i] = new PMMLParameter(name);
-               } else {
-                   paramList[i] = new PMMLParameter(name, label);
-               }
-           }
-           m_content.setParameterList(paramList);
-       } else {
-           m_content.setParameterList(new PMMLParameter[0]);
-       }
+        // read the factor list
+        FactorList pmmlFactorList = reg.getFactorList();
+        if (pmmlFactorList != null && pmmlFactorList.sizeOfPredictorArray() > 0) {
+            List<Predictor> pmmlPredictor = pmmlFactorList.getPredictorList();
+            PMMLPredictor[] predictor = new PMMLPredictor[pmmlPredictor.size()];
+            for (int i = 0; i < pmmlPredictor.size(); i++) {
+                predictor[i] = new PMMLPredictor(m_nameMapper.getColumnName(pmmlPredictor.get(i).getName()));
+            }
+            m_content.setFactorList(predictor);
+        } else {
+            m_content.setFactorList(new PMMLPredictor[0]);
+        }
 
-       // read the factor list
-       FactorList pmmlFactorList = reg.getFactorList();
-       if (pmmlFactorList != null
-               && pmmlFactorList.sizeOfPredictorArray() > 0) {
-           Predictor[] pmmlPredictor = pmmlFactorList.getPredictorArray();
-           PMMLPredictor[] predictor = new PMMLPredictor[pmmlPredictor.length];
-           for (int i = 0; i < pmmlPredictor.length; i++) {
-               predictor[i] = new PMMLPredictor(m_nameMapper.getColumnName(
-                       pmmlPredictor[i].getName()));
-           }
-           m_content.setFactorList(predictor);
-       } else {
-           m_content.setFactorList(new PMMLPredictor[0]);
-       }
+        // read covariate list
+        CovariateList covariateList = reg.getCovariateList();
+        if (covariateList != null && covariateList.sizeOfPredictorArray() > 0) {
+            List<Predictor> pmmlPredictor = covariateList.getPredictorList();
+            PMMLPredictor[] predictor = new PMMLPredictor[pmmlPredictor.size()];
+            for (int i = 0; i < pmmlPredictor.size(); i++) {
+                predictor[i] = new PMMLPredictor(m_nameMapper.getColumnName(pmmlPredictor.get(i).getName()));
+            }
+            m_content.setCovariateList(predictor);
+        } else {
+            m_content.setCovariateList(new PMMLPredictor[0]);
+        }
 
-       // read covariate list
-       CovariateList covariateList = reg.getCovariateList();
-       if (covariateList != null
-               && covariateList.sizeOfPredictorArray() > 0) {
-           Predictor[] pmmlPredictor = covariateList.getPredictorArray();
-           PMMLPredictor[] predictor = new PMMLPredictor[pmmlPredictor.length];
-           for (int i = 0; i < pmmlPredictor.length; i++) {
-               predictor[i] = new PMMLPredictor(m_nameMapper.getColumnName(
-                       pmmlPredictor[i].getName()));
-           }
-           m_content.setCovariateList(predictor);
-       } else {
-           m_content.setCovariateList(new PMMLPredictor[0]);
-       }
+        // read PPMatrix
+        PPMatrix ppMatrix = reg.getPPMatrix();
+        if (ppMatrix != null && ppMatrix.sizeOfPPCellArray() > 0) {
+            List<PPCell> pmmlCellArray = ppMatrix.getPPCellList();
+            PMMLPPCell[] cells = new PMMLPPCell[pmmlCellArray.size()];
+            for (int i = 0; i < pmmlCellArray.size(); i++) {
+                PPCell ppCell = pmmlCellArray.get(i);
+                cells[i] = new PMMLPPCell(ppCell.getValue(), m_nameMapper.getColumnName(ppCell.getPredictorName()),
+                    ppCell.getParameterName(), ppCell.getTargetCategory());
+            }
+            m_content.setPPMatrix(cells);
+        } else {
+            m_content.setPPMatrix(new PMMLPPCell[0]);
+        }
 
-       // read PPMatrix
-       PPMatrix ppMatrix = reg.getPPMatrix();
-       if (ppMatrix != null && ppMatrix.sizeOfPPCellArray() > 0) {
-           PPCell[] pmmlCellArray = ppMatrix.getPPCellArray();
-           PMMLPPCell[] cells = new PMMLPPCell[pmmlCellArray.length];
-           for (int i = 0; i < pmmlCellArray.length; i++) {
-               PPCell ppCell = pmmlCellArray[i];
-               cells[i] = new PMMLPPCell(ppCell.getValue(),
-                       m_nameMapper.getColumnName(ppCell.getPredictorName()),
-                       ppCell.getParameterName(),
-                       ppCell.getTargetCategory());
-           }
-           m_content.setPPMatrix(cells);
-       } else {
-           m_content.setPPMatrix(new PMMLPPCell[0]);
-       }
-
-       // read CovMatrix
+        // read CovMatrix
         PCovMatrix pCovMatrix = reg.getPCovMatrix();
         if (pCovMatrix != null && pCovMatrix.sizeOfPCovCellArray() > 0) {
-            PCovCell[] pCovCellArray = pCovMatrix.getPCovCellArray();
-            PMMLPCovCell[] covCells = new PMMLPCovCell[pCovCellArray.length];
-            for (int i = 0; i < pCovCellArray.length; i++) {
-                PCovCell c = pCovCellArray[i];
-                covCells[i] =
-                        new PMMLPCovCell(c.getPRow(), c.getPCol(), c.getTRow(),
-                                c.getTCol(), c.getValue(),
-                                c.getTargetCategory());
+            List<PCovCell> pCovCellArray = pCovMatrix.getPCovCellList();
+            PMMLPCovCell[] covCells = new PMMLPCovCell[pCovCellArray.size()];
+            for (int i = 0; i < pCovCellArray.size(); i++) {
+                PCovCell c = pCovCellArray.get(i);
+                covCells[i] = new PMMLPCovCell(c.getPRow(), c.getPCol(), c.getTRow(), c.getTCol(), c.getValue(),
+                    c.getTargetCategory());
             }
             m_content.setPCovMatrix(covCells);
         } else {
             m_content.setPCovMatrix(new PMMLPCovCell[0]);
         }
 
-       // read ParamMatrix
-       ParamMatrix paramMatrix = reg.getParamMatrix();
-       if (paramMatrix != null && paramMatrix.sizeOfPCellArray() > 0) {
-           PCell[] pCellArray = paramMatrix.getPCellArray();
-           PMMLPCell[] cells = new PMMLPCell[pCellArray.length];
-           for (int i = 0; i < pCellArray.length; i++) {
-               PCell p = pCellArray[i];
-               double beta = p.getBeta();
-               BigInteger df = p.getDf();
-               if (df != null) {
-                   cells[i] = new PMMLPCell(p.getParameterName(), beta,
-                           df.intValue(), p.getTargetCategory());
-               } else {
-                   cells[i] = new PMMLPCell(p.getParameterName(), beta,
-                           p.getTargetCategory());
-               }
-           }
-           m_content.setParamMatrix(cells);
-       } else {
-           m_content.setParamMatrix(new PMMLPCell[0]);
-       }
+        // read ParamMatrix
+        ParamMatrix paramMatrix = reg.getParamMatrix();
+        if (paramMatrix != null && paramMatrix.sizeOfPCellArray() > 0) {
+            List<PCell> pCellArray = paramMatrix.getPCellList();
+            PMMLPCell[] cells = new PMMLPCell[pCellArray.size()];
+            for (int i = 0; i < pCellArray.size(); i++) {
+                PCell p = pCellArray.get(i);
+                double beta = p.getBeta();
+                BigInteger df = p.getDf();
+                if (df != null) {
+                    cells[i] = new PMMLPCell(p.getParameterName(), beta, df.intValue(), p.getTargetCategory());
+                } else {
+                    cells[i] = new PMMLPCell(p.getParameterName(), beta, p.getTargetCategory());
+                }
+            }
+            m_content.setParamMatrix(cells);
+        } else {
+            m_content.setParamMatrix(new PMMLPCell[0]);
+        }
+    }
+
+    /**
+     * @param derivedFieldList
+     */
+    private void updateVectorLengthsBasedOnDerivedFields(final List<DerivedField> derivedFieldList) {
+        final Map<String, Integer> lengths = new LinkedHashMap<>();
+        for (final DerivedField df : derivedFieldList) {
+            final String name = df.getName();
+            Optional<NameAndIndex> vni = VectorHandling.parse(name);
+            if (vni.isPresent()) {
+                final String key = vni.get().getName();
+                try {
+                    String function = df.getApply().getFunction();
+                    if (!"substring".equals(function)) {
+                        continue;
+                    }
+                    final List<FieldRef> fieldRefList = df.getApply().getFieldRefList();
+                    if (fieldRefList.isEmpty() || !key.equals(fieldRefList.get(0).getField())) {
+                        LOGGER.debug("Field name is not related to the derived field name: " + fieldRefList + " <-> " + key);
+                        continue;
+                    }
+                    if (2 != df.getApply().getConstantList().size()) {
+                        LOGGER.debug("substring requires two parameters: " + df);
+                        continue;
+                    }
+                    if (!DATATYPE.INTEGER.equals(df.getDataType())) {
+                        LOGGER.debug("Array value should be integer: " + df);
+                        continue;
+                    }
+                    if (!OPTYPE.CONTINUOUS.equals(df.getOptype())) {
+                        LOGGER.debug("The optype should be continuous: " + df);
+                        continue;
+                    }
+                    int index = vni.get().getIndex();
+                    int old = Math.max(0, lengths.getOrDefault(key, Integer.valueOf(0)).intValue());
+                    if (old <= index) {
+                        lengths.put(key, index + 1);
+                    }
+                } catch (RuntimeException e) {
+                    //Ignore
+                    LOGGER.debug(df.toString(), e);
+                }
+            }
+        }
+        LOGGER.debug(lengths);
+        m_content.updateVectorLengths(lengths);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public SchemaType exportTo(final PMMLDocument pmmlDoc,
-            final PMMLPortObjectSpec spec) {
+    public SchemaType exportTo(final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
         m_nameMapper = new DerivedFieldMapper(pmmlDoc);
 
-        GeneralRegressionModel reg =
-            pmmlDoc.getPMML().addNewGeneralRegressionModel();
+        GeneralRegressionModel reg = pmmlDoc.getPMML().addNewGeneralRegressionModel();
+        final JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
+        if (!m_content.getVectorLengths().isEmpty()) {
+            LocalTransformations localTransformations = reg.addNewLocalTransformations();
+            for (final Entry<? extends String, ? extends Integer> entry : m_content.getVectorLengths().entrySet()) {
+                DataColumnSpec columnSpec = spec.getDataTableSpec().getColumnSpec(entry.getKey());
+                if (columnSpec != null) {
+                    final DataType type = columnSpec.getType();
+                    final DataColumnProperties props = columnSpec.getProperties();
+                    final boolean bitVector =
+                        type.isCompatible(BitVectorValue.class) || (type.isCompatible(StringValue.class)
+                            && props.containsProperty("realType") && "BitVector".equals(props.getProperty("realType")));
+                    final boolean byteVector = type.isCompatible(ByteVectorValue.class)
+                        || (type.isCompatible(StringValue.class) && props.containsProperty("realType")
+                            && "ByteVector".equals(props.getProperty("realType")));
+                    final String lengthAsString;
+                    final int width;
+                    if (byteVector) {
+                        lengthAsString = "3";
+                        width = 4;
+                    } else if (bitVector) {
+                        lengthAsString = "1";
+                        width = 1;
+                    } else {
+                        throw new UnsupportedOperationException(
+                            "Not supported type: " + type + " for column: " + columnSpec);
+                    }
+                    for (int i = 0; i < entry.getValue().intValue(); ++i) {
+                        final DerivedField derivedField = localTransformations.addNewDerivedField();
+                        derivedField.setOptype(OPTYPE.CONTINUOUS);
+                        derivedField.setDataType(DATATYPE.INTEGER);
+                        derivedField.setName(entry.getKey() + "[" + i + "]");
+                        Apply apply = derivedField.addNewApply();
+                        apply.setFunction("substring");
+                        apply.addNewFieldRef().setField(entry.getKey());
+                        Constant from = apply.addNewConstant();
+                        from.setDataType(DATATYPE.INTEGER);
+                        from.setStringValue(bitVector ? Long.toString(entry.getValue().longValue() - i) : Long.toString(i * width + 1L));
+                        Constant length = apply.addNewConstant();
+                        length.setDataType(DATATYPE.INTEGER);
+                        length.setStringValue(lengthAsString);
+
+                    }
+                }
+                jsonBuilder.add(entry.getKey(), entry.getValue().intValue());
+            }
+        }
+        //        PMMLPortObjectSpecCreator newSpecCreator = new PMMLPortObjectSpecCreator(spec);
+        //        newSpecCreator.addPreprocColNames(m_content.getVectorLengths().entrySet().stream()
+        //            .flatMap(
+        //                e -> IntStream.iterate(0, o -> o + 1).limit(e.getValue()).mapToObj(i -> e.getKey() + "[" + i + "]"))
+        //            .collect(Collectors.toList()));
         PMMLMiningSchemaTranslator.writeMiningSchema(spec, reg);
-        reg.setModelType(
-                getPMMLRegModelType(m_content.getModelType()));
-        reg.setFunctionName(
-                getPMMLMiningFunction(m_content.getFunctionName()));
+        //        if (!m_content.getVectorLengths().isEmpty()) {
+        //        Extension miningExtension = reg.getMiningSchema().addNewExtension();
+        //        miningExtension.setExtender(EXTENDER);
+        //        miningExtension.setName(VECTOR_COLUMNS_WITH_LENGTH);
+        //        miningExtension.setValue(jsonBuilder.build().toString());
+        //        }
+        reg.setModelType(getPMMLRegModelType(m_content.getModelType()));
+        reg.setFunctionName(getPMMLMiningFunction(m_content.getFunctionName()));
         String algorithmName = m_content.getAlgorithmName();
         if (algorithmName != null && !algorithmName.isEmpty()) {
             reg.setAlgorithmName(algorithmName);
@@ -293,8 +404,8 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
         // add factor list
         FactorList factorList = reg.addNewFactorList();
         for (PMMLPredictor p : m_content.getFactorList()) {
-           Predictor predictor = factorList.addNewPredictor();
-           predictor.setName(m_nameMapper.getDerivedFieldName(p.getName()));
+            Predictor predictor = factorList.addNewPredictor();
+            predictor.setName(m_nameMapper.getDerivedFieldName(p.getName()));
         }
 
         // add covariate list
@@ -309,8 +420,7 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
         for (PMMLPPCell p : m_content.getPPMatrix()) {
             PPCell cell = ppMatrix.addNewPPCell();
             cell.setValue(p.getValue());
-            cell.setPredictorName(m_nameMapper.getDerivedFieldName(
-                    p.getPredictorName()));
+            cell.setPredictorName(m_nameMapper.getDerivedFieldName(p.getPredictorName()));
             cell.setParameterName(p.getParameterName());
             String targetCategory = p.getTargetCategory();
             if (targetCategory != null && !targetCategory.isEmpty()) {
@@ -357,26 +467,22 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
         return GeneralRegressionModel.type;
     }
 
-
-
-    private ModelType.Enum getPMMLRegModelType(
-            final PMMLGeneralRegressionContent.ModelType type) {
+    private ModelType.Enum getPMMLRegModelType(final PMMLGeneralRegressionContent.ModelType type) {
         switch (type) {
-        case generalLinear:
-            return ModelType.GENERAL_LINEAR;
-        case multinomialLogistic:
-            return ModelType.MULTINOMIAL_LOGISTIC;
-        case ordinalMultinomial:
-            return ModelType.ORDINAL_MULTINOMIAL;
-        case regression:
-            return ModelType.REGRESSION;
-        default:
-            return null;
+            case generalLinear:
+                return ModelType.GENERAL_LINEAR;
+            case multinomialLogistic:
+                return ModelType.MULTINOMIAL_LOGISTIC;
+            case ordinalMultinomial:
+                return ModelType.ORDINAL_MULTINOMIAL;
+            case regression:
+                return ModelType.REGRESSION;
+            default:
+                return null;
         }
     }
 
-    private PMMLGeneralRegressionContent.ModelType getKNIMERegModelType(
-            final ModelType.Enum modelType) {
+    private PMMLGeneralRegressionContent.ModelType getKNIMERegModelType(final ModelType.Enum modelType) {
         PMMLGeneralRegressionContent.ModelType type = null;
         if (ModelType.GENERAL_LINEAR.equals(modelType)) {
             type = PMMLGeneralRegressionContent.ModelType.generalLinear;
@@ -394,31 +500,27 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
         return type;
     }
 
-    private MININGFUNCTION.Enum getPMMLMiningFunction(
-            final PMMLGeneralRegressionContent.FunctionName function) {
+    private MININGFUNCTION.Enum getPMMLMiningFunction(final PMMLGeneralRegressionContent.FunctionName function) {
         switch (function) {
-        case classification:
-            return MININGFUNCTION.CLASSIFICATION;
-        case regression:
-            return MININGFUNCTION.REGRESSION;
-        default:
-            throw new IllegalArgumentException("Only classification or "
-                    + "regression are allowed as mining function for general "
-                    + "regression");
+            case classification:
+                return MININGFUNCTION.CLASSIFICATION;
+            case regression:
+                return MININGFUNCTION.REGRESSION;
+            default:
+                throw new IllegalArgumentException("Only classification or "
+                    + "regression are allowed as mining function for general " + "regression");
         }
     }
 
-    private PMMLGeneralRegressionContent.FunctionName getKNIMEFunctionName(
-            final MININGFUNCTION.Enum mf) {
+    private PMMLGeneralRegressionContent.FunctionName getKNIMEFunctionName(final MININGFUNCTION.Enum mf) {
         PMMLGeneralRegressionContent.FunctionName function = null;
         if (MININGFUNCTION.CLASSIFICATION.equals(mf)) {
             function = PMMLGeneralRegressionContent.FunctionName.classification;
         } else if (MININGFUNCTION.REGRESSION.equals(mf)) {
-                function = PMMLGeneralRegressionContent.FunctionName.regression;
+            function = PMMLGeneralRegressionContent.FunctionName.regression;
         } else {
-            throw new IllegalArgumentException("Only classification or "
-                    + "regression are allowed as mining function for general "
-                    + "regression");
+            throw new IllegalArgumentException(
+                "Only classification or " + "regression are allowed as mining function for general " + "regression");
         }
         return function;
     }
