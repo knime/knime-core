@@ -139,7 +139,9 @@ public class CasePivotStatementGenerator extends DefaultPivotStatementGenerator 
         StringBuilder outerGroupByStatement = new StringBuilder();
         StringBuilder outerSelectStatement = createOuterSelectStatement(sm, tableName, groupByColumnsList,
             pivotDataQueries, aggValues, pivotColGenerator);
-        outerGroupByStatement.append(outerSelectStatement.substring(0, outerSelectStatement.length() - 2));
+        if (outerSelectStatement.length() > 2) {
+            outerGroupByStatement.append(outerSelectStatement.substring(0, outerSelectStatement.length() - 2));
+        }
         return outerGroupByStatement;
     }
 

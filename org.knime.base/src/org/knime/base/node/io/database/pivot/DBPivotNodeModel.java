@@ -82,12 +82,12 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.AggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.InvalidAggregationFunction;
 import org.knime.core.node.port.database.pivoting.PivotColumnNameGenerator;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.util.Pair;
 
 /**
@@ -217,22 +217,30 @@ final class DBPivotNodeModel extends DBNodeModel {
                 try {
                     function.configure(tableSpec);
                 } catch (InvalidSettingsException e) {
-                    throw new InvalidSettingsException("Exception in aggregation function " + function.getLabel()
-                        + " of column " + row.getColumnSpec().getName() + ": " + e.getMessage());
+                    throw new InvalidSettingsException("Wrong aggregation function configuration '" + function.getLabel()
+                        + "' of column '" + row.getColumnSpec().getName() + "': " + e.getMessage(), e);
                 }
             }
             usedColNames.add(row.getColumnSpec().getName());
             m_aggregationFunction2Use.add(row);
         }
-        if (m_groupByCols.getIncludeList().isEmpty() && m_aggregationFunction2Use.isEmpty()) {
-            throw new InvalidSettingsException("Please select at least one group or aggregation function.");
+
+        if (m_aggregationFunction2Use.isEmpty()) {
+            throw new InvalidSettingsException("No aggregation columns selected.");
         }
-        if (m_pivotCols.getIncludeList().isEmpty() && m_aggregationFunction2Use.isEmpty()) {
-            throw new InvalidSettingsException("Please select at least one group or aggregation function.");
+
+        if (m_groupByCols.getIncludeList().isEmpty()) {
+            setWarningMessage("No grouping column included. Aggregate complete table");
         }
+
+        if (m_pivotCols.getIncludeList().isEmpty()) {
+            throw new InvalidSettingsException("No pivot columns selected.");
+        }
+
         if (!invalidColAggrs.isEmpty()) {
             setWarningMessage(invalidColAggrs.size() + " aggregation functions ignored due to incompatible columns.");
         }
+
         final DatabasePortObjectSpec resultSpec;
         if (connection.getRetrieveMetadataInConfigure()) {
             try {
@@ -264,21 +272,19 @@ final class DBPivotNodeModel extends DBNodeModel {
             connectionSettings = createDBQueryConnection(inSpec, newQuery);
             DatabaseQueryConnectionSettings querySettings =
                 new DatabaseQueryConnectionSettings(connectionSettings, newQuery);
-            DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
+            DBReader reader = querySettings.getUtility().getReader(querySettings);
             DataTableSpec tableSpec;
             exec.setMessage("Retrieving result specification.");
-            tableSpec = conn.getDataTableSpec(getCredentialsProvider());
+            tableSpec = reader.getDataTableSpec(getCredentialsProvider());
             return new DatabasePortObjectSpec(tableSpec, connectionSettings.createConnectionModel());
         } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException
                 | IOException e1) {
-            throw new InvalidSettingsException("Failure during query generation. Error: " + e1.getMessage());
+            throw new InvalidSettingsException("Failure during query generation. Error: " + e1.getMessage(), e1);
         }
     }
 
     private String createQuery(final Connection connection, final String query, final StatementManipulator manipulator,
         final DataTableSpec dataTableSpec, final ExecutionMonitor exec) throws SQLException, CanceledExecutionException {
-
-        final StringBuilder resultQuery = new StringBuilder();
 
         exec.setMessage("Getting pivot values.");
         ExecutionMonitor subExec = exec.createSubProgress(0.7);
@@ -335,17 +341,15 @@ final class DBPivotNodeModel extends DBNodeModel {
                     case AGGREGATION_METHOD_COLUMN_NAME:
                         return vals + "+" + method + "(" + columnName + ")";
                     case COLUMN_NAME_AGGREGATION_METHOD:
-                        return vals + "+" + columnName + "(" + method + ")";
+                        return vals + "+" + columnName + " (" + method + ")";
                     default:
-                        return columnName;
+                        throw new IllegalStateException("Unhandled column naming policy: " + pivotColPoliciy);
                 }
             }
         };
 
         exec.setProgress(0.9, "Creating query.");
         exec.checkCanceled();
-        resultQuery
-            .append(manipulator.getPivotStatement(query, groupByColumns, pivotElements, aggValues, pivotColName));
-        return resultQuery.toString();
+        return manipulator.getPivotStatement(query, groupByColumns, pivotElements, aggValues, pivotColName);
     }
 }

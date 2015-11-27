@@ -121,11 +121,8 @@ public class DefaultPivotStatementGenerator implements PivotStatementGenerator {
         StringBuilder outerSelectStatement = new StringBuilder();
 
         for (int i = 1; i < groupByColumnsList.size() + 1; i++) {
-            if (i != 1) {
-                outerSelectStatement.append(", ");
-            }
             final String groupColName = "T." + sm.quoteIdentifier(groupByColumnsList.get(i - 1));
-            outerSelectStatement.append(groupColName);
+            outerSelectStatement.append(groupColName).append(", ");
         }
         int id_counter = 1;
         for (PivotData pivotData : pivotDataQueries) {
@@ -134,10 +131,14 @@ public class DefaultPivotStatementGenerator implements PivotStatementGenerator {
                 Pair<String, DBAggregationFunction> pair = aggValues.get(j - 1);
                 String pivotColName =
                     pivotColGenerator.createColumnName(pair.getFirst(), pair.getSecond(), pivotData.getValues());
-                String columnIdentifier = ", " + identifier + ".c" + j;
-                outerSelectStatement.append(columnIdentifier + " " + sm.quoteIdentifier(pivotColName));
+                String columnIdentifier = identifier + ".c" + j;
+                outerSelectStatement.append(columnIdentifier).append(" ").append(sm.quoteIdentifier(pivotColName))
+                    .append(", ");
             }
             id_counter++;
+        }
+        if (outerSelectStatement.length() > 2) {
+            outerSelectStatement.delete(outerSelectStatement.length() - 2, outerSelectStatement.length());
         }
         outerSelectStatement.append(" FROM (" + tableName + ") T");
         return outerSelectStatement;
@@ -169,14 +170,13 @@ public class DefaultPivotStatementGenerator implements PivotStatementGenerator {
         StringBuilder columnsGroupByOperator = new StringBuilder();
         ArrayList<String> columnsGroupByOuterSelection = new ArrayList<String>(groupByColumnsList.size());
         for (int i = 1; i < groupByColumnsList.size() + 1; i++) {
-            if (i != 1) {
-                columnsGroupBy.append(", ");
-                columnsGroupByOperator.append(", ");
-            }
             final String groupColName = sm.quoteIdentifier(groupByColumnsList.get(i - 1));
-            columnsGroupBy.append(groupColName + " g" + i);
+            columnsGroupBy.append(groupColName + " g" + i).append(", ");
             columnsGroupByOuterSelection.add("T." + groupColName);
-            columnsGroupByOperator.append(groupColName);
+            columnsGroupByOperator.append(groupColName).append(", ");
+        }
+        if (columnsGroupByOperator.length() > 2) {
+            columnsGroupByOperator.delete(columnsGroupByOperator.length() - 2, columnsGroupByOperator.length());
         }
 
         StringBuilder innerStatement = new StringBuilder();
@@ -184,17 +184,24 @@ public class DefaultPivotStatementGenerator implements PivotStatementGenerator {
         for (PivotData pivotData : pivotDataQueries) {
             innerStatement.append(" LEFT JOIN ");
             String identifier = sm.quoteIdentifier("P_" + id_counter);
-            innerStatement.append("(SELECT " + columnsGroupBy + ", " + aggregationValues + " FROM (" + tableName
-                + ") A WHERE " + pivotData.getQuery() + " GROUP BY " + columnsGroupByOperator + ") " + identifier);
+            innerStatement.append("(SELECT ").append(columnsGroupBy).append(aggregationValues).append(" FROM (")
+                .append(tableName).append(") A WHERE ").append(pivotData.getQuery());
+            if (columnsGroupByOperator.length() > 0) {
+                innerStatement.append(" GROUP BY ").append(columnsGroupByOperator);
+            }
+            innerStatement.append(") ").append(identifier);
             id_counter++;
             StringBuilder onStatement = new StringBuilder();
             for (int i = 1; i < columnsGroupByOuterSelection.size() + 1; i++) {
                 if (i != 1) {
                     onStatement.append(" AND ");
                 }
-                onStatement.append("(" + columnsGroupByOuterSelection.get(i - 1) + "=" + identifier + ".g" + i + ")");
+                onStatement.append("(").append(columnsGroupByOuterSelection.get(i - 1)).append("=").append(identifier)
+                    .append(".g").append(i).append(")");
             }
-            innerStatement.append(" ON " + onStatement);
+            if (onStatement.length() > 0) {
+                innerStatement.append(" ON ").append(onStatement);
+            }
         }
         return innerStatement;
     }
@@ -214,17 +221,18 @@ public class DefaultPivotStatementGenerator implements PivotStatementGenerator {
 
         StringBuilder outerGroupByStatement = new StringBuilder();
         for (int i = 1; i < groupByColumnsList.size() + 1; i++) {
-            if (i != 1) {
-                outerGroupByStatement.append(", ");
-            }
             final String groupColName = "T." + sm.quoteIdentifier(groupByColumnsList.get(i - 1));
-            outerGroupByStatement.append(groupColName);
+            outerGroupByStatement.append(groupColName).append(", ");
         }
+
         for (int i = 1; i < pivotDataQueries.size() + 1; i++) {
             String identifier = sm.quoteIdentifier("P_" + i);
             for (int j = 1; j < aggValues.size() + 1; j++) {
-                outerGroupByStatement.append(", " + identifier + ".c" + j);
+                outerGroupByStatement.append(identifier).append(".c").append(j).append(", ");
             }
+        }
+        if (outerGroupByStatement.length() > 2) {
+            outerGroupByStatement.delete(outerGroupByStatement.length() - 2, outerGroupByStatement.length());
         }
         return outerGroupByStatement;
     }
@@ -234,7 +242,9 @@ public class DefaultPivotStatementGenerator implements PivotStatementGenerator {
         StringBuilder result = new StringBuilder();
         result.append(" SELECT " + outerSelectStatement);
         result.append(innerStatement);
-        result.append(" GROUP BY " + outerGroupByStatement);
+        if (outerGroupByStatement.length() > 0) {
+            result.append(" GROUP BY " + outerGroupByStatement);
+        }
         return result;
     }
 
