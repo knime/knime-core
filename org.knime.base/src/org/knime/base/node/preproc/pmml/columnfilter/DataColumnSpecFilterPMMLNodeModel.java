@@ -150,7 +150,7 @@ public class DataColumnSpecFilterPMMLNodeModel extends DataColumnSpecFilterNodeM
                 //execute streamable in- and outport (0)
                 fct.init(exec);
                 fct.runFinal(inputs, outputs, exec);
-                fct.finish(true);
+                fct.finish();
 
                 DataTableSpec outSpec = corea.createSpec();
 

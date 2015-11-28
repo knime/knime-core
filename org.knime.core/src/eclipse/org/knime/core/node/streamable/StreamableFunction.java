@@ -104,7 +104,6 @@ public abstract class StreamableFunction extends StreamableOperator {
         RowInput rowInput = ((RowInput)inputs[m_inportIndex]);
         RowOutput rowOutput = ((RowOutput)outputs[m_outportIndex]);
         init(ctx);
-        boolean success = false;
         try {
             DataRow inputRow;
             long index = 0;
@@ -114,9 +113,8 @@ public abstract class StreamableFunction extends StreamableOperator {
             }
             rowInput.close();
             rowOutput.close();
-            success = true;
         } finally {
-            finish(success);
+            finish();
         }
     }
 
@@ -135,11 +133,8 @@ public abstract class StreamableFunction extends StreamableOperator {
      * @throws Exception if that fails. */
     public abstract DataRow compute(final DataRow input) throws Exception;
 
-    /** Called after all rows have been processed.
-     * @param success a flag indicating whether (for the current chunk) the computation completed
-     * normally without exception. Most implementations will ignore this flag as there is no
-     * indication for a global success state. */
-    public void finish(final boolean success) {
+    /** Called after all rows have been processed (normally or abnormally). */
+    public void finish() {
         // no op
     }
 
@@ -159,19 +154,22 @@ public abstract class StreamableFunction extends StreamableOperator {
         final StreamableFunction func2, final RowOutput output2, final ExecutionContext exec) throws Exception {
         func1.init(exec);
         func2.init(exec);
-        DataRow inputRow;
-        long index = 0;
-        while ((inputRow = input.poll()) != null) {
-            output1.push(func1.compute(inputRow));
-            output2.push(func2.compute(inputRow));
-            exec.setMessage(String.format("Row %d (\"%s\"))",
-                    ++index, inputRow.getKey()));
+        try {
+            DataRow inputRow;
+            long index = 0;
+            while ((inputRow = input.poll()) != null) {
+                output1.push(func1.compute(inputRow));
+                output2.push(func2.compute(inputRow));
+                exec.setMessage(String.format("Row %d (\"%s\"))",
+                        ++index, inputRow.getKey()));
+            }
+            input.close();
+            output1.close();
+            output2.close();
+        } finally {
+            func1.finish();
+            func2.finish();
         }
-        input.close();
-        output1.close();
-        output2.close();
-        func1.finish(true);
-        func2.finish(true);
     }
 
 }
