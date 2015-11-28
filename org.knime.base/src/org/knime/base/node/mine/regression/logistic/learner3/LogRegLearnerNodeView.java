@@ -64,7 +64,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Heiko Hofer
  */
-public class LogRegLearnerNodeView
+final class LogRegLearnerNodeView
     extends NodeView<LogRegLearnerNodeModel> {
 
     /** The text pane that holds the information. */

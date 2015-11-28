@@ -58,8 +58,9 @@ import org.knime.core.node.util.CheckUtils;
  * This class helps generate and parse the name of vector references.
  *
  * @author Gabor Bakos
+ * @since 3.1
  */
-public class VectorHandling {
+public final class VectorHandling {
     /**
      * Hide constructor.
      */

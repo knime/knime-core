@@ -93,7 +93,7 @@ import Jama.Matrix;
  *
  * @author Heiko Hofer
  */
-public final class LogisticRegressionContent {
+final class LogisticRegressionContent {
     private final PMMLPortObjectSpec m_outSpec;
 
     private final List<String> m_factorList;
