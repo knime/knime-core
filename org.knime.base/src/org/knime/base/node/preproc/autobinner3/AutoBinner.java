@@ -156,7 +156,7 @@ public class AutoBinner {
                     double[] edges = calculateBounds(binCount, min, max);
 
                     if (m_settings.getIntegerBounds()) {
-                        edges = toIntegerBounds(edges);
+                        edges = toIntegerBoundaries(edges);
                     }
 
                     edgesMap.put(target, edges);
@@ -199,7 +199,7 @@ public class AutoBinner {
                 colCalcContext.setProgress(1.0);
                 exec.clearTable(singleColSorted);
                 if (m_settings.getIntegerBounds()) {
-                    edges = toIntegerBounds(edges);
+                    edges = toIntegerBoundaries(edges);
                 }
                 edgesMap.put(target, edges);
             }
@@ -226,18 +226,22 @@ public class AutoBinner {
     }
 
     /**
-     * @param edges
-     * @return
+     * Converts double boundaries to integer boundaries. The resulting array may be shorter if some boundaries map to
+     * the same integer value.
+     *
+     * @param boundaries a sorted array of boundaries
+     * @return the new boundaries, all integer values
+     * @since 3.1
      */
-    private static double[] toIntegerBounds(final double[] edges) {
-        Set<Long> intEdges = new TreeSet<Long>();
-        intEdges.add((long)Math.floor(edges[0]));
-        for (int i = 1; i < edges.length; i++) {
-            intEdges.add((long)Math.ceil(edges[i]));
+    public static double[] toIntegerBoundaries(final double[] boundaries) {
+        Set<Double> intBoundaries = new TreeSet<Double>();
+        intBoundaries.add(Math.floor(boundaries[0]));
+        for (int i = 1; i < boundaries.length; i++) {
+            intBoundaries.add(Math.ceil(boundaries[i]));
         }
-        double[] newEdges = new double[intEdges.size()];
+        double[] newEdges = new double[intBoundaries.size()];
         int i = 0;
-        for (Long edge : intEdges) {
+        for (Double edge : intBoundaries) {
             newEdges[i++] = edge;
         }
         return newEdges;

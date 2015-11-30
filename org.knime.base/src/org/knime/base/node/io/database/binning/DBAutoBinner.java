@@ -121,6 +121,10 @@ public class DBAutoBinner extends AutoBinner {
         AutoBinnerLearnSettings settings = getSettings();
         String[] includeCols = settings.getFilterConfiguration().applyTo(dataTableSpec).getIncludes();
 
+        if (includeCols.length == 0) {
+            return createDisretizeOp(new LinkedHashMap<>());
+        }
+
         double max = 0;
         double min = 0;
         StringBuilder minMaxQuery = new StringBuilder();
@@ -150,6 +154,9 @@ public class DBAutoBinner extends AutoBinner {
         for (Entry<String, Pair<Double, Double>> entry : maxAndMin.entrySet()) {
             double[] edges =
                 AutoBinner.calculateBounds(number, entry.getValue().getFirst(), entry.getValue().getSecond());
+            if (settings.getIntegerBounds()) {
+                edges = AutoBinner.toIntegerBoundaries(edges);
+            }
             edgesMap.put(entry.getKey(), edges);
         }
 
