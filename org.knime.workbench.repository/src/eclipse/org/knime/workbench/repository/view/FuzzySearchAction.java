@@ -74,7 +74,7 @@ class FuzzySearchAction extends Action {
      *
      */
     public FuzzySearchAction(final Runnable callback) {
-        setImageDescriptor(ImageRepository.getIconDescriptor(SharedImages.Search));
+        setImageDescriptor(ImageRepository.getIconDescriptor(SharedImages.FuzzySearch));
         //this somehow magically turns it into a toggle button
         setChecked(false);
 
