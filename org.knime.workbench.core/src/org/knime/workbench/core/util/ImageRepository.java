@@ -155,6 +155,8 @@ public final class ImageRepository {
         StartupMessages("icons/startupMessages.png"),
         /** Icon showing a magnifier glass. */
         Search("icons/search.gif"),
+        /** Icon showing a 'fuzzy' magnifier glass. */
+        FuzzySearch("icons/fuzzy_search.png"),
 
         /** Icon for a folder. */
         Folder("icons/folder.png"),
