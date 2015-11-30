@@ -233,8 +233,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                         }
                         queryValues.append(v.toString());
                     }
-                    String newQuery = oQuery.replaceAll(
-                            IN_PLACE_HOLDER, queryValues.toString());
+                    String newQuery = parseQuery(oQuery.replaceAll(IN_PLACE_HOLDER, queryValues.toString()));
                     load.updateQuery(newQuery);
                     exec.setProgress(values.size() * (double)noValues / rowCount, "Selecting all values \""
                         + queryValues + "\"...");

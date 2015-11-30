@@ -233,7 +233,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
     }
     */
 
-    private String parseQuery(final String query) {
+    protected String parseQuery(final String query) {
         return FlowVariableResolver.parse(query, this);
     }
 
