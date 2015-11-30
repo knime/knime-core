@@ -52,9 +52,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 
 import org.knime.core.data.xml.util.XmlDomComparer.Diff.Type;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.filter.InputFilter;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CharacterData;
@@ -63,6 +63,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.ProcessingInstruction;
 
 /**
  * Provides methods for comparing XML nodes.
@@ -270,7 +271,7 @@ public final class XmlDomComparer {
             case Node.COMMENT_NODE:
                 String textNode1 = ((CharacterData)node1).getData();
                 String textNode2 = ((CharacterData)node2).getData();
-                if (!ConvenienceMethods.areEqual(textNode1, textNode2)) {
+                if (!Objects.equals(textNode1, textNode2)) {
                     return new Diff(node1, textNode1, textNode2, Type.TEXT_MISSMATCH);
                 }
                 return null;
@@ -294,6 +295,13 @@ public final class XmlDomComparer {
                 }
 
                 return areChildsEqual(node1, node2, l);
+            case Node.PROCESSING_INSTRUCTION_NODE:
+                String piNode1 =  ((ProcessingInstruction)node1).getData();
+                String piNode2 =  ((ProcessingInstruction)node2).getData();
+                if (!Objects.equals(piNode1, piNode2)) {
+                    return new Diff(node1, piNode1, piNode2, Type.TEXT_MISSMATCH);
+                }
+                return null;
             default:
                 throw new IllegalArgumentException("Nodes with type: " + node1.getNodeType() + " are not supported");
         }
