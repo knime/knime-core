@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.util.Pair;
 
 /**
  * Class to create a SQL binning statement for databases which support "CASE"
@@ -72,8 +73,8 @@ public class CaseBinningStatementGenerator extends DefaultBinningStatementGenera
 
     @Override
     public String getBinnerStatement(final StatementManipulator sm, final String query, final String[] binnedCols,
-        final String[] additionalCols, final Map<String, List<Double[]>> limitsMap,
-        final Map<String, List<Boolean[]>> includeMap, final Map<String, List<String>> namingMap,
+        final String[] additionalCols, final Map<String, List<Pair<Double, Double>>> boundariesMap,
+        final Map<String, List<Pair<Boolean, Boolean>>> boundariesOpenMap, final Map<String, List<String>> namingMap,
         final Map<String, String> appendMap) {
 
         if (binnedCols.length == 0) {
@@ -89,9 +90,9 @@ public class CaseBinningStatementGenerator extends DefaultBinningStatementGenera
         StringBuilder caseQuery = new StringBuilder();
         int counter = 0;
 
-        for (String selColumn : limitsMap.keySet()) {
-            List<Double[]> limits = limitsMap.get(selColumn);
-            List<Boolean[]> include = includeMap.get(selColumn);
+        for (String selColumn : boundariesMap.keySet()) {
+            List<Pair<Double, Double>> boundaries = boundariesMap.get(selColumn);
+            List<Pair<Boolean, Boolean>> boundariesOpen = boundariesOpenMap.get(selColumn);
             List<String> naming = namingMap.get(selColumn);
             String appendColumn = appendMap.get(selColumn);
 
@@ -103,33 +104,24 @@ public class CaseBinningStatementGenerator extends DefaultBinningStatementGenera
 
             caseQuery.append("(CASE");
 
-            String leftBorder;
-            String rightBorder;
-            for (int i = 0; i < limits.size(); i++) {
-                if (include.get(i)[0]) {
-                    leftBorder = ">=";
-                } else {
-                    leftBorder = ">";
-                }
-                if (include.get(i)[1]) {
-                    rightBorder = "<=";
-                } else {
-                    rightBorder = "<";
-                }
+            for (int i = 0; i < boundaries.size(); i++) {
+                String leftBorder = (boundariesOpen.get(i).getFirst()) ? ">" : ">=";
+                String rightBorder = (boundariesOpen.get(i).getSecond()) ? "<" :  "<=";
 
-                if (limits.get(0)[0] == Double.NEGATIVE_INFINITY && limits.get(0)[1] == Double.POSITIVE_INFINITY) { //(inf, inf)
+                if (boundaries.get(0).getFirst() == Double.NEGATIVE_INFINITY
+                    && boundaries.get(0).getSecond() == Double.POSITIVE_INFINITY) { //(inf, inf)
                     caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + " = " + sm.quoteIdentifier(selColumn)
                         + " THEN '" + naming.get(0) + "'");
-                } else if (limits.get(i)[0] == Double.NEGATIVE_INFINITY) {//(inf, x] or (inf, x)
-                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + rightBorder + limits.get(i)[1]
+                } else if (boundaries.get(i).getFirst() == Double.NEGATIVE_INFINITY) {//(inf, x] or (inf, x)
+                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + rightBorder + boundaries.get(i).getSecond()
                         + " THEN '" + naming.get(i) + "'");
-                } else if (limits.get(i)[1] == Double.POSITIVE_INFINITY) { //[x, inf) or (x, inf)
-                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + leftBorder + limits.get(i)[0]
+                } else if (boundaries.get(i).getSecond() == Double.POSITIVE_INFINITY) { //[x, inf) or (x, inf)
+                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + leftBorder + boundaries.get(i).getFirst()
                         + " THEN '" + naming.get(i) + "'");
                 } else {
-                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + leftBorder + limits.get(i)[0] + " AND "
-                        + sm.quoteIdentifier(selColumn) + rightBorder + limits.get(i)[1] + " THEN '" + naming.get(i)
-                        + "'");
+                    caseQuery.append(" WHEN " + sm.quoteIdentifier(selColumn) + leftBorder + boundaries.get(i).getFirst()
+                        + " AND " + sm.quoteIdentifier(selColumn) + rightBorder + boundaries.get(i).getSecond() + " THEN '"
+                        + naming.get(i) + "'");
                 }
             }
 
@@ -141,7 +133,7 @@ public class CaseBinningStatementGenerator extends DefaultBinningStatementGenera
             }
 
             counter++;
-            if (counter < limitsMap.size()) {
+            if (counter < boundariesMap.size()) {
                 caseQuery.append(", ");
             }
 

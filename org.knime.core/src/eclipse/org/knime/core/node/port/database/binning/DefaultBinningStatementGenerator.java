@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.util.Pair;
 
 /**
  * Class to create a SQL binning statement with basic SQL syntax.
@@ -59,7 +60,7 @@ import org.knime.core.node.port.database.StatementManipulator;
  * @author Lara Gorini
  * @since 3.1
  */
-public class DefaultBinningStatementGenerator implements BinningStatamentGenerator {
+public class DefaultBinningStatementGenerator implements BinningStatementGenerator {
 
     private static final DefaultBinningStatementGenerator INSTANCE = new DefaultBinningStatementGenerator();
 
@@ -75,8 +76,8 @@ public class DefaultBinningStatementGenerator implements BinningStatamentGenerat
      */
     @Override
     public String getBinnerStatement(final StatementManipulator sm, final String query, final String[] binnedCols,
-        final String[] additionalCols, final Map<String, List<Double[]>> limitsMap,
-        final Map<String, List<Boolean[]>> includeMap, final Map<String, List<String>> namingMap,
+        final String[] additionalCols, final Map<String, List<Pair<Double, Double>>> boundariesMap,
+        final Map<String, List<Pair<Boolean, Boolean>>> boundariesOpenMap, final Map<String, List<String>> namingMap,
         final Map<String, String> appendMap) {
 
         if (binnedCols.length == 0) {
@@ -86,16 +87,11 @@ public class DefaultBinningStatementGenerator implements BinningStatamentGenerat
         StringBuilder resultQuery = new StringBuilder();
 
         // with Default Statement only one column can be binned!!
-        for (String selColumn : limitsMap.keySet()) {
-            List<Double[]> limits = null;
-            List<Boolean[]> include = null;
-            List<String> naming = null;
-            String append = null;
-
-            limits = limitsMap.get(selColumn);
-            include = includeMap.get(selColumn);
-            naming = namingMap.get(selColumn);
-            append = appendMap.get(selColumn);
+        for (String selColumn : boundariesMap.keySet()) {
+            List<Pair<Double, Double>> boundaries = boundariesMap.get(selColumn);
+            List<Pair<Boolean, Boolean>> boundariesOpen = boundariesOpenMap.get(selColumn);
+            List<String> naming = namingMap.get(selColumn);
+            String append = appendMap.get(selColumn);
 
             StringBuilder selectQuery = new StringBuilder();
             selectQuery.append("SELECT ");
@@ -111,46 +107,40 @@ public class DefaultBinningStatementGenerator implements BinningStatamentGenerat
                 append = selColumn;
             }
 
-            if (limits.get(0)[0] == Double.NEGATIVE_INFINITY && limits.get(0)[1] == Double.POSITIVE_INFINITY) { //(inf, inf)
+            if (boundaries.get(0).getFirst() == Double.NEGATIVE_INFINITY
+                && boundaries.get(0).getSecond() == Double.POSITIVE_INFINITY) { //(inf, inf)
                 selectQuery.append("'" + naming.get(0) + "' " + sm.quoteIdentifier(append) + " FROM (" + query
                     + ") T WHERE " + sm.quoteIdentifier(selColumn) + "=" + sm.quoteIdentifier(selColumn));
                 resultQuery.append(selectQuery);
                 return resultQuery.toString();
             }
 
-            for (int i = 0; i < limits.size(); i++) {
-
-                String leftBorder;
-                String rightBorder;
-                if (include.get(i)[0]) {
-                    leftBorder = ">=";
-                } else {
-                    leftBorder = ">";
-                }
-                if (include.get(i)[1]) {
-                    rightBorder = "<=";
-                } else {
-                    rightBorder = "<";
-                }
+            for (int i = 0; i < boundaries.size(); i++) {
+                String leftBorder = boundariesOpen.get(i).getFirst() ? ">" : ">=";
+                String rightBorder =  boundariesOpen.get(i).getSecond() ? "<" : "<=";
                 StringBuilder whenQuery = new StringBuilder();
 
-                if (limits.get(i)[0] == Double.NEGATIVE_INFINITY) {//(inf, x] or (inf, x)
+                if (boundaries.get(i).getFirst() == Double.NEGATIVE_INFINITY) {//(inf, x] or (inf, x)
                     whenQuery.append("'" + naming.get(i) + "' " + sm.quoteIdentifier(append) + " FROM (" + query
-                        + ") T WHERE " + sm.quoteIdentifier(selColumn) + rightBorder + limits.get(i)[1]);
-                } else if (limits.get(i)[1] == Double.POSITIVE_INFINITY) { //[x, inf) or (x, inf)
+                        + ") T WHERE " + sm.quoteIdentifier(selColumn) + rightBorder + boundaries.get(i).getSecond());
+                } else if (boundaries.get(i).getSecond() == Double.POSITIVE_INFINITY) { //[x, inf) or (x, inf)
                     whenQuery.append("'" + naming.get(i) + "' " + sm.quoteIdentifier(append) + " FROM (" + query
-                        + ") T WHERE " + sm.quoteIdentifier(selColumn) + leftBorder + limits.get(i)[0]);
+                        + ") T WHERE " + sm.quoteIdentifier(selColumn) + leftBorder + boundaries.get(i).getFirst());
                 } else {
                     whenQuery.append("'" + naming.get(i) + "' " + sm.quoteIdentifier(append) + " FROM (" + query
-                        + ") T WHERE " + sm.quoteIdentifier(selColumn) + leftBorder + limits.get(i)[0] + " AND "
-                        + sm.quoteIdentifier(selColumn) + rightBorder + limits.get(i)[1]);
+                        + ") T WHERE " + sm.quoteIdentifier(selColumn) + leftBorder + boundaries.get(i).getFirst() + " AND "
+                        + sm.quoteIdentifier(selColumn) + rightBorder + boundaries.get(i).getSecond());
                 }
-                if (i < limits.size() - 1) {
-                    whenQuery.append(" UNION ALL ");
-                }
+
+                whenQuery.append(" UNION ALL ");
                 resultQuery.append(selectQuery);
                 resultQuery.append(whenQuery);
             }
+
+            // all rows with NULL values in binning column
+            resultQuery.append(selectQuery);
+            resultQuery.append("NULL ").append(sm.quoteIdentifier(append)).append(" FROM (").append(query)
+                .append(") T WHERE ").append(sm.quoteIdentifier(selColumn)).append(" IS NULL");
         }
         return resultQuery.toString();
     }

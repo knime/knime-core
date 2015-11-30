@@ -51,6 +51,7 @@ package org.knime.base.node.io.database.binning;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -63,6 +64,7 @@ import java.util.Set;
 
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.dmg.pmml.DiscretizeBinDocument.DiscretizeBin;
+import org.dmg.pmml.IntervalDocument.Interval;
 import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
 import org.knime.base.node.io.database.binning.auto.DBAutoBinnerNodeModel;
 import org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretize;
@@ -272,23 +274,26 @@ public class DBAutoBinner extends AutoBinner {
      */
     public static DBBinnerMaps intoBinnerMaps(final PMMLPortObject pmmlPortObject, final DataTableSpec dataTableSpec) {
 
-        Map<String, List<Double[]>> limitsMap = new LinkedHashMap<>();
-        Map<String, List<Boolean[]>> includeMap = new LinkedHashMap<>();
+        Map<String, List<Pair<Double, Double>>> boundariesMap = new LinkedHashMap<>();
+        Map<String, List<Pair<Boolean, Boolean>>> boundariesOpenMap = new LinkedHashMap<>();
         Map<String, List<String>> namingMap = new LinkedHashMap<>();
         Map<String, String> appendMap = new LinkedHashMap<>();
 
         DerivedField[] derivedFields = pmmlPortObject.getDerivedFields();
         for (int i = 0; i < derivedFields.length; i++) { // each column has its own derived fields
 
-            List<Double[]> limits = new LinkedList<>();
-            List<String> names = new LinkedList<>();
-            List<Boolean[]> includes = new LinkedList<>();
+            List<Pair<Double, Double>> boundaries = new ArrayList<>();
+            List<String> names = new ArrayList<>();
+            List<Pair<Boolean, Boolean>> boundariesOpen = new ArrayList<>();
 
             List<DiscretizeBin> discretizeBinList = derivedFields[i].getDiscretize().getDiscretizeBinList();
             String replacedColumnName = DataTableSpec.getUniqueColumnName(dataTableSpec, derivedFields[i].getName());
             String originalColumnName = derivedFields[i].getDiscretize().getField();
             for (DiscretizeBin discBin : discretizeBinList) {
-                limits.add(new Double[]{discBin.getInterval().getLeftMargin(), discBin.getInterval().getRightMargin()});
+                Interval interval = discBin.getInterval();
+                double left = interval.isSetLeftMargin() ? interval.getLeftMargin() : Double.NEGATIVE_INFINITY;
+                double right = interval.isSetRightMargin() ? interval.getRightMargin() : Double.POSITIVE_INFINITY;
+                boundaries.add(new Pair<>(left, right));
                 names.add(discBin.getBinValue());
                 boolean leftOpen;
                 boolean rightOpen;
@@ -321,25 +326,19 @@ public class DBAutoBinner extends AutoBinner {
                         rightOpen = false;
                         break;
                 }
-                includes.add(new Boolean[]{leftOpen, rightOpen});
+                boundariesOpen.add(new Pair<>(leftOpen, rightOpen));
             }
 
-            limits.get(0)[0] = Double.NEGATIVE_INFINITY;
-            limits.set(0, limits.get(0));
-
-            limits.get(limits.size() - 1)[1] = Double.POSITIVE_INFINITY;
-            limits.set(limits.size() - 1, limits.get(limits.size() - 1));
-
-            limitsMap.put(originalColumnName, limits);
+            boundariesMap.put(originalColumnName, boundaries);
             namingMap.put(originalColumnName, names);
-            includeMap.put(originalColumnName, includes);
+            boundariesOpenMap.put(originalColumnName, boundariesOpen);
             if (replacedColumnName.matches("(.*)" + originalColumnName + "\\*" + "(.*)")) {
                 appendMap.put(originalColumnName, null);
             } else {
                 appendMap.put(originalColumnName, replacedColumnName);
             }
         }
-        DBBinnerMaps maps = new DBBinnerMaps(limitsMap, includeMap, namingMap, appendMap);
+        DBBinnerMaps maps = new DBBinnerMaps(boundariesMap, boundariesOpenMap, namingMap, appendMap);
         return maps;
     }
 

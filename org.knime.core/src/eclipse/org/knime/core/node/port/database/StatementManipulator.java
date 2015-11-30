@@ -58,7 +58,7 @@ import java.util.regex.Pattern;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.binning.BinningStatamentGenerator;
+import org.knime.core.node.port.database.binning.BinningStatementGenerator;
 import org.knime.core.node.port.database.binning.CaseBinningStatementGenerator;
 import org.knime.core.node.port.database.binning.DefaultBinningStatementGenerator;
 import org.knime.core.node.port.database.pivoting.CasePivotStatementGenerator;
@@ -78,7 +78,7 @@ public class StatementManipulator {
 
     private final PivotStatementGenerator m_pivot;
 
-    private final BinningStatamentGenerator m_binning;
+    private final BinningStatementGenerator m_binning;
 
     /**
      * Constructor of class {@link StatementManipulator}.
@@ -98,10 +98,10 @@ public class StatementManipulator {
 
     /**
      * @param pivot {@link PivotStatementGenerator} implementation
-     * @param binning {@link BinningStatamentGenerator} implementation
+     * @param binning {@link BinningStatementGenerator} implementation
      * @since 3.1
      */
-    protected StatementManipulator(final PivotStatementGenerator pivot, final BinningStatamentGenerator binning) {
+    protected StatementManipulator(final PivotStatementGenerator pivot, final BinningStatementGenerator binning) {
         if (pivot == null) {
             throw new IllegalArgumentException("PivotStatementGenerator must not be null");
         }
@@ -312,15 +312,18 @@ public class StatementManipulator {
      * @param query The input query
      * @param includeCols Names of columns that are binned
      * @param excludeCols Names of columns that are not binned
-     * @param limitsMap Map containing limits of bins as values
-     * @param includeMap Map containing boolean which indicates if edge is open (true) or closed (false)
+     * @param boundariesMap Map containing limits of bins as values
+     * @param boundariesOpenMap Map containing boolean which indicates if edge is open (true) or closed (false)
      * @param namingMap Map containing names of bins as values
      * @param appendMap Map containing names of columns that should be appended as values (can be null).
      * @return a SQL statement for binning
      * @since 3.1
      */
-    public String getBinnerStatement(final String query, final String[] includeCols, final String[] excludeCols, final Map<String, List<Double[]>> limitsMap,
-        final Map<String, List<Boolean[]>> includeMap, final Map<String, List<String>> namingMap, final Map<String, String> appendMap) {
-        return m_binning.getBinnerStatement(this, query, includeCols, excludeCols, limitsMap, includeMap , namingMap, appendMap);
+    public String getBinnerStatement(final String query, final String[] includeCols, final String[] excludeCols,
+        final Map<String, List<Pair<Double, Double>>> boundariesMap,
+        final Map<String, List<Pair<Boolean, Boolean>>> boundariesOpenMap, final Map<String, List<String>> namingMap,
+        final Map<String, String> appendMap) {
+        return m_binning.getBinnerStatement(this, query, includeCols, excludeCols, boundariesMap, boundariesOpenMap,
+            namingMap, appendMap);
     }
 }

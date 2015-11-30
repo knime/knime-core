@@ -52,27 +52,28 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.util.Pair;
 
 /**
  *
  * @author Lara Gorini
  * @since 3.1
  */
-public interface BinningStatamentGenerator {
+public interface BinningStatementGenerator {
 
     /**
      * @param statementManipulator The {@link StatementManipulator} to use
      * @param query The input query
      * @param binnedCols Names of columns that are binned
      * @param additionalCols Names of columns that are not binned but should be selected
-     * @param limitsMap Map containing limits of bins as values
-     * @param includeMap Map containing boolean which indicates if edge is open (true) or closed (false)
+     * @param boundariesMap Map containing limits of bins as values
+     * @param boundariesOpenMap Map containing boolean which indicates if edge is open (true) or closed (false)
      * @param namingMap Map containing names of bins as values
      * @param appendMap Map containing names of columns that should be appended as values (can be null).
      * @return a SQL statement for binning
      */
     public String getBinnerStatement(StatementManipulator statementManipulator, String query, String[] binnedCols,
-        String[] additionalCols, Map<String, List<Double[]>> limitsMap, Map<String, List<Boolean[]>> includeMap,
-        Map<String, List<String>> namingMap, Map<String, String> appendMap);
-
+        String[] additionalCols, Map<String, List<Pair<Double, Double>>> boundariesMap,
+        Map<String, List<Pair<Boolean, Boolean>>> boundariesOpenMap, Map<String, List<String>> namingMap,
+        Map<String, String> appendMap);
 }

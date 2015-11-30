@@ -49,8 +49,11 @@ import java.security.InvalidKeyException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -58,9 +61,9 @@ import javax.crypto.IllegalBlockSizeException;
 import org.knime.base.node.io.database.DBNodeModel;
 import org.knime.base.node.io.database.binning.DBAutoBinner;
 import org.knime.base.node.io.database.binning.DBBinnerMaps;
+import org.knime.base.node.preproc.pmml.binner.BinnerColumnFactory.Bin;
 import org.knime.base.node.preproc.pmml.binner.NumericBin;
 import org.knime.base.node.preproc.pmml.binner.PMMLBinningTranslator;
-import org.knime.base.node.preproc.pmml.binner.BinnerColumnFactory.Bin;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -73,8 +76,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
@@ -222,6 +225,8 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
     protected final PortObject[] execute(final PortObject[] inData, final ExecutionContext exec)
         throws CanceledExecutionException, Exception {
         exec.setMessage("Retrieving metadata from database");
+        checkDuplicateBinNames();
+
         final DatabasePortObject inDatabasePortObject = (DatabasePortObject)inData[0];
         final DatabasePortObjectSpec inDatabasePortObjectSpec = inDatabasePortObject.getSpec();
         DatabaseQueryConnectionSettings connectionSettings =
@@ -249,8 +254,8 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
         connectionSettings = createDBQueryConnection(inDatabasePortObjectSpec, newQuery);
         final DatabaseQueryConnectionSettings querySettings =
             new DatabaseQueryConnectionSettings(connectionSettings, newQuery);
-        DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
-        DataTableSpec outDataTableSpec = conn.getDataTableSpec(getCredentialsProvider());
+        DBReader reader = querySettings.getUtility().getReader(querySettings);
+        DataTableSpec outDataTableSpec = reader.getDataTableSpec(getCredentialsProvider());
         DatabasePortObjectSpec outDatabasePortObjectSpec =
             new DatabasePortObjectSpec(outDataTableSpec, connectionSettings.createConnectionModel());
         return outDatabasePortObjectSpec;
@@ -267,6 +272,17 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
         return outPMMLPortObject;
     }
 
+    private void checkDuplicateBinNames() {
+        for (Bin[] bins : m_columnToBins.values()) {
+            Set<String> binNames = new HashSet<>();
+            Optional<Bin> duplicate = Stream.of(bins).filter(b -> !binNames.add(b.getBinName())).findFirst();
+            if (duplicate.isPresent()) {
+                setWarningMessage(
+                    "Bin name \"" + duplicate.get().getBinName() + "\" is used for different intervals.");
+            }
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -277,11 +293,17 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
             inDatabasePortObjectSpec.getConnectionSettings(getCredentialsProvider());
         boolean suppCase = connectionSettings.getUtility().supportsCase();
         if (!suppCase) {
-            if (m_columnToBins.keySet().size() > 1) {
+            if (m_columnToBins.size() > 1) {
                 throw new InvalidSettingsException(
                     "Database does not support \"CASE\". Please choose only one column.");
             }
         }
+        if (m_columnToBins.isEmpty()) {
+            setWarningMessage("No columns selected for binning");
+        } else {
+            checkDuplicateBinNames();
+        }
+
         DataTableSpec outDataTableSpec =
             DBAutoBinner.createNewDataTableSpec(inDatabasePortObjectSpec.getDataTableSpec(), m_columnToAppended);
         PMMLPortObject outPMMLPortObject =
@@ -305,8 +327,8 @@ final class DBNumericBinnerNodeModel extends DBNodeModel {
         String[] allColumns = dataTableSpec.getColumnNames();
         String[] excludeCols = DBAutoBinner.filter(includeCols, allColumns);
         String result =
-            statementManipulator.getBinnerStatement(query, includeCols, excludeCols, binnerMaps.getLimitsMap(),
-                binnerMaps.getIncludeMap(), binnerMaps.getNamingMap(), binnerMaps.getAppendMap());
+            statementManipulator.getBinnerStatement(query, includeCols, excludeCols, binnerMaps.getBoundariesMap(),
+                binnerMaps.getBoundariesOpenMap(), binnerMaps.getNamingMap(), binnerMaps.getAppendMap());
         return result;
     }
 

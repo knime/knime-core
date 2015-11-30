@@ -45,8 +45,10 @@
 package org.knime.base.node.io.database.binning.apply;
 
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.knime.base.node.io.database.DBNodeModel;
@@ -64,8 +66,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
@@ -119,23 +121,25 @@ final class DBApplyBinnerNodeModel extends DBNodeModel {
             String fieldName = derivedFields[i].getDiscretize().getField();
             final DataColumnSpec colSpec = dataTableSpec.getColumnSpec(fieldName);
             if (colSpec == null) {
-                throw new InvalidSettingsException("Column " + fieldName + " not found in input");
+                throw new InvalidSettingsException("Column '" + fieldName + "' not found in input table");
             }
+
             DataColumnSpec pmmlInputColSpec = pmmlInputSpec.getColumnSpec(fieldName);
-            if (pmmlInputColSpec == null) {
-                throw new InvalidSettingsException("Column " + fieldName + " not found in PMML input specification");
-            }
+            assert (pmmlInputColSpec != null) : "Column '" + fieldName
+                + "' from derived fields not found in PMML model spec";
+
             DataType knimeType = pmmlInputColSpec.getType();
             if (!colSpec.getType().isCompatible(knimeType.getPreferredValueClass())) {
                 throw new InvalidSettingsException(
-                    "Column " + fieldName + " data type not compatible to pmml specification");
+                    "Date type of column '" + fieldName + "' is not compatible with PMML model: expected '" + knimeType
+                        + "' but is '" + colSpec.getType() + "'");
             }
             includeCols[i] = fieldName;
         }
         String[] allColumns = dataTableSpec.getColumnNames();
         String[] excludeCols = filter(includeCols, allColumns);
-        String result = statementManipulator.getBinnerStatement(query, includeCols, excludeCols, maps.getLimitsMap(),
-            maps.getIncludeMap(), maps.getNamingMap(), maps.getAppendMap());
+        String result = statementManipulator.getBinnerStatement(query, includeCols, excludeCols, maps.getBoundariesMap(),
+            maps.getBoundariesOpenMap(), maps.getNamingMap(), maps.getAppendMap());
         return result;
     }
 
@@ -150,41 +154,22 @@ final class DBApplyBinnerNodeModel extends DBNodeModel {
         connectionSettings = createDBQueryConnection(inSpec, newQuery);
         DatabaseQueryConnectionSettings querySettings =
             new DatabaseQueryConnectionSettings(connectionSettings, newQuery);
-        DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
+        DBReader reader = querySettings.getUtility().getReader(querySettings);
 
-        DatabasePortObjectSpec databasePortObjectSpec = null;
         try {
-            databasePortObjectSpec = new DatabasePortObjectSpec(conn.getDataTableSpec(getCredentialsProvider()),
-                connectionSettings.createConnectionModel());
+            DatabasePortObjectSpec databasePortObjectSpec = new DatabasePortObjectSpec(
+                reader.getDataTableSpec(getCredentialsProvider()), connectionSettings.createConnectionModel());
+            DatabasePortObject databasePortObject = new DatabasePortObject(databasePortObjectSpec);
+            return databasePortObject;
         } catch (SQLException e) {
             throw new InvalidSettingsException("Failure during query generation. Error: " + e.getMessage());
         }
-        DatabasePortObject databasePortObject = new DatabasePortObject(databasePortObjectSpec);
-        return databasePortObject;
     }
 
     private String[] filter(final String[] includeCols, final String[] allColumns) {
-        List<String> excludeColsList = new LinkedList<>();
-        for (int i = 0; i < allColumns.length; i++) {
-            for (int j = 0; j < includeCols.length; j++) {
-                if (allColumns[i].equals(includeCols[j])) {
-                    if (excludeColsList.contains(allColumns[i])) {
-                        excludeColsList.remove(allColumns[i]);
-                        break;
-                    } else {
-                        break;
-                    }
-                } else {
-                    if (!excludeColsList.contains(allColumns[i])) {
-                        excludeColsList.add(allColumns[i]);
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-        String[] excludeCols = excludeColsList.toArray(new String[excludeColsList.size()]);
-        return excludeCols;
+        Set<String> excludeCols = new HashSet<>(Arrays.asList(allColumns));
+        Stream.of(includeCols).forEach(col -> excludeCols.remove(col));
+        return excludeCols.toArray(new String[excludeCols.size()]);
     }
 
 }

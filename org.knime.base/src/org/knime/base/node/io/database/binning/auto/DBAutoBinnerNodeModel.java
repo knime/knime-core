@@ -222,8 +222,8 @@ public final class DBAutoBinnerNodeModel extends DBNodeModel {
         String[] binningCols = m_settings.getFilterConfiguration().applyTo(dataTableSpec).getIncludes();
         String[] allColumns = dataTableSpec.getColumnNames();
         String[] additionalCols = DBAutoBinner.filter(binningCols, allColumns);
-        String result = statementManipulator.getBinnerStatement(query, binningCols, additionalCols, maps.getLimitsMap(),
-            maps.getIncludeMap(), maps.getNamingMap(), maps.getAppendMap());
+        String result = statementManipulator.getBinnerStatement(query, binningCols, additionalCols, maps.getBoundariesMap(),
+            maps.getBoundariesOpenMap(), maps.getNamingMap(), maps.getAppendMap());
         return result;
     }
 

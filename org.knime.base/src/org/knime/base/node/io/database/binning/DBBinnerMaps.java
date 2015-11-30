@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.util.Pair;
 
 /**
  * This class is to collect required Maps containing parameters for binning operation in {@link StatementManipulator}.
@@ -60,9 +61,9 @@ import org.knime.core.node.port.database.StatementManipulator;
  */
 public class DBBinnerMaps {
 
-    private Map<String, List<Double[]>> m_limitsMap;
+    private Map<String, List<Pair<Double, Double>>> m_limitsMap;
 
-    private Map<String, List<Boolean[]>> m_includeMap;
+    private Map<String, List<Pair<Boolean, Boolean>>> m_boundariesOpenMap;
 
     private Map<String, List<String>> m_namingMap;
 
@@ -70,14 +71,15 @@ public class DBBinnerMaps {
 
     /**
      * @param limitsMap Map containing edges of bins
-     * @param includeMap Map holding information if edges are included or excluded
+     * @param boundariesOpenMap Map holding information if boundaries of the interval are open (excluded)
      * @param namingMap Map containing names of bins
      * @param appendMap Map containing name of columns which has to be appended. Value will be null, if column is not appended
      */
-    public DBBinnerMaps(final Map<String, List<Double[]>> limitsMap, final Map<String, List<Boolean[]>> includeMap,
-        final Map<String, List<String>> namingMap, final Map<String, String> appendMap) {
+    public DBBinnerMaps(final Map<String, List<Pair<Double, Double>>> limitsMap,
+        final Map<String, List<Pair<Boolean, Boolean>>> boundariesOpenMap, final Map<String, List<String>> namingMap,
+        final Map<String, String> appendMap) {
         m_limitsMap = limitsMap;
-        m_includeMap = includeMap;
+        m_boundariesOpenMap = boundariesOpenMap;
         m_namingMap = namingMap;
         m_appendMap = appendMap;
     }
@@ -85,15 +87,15 @@ public class DBBinnerMaps {
     /**
      * @return the limitsMap
      */
-    public Map<String, List<Double[]>> getLimitsMap() {
+    public Map<String, List<Pair<Double, Double>>> getBoundariesMap() {
         return m_limitsMap;
     }
 
     /**
      * @return the includeMap
      */
-    public Map<String, List<Boolean[]>> getIncludeMap() {
-        return m_includeMap;
+    public Map<String, List<Pair<Boolean, Boolean>>> getBoundariesOpenMap() {
+        return m_boundariesOpenMap;
     }
 
     /**
