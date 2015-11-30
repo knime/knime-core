@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.knime.core.node.BufferedDataTable;
@@ -76,7 +77,9 @@ public final class ConvenienceMethods {
      * @param o2 Second object for comparison, may be <code>null</code>.
      * @return If both arguments are equal
      * (if either one is null, so must be the other one)
+     * @deprecated use {@link Objects#equals(Object, Object)} instead
      */
+    @Deprecated
     public static boolean areEqual(final Object o1, final Object o2) {
         if (o1 == o2) {
             // same object or both are null
