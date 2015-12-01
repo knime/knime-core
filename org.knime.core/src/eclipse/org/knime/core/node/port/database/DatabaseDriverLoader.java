@@ -164,7 +164,7 @@ public final class DatabaseDriverLoader {
             DRIVER_MAP.put(driverName, d);
             return true;
         } catch (Throwable t) {
-            LOGGER.warn("Could not load driver class '" + JDBC_ODBC_DRIVER + "'");
+            LOGGER.debug("Could not load JDBC ODBC driver class '" + JDBC_ODBC_DRIVER + "'. Class has been removed in Java 8.");
             return false;
         }
     }
