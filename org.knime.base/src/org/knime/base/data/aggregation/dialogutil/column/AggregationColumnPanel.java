@@ -423,7 +423,7 @@ public class AggregationColumnPanel
         for (final ColumnAggregator colAggr : colAggrs) {
             final DataColumnSpec colSpec = spec.getColumnSpec(colAggr.getOriginalColName());
             final boolean valid;
-            if (colSpec != null && colSpec.getType().equals(colAggr.getOriginalDataType())) {
+            if (colSpec != null && colAggr.getOriginalDataType().isASuperTypeOf(colSpec.getType())) {
                 valid = true;
             } else {
                 valid = false;

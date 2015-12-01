@@ -857,7 +857,7 @@ public class GroupByNodeModel extends NodeModel {
         for (final ColumnAggregator colAggr : columnAggregators) {
             final String originalColName = colAggr.getOriginalColName();
             final DataColumnSpec colSpec = inputSpec.getColumnSpec(originalColName);
-            if (colSpec != null && colSpec.getType().equals(colAggr.getOriginalDataType())) {
+            if (colSpec != null && colAggr.getOriginalDataType().isASuperTypeOf(colSpec.getType())) {
                 usedColNames.add(originalColName);
                 columnAggregators2Use.add(colAggr);
             } else {
