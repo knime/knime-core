@@ -29,7 +29,7 @@
         <option name="Allow variable column types">
         	If checked, the loop does not fail when the column types between different table iterations change.
         </option>
-        <option name="Tolerate changing table specifications">
+        <option name="Allow changing table specifications">
 			If checked, the table specifications between iterations can differ. If
 			column have been added or removed between iterations, missing values
 			are inserted accordingly in the result table.

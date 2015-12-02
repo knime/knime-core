@@ -61,8 +61,8 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
     private final JCheckBox m_tolerateColumnTypes1 = new JCheckBox("Allow variable column types at port 1");
     private final JCheckBox m_tolerateColumnTypes2 = new JCheckBox("Allow variable column types at port 2");
 
-    private final JCheckBox m_tolerateChangingSpecs1 = new JCheckBox("Tolerate changing table specifications at port 1");
-    private final JCheckBox m_tolerateChangingSpecs2 = new JCheckBox("Tolerate changing table specifications at port 2");
+    private final JCheckBox m_tolerateChangingSpecs1 = new JCheckBox("Allow changing table specifications at port 1");
+    private final JCheckBox m_tolerateChangingSpecs2 = new JCheckBox("Allow changing table specifications at port 2");
 
     /**
      *

@@ -58,7 +58,7 @@ public class LoopEndNodeDialog extends AbstractLoopEndNodeDialog<LoopEndNodeSett
 
     private final JCheckBox m_tolerateColumnTypes = new JCheckBox("Allow variable column types");
 
-    private final JCheckBox m_tolerateChangingSpecs = new JCheckBox("Tolerate changing table specifications");
+    private final JCheckBox m_tolerateChangingSpecs = new JCheckBox("Allow changing table specifications");
 
     /** Create a new dialog.  */
     public LoopEndNodeDialog() {
