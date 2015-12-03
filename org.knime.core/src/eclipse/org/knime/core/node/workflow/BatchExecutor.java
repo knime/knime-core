@@ -674,10 +674,10 @@ public class BatchExecutor {
             LOGGER.error("Error while reading preferences file: " + ex.getMessage(), ex);
             return EXIT_ERR_PRESTART;
         } catch (IllegalOptionException ex) {
-            LOGGER.error(ex.getMessage());
+            LOGGER.error(ex.getMessage(), ex);
             return EXIT_ERR_PRESTART;
         } catch (BatchException ex) {
-            LOGGER.error(ex.getMessage());
+            LOGGER.error(ex.getMessage(), ex);
             return ex.getDetailCode();
         }
     }
