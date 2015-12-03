@@ -668,10 +668,10 @@ public class BatchExecutor {
             BatchExecutor exec = new BatchExecutor(args);
             return exec.runAll();
         } catch (IOException ex) {
-            LOGGER.error("Error while reading input XML file: " + ex.getMessage());
+            LOGGER.error("Error while reading input XML file: " + ex.getMessage(), ex);
             return EXIT_ERR_PRESTART;
         } catch (CoreException ex) {
-            LOGGER.error("Error while reading preferences file: " + ex.getMessage());
+            LOGGER.error("Error while reading preferences file: " + ex.getMessage(), ex);
             return EXIT_ERR_PRESTART;
         } catch (IllegalOptionException ex) {
             LOGGER.error(ex.getMessage());
