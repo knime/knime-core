@@ -8,6 +8,8 @@ http://update.knime.org/analytics-platform/3.0,remove
 http://update.knime.org/store/3.0,remove
 http://update.knime.org/community-contributions/trusted/3.0,remove
 http://update.knime.org/community-contributions/3.0,remove
+http://tech.knime.org/update/community-contributions/trusted/3.0,remove
+http://tech.knime.org/update/community-contributions/3.0,remove
 http://update.knime.org/server/4.1,remove
 http://update.knime.org/teamspace/3.6,remove
 http://update.knime.org/analytics-platform/3.1,add,enabled,KNIME Analytics Platform Update Site
