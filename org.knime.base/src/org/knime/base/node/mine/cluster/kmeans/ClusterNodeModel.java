@@ -628,7 +628,8 @@ public class ClusterNodeModel extends NodeModel {
         DataTableSpecCreator clusterCenterSpecCreator = new DataTableSpecCreator();
         for (int i = 0; i < m_dimension; i++) {
             if (!m_ignoreColumn[i]) {
-                clusterCenterSpecCreator.addColumns(spec.getColumnSpec(i));
+                clusterCenterSpecCreator.addColumns(
+                    new DataColumnSpecCreator(spec.getColumnSpec(i).getName(), DoubleCell.TYPE).createSpec());
             }
         }
         clusterCenterSpecCreator.dropAllDomains();
