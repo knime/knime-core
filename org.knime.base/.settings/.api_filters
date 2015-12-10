@@ -1,43 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.base" version="2">
-    <resource path="META-INF/MANIFEST.MF">
-        <filter id="924844039">
-            <message_arguments>
-                <message_argument value="2.12.2"/>
-                <message_argument value="2.12.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeModel">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeModel"/>
-                <message_argument value="org.knime.base_2.12.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605.TypeSystemHolder">
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605.TypeSystemHolder"/>
-                <message_argument value="org.knime.base_2.11.0"/>
-            </message_arguments>
-        </filter>
-        <filter id="305426566">
-            <message_arguments>
-                <message_argument value="schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605.TypeSystemHolder"/>
-                <message_argument value="org.knime.base_2.11.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src-deprecated/org/knime/base/node/io/listfiles/ListFilesNodeFactory.java" type="org.knime.base.node.io.listfiles.ListFilesNodeFactory">
-        <filter id="305365105">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.io.listfiles.ListFilesNodeFactory"/>
-                <message_argument value="org.knime.base_2.12.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/org/knime/base/node/meta/looper/LoopEndJoin2NodeFactory.java" type="org.knime.base.node.meta.looper.LoopEndJoin2NodeFactory">
         <filter id="1108344834">
             <message_arguments>
@@ -51,13 +13,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.base.node.meta.looper.LoopEndJoinNodeModel"/>
-                <message_argument value="org.knime.base_2.12.2"/>
-            </message_arguments>
-        </filter>
-        <filter id="305365105">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.meta.looper.LoopEndJoinNodeModel"/>
-                <message_argument value="org.knime.base_3.1.0"/>
+                <message_argument value="org.knime.base_3.1.1"/>
             </message_arguments>
         </filter>
     </resource>
@@ -71,28 +27,6 @@
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="getRowCount()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/org/knime/base/node/preproc/joiner/Joiner2NodeDialog.java" type="org.knime.base.node.preproc.joiner.Joiner2NodeDialog">
-        <filter id="354463860">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.joiner.Joiner2NodeDialog"/>
-                <message_argument value="Joiner2NodeDialog()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/org/knime/base/node/switches/endmodelcase/EndmodelcaseNodeFactory.java" type="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"/>
-                <message_argument value="createNodeModel()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"/>
-                <message_argument value="createNodeView(int, EndmodelcaseNodeModel)"/>
             </message_arguments>
         </filter>
     </resource>
