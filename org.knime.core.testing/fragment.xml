@@ -21,5 +21,11 @@
          </renderer>
       </dataValue>
    </extension>
+   <extension
+         point="org.knime.core.EarlyStartup">
+      <provider
+            class="org.knime.core.util.EarlyStartupTest">
+      </provider>
+   </extension>
 
 </fragment>
