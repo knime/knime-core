@@ -1453,10 +1453,6 @@ public class HistogramColumn implements Cloneable {
             double[] binMins = h.getDoubleArray(BIN_MINS), binMaxes = h.getDoubleArray(BIN_MAXES);
             int[] binCounts = h.getIntArray(BIN_COUNTS);
             double mean = means[colIdx];
-            ///This 10 might not work always, though it is not used with the current implementation
-            MinMaxBinCount adjusted = MinMaxBinCount.adjust(min, max, strategy, 10);
-            min = adjusted.getMin();
-            max = adjusted.getMax();
             HistogramNumericModel histogramData =
                 new HistogramNumericModel(min, max, binMins.length, colIdx, colName, min, max, mean);
             for (int i = binMins.length; i-- > 0;) {
@@ -1465,7 +1461,7 @@ public class HistogramColumn implements Cloneable {
             }
             histogramData.setMaxCount(maxCount);
             histogramData.setRowCount(rowCount);
-            assert histogramData.m_width == width;
+            assert Math.abs(histogramData.m_width - width) < 1e-9: "histogram data width: " + histogramData.m_width + " width: " + width;
             histograms.put(colIdx, histogramData);
             numericKeys.put(colIdx, new HashMap<Integer, Set<RowKey>>());
         }
