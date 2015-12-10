@@ -537,10 +537,4 @@
             specSerializer="org.knime.core.node.port.pmml.PMMLPortObjectSpecSerializer">
       </portType>
    </extension>
-   <extension
-         point="org.knime.core.EarlyStartup">
-      <provider
-            class="org.knime.core.util.DummyEarlyStartup">
-      </provider>
-   </extension>
 </plugin>
