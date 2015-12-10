@@ -98,11 +98,17 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -181,6 +187,7 @@ import org.knime.core.quickform.AbstractQuickFormConfiguration;
 import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
 import org.knime.core.quickform.in.QuickFormInputNode;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.VMFileLocker;
@@ -321,6 +328,32 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * workflow disposal. If null, the temp dir location in the context was set from someone else (the server e.g.) and
      * it must not be deleted by the workflow manager. */
     private File m_tmpDir = null;
+
+    static {
+        executeEarlyStartup();
+    }
+
+    private static void executeEarlyStartup() {
+        String extPointId = "org.knime.core.EarlyStartup";
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point = registry.getExtensionPoint(extPointId);
+        assert point != null : "Invalid extension point id: " + extPointId;
+
+        Iterator<IConfigurationElement> it =
+            Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements())).iterator();
+        while (it.hasNext()) {
+            IConfigurationElement e = it.next();
+            try {
+                ((IEarlyStartup)e.createExecutableExtension("class")).run();
+            } catch (CoreException ex) {
+                LOGGER.error("Could not create early startup object od class '" + e.getAttribute("class") + "' "
+                    + "from plug-in '" + e.getContributor().getName() + "': " + ex.getMessage(), ex);
+            } catch (Exception ex) {
+                LOGGER.error("Early startup in '" + e.getAttribute("class") + " from plug-in '"
+                    + e.getContributor().getName() + "' has thrown an uncaught exception: " + ex.getMessage(), ex);
+            }
+        }
+    }
 
     ///////////////////////
     // Constructors

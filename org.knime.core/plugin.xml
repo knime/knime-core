@@ -9,6 +9,7 @@
    <extension-point id="WizardNodeView" name="WizardNodeView" schema="schema/WizardNodeView.exsd"/>
    <extension-point id="DataType" name="DataType" schema="schema/DataType.exsd"/>
    <extension-point id="PortType" name="PortType" schema="schema/PortType.exsd"/>
+   <extension-point id="EarlyStartup" name="EarlyStartup" schema="schema/EarlyStartup.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory
@@ -535,5 +536,11 @@
             specClass="org.knime.core.node.port.pmml.PMMLPortObjectSpec"
             specSerializer="org.knime.core.node.port.pmml.PMMLPortObjectSpecSerializer">
       </portType>
+   </extension>
+   <extension
+         point="org.knime.core.EarlyStartup">
+      <provider
+            class="org.knime.core.util.DummyEarlyStartup">
+      </provider>
    </extension>
 </plugin>
