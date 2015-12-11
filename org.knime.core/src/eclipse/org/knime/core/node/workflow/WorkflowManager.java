@@ -5172,9 +5172,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (this == ROOT) {
             throw new IllegalStateException("Can't execute ROOT workflow");
         }
-        // let parent execute this node (important if job manager is assigned)
-        // see also bug 2217
-        getParent().executeUpToHere(getID());
+        executeAll();
         try {
             waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
