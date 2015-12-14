@@ -52,6 +52,7 @@ import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 
@@ -119,18 +120,21 @@ public final class WorkflowLock implements AutoCloseable {
      */
     public WorkflowLock lock() {
         m_reentrantLock.lock();
-        assert hasNoChildLocked() : "Child already locked - can't lock parent";
+        if (KNIMEConstants.ASSERTIONS_ENABLED) {
+            hasNoChildLocked();
+        }
         m_lockHierarchyLevelThreadLocal.get().increment();
         return this;
     }
 
-    /** @return true if none of the wfm's children is already locked. Used in assertion to guarantee parent lock
-     * is always acquired before children are locked. */
+    /**
+     * Checks if this thread already has a locked on a child of the workflow manager. If so a coding error is reported.
+     */
     // see bug 6644
-    private boolean hasNoChildLocked() {
+    private void hasNoChildLocked() {
         // only make (expensive) check if initially locked: count must be 1
         if (m_reentrantLock.getHoldCount() != 1) {
-            return true;
+            return;
         }
         Optional<NodeContainerParent> badBehavingChild = m_wfm.getNodeContainers().stream()
             .filter(n -> n instanceof NodeContainerParent)
@@ -140,9 +144,7 @@ public final class WorkflowLock implements AutoCloseable {
         if (badBehavingChild.isPresent()) {
             NodeLogger.getLogger(WorkflowLock.class).codingWithFormat("Lock of child node \"%s\" already locked when "
                 + "trying to acquire lock of parent \"%s\"", badBehavingChild.get(), m_wfm);
-            return false;
         }
-        return true;
     }
 
     /** Unlocks as per {@link ReentrantLock#unlock()}, possibly causing a state update check and notification on the
