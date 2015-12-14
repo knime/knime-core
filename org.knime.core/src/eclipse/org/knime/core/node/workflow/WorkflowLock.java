@@ -127,9 +127,7 @@ public final class WorkflowLock implements AutoCloseable {
         return this;
     }
 
-    /**
-     * Checks if this thread already has a locked on a child of the workflow manager. If so a coding error is reported.
-     */
+    /** Checks if this thread has a lock on any child of the workflow manager. If so a coding error is reported. */
     // see bug 6644
     private void hasNoChildLocked() {
         // only make (expensive) check if initially locked: count must be 1
