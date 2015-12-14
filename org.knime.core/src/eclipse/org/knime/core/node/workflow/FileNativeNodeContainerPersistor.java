@@ -68,7 +68,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeFactory;

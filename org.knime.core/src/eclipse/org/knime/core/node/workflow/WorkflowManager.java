@@ -324,6 +324,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public static final WorkflowManager ROOT = new WorkflowManager(null, null, NodeID.ROOTID, new PortType[0],
         new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty());
 
+    /** The root of all meta nodes that are part of the node repository, for instance x-val meta node. 
+     * @noreference This field is not intended to be referenced by clients. */
+    // this used to be part of UI code but moved into core because creation of child instance locks ROOT,
+    // which should be done with care.
+    // Problems with loading full repository when fully qualified name of node can't be loaded in
+    //   org.knime.core.node.workflow.FileNativeNodeContainerPersistor.loadNodeFactory(String)
+    public static final WorkflowManager META_NODE_ROOT =
+            ROOT.createAndAddProject("KNIME MetaNode Repository", new WorkflowCreationHelper());
+
     /** dir where all tmp files of the flow live. Set in the workflow context. If not null, it must be discarded upon
      * workflow disposal. If null, the temp dir location in the context was set from someone else (the server e.g.) and
      * it must not be deleted by the workflow manager. */

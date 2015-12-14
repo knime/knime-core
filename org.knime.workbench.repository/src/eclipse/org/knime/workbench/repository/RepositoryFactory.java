@@ -66,7 +66,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSetFactory;
 import org.knime.core.node.workflow.FileWorkflowPersistor;
-import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -92,19 +91,8 @@ public final class RepositoryFactory {
         // hidden constructor (utility class)
     }
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RepositoryFactory.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(RepositoryFactory.class);
 
-    /**
-     * Workflow manager instance loading and administering the predefined meta
-     * nodes.
-     */
-    public static final WorkflowManager META_NODE_ROOT;
-
-    static {
-        META_NODE_ROOT =
-            WorkflowManager.ROOT.createAndAddProject("KNIME MetaNode Repository", new WorkflowCreationHelper());
-    }
 
     /**
      * Creates a new node repository object. Throws an exception, if this fails
@@ -229,8 +217,7 @@ public final class RepositoryFactory {
                 FileWorkflowPersistor persistor =
                         WorkflowManager.createLoadPersistor(f, loadHelper);
 
-                WorkflowManager metaNode =
-                        META_NODE_ROOT.load(persistor, new ExecutionMonitor(),
+                WorkflowManager metaNode = WorkflowManager.META_NODE_ROOT.load(persistor, new ExecutionMonitor(),
                                 false).getWorkflowManager();
                 return metaNode;
             } catch (CanceledExecutionException cee) {

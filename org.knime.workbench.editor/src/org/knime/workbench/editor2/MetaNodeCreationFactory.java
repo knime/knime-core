@@ -53,7 +53,6 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.workbench.repository.RepositoryFactory;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 
 /**
@@ -70,7 +69,7 @@ public class MetaNodeCreationFactory implements CreationFactory {
     @Override
     public Object getNewObject() {
         NodeID id = m_template.getManager().getID();
-        WorkflowManager sourceManager = RepositoryFactory.META_NODE_ROOT;
+        WorkflowManager sourceManager = WorkflowManager.META_NODE_ROOT;
         WorkflowCopyContent content = new WorkflowCopyContent();
         content.setNodeIDs(id);
         return sourceManager.copy(content);

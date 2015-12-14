@@ -92,10 +92,10 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.KNIMEJob;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.repository.NodeUsageRegistry;
-import org.knime.workbench.repository.RepositoryFactory;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.AbstractRepositoryObject;
 import org.knime.workbench.repository.model.Category;
@@ -351,7 +351,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                 } else if (o instanceof MetaNodeTemplate) {
                     MetaNodeTemplate mnt = (MetaNodeTemplate)o;
                     NodeID metaNode = mnt.getManager().getID();
-                    NodeProvider.INSTANCE.addMetaNode(RepositoryFactory.META_NODE_ROOT, metaNode);
+                    NodeProvider.INSTANCE.addMetaNode(WorkflowManager.META_NODE_ROOT, metaNode);
                 } else if (o instanceof Category) {
                     m_viewer.setExpandedState(o, !m_viewer.getExpandedState(o));
                 }

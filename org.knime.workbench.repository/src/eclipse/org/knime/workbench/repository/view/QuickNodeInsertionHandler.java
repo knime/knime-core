@@ -85,12 +85,12 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.KNIMEJob;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.NodeUsageRegistry;
-import org.knime.workbench.repository.RepositoryFactory;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
@@ -324,7 +324,7 @@ public class QuickNodeInsertionHandler extends AbstractHandler {
         if (o instanceof MetaNodeTemplate) {
             MetaNodeTemplate mnt = (MetaNodeTemplate)o;
             NodeID metaNode = mnt.getManager().getID();
-            NodeProvider.INSTANCE.addMetaNode(RepositoryFactory.META_NODE_ROOT, metaNode);
+            NodeProvider.INSTANCE.addMetaNode(WorkflowManager.META_NODE_ROOT, metaNode);
         }
     }
 }
