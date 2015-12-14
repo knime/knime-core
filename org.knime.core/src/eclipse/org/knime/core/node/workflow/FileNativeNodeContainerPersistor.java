@@ -335,13 +335,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 // may be loaded. Therefore in order to search for a matching
                 // factory below we need to initialize the whole repository
                 // first
-                // We need to load it in a separate thread, because the current thread already holds a lock on the
-                // current workflow manager and loading the repository will acquire a lock on the root (when a meta node
-                // is loaded) which is not allowed.
-                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(() -> {
-                    REPOS_LOAD_METHOD.invoke(REPOS_MANAGER);
-                    return null;
-                }).get();
+                REPOS_LOAD_METHOD.invoke(REPOS_MANAGER);
             } catch (Exception ex1) {
                 getLogger().error("Could not load repository manager", ex1);
             }
