@@ -324,8 +324,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public static final WorkflowManager ROOT = new WorkflowManager(null, null, NodeID.ROOTID, new PortType[0],
         new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty());
 
-    /** The root of all meta nodes that are part of the node repository, for instance x-val meta node. 
-     * @noreference This field is not intended to be referenced by clients. */
+    /** The root of all meta nodes that are part of the node repository, for instance x-val meta node.
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 3.1 */
     // this used to be part of UI code but moved into core because creation of child instance locks ROOT,
     // which should be done with care.
     // Problems with loading full repository when fully qualified name of node can't be loaded in
