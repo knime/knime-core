@@ -84,7 +84,7 @@ implements ScopeEndNode<FlowTryCatchContext>, InactiveBranchConsumer {
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(GenericCatchNodeModel.class);
 
     // new since 2.11
-    private SettingsModelBoolean m_alwaysPop = GenericCatchNodeDialog.getAlwaysPopulate();
+    private SettingsModelBoolean m_alwaysPopulate = GenericCatchNodeDialog.getAlwaysPopulate();
     private SettingsModelString m_defaultText = GenericCatchNodeDialog.getDefaultMessage();
     private SettingsModelString m_defaultVariable = GenericCatchNodeDialog.getDefaultVariable();
     private SettingsModelString m_defaultStackTrace = GenericCatchNodeDialog.getDefaultStackTrace();
@@ -109,7 +109,7 @@ implements ScopeEndNode<FlowTryCatchContext>, InactiveBranchConsumer {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        if (m_alwaysPop.getBooleanValue()) {
+        if (m_alwaysPopulate.getBooleanValue()) {
             pushFlowVariableString("FailingNode", m_defaultVariable.getStringValue());
             pushFlowVariableString("FailingNodeMessage", m_defaultText.getStringValue());
             pushFlowVariableString("FailingNodeStackTrace", m_defaultStackTrace.getStringValue());
@@ -140,7 +140,7 @@ implements ScopeEndNode<FlowTryCatchContext>, InactiveBranchConsumer {
             pushFlowVariableString("FailingNode", ftcc.getNode());
             pushFlowVariableString("FailingNodeMessage", ftcc.getReason());
             pushFlowVariableString("FailingNodeStackTrace", ftcc.getStacktrace());
-        } else if (m_alwaysPop.getBooleanValue()) {
+        } else if (m_alwaysPopulate.getBooleanValue()) {
             pushFlowVariableString("FailingNode", m_defaultVariable.getStringValue());
             pushFlowVariableString("FailingNodeMessage", m_defaultText.getStringValue());
             pushFlowVariableString("FailingNodeStackTrace", m_defaultStackTrace.getStringValue());
@@ -153,7 +153,7 @@ implements ScopeEndNode<FlowTryCatchContext>, InactiveBranchConsumer {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_alwaysPop.saveSettingsTo(settings);
+        m_alwaysPopulate.saveSettingsTo(settings);
         m_defaultText.saveSettingsTo(settings);
         m_defaultVariable.saveSettingsTo(settings);
         m_defaultStackTrace.saveSettingsTo(settings);
@@ -165,7 +165,7 @@ implements ScopeEndNode<FlowTryCatchContext>, InactiveBranchConsumer {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (settings.containsKey(m_defaultText.getKey())) {
-            m_alwaysPop.validateSettings(settings);
+            m_alwaysPopulate.validateSettings(settings);
             m_defaultText.validateSettings(settings);
             m_defaultVariable.validateSettings(settings);
             m_defaultStackTrace.validateSettings(settings);
@@ -178,7 +178,7 @@ implements ScopeEndNode<FlowTryCatchContext>, InactiveBranchConsumer {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (settings.containsKey(m_defaultText.getKey())) {
-            m_alwaysPop.loadSettingsFrom(settings);
+            m_alwaysPopulate.loadSettingsFrom(settings);
             m_defaultText.loadSettingsFrom(settings);
             m_defaultVariable.loadSettingsFrom(settings);
             m_defaultStackTrace.loadSettingsFrom(settings);
