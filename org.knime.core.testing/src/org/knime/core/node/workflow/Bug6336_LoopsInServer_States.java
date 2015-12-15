@@ -96,7 +96,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     }
 
     /** Collapse to meta node, then copy and connect to its original instance, then exec all. */
-    public void testExecuteAfterCollapseAndClone() throws Exception {
+    public void disabled_testExecuteAfterCollapseAndClone() throws Exception {
         final WorkflowManager manager = getManager();
         WorkflowManager metaNode = collapseToMetaNode(manager);
         WorkflowCopyContent copyContent = new WorkflowCopyContent();
