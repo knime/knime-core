@@ -96,6 +96,8 @@ public class TestrunConfiguration {
 
     private boolean m_checkNodeMessages = true;
 
+    private boolean m_runInStreamingMode = false;
+
     private final Collection<FlowVariable> m_flowVariables = new ArrayList<>();
 
     /**
@@ -357,6 +359,24 @@ public class TestrunConfiguration {
      */
     public boolean isCheckNodeMessages() {
         return m_checkNodeMessages;
+    }
+
+    /**
+     * Sets whether all nodes should be run in streaming mode using the streaming test executor in order to test the streaming API.
+     *
+     * @param runInStreamingMode <code>true</code> if nodes should be run in streaming mode
+     */
+    public void setRunInStreamingMode(final boolean runInStreamingMode) {
+        m_runInStreamingMode = runInStreamingMode;
+    }
+
+    /**
+     * Returns whether the nodes are to be executed in streaming mode, i.e. by using the streaming API-methods.
+     *
+     * @return <code>true</code> if the nodes should be executed in streaming mode
+     */
+    public boolean isRunInStreamingMode() {
+        return m_runInStreamingMode;
     }
 
     /**

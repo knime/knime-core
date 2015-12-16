@@ -126,6 +126,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private final JSpinner m_maxHiliteRows = new JSpinner(new SpinnerNumberModel(2500, 0, Integer.MAX_VALUE, 10));
 
+    private final JCheckBox m_streamingTest = new JCheckBox();
+
     private int m_lastSelectedIndex = -1;
 
     private final Map<String, JCheckBox> m_usedJanitors = new HashMap<>();
@@ -195,6 +197,16 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1;
         p.add(m_maxHiliteRows, c);
+
+        c.gridx = 0;
+        c.gridy++;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        p.add(new JLabel("Test in streaming mode   "), c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        p.add(m_streamingTest, c);
 
         c.gridx = 0;
         c.gridy++;
@@ -441,6 +453,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         m_settings.owner(m_owner.getText());
         m_settings.timeout((Integer) m_timeout.getValue());
         m_settings.maxHiliteRows((Integer) m_maxHiliteRows.getValue());
+        m_settings.streamingTest(m_streamingTest.isSelected());
 
         List<String> temp = new ArrayList<String>();
         for (int i = 0; i < m_logErrorsModel.getSize(); i++) {
@@ -481,6 +494,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         m_owner.setText(m_settings.owner());
         m_timeout.setValue(m_settings.timeout());
         m_maxHiliteRows.setValue(m_settings.maxHiliteRows());
+        m_streamingTest.setSelected(m_settings.streamingTest());
 
         m_logErrorsModel.removeAllElements();
         for (String l : m_settings.requiredLogErrors()) {

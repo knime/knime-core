@@ -72,6 +72,13 @@
                 is used.<br />
                 Also warning messages can contain regular expressions, see above.
             </option>
+			<option name="Test in streaming mode">
+				If checked, the workflow will also be tested in streaming mode, i.e. a
+				Test Streaming Executor will be selected for each node and executed.
+				Please note that the streaming mode must additionally be allowed in
+				the global Testrun Configuration! Otherwise the streaming test will be
+				skipped.
+			</option>
         </tab>
     </fullDescription>
     <ports />

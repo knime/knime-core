@@ -222,4 +222,10 @@
             specSerializer="org.knime.testing.data.filestore.LargeFileStorePortObjectSpec$Serializer">
       </portType>
    </extension>
+   <extension
+         point="org.knime.core.NodeExecutionJobManagerFactory">
+      <NodeExecutionJobManagerFactory
+            JobManagerFactory="org.knime.testing.streaming.testexecutor.StreamingTestNodeExecutionJobManagerFactory">
+      </NodeExecutionJobManagerFactory>
+   </extension>
 </plugin>

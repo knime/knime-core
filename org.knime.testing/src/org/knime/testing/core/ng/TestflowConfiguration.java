@@ -112,6 +112,8 @@ class TestflowConfiguration {
 
     private int m_maxHiliteRows = DEFAULT_MAX_HILITE_ROWS;
 
+    private boolean m_streamingTest = false;
+
     /**
      * Creates a new testflow configuration. The configuration is read from the testflow configuration node inside the
      * workflow. If no such node exists, configuration files are read. If no files exists, a default configuration is
@@ -208,6 +210,7 @@ class TestflowConfiguration {
 
         m_timeout = settings.timeout();
         m_maxHiliteRows = settings.maxHiliteRows();
+        m_streamingTest = settings.streamingTest();
     }
 
     /**
@@ -520,6 +523,15 @@ class TestflowConfiguration {
      */
     public int getMaxHiliteRows() {
         return m_maxHiliteRows;
+    }
+
+    /**
+     * Determines whether the workflow is to be executed in streaming mode.
+     *
+     * @return <code>true</code> if the workflow it to be executed in streaming mode, otherwise <code>false</code>
+     */
+    public boolean runStreamingTest() {
+        return m_streamingTest;
     }
 
     private static Pattern createPatternFromMessage(String message) {

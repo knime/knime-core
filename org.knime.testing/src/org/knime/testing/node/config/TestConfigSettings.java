@@ -90,6 +90,8 @@ public class TestConfigSettings {
 
     private int m_maxHiliteRows = 2500;
 
+    private boolean m_streamingTest = false;
+
     private static final String[] EMPTY = new String[0];
 
     private List<String> m_usedJanitors = new ArrayList<>();
@@ -292,6 +294,22 @@ public class TestConfigSettings {
     }
 
     /**
+     * Whether the workflow is to be tested in streaming mode.
+     *
+     * @param test <code>true</code> if to be tested in streaming mode
+     */
+    public void streamingTest(final boolean test) {
+        m_streamingTest = test;
+    }
+
+    /**
+     * @return <code>true</code> if the workflow is to be tested in streaming mode
+     */
+    public boolean streamingTest() {
+        return m_streamingTest;
+    }
+
+    /**
      * Sets the janitors that are used by this workflow. The passed collection has to contain their IDs.
      *
      * @param janitors a collection with janitor IDs
@@ -380,6 +398,9 @@ public class TestConfigSettings {
         for (String j : janitors) {
             m_usedJanitors.add(j);
         }
+
+        // since 3.1
+        m_streamingTest = settings.getBoolean("streamingTest", false);
     }
 
     /**
@@ -459,6 +480,8 @@ public class TestConfigSettings {
             m_usedJanitors.add(j);
         }
 
+        m_streamingTest = settings.getBoolean("streamingTest", false);
+
     }
 
     /**
@@ -497,6 +520,7 @@ public class TestConfigSettings {
         settings.addInt("timeout", m_timeout);
         settings.addInt("maxHilitedRows", m_maxHiliteRows);
         settings.addStringArray("usedJanitors", m_usedJanitors.toArray(new String[m_usedJanitors.size()]));
+        settings.addBoolean("streamingTest", m_streamingTest);
     }
 
     /**

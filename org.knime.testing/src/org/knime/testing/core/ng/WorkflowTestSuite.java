@@ -197,6 +197,16 @@ public class WorkflowTestSuite extends WorkflowTest {
         if (runConfig.isCheckMemoryLeaks()) {
             m_allTests.add(new WorkflowMemLeakTest(m_workflowName, m_progressMonitor, runConfig, m_context));
         }
+
+        if(runConfig.isRunInStreamingMode()) {
+            m_allTests.add(new WorkflowExecuteStreamingTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor, runConfig, m_context));
+            //            m_allTests.add(new WorkflowNodeMessagesTest(m_workflowName, m_progressMonitor, m_context) {
+            //                @Override
+            //                public String getName() {
+            //                    return super.getName() + " streaming";
+            //                }
+            //            });
+        }
     }
 
     /**

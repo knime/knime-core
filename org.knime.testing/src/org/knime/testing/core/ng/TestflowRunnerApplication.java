@@ -474,6 +474,9 @@ public class TestflowRunnerApplication implements IApplication {
                 }
                 m_runConfiguration.addFlowVariable(var);
                 i++;
+            } else if(stringArgs[i].equals("-streaming")) {
+                m_runConfiguration.setRunInStreamingMode(true);
+                i++;
             } else {
                 System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
                 return false;
@@ -516,6 +519,8 @@ public class TestflowRunnerApplication implements IApplication {
                 + " timeouts.");
         System.err.println("    -memLeaks <bytes>: optional, specifies the maximum allowed increaes in heap usage for "
                 + "each testflow. If not specified no test for memory leaks is performed.");
+        System.err.println("    -streaming: optional, additionally executes each workflow in streaming mode."
+                + "The test streaming job manager is set and used for each single node.");
         System.err.println("    -preferences <file_name>: optional, specifies an exported preferences file that should"
                 + " be used to initialize preferences");
         System.err.println("    -workflow.variable <variable-declaration>: optional, defines or overwrites workflow "
