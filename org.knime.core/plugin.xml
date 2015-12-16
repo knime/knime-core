@@ -36,11 +36,11 @@
             valueClass="org.knime.core.data.StringValue">
          <renderer
                rendererFactoryClass="org.knime.core.data.renderer.StringValueRenderer$Factory"
-               suggestAsDefault="true">
+               suggestAsDefault="false">
          </renderer>
          <renderer
                rendererFactoryClass="org.knime.core.data.renderer.MultiLineStringValueRenderer$Factory"
-               suggestAsDefault="false">
+               suggestAsDefault="true">
          </renderer>
       </dataValue>
       <dataValue
