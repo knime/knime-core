@@ -57,6 +57,12 @@ import org.knime.core.node.util.ConvenienceMethods;
  */
 public final class FlowTryCatchContext extends FlowScopeContext {
 
+    /* static variable names for information put on the stack by the WFM */
+    public static String ERROR_FLAG = "_error_caught";
+    public static String ERROR_NODE = "_error_node";
+    public static String ERROR_REASON = "_error_reason";
+    public static String ERROR_STACKTRACE = "_error_stacktrace";
+
     /* variables for information retrieved by the WFM */
     private boolean m_errorCaught = false;
     private String m_node;

@@ -961,10 +961,15 @@ public final class Node implements NodeModelWarningListener {
                         Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
                         setOutPortObjects(outs, false, false);
                         createErrorMessageAndNotify("Execution failed in Try-Catch block: " + th.getMessage());
-                        // and store information catch-node can report it:
+                        // and store information catch-node can report it
+                        FlowObjectStack fos = getNodeModel().getOutgoingFlowObjectStack();
+                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
+                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, getName()));
+                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, th.getMessage()));
                         StringWriter thstack = new StringWriter();
                         th.printStackTrace(new PrintWriter(thstack));
                         tcslc.setError(getName(), th.getMessage(), thstack.toString());
+                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_STACKTRACE, thstack.toString()));
                         return true;
                     }
                 }
