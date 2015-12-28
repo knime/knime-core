@@ -69,7 +69,7 @@ public final class MetaNodeToSubNodeResult {
 
     /** Construct action object - only to be called from WFM.
      * @param wfm The workflow manager
-     * @param nodeID the id of the meta node to wrap.
+     * @param nodeID the id of the metanode to wrap.
      * @param undoPersistor The persistor to undo the operation.
      */
     public MetaNodeToSubNodeResult(final WorkflowManager wfm, final NodeID nodeID, final WorkflowPersistor undoPersistor) {

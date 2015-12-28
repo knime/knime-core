@@ -84,8 +84,8 @@ import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 
 /**
- * The single page of the {@link AddMetaNodeWizard}. Used to either create a new meta node (then specify the template to
- * begin with) or to reconfigure an exiting meta node (then set the MetaNode) to initialize components accordingly.
+ * The single page of the {@link AddMetaNodeWizard}. Used to either create a new metanode (then specify the template to
+ * begin with) or to reconfigure an exiting metanode (then set the MetaNode) to initialize components accordingly.
  *
  * @author Fabian Dill, University of Konstanz
  */
@@ -150,18 +150,18 @@ public class AddMetaNodePage extends WizardPage {
     }
 
     /**
-     * This page initializes either from the template or the meta node set.
+     * This page initializes either from the template or the metanode set.
      *
-     * @param template the selected meta node template from previous page (that is to be created)
+     * @param template the selected metanode template from previous page (that is to be created)
      */
     void setTemplate(final String template) {
         m_template = template;
     }
 
     /**
-     * This page initializes either from the meta node or the template set.
+     * This page initializes either from the metanode or the template set.
      *
-     * @param metaNode the meta node to initialize the port lists from (and that is to be reconfigured)
+     * @param metaNode the metanode to initialize the port lists from (and that is to be reconfigured)
      */
     void setMetaNode(final WorkflowManager metaNode) {
         m_metaNode = metaNode;
@@ -297,7 +297,7 @@ public class AddMetaNodePage extends WizardPage {
 
     /**
      *
-     * @return the entered name for the meta node
+     * @return the entered name for the metanode
      */
     public String getMetaNodeName() {
         return m_name.getText();
@@ -672,7 +672,7 @@ public class AddMetaNodePage extends WizardPage {
         composite.setLayoutData(gridData);
         // label
         Label label = new Label(composite, SWT.NONE);
-        label.setText("Meta Node Name:");
+        label.setText("Metanode Name:");
         gridData = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING,
                 GridData.VERTICAL_ALIGN_CENTER, false, false);
         label.setLayoutData(gridData);

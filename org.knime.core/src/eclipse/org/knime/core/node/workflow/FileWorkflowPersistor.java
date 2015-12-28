@@ -118,9 +118,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             V220("2.2.0"),
             /** Version 2.3.x, introduces workflow annotations &amp; switches. */
             V230("2.3.0"),
-            /** Version 2.4.x, introduces meta node templates. */
+            /** Version 2.4.x, introduces metanode templates. */
             V240("2.4.0"),
-            /** Version 2.5.x, lockable meta nodes, node-relative annotations. */
+            /** Version 2.5.x, lockable metanodes, node-relative annotations. */
             V250("2.5.0"),
             /** Version 2.6.x, file store objects, grid information, node vendor &amp; plugin information.
              * @since 2.6 */
@@ -181,7 +181,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     /** KNIME Node type: native, meta or sub node.*/
     private enum NodeType {
         NativeNode("node"),
-        MetaNode("meta node"),
+        MetaNode("metanode"),
         SubNode("wrapped node");
 
         private final String m_shortName;
@@ -251,7 +251,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     private EditorUIInformation m_editorUIInfo;
 
     /**
-     * Parent persistor, used to create (nested) decryption stream for locked meta nodes.
+     * Parent persistor, used to create (nested) decryption stream for locked metanodes.
      */
     private WorkflowPersistor m_parentPersistor;
 
@@ -586,9 +586,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         NodeSettingsRO subWFSettings;
         try {
             InputStream in = new FileInputStream(nodeFile);
-            if (m_parentPersistor != null) { // real meta node, not a project
+            if (m_parentPersistor != null) { // real metanode, not a project
                 // the workflow.knime (or template.knime) file is not encrypted
-                // with this meta node's cipher but possibly with a parent
+                // with this metanode's cipher but possibly with a parent
                 // cipher
                 in = m_parentPersistor.decipherInput(in);
             }
@@ -1141,7 +1141,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 int destPort = t.getDestPort();
                 if (destSuffix == missingNodeSuffix) {
                     FromFileNodeContainerPersistor persistor;
-                    if (sourceSuffix == -1) { // connected to this meta node's input port bar
+                    if (sourceSuffix == -1) { // connected to this metanode's input port bar
                         persistor = this;
                     } else {
                         persistor = m_nodeContainerLoaderMap.get(sourceSuffix);
@@ -1152,7 +1152,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 // check downstream nodes
                 if (sourceSuffix == missingNodeSuffix) {
                     FromFileNodeContainerPersistor persistor;
-                    if (destSuffix == -1) { // connect to this meta node's output port bar
+                    if (destSuffix == -1) { // connect to this metanode's output port bar
                         persistor = this;
                     } else {
                         persistor = m_nodeContainerLoaderMap.get(destSuffix);
@@ -1191,7 +1191,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
             if (sourcePersistor instanceof FileSingleNodeContainerPersistor) {
                 // correct port index only for ordinary nodes (no new flow
-                // variable ports on meta nodes)
+                // variable ports on metanodes)
                 int index = c.getSourcePort();
                 c.setSourcePort(index + 1);
             }
@@ -1240,7 +1240,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                     }
                 }
                 // correct port index only for ordinary nodes (no new flow
-                // variable ports on meta nodes)
+                // variable ports on metanodes)
                 int index = c.getDestPort();
                 c.setDestPort(index + 1);
             }
@@ -1248,7 +1248,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             // v2.1 and before did not have flow variable ports (index 0)
             if (destPersistor instanceof FileSingleNodeContainerPersistor) {
                 // correct port index only for ordinary nodes (no new flow
-                // variable ports on meta nodes)
+                // variable ports on metanodes)
                 int index = c.getDestPort();
                 c.setDestPort(index + 1);
             }
@@ -1266,7 +1266,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     /**
-     * This is overridden by the meta node loader (1.x.x) and returns true for the "special" nodes.
+     * This is overridden by the metanode loader (1.x.x) and returns true for the "special" nodes.
      *
      * @param settings node sub-element
      * @return true if to skip (though in 99.9% false)
@@ -1730,7 +1730,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      */
     WorkflowPortTemplate loadInPortTemplate(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            throw new InvalidSettingsException("No ports for meta nodes in version 1.x.x");
+            throw new InvalidSettingsException("No ports for metanodes in version 1.x.x");
         }
         int index = settings.getInt("index");
         String name = settings.getString("name");
@@ -1781,7 +1781,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      */
     WorkflowPortTemplate loadOutPortTemplate(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            throw new InvalidSettingsException("No ports for meta nodes in version 1.x.x");
+            throw new InvalidSettingsException("No ports for metanodes in version 1.x.x");
         } else {
             int index = settings.getInt("index");
             String name = settings.getString("name");
@@ -1849,7 +1849,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
         final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
         final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
-        // not applicable for meta nodes
+        // not applicable for metanodes
     }
 
     /**
@@ -2248,7 +2248,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     protected static void saveNodeType(final NodeSettingsWO settings, final NodeContainer nc) {
         // obsolote since LoadVersion.V2100 - written to help old knime installs to read new workflows
-        // treat sub and meta nodes the same
+        // treat sub and metanodes the same
         settings.addBoolean("node_is_meta", !(nc instanceof NativeNodeContainer));
         NodeType nodeType;
         if (nc instanceof NativeNodeContainer) {

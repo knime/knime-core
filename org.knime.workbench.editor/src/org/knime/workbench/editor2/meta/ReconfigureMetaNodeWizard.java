@@ -62,7 +62,7 @@ import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.commands.ReconfigureMetaNodeCommand;
 
 /**
- * One page wizard to reconfigure a meta node by changing the number and type, order or number of in
+ * One page wizard to reconfigure a metanode by changing the number and type, order or number of in
  * and out ports.
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
@@ -79,7 +79,7 @@ public class ReconfigureMetaNodeWizard extends Wizard {
 
     /**
      * @param viewer The viewer
-     * @param metaNode The meta node
+     * @param metaNode The metanode
      */
     public ReconfigureMetaNodeWizard(final EditPartViewer viewer, final WorkflowManager metaNode) {
         super();
@@ -108,7 +108,7 @@ public class ReconfigureMetaNodeWizard extends Wizard {
      */
     @Override
     public void addPages() {
-        String name = m_metaNode != null ? "Meta Node" : "Wrapped Node";
+        String name = m_metaNode != null ? "Metanode" : "Wrapped Metanode";
         setWindowTitle("Reconfigure " + name + " Wizard");
         setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
                 ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/meta_node_wizard2.png")));

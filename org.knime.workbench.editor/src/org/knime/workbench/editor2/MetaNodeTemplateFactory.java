@@ -45,6 +45,6 @@
 package org.knime.workbench.editor2;
 
 public class MetaNodeTemplateFactory extends IFileStoreFactory {
-    /* Meta node factory type to distinguish between meta node drops and
+    /* Metanode factory type to distinguish between metanode drops and
      * ordinary file drops. */
 }

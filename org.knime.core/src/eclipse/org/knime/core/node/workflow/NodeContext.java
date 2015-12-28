@@ -106,7 +106,7 @@ public final class NodeContext {
             return null;
         }
 
-        // find the actual workflow and not the meta node the container may be in
+        // find the actual workflow and not the metanode the container may be in
         NodeContainerParent parent = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getDirectNCParent();
 
         while (!(parent instanceof WorkflowManager && ((WorkflowManager)parent).isProject())) {

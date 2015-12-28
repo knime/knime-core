@@ -147,7 +147,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * {@link WorkflowCipher#NULL_CIPHER}, never null. */
     WorkflowCipher getWorkflowCipher();
 
-    /** Get the workflow variables associated with this meta node/workflow.
+    /** Get the workflow variables associated with this metanode/workflow.
      * This method must not return null (but possibly an empty list). The result
      * may be unmodifiable.
      * @return The workflow variables.
@@ -155,7 +155,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     List<FlowVariable> getWorkflowVariables();
 
     /** Get (non-null) map of credentials.
-     * @return The credentials defined on this meta node.
+     * @return The credentials defined on this metanode.
      */
     List<Credentials> getCredentials();
 
@@ -193,18 +193,18 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     public boolean mustWarnOnDataLoadError();
 
     /** template information associated with the workflow, e.g. whether it
-     * is linking to same central master meta node.
+     * is linking to same central master metanode.
      * @return The template info
      */
     public MetaNodeTemplateInformation getTemplateInformation();
 
-    /** The workflow author information or null for meta nodes (or copied WFMs, which have not been saved yet).
+    /** The workflow author information or null for metanodes (or copied WFMs, which have not been saved yet).
      * @return ...
      * @since 2.8
      */
     public AuthorInformation getAuthorInformation();
 
-    /** Open decryption stream for locked meta nodes. Implementations will
+    /** Open decryption stream for locked metanodes. Implementations will
      * also call the decipher method on their parent workflow persistors.
      * @param input The input to decipher.
      * @return The decipherd input, mostly just the input.

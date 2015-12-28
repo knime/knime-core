@@ -281,11 +281,11 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
         final List<NodeID> links) {
         StringBuilder m = new StringBuilder("The workflow contains ");
         if (links.size() == 1) {
-            m.append("one meta node link (\"");
+            m.append("one metanode link (\"");
             m.append(parent.findNodeContainer(links.get(0)).getNameWithID());
             m.append("\").");
         } else {
-            m.append(links.size()).append(" meta node links.");
+            m.append(links.size()).append(" metanode links.");
         }
         m.append("\n\n").append("Do you want to check for updates now?");
 
@@ -307,7 +307,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 public void run() {
                     Shell activeShell = display.getActiveShell();
                     MessageDialogWithToggle dlg =
-                        MessageDialogWithToggle.openYesNoCancelQuestion(activeShell, "Meta Node Link Update", message,
+                        MessageDialogWithToggle.openYesNoCancelQuestion(activeShell, "Metanode Link Update", message,
                             "Remember my decision", false, corePrefStore, pKey);
                     switch (dlg.getReturnCode()) {
                         case IDialogConstants.YES_ID:

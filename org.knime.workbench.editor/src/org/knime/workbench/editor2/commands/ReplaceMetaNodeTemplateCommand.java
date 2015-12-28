@@ -57,7 +57,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
 /**
- * GEF command for replacing a <code>Meta Node Template</code> in the <code>WorkflowManager</code>.
+ * GEF command for replacing a <code>Metanode Template</code> in the <code>WorkflowManager</code>.
  *
  * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
  */
@@ -73,10 +73,10 @@ public class ReplaceMetaNodeTemplateCommand extends CreateMetaNodeTemplateComman
 
     /**
      * @param manager the workflow manager
-     * @param templateFolder the folder of the meta node template
-     * @param location the insert location of the new meta node template
-     * @param snapToGrid should meta node snap to grid
-     * @param node which will be replaced by this meta node template
+     * @param templateFolder the folder of the metanode template
+     * @param location the insert location of the new metanode template
+     * @param snapToGrid should metanode snap to grid
+     * @param node which will be replaced by this metanode template
      */
     public ReplaceMetaNodeTemplateCommand(final WorkflowManager manager,
         final AbstractExplorerFileStore templateFolder, final Point location, final boolean snapToGrid,

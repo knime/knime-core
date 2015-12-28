@@ -82,7 +82,7 @@ public abstract class AbstractNodeExecutionJobManager implements NodeExecutionJo
         return false;
     }
 
-    /** The icon that is shown in the workflow editor if the corresponding meta node or its parent meta node
+    /** The icon that is shown in the workflow editor if the corresponding metanode or its parent metanode
      * has this job manager set.
      * @return The url of the icon (or null). Icon should be at most 200x200.
      */
@@ -90,7 +90,7 @@ public abstract class AbstractNodeExecutionJobManager implements NodeExecutionJo
         return null;
     }
 
-    /** Called when this job manager is set on a meta node and controls the execution of the argument child node.
+    /** Called when this job manager is set on a metanode and controls the execution of the argument child node.
      * @param child The child node.
      * @return the url of the decorator icon (attached to a node container figure). If null no icon is shown for
      * the node.

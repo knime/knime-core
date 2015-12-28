@@ -625,7 +625,7 @@ public class NodeContainerFigure extends RectangleFigure {
         int compCount = 3;
         prefHeight += m_headingContainer.getPreferredSize().height;
         prefHeight += m_symbolFigure.getPreferredSize().height;
-        // meta node don't have a status figure
+        // metanode don't have a status figure
         if (isChild(m_statusFigure) || isChild(m_progressFigure)) {
             prefHeight += m_statusFigure.getPreferredSize().height;
             compCount++;

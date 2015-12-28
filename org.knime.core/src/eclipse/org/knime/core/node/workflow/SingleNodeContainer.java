@@ -422,7 +422,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
             case CONFIGURED:
                 /*
                  * Also configured nodes must be reset in order to handle
-                 * nodes subsequent to meta nodes with through-connections.
+                 * nodes subsequent to metanodes with through-connections.
                  */
                 NodeContext.pushContext(this);
                 try {
@@ -562,7 +562,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
             case EXECUTINGREMOTELY:
                 // execute remotely can be both truly executing remotely
                 // (job will be non-null) or marked as executing remotely
-                // (e.g. node is part of meta node which is remote executed
+                // (e.g. node is part of metanode which is remote executed
                 // -- the job will be null). We tolerate both cases here.
                 job = getExecutionJob();
                 if (job == null) {

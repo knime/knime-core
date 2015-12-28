@@ -283,7 +283,7 @@ public class WorkflowLoadHelper {
             }
         } else if (isTemplateFlow()) {
 //            LOGGER.coding("Supposed to instantiate a template but the link URI is not set");
-            // meta node template from node repository
+            // metanode template from node repository
             templateInfo = null;
         } else {
             templateInfo = null;

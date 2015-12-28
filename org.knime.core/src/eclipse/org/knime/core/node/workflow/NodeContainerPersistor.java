@@ -77,8 +77,8 @@ public interface NodeContainerPersistor {
     /** Does this persistor complain if its persisted state
      * {@link NodeContainer#getInternalState() state} does not match the state after
      * loading (typically all non-executed nodes are configured after load).
-     * This is true for all SingleNodeContainer and newer meta nodes,
-     * but it will be false for meta nodes, which are loaded from 1.x workflow.
+     * This is true for all SingleNodeContainer and newer metanodes,
+     * but it will be false for metanodes, which are loaded from 1.x workflow.
      * @return Such a property.
      */
     boolean mustComplainIfStateDoesNotMatch();

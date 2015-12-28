@@ -269,11 +269,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
 
     /** The repository of all active {@link IFileStoreHandler}. It inherits
-     * from the parent if this wfm is a meta node. */
+     * from the parent if this wfm is a metanode. */
     private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
 
     /** Password store. This object is associated with each meta-node
-     * (contained meta nodes have their own password store). */
+     * (contained metanodes have their own password store). */
     private final CredentialsStore m_credentialsStore;
 
     /** The version as read from workflow.knime file during load
@@ -287,7 +287,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Template information encapsulating template source URI and reference
      * date. This field is {@link MetaNodeTemplateInformation#NONE} for workflow
-     * projects and meta nodes, which are not used as linked templates. */
+     * projects and metanodes, which are not used as linked templates. */
     private MetaNodeTemplateInformation m_templateInformation;
 
     /** True if the underlying folder is RO (WFM will be write protected). This
@@ -310,7 +310,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** see {@link #getDirectNCParent()}. */
     private final NodeContainerParent m_directNCParent;
 
-    /** A lock handle identifying this workflow/meta node as encrypted. See
+    /** A lock handle identifying this workflow/metanode as encrypted. See
      * {@link WorkflowCipher} for details on what is locked/encrypted.
      * @since 2.5 */
     private WorkflowCipher m_cipher = WorkflowCipher.NULL_CIPHER;
@@ -325,7 +325,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public static final WorkflowManager ROOT = new WorkflowManager(null, null, NodeID.ROOTID, new PortType[0],
         new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty());
 
-    /** The root of all meta nodes that are part of the node repository, for instance x-val meta node.
+    /** The root of all metanodes that are part of the node repository, for instance x-val metanode.
      * @noreference This field is not intended to be referenced by clients.
      * @since 3.1 */
     // this used to be part of UI code but moved into core because creation of child instance locks ROOT,
@@ -441,7 +441,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // instance is used in a sub node container
             return directNCParent;
         } else if (directNCParent == null && parent != null) {
-            // standard case: either a project or a meta node
+            // standard case: either a project or a metanode
             return parent;
         } else {
             throw new IllegalArgumentException("Parent assignments misleading; can only have one parent (type)");
@@ -788,7 +788,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, getID(), nc, null));
     }
 
-    /** Creates new meta node. We will automatically find the next available
+    /** Creates new metanode. We will automatically find the next available
      * free index for the new node within this workflow.
      * @param inPorts types of external inputs (going into this workflow)
      * @param outPorts types of external outputs (exiting this workflow)
@@ -800,7 +800,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null, null, null);
     }
 
-    /** Adds new empty meta node to this WFM.
+    /** Adds new empty metanode to this WFM.
      * @param globalTableRepository TODO
      * @param fileStoreHandlerRepository TODO*/
     private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts, final PortType[] outPorts,
@@ -847,14 +847,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Returns true if this workflow manager is a project (which usually means
      * that the parent is {@link #ROOT}). It returns false if this workflow
-     * is only a meta node in another meta node or project.
+     * is only a metanode in another metanode or project.
      * @return This property.
      * @since 2.6 */
     public boolean isProject() {
         return this == ROOT || getReentrantLockInstance() != getDirectNCParent().getReentrantLockInstance();
     }
 
-    /** Creates new meta node from a persistor instance.
+    /** Creates new metanode from a persistor instance.
      * @param persistor to read from
      * @param newID new id to be used
      * @return newly created <code>WorkflowManager</code>
@@ -1010,7 +1010,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     getParent().configureNodeAndSuccessors(dest, false);
                     lock.queueCheckForNodeStateChangeNotification(true);
                 } else if (destNC instanceof WorkflowManager) {
-                    // connection enters a meta node
+                    // connection enters a metanode
                     // (can't have optional ins -- no reset required)
                     WorkflowManager destWFM = (WorkflowManager)destNC;
                     destWFM.configureNodesConnectedToPortInWFM(Collections.singleton(destPort));
@@ -1310,7 +1310,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // make sure to reflect state changes
                 lock.queueCheckForNodeStateChangeNotification(true);
             } else if (destNC instanceof WorkflowManager) {
-                // connection entered a meta node
+                // connection entered a metanode
                 WorkflowManager destWFM = (WorkflowManager)destNC;
                 destWFM.configureNodesConnectedToPortInWFM(Collections.singleton(destPort));
                 // also configure successors (too broad again, see above)
@@ -1418,7 +1418,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * by the routines that allow the user to change the port information
      * (add, delete, move).
      * @param metaNodeID The argument node
-     * @return the meta node's port info.
+     * @return the metanode's port info.
      * @throws IllegalArgumentException If the node is invalid.
      * @since 2.6 */
     public MetaPortInfo[] getMetanodeInputPortInfo(final NodeID metaNodeID) {
@@ -1748,7 +1748,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 resetNodeAndSuccessors(id);
                 nc.loadSettings(settings);
                 // bug fix 2593: can't simply call configureNodeAndSuccessor
-                // with meta node as argument: will miss contained source nodes
+                // with metanode as argument: will miss contained source nodes
                 if (nc instanceof SingleNodeContainer) {
                     configureNodeAndSuccessors(id, true);
                 } else {
@@ -1822,7 +1822,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 resetNodeAndSuccessors(id);
                 nc.loadCommonSettings(settings);
                 // bug fix 2593: can't simply call configureNodeAndSuccessor
-                // with meta node as argument: will miss contained source nodes
+                // with metanode as argument: will miss contained source nodes
                 if (nc instanceof SingleNodeContainer) {
                     configureNodeAndSuccessors(id, true);
                 } else {
@@ -2149,7 +2149,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * Reset all nodes in this workflow. Make sure the reset is propagated
      * in the right order, that is, only actively reset the "left most"
-     * nodes in the workflow or the ones connected to meta node input
+     * nodes in the workflow or the ones connected to metanode input
      * ports. The will also trigger resets of subsequent nodes.
      * Also re-configure not executed nodes the same way to make sure that
      * new workflow variables are spread accordingly.
@@ -2381,7 +2381,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (nc instanceof SingleNodeContainer) {
                     markAndQueueNodeAndPredecessors(id, -1);
                 } else if (nc.isLocalWFM()) {
-                    // if the execute option on a meta node is selected, run
+                    // if the execute option on a metanode is selected, run
                     // all nodes in it, not just the ones that are connected
                     // to the outports
                     // this will also trigger an execute on predecessors
@@ -2519,7 +2519,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final NodeModelFilter<T> filter, final Set<NodeID> visitedNodes) {
         assert m_workflowLock.isHeldByCurrentThread(); // lock prevents state transitions due to finished executions.
         NodeContainer nc = getNodeContainer(id);
-        if (!nc.isLocalWFM()) { // single node container or meta node with other job manager (SGE, DR, ...)
+        if (!nc.isLocalWFM()) { // single node container or metanode with other job manager (SGE, DR, ...)
             // for single Node Containers we need to make sure that they are
             // fully connected and all predecessors are executed or executing:
             // 2.7.1.: fixes bug #3976 where we also did that for Metanodes - not
@@ -2844,14 +2844,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * Callback from NodeContainer to request a safe transition into the
      * {@link InternalNodeContainerState#PREEXECUTE} state. This method is mostly
      * only called with {@link SingleNodeContainer} as argument but may also be
-     * called with a remotely executed meta node.
+     * called with a remotely executed metanode.
      * @param nc node whose execution is about to start
      * @return whether there was an actual state transition, false if the
      *         execution was canceled (cancel checking to be done in
      *         synchronized block)
      */
     boolean doBeforePreExecution(final NodeContainer nc) {
-        assert !nc.isLocalWFM() : "No execution of local meta nodes";
+        assert !nc.isLocalWFM() : "No execution of local metanodes";
         try (WorkflowLock lock = lock()) {
             LOGGER.debug(nc.getNameWithID() + " doBeforePreExecution");
             if (nc.performStateTransitionPREEXECUTE()) {
@@ -2866,13 +2866,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * Callback from NodeContainer to request a safe transition into the
      * {@link InternalNodeContainerState#POSTEXECUTE} state. This method is mostly
      * only called with {@link SingleNodeContainer} as argument but may also be
-     * called with a remotely executed meta node.
+     * called with a remotely executed metanode.
      * @param nc node whose execution is ending (and is now copying
      *   result data, e.g.)
      * @param status ...
      */
     void doBeforePostExecution(final NodeContainer nc, final NodeContainerExecutionStatus status) {
-        assert !nc.isLocalWFM() : "No execution of local meta nodes";
+        assert !nc.isLocalWFM() : "No execution of local metanodes";
         try (WorkflowLock lock = lock()) {
             LOGGER.debug(nc.getNameWithID() + " doBeforePostExecution");
             if (nc instanceof NativeNodeContainer && status.isSuccess()) {
@@ -2889,7 +2889,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Call-back from NodeContainer called before node is actually executed.
      * The argument node is in usually a {@link SingleNodeContainer}, although
-     * it can also be a meta node (i.e. a <code>WorkflowManager</code>), which
+     * it can also be a metanode (i.e. a <code>WorkflowManager</code>), which
      * is executed remotely (execution takes place as a single operation).
      *
      * @param nc node whose execution is about to start
@@ -2898,7 +2898,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     void doBeforeExecution(final NodeContainer nc) {
         assert !nc.getID().equals(this.getID());
-        assert !nc.isLocalWFM() : "No execution of local meta nodes";
+        assert !nc.isLocalWFM() : "No execution of local metanodes";
         try (WorkflowLock lock = lock()) {
             LOGGER.debug(nc.getNameWithID() + " doBeforeExecution");
             nc.getNodeTimer().startExec();
@@ -3553,14 +3553,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public String canExpandSubNode(final NodeID subNodeID) {
         try (WorkflowLock lock = lock()) {
             if (!(getNodeContainer(subNodeID) instanceof SubNodeContainer)) {
-                return "Cannot expand selected node (not a Wrapped Node).";
+                return "Cannot expand selected node (not a Wrapped Metanode).";
             }
             if (!canRemoveNode(subNodeID)) {
-                return "Cannot move Wrapped Node or nodes inside Wrapped Nodes (node(s) or successor still executing?)";
+                return "Cannot move Wrapped Metanode or nodes inside Wrapped Metanodes (node(s) or successor still executing?)";
             }
             WorkflowManager wfm = ((SubNodeContainer)getNodeContainer(subNodeID)).getWorkflowManager();
             if (wfm.containsExecutedNode()) {
-                return "Cannot expand executed Wrapped Node (reset first).";
+                return "Cannot expand executed Wrapped Metanode (reset first).";
             }
             return null;
         }
@@ -3588,7 +3588,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
             if (wfm.containsExecutedNode()) {
-                return "Cannot expand executed meta node (reset first).";
+                return "Cannot expand executed metanode (reset first).";
             }
             return null;
         }
@@ -3634,7 +3634,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 virtualNodes.add(snc.getVirtualOutNodeID());
                 subWFM = snc.getWorkflowManager();
             } else {
-                throw new IllegalStateException("Not a sub- or meta node: " + node);
+                throw new IllegalStateException("Not a sub- or metanode: " + node);
             }
             // retrieve all nodes from metanode
             Collection<NodeContainer> ncs = subWFM.getNodeContainers();
@@ -3834,7 +3834,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Unwrap a selected subnode into a meta node.
+    /** Unwrap a selected subnode into a metanode.
      * @param subnodeID Subnode to unwrap.
      * @return The result object for undo.
      * @throws IllegalStateException If it cannot perform the operation (e.g. node executing)
@@ -4292,7 +4292,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     void markForExecution(final boolean flag) {
-        assert !isLocalWFM() : "Setting execution mark on meta node not allowed"
+        assert !isLocalWFM() : "Setting execution mark on metanode not allowed"
             + " for locally executing (sub-)flows";
         if (getInternalState().isExecutionInProgress()) {
             throw new IllegalStateException("Execution of (sub-)flow already "
@@ -4350,7 +4350,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     sub = NodeContainerExecutionStatus.FAILURE;
                 }
                 // will be ignored on already executed nodes
-                // (think of an executed file reader in a meta node that is
+                // (think of an executed file reader in a metanode that is
                 // submitted onto a cluster in the executed state already)
                 nc.mimicRemoteExecuted(sub);
             }
@@ -4383,7 +4383,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     boolean performStateTransitionPREEXECUTE() {
-        assert !isLocalWFM() : "Execution of meta node not allowed for locally executing (sub-)flows";
+        assert !isLocalWFM() : "Execution of metanode not allowed for locally executing (sub-)flows";
         try (WorkflowLock lock = lock()) {
             if (getInternalState().isExecutionInProgress()) {
                 for (NodeContainer nc : m_workflow.getNodeValues()) {
@@ -4406,7 +4406,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     void performStateTransitionEXECUTING() {
-        assert !isLocalWFM() : "Execution of meta node not allowed for locally executing (sub-)flows";
+        assert !isLocalWFM() : "Execution of metanode not allowed for locally executing (sub-)flows";
         try (WorkflowLock lock = lock()) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.mimicRemoteExecuting();
@@ -4419,7 +4419,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     void performStateTransitionPOSTEXECUTE() {
-        assert !isLocalWFM() : "Execution of meta node not allowed for locally executing (sub-)flows";
+        assert !isLocalWFM() : "Execution of metanode not allowed for locally executing (sub-)flows";
         try (WorkflowLock lock = lock()) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
                 nc.mimicRemotePostExecute();
@@ -4432,7 +4432,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     void performStateTransitionEXECUTED(final NodeContainerExecutionStatus status) {
-        assert !isLocalWFM() : "Execution of meta node not allowed for locally executing (sub-)flows";
+        assert !isLocalWFM() : "Execution of metanode not allowed for locally executing (sub-)flows";
         synchronized (m_nodeMutex) {
             mimicRemoteExecuted(status);
             String stateList = printNodeSummary(getID(), 0);
@@ -4476,7 +4476,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     public boolean canResetContainedNodes() {
-        // workflows and meta nodes can always reset their interna (under canReset(NodeID)) unless the parent forbids it
+        // workflows and metanodes can always reset their interna (under canReset(NodeID)) unless the parent forbids it
         return isProject() || getDirectNCParent().canResetContainedNodes();
     }
 
@@ -4516,7 +4516,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         NodeContainer nc = m_workflow.getNode(nodeID);
         if (nc == null) {
-            // node has disappeared. Fixes bug 4881: a editor of a deleted meta node updates the enable status
+            // node has disappeared. Fixes bug 4881: a editor of a deleted metanode updates the enable status
             // of its action buttons one last time
             return false;
         }
@@ -4549,7 +4549,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     //////////////////////////////////////////////////////////
-    // NodeContainer implementations (WFM acts as meta node)
+    // NodeContainer implementations (WFM acts as metanode)
     //////////////////////////////////////////////////////////
 
     /** Reset node and all executed successors of a specific node.
@@ -4600,7 +4600,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // (resetSuccessors() follows ports and will be
             // called throughout subsequent calls...)
 
-            // TODO this configures the meta node, too!
+            // TODO this configures the metanode, too!
             wfm.resetAndReconfigureAllNodesInWFM();
         }
         nc.resetJobManagerViews();
@@ -4714,13 +4714,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         try (WorkflowLock lock = lock()) {
             SubNodeContainer snc = getNodeContainer(id, SubNodeContainer.class, true);
             CheckUtils.checkState(snc.getInternalState().isExecuted(),
-                "Wrapped Node %s not executed", snc.getNameWithID());
+                "Wrapped Metanode %s not executed", snc.getNameWithID());
             for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                 NodeID dest = cc.getDest();
                 NodeContainer destNC = dest.equals(getID()) ? this : getNodeContainer(dest);
                 final InternalNodeContainerState destNCState = destNC.getInternalState();
                 CheckUtils.checkState(destNCState.isHalted() && !destNCState.isExecuted(), "Downstream nodes of "
-                    + "Wrapped Node %s must not be in execution/executed (node %s)", snc.getNameWithID(), destNC);
+                    + "Wrapped Metanode %s must not be in execution/executed (node %s)", snc.getNameWithID(), destNC);
             }
             invokeResetOnSingleNodeContainer(snc);
         }
@@ -4827,7 +4827,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     public boolean canConfigureNodes() {
         try (WorkflowLock lock = lock()) {
-            // workflows and meta nodes can always configure, nodes in subnodes need to ask parent
+            // workflows and metanodes can always configure, nodes in subnodes need to ask parent
             return isProject() || getDirectNCParent().canConfigureNodes();
         }
     }
@@ -4891,7 +4891,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             return getParent().hasExecutablePredecessor(nodeID);
         }
         if (m_workflow.getNode(nodeID) == null) {
-            // node has disappeared. Fixes bug 4881: a editor of a deleted meta node updates the enable status
+            // node has disappeared. Fixes bug 4881: a editor of a deleted metanode updates the enable status
             // of its action buttons one last time
             return false;
         }
@@ -4956,7 +4956,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
        }
    }
 
-   /** @return true if all nodes in this workflow / meta node can be canceled.
+   /** @return true if all nodes in this workflow / metanode can be canceled.
     * @since 3.1 */
    public boolean canCancelAll() {
        // added as part of fix for bug 6534 - this method is called often also indirectly via change events
@@ -5309,7 +5309,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // and finally move the current node to the other list
                     executedNodes.add(thisID);
                 }
-                // bug 6026: need one additional check in case the workflow only consists of meta nodes
+                // bug 6026: need one additional check in case the workflow only consists of metanodes
                 // TODO: improve this: each and every node in the workflow performs a check!
                 lock.queueCheckForNodeStateChangeNotification(true);
             }
@@ -5390,7 +5390,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     NodeDialogPane getDialogPane() {
         if (m_nodeDialogPane == null) {
             if (hasDialog()) {
-                // create meta node dialog with quickforms
+                // create metanode dialog with quickforms
                 m_nodeDialogPane = new MetaNodeDialogPane();
                 // workflow manager jobs can't be split
                 m_nodeDialogPane.addJobMgrTab(SplitType.DISALLOWED);
@@ -5435,7 +5435,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return m_globalTableRepository;
     }
 
-    /** @return the fileStoreHandlerRepository for this meta node or project.
+    /** @return the fileStoreHandlerRepository for this metanode or project.
      * @since 3.1
      * @noreference This method is not intended to be referenced by clients.
      */
@@ -5716,7 +5716,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Attempts to configure all nodes in the workflow. It will also try to
      * configure nodes whose predecessors did not change their output specs.
-     * This method checks the new state of the meta node but
+     * This method checks the new state of the metanode but
      * does not propagate it (since called recursively).
      * @param keepNodeMessage Whether to retain the previously set node message.
      */
@@ -6438,7 +6438,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         setDirty();
     }
 
-    /** The list of contained meta nodes that are linked meta nodes. If recurse flag is set, each meta node is checked
+    /** The list of contained metanodes that are linked metanodes. If recurse flag is set, each metanode is checked
      * recursively.
      * @param recurse ...
      * @return list of node ids, ids not necessarily direct childs of this WFM!
@@ -6478,11 +6478,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * Query the template to the linked meta node with the given ID and check whether a newer version is available.
+     * Query the template to the linked metanode with the given ID and check whether a newer version is available.
      *
-     * @param id The ID of the linked meta node
+     * @param id The ID of the linked metanode
      * @param loadHelper The load helper to load the template
-     * @return true if a newer revision is available, false if not or this is not a meta node link.
+     * @return true if a newer revision is available, false if not or this is not a metanode link.
      * @throws IOException If that fails (template not accessible)
      */
     public boolean checkUpdateMetaNodeLink(final NodeID id, final WorkflowLoadHelper loadHelper) throws IOException {
@@ -6502,10 +6502,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Implementation of #checkUpdateMetaNodeLink that uses a cache of already checked meta node links.
+    /** Implementation of #checkUpdateMetaNodeLink that uses a cache of already checked metanode links.
      * @param loadResult Errors while loading the template are added here
-     * @param visitedTemplateMap avoids repeated checks for copies of the same meta node link.
-     * @param recurseInto Should linked meta nodes contained in the meta node also be checked. */
+     * @param visitedTemplateMap avoids repeated checks for copies of the same metanode link.
+     * @param recurseInto Should linked metanodes contained in the metanode also be checked. */
     private boolean checkUpdateMetaNodeLinkWithCache(final NodeID id, final WorkflowLoadHelper loadHelper,
         final LoadResult loadResult, final Map<URI, NodeContainerTemplate> visitedTemplateMap,
         final boolean recurseInto) throws IOException {
@@ -6574,7 +6574,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             loadResultChild = new MetaNodeLinkUpdateResult("Template from " + sourceURI.toString());
             tempParent.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
         } catch (InvalidSettingsException e) {
-            throw new IOException("Unable to read template meta node: " + e.getMessage(), e);
+            throw new IOException("Unable to read template metanode: " + e.getMessage(), e);
         } finally {
             NodeContext.removeLastContext();
         }
@@ -6594,12 +6594,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return linkResult;
     }
 
-    /** Returns true if the argument node is a valid meta node link and is not
+    /** Returns true if the argument node is a valid metanode link and is not
      * executing and has no successor in execution. Used from the GUI to enable
      * or disable the update action. It does not test whether there is a newer
-     * version of the meta node available. It may also return true even if the
-     * meta node is executed or contains executed nodes.
-     * @param id The meta node in question.
+     * version of the metanode available. It may also return true even if the
+     * metanode is executed or contains executed nodes.
+     * @param id The metanode in question.
      * @return The above described property. */
     public boolean canUpdateMetaNodeLink(final NodeID id) {
         try (WorkflowLock lock = lock()) {
@@ -6618,13 +6618,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Returns true when the meta node for the given ID is a link or contains links, which have the update status set
+    /** Returns true when the metanode for the given ID is a link or contains links, which have the update status set
      * (doesn't actually check on remote side but uses cached information). It assumes
      * {@link #checkUpdateMetaNodeLink(NodeID, WorkflowLoadHelper)} has been called before.
      *
      * <p>This method is used by an UI action and is not meant as public API.
-     * @param id The id to the meta node.
-     * @return if the ID is unknown or there are no meta nodes with the appropriate update flag.
+     * @param id The id to the metanode.
+     * @return if the ID is unknown or there are no metanodes with the appropriate update flag.
      * @since 2.9
      */
     public boolean hasUpdateableMetaNodeLink(final NodeID id) {
@@ -6652,14 +6652,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * Update link meta nodes with the given ID.
+     * Update link metanodes with the given ID.
      *
-     * @param id The ids of the meta node (must be existing meta node and must be a link).
+     * @param id The ids of the metanode (must be existing metanode and must be a link).
      * @param exec The execution monitor used to load a copy of the template
      * @param loadHelper A load helper.
      * @return The load result of the newly inserted link copy.
      * @throws CanceledExecutionException If canceled
-     * @throws IllegalArgumentException If the node does not exist or is not a meta node.
+     * @throws IllegalArgumentException If the node does not exist or is not a metanode.
      */
     public NodeContainerTemplateLinkUpdateResult updateMetaNodeLink(final NodeID id, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper) throws CanceledExecutionException {
@@ -6704,12 +6704,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return loadRes;
             }
             NodeSettings ncSettings = null;
-            if (needsUpdate) { // don't need to apply old settings as the meta node link is still up-to-date
+            if (needsUpdate) { // don't need to apply old settings as the metanode link is still up-to-date
                 ncSettings = new NodeSettings("metanode_settings");
                 try {
                     saveNodeSettings(id, ncSettings);
                 } catch (InvalidSettingsException e1) {
-                    String error = "Unable to store meta node settings: " + e1.getMessage();
+                    String error = "Unable to store metanode settings: " + e1.getMessage();
                     LOGGER.warn(error, e1);
                     loadRes.addError(error);
                 }
@@ -6744,7 +6744,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 try {
                     loadNodeSettings(loadRes.getNCTemplate().getID(), ncSettings);
                 } catch (InvalidSettingsException e) {
-                    String error = "Can't apply previous settigs to new meta node link: " + e.getMessage();
+                    String error = "Can't apply previous settigs to new metanode link: " + e.getMessage();
                     LOGGER.warn(error, e);
                     loadRes.addError(error);
                 }
@@ -6774,7 +6774,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Actual implementation to #updateMetaNodeLink. It updates a single meta node, which must be a linked meta node.
+    /** Actual implementation to #updateMetaNodeLink. It updates a single metanode, which must be a linked metanode.
      * It does not keep any backups and doesn't have a rollback.
      */
     private NodeContainerTemplate updateNodeTemplateLinkInternal(final NodeID id, final ExecutionMonitor exec,
@@ -6790,12 +6790,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 tempLink = loadMetaNodeTemplate(tnc, loadHelper, loadRes);
                 visitedTemplateMap.put(sourceURI, tempLink);
             } catch (IOException e) {
-                String error = "Failed to update meta node reference: " + e.getMessage();
+                String error = "Failed to update metanode reference: " + e.getMessage();
                 LOGGER.error(error, e);
                 loadRes.addError(error);
                 return null;
             } catch (UnsupportedWorkflowVersionException e) {
-                String error = "Unsupported version in meta node template " + e.getMessage();
+                String error = "Unsupported version in metanode template " + e.getMessage();
                 LOGGER.error(error, e);
                 loadRes.addError(error);
                 return null;
@@ -6821,7 +6821,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 int destPort = cc.getDestPort();
                 if (!canAddConnection(s, sourcePort, id, destPort)) {
                     loadRes.addWarning("Could not restore connection between \""
-                            + getNodeContainer(s).getNameWithID() + "\" and meta node template");
+                            + getNodeContainer(s).getNameWithID() + "\" and metanode template");
                 } else {
                     ConnectionContainer c = addConnection(s, sourcePort, id, destPort);
                     c.setDeletable(cc.isDeletable());
@@ -6834,7 +6834,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 int destPort = cc.getDestPort();
                 NodeID des = cc.getDest();
                 if (!canAddConnection(id, sourcePort, des, destPort)) {
-                    loadRes.addError("Could not restore connection between meta node template and \""
+                    loadRes.addError("Could not restore connection between metanode template and \""
                             + getNodeContainer(des).getNameWithID() + "\"");
                 } else {
                     ConnectionContainer c = addConnection(id, sourcePort, des, destPort);
@@ -6848,7 +6848,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * Update meta node links (recursively finding all meta nodes but not updating meta nodes in meta nodes).
+     * Update metanode links (recursively finding all metanodes but not updating metanodes in metanodes).
      * @param lH Load helper.
      * @param failOnLoadError If to fail if there errors updating the links
      * @param exec Progress monitor
@@ -6859,7 +6859,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public NodeContainerTemplateLinkUpdateResult updateMetaNodeLinks(final WorkflowLoadHelper lH,
         final boolean failOnLoadError, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
-        // all linked meta nodes that need to be checked.
+        // all linked metanodes that need to be checked.
         Map<NodeID, NodeContainerTemplate> linkedMetaNodes =
                 fillLinkedTemplateNodesList(new LinkedHashMap<NodeID, NodeContainerTemplate>(), true, true);
         int linksChecked = 0;
@@ -6878,7 +6878,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     tnc.getID(), lH, checkTemplateResult, visitedTemplateMap, true);
                 if (failOnLoadError && checkTemplateResult.hasErrors()) {
                     LOGGER.error(checkTemplateResult.getFilteredError("", LoadResultEntryType.Error));
-                    throw new IOException("Error(s) while updating meta node links");
+                    throw new IOException("Error(s) while updating metanode links");
                 }
                 if (updatesAvail) {
                     NodeContainerTemplateLinkUpdateResult loadResult = parent.updateMetaNodeLinkWithCache(tnc.getID(),
@@ -6887,14 +6887,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     linksUpdated += 1;
                     if (failOnLoadError && loadResult.hasErrors()) {
                         LOGGER.error(loadResult.getFilteredError("", LoadResultEntryType.Error));
-                        throw new IOException("Error(s) while updating meta node links");
+                        throw new IOException("Error(s) while updating metanode links");
                     }
                 }
             }
             if (linksChecked == 0) {
-                LOGGER.debug("No meta node links in workflow, nothing updated");
+                LOGGER.debug("No metanode links in workflow, nothing updated");
             } else {
-                LOGGER.debug("Workflow contains " + linksChecked + " meta node link(s), " + linksUpdated
+                LOGGER.debug("Workflow contains " + linksChecked + " metanode link(s), " + linksUpdated
                     + " were updated");
             }
             return update;
@@ -6905,7 +6905,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Root workflow to all temporary workflow templates. While updating or definining meta node links/templates
+    /** Root workflow to all temporary workflow templates. While updating or definining metanode links/templates
      * this instance is used to hold a temporary copy. Initialized lazy.*/
     private static WorkflowManager templateWorkflowRoot;
 
@@ -6954,13 +6954,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Sets the argument template info on the node with the given ID. The node
-     * must be a valid meta node contained in this workflow.
-     * @param id The id of the node to change (must be an existing meta node).
+     * must be a valid metanode contained in this workflow.
+     * @param id The id of the node to change (must be an existing metanode).
      * @param templateInformation the templateInformation to set
      * @return The old template info associated with the node.
      * @throws NullPointerException If either argument is null.
      * @throws IllegalArgumentException If the id does not represent a
-     * valid meta node. */
+     * valid metanode. */
     public MetaNodeTemplateInformation setTemplateInformation(final NodeID id,
             final MetaNodeTemplateInformation templateInformation) {
         try (WorkflowLock lock = lock()) {
@@ -6975,7 +6975,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     // Workflow Encryption & Locking
     ///////////////////////////////////
 
-    /** Set password on this meta node. See {@link WorkflowCipher} for details
+    /** Set password on this metanode. See {@link WorkflowCipher} for details
      * on what is protected/locked.
      * @param password The new password (or null to always unlock)
      * @param hint The hint/copyright.
@@ -6992,7 +6992,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         try (WorkflowLock lock = lock()) {
             setDirtyAll(); // first set dirty to decrypt with old cipher
             m_cipher = cipher;
-            String msg = " cipher on meta node \"" + getNameWithID() + "\"";
+            String msg = " cipher on metanode \"" + getNameWithID() + "\"";
             if (m_cipher.isNullCipher()) {
                 LOGGER.debug("Unsetting " + msg);
             } else {
@@ -7739,7 +7739,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContext.removeLastContext();
             }
             sub1.setProgress(1.0);
-            // if cont == isolated meta nodes, then we need to block that meta node as well
+            // if cont == isolated metanodes, then we need to block that metanode as well
             // (that is being asserted in methods which get called indirectly)
             try (WorkflowLock lock = cont instanceof WorkflowManager ? ((WorkflowManager)cont).lock() : lock()) {
                 cont.loadContent(persistor, tblRep, inStack, sub2, subResult, keepNodeMessage);
@@ -8190,7 +8190,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 break;
                             case EXECUTINGREMOTELY:
                                 // be more flexible than in the EXECUTING case
-                                // EXECUTINGREMOTELY is used in meta nodes,
+                                // EXECUTINGREMOTELY is used in metanodes,
                                 // which are executed elsewhere -- they set all nodes
                                 // of their internal flow to EXECUTINGREMOTELY
                                 allowedStates.retainAll(Arrays.asList(IDLE,
@@ -8235,7 +8235,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         }
                     }
                     boolean hasData = true;
-                    // meta nodes don't need to provide output data and can still
+                    // metanodes don't need to provide output data and can still
                     // be executed.
                     if (nc instanceof SingleNodeContainer) {
                         for (int i = 0; i < nc.getNrOutPorts(); i++) {
@@ -8263,7 +8263,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * A "local wfm" is a workflow or meta node that has the default job manager. Other instances, which are executed in
+     * A "local wfm" is a workflow or metanode that has the default job manager. Other instances, which are executed in
      * a cluster or so, are non-local and will be more handled like a single node container on execution. The WFM
      * instance contained in a sub node is a local wfm even if the subnode has a non-default job manager set.
      * {@inheritDoc}
@@ -8325,7 +8325,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     //////////////////////////////////////
     // NodeContainer implementations
-    // (WorkflowManager acts as meta node)
+    // (WorkflowManager acts as metanode)
     //////////////////////////////////////
 
     /** The up-to-date state of the workflow, not neccarily the one that was most recently set by
@@ -8639,7 +8639,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (isProject && ncDir != null) {
             ncDir.fileUnlockRootForVM();
         }
-        if (isProject && !directory.fileLockRootForVM()) { // need to lock projects (but not meta nodes)
+        if (isProject && !directory.fileLockRootForVM()) { // need to lock projects (but not metanodes)
             throw new IllegalStateException("Workflow root directory \""
                     + directory + "\" can't be locked although it should have "
                     + "been locked by the save routines");
@@ -8782,11 +8782,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void addWorkflowVariables(final boolean skipReset,
             final FlowVariable... newVars) {
-        // meta node variables not supported for two reasons
+        // metanode variables not supported for two reasons
         // (1) missing configure propagation and (2) meta-node variables need
         // to be hidden in outer workflow
         assert (getNrInPorts() == 0 && getNrOutPorts() == 0)
-            : "Workflow variables can't be set on meta nodes";
+            : "Workflow variables can't be set on metanodes";
         try (WorkflowLock lock = lock()) {
             if (m_workflowVariables == null) {
                 // create new set of vars if none exists
@@ -8958,7 +8958,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param <T> Specific NodeModel derivation or another interface
      *            implemented by NodeModel instances.
      * @param nodeModelClass The class of interest
-     * @param recurse Whether to recurse into contained meta nodes.
+     * @param recurse Whether to recurse into contained metanodes.
      * @return A (unsorted) list of nodes matching the class criterion
      */
     public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final boolean recurse) {
@@ -8972,7 +8972,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *            implemented by NodeModel instances.
      * @param nodeModelClass The class of interest
      * @param filter A non-null filter to apply.
-     * @param recurse Whether to recurse into contained meta nodes.
+     * @param recurse Whether to recurse into contained metanodes.
      * @return A (unsorted) list of nodes matching the class criterion
      * @since 2.7
      */
@@ -9003,7 +9003,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Get the node container associated with the argument id. Recurses into
-     * contained meta nodes to find the node if it's not directly contained
+     * contained metanodes to find the node if it's not directly contained
      * in this workflow level.
      *
      * <p>Clients should generally use {@link #getNodeContainer(NodeID)} to
@@ -9028,7 +9028,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     return ((SubNodeContainer)parentNC).getWorkflowManager();
                 }
                 throw new IllegalArgumentException("NodeID " + id + " is not contained in workflow "
-                        + getNameWithID() + " - parent node is not meta node");
+                        + getNameWithID() + " - parent node is not metanode");
             } else {
                 throw new IllegalArgumentException("NodeID " + id
                         + " is not contained in workflow " + getNameWithID());
@@ -9121,7 +9121,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * recursion for nested meta nodes.
+     * recursion for nested metanodes.
      */
     private <T> WorkflowManager findNextWaitingWorkflowManager(
             final WorkflowManager parentWfm,

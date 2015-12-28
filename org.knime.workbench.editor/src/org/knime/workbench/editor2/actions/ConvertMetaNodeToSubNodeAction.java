@@ -58,7 +58,7 @@ import org.knime.workbench.editor2.commands.ConvertMetaNodeToSubNodeCommand;
 import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
-/** Convert meta node to a sub node.
+/** Convert metanode to a sub node.
  *
  * @author M. Berthold
  */
@@ -130,7 +130,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
     }
 
     /**
-     * Expand meta node!
+     * Expand metanode!
      *
      * {@inheritDoc}
      */
@@ -146,11 +146,11 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
             if (!metaNode.unlock(new GUIWorkflowCipherPrompt())) {
                 return;
             }
-            // before we do anything, let's see if the convert will reset the meta node
+            // before we do anything, let's see if the convert will reset the metanode
             if (manager.canResetNode(metaNode.getID())) {
                 // yes: ask if we can reset, otherwise bail
                 MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.OK | SWT.CANCEL);
-                mb.setMessage("Executed Nodes inside Meta Node will be reset - are you sure?");
+                mb.setMessage("Executed Nodes inside Metanode will be reset - are you sure?");
                 mb.setText("Reset Executed Nodes");
                 int dialogreturn = mb.open();
                 if (dialogreturn == SWT.CANCEL) {
@@ -165,7 +165,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
             execute(cmnc);
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.ERROR);
-            mb.setMessage("Sorry, converting Meta Node failed: " + e.getMessage());
+            mb.setMessage("Sorry, converting Metanode failed: " + e.getMessage());
             mb.setText("Convert failed");
             mb.open();
         }

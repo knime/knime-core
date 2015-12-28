@@ -77,8 +77,8 @@ public final class WorkflowCopyContent {
         m_nodeIDs = ids;
     }
 
-    /** Used when copying from meta node template space.
-     * @param id The ID of the meta node in the template root workflow
+    /** Used when copying from metanode template space.
+     * @param id The ID of the metanode in the template root workflow
      * @param suggestedNodeIDSuffix The suffix to be used in the target workflow (overwrite it)
      * @param uiInfo The UIInfo the in the target workflow (also overwritten)
      * @return this

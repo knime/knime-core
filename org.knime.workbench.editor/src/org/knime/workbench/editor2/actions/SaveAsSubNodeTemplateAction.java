@@ -109,7 +109,7 @@ public class SaveAsSubNodeTemplateAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Saves the Wrapped Node as a reusable template";
+        return "Saves the Wrapped Metanode as a reusable template";
     }
 
 
@@ -181,8 +181,8 @@ public class SaveAsSubNodeTemplateAction extends AbstractNodeAction {
         final Shell shell = Display.getCurrent().getActiveShell();
         ContentObject defSel = getDefaultSaveLocation(wm);
         SpaceResourceSelectionDialog dialog = new SpaceResourceSelectionDialog(shell, validMountPoints, defSel);
-        dialog.setTitle("Save As Wrapped Node Template");
-        dialog.setHeader("Select destination workflow group for Wrapped Node template");
+        dialog.setTitle("Save As Wrapped Metanode Template");
+        dialog.setHeader("Select destination workflow group for Wrapped Metanode template");
         dialog.setValidator(new Validator() {
             @Override
             public String validateSelectionValue(final AbstractExplorerFileStore selection, final String name) {

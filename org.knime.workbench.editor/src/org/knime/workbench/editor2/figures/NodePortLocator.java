@@ -70,7 +70,7 @@ public class NodePortLocator extends PortLocator {
      * @param maxPorts max number of data ports to locate
      * @param portIndex The port index
      * @param portType type of the port
-     * @param isMetaNodePort if port belongs to a meta node
+     * @param isMetaNodePort if port belongs to a metanode
      */
     public NodePortLocator(final NodeContainerFigure parent,
             final boolean isInport, final int maxPorts, final int portIndex,
@@ -112,7 +112,7 @@ public class NodePortLocator extends PortLocator {
         int y;
         // Y position:
         // Implicit flow variable ports are always at the very top.
-        // Meta nodes don't have implicit flow variable ports.
+        // Metanodes don't have implicit flow variable ports.
         // With port count one or two we spread evenly
         // Multiple ports (more than 2) hang off the top of the icon
         if (isImplVariablePort()) {

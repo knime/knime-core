@@ -56,7 +56,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 
 /**
- * A Factory to create meta nodes.
+ * A Factory to create metanodes.
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
 public class MetaNodeCreationFactory implements CreationFactory {
@@ -84,14 +84,14 @@ public class MetaNodeCreationFactory implements CreationFactory {
     }
 
     /**
-     * @return the meta node template
+     * @return the metanode template
      */
     public MetaNodeTemplate getMetaNodeTemplate() {
         return m_template;
     }
 
     /**
-     * @param template the meta node template to set
+     * @param template the metanode template to set
      */
     public void setMetaNodeTemplate(final MetaNodeTemplate template) {
         m_template = template;

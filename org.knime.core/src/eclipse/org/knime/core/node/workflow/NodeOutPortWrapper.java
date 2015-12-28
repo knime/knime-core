@@ -178,7 +178,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         if (m_underlyingPort == null) {
             /*
              * Return the IDLE state if the underlying port is null.
-             * This may happen during loading of meta nodes and
+             * This may happen during loading of metanodes and
              * if the port is not connected. The port is anyway intersted in
              * the state and it is displayed as "no spec/node data".
              *

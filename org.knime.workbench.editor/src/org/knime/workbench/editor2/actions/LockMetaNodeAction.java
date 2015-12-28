@@ -62,7 +62,7 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
-/** Action to set locking on meta node.
+/** Action to set locking on metanode.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class LockMetaNodeAction extends AbstractNodeAction {
@@ -166,7 +166,7 @@ public class LockMetaNodeAction extends AbstractNodeAction {
         try {
             metaNodeWFM.setWorkflowPassword(password, hint);
         } catch (NoSuchAlgorithmException e) {
-            String msg = "Unable to encrypt meta node: " + e.getMessage();
+            String msg = "Unable to encrypt metanode: " + e.getMessage();
             LOGGER.error(msg, e);
             MessageDialog.openError(shell, "Metanode encrypt", msg);
         }

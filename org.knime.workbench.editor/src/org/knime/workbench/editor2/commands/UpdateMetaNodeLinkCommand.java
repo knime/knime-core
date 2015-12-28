@@ -63,7 +63,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.UpdateMetaNodeTemplateRunnable;
 
 /**
- * GEF command for update meta node links.
+ * GEF command for update metanode links.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich
  */
@@ -162,8 +162,8 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        LOGGER.debug("Undo: Reverting meta node links ("
-                + m_newIDs.size() + " meta node(s))");
+        LOGGER.debug("Undo: Reverting metanode links ("
+                + m_newIDs.size() + " metanode(s))");
         WorkflowManager hostWFM = getHostWFM();
         for (int i = 0; i < m_newIDs.size(); i++) {
             NodeID id = m_newIDs.get(i);

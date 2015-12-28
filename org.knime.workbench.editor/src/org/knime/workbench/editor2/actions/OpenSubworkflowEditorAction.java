@@ -95,7 +95,7 @@ public class OpenSubworkflowEditorAction extends Action {
      */
     @Override
     public String getToolTipText() {
-        return "Opens editor for this meta node";
+        return "Opens editor for this metanode";
     }
 
 

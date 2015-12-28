@@ -64,7 +64,7 @@ import org.knime.workbench.editor2.commands.AddNewMetaNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * One page wizard to create a meta node by defining the number and type of in
+ * One page wizard to create a metanode by defining the number and type of in
  * and out ports.
  *
  * @author Fabian Dill, University of Konstanz
@@ -85,8 +85,8 @@ public class AddMetaNodeWizard extends Wizard {
         super();
         m_wfEditor = wfEditor;
         // TODO: remove as soon as there is some help available
-        // would be  great to have some description of how to create meta nodes,
-        // what to do with meta nodes and how to deploy them
+        // would be  great to have some description of how to create metanodes,
+        // what to do with metanodes and how to deploy them
         setHelpAvailable(false);
     }
 
@@ -97,11 +97,11 @@ public class AddMetaNodeWizard extends Wizard {
     @Override
     public void addPages() {
         // add the one and only page to enter the in- and out ports
-        setWindowTitle("Add Meta Node Wizard");
+        setWindowTitle("Add Metanode Wizard");
         setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
                 ImageRepository.getImage(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/meta_node_wizard2.png")));
         m_selectPage = new SelectMetaNodePage();
-        m_addPage = new AddMetaNodePage("Create a new Meta Node");
+        m_addPage = new AddMetaNodePage("Create a new Metanode");
         addPage(m_selectPage);
         addPage(m_addPage);
     }
@@ -133,23 +133,23 @@ public class AddMetaNodeWizard extends Wizard {
     protected boolean performPredefinedFinish() {
         String metaNodeType = m_selectPage.getSelectedMetaNode();
         if (metaNodeType.equals(SelectMetaNodePage.ZERO_ONE)) {
-            // create 0:1 meta node
+            // create 0:1 metanode
             createMetaNode(0, 1);
             return true;
         } else if (metaNodeType.equals(SelectMetaNodePage.ONE_ONE)) {
-            // create 1:1 meta node
+            // create 1:1 metanode
             createMetaNode(1, 1);
             return true;
         } else if (metaNodeType.equals(SelectMetaNodePage.ONE_TWO)) {
-            // create 1:2 meta node
+            // create 1:2 metanode
             createMetaNode(1, 2);
             return true;
         } else if (metaNodeType.equals(SelectMetaNodePage.TWO_ONE)) {
-            // create 2:1 meta node
+            // create 2:1 metanode
             createMetaNode(2, 1);
             return true;
         } else if (metaNodeType.equals(SelectMetaNodePage.TWO_TWO)) {
-            // create 2:2 meta node
+            // create 2:2 metanode
             createMetaNode(2, 2);
             return true;
         }

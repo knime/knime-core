@@ -85,7 +85,7 @@ public abstract class AbstractWorkflowPortBarEditPart
     @Override
     public void activate() {
         super.activate();
-        // need to know about meta node port changes
+        // need to know about metanode port changes
         getNodeContainer().addNodePropertyChangedListener(this);
     }
 

@@ -121,7 +121,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
         ReferencedFile workflowKNIMEFile = super.getWorkflowKNIMEFile();
         File setFile = workflowKNIMEFile.getFile();
         if (!setFile.getName().equals("settings.xml")) {
-            String warn = "Settings file of obsolete meta node is not "
+            String warn = "Settings file of obsolete metanode is not "
                     + "named settings.xml: " + setFile.getName();
             getLogger().warn(warn);
             result.addError(warn);
@@ -160,7 +160,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
             name = "Cross Validation";
         case LOOPER:
             result.addError("Workflow contains obsolete \"" + name
-                    + "\" meta node implementation, not all settings could "
+                    + "\" metanode implementation, not all settings could "
                     + "be restored, please re-configure and execute again.");
             setNeedsResetAfterLoad();
         default:
@@ -210,7 +210,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
         case CROSSVALIDATION:
             return "Cross Validation";
         default:
-            StringBuilder b = new StringBuilder("Meta Node ");
+            StringBuilder b = new StringBuilder("Metanode ");
             b.append(m_dataInNodeIDs.length);
             b.append(" : ");
             b.append(m_dataOutNodeIDs.length);

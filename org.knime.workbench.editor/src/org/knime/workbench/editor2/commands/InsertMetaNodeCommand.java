@@ -55,7 +55,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
 /**
- * GEF command for adding a <code>meta node</code> to a connection. The new meta node will be connected to the source
+ * GEF command for adding a <code>metanode</code> to a connection. The new metanode will be connected to the source
  * and target node of the passed connection.
  *
  * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
@@ -72,9 +72,9 @@ public class InsertMetaNodeCommand extends CreateMetaNodeCommand {
     /**
      * @param manager the workflow manager
      * @param persistor the workflow persistor
-     * @param location the insert location of the new meta node
-     * @param snapToGrid should meta node snap to grid
-     * @param edge on which the meta node should be inserted
+     * @param location the insert location of the new metanode
+     * @param snapToGrid should metanode snap to grid
+     * @param edge on which the metanode should be inserted
      */
     public InsertMetaNodeCommand(final WorkflowManager manager, final WorkflowPersistor persistor,
         final Point location, final boolean snapToGrid, final ConnectionContainerEditPart edge) {

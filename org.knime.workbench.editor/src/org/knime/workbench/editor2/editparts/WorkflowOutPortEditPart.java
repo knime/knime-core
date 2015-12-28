@@ -110,7 +110,7 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
         if (getParent() == null) {
             return null;
         }
-        // if the referring WorkflowManager is displayed as a meta node, then
+        // if the referring WorkflowManager is displayed as a metanode, then
         // the parent is a NodeContainerEditPart
         if (getParent() instanceof NodeContainerEditPart) {
             return (NodeContainer) getParent().getModel();

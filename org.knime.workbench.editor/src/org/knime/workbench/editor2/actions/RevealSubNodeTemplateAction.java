@@ -107,7 +107,7 @@ public class RevealSubNodeTemplateAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Reveals the Wrapped Node template this sub node is linked to.";
+        return "Reveals the Wrapped Metanode template this sub node is linked to.";
     }
 
 

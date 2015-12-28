@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
-   <extension-point id="metanode_porttype" name="Port Type for Meta Node Wizard" schema="schema/metanode_portype.exsd"/>
+   <extension-point id="metanode_porttype" name="Port Type for Metanode Wizard" schema="schema/metanode_portype.exsd"/>
      <extension
          point="org.eclipse.ui.commands">
       <category
@@ -20,9 +20,9 @@
             name="Toggle Snap to Grid"/>
       <command
             categoryId="knime.command.category"
-            description="Opens the settings dialog for the Wrapped Node layout."
+            description="Opens the settings dialog for the Wrapped Metanode layout."
             id="knime.commands.editor.subnodeLayout"
-            name="Wrapped Node Layout">
+            name="Wrapped Metanode Layout">
       </command>
       <command
             categoryId="knime.command.category"
@@ -116,14 +116,14 @@
             name="Open First Out-port View"/>
       <command
             categoryId="knime.command.category"
-            description="Open wizard to add meta node"
+            description="Open wizard to add metanode"
             id="knime.commands.addMetaNode"
-            name="Open Meta Node Wizard..."/>
+            name="Open Metanode Wizard..."/>
       <command
             categoryId="knime.command.category"
-            description="Checks and updates meta node links"
+            description="Checks and updates metanode links"
             id="knime.commands.updateMetaNodeLink"
-            name="Update meta node link"/>
+            name="Update metanode link"/>
       <command
             categoryId="knime.command.category"
             description="Do one loop step"
@@ -231,21 +231,21 @@
                disabledIcon="icons/meta/metanode_add.png"
                icon="icons/meta/metanode_add.png"
                id="org.knime.workbench.editor.meta"
-               label="Open Meta Node Wizard..."
+               label="Open Metanode Wizard..."
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Opens the Add Meta Node Wizard"/>
+               tooltip="Opens the Add Metanode Wizard"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.CheckUpdateMetaNodeLinkAllEditorAction"    
                definitionId="knime.commands.updateMetaNodeLink"
                disabledIcon="icons/meta/metanode_link_update.png"
                icon="icons/meta/metanode_link_update.png"
                id="knime.action.meta_node_check_update_link_all"
-               label="Update Meta Node Links"
+               label="Update Metanode Links"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
-               tooltip="Check and update meta node links"/>
+               tooltip="Check and update metanode links"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.DefaultOpenViewEditorAction"
                definitionId="knime.commands.openView"
@@ -371,11 +371,11 @@
                disabledIcon="icons/layout_16_bw.png"
                icon="icons/layout_16.png"
                id="org.knime.workbench.editor.actions.subnodeLayout"
-               label="Wrapped NodeLayout"
+               label="Wrapped Metanode Layout"
                menubarPath="org.knime.workbench.editor.menu/group2"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group2"
-               tooltip="Opens dialog to edit layout of Wrapped Node views.">
+               tooltip="Opens dialog to edit layout of Wrapped Metanode views.">
          </action>
          
          

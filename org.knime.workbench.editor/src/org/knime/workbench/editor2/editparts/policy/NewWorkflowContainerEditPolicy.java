@@ -91,9 +91,9 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NewWorkflowContainerEditPolicy.class);
 
-    public static final String REQ_LINK_METANODE_TEMPLATE = "link meta node template";
+    public static final String REQ_LINK_METANODE_TEMPLATE = "link metanode template";
 
-    public static final String REQ_COPY_METANODE_TEMPLATE = "copy meta node template";
+    public static final String REQ_COPY_METANODE_TEMPLATE = "copy metanode template";
 
     /**
      * {@inheritDoc}
@@ -133,18 +133,18 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 
     /**
      * @param manager the workflow manager
-     * @param content the meta node content
+     * @param content the metanode content
      * @param request the drop request
      */
     private Command handleMetaNodeDrop(final WorkflowManager manager, final WorkflowPersistor content, final CreateDropRequest request) {
         Point location = request.getLocation();
         if (request.getRequestType().equals(RequestType.CREATE)) {
-            // create meta node from node repository
+            // create metanode from node repository
             return new CreateMetaNodeCommand(manager, content, location, WorkflowEditor.getActiveEditorSnapToGrid());
         } else {
             AbstractEditPart editPart = request.getEditPart();
             if (request.getRequestType().equals(RequestType.INSERT)) {
-                // insert meta node from node repository into connection
+                // insert metanode from node repository into connection
                 InsertMetaNodeCommand insertCommand =
                     new InsertMetaNodeCommand(manager, content, location, WorkflowEditor.getActiveEditorSnapToGrid(),
                         (ConnectionContainerEditPart)editPart);
@@ -158,7 +158,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
                     return insertCommand;
                 }
             } else if (request.getRequestType().equals(RequestType.REPLACE)) {
-                // replace node with meta node from repository
+                // replace node with metanode from repository
                 return new ReplaceMetaNodeCommand(manager, content, location, WorkflowEditor.getActiveEditorSnapToGrid(),
                     (NodeContainerEditPart)editPart);
             } else {
@@ -170,7 +170,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
     /**
      * @param manager the workflow manager
      * @param request the drop request
-     * @param filestore the location of the meta node template
+     * @param filestore the location of the metanode template
      */
     private Command handleMetaNodeTemplateDrop(final WorkflowManager manager,
         final CreateDropRequest request, final AbstractExplorerFileStore filestore) {
@@ -178,12 +178,12 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
             Point location = request.getLocation();
             boolean snapToGrid = WorkflowEditor.getActiveEditorSnapToGrid();
             if (requestType.equals(RequestType.CREATE)) {
-                // create meta node from template
+                // create metanode from template
                 return new CreateMetaNodeTemplateCommand(manager, filestore, location, snapToGrid);
             } else {
                 AbstractEditPart editPart = request.getEditPart();
                 if (requestType.equals(RequestType.INSERT)) {
-                    // insert meta node from template into connection
+                    // insert metanode from template into connection
                     InsertMetaNodeTempalteCommand insertCommand =
                             new InsertMetaNodeTempalteCommand(manager, filestore, location, snapToGrid,
                                 (ConnectionContainerEditPart)editPart);
@@ -197,7 +197,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
                             return insertCommand;
                         }
                 }else if (requestType.equals(RequestType.REPLACE)) {
-                    // replace node with meta node from template
+                    // replace node with metanode from template
                     return new ReplaceMetaNodeTemplateCommand(manager, filestore, location, snapToGrid,
                         (NodeContainerEditPart)editPart);
                 } else {

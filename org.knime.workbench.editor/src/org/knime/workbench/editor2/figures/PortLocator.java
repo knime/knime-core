@@ -73,7 +73,7 @@ public abstract class PortLocator implements Locator {
      * @param portIndex port index
      * @param isInPort true if it's an in port, false if it's an out port
      * @param nrPorts total number of ports
-     * @param isMetaNodePort whether this is hanging off a meta node
+     * @param isMetaNodePort whether this is hanging off a metanode
      */
     public PortLocator(final PortType type, final int portIndex,
             final boolean isInPort, final int nrPorts,
@@ -131,7 +131,7 @@ public abstract class PortLocator implements Locator {
     }
 
     /**
-     * @return true if port is hanging off a meta node.
+     * @return true if port is hanging off a metanode.
      */
     protected boolean isMetaNodePort() {
         return m_isMetaNodePort;

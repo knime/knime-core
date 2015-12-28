@@ -112,7 +112,7 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
      * @return A new empty instance of the dialog value class, not null. */
     public VAL createEmptyDialogValue();
 
-    /** Loads a value edited outside the node into the node. 'Outside' here refers to the dialog of a sub- or meta node.
+    /** Loads a value edited outside the node into the node. 'Outside' here refers to the dialog of a sub- or metanode.
      * @param value A value whose content should be used in the next calls of configure and execute. May be null
      * to fall back to the defaults (as per configuration). */
     public void setDialogValue(VAL value);

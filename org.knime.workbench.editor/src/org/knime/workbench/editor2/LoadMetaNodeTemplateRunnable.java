@@ -101,7 +101,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
     public void run(final IProgressMonitor pm) {
         try {
             // create progress monitor
-            ProgressHandler progressHandler = new ProgressHandler(pm, 101, "Loading meta node template...");
+            ProgressHandler progressHandler = new ProgressHandler(pm, 101, "Loading metanode template...");
             final CheckCancelNodeProgressMonitor progressMonitor = new CheckCancelNodeProgressMonitor(pm);
             progressMonitor.addProgressListener(progressHandler);
 

@@ -547,9 +547,9 @@ public final class WizardExecutionController extends ExecutionController {
             NodeIDSuffix suffix = NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
             CheckUtils.checkState(id.hasPrefix(currentID), "The wizard page content for ID %s (suffix %s) "
-                        + "does not belong to the current Wrapped Node (ID %s)", id, entry.getKey(), currentID);
+                        + "does not belong to the current Wrapped Metanode (ID %s)", id, entry.getKey(), currentID);
             WizardNode wizardNode = wizardNodeSet.get(id);
-            CheckUtils.checkState(wizardNode != null, "No wizard node with ID %s in Wrapped Node, valid IDs are: "
+            CheckUtils.checkState(wizardNode != null, "No wizard node with ID %s in Wrapped Metanode, valid IDs are: "
                         + "%s", id, ConvenienceMethods.getShortStringFrom(wizardNodeSet.entrySet(), 10));
             WebViewContent newViewValue = wizardNode.createEmptyViewValue();
             if (newViewValue == null) {
@@ -675,8 +675,8 @@ public final class WizardExecutionController extends ExecutionController {
                 ? null : m_promptedSubnodeIDSuffixes.peek();
         SubNodeContainer previousSN = previousSNIDSuffix == null ? null
             : manager.getNodeContainer(toNodeID(previousSNIDSuffix), SubNodeContainer.class, true);
-        LOGGER.debugWithFormat("Stepping back wizard execution - resetting Wrapped Node \"%s\" (%s)",
-            currentSN.getNameWithID(), previousSN == null ? "no more Wrapped Nodes to reset"
+        LOGGER.debugWithFormat("Stepping back wizard execution - resetting Wrapped Metanode \"%s\" (%s)",
+            currentSN.getNameWithID(), previousSN == null ? "no more Wrapped Metanodes to reset"
                 : "new current one is \"" + previousSN.getNameWithID() + "\"");
         manager.cancelExecution(currentSN);
         manager.resetAndConfigureNodeAndSuccessors(currentSNID, false);

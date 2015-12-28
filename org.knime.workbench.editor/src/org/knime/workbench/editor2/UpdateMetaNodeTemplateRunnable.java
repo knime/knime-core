@@ -66,7 +66,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkU
 
 
 /**
- * Runnable used to update a single meta node template link.
+ * Runnable used to update a single metanode template link.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
@@ -77,17 +77,17 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
 
     /** The host WFM. */
     private WorkflowManager m_parentWFM;
-    /** The IDs of the meta node links to be updated. */
+    /** The IDs of the metanode links to be updated. */
     private NodeID[] m_ids;
-    /** The IDs of the meta nodes after update (very very likely correspond
+    /** The IDs of the metanodes after update (very very likely correspond
      * to m_ids except in case of errors. */
     private List<NodeID> m_newIDs;
-    /** The undo persistors of the previously deleted meta nodes. */
+    /** The undo persistors of the previously deleted metanodes. */
     private List<WorkflowPersistor> m_undoPersistors;
 
     /**
      * @param wfm target workflow (where to insert)
-     * @param ids The ID of the meta node to update
+     * @param ids The ID of the metanode to update
      */
     public UpdateMetaNodeTemplateRunnable(final WorkflowManager wfm,
             final NodeID[] ids) {
@@ -134,7 +134,7 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
                 m_newIDs.add(updateMetaNodeLinkResult.getNCTemplate().getID());
                 m_undoPersistors.add(p);
             }
-            // meta nodes don't have data
+            // metanodes don't have data
             // data load errors are unexpected but OK
             IStatus status = createStatus(updateMetaNodeLinkResult, true);
             subExec.setProgress(1.0);

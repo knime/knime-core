@@ -70,7 +70,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     m_progressListeners = new CopyOnWriteArraySet<ConnectionProgressListener>();
 
 
-    /** Typ of the connection: meta node input, output, through or "standard" connection.
+    /** Typ of the connection: metanode input, output, through or "standard" connection.
      * @noreference */
     public enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH;
         /**

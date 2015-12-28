@@ -47,7 +47,7 @@
 package org.knime.core.node.dialog;
 
 /**
- * A node that contributes to the meta nodes dialog.
+ * A node that contributes to the metanodes dialog.
  *
  * @author "Patrick Winter"
  * @since 2.10

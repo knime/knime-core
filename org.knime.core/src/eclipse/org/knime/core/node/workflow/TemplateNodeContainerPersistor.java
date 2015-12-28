@@ -63,7 +63,7 @@ public interface TemplateNodeContainerPersistor extends FromFileNodeContainerPer
     /** @return The version of the workflow or template being loaded. */
     public LoadVersion getLoadVersion();
 
-    /** @return true if the persistor represent a workflow project, false for meta nodes and other templates. */
+    /** @return true if the persistor represent a workflow project, false for metanodes and other templates. */
     boolean isProject();
 
     /** @return the mustWarnOnDataLoadError */
@@ -73,7 +73,7 @@ public interface TemplateNodeContainerPersistor extends FromFileNodeContainerPer
     public void setDirtyAfterLoad();
 
     /** Set a name that overloads the name as persisted in the worklow. Used to overwrite the name in
-     * meta node templates (name is then derived from the folder name).
+     * metanode templates (name is then derived from the folder name).
      * @param nameOverwrite the nameOverwrite to set
      */
     public void setNameOverwrite(final String nameOverwrite);

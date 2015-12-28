@@ -188,8 +188,8 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
     }
 
     /**
-     * Creates a port list that can be applied - after the newPortList was applied to a meta node with the
-     * currentPortList - to get the meta node back to a port list like the curentPortList.
+     * Creates a port list that can be applied - after the newPortList was applied to a metanode with the
+     * currentPortList - to get the metanode back to a port list like the curentPortList.
      *
      * @param currentPortList
      * @param newPortList

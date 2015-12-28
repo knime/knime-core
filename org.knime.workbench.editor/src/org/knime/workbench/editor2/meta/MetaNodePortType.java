@@ -47,8 +47,8 @@ package org.knime.workbench.editor2.meta;
 
 import org.knime.core.node.port.PortType;
 
-/** Represents a port type available in the meta node wizard. This class
- * is registered in the contributions to the meta node port type
+/** Represents a port type available in the metanode wizard. This class
+ * is registered in the contributions to the metanode port type
  * extension point.
  *
  * <p>Derived class must provide a node-arg constructor, see

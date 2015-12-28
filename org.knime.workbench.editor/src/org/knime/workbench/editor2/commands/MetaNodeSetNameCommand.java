@@ -50,7 +50,7 @@ package org.knime.workbench.editor2.commands;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Command to change name of a meta node (the name is the label above the
+ * Command to change name of a metanode (the name is the label above the
  * node icon).
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */

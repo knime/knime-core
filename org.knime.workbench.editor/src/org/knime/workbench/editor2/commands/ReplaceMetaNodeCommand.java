@@ -54,7 +54,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * GEF command for replacing a <code>Meta Node</code> in the <code>WorkflowManager</code>.
+ * GEF command for replacing a <code>Metanode</code> in the <code>WorkflowManager</code>.
  *
  * @author Tim-Oliver Buchholz, KNIME.com, Zurich, Switzerland
  */
@@ -70,9 +70,9 @@ public class ReplaceMetaNodeCommand extends CreateMetaNodeCommand {
     /**
      * @param manager the workflow manager
      * @param persistor the workflow persistor
-     * @param location the insert location of the new meta node
-     * @param snapToGrid should meta node snap to grid
-     * @param node which will be replaced by this meta node
+     * @param location the insert location of the new metanode
+     * @param snapToGrid should metanode snap to grid
+     * @param node which will be replaced by this metanode
      */
     public ReplaceMetaNodeCommand(final WorkflowManager manager, final WorkflowPersistor persistor,
         final Point location, final boolean snapToGrid, final NodeContainerEditPart node) {

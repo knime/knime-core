@@ -615,7 +615,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             Element intro = doc.createElement("intro");
             fullDescription.appendChild(intro);
             addText(intro, description, NO_DESCRIPTION_SET + "\nIn order to set a description browse the input node "
-                    + "contained in the Wrapped Node and change its configuration.");
+                    + "contained in the Wrapped Metanode and change its configuration.");
             // option
             for (int i = 0; i < optionNames.size(); i++) {
                 Element option = doc.createElement("option");
@@ -634,7 +634,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 inPort.setAttribute("name", inPortNames[i]);
                 String defaultText = NO_DESCRIPTION_SET;
                 if (i == 0) {
-                    defaultText += "\nChange this label by browsing the input node contained in the Wrapped Node "
+                    defaultText += "\nChange this label by browsing the input node contained in the Wrapped Metanode "
                             + "and changing its configuration.";
                 }
                 addText(inPort, inPortDescriptions[i], defaultText);
@@ -647,14 +647,14 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 outPort.setAttribute("name", outPortNames[i]);
                 String defaultText = NO_DESCRIPTION_SET;
                 if (i == 0) {
-                    defaultText += "\nChange this label by browsing the output node contained in the Wrapped Node "
+                    defaultText += "\nChange this label by browsing the output node contained in the Wrapped Metanode "
                             + "and changing its configuration.";
                 }
                 addText(outPort, outPortDescriptions[i], defaultText);
             }
             return new NodeDescription27Proxy(doc).getXMLDescription();
         } catch (ParserConfigurationException | DOMException | XmlException e) {
-            LOGGER.warn("Could not generate Wrapped Node description", e);
+            LOGGER.warn("Could not generate Wrapped Metanode description", e);
         }
         return null;
     }
@@ -1370,7 +1370,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     public String getOutputObjectSummary(final int portIndex) {
-        return "Wrapped Node Output: " + m_outputs[portIndex].getSummary();
+        return "Wrapped Metanode Output: " + m_outputs[portIndex].getSummary();
     }
 
     /* ------------- HiLite Support ---------------- */
@@ -1472,7 +1472,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         synchronized (m_nodeMutex) {
             // check state of contained WFM as state of this Subnode may already be "MARKED".
             if (m_wfm.getInternalState().isExecutionInProgress()) {
-                throw new IllegalStateException("Cannot load settings as the Wrapped Node is currently executing");
+                throw new IllegalStateException("Cannot load settings as the Wrapped Metanode is currently executing");
             }
             Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
             // contains all nodes that have new value (different to previous value, even if null now).
@@ -1551,7 +1551,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             try {
                 loadModelSettingsIntoDialogNodes(modelSettings, false);
             } catch (InvalidSettingsException e) {
-                final String msg = "Could not load Wrapped Node configuration into dialog-nodes: " + e.getMessage();
+                final String msg = "Could not load Wrapped Metanode configuration into dialog-nodes: " + e.getMessage();
                 LOGGER.error(msg, e);
                 loadResult.addError(msg);
                 setDirty();
@@ -1705,7 +1705,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     }
 
     /** @return a persistor containing all but the virtual nodes and that is also fixing the in/out connections
-     * once the node is unwrapped to a meta node. */
+     * once the node is unwrapped to a metanode. */
     WorkflowPersistor getConvertToMetaNodeCopyPersistor() {
         assert isLockedByCurrentThread();
         Collection<WorkflowAnnotation> workflowAnnotations = m_wfm.getWorkflowAnnotations();

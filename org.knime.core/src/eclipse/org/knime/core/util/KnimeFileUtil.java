@@ -96,7 +96,7 @@ public final class KnimeFileUtil {
         if (new File(file, WorkflowPersistor.METAINFO_FILE).exists()) {
             return true;
         }  else if (
-                // workflow or meta node
+                // workflow or metanode
                 new File(file, WorkflowPersistor.WORKFLOW_FILE).exists()
                 // workflow template
                 || new File(file, WorkflowPersistor.TEMPLATE_FILE).exists()
@@ -110,7 +110,7 @@ public final class KnimeFileUtil {
 
     /**
      * @param file  the file to check
-     * @return true if the file represents a meta node template, false
+     * @return true if the file represents a metanode template, false
      *      otherwise
      * @noreference This method is not intended to be referenced by clients.
      */
@@ -124,7 +124,7 @@ public final class KnimeFileUtil {
 
     /**
      * @param file to check
-     * @return true if this is a meta node (or a sub node) in a workflow (or meta node in another meta node, etc.)
+     * @return true if this is a metanode (or a sub node) in a workflow (or metanode in another metanode, etc.)
      * @since 2.12
      */
     public static boolean isMetaNode(final File file) {

@@ -62,7 +62,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
- * GEF command for adding a meta node from the repository to the workflow.
+ * GEF command for adding a metanode from the repository to the workflow.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
@@ -73,13 +73,13 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
     private final WorkflowPersistor m_persistor;
 
     /**
-     * Location of the new meta node.
+     * Location of the new metanode.
      * @since 2.12
      */
     protected final Point m_location;
 
     /**
-     * Snap meta node to grid.
+     * Snap metanode to grid.
      * @since 2.12
      */
     protected final boolean m_snapToGrid;
@@ -88,7 +88,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
     private WorkflowCopyContent m_copyContent;
 
     /**
-     * Container of the new meta node.
+     * Container of the new metanode.
      * @since 2.12
      */
     protected NodeContainer m_container;
@@ -136,12 +136,12 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
             }
         } catch (Throwable t) {
             // if fails notify the user
-            String error = "Meta node cannot be created";
+            String error = "Metanode cannot be created";
             LOGGER.debug(error + ": " + t.getMessage(), t);
             MessageBox mb = new MessageBox(Display.getDefault().
                     getActiveShell(), SWT.ICON_WARNING | SWT.OK);
             mb.setText(error);
-            mb.setMessage("The meta node could not be created "
+            mb.setMessage("The metanode could not be created "
                     + "due to the following reason:\n" + t.getMessage());
             mb.open();
             return;

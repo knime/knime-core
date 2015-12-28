@@ -79,7 +79,7 @@ import org.knime.workbench.editor2.commands.UpdateMetaNodeLinkCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to check for updates of meta node templates.
+ * Action to check for updates of metanode templates.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {

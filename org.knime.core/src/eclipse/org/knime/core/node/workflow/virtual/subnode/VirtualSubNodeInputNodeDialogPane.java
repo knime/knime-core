@@ -118,7 +118,7 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
 
         gbc.gridwidth = 2;
         gbc.weighty = 0;
-        result.add(new JLabel("Choose variables from workflow to be visible inside the Wrapped Node"), gbc);
+        result.add(new JLabel("Choose variables from workflow to be visible inside the Wrapped Metanode"), gbc);
 
         gbc.gridy += 1;
         gbc.weighty = 1.0;
@@ -164,7 +164,7 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
         gbc.gridy = 0;
         panel.add(m_subNodeDescription, gbc);
         m_subNodeDescription.setBorder(new EtchedBorder());
-        panel.setBorder(new TitledBorder(new EtchedBorder(), "Wrapped Node Description"));
+        panel.setBorder(new TitledBorder(new EtchedBorder(), "Wrapped Metanode Description"));
         return panel;
     }
 

@@ -72,7 +72,7 @@ public interface NodeContainerTemplate {
     /**
      * @param directory The directory to save in
      * @param exec The execution monitor
-     * @return Information about the meta node template
+     * @return Information about the metanode template
      * @throws IOException If an IO error occurs
      * @throws CanceledExecutionException If execution is canceled during the operation
      * @throws LockFailedException If locking failed

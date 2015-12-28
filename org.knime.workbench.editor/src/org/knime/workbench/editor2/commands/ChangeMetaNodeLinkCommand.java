@@ -57,7 +57,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * GEF Command for changing the link (back to its template) of a meta node.
+ * GEF Command for changing the link (back to its template) of a metanode.
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
@@ -101,7 +101,7 @@ public class ChangeMetaNodeLinkCommand extends AbstractKNIMECommand {
     private boolean setLink(final URI link) {
         NodeContainer metaNode = getHostWFM().getNodeContainer(m_metaNodeID);
         if (!(metaNode instanceof WorkflowManager)) {
-            LOGGER.error("Command failed: Specified node is not a meta node");
+            LOGGER.error("Command failed: Specified node is not a metanode");
             return false;
         }
         MetaNodeTemplateInformation templateInfo = ((WorkflowManager)metaNode).getTemplateInformation();
@@ -110,7 +110,7 @@ public class ChangeMetaNodeLinkCommand extends AbstractKNIMECommand {
             newInfo = templateInfo.createLinkWithUpdatedSource(m_newLink);
         } catch (InvalidSettingsException e1) {
             // will not happen.
-            LOGGER.error("Command failed: Specified node is not a meta node with a link." + e1.getMessage(), e1);
+            LOGGER.error("Command failed: Specified node is not a metanode with a link." + e1.getMessage(), e1);
             return false;
         }
         getHostWFM().setTemplateInformation(m_metaNodeID, newInfo);

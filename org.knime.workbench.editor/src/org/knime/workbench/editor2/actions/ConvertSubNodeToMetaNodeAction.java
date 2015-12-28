@@ -58,7 +58,7 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.ConvertSubNodeToMetaNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
-/** Convert meta node to a sub node.
+/** Convert metanode to a sub node.
  *
  * @author M. Berthold
  */
@@ -130,7 +130,7 @@ public class ConvertSubNodeToMetaNodeAction extends AbstractNodeAction {
     }
 
     /**
-     * Expand meta node!
+     * Expand metanode!
      *
      * {@inheritDoc}
      */
@@ -146,7 +146,7 @@ public class ConvertSubNodeToMetaNodeAction extends AbstractNodeAction {
 //            if (!subNode.unlock(new GUIWorkflowCipherPrompt())) {
 //                return;
 //            }
-            // before we do anything, let's see if the convert will reset the meta node
+            // before we do anything, let's see if the convert will reset the metanode
             if (manager.canResetNode(subNode.getID())) {
                 // yes: ask if we can reset, otherwise bail
                 MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.OK | SWT.CANCEL);

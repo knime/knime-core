@@ -77,7 +77,7 @@ import org.knime.core.util.crypto.HexUtils;
 import org.knime.core.util.crypto.KNIMEDecryptionStream;
 
 /**
- * Allows changing the meta node lock (set password).
+ * Allows changing the metanode lock (set password).
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich
  */
@@ -101,7 +101,7 @@ public class LockMetaNodeDialog extends IconAndMessageDialog {
      * the password and the password hint.
      *
      * @param parent the parent shell for this dialog
-     * @param mgr the workflow manager for the meta node
+     * @param mgr the workflow manager for the metanode
      */
     public LockMetaNodeDialog(final Shell parent, final WorkflowManager mgr) {
         super(parent);

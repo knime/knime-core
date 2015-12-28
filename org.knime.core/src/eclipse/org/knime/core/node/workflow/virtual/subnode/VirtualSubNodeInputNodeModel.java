@@ -149,7 +149,7 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
     @Override
     protected PortObject[] executeModel(final PortObject[] rawData,
         final ExecutionEnvironment exEnv, final ExecutionContext exec) throws Exception {
-        CheckUtils.checkNotNull(m_subNodeContainer, "No Wrapped Node container set");
+        CheckUtils.checkNotNull(m_subNodeContainer, "No Wrapped Metanode container set");
         PortObject[] dataFromParent = m_subNodeContainer.fetchInputDataFromParent();
         if (dataFromParent == null) {
             setWarningMessage("Not all inputs available");
@@ -227,7 +227,7 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
         final PortObjectSpec[] specsFromParentNoFlowVar = ArrayUtils.removeAll(specsFromParent, 0);
         int firstNullIndex = ArrayUtils.indexOf(specsFromParentNoFlowVar, null);
         CheckUtils.checkSetting(firstNullIndex < 0,
-            "Wrapped Node input port %d is not connected or doesn't have meta data", firstNullIndex);
+            "Wrapped Metanode input port %d is not connected or doesn't have meta data", firstNullIndex);
         pushFlowVariables();
         return specsFromParentNoFlowVar;
     }

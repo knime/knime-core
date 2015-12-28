@@ -47,7 +47,7 @@
  */
 package org.knime.core.node.workflow;
 
-/** Callback method to query the unlock password for a meta node. This class
+/** Callback method to query the unlock password for a metanode. This class
  * is overwritten in the UI plugins.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland

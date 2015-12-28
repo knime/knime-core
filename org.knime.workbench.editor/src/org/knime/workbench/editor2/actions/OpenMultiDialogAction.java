@@ -125,7 +125,7 @@ public class OpenMultiDialogAction extends AbstractNodeAction {
         for (NodeContainerEditPart ep : selected) {
             NodeContainer nc = ep.getNodeContainer();
             if (nc.getParent().isWriteProtected()) {
-                // don't do it in write protected meta nodes.
+                // don't do it in write protected metanodes.
                 return false;
             }
             if (nc.getNodeContainerState().isExecutionInProgress()) {
@@ -147,7 +147,7 @@ public class OpenMultiDialogAction extends AbstractNodeAction {
             NodeContainer nc = nodeParts[i].getNodeContainer();
             nodes[i] = nc.getID();
             if (nc instanceof WorkflowManager) {
-                // one meta node disables splitting
+                // one metanode disables splitting
                 splitType = SplitType.DISALLOWED;
             }
         }

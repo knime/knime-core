@@ -80,7 +80,7 @@ public interface NodeExecutionJobManager {
      * @return A job representing the pending execution.
      * @throws IllegalStateException If this job manager is not able to execute
      *             the given argument node container (for instance a local
-     *             thread executor will not allow an execution of a meta node).
+     *             thread executor will not allow an execution of a metanode).
      */
     public NodeExecutionJob submitJob(final NodeContainer nc,
             final PortObject[] data);

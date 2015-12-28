@@ -333,7 +333,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private String m_manuallySetToolTip;
 
-    /** Auto save is possible when this editor is for a workflow (not a meta node) and no other auto-save copy
+    /** Auto save is possible when this editor is for a workflow (not a metanode) and no other auto-save copy
      * is detected when the workflow is opened (see assignment of variable for additional requirements). */
     private boolean m_isAutoSaveAllowed;
 
@@ -451,7 +451,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
 
     /*
-     * Returns all sub editors (of sub nodes / meta nodes) of this editor.
+     * Returns all sub editors (of sub nodes / metanodes) of this editor.
      */
     private List<IEditorPart> getSubEditors() {
         List<IEditorPart> result = new ArrayList<IEditorPart>();
@@ -465,7 +465,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Collects the open editor(s) of the specified (sub-)workflow manager and all sub editor(s) of it. The provided id
      * must be a child of the workflow displayed in this editor.
      *
-     * @param id of a child of this editor. Must be a sub/meta node whose editor (and all sub-editors recursively) will
+     * @param id of a child of this editor. Must be a sub/metanode whose editor (and all sub-editors recursively) will
      *            be returned.
      * @return a list of open editors
      */
@@ -497,7 +497,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 if (child_editor != null) {
                     editors.add(child_editor);
                     if (child_editor instanceof WorkflowEditor) {
-                        // recursively add sub editors (to get sub/meta nodes in sub/meta nodes)
+                        // recursively add sub editors (to get sub/metanodes in sub/metanodes)
                         for (NodeContainer nc : child_mgr.getNodeContainers()) {
                             editors.addAll(((WorkflowEditor)child_editor).getSubEditors(nc.getID()));
                         }
@@ -555,12 +555,12 @@ public class WorkflowEditor extends GraphicalEditor implements
         NodeProvider.INSTANCE.removeListener(this);
         getSite().getWorkbenchWindow().getSelectionService().removeSelectionListener(this);
         if (m_parentEditor != null && m_manager != null) {
-            // Store the editor settings with the meta node
+            // Store the editor settings with the metanode
             if (getWorkflowManager().isDirty()) {
                 saveEditorSettingsToWorkflowManager(); // doesn't persist settings to disk
             }
             // bug fix 2051: Possible memory leak related to sub-flow editor.
-            // meta node editors were still referenced by the EditorHistory
+            // metanode editors were still referenced by the EditorHistory
             IWorkbench workbench = PlatformUI.getWorkbench();
             if (workbench instanceof Workbench) {
                 EditorHistory hist = ((Workbench)workbench).getEditorHistory();
@@ -904,9 +904,9 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Returns the URI to the workflow. If this is a meta node editor, it traverses up until it finds the top. Should
+     * Returns the URI to the workflow. If this is a metanode editor, it traverses up until it finds the top. Should
      * never return null - returns null if it has no file resource AND no parent....
-     * @return the URI to the workflow. If this is a meta node editor, it traverses up until it finds the top.
+     * @return the URI to the workflow. If this is a metanode editor, it traverses up until it finds the top.
      */
     public URI getWorkflowURI() {
         if (m_fileResource != null) {
@@ -929,7 +929,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         LOGGER.debug("Setting input into editor...");
         super.setInput(input);
         m_origRemoteLocation = null;
-        if (input instanceof WorkflowManagerInput) { // meta node and subnode
+        if (input instanceof WorkflowManagerInput) { // metanode and subnode
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else if (input instanceof IURIEditorInput) {
             File wfFile;
@@ -1240,7 +1240,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // only for projects -> they have file resources in title
         // when renamed, they cannot reflect the changes, thus, the manually
         // set title is returned...
-        // meta nodes can do not have file resources in title
+        // metanodes can do not have file resources in title
         if (m_manuallySetToolTip != null && m_parentEditor == null) {
             return m_manuallySetToolTip;
         }
@@ -1249,7 +1249,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             return m_manager.getID().toString() + ": "
                     + new Path(m_fileResource.getPath()).lastSegment();
         } else {
-            // we are a meta node editor
+            // we are a metanode editor
             // return id and node name (custom name)
             return m_manager.getDisplayLabel();
         }
@@ -1451,7 +1451,7 @@ public class WorkflowEditor extends GraphicalEditor implements
          * eclipse opens the dialog).
          */
         if (m_parentEditor != null) {
-            // ignore closing meta node editors.
+            // ignore closing metanode editors.
             return ISaveablePart2.NO;
         }
         String message =
@@ -1505,7 +1505,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         saveEditorSettingsToWorkflowManager();
         /* TODO: EditorSettings should be saved on all child editors too. But this triggers them dirty. And they stay
          * dirty even after save (and setting them clean!). The dirty flag is a mess. Needs to be cleaned up!
-         * And after that, we may not inherit the zoom level (in meta nodes) from the parent anymore
+         * And after that, we may not inherit the zoom level (in metanodes) from the parent anymore
          * (see #applyEditorSettingsFromWorkflowManager).
          * for (IEditorPart subEditor : getSubEditors()) {
          *   ((WorkflowEditor)subEditor).saveEditorSettingsToWorkflowManager();
@@ -1652,7 +1652,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void doSaveAs() {
-        if (m_parentEditor != null) { // parent does it if this is a meta node editor
+        if (m_parentEditor != null) { // parent does it if this is a metanode editor
             m_parentEditor.doSaveAs();
             return;
         }
@@ -1772,7 +1772,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         @Override
         protected IStatus run(final IProgressMonitor jobMonitor) {
-            assert m_parentEditor == null : "No auto save on meta node";
+            assert m_parentEditor == null : "No auto save on metanode";
             long start = System.currentTimeMillis();
             IStatus status = doIt(jobMonitor);
             IStatus resultStatus = status;
@@ -2091,7 +2091,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         final WorkflowManager wfm = getWorkflowManager();
         EditorUIInformation settings = wfm.getEditorUIInformation();
         if (settings == null || settings.getGridX() == -1) {
-            // if this is a meta node - derive settings from parent
+            // if this is a metanode - derive settings from parent
             if (m_fileResource == null && m_parentEditor != null) {
                 settings = m_parentEditor.getCurrentEditorSettings();
             } else {
@@ -2142,7 +2142,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @since 2.10
      */
     public boolean isTempRemoteWorkflowEditor() {
-        if (m_fileResource == null && m_parentEditor != null) { // meta node editor
+        if (m_fileResource == null && m_parentEditor != null) { // metanode editor
             return m_parentEditor.isTempRemoteWorkflowEditor();
         }
         return m_origRemoteLocation != null;
@@ -2242,15 +2242,15 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * {@inheritDoc}
      * Listener interface method of the {@link NodeProvider}.
-     * Called when other instances want to add a meta node to the workflow in
+     * Called when other instances want to add a metanode to the workflow in
      * the editor. <br>
      * The implementation only adds it if the editor is active. If one other
      * node is selected in the editor, to which the new node will then be
      * connected to.
      *
-     * @param sourceManager wfm to copy the meta node from
-     * @param id the id of the meta node in the source manager
-     * @return if the meta node was actually added
+     * @param sourceManager wfm to copy the metanode from
+     * @param id the id of the metanode in the source manager
+     * @return if the metanode was actually added
      */
     @Override
     public boolean addMetaNode(final WorkflowManager sourceManager,
@@ -2890,7 +2890,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 switch (event.getType()) {
                 case NODE_REMOVED:
                     Object oldValue = event.getOldValue();
-                    // close sub-editors if a child meta node is deleted
+                    // close sub-editors if a child metanode is deleted
                     if (oldValue instanceof WorkflowManager) {
                         WorkflowManager wm = (WorkflowManager)oldValue;
                         // since the equals method of the WorkflowManagerInput
@@ -2936,7 +2936,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             updateEditorBackgroundColor();
             break;
         case MetaNodePorts:
-            // for meta node editors in case the port bar needs to dis/appear
+            // for metanode editors in case the port bar needs to dis/appear
             getViewer().getContents().refresh();
             break;
         default:
@@ -3109,7 +3109,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * UI information listener only relevant if this editor is for a meta node
+     * UI information listener only relevant if this editor is for a metanode
      * (update part name). {@inheritDoc}
      */
     @Override

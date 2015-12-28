@@ -727,7 +727,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     }
 
     /**
-     * Opens the node's dialog (also meta node dialogs).
+     * Opens the node's dialog (also metanode dialogs).
      *
      * @since 2.6
      */

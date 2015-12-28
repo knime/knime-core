@@ -89,7 +89,7 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
 public final class WorkflowEditPartFactory implements EditPartFactory, IPartListener2 {
     /*
      * we need this flag to determine between the "root" workflow manager and
-     * all subsequent meta nodes. This means that we implicitely assume that
+     * all subsequent metanodes. This means that we implicitely assume that
      * the "root" workflow manager is the first object to come of type
      * WorkflowManager. This assumption is correct, since the top model is
      * passed to the factory and subsequently is asked for its model children.
@@ -141,12 +141,12 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
             // this is out "root" workflow manager
             if (m_isTop) {
                 // all following objects of type WorkflowManager are treated as
-                // meta nodes and displayed as NodeContainers
+                // metanodes and displayed as NodeContainers
                 m_isTop = false;
                 part = new WorkflowRootEditPart();
             } else {
                 // we already have a "root" workflow manager
-                // must be a meta node
+                // must be a metanode
                 part = new SubworkflowEditPart();
             }
         } else if (model instanceof NodeAnnotation) {

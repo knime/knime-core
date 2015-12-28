@@ -59,7 +59,7 @@ import org.knime.workbench.repository.model.AbstractNodeTemplate;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 
 /**
- * A DropTargetListener for meta node drops from the node repository.
+ * A DropTargetListener for metanode drops from the node repository.
  *
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */

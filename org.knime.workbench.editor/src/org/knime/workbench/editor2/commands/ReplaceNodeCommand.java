@@ -73,8 +73,8 @@ public class ReplaceNodeCommand extends CreateNodeCommand {
     /**
      * @param manager the workflow manager
      * @param factory the node factory
-     * @param location the insert location of the new meta node
-     * @param snapToGrid should meta node snap to grid
+     * @param location the insert location of the new metanode
+     * @param snapToGrid should metanode snap to grid
      * @param node which will be replaced by this node
      */
     public ReplaceNodeCommand(final WorkflowManager manager, final NodeFactory<? extends NodeModel> factory,

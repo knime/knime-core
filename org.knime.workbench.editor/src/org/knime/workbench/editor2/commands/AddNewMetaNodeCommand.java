@@ -57,7 +57,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 
 /**
- * GEF command for adding a new empty meta node (called from the new meta node wizard).
+ * GEF command for adding a new empty metanode (called from the new metanode wizard).
  *
  * @author Peter Ohl, KNIME.com, Zurich, Switzerland
  */
@@ -132,8 +132,8 @@ public class AddNewMetaNodeCommand extends AbstractKNIMECommand {
         try {
             getHostWFM().removeNode(m_metanodeID);
         } catch (Exception e) {
-            LOGGER.error("Undo failed! Removal of meta node " + m_metanodeID + " failed: " + e.getMessage(), e);
-            // prevent a redo from happening (and inserting yet another meta node).
+            LOGGER.error("Undo failed! Removal of metanode " + m_metanodeID + " failed: " + e.getMessage(), e);
+            // prevent a redo from happening (and inserting yet another metanode).
             m_name = null;
             m_inPorts = null;
             m_outPorts = null;

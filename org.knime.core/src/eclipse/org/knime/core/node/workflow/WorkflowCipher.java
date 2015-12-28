@@ -68,13 +68,13 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.WorkflowCipherPrompt.PromptCancelled;
 import org.knime.core.util.crypto.HexUtils;
 
-/** A cipher object associated with a meta node or workflow. Most workflows
+/** A cipher object associated with a metanode or workflow. Most workflows
  * have the {@link #NULL_CIPHER} assigned, i.e. no locking/encryption.
  *
  * <p>
- * If a meta node is locked, then the content of the meta node can only be
+ * If a metanode is locked, then the content of the metanode can only be
  * accessed in the UI after the users enters the correct password. It does not
- * cover the usage (executing a meta node without entering the password is still
+ * cover the usage (executing a metanode without entering the password is still
  * possible).
  *
  * <p>
@@ -119,7 +119,7 @@ final class WorkflowCipher implements Cloneable {
         return m_isUnlocked;
     }
 
-    /** Unlock meta node.
+    /** Unlock metanode.
      * @param prompt The callback to prompt for the password.
      * @return If successfully unlocked (or already unlocked).
      */

@@ -60,13 +60,13 @@ public class NodePropertyChangedEvent extends EventObject {
     public enum NodeProperty {
         /** Job manager (e.g. to SGE job executor) has changed. */
         JobManager,
-        /** Name (of a meta node) has changed. */
+        /** Name (of a metanode) has changed. */
         Name,
-        /** Meta node template information has changed. */
+        /** Metanode template information has changed. */
         TemplateConnection,
-        /** Meta node encryption/lock status has changed. */
+        /** Metanode encryption/lock status has changed. */
         LockStatus,
-        /** Meta node ports have changed.
+        /** Metanode ports have changed.
          * @since 2.6*/
         MetaNodePorts
     }

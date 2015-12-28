@@ -76,9 +76,9 @@ public class InsertNodeCommand extends CreateNodeCommand {
     /**
      * @param manager the workflow manager
      * @param factory the node factory
-     * @param location the insert location of the new meta node
-     * @param snapToGrid should meta node snap to grid
-     * @param edge on which the meta node should be inserted
+     * @param location the insert location of the new metanode
+     * @param snapToGrid should metanode snap to grid
+     * @param edge on which the metanode should be inserted
      */
     public InsertNodeCommand(final WorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
         final Point location, final boolean snapToGrid, final ConnectionContainerEditPart edge) {

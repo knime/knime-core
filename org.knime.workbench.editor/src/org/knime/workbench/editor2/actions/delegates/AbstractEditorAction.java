@@ -157,7 +157,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
 
     private class SelectionRunnable implements Runnable {
         /** Flags to memorize if this runnable has already been queued. I
-         * (Bernd) ran into serious problems when using meta nodes that
+         * (Bernd) ran into serious problems when using metanodes that
          * execute/reset nodes quickly (and frequently). There where
          * many (> 500000) runnables in the async-queue. */
         private final AtomicBoolean m_isUpdateInProgress = new AtomicBoolean();

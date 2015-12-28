@@ -84,7 +84,7 @@ public class OpenPortViewAction extends Action {
             final int portIndex, final int totalPortCount) {
         m_nodeContainer = nodeContainer;
         m_index = portIndex;
-        /* in normal nodes (not meta nodes) we have an additional port (the
+        /* in normal nodes (not metanodes) we have an additional port (the
          * implicit flow variable port). The index for the user is still the
          * old index though (w/o implicit port)
          */

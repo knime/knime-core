@@ -164,7 +164,7 @@ public class ReplaceHelper {
 
         if (m_oldNode instanceof WorkflowManager && !(container instanceof WorkflowManager)) {
             inShift = 0;
-            // replacing a meta node (no opt. flow var ports) with a "normal" node (that has optional flow var ports)
+            // replacing a metanode (no opt. flow var ports) with a "normal" node (that has optional flow var ports)
             if (m_oldNode.getNrInPorts() > 0 && container.getNrInPorts() > 1) {
                 // shift ports one index - unless we need to use the invisible optional flow var port of new node
                 if (!m_oldNode.getInPort(0).getPortType().equals(FlowVariablePortObject.TYPE)) {
@@ -183,7 +183,7 @@ public class ReplaceHelper {
                 }
             }
         } else if (!(m_oldNode instanceof WorkflowManager) && container instanceof WorkflowManager) {
-            // replacing a "normal" node with a meta node
+            // replacing a "normal" node with a metanode
             inShift = -1;
             for (ConnectionContainer cc : m_incomingConnections) {
                 if (cc.getDestPort() == 0) {

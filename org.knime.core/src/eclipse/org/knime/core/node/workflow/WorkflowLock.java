@@ -59,7 +59,7 @@ import org.knime.core.node.util.CheckUtils;
 /**
  * A lock instance associated with a workflow or subnode. It serves two purposes: preventing concurrent access to the
  * internals of a workflow (like removing connections while a reset is propagating) and deferring state updates of
- * the meta node/workflow/subnode to when the lock is finally released.
+ * the metanode/workflow/subnode to when the lock is finally released.
  *
  * <p/>
  * This class is wrapping a {@link ReentrantLock}. Workflows and contained meta/sub nodes share the same
@@ -94,8 +94,8 @@ public final class WorkflowLock implements AutoCloseable {
         m_reentrantLock = new ReentrantLock();
     }
 
-    /** An instance for a contained meta node or sub node.
-     * @param wfm The meta node instance itself (or wfm within a {@link SubNodeContainer}).
+    /** An instance for a contained metanode or sub node.
+     * @param wfm The metanode instance itself (or wfm within a {@link SubNodeContainer}).
      * @param parent The parent workflow.
      */
     WorkflowLock(final WorkflowManager wfm, final NodeContainerParent parent) {

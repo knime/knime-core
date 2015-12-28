@@ -73,7 +73,7 @@ import org.knime.workbench.explorer.view.AbstractContentProvider;
 import org.knime.workbench.explorer.view.ContentObject;
 
 /**
- * Action to save a meta node as template (requires KNIME TeamSpace feature).
+ * Action to save a metanode as template (requires KNIME TeamSpace feature).
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
@@ -177,8 +177,8 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
         final Shell shell = Display.getCurrent().getActiveShell();
         ContentObject defSel = getDefaultSaveLocation(wm);
         SpaceResourceSelectionDialog dialog = new SpaceResourceSelectionDialog(shell, validMountPoints, defSel);
-        dialog.setTitle("Save As Meta Node Template");
-        dialog.setHeader("Select destination workflow group for meta node template");
+        dialog.setTitle("Save As Metanode Template");
+        dialog.setHeader("Select destination workflow group for metanode template");
         dialog.setValidator(new Validator() {
             @Override
             public String validateSelectionValue(final AbstractExplorerFileStore selection, final String name) {

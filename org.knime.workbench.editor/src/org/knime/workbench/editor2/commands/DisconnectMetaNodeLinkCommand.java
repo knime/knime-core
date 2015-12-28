@@ -60,7 +60,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * GEF command for disconnecting meta node links.
+ * GEF command for disconnecting metanode links.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich
  */
@@ -152,8 +152,8 @@ public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        LOGGER.debug("Undo: Reconnecting meta node links ("
-                + m_changedIDs.size() + " meta node(s))");
+        LOGGER.debug("Undo: Reconnecting metanode links ("
+                + m_changedIDs.size() + " metanode(s))");
         for (int i = 0; i < m_changedIDs.size(); i++) {
             NodeID id = m_changedIDs.get(i);
             MetaNodeTemplateInformation old = m_oldTemplInfos.get(i);

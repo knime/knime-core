@@ -52,7 +52,7 @@ import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAllAction;
 
 /**
- * Delegate action (used in menu bar) to update meta node links.
+ * Delegate action (used in menu bar) to update metanode links.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class CheckUpdateMetaNodeLinkAllEditorAction

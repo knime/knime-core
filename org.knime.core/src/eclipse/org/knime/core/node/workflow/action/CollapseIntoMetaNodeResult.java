@@ -55,7 +55,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
- * Represents the result of an collapse into meta node. It represent the result itself (the outcoming workflow manager)
+ * Represents the result of an collapse into metanode. It represent the result itself (the outcoming workflow manager)
  * and an undo persitor.
  *
  * @noreference This class is not intended to be referenced by clients.

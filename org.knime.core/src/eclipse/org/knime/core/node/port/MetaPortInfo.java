@@ -47,7 +47,7 @@
  */
 package org.knime.core.node.port;
 
-/** Object describing a meta node port. Used in the action to modify meta node
+/** Object describing a metanode port. Used in the action to modify metanode
  * port orders, types, etc. It comprises the port type, whether it's connected
  * (only if created from the WFM) and what its index in the list of all
  * in/out ports is.

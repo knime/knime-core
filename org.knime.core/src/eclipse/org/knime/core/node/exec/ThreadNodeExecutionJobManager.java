@@ -85,7 +85,7 @@ public class ThreadNodeExecutionJobManager extends AbstractNodeExecutionJobManag
     public NodeExecutionJob submitJob(final NodeContainer nc, final PortObject[] data) {
         if (!(nc instanceof SingleNodeContainer)) {
             throw new IllegalStateException(getClass().getSimpleName()
-                    + " is not able to execute a meta node: " + nc.getNameWithID());
+                    + " is not able to execute a metanode: " + nc.getNameWithID());
         }
         LocalNodeExecutionJob job = new LocalNodeExecutionJob((SingleNodeContainer)nc, data);
         Future<?> future = m_pool.enqueue(job);

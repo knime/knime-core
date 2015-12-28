@@ -119,7 +119,7 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Open the layout editor for the views contained in the Wrapped Node.";
+        return "Open the layout editor for the views contained in the Wrapped Metanode.";
     }
 
     /**

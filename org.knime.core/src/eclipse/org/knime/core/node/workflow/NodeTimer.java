@@ -314,7 +314,7 @@ public final class NodeTimer {
                     }
                     job2.add("nodes", jab);
 
-                    // meta nodes
+                    // metanodes
                     JsonObjectBuilder jobMeta = Json.createObjectBuilder();
                     NodeStats ns = m_globalNodeStats.get("NodeContainer");
                     if (ns != null) {
@@ -513,7 +513,7 @@ public final class NodeTimer {
                                 m_globalNodeStats.put(nodeID, ns);
                             }
 
-                            // meta nodes
+                            // metanodes
                             JsonObject jobMeta = jo2.getJsonObject("metaNodes");
                             if (!jobMeta.isEmpty()) {
                                 int execCount = jobMeta.getInt("nrexecs", 0);

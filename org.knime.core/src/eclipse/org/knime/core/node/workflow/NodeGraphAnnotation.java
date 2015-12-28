@@ -242,7 +242,7 @@ public final class NodeGraphAnnotation implements Comparable<NodeGraphAnnotation
             m_depth = nga.m_depth;
             changesMade = true;
         }
-        // join the lists of meta node inports
+        // join the lists of metanode inports
         m_connectedMetaInPorts.addAll(nga.m_connectedMetaInPorts);
         // and finally merge the two stacks:
         if (m_startNodeStack.equals(nga.m_startNodeStack)) {

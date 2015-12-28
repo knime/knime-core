@@ -842,7 +842,7 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
             ConnectionContainer cc = (ConnectionContainer)event.getNewValue();
             if (cc.getSource().equals(m_lastNode)) {
                 if (m_workflow.getOutgoingConnectionsFor(m_lastNode).size() == 1) {
-                    if (m_workflow.containsNodeContainer(cc.getDest())) { // could be an outgoing meta node connection
+                    if (m_workflow.containsNodeContainer(cc.getDest())) { // could be an outgoing metanode connection
                         // first connection: follow this new branch extension
                         updateNCinfoInSWT(cc.getDest());
                     }

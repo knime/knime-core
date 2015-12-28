@@ -609,7 +609,7 @@ public class BatchExecutor {
                 + " -nosave           => do not save the workflow after execution has finished\n"
                 + " -reset            => reset workflow prior to execution\n"
                 + " -failonloaderror  => don't execute if there are errors during workflow loading\n"
-                + " -updateLinks      => update meta node links to latest version\n"
+                + " -updateLinks      => update metanode links to latest version\n"
                 + " -credential=name[;login[;password]] => for each credential enter credential\n"
                 + "                      name and optional login/password, otherwise its prompted for\n"
                 + " -masterkey[=...]  => prompt for master password (used in e.g. database nodes),\n"
@@ -747,14 +747,14 @@ public class BatchExecutor {
 
         BatchExecWorkflowTemplateLoadHelper batchTemplateLH = new BatchExecWorkflowTemplateLoadHelper(batchLH);
         if (config.updateMetanodeLinks) {
-            LOGGER.debug("Checking for meta node link updates...");
+            LOGGER.debug("Checking for metanode link updates...");
             try {
                 wfm.updateMetaNodeLinks(batchTemplateLH, config.failOnLoadError, new ExecutionMonitor());
             } catch (IOException ex) {
                 wfm.getParent().removeProject(wfm.getID());
                 throw ex;
             }
-            LOGGER.debug("Checking for meta node link updates... done");
+            LOGGER.debug("Checking for metanode link updates... done");
         }
 
         if (!config.flowVariables.isEmpty()) {

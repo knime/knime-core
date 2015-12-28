@@ -54,7 +54,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Interface used by embedded {@link WorkflowManager} instances to invoke actions on the parent item. The parent
- * item is a {@link WorkflowManager} for meta nodes or projects. It is a {@link SubNodeContainer} for the instance
+ * item is a {@link WorkflowManager} for metanodes or projects. It is a {@link SubNodeContainer} for the instance
  * that is used inside a sub node.
  *
  * <p>None of the methods are meant be public API.
@@ -83,7 +83,7 @@ public interface NodeContainerParent {
 
     /** May return false for nodes contained in subnodes, which cannot be configured until all data is available
      * to the subnode. Used to ensure the user doesn't execute nodes in a subnode unless all data is available. For
-     * ordinary workflows/meta nodes it always returns true.
+     * ordinary workflows/metanodes it always returns true.
      * @return that property */
     public boolean canConfigureNodes();
 
@@ -106,7 +106,7 @@ public interface NodeContainerParent {
      */
     public boolean isLockedByCurrentThread();
 
-    /** Is this workflow represents a linked meta node (locked for edit). This
+    /** Is this workflow represents a linked metanode (locked for edit). This
      * flag is only a hint for the UI -- non of the add/remove operations will
      * read this flag.
      * @return Whether edit operations are not permitted. */

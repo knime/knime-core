@@ -53,7 +53,7 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 /**
  * Status of a finished execution of a node. This information consists currently
  * of a success flag and status information for all of the node's children
- * (if it is a meta node).
+ * (if it is a metanode).
  *
  * <p>For the standard execution (local thread execution), this is either
  * {@link #FAILURE} or {@link #SUCCESS}. This interface becomes necessary
@@ -67,9 +67,9 @@ public interface NodeContainerExecutionStatus {
     /** Whether the execution was successful. If the node represents a
      * {@link SingleNodeContainer}, a successful execution brings the node into
      * the executed state, otherwise into configured or idle state. If
-     * this object represents an execution status of a meta node, this method
+     * this object represents an execution status of a metanode, this method
      * is typically ignored and the state is determined based on the internals
-     * of the meta node.
+     * of the metanode.
      * @return the success status.
      */
     public boolean isSuccess();

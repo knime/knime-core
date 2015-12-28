@@ -68,7 +68,7 @@ import org.knime.workbench.explorer.view.ContentDelegator;
 import org.knime.workbench.explorer.view.ExplorerView;
 
 /**
- * Action to reveal the template of a linked meta node.
+ * Action to reveal the template of a linked metanode.
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
@@ -104,7 +104,7 @@ public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Reveals the meta node template this meta node is linked to.";
+        return "Reveals the metanode template this metanode is linked to.";
     }
 
 

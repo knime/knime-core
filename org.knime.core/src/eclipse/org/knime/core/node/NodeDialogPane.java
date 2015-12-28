@@ -296,7 +296,7 @@ public abstract class NodeDialogPane {
     }
 
     /** Returns true if the underlying node is write protected. A node is write
-     * protected if it is part of a linked meta node (i.e. referencing a
+     * protected if it is part of a linked metanode (i.e. referencing a
      * template). Client code usually does not need to evaluate this flag, the
      * framework will disable the OK/Apply button for write protected nodes.
      * @return If this node is write protected. */
@@ -362,7 +362,7 @@ public abstract class NodeDialogPane {
      * @param foStack Flow object stack (contains flow variables)
      * @param credentialsProvider The credentials available in the flow
      * @param isWriteProtected Whether ok/apply should be disabled
-     *        (write protected meta node)
+     *        (write protected metanode)
      * @throws NotConfigurableException
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])

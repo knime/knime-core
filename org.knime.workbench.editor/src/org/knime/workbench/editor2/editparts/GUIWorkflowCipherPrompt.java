@@ -53,7 +53,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
 
 /**
- * Callback prompt to unlock meta node.
+ * Callback prompt to unlock metanode.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class GUIWorkflowCipherPrompt extends WorkflowCipherPrompt {

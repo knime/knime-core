@@ -260,7 +260,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
 
-        // collapse meta nodes
+        // collapse metanodes
         action = m_actionRegistry.getAction(CollapseMetaNodeAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
@@ -501,7 +501,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
     private static IMenuManager getMetaNodeMenuManager(final IMenuManager metaNodeManagerOrNull,
         final IMenuManager parentMenuManager) {
         if (metaNodeManagerOrNull == null) {
-            MenuManager m = new MenuManager("Meta Node",
+            MenuManager m = new MenuManager("Metanode",
                 ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "/icons/meta/meta_menu.png"),
                 null);
             m.add(new Separator(GROUP_METANODE));
@@ -515,7 +515,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
     private static IMenuManager getSubNodeMenuManager(final IMenuManager subNodeManagerOrNull,
         final IMenuManager parentMenuManager) {
         if (subNodeManagerOrNull == null) {
-            MenuManager m = new MenuManager("Wrapped Node",
+            MenuManager m = new MenuManager("Wrapped Metanode",
                 ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "/icons/meta/meta_menu.png"),
                 null);
             m.add(new Separator(GROUP_SUBNODE));

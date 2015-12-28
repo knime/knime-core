@@ -65,7 +65,7 @@ import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.workbench.editor2.figures.MetaNodeOutPortFigure;
 
 /**
- * Represent edit part for meta node outport (attached to a node icon, decorated
+ * Represent edit part for metanode outport (attached to a node icon, decorated
  * with a bubble indicating the node state).
  * @author Fabian Dill, University of Konstanz
  */
@@ -92,7 +92,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     @Override
     protected IFigure createFigure() {
         NodeContainer nc = getNodeContainer();
-        LOGGER.debug("returning new sub meta node out port figure "
+        LOGGER.debug("returning new sub metanode out port figure "
                 + " with type " + getType() + " index " + getIndex()
                 + " nr outports " + nc.getNrOutPorts()
                 + " and tooltip " + nc.getOutPort(getIndex())

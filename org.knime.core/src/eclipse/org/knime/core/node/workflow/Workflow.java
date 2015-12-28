@@ -94,7 +94,7 @@ class Workflow {
     private NodeID m_id;
 
     /**
-     * Constructor - initialize sets for meta node in/out connections.
+     * Constructor - initialize sets for metanode in/out connections.
      *
      * @param wfm WorkflowManager holding this workflow (note that this may not completely initalized!)
      * @param id of workflow
@@ -1238,7 +1238,7 @@ class Workflow {
     List<Pair<ConnectionContainer, ConnectionContainer>>
     changeDestinationPortsForMetaNode(final NodeID metaNodeID, final MetaPortInfo[] newPorts,
             final boolean includeUnchanged) {
-        // argument node is either a contained meta node or this wfm itself
+        // argument node is either a contained metanode or this wfm itself
         // (latter only when updating outgoing connections)
         List<Pair<ConnectionContainer, ConnectionContainer>> result =
             new ArrayList<Pair<ConnectionContainer, ConnectionContainer>>();
@@ -1275,7 +1275,7 @@ class Workflow {
     List<Pair<ConnectionContainer, ConnectionContainer>>
     changeSourcePortsForMetaNode(final NodeID metaNodeID, final MetaPortInfo[] newPorts,
             final boolean includeUnchanged) {
-        // argument node is either a contained meta node or this wfm itself
+        // argument node is either a contained metanode or this wfm itself
         // (latter only when updating outgoing connections)
         List<Pair<ConnectionContainer, ConnectionContainer>> result =
             new ArrayList<Pair<ConnectionContainer, ConnectionContainer>>();

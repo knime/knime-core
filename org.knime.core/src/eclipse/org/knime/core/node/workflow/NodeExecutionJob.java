@@ -255,7 +255,7 @@ public abstract class NodeExecutionJob implements Runnable {
     /** Get the input objects, excluding the mandatory flow variable input
      * port (added in v2.2.0). If this job represents the execution of a
      * workflow manager (possibly for remote execution), this method
-     * returns the whole input object array. (Meta nodes do not have an
+     * returns the whole input object array. (Metanodes do not have an
      * flow variable input)
      * @return The input objects, excluding the flow variable port.
      */

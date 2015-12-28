@@ -54,7 +54,7 @@ import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Creates a new meta node - and may auto connect it to another one.
+ * Creates a new metanode - and may auto connect it to another one.
  *
  * @author ohl, University of Konstanz
  */
@@ -70,9 +70,9 @@ public class CreateNewConnectedMetaNodeCommand extends
      *
      * @param viewer the current viewer (usually a workflow editor)
      * @param hostWfm the workflow manager in which the node should be inserted
-     * @param sourceWfm the workflow manager that contains the meta node
+     * @param sourceWfm the workflow manager that contains the metanode
      *            template
-     * @param sourceID the id of the meta node in the source workflow manager
+     * @param sourceID the id of the metanode in the source workflow manager
      * @param location absolute coordinates of the new node
      * @param connectTo the node to which the new node should be connected
      */

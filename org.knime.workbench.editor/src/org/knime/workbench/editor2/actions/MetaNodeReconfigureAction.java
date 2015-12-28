@@ -98,7 +98,7 @@ public class MetaNodeReconfigureAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Change name and ports of Meta Node";
+        return "Change name and ports of Metanode";
     }
 
     /**

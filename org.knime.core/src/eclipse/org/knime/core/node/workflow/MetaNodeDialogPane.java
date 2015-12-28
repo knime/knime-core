@@ -102,7 +102,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
     }
 
     /** Constructor.
-     * @param usedInSubnode false for meta nodes, true for sub node. */
+     * @param usedInSubnode false for metanodes, true for sub node. */
     MetaNodeDialogPane(final boolean usedInSubnode) {
         m_nodes = new LinkedHashMap<NodeID, MetaNodeDialogNode>();
         m_quickFormInputNodePanels = new LinkedHashMap<NodeID, QuickFormConfigurationPanel>();
@@ -135,7 +135,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         m_nodes.clear();
         m_quickFormInputNodePanels.clear();
         m_dialogNodePanels.clear();
-        // If meta node contains new quickform nodes, ignore old ones
+        // If metanode contains new quickform nodes, ignore old ones
         boolean containsNewNodes = m_usedInSubnode;
         for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
             containsNewNodes |= e.getValue() instanceof DialogNode;

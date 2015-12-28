@@ -207,7 +207,7 @@ public final class SandboxedNodeCreator {
         }
 
         final WorkflowManager parent = m_nc.getParent();
-        // derive workflow context via NodeContext as the parent could only a be a meta node in a meta node...
+        // derive workflow context via NodeContext as the parent could only a be a metanode in a metanode...
         final WorkflowContext origContext = NodeContext.getContext().getWorkflowManager().getContext();
         WorkflowContext.Factory ctxFactory;
         // this if-elseif-etc is OK for both streaming in cluster but not 100% certain for other cases

@@ -109,7 +109,7 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Expand selected Wrapped Node";
+        return "Expand selected Wrapped Metanode";
     }
 
     /**
@@ -144,7 +144,7 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
             return;
         }
 
-        LOGGER.debug("Creating 'Expand Wrapped Node' job for " + nodeParts.length + " node(s)...");
+        LOGGER.debug("Creating 'Expand Wrapped Metanode' job for " + nodeParts.length + " node(s)...");
         try {
             WorkflowManager manager = getManager();
             SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getNodeContainer();
@@ -156,7 +156,7 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
             if (manager.canResetNode(subNode.getID())) {
                 // yes: ask if we can reset, otherwise bail
                 MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.OK | SWT.CANCEL);
-                mb.setMessage("Executed Nodes inside Wrapped Node will be reset" + " - are you sure?");
+                mb.setMessage("Executed Nodes inside Wrapped Metanode will be reset" + " - are you sure?");
                 mb.setText("Reset Executed Nodes");
                 int dialogreturn = mb.open();
                 if (dialogreturn == SWT.CANCEL) {
@@ -175,7 +175,7 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
             execute(emnc);
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.ERROR);
-            mb.setMessage("Expanding Wrapped Node failed: " + e.getMessage());
+            mb.setMessage("Expanding Wrapped Metanode failed: " + e.getMessage());
             mb.setText("Expand failed");
             mb.open();
         }

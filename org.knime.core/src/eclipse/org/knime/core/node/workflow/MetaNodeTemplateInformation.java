@@ -58,7 +58,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
- * Additional information that is associated with a meta node that are used
+ * Additional information that is associated with a metanode that are used
  * as templates. This includes their source URI and versioning information.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -70,7 +70,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     /** The template's role. */
     public enum Role {
-        /** No role, i.e. ordinary workflow or meta node (no reference date). */
+        /** No role, i.e. ordinary workflow or metanode (no reference date). */
         None,
         /** The template itself (no uri but reference date). */
         Template,
@@ -122,7 +122,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     private UpdateStatus m_updateStatus = UpdateStatus.UpToDate;
 
 
-    /** Create new meta node template (role {@link Role#None}). */
+    /** Create new metanode template (role {@link Role#None}). */
     private MetaNodeTemplateInformation() {
         this(Role.None, null, null, null);
     }
@@ -151,7 +151,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             break;
         case Link:
             CheckUtils.checkNotNull(uri, "Link URI must not be null");
-            CheckUtils.checkNotNull(timestamp, "Meta node link timestamp must not be null");
+            CheckUtils.checkNotNull(timestamp, "Metanode link timestamp must not be null");
             m_sourceURI = uri;
             m_type = null;
             m_timestamp = timestamp;
@@ -227,7 +227,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             assert ts != null : "Templates must not have null timestamp";
             return new MetaNodeTemplateInformation(Role.Link, null, sourceURI, ts);
         default:
-            throw new IllegalStateException("Can't link to meta node of role"
+            throw new IllegalStateException("Can't link to metanode of role"
                     + " \"" + getRole() + "\" (URI: \"" + sourceURI + "\")");
         }
     }
@@ -254,7 +254,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             newInfo.m_updateStatus = m_updateStatus;
             return newInfo;
         default:
-            throw new InvalidSettingsException("Can't link to meta node of role"
+            throw new InvalidSettingsException("Can't link to metanode of role"
                     + " \"" + getRole() + "\" (URI: \"" + m_sourceURI + "\")");
         }
     }

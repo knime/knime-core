@@ -247,7 +247,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
         NodeContainerEditPart nextNode = null;
 
         if (source instanceof WorkflowInPortBarEditPart && target instanceof NodeContainerEditPart) {
-            // meta node start --> first node in meta node
+            // metanode start --> first node in metanode
             WorkflowInPortBarEditPart sourceBar = ((WorkflowInPortBarEditPart)source);
             NodeContainerEditPart targetNode = (NodeContainerEditPart)target;
             Rectangle bounds = sourceBar.getFigure().getBounds();
@@ -257,7 +257,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
             targetAnnotationHeight = targetNode.getNodeAnnotationEditPart().getModel().getHeight();
             nextNode = targetNode;
         } else if (source instanceof NodeContainerEditPart && target instanceof WorkflowOutPortBarEditPart) {
-            // last node in meta node --> meta node end
+            // last node in metanode --> metanode end
             NodeContainerEditPart sourceNode = (NodeContainerEditPart)source;
             WorkflowOutPortBarEditPart targetBar = (WorkflowOutPortBarEditPart)target;
             sourceBounds = sourceNode.getNodeContainer().getUIInformation().getBounds();
@@ -265,7 +265,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
             targetBounds = new int[]{bounds.x, bounds.y, bounds.width, bounds.height};
             sourceAnnotationHeight = sourceNode.getNodeAnnotationEditPart().getModel().getHeight();
         } else if (source instanceof WorkflowInPortBarEditPart && target instanceof WorkflowOutPortBarEditPart) {
-            // meta node start --> meta node end
+            // metanode start --> metanode end
             WorkflowInPortBarEditPart sourceBar = (WorkflowInPortBarEditPart)source;
             WorkflowOutPortBarEditPart targetBar = (WorkflowOutPortBarEditPart)target;
             sourceBounds = sourceBar.getNodeContainer().getUIInformation().getBounds();

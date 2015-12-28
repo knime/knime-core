@@ -233,7 +233,7 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
             MessageBox mb = new MessageBox(
                     Display.getCurrent().getActiveShell(), SWT.ERROR);
             final String error =
-                "Collapsing to meta node failed: " + e.getMessage();
+                "Collapsing to metanode failed: " + e.getMessage();
             LOGGER.error(error, e);
             mb.setMessage(error);
             mb.setText("Collapse failed");

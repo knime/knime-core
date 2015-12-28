@@ -79,19 +79,19 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
     private final AbstractExplorerFileStore m_templateKNIMEFolder;
 
     /**
-     * Location of the new meta node template.
+     * Location of the new metanode template.
      * @since 2.12
      */
     protected final Point m_location;
 
     /**
-     * Snap meta node template to grid.
+     * Snap metanode template to grid.
      * @since 2.12
      */
     protected final boolean m_snapToGrid;
 
     /**
-     * Container of the meta node template.
+     * Container of the metanode template.
      * @since 2.12
      */
     protected NodeContainer m_container;

@@ -119,7 +119,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
                 NodeID id = ncep.getNodeContainer().getID();
                 idSet.add(id);
                 // the selection may correspond to the outer workflow, this
-                // happens a meta node is double-clicked (opened) and the
+                // happens a metanode is double-clicked (opened) and the
                 // action buttons are enabled/disabled -- a new DeleteCommand
                 // is created with the correct WorkbenchPart but the wrong
                 // selection (seen in debugger)

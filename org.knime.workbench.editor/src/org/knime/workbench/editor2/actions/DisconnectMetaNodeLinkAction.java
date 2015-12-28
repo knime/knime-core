@@ -62,7 +62,7 @@ import org.knime.workbench.editor2.commands.DisconnectMetaNodeLinkCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to get disconnect a meta node link from its template.
+ * Action to get disconnect a metanode link from its template.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class DisconnectMetaNodeLinkAction extends AbstractNodeAction {
@@ -99,8 +99,8 @@ public class DisconnectMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Removes the link to the meta node template and keeps a local, "
-            + "editable copy of the meta node.";
+        return "Removes the link to the metanode template and keeps a local, "
+            + "editable copy of the metanode.";
     }
 
 

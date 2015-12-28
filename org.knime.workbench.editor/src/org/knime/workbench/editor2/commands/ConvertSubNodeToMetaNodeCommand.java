@@ -54,7 +54,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 
 /**
- * Command to unwrap a sub node into a meta node.
+ * Command to unwrap a sub node into a metanode.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class ConvertSubNodeToMetaNodeCommand extends AbstractKNIMECommand {

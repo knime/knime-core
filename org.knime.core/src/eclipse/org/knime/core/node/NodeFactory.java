@@ -98,7 +98,7 @@ public abstract class NodeFactory<T extends NodeModel> {
         Manipulator,
         /** A visualizing node. */
         Visualizer,
-        /** A meta node. */
+        /** A metanode. */
         Meta,
         /** Start node of a loop. */
         LoopStart,

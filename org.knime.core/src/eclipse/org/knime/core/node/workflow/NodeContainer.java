@@ -88,7 +88,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
 /**
  * Abstract super class for containers holding node or just structural
- * information of a meta node. Also stores additional (optional) information
+ * information of a metanode. Also stores additional (optional) information
  * such as coordinates on a workflow layout.
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
@@ -412,7 +412,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /** Put this node into either the {@link InternalNodeContainerState#EXECUTED} or
      * {@link InternalNodeContainerState#IDLE} state depending on the argument. This method is
-     * applied recursively on all of this node's children (if a meta node).
+     * applied recursively on all of this node's children (if a metanode).
      * @param status Where to get the success flag from.
      * @throws IllegalStateException In case of an illegal state.
      */
@@ -1398,7 +1398,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @param fileStoreHandlerRepository file store handler of destination
      * @param preserveDeletableFlags Whether the "isdeleteable" annotation
      * should be copied also (false when individual nodes are copied
-     * but true when an entire meta node is copied).
+     * but true when an entire metanode is copied).
      * @param isUndoableDeleteCommand If to keep the location of the
      *        node directories (important for undo of delete commands, see
      *        {@link WorkflowManager#copy(boolean, WorkflowCopyContent)}

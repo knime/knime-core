@@ -58,7 +58,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
  *
  * <p>
  * This interface is used to resolve URIs that are stored as part of referenced
- * meta node templates. It is not meant to be implemented by third-party plug-ins.
+ * metanode templates. It is not meant to be implemented by third-party plug-ins.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @noimplement

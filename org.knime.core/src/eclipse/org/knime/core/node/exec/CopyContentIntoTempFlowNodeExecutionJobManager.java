@@ -59,7 +59,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 
 /**
  * Job manager that applies a given execution result to a node container. This manager is not visible to the user (not
- * selectable). It is used to load the data of a partially executed meta node in the temporary sandbox workflow, which
+ * selectable). It is used to load the data of a partially executed metanode in the temporary sandbox workflow, which
  * is then executed, for instance on a cluster.
  *
  * @noreference This class is not intended to be referenced by clients.
