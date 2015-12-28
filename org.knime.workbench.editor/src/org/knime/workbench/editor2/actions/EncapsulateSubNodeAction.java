@@ -57,23 +57,21 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to collapse selected set of nodes into metanode.
+ * Action to encapsulate a selected set of nodes into wrapped metanode.
  *
- * @author M. Berthold, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class CollapseMetaNodeAction extends AbstractNodeAction {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(CollapseMetaNodeAction.class);
+public class EncapsulateSubNodeAction extends AbstractNodeAction {
 
-    /**
-     * unique ID for this action.
-     */
-    public static final String ID = "knime.action.collapsemetanode";
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(EncapsulateSubNodeAction.class);
+
+    /** unique ID for this action. */
+    public static final String ID = "knime.action.encapsulatesubnode";
 
     /**
      * @param editor The workflow editor
      */
-    public CollapseMetaNodeAction(final WorkflowEditor editor) {
+    public EncapsulateSubNodeAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -90,7 +88,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Collapse into Metanode";
+        return "Encapsulate into Wrapped Metanode";
     }
 
     /**
@@ -98,7 +96,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_add.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/meta/metanode_wrap.png");
     }
 
     /**
@@ -106,7 +104,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Collapse Nodes into new Metanode";
+        return "Encapsulates nodes into new wrapped metanode";
     }
 
     /**
@@ -116,8 +114,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        NodeContainerEditPart[] parts =
-            getSelectedParts(NodeContainerEditPart.class);
+        NodeContainerEditPart[] parts = getSelectedParts(NodeContainerEditPart.class);
         if (parts.length < 1) {
             return false;
         }
@@ -132,7 +129,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
     @Override
     public void runInSWT() {
         Optional<CollapseMetaNodeCommand> cmd = CollapseMetaNodeCommand.create(getManager(),
-            getSelectedParts(NodeContainerEditPart.class), getSelectedParts(AnnotationEditPart.class), false);
+            getSelectedParts(NodeContainerEditPart.class), getSelectedParts(AnnotationEditPart.class), true);
         if (cmd.isPresent()) {
             getCommandStack().execute(cmd.get());
         }
@@ -144,7 +141,6 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
             // ignore
         }
     }
-
 
     /** {@inheritDoc} */
     @Override

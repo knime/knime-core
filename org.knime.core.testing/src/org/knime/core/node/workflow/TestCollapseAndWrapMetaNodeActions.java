@@ -49,6 +49,7 @@ package org.knime.core.node.workflow;
 
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
+import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
 
@@ -77,6 +78,33 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
         m_tableView_6 = new NodeID(baseID, 6);
     }
 
+    /** Collect nodes, collapse them, undo. */
+    public void testCollapseIntoMetaNodeThenUndo() throws Exception {
+        WorkflowManager mgr = getManager();
+        executeAllAndWait();
+        checkState(mgr, EXECUTED);
+
+        mgr.resetAndConfigureAll();
+        // there is only one in the wfm
+        WorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
+        final NodeID[] nodes = new NodeID[] {m_columnFilter_2, m_columnFilter_3, m_columnSplitter_4};
+        CollapseIntoMetaNodeResult collapseResult = mgr.collapseIntoMetaNode(nodes,
+            new WorkflowAnnotation[] {annotation}, "Test-Meta/Wrap Node");
+        NodeID metaSubID = collapseResult.getCollapsedMetanodeID();
+        mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
+        assertFalse("Should have removed node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
+        assertTrue("No annotation expected", mgr.getWorkflowAnnotations().isEmpty());
+
+        executeAllAndWait();
+        checkState(mgr, EXECUTED);
+        mgr.resetAndConfigureNode(metaSubID);
+        assertTrue("Should be able to undo collapse", collapseResult.canUndo());
+        collapseResult.undo();
+        assertTrue("Should have restored node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
+        assertFalse("Annotation expected", mgr.getWorkflowAnnotations().isEmpty());
+
+    }
+
     /** Collect nodes, collapse them, convert to meta node and wrap/unwrap. */
     public void testCollapseIntoMetaNodeThenWrapUnwrap() throws Exception {
         WorkflowManager mgr = getManager();
@@ -87,8 +115,10 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
         // there is only one in the wfm
         WorkflowAnnotation annotation = mgr.getWorkflowAnnotations().stream().findFirst().get();
         final NodeID[] nodes = new NodeID[] {m_columnFilter_2, m_columnFilter_3, m_columnSplitter_4};
-        WorkflowManager metaNode =
-                mgr.collapseIntoMetaNode(nodes, new WorkflowAnnotation[] {annotation}, "Test-Meta/Wrap Node");
+        CollapseIntoMetaNodeResult collapseResult = mgr.collapseIntoMetaNode(nodes,
+            new WorkflowAnnotation[] {annotation}, "Test-Meta/Wrap Node");
+        WorkflowManager metaNode = mgr.getNodeContainer(
+            collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         NodeID metaSubID = metaNode.getID();
         assertFalse("Should have removed node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
         assertTrue("No annotation expected", mgr.getWorkflowAnnotations().isEmpty());

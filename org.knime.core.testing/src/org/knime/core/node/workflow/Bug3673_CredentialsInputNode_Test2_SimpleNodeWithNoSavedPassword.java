@@ -54,6 +54,7 @@ import java.util.List;
 
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -167,8 +168,11 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         assertTrue("No password prompted", loadHelper.hasBeenPrompted());
 
         /* Collapse into subnode - make sure it's there */
-        WorkflowManager metaNode = getManager().collapseIntoMetaNode(new NodeID[] {m_credentialsInput_1},
+        CollapseIntoMetaNodeResult collapseResult = getManager().collapseIntoMetaNode(new NodeID[] {m_credentialsInput_1},
             new WorkflowAnnotation[0], "Collapsed-by-Testflow");
+        WorkflowManager metaNode = getManager().getNodeContainer(
+            collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
+
         getManager().convertMetaNodeToSubNode(metaNode.getID());
         assertFalse("Expected to be removed", getManager().containsNodeContainer(m_credentialsInput_1));
 

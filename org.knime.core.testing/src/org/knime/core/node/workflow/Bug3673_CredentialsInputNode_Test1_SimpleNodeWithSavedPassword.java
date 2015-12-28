@@ -50,6 +50,7 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import java.io.File;
 
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -102,8 +103,10 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
 //        WorkflowCopyContent cnt = new WorkflowCopyContent();
 //        cnt.setNodeIDs(m_credentialsInput_1);
 //        getManager().copyFromAndPasteHere(getManager(), cnt);
-        WorkflowManager metaNode = getManager().collapseIntoMetaNode(new NodeID[] {m_credentialsInput_1},
-            new WorkflowAnnotation[0], "Collapsed-by-Testflow");
+        CollapseIntoMetaNodeResult collapseResult = getManager().collapseIntoMetaNode(
+            new NodeID[] {m_credentialsInput_1}, new WorkflowAnnotation[0], "Collapsed-by-Testflow");
+        WorkflowManager metaNode = getManager().getNodeContainer(
+            collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         getManager().convertMetaNodeToSubNode(metaNode.getID());
         assertFalse("Expected to be removed", getManager().containsNodeContainer(m_credentialsInput_1));
 

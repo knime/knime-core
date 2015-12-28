@@ -171,6 +171,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
@@ -3979,9 +3980,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Collapse selected set of nodes into a metanode. Make sure connections
-     * from and to nodes not contained in this set are passed through
-     * appropriate ports of the new metanode.
+    /**
+     * Collapse selected set of nodes into a metanode. Make sure connections from and to nodes not contained in this set
+     * are passed through appropriate ports of the new metanode.
      *
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
      * @param orgAnnos the workflow annotations to be moved
@@ -3989,31 +3990,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return newly create metanode
      * @throws IllegalArgumentException if collapse cannot be done
      */
-    public WorkflowManager collapseIntoMetaNode(final NodeID[] orgIDs,
-            final WorkflowAnnotation[] orgAnnos, final String name)
-    throws IllegalArgumentException {
+    public CollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs, final WorkflowAnnotation[] orgAnnos,
+        final String name) {
         try (WorkflowLock lock = lock()) {
             // make sure this is still true:
             String res = canCollapseNodesIntoMetaNode(orgIDs);
-            if (res != null) {
-                throw new IllegalArgumentException(res);
-            }
+            CheckUtils.checkArgument(res == null, res);
             // for quick search:
             HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
             // find outside Nodes/Ports that have connections to the inside.
             // Map will hold SourceNodeID/PortIndex + Index of new MetanodeInport.
-            HashMap<Pair<NodeID, Integer>, VerticalPortIndex> exposedIncomingPorts =
-                new HashMap<Pair<NodeID, Integer>, VerticalPortIndex>();
+            HashMap<Pair<NodeID, Integer>, VerticalPortIndex> exposedIncomingPorts = new HashMap<>();
             // second Map holds list of affected connections
             HashMap<ConnectionContainer, VerticalPortIndex> inportConnections =
-                         new HashMap<ConnectionContainer, VerticalPortIndex>();
+                new HashMap<ConnectionContainer, VerticalPortIndex>();
             for (NodeID id : orgIDs) {
                 if (m_workflow.getConnectionsByDest(id) != null) {
                     for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
                         if (!orgIDsHash.contains(cc.getSource())) {
-                            Pair<NodeID, Integer> npi
-                                    = new Pair<NodeID, Integer>(cc.getSource(),
-                                                                cc.getSourcePort());
+                            Pair<NodeID, Integer> npi = Pair.create(cc.getSource(), cc.getSourcePort());
                             if (!exposedIncomingPorts.containsKey(npi)) {
                                 int yPos = npi.getSecond();
                                 if (npi.getFirst().equals(this.getID())) {
@@ -4044,8 +4039,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             // sort new input ports by vertical position of source nodes
-            VerticalPortIndex[] vpis =
-                new VerticalPortIndex[exposedIncomingPorts.size()];
+            VerticalPortIndex[] vpis = new VerticalPortIndex[exposedIncomingPorts.size()];
             int vi = 0;
             for (VerticalPortIndex vpi : exposedIncomingPorts.values()) {
                 vpis[vi] = vpi;
@@ -4057,14 +4051,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // find Nodes/Ports that have outgoing connections to the outside.
             // Map will hold SourceNodeID/PortIndex + Index of new MetanodeOutport.
-            HashMap<Pair<NodeID, Integer>, VerticalPortIndex> exposedOutports =
-                new HashMap<Pair<NodeID, Integer>, VerticalPortIndex>();
+            HashMap<Pair<NodeID, Integer>, VerticalPortIndex> exposedOutports = new HashMap<>();
             for (NodeID id : orgIDs) {
                 for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                     if (!orgIDsHash.contains(cc.getDest())) {
-                        Pair<NodeID, Integer> npi
-                                = new Pair<NodeID, Integer>(cc.getSource(),
-                                                            cc.getSourcePort());
+                        Pair<NodeID, Integer> npi = Pair.create(cc.getSource(), cc.getSourcePort());
                         if (!exposedOutports.containsKey(npi)) {
                             NodeContainer nc = getNodeContainer(npi.getFirst());
                             NodeUIInformation uii = nc.getUIInformation();
@@ -4100,8 +4091,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // (note that we reach directly into the Node to get the port type
             //  so we need to correct the index for the - then missing - var
             //  port.)
-            PortType[] exposedIncomingPortTypes
-                                    = new PortType[exposedIncomingPorts.size()];
+            PortType[] exposedIncomingPortTypes = new PortType[exposedIncomingPorts.size()];
             for (Map.Entry<Pair<NodeID, Integer>, VerticalPortIndex> entry : exposedIncomingPorts.entrySet()) {
                 Pair<NodeID, Integer> npi = entry.getKey();
                 int index = entry.getValue().getIndex();
@@ -4109,28 +4099,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 int portIndex = npi.getSecond();
                 if (nID.equals(this.getID())) {
                     // if this connection comes directly from a Metanode Inport:
-                    exposedIncomingPortTypes[index]
-                                      = this.getInPort(portIndex).getPortType();
+                    exposedIncomingPortTypes[index] = this.getInPort(portIndex).getPortType();
                 } else {
                     // otherwise reach into Nodecontainer to find out port type:
                     NodeContainer nc = getNodeContainer(nID);
-                    exposedIncomingPortTypes[index]
-                                       = nc.getOutPort(portIndex).getPortType();
+                    exposedIncomingPortTypes[index] = nc.getOutPort(portIndex).getPortType();
                 }
             }
-            PortType[] exposedOutportTypes
-                                         = new PortType[exposedOutports.size()];
+            PortType[] exposedOutportTypes = new PortType[exposedOutports.size()];
             for (Pair<NodeID, Integer> npi : exposedOutports.keySet()) {
                 int index = exposedOutports.get(npi).getIndex();
                 int portIndex = npi.getSecond();
                 NodeContainer nc = getNodeContainer(npi.getFirst());
-                exposedOutportTypes[index]
-                                  = nc.getOutPort(portIndex).getPortType();
+                exposedOutportTypes[index] = nc.getOutPort(portIndex).getPortType();
             }
             // create the new Metanode
-            WorkflowManager newWFM = createAndAddSubWorkflow(
-                    exposedIncomingPortTypes,
-                    exposedOutportTypes, name);
+            WorkflowManager newWFM = createAndAddSubWorkflow(exposedIncomingPortTypes, exposedOutportTypes, name);
             // move into center of nodes this one replaces...
             int x = 0;
             int y = 0;
@@ -4150,16 +4134,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             if (count >= 1) {
-                NodeUIInformation newUii =
-                    new NodeUIInformation(x / count, y / count, -1, -1, true);
+                NodeUIInformation newUii = new NodeUIInformation(x / count, y / count, -1, -1, true);
                 newWFM.setUIInformation(newUii);
             }
             // copy the nodes into the newly create WFM:
             WorkflowCopyContent orgContent = new WorkflowCopyContent();
             orgContent.setNodeIDs(orgIDs);
             orgContent.setAnnotation(orgAnnos);
-            WorkflowCopyContent newContent
-                    = newWFM.copyFromAndPasteHere(this, orgContent);
+            orgContent.setIncludeInOutConnections(true);
+            final WorkflowPersistor undoPersistor = copy(true, orgContent);
+
+            orgContent.setIncludeInOutConnections(false);
+            WorkflowCopyContent newContent = newWFM.copyFromAndPasteHere(this, orgContent);
             NodeID[] newIDs = newContent.getNodeIDs();
             Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
             for (int i = 0; i < orgIDs.length; i++) {
@@ -4191,9 +4177,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
                     NodeUIInformation uii = nc.getUIInformation();
                     if (uii != null) {
-                        NodeUIInformation newUii =
-                            uii.createNewWithOffsetPosition(
-                                   new int[]{xshift, yshift});
+                        NodeUIInformation newUii = uii.createNewWithOffsetPosition(new int[]{xshift, yshift});
                         nc.setUIInformation(newUii);
                     }
                 }
@@ -4203,13 +4187,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 // move bendpoints of all internal connections
                 for (ConnectionContainer cc : newWFM.getConnectionContainers()) {
-                    if ((!cc.getSource().equals(newWFM.getID()))
-                            && (!cc.getDest().equals(newWFM.getID()))) {
+                    if ((!cc.getSource().equals(newWFM.getID())) && (!cc.getDest().equals(newWFM.getID()))) {
                         ConnectionUIInformation uii = cc.getUIInfo();
                         if (uii != null) {
-                            ConnectionUIInformation newUI =
-                                uii.createNewWithOffsetPosition(
-                                        new int[] {xshift, yshift});
+                            ConnectionUIInformation newUI = uii.createNewWithOffsetPosition(new int[]{xshift, yshift});
                             cc.setUIInfo(newUI);
                         }
                     }
@@ -4219,8 +4200,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (ConnectionContainer cc : inportConnections.keySet()) {
                 int portIndex = inportConnections.get(cc).getIndex();
                 NodeID newID = oldIDsHash.get(cc.getDest());
-                newWFM.addConnection(newWFM.getID(), portIndex,
-                        newID, cc.getDestPort());
+                newWFM.addConnection(newWFM.getID(), portIndex, newID, cc.getDestPort());
                 this.removeConnection(cc);
             }
             // create connections INSIDE the new workflow (to outgoing ports)
@@ -4232,8 +4212,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // create OUTSIDE connections to the new workflow
             for (Pair<NodeID, Integer> npi : exposedIncomingPorts.keySet()) {
                 int index = exposedIncomingPorts.get(npi).getIndex();
-                this.addConnection(npi.getFirst(), npi.getSecond(),
-                        newWFM.getID(), index);
+                this.addConnection(npi.getFirst(), npi.getSecond(), newWFM.getID(), index);
             }
             // create OUTSIDE connections from the new workflow
             for (NodeID id : orgIDs) {
@@ -4242,24 +4221,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 cca = m_workflow.getConnectionsBySource(id).toArray(cca);
                 for (ConnectionContainer cc : cca) {
                     if (!orgIDsHash.contains(cc.getDest())) {
-                        Pair<NodeID, Integer> npi
-                                = new Pair<NodeID, Integer>(cc.getSource(),
-                                                            cc.getSourcePort());
+                        Pair<NodeID, Integer> npi = new Pair<NodeID, Integer>(cc.getSource(), cc.getSourcePort());
                         int newPort = exposedOutports.get(npi).getIndex();
                         this.removeConnection(cc);
-                        this.addConnection(newWFM.getID(), newPort,
-                                cc.getDest(), cc.getDestPort());
+                        this.addConnection(newWFM.getID(), newPort, cc.getDest(), cc.getDestPort());
                     }
                 }
             }
             // and finally: delete the original nodes and annotations.
-            for (NodeID id : orgIDs) {
-                this.removeNode(id);
-            }
-            for (WorkflowAnnotation anno : orgAnnos) {
-                this.removeAnnotation(anno);
-            }
-            return newWFM;
+            Stream.of(orgIDs).forEach(id -> removeNode(id));
+            Stream.of(orgAnnos).forEach(anno -> removeAnnotation(anno));
+            return new CollapseIntoMetaNodeResult(this, newWFM.getID(), undoPersistor);
         }
     }
 

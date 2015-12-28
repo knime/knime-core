@@ -200,6 +200,7 @@ import org.knime.workbench.editor2.actions.CutAction;
 import org.knime.workbench.editor2.actions.DefaultOpenViewAction;
 import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.DisconnectSubNodeLinkAction;
+import org.knime.workbench.editor2.actions.EncapsulateSubNodeAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAllAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
@@ -665,6 +666,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         PasteAction paste = new PasteAction(this);
         PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
         CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
+        EncapsulateSubNodeAction encapsulate = new EncapsulateSubNodeAction(this);
         ExpandMetaNodeAction expand = new ExpandMetaNodeAction(this);
         ExpandSubNodeAction expandSub = new ExpandSubNodeAction(this);
         ConvertMetaNodeToSubNodeAction wrap = new ConvertMetaNodeToSubNodeAction(this);
@@ -700,6 +702,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(hideNodeName);
         m_actionRegistry.registerAction(showNodeIdAction);
         m_actionRegistry.registerAction(collapse);
+        m_actionRegistry.registerAction(encapsulate);
         m_actionRegistry.registerAction(expand);
         m_actionRegistry.registerAction(expandSub);
         m_actionRegistry.registerAction(wrap);

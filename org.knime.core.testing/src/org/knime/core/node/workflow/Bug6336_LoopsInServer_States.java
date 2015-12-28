@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 
 /**
  * Bug 6336: Premature state notification in case workflow contains loops (problems on server)
@@ -118,8 +119,10 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
         Set<NodeID> ids = new LinkedHashSet<>(manager.getWorkflow().getNodeIDs());
         assertTrue(ids.remove(m_dataGenerator1));
         assertTrue(ids.remove(m_tableView12));
-        WorkflowManager metaNode = manager.collapseIntoMetaNode(
+        final CollapseIntoMetaNodeResult collapseResult = manager.collapseIntoMetaNode(
             ids.toArray(new NodeID[0]), new WorkflowAnnotation[0], "Collapsed Content");
+        WorkflowManager metaNode = manager.getNodeContainer(
+            collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         // remaining: data gen, table view, and new meta node
         assertEquals("Node count after collapse incorrect", 3, manager.getWorkflow().getNrNodes());
         assertTrue(manager.containsNodeContainer(m_dataGenerator1));
