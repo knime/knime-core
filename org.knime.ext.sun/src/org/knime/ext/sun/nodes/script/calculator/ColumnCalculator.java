@@ -143,7 +143,7 @@ public class ColumnCalculator implements CellFactory {
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         m_lastProcessedRow = curRowNr;
-        
+
         exec.setProgress(curRowNr / (double)rowCount, "Calculated row "
                 + curRowNr + " (\"" + lastKey + "\")");
     }

@@ -614,6 +614,21 @@ public final class Expression {
         return new Expression(body, nameValueMap, settings);
     }
 
+    /** Used by node implementation execution can be streamed. If row count is required we need to count first.
+     * @return Whether row count is required during computation (field is used).
+     */
+    public boolean usesRowCount() {
+        return m_fieldMap.keySet().stream().anyMatch(f -> ROWCOUNT.equals(f.getColOrVarName()));
+    }
+
+    /** Similar to {@link #usesRowCount()} it checks whether the row index is used in the expression. If so, the 
+     * computation cannot be distributed.
+     * @return that property.
+     */
+    public boolean usesRowIndex() {
+        return m_fieldMap.keySet().stream().anyMatch(f -> ROWINDEX.equals(f.getColOrVarName()));
+    }
+
     /** Object that pairs the name of the field used in the temporarily created
      * java class with the class of that field. */
     public static final class ExpressionField {

@@ -93,4 +93,16 @@ public final class InputPortRole extends PortRole {
         return m_isStreamable;
     }
 
+    /** Getter method for on of the static fields based on the argument flags.
+     * @param isDistributable distributable flag
+     * @param isStreamable streamable flag
+     * @return One of the static fields, never null. */
+    public static InputPortRole get(final boolean isDistributable, final boolean isStreamable) {
+        if (isDistributable) {
+            return isStreamable ? DISTRIBUTED_STREAMABLE : DISTRIBUTED_NONSTREAMABLE;
+        } else {
+            return isStreamable ? NONDISTRIBUTED_STREAMABLE : NONDISTRIBUTED_NONSTREAMABLE;
+        }
+    }
+
 }

@@ -48,12 +48,13 @@ package org.knime.ext.sun.nodes.script.node.rowsplitter;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -63,8 +64,24 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.MergeOperator;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
 import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
+import org.knime.ext.sun.nodes.script.expression.Expression;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingCustomizer;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 
@@ -74,6 +91,8 @@ import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
  */
 public class JavaRowSplitterNodeModel extends NodeModel
     implements FlowVariableProvider {
+
+    private static final String SIMPLE_STREAMABLE_ROWCOUNT_KEY = "rowCount-int";
 
     private final JavaScriptingCustomizer m_customizer;
     private JavaScriptingSettings m_settings;
@@ -116,50 +135,56 @@ public class JavaRowSplitterNodeModel extends NodeModel
     /** {@inheritDoc} */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+        final ExecutionContext exec) throws Exception {
+        final int rowCount = inData[0].getRowCount();
+        m_rowCount = rowCount;
+        DataTableRowInput input = new DataTableRowInput(inData[0]);
         DataTableSpec spec = inData[0].getDataTableSpec();
         BufferedDataContainer trueMatch = exec.createDataContainer(spec);
+        BufferedDataTableRowOutput[] outputs;
         BufferedDataContainer falseMatch = null;
         if (getNrOutPorts() == 2) {
             falseMatch = exec.createDataContainer(spec);
         }
-        m_rowCount = inData[0].getRowCount();
+        outputs = Stream.of(trueMatch, falseMatch).filter(f -> f != null).map(f -> new BufferedDataTableRowOutput(f))
+            .toArray(BufferedDataTableRowOutput[]::new);
+        execute(input, outputs, exec);
+        BufferedDataTable[] outTables = Stream.of(trueMatch, falseMatch).filter(f -> f != null)
+                .map(f -> f.getTable()).toArray(BufferedDataTable[]::new);
+        return outTables;
+    }
+
+
+    private void execute(final RowInput inData, final RowOutput[] outputs, final ExecutionContext exec) throws Exception {
+        DataTableSpec spec = inData.getDataTableSpec();
         m_settings.setInputAndCompile(spec);
         ColumnCalculator cc = new ColumnCalculator(m_settings, this);
-        final int rowCount = inData[0].getRowCount();
-        RowIterator it = inData[0].iterator();
-        for (int i = 0; it.hasNext(); i++) {
-            DataRow r = it.next();
-            cc.setProgress(i, rowCount, r.getKey(), exec);
+        int rowIndex = 0;
+        DataRow r;
+        RowOutput trueMatch = outputs[0];
+        RowOutput falseMatch = outputs.length > 1 ? outputs[1] : null;
+        while ((r = inData.poll()) != null) {
+            cc.setProgress(rowIndex, m_rowCount, r.getKey(), exec);
             DataCell result = cc.calculate(r);
             boolean b;
             if (result.isMissing()) {
                 b = false;
-                setWarningMessage("Expression returned missing value for some "
-                        + "rows (interpreted as no match)");
+                setWarningMessage("Expression returned missing value for some rows (interpreted as no match)");
             } else {
                 b = ((BooleanValue)result).getBooleanValue();
             }
             if (b) {
-                trueMatch.addRowToTable(r);
+                trueMatch.push(r);
             } else if (falseMatch != null) {
-                falseMatch.addRowToTable(r);
+                falseMatch.push(r);
             }
             exec.checkCanceled();
+            rowIndex++;
         }
         trueMatch.close();
-        BufferedDataTable[] out;
-        BufferedDataTable trueTable = trueMatch.getTable();
         if (falseMatch != null) {
             falseMatch.close();
-            BufferedDataTable falseTable = falseMatch.getTable();
-            out = new BufferedDataTable[2];
-            out[1] = falseTable;
-        } else {
-            out = new BufferedDataTable[1];
         }
-        out[0] = trueTable;
-        return out;
     }
 
     /** {@inheritDoc} */
@@ -168,6 +193,61 @@ public class JavaRowSplitterNodeModel extends NodeModel
         m_rowCount = -1;
     }
 
+
+    /** {@inheritDoc} */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        boolean isStreamable, isDistributable;
+        Expression exp = m_settings == null ? null : m_settings.getCompiledExpression();
+        if (exp == null) {
+            isStreamable = false;
+            isDistributable = false;
+        } else {
+            isStreamable = !exp.usesRowCount();
+            isDistributable = !exp.usesRowIndex();
+        }
+        return new InputPortRole[] {InputPortRole.get(isDistributable, isStreamable)};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return IntStream.range(0, getNrOutPorts())
+                .mapToObj(i -> OutputPortRole.DISTRIBUTED).toArray(OutputPortRole[]::new);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
+        return saveInt(-1);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean iterate(final StreamableOperatorInternals internals) {
+        return !getInputPortRoles()[0].isStreamable() && readInt(internals) < 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public MergeOperator createMergeOperator() {
+        return new MyMergeOperator();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
+        final PortOutput[] output) throws Exception {
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+        return new MyStreamableOperator();
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -182,7 +262,6 @@ public class JavaRowSplitterNodeModel extends NodeModel
             throw new RuntimeException("Invalid variable class: " + type);
         }
     }
-
 
     /** {@inheritDoc} */
     @Override
@@ -228,6 +307,74 @@ public class JavaRowSplitterNodeModel extends NodeModel
             final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // no internals
+    }
+
+    private class MyMergeOperator extends MergeOperator {
+
+        /** {@inheritDoc} */
+        @Override
+        public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] operators) {
+            return saveInt(Stream.of(operators).mapToInt(o -> readInt(o)).sum());
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public StreamableOperatorInternals mergeIntermediate(final StreamableOperatorInternals[] operators) {
+            return mergeFinal(operators);
+        }
+
+    }
+
+    private final class MyStreamableOperator extends StreamableOperator {
+
+        /** {@inheritDoc} */
+        @Override
+        public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+            RowOutput[] rowOutputs = Stream.of(outputs).map(o -> (RowOutput)o).toArray(RowOutput[]::new);
+            execute((RowInput)inputs[0], rowOutputs, exec);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void runIntermediate(final PortInput[] inputs, final ExecutionContext exec) throws Exception {
+            int count = 0;
+            RowInput rowInput = (RowInput)inputs[0];
+            while (rowInput.poll() != null) {
+                count += 1;
+            }
+            rowInput.close();
+            m_rowCount = count;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public StreamableOperatorInternals saveInternals() {
+            return saveInt(m_rowCount);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void loadInternals(final StreamableOperatorInternals internals) {
+            m_rowCount = readInt(internals);
+        }
+
+    }
+
+    private static int readInt(final StreamableOperatorInternals internals) {
+        CheckUtils.checkArgument(internals instanceof SimpleStreamableOperatorInternals, "Not of expected class,"
+            + "expected \"%s\", got \"%s\"", SimpleStreamableOperatorInternals.class.getSimpleName(),
+            internals == null ? "<null" : internals.getClass().getSimpleName());
+        try {
+            return ((SimpleStreamableOperatorInternals)internals).getConfig().getInt(SIMPLE_STREAMABLE_ROWCOUNT_KEY);
+        } catch (InvalidSettingsException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static SimpleStreamableOperatorInternals saveInt(final int rowCount) {
+        SimpleStreamableOperatorInternals internals = new SimpleStreamableOperatorInternals();
+        internals.getConfig().addInt(SIMPLE_STREAMABLE_ROWCOUNT_KEY, rowCount);
+        return internals;
     }
 
 }
