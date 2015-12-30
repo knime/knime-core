@@ -196,8 +196,9 @@ public class RowFilterNodeModel extends NodeModel {
             }
             exec.checkCanceled();
             if (matches) {
-                exec.setMessage("Added row " + index
-                        + " (\"" + row.getKey() + "\")");
+                final int indexFinal = index;
+                final DataRow rowFinal = row;
+                exec.setMessage(() -> "Added row " + indexFinal + " (\"" + rowFinal.getKey() + "\")");
                 output.push(row);
             }
         }

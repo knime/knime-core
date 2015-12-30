@@ -45,13 +45,17 @@
 package org.knime.core.node;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
+import org.apache.commons.lang3.StringUtils;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeProgress;
 import org.knime.core.node.workflow.NodeProgressEvent;
@@ -71,17 +75,19 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DefaultNodeProgressMonitor.class);
 
+    private static final Supplier<String> NULL_SUPPLIER = () -> null;
+
     /** The cancel requested flag. */
     private boolean m_cancelExecute;
 
     /** Progress of the execution between 0 and 1, or null if not available. */
     private Double m_progress;
 
-    /** The progress message. */
-    private String m_message;
+    /** Lazy setter of new message - generation may be skipped if new messages come in faster than processed. */
+    private Supplier<String> m_messageSupplier;
 
-    /** The message to append; used by SubNodeProgressMonitor. */
-    private String m_append;
+    /** Lazy setter of new append message - used by SubNodeProgressMonitor. */
+    private Supplier<String> m_appendSupplier;
 
     /** A set of progress listeners. */
     private final CopyOnWriteArrayList<NodeProgressListener> m_listeners;
@@ -98,41 +104,36 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /** If progress has changed. */
     private boolean m_changed = false;
 
-    /**
-     * The timer task which informs all currently active progress monitors about new progress information.
-     */
-    private static final TimerTask TASK = new TimerTask() {
-        @Override
-        public void run() {
-            // for maintenance only
-            List<WeakReference<DefaultNodeProgressMonitor>> deadList = new ArrayList<>();
-            for (Iterator<WeakReference<DefaultNodeProgressMonitor>> it = PROGMONS.iterator(); it.hasNext();) {
-                WeakReference<DefaultNodeProgressMonitor> next = it.next();
-                DefaultNodeProgressMonitor p = next.get();
-
-                if (p == null) {
-                    deadList.add(next);
-                } else if (p.m_changed) {
-                    try {
-                        p.fireProgressChanged(); // something has changed
-                    } catch (Exception e) {
-                        LOGGER.warn(
-                            "Exception (\"" + e.getClass().getSimpleName() + "\") " + " during event notification.", e);
-                    }
-                }
-            }
-            if (!deadList.isEmpty()) {
-                PROGMONS.removeAll(deadList);
-            }
-        }
-    };
-
-    /** Timer used to schedule the task. */
-    private static final Timer TIMER = new Timer("KNIME Progress Timer", true);
+    private static final ScheduledExecutorService NOTIFICATION_SERVICE =
+            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "KNIME Progress Updater"));
 
     static {
-        // start timer once with the given task, starting time, and time period
-        TIMER.scheduleAtFixedRate(TASK, 0, TIMER_PERIOD);
+        // The timer task which informs all currently active progress monitors about new progress information.
+        NOTIFICATION_SERVICE.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                // for maintenance only
+                List<WeakReference<DefaultNodeProgressMonitor>> deadList = new LinkedList<>();
+                for (Iterator<WeakReference<DefaultNodeProgressMonitor>> it = PROGMONS.iterator(); it.hasNext();) {
+                    WeakReference<DefaultNodeProgressMonitor> next = it.next();
+                    DefaultNodeProgressMonitor p = next.get();
+
+                    if (p == null) {
+                        deadList.add(next);
+                    } else if (p.m_changed) {
+                        try {
+                            p.fireProgressChanged(); // something has changed
+                        } catch (Exception e) {
+                            LOGGER.warn(
+                                "Exception (\"" + e.getClass().getSimpleName() + "\") " + " during event notification.", e);
+                        }
+                    }
+                }
+                if (!deadList.isEmpty()) {
+                    PROGMONS.removeAll(deadList);
+                }
+            }
+        }, TIMER_PERIOD, TIMER_PERIOD, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -143,8 +144,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     public DefaultNodeProgressMonitor() {
         m_listeners = new CopyOnWriteArrayList<NodeProgressListener>();
         m_cancelExecute = false;
-        m_progress = null;
-        m_message = null;
+        m_messageSupplier = NULL_SUPPLIER;
+        m_appendSupplier = NULL_SUPPLIER;
         // add this progress monitor to the list of active ones
         PROGMONS.add(new WeakReference<DefaultNodeProgressMonitor>(this));
     }
@@ -166,12 +167,13 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     @Override
     public synchronized void reset() {
-        if ((m_progress != null) || (m_message != null)) {
+        if ((m_progress != null) || (m_messageSupplier.get() != null)) {
             m_changed = true;
         }
         m_cancelExecute = false;
         m_progress = null;
-        m_message = null;
+        m_appendSupplier = NULL_SUPPLIER;
+        m_messageSupplier = NULL_SUPPLIER;
     }
 
     /**
@@ -212,11 +214,23 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     @Override
     public synchronized void setProgress(final double progress, final String message) {
-        boolean progressChanged = setProgressIntern(progress);
-        boolean messageChanged = setMessageIntern(message, null);
-        if (progressChanged || messageChanged) {
-            m_changed = true;
-        }
+        setProgressIntern(progress);
+        setMessageIntern(() -> message, NULL_SUPPLIER);
+        m_changed = true;
+    }
+
+    /**
+     * Updates the progress value and message if different from the current one.
+     *
+     * @see #setProgress(double)
+     * @param progress The (new) progress value.
+     * @param message The text message shown in the progress monitor.
+     */
+    @Override
+    public synchronized void setProgress(final double progress, final Supplier<String> message) {
+        setProgressIntern(progress);
+        m_messageSupplier = CheckUtils.checkArgumentNotNull(message);
+        m_changed = true;
     }
 
     /**
@@ -231,12 +245,17 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public synchronized void setMessage(final String message) {
         setProgress(message);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public synchronized void setMessage(final Supplier<String> message) {
+        m_messageSupplier = CheckUtils.checkArgumentNotNull(message);
+        m_changed = true;
     }
 
     /**
@@ -246,15 +265,13 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     @Override
     public synchronized void setProgress(final String message) {
-        if (setMessageIntern(message, null)) {
-            m_changed = true;
-        }
+        setMessageIntern(() -> message, NULL_SUPPLIER);
+        m_changed = true;
     }
 
-    private synchronized void appendMessage(final String append) {
-        if (setMessageIntern(m_message, append)) {
-            m_changed = true;
-        }
+    private synchronized void appendMessage(final Supplier<String> appendSupplier) {
+        setMessageIntern(m_messageSupplier, appendSupplier);
+        m_changed = true;
     }
 
     /**
@@ -269,27 +286,11 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         return changed;
     }
 
-    /**
-     * Sets message internally, returns if old value has changed.
-     */
-    private boolean setMessageIntern(final String message, final String append) {
-        if (message == m_message && append == m_append) {
-            return false;
-        }
-        boolean changed = false;
-        if (message == null || m_message == null) {
-            changed = true;
-        } else {
-            changed = !message.equals(m_message);
-        }
-        m_message = message;
-        if (append == null || m_append == null) {
-            changed = true;
-        } else {
-            changed |= !append.equals(m_append);
-        }
-        m_append = append;
-        return changed;
+    /** Sets message internally. */
+    private void setMessageIntern(final Supplier<String> messageSupplier, final Supplier<String> appendSupplier) {
+        assert Thread.holdsLock(this);
+        m_messageSupplier = messageSupplier;
+        m_appendSupplier = appendSupplier;
     }
 
     /**
@@ -305,7 +306,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     @Override
     public synchronized String getMessage() {
-        return m_message;
+        return m_messageSupplier.get();
     }
 
     /**
@@ -338,7 +339,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     private void fireProgressChanged() {
         m_changed = false;
-        NodeProgress pe = new NodeProgress(getProgress(), createMessage(m_message, m_append));
+        NodeProgress pe = new NodeProgress(getProgress(), createMessage(m_messageSupplier, m_appendSupplier));
         for (NodeProgressListener l : m_listeners) {
             try {
                 // we can't provide a useful node id here
@@ -350,17 +351,19 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
     }
 
-    private static String createMessage(final String message, final String append) {
-        String result = "";
+    private static String createMessage(final Supplier<String> messageSupplier, final Supplier<String> appendSupplier) {
+        String message = messageSupplier.get();
+        String append = appendSupplier.get();
+        StringBuilder b = new StringBuilder();
         if (message != null) {
-            result = message;
+            b.append(message);
             if (append != null) {
-                result += " - " + append;
+                b.append(" - ").append(append);
             }
         } else if (append != null) {
-            result = append;
+            b.append(append);
         }
-        return result;
+        return b.toString();
     }
 
     /**
@@ -375,9 +378,9 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         private double m_lastProg;
 
-        private String m_message;
+        private Supplier<String> m_innerMessageSupplier;
 
-        private String m_append;
+        private Supplier<String> m_innerAppendSupplier;
 
         /**
          * Creates new sub progress monitor.
@@ -388,7 +391,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         SubNodeProgressMonitor(final NodeProgressMonitor parent, final double max) {
             m_maxProg = max;
             m_parent = parent;
-            m_message = null;
+            m_innerMessageSupplier = NULL_SUPPLIER;
+            m_innerAppendSupplier = NULL_SUPPLIER;
         }
 
         /** Must not be called. Throws IllegalStateException. {@inheritDoc} */
@@ -410,11 +414,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /** {@inheritDoc} */
         @Override
         public String getMessage() {
-            if (m_message == null) {
-                return "";
-            } else {
-                return m_message;
-            }
+            return StringUtils.defaultString(m_innerMessageSupplier.get());
         }
 
         /**
@@ -464,6 +464,16 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
 
         /**
+         * Delegates to parent.
+         *
+         * {@inheritDoc}
+         */
+        @Override
+        public void setProgress(final String message) {
+            setProgress(() -> message, true);
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override
@@ -471,52 +481,55 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             setProgress(message);
         }
 
-        /**
-         * Delegates to parent.
-         *
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
-        public void setProgress(final String message) {
-            setProgress(message, true);
+        public void setMessage(final Supplier<String> messageSupplier) {
+            setProgress(messageSupplier, true);
+        }
+
+
+        /** {@inheritDoc} */
+        @Override
+        public void setProgress(final double progress, final String message) {
+            setProgress(progress, () -> message);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void setProgress(final double progress, final Supplier<String> messageSupplier) {
+            synchronized (m_parent) {
+                this.setProgress(progress);
+                this.setMessage(messageSupplier);
+            }
         }
 
         /**
          * Internal setter method, subject to override in silent progress mon.
          *
-         * @param message new message
+         * @param messageSupplier new message
          * @param append whether to append
          */
-        void setProgress(final String message, final boolean append) {
+        void setProgress(final Supplier<String> messageSupplier, final boolean append) {
             synchronized (m_parent) {
-                m_message = message;
+                m_innerMessageSupplier = CheckUtils.checkArgumentNotNull(messageSupplier);
                 if (append) {
-                    m_append = null;
+                    m_innerAppendSupplier = NULL_SUPPLIER;
                 }
-                String create = createMessage(m_message, m_append);
+                Supplier<String> createSupplier = () -> createMessage(m_innerMessageSupplier, m_innerAppendSupplier);
                 if (m_parent instanceof DefaultNodeProgressMonitor) {
-                    ((DefaultNodeProgressMonitor)m_parent).appendMessage(create);
+                    ((DefaultNodeProgressMonitor)m_parent).appendMessage(createSupplier);
                 } else if (m_parent instanceof SubNodeProgressMonitor) {
-                    ((SubNodeProgressMonitor)m_parent).appendMessage(create);
+                    ((SubNodeProgressMonitor)m_parent).appendMessage(createSupplier);
                 } else {
-                    m_parent.setMessage(create);
+                    m_parent.setMessage(createSupplier);
                 }
             }
         }
 
         /** @param append Message to append */
-        void appendMessage(final String append) {
-            m_append = append;
-            setProgress(m_message, false);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void setProgress(final double progress, final String message) {
-            synchronized (m_parent) {
-                this.setProgress(progress);
-                this.setMessage(message);
-            }
+        void appendMessage(final Supplier<String> appendSupplier) {
+            m_innerAppendSupplier = appendSupplier;
+            setProgress(m_innerMessageSupplier, false);
         }
 
         /** {@inheritDoc} */
@@ -586,7 +599,19 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /** {@inheritDoc} */
         @Override
+        public void setProgress(final double progress, final Supplier<String> messageSupplier) {
+            // do nothing here
+        }
+
+        /** {@inheritDoc} */
+        @Override
         public void setMessage(final String arg0) {
+            // do nothing here
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void setMessage(final Supplier<String> messageSupplier) {
             // do nothing here
         }
 
@@ -598,13 +623,13 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /** {@inheritDoc} */
         @Override
-            void appendMessage(final String append) {
+        void appendMessage(final Supplier<String> appendSupplier) {
             // do nothing here
         }
 
         /** {@inheritDoc} */
         @Override
-            void setProgress(final String message, final boolean append) {
+        void setProgress(final Supplier<String> messageSupplier, final boolean append) {
             // do nothing here
         }
     }

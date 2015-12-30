@@ -280,7 +280,8 @@ public class SampleDataNodeModel extends NodeModel {
                         ? colNames[c] : DataType.getMissingCell());
                 DataRow r = createRow(RowKey.createRowKey(pattern), d, cl);
                 dataOutput.push(r);
-                exec.setProgress(pattern / totalCount, "Added row " + pattern);
+                final int patternTempFinal = pattern;
+                exec.setProgress(pattern / totalCount, () -> "Added row " + patternTempFinal);
                 exec.checkCanceled();
                 pattern++;
             }

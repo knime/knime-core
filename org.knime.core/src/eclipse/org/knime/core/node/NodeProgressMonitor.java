@@ -44,6 +44,8 @@
  */
 package org.knime.core.node;
 
+import java.util.function.Supplier;
+
 import org.knime.core.node.workflow.NodeProgressListener;
 
 
@@ -62,8 +64,7 @@ public interface NodeProgressMonitor {
     void checkCanceled() throws CanceledExecutionException;
 
     /**
-     * Sets a new progress value. If the value is not in range, the old value is
-     * kept.
+     * Sets a new progress value. If the value is not in range, the old value is kept.
      * @param progress The value between 0 and 1.
      */
     void setProgress(final double progress);
@@ -84,11 +85,36 @@ public interface NodeProgressMonitor {
     void setProgress(final double progress, final String message);
 
     /**
+     * Sets a new progress value and message based on supplier. This message is generally preferred over setting
+     * the message directly as KNIME's UI updater has a built-in delay so the majority of messages is never
+     * reported (and string construction is expensive).
+     * @param progress The value between 0 and 1 (out of range values are ignored).
+     * @param message A non-null message supplier to generate a string shown in the progress monitor (message may be
+     * <code>null</code>).
+     */
+    default void setProgress(final double progress, final Supplier<String> message) {
+        // subclasses may do this more efficiently
+        setProgress(progress, message.get());
+    }
+
+    /**
      * Displays the message as given by the argument.
      * @param message A convenience message shown in the progress monitor.
      * @see #setProgress(String)
      */
     void setMessage(final String message);
+
+    /**
+     * Sets a message based on a supplier. This message is generally preferred over setting
+     * the message directly as KNIME's UI updater has a built-in delay so the majority of messages is never
+     * reported (and string construction is expensive).
+     * @param message A non-null message supplier to generate a string shown in the progress monitor (message may be
+     * <code>null</code>).
+     */
+    default void setMessage(final Supplier<String> message) {
+        // subclasses may do this more efficiently
+        setMessage(message.get());
+    }
 
     /**
      * Displays the message as given by the argument.

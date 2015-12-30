@@ -109,7 +109,9 @@ public abstract class StreamableFunction extends StreamableOperator {
             long index = 0;
             while ((inputRow = rowInput.poll()) != null) {
                 rowOutput.push(compute(inputRow));
-                ctx.setMessage(String.format("Row %d (\"%s\"))", ++index, inputRow.getKey()));
+                final long i = ++index;
+                final DataRow r = inputRow;
+                ctx.setMessage(() -> String.format("Row %d (\"%s\"))", i, r.getKey()));
             }
             rowInput.close();
             rowOutput.close();

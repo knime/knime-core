@@ -44,6 +44,8 @@
  */
 package org.knime.core.node;
 
+import java.util.function.Supplier;
+
 import org.knime.core.node.DefaultNodeProgressMonitor.SilentSubNodeProgressMonitor;
 import org.knime.core.node.DefaultNodeProgressMonitor.SubNodeProgressMonitor;
 
@@ -128,12 +130,31 @@ public class ExecutionMonitor {
         m_progress.setProgress(progress, message);
     }
 
+    /** Set progress value and message as per arguments. The progress value needs to be in [0, 1] (others are ignored)
+     * and are absolute (not incremental). The message is provided by given supplier, whereby its {@linkplain
+     * Supplier#get() get-method} is not evaluated until actually needed (which might be a performance boost in case
+     * many progress/message updates are generated).
+     * @param progress Progress in [0, 1] - invalid values are ignored.
+     * @param messageSupplier The message supplier, not null (though provided value may be null).
+     * @throws IllegalArgumentException If supplier argument is null.
+     * @see NodeProgressMonitor#setProgress(double, Supplier)
+     */
+    public void setProgress(final double progress, final Supplier<String> messageSupplier) {
+        m_progress.setProgress(progress, messageSupplier);
+    }
+
     /**
      * @see NodeProgressMonitor#setMessage(String)
      * @param message The message to be shown in the progress monitor.
      */
     public void setMessage(final String message) {
         m_progress.setMessage(message);
+    }
+
+    /** Set a new message based on a supplier. For further details see {@link #setProgress(double, String)}.
+     * @param messageSupplier The non-null message supplier. */
+    public void setMessage(final Supplier<String> messageSupplier) {
+        m_progress.setMessage(messageSupplier);
     }
 
     /**
