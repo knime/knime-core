@@ -68,7 +68,6 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.util.NonClosableInputStream;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -83,6 +82,15 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 
 
@@ -180,15 +188,43 @@ public class ReadTableNodeModel extends NodeModel {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        InputStream in = null;
-        try {
-            in = openInputStream();
+        final ExecutionContext exec) throws Exception {
+        exec.setMessage("Extracting temporary table");
+        ContainerTable table = extractTable(exec.createSubExecutionContext(0.4));
+        exec.setMessage("Reading into final format");
+        BufferedDataTableRowOutput c = new BufferedDataTableRowOutput(
+            exec.createDataContainer(table.getDataTableSpec(), true));
+        execute(table, c, exec.createSubExecutionContext(0.6));
+        return new BufferedDataTable[]{c.getDataTable()};
+    }
+
+    void execute(final ContainerTable table, final RowOutput output, final ExecutionContext exec) throws Exception {
+        long limit = m_limitCheckerModel.getBooleanValue() ? m_limitSpinnerModel.getIntValue() : Long.MAX_VALUE;
+        final long rowCount = Math.min(limit, table.size());
+        long row = 0L;
+        for (RowIterator it = table.iterator(); it.hasNext() && row < limit; row++) {
+            final DataRow next = it.next();
+            final long rowFinal = row;
+            exec.setProgress(row / (double)rowCount,
+                () -> String.format("Row %,d/%,d (%s)", rowFinal + 1, rowCount, next.getKey()));
+            exec.checkCanceled();
+            output.push(next);
+        }
+        output.close();
+    }
+
+    /**
+     * @param exec
+     * @return
+     * @throws IOException
+     * @throws InvalidSettingsException
+     */
+    private ContainerTable extractTable(final ExecutionContext exec) throws IOException, InvalidSettingsException {
+        try (InputStream inputStream = openInputStream()) {
+            InputStream in = inputStream; // possibly re-assigned
             long sizeInBytes;
             String loc = m_fileName.getStringValue();
             try {
@@ -207,8 +243,6 @@ public class ReadTableNodeModel extends NodeModel {
                 // ignore, no progress
                 sizeInBytes = 0L;
             }
-            final ExecutionMonitor extractMonitor = exec.createSubProgress(0.4);
-            final ExecutionMonitor readMonitor = exec.createSubProgress(0.6);
             final long sizeFinal = sizeInBytes;
             if (sizeFinal > 0) {
                 CountingInputStream bcs = new CountingInputStream(in) {
@@ -216,10 +250,10 @@ public class ReadTableNodeModel extends NodeModel {
                     protected synchronized void afterRead(final int n) {
                         super.afterRead(n);
                         final long byteCount = getByteCount();
-                        extractMonitor.setProgress((double)byteCount / sizeFinal,
-                            FileUtils.byteCountToDisplaySize(byteCount));
+                        exec.setProgress((double)byteCount / sizeFinal,
+                            () -> FileUtils.byteCountToDisplaySize(byteCount));
                         try {
-                            extractMonitor.checkCanceled();
+                            exec.checkCanceled();
                         } catch (CanceledExecutionException e) {
                             throw new RuntimeException("canceled");
                         }
@@ -227,40 +261,13 @@ public class ReadTableNodeModel extends NodeModel {
                 };
                 in = bcs;
             }
-            exec.setMessage("Extracting temporary table...");
-            ContainerTable table = DataContainer.readFromStream(in);
-            exec.setMessage("Reading into final format...");
-            int limit = m_limitCheckerModel.getBooleanValue() ? m_limitSpinnerModel.getIntValue() : Integer.MAX_VALUE;
-            final int rowCount = Math.min(limit, table.getRowCount());
-            BufferedDataContainer c = exec.createDataContainer(table.getDataTableSpec(), true);
-            int row = 0;
-            try {
-                for (RowIterator it = table.iterator(); it.hasNext() && row < limit; row++) {
-                    DataRow next = it.next();
-                    String message = "Caching row #" + (row + 1) + " (\"" + next.getKey() + "\")";
-                    readMonitor.setProgress(row / (double)rowCount, message);
-                    exec.checkCanceled();
-                    c.addRowToTable(next);
-                }
-            } finally {
-                c.close();
-            }
-            BufferedDataTable out = c.getTable();
-            return new BufferedDataTable[]{out};
+            return DataContainer.readFromStream(in);
         } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException ioe) {
-                    // ignore
-                }
-            }
+            exec.setProgress(1.0);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void reset() {
     }
@@ -271,9 +278,7 @@ public class ReadTableNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_fileName.getStringValue() == null) {
-            throw new InvalidSettingsException("No file set.");
-        }
+        CheckUtils.checkSettingNotNull(m_fileName.getStringValue(), "No file set.");
         InputStream in = null;
         try {
             in = openInputStream();
@@ -320,29 +325,23 @@ public class ReadTableNodeModel extends NodeModel {
         // must not use ZipFile here as it is known to have memory problems
         // on large files, see e.g.
         // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5077277
-        ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(in));
-        ZipEntry entry = zipIn.getNextEntry();
-        try {
+        try (ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(in))) {
+            ZipEntry entry = zipIn.getNextEntry();
             // hardcoded constants here as we do not want additional
             // functionality to DataContainer ... at least not yet.
             if ("spec.xml".equals(entry != null ? entry.getName() : "")) {
-                NodeSettingsRO settings = NodeSettings.loadFromXML(
-                        new NonClosableInputStream.Zip(zipIn));
+                NodeSettingsRO settings = NodeSettings.loadFromXML(new NonClosableInputStream.Zip(zipIn));
                 try {
-                    NodeSettingsRO specSettings =
-                        settings.getNodeSettings("table.spec");
+                    NodeSettingsRO specSettings = settings.getNodeSettings("table.spec");
                     return DataTableSpec.load(specSettings);
                 } catch (InvalidSettingsException ise) {
-                    IOException ioe = new IOException(
-                    "Unable to read spec from file");
+                    IOException ioe = new IOException("Unable to read spec from file");
                     ioe.initCause(ise);
                     throw ioe;
                 }
             } else {
                 return null;
             }
-        } finally {
-            zipIn.close();
         }
     }
 
@@ -350,6 +349,29 @@ public class ReadTableNodeModel extends NodeModel {
         throws IOException, InvalidSettingsException {
         String loc = m_fileName.getStringValue();
         return FileUtil.openInputStream(loc);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[] {OutputPortRole.DISTRIBUTED};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
+                final ExecutionContext exec) throws Exception {
+                exec.setMessage("Extract temporary table");
+                ContainerTable table = extractTable(exec.createSubExecutionContext(0.4));
+                exec.setMessage("Streaming Output");
+                RowOutput output = (RowOutput)outputs[0];
+                execute(table, output, exec.createSubExecutionContext(0.6));
+            }
+        };
     }
 
     /**
