@@ -73,8 +73,7 @@ import org.knime.core.node.workflow.NodeProgress;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public class ProgressFigure extends RectangleFigure implements
-        MouseMotionListener {
+public class ProgressFigure extends RectangleFigure implements MouseMotionListener {
     /** absolute width of this figure. * */
     public static final int WIDTH = 32;
 
@@ -89,8 +88,7 @@ public class ProgressFigure extends RectangleFigure implements
 
     private static final Font QUEUED_FONT_SMALL;
 
-    private static final Color PROGRESS_BAR_BACKGROUND_COLOR = new Color(null,
-            189, 189, 189);
+    private static final Color PROGRESS_BAR_BACKGROUND_COLOR = new Color(null, 189, 189, 189);
 
     private static final Color PROGRESS_BAR_COLOR = ColorConstants.darkBlue;
 
@@ -209,8 +207,7 @@ public class ProgressFigure extends RectangleFigure implements
         super.fillShape(graphics);
     }
 
-    private void drawSmoothRect(final Graphics graphics, final int x, final int y, final int w,
-            final int h) {
+    private void drawSmoothRect(final Graphics graphics, final int x, final int y, final int w, final int h) {
 
         graphics.setForegroundColor(PROGRESS_BAR_BACKGROUND_COLOR);
         graphics.drawLine(x + 1, y, x + w - 2, y);
@@ -218,7 +215,6 @@ public class ProgressFigure extends RectangleFigure implements
         graphics.drawLine(x, y + 1, x, y + h - 2);
         graphics.drawLine(x + w - 1, y + 1, x + w - 1, y + h - 2);
     }
-
 
     /**
      * {@inheritDoc}
@@ -244,62 +240,57 @@ public class ProgressFigure extends RectangleFigure implements
         graphics.setBackgroundColor(PROGRESS_BAR_COLOR);
 
         switch (m_progressMode) {
-        case EXECUTING:
-            if (!m_unknownProgress) {
+            case EXECUTING:
+                if (!m_unknownProgress) {
 
-                // calculate the progress bar width from the percentage
-                // current worked value
-                int barWidth = (int) Math.round((WIDTH - 2)
-                        / 100.0D * m_currentWorked);
+                    // calculate the progress bar width from the percentage
+                    // current worked value
+                    int barWidth = (int)Math.round((WIDTH - 2) / 100.0D * m_currentWorked);
 
-                graphics.fillRectangle(x + 1, y + 1, barWidth, h - 2);
+                    graphics.fillRectangle(x + 1, y + 1, barWidth, h - 2);
 
-                graphics.setFont(PROGRESS_FONT);
+                    graphics.setFont(PROGRESS_FONT);
 
-                // create the percentage string
-                String progressString = m_currentWorked + "%";
+                    // create the percentage string
+                    String progressString = m_currentWorked + "%";
 
-                graphics.setXORMode(true);
-                graphics.setForegroundColor(ColorConstants.white);
-                graphics.drawString(progressString, x + w / 2
-                        - (progressString.length() * 4), y - 1);
-            } else {
+                    graphics.setXORMode(true);
+                    graphics.setForegroundColor(ColorConstants.white);
+                    graphics.drawString(progressString, x + w / 2 - (progressString.length() * 4), y - 1);
+                } else {
 
-                graphics.setForegroundColor(ColorConstants.darkBlue);
+                    graphics.setForegroundColor(ColorConstants.darkBlue);
 
-                // calculate the rendering direction
-                if (m_unknownProgressBarRenderingPosition
-                        + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH - 2) {
-                    m_unknownProgressBarDirection = -1;
-                } else if (m_unknownProgressBarRenderingPosition <= 0) {
-                    m_unknownProgressBarDirection = 1;
-                }
+                    // calculate the rendering direction
+                    if (m_unknownProgressBarRenderingPosition + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH - 2) {
+                        m_unknownProgressBarDirection = -1;
+                    } else if (m_unknownProgressBarRenderingPosition <= 0) {
+                        m_unknownProgressBarDirection = 1;
+                    }
 
-                graphics.fillRectangle(x + 1
-                        + m_unknownProgressBarRenderingPosition, y + 1,
+                    graphics.fillRectangle(x + 1 + m_unknownProgressBarRenderingPosition, y + 1,
                         UNKNOW_PROGRESS_BAR_WIDTH, h - 2);
 
-                m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
+                    m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
 
-            }
-            break;
-        case QUEUED:
-        case PAUSED:
-            // draw "Queued"/"Paused"
-            String queuedString = m_progressMode.equals(ProgressMode.QUEUED) ? "queued" : "paused";
-            graphics.setFont(QUEUED_FONT);
-            Dimension dim = FigureUtilities.getStringExtents(queuedString,
-                    QUEUED_FONT);
+                }
+                break;
+            case QUEUED:
+            case PAUSED:
+                // draw "Queued"/"Paused"
+                String queuedString = m_progressMode.equals(ProgressMode.QUEUED) ? "queued" : "paused";
+                graphics.setFont(QUEUED_FONT);
+                Dimension dim = FigureUtilities.getStringExtents(queuedString, QUEUED_FONT);
 
-            // if the string is to big for the progress bar
-            // reduce the font size
-            if (dim.width > 30) {
-                graphics.setFont(QUEUED_FONT_SMALL);
-            }
-            graphics.drawString(queuedString, x + 1, y);
-            break;
-        default:
-            // do nothing
+                // if the string is to big for the progress bar
+                // reduce the font size
+                if (dim.width > 30) {
+                    graphics.setFont(QUEUED_FONT_SMALL);
+                }
+                graphics.drawString(queuedString, x + 1, y);
+                break;
+            default:
+                // do nothing
         }
     }
 
@@ -354,14 +345,14 @@ public class ProgressFigure extends RectangleFigure implements
 
     /**
      * Updates UI after progress has changed.
+     *
      * @param pe the new progress to display
      */
     public synchronized void progressChanged(final NodeProgress pe) {
         int newWorked = m_currentWorked;
         if (pe.hasProgress()) {
             double progress = pe.getProgress().doubleValue();
-            newWorked = (int) Math.round(Math.max(0, Math.min(progress * 100,
-                    100)));
+            newWorked = (int)Math.round(Math.max(0, Math.min(progress * 100, 100)));
         }
 
         // if something changed, change the values and repaint
@@ -389,21 +380,16 @@ public class ProgressFigure extends RectangleFigure implements
         if (!m_currentProgressMessage.equals(message)) {
 
             String meString = m_currentProgressMessage;
-            m_currentProgressMessage = message == null ? "" : m_stateMessage
-                    + " - " + message;
+            m_currentProgressMessage = message == null ? "" : m_stateMessage + " - " + message;
 
-            if (!m_currentProgressMessage.equals(meString)
-                && (m_mouseEvent != null)
-                && (m_currentDisplay != null)
+            if (!m_currentProgressMessage.equals(meString) && (m_mouseEvent != null) && (m_currentDisplay != null)
                 && !m_currentDisplay.isDisposed() /* bugfix: 1392 */) {
                 m_currentDisplay.syncExec(new Runnable() {
                     @Override
                     public void run() {
                         if (m_mouseEvent != null) {
-                            getToolTipHelper().displayToolTipNear(
-                                    ProgressFigure.this,
-                                    new Label(m_currentProgressMessage),
-                                    m_mouseEvent.x, m_mouseEvent.y);
+                            getToolTipHelper().displayToolTipNear(ProgressFigure.this,
+                                new Label(m_currentProgressMessage), m_mouseEvent.x, m_mouseEvent.y);
                         }
                     }
                 });
@@ -420,12 +406,10 @@ public class ProgressFigure extends RectangleFigure implements
     }
 
     /**
-     * Sets the state message. This message is something like: Executing or
-     * Waiting or Queued, etc. The message is always appended before the
-     * progress message.
+     * Sets the state message. This message is something like: Executing or Waiting or Queued, etc. The message is
+     * always appended before the progress message.
      *
-     * @param stateMessage
-     *            the state message to show
+     * @param stateMessage the state message to show
      */
     public void setStateMessage(final String stateMessage) {
         m_stateMessage = stateMessage;
@@ -452,8 +436,7 @@ public class ProgressFigure extends RectangleFigure implements
     /**
      * To set the current display. Null display is not set.
      *
-     * @param currentDisplay
-     *            the dipsplay to set
+     * @param currentDisplay the dipsplay to set
      */
     public void setCurrentDisplay(final Display currentDisplay) {
 
@@ -463,7 +446,6 @@ public class ProgressFigure extends RectangleFigure implements
 
         m_currentDisplay = currentDisplay;
     }
-
 
     @Override
     public void mouseDragged(final MouseEvent me) {
@@ -476,13 +458,11 @@ public class ProgressFigure extends RectangleFigure implements
         // if there is a usefull progress message and there is a tooltip
         // position indicating that a tooltip should be shown, set the
         // tooltip
-        if (m_currentProgressMessage != null
-                && !m_currentProgressMessage.equals("") && m_mouseEvent != null) {
+        if (m_currentProgressMessage != null && !m_currentProgressMessage.equals("") && m_mouseEvent != null) {
 
             IFigure tip = new Label(m_currentProgressMessage);
 
-            getToolTipHelper().displayToolTipNear(ProgressFigure.this, tip,
-                    m_mouseEvent.x, m_mouseEvent.y);
+            getToolTipHelper().displayToolTipNear(ProgressFigure.this, tip, m_mouseEvent.x, m_mouseEvent.y);
 
         }
     }
@@ -502,8 +482,7 @@ public class ProgressFigure extends RectangleFigure implements
         IFigure parent = getParent();
         if (parent != null) {
 
-            WorkflowFigure workflowFigure = (WorkflowFigure) getParent()
-                    .getParent();
+            WorkflowFigure workflowFigure = (WorkflowFigure)getParent().getParent();
             if (workflowFigure != null) {
 
                 m_toolTipHelper = workflowFigure.getProgressToolTipHelper();
@@ -522,10 +501,9 @@ public class ProgressFigure extends RectangleFigure implements
     }
 
     /**
-     * Implements a thread that updates all figures passed to it. The thread for
-     * updating the unknown progress figures (cycling figures) is intended to
-     * run just one time. The advantage is that the expensive rendering on the
-     * display thread is only invoked once for all figures to render.
+     * Implements a thread that updates all figures passed to it. The thread for updating the unknown progress figures
+     * (cycling figures) is intended to run just one time. The advantage is that the expensive rendering on the display
+     * thread is only invoked once for all figures to render.
      *
      * @author Christoph Sieb, University of Konstanz
      */
@@ -577,11 +555,9 @@ public class ProgressFigure extends RectangleFigure implements
         }
 
         /**
-         * Add a progress figure that should be rendered regularly. (Intended
-         * for cycling progress bars)
+         * Add a progress figure that should be rendered regularly. (Intended for cycling progress bars)
          *
-         * @param figure
-         *            The figure to render regularly
+         * @param figure The figure to render regularly
          */
         public void addFigure(final ProgressFigure figure) {
             synchronized (m_figuresToPaint) {
@@ -593,8 +569,7 @@ public class ProgressFigure extends RectangleFigure implements
         /**
          * Remove a figure that is no longer intended to be rendered regulary.
          *
-         * @param figure
-         *            the figure to remove
+         * @param figure the figure to remove
          */
         public void removeFigure(final ProgressFigure figure) {
             synchronized (m_figuresToPaint) {
