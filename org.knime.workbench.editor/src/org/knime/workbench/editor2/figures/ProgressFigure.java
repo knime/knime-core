@@ -49,6 +49,8 @@ package org.knime.workbench.editor2.figures;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.DelegatingLayout;
@@ -79,6 +81,9 @@ public class ProgressFigure extends RectangleFigure implements MouseMotionListen
 
     /** absolute height of this figure. * */
     public static final int HEIGHT = 12;
+
+    /** Update interval for moving unknown progress timer in ms. */
+    private static final int UNKNOWN_PROGRESS_UPDATE_INTERVAL = 100;
 
     private static final int UNKNOW_PROGRESS_BAR_WIDTH = 10;
 
@@ -114,9 +119,17 @@ public class ProgressFigure extends RectangleFigure implements MouseMotionListen
 
     private boolean m_unknownProgress = false;
 
-    private int m_unknownProgressBarRenderingPosition;
+    /** An object that remembers the state for "unknown progress" figures (cycling). It also wraps
+     * a timestamp so that frequent repaints (e.g. due to an edit part being moved) don't let the progress
+     * go faster.
+     */
+    private static final class UnknownProgressBarRenderingStatus {
+        private int m_position;
+        private int m_direction;
+        private long m_lastUpdateTimestamp;
+    }
 
-    private int m_unknownProgressBarDirection;
+    private final UnknownProgressBarRenderingStatus m_unknownProgressBarRenderingStatus;
 
     /**
      * Enumeration for the current progress mode for the figure.
@@ -163,7 +176,7 @@ public class ProgressFigure extends RectangleFigure implements MouseMotionListen
         setFill(true);
         setOutline(true);
 
-        m_unknownProgressBarRenderingPosition = 0;
+        m_unknownProgressBarRenderingStatus = new UnknownProgressBarRenderingStatus();
 
         DelegatingLayout layout = new DelegatingLayout();
         setLayoutManager(layout);
@@ -261,17 +274,22 @@ public class ProgressFigure extends RectangleFigure implements MouseMotionListen
 
                     graphics.setForegroundColor(ColorConstants.darkBlue);
 
+                    final UnknownProgressBarRenderingStatus renderStat = m_unknownProgressBarRenderingStatus;
                     // calculate the rendering direction
-                    if (m_unknownProgressBarRenderingPosition + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH - 2) {
-                        m_unknownProgressBarDirection = -1;
-                    } else if (m_unknownProgressBarRenderingPosition <= 0) {
-                        m_unknownProgressBarDirection = 1;
+                    if (renderStat.m_position + UNKNOW_PROGRESS_BAR_WIDTH >= WIDTH - 2) {
+                        renderStat.m_direction = -1;
+                    } else if (renderStat.m_position <= 0) {
+                        renderStat.m_direction = 1;
                     }
 
-                    graphics.fillRectangle(x + 1 + m_unknownProgressBarRenderingPosition, y + 1,
+                    graphics.fillRectangle(x + 1 + renderStat.m_position, y + 1,
                         UNKNOW_PROGRESS_BAR_WIDTH, h - 2);
 
-                    m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
+                    long timestamp = System.currentTimeMillis();
+                    if (timestamp - renderStat.m_lastUpdateTimestamp > UNKNOWN_PROGRESS_UPDATE_INTERVAL) {
+                        renderStat.m_position += renderStat.m_direction;
+                        renderStat.m_lastUpdateTimestamp = timestamp;
+                    }
 
                 }
                 break;
@@ -447,6 +465,13 @@ public class ProgressFigure extends RectangleFigure implements MouseMotionListen
         m_currentDisplay = currentDisplay;
     }
 
+    /**
+     * @return the currentDisplay
+     */
+    Display getCurrentDisplay() {
+        return m_currentDisplay;
+    }
+
     @Override
     public void mouseDragged(final MouseEvent me) {
     }
@@ -515,7 +540,6 @@ public class ProgressFigure extends RectangleFigure implements MouseMotionListen
          * Creats an unknown progress timer for cycling progress bar rendering.
          */
         public UnknownProgressTimer() {
-
             super("Unknown Progress Timer");
         }
 
@@ -525,29 +549,37 @@ public class ProgressFigure extends RectangleFigure implements MouseMotionListen
                 // if the queue is empty wait for the next
                 // figure to render
                 synchronized (m_figuresToPaint) {
-                    if (m_figuresToPaint.size() == 0) {
+                    while (m_figuresToPaint.size() == 0) {
                         try {
                             m_figuresToPaint.wait();
                         } catch (InterruptedException e) {
                             break;
                         }
                     }
-                    for (final ProgressFigure figure : m_figuresToPaint) {
-                        Display dp = figure.m_currentDisplay;
+                    long timestamp = System.currentTimeMillis();
+
+                    // a map Display to list of prog-figures - presumably this is always a single entry map
+                    Map<Display, List<ProgressFigure>> byDisplayMap = m_figuresToPaint.stream()
+                            // filter those that need updating - some got updated by ordinary repaint events
+                            .filter(p -> (timestamp - p.m_unknownProgressBarRenderingStatus.m_lastUpdateTimestamp
+                                    > UNKNOWN_PROGRESS_UPDATE_INTERVAL))
+                            .collect(Collectors.groupingBy(ProgressFigure::getCurrentDisplay));
+                    for (final Map.Entry<Display, List<ProgressFigure>> entry : byDisplayMap.entrySet()) {
+                        Display dp = entry.getKey();
                         if ((dp != null) && !dp.isDisposed()) {
                             dp.asyncExec(new Runnable() {
                                 @Override
                                 public void run() {
-                                    figure.repaint();
+                                    entry.getValue().stream().forEach(f -> f.repaint());
                                 }
                             });
                         }
                     }
                 }
 
-                // the figures are rendered all 500 ms
+                // figure updates with some delay
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(UNKNOWN_PROGRESS_UPDATE_INTERVAL);
                 } catch (InterruptedException e) {
                     break;
                 }
