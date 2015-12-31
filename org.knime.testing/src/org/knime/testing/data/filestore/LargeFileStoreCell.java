@@ -129,9 +129,12 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         final LargeFileStoreCell odc = (LargeFileStoreCell)dc;
-        if (odc.m_seed != m_seed) {
-            return false;
-        }
-        return super.equalsDataCell(odc);
+        return odc.m_seed == m_seed;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return Long.hashCode(m_seed);
     }
 }
