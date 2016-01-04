@@ -50,7 +50,6 @@ package org.knime.base.node.meta.looper.columnlist2;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashSet;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -62,7 +61,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.workflow.LoopStartNodeTerminator;
@@ -73,9 +71,9 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ColumnListLoopStartNodeModel extends NodeModel implements
-        LoopStartNodeTerminator {
-    private DataColumnSpecFilterConfiguration m_filterConfig = null;
+public class ColumnListLoopStartNodeModel extends NodeModel implements LoopStartNodeTerminator {
+
+    private DataColumnSpecFilterConfiguration m_filterConfig;
 
     private int m_currentColIndex = 0;
 
@@ -108,20 +106,6 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements
         }
 
         FilterResult filter = m_filterConfig.applyTo(spec);
-
-        String[] rmFromIncl = filter.getRemovedFromIncludes();
-        if (rmFromIncl.length != 0) {
-            throw new InvalidSettingsException("Input table does not contain the following required included "
-                + "column(s): "
-                    + ConvenienceMethods.getShortStringFrom(new HashSet<String>(Arrays.asList(rmFromIncl)), 3));
-        }
-
-        String[] rmFromExcl = filter.getRemovedFromExcludes();
-        if (rmFromExcl.length != 0) {
-            throw new InvalidSettingsException("Input table does not contain the following required excluded "
-                + "column(s): "
-                    + ConvenienceMethods.getShortStringFrom(new HashSet<String>(Arrays.asList(rmFromExcl)), 3));
-        }
 
         assert m_iteration == 0;
         pushFlowVariableInt("currentIteration", m_iteration);
