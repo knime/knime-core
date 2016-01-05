@@ -420,6 +420,11 @@
                 <message_argument value="convertMetaNodeToSubNode(NodeID)"/>
             </message_arguments>
         </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="collapseIntoMetaNode(NodeID[], WorkflowAnnotation[], String)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeContainerExecutionStatus.java" type="org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus">
         <filter id="403804204">

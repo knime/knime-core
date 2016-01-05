@@ -327,7 +327,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** The root of all metanodes that are part of the node repository, for instance x-val metanode.
      * @noreference This field is not intended to be referenced by clients.
-     * @since 3.1 */
+     * @since 3.2 */
     // this used to be part of UI code but moved into core because creation of child instance locks ROOT,
     // which should be done with care.
     // Problems with loading full repository when fully qualified name of node can't be loaded in
