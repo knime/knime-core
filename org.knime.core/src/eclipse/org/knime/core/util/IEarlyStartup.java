@@ -55,7 +55,7 @@ package org.knime.core.util;
  * methods are executed synchronously therefore you shouldn't perform any long-running operations in them.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 3.1
+ * @since 3.2
  */
 @FunctionalInterface
 public interface IEarlyStartup {

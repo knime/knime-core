@@ -616,14 +616,16 @@ public final class Expression {
 
     /** Used by node implementation execution can be streamed. If row count is required we need to count first.
      * @return Whether row count is required during computation (field is used).
+     * @since 3.2
      */
     public boolean usesRowCount() {
         return m_fieldMap.keySet().stream().anyMatch(f -> ROWCOUNT.equals(f.getColOrVarName()));
     }
 
-    /** Similar to {@link #usesRowCount()} it checks whether the row index is used in the expression. If so, the 
+    /** Similar to {@link #usesRowCount()} it checks whether the row index is used in the expression. If so, the
      * computation cannot be distributed.
      * @return that property.
+     * @since 3.2
      */
     public boolean usesRowIndex() {
         return m_fieldMap.keySet().stream().anyMatch(f -> ROWINDEX.equals(f.getColOrVarName()));

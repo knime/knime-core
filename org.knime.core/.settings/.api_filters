@@ -7,6 +7,12 @@
                 <message_argument value="2.12.0"/>
             </message_arguments>
         </filter>
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="3.2.0"/>
+                <message_argument value="3.1.0"/>
+            </message_arguments>
+        </filter>
         <filter comment="DataType#toPrettyString() added - part of missing value handling node fix" id="924844039">
             <message_arguments>
                 <message_argument value="2.12.1"/>
@@ -77,6 +83,20 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.Node"/>
                 <message_argument value="areSettingsValid(NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodeProgressMonitor.java" type="org.knime.core.node.NodeProgressMonitor">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeProgressMonitor"/>
+                <message_argument value="setMessage(Supplier&lt;String&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeProgressMonitor"/>
+                <message_argument value="setProgress(double, Supplier&lt;String&gt;)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -230,6 +250,26 @@
                 <message_argument value="ERROR_STACKTRACE"/>
             </message_arguments>
         </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="ERROR_FLAG"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="ERROR_NODE"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="ERROR_REASON"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="ERROR_STACKTRACE"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
         <filter id="338792546">
@@ -349,6 +389,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="collapseIntoMetaNode(NodeID[], WorkflowAnnotation[], String)"/>
+            </message_arguments>
+        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>

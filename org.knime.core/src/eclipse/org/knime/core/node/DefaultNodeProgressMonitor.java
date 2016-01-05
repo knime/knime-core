@@ -219,13 +219,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         m_changed = true;
     }
 
-    /**
-     * Updates the progress value and message if different from the current one.
-     *
-     * @see #setProgress(double)
-     * @param progress The (new) progress value.
-     * @param message The text message shown in the progress monitor.
-     */
+    /** {@inheritDoc}
+     * @since 3.2 */
     @Override
     public synchronized void setProgress(final double progress, final Supplier<String> message) {
         setProgressIntern(progress);
@@ -251,7 +246,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         setProgress(message);
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 3.2 */
     @Override
     public synchronized void setMessage(final Supplier<String> message) {
         m_messageSupplier = CheckUtils.checkArgumentNotNull(message);

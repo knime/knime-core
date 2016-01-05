@@ -138,6 +138,7 @@ public class ExecutionMonitor {
      * @param messageSupplier The message supplier, not null (though provided value may be null).
      * @throws IllegalArgumentException If supplier argument is null.
      * @see NodeProgressMonitor#setProgress(double, Supplier)
+     * @since 3.2
      */
     public void setProgress(final double progress, final Supplier<String> messageSupplier) {
         m_progress.setProgress(progress, messageSupplier);
@@ -152,7 +153,8 @@ public class ExecutionMonitor {
     }
 
     /** Set a new message based on a supplier. For further details see {@link #setProgress(double, String)}.
-     * @param messageSupplier The non-null message supplier. */
+     * @param messageSupplier The non-null message supplier.
+     * @since 3.2 */
     public void setMessage(final Supplier<String> messageSupplier) {
         m_progress.setMessage(messageSupplier);
     }

@@ -91,6 +91,7 @@ public interface NodeProgressMonitor {
      * @param progress The value between 0 and 1 (out of range values are ignored).
      * @param message A non-null message supplier to generate a string shown in the progress monitor (message may be
      * <code>null</code>).
+     * @since 3.2
      */
     default void setProgress(final double progress, final Supplier<String> message) {
         // subclasses may do this more efficiently
@@ -110,6 +111,7 @@ public interface NodeProgressMonitor {
      * reported (and string construction is expensive).
      * @param message A non-null message supplier to generate a string shown in the progress monitor (message may be
      * <code>null</code>).
+     * @since 3.2
      */
     default void setMessage(final Supplier<String> message) {
         // subclasses may do this more efficiently
