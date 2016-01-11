@@ -105,7 +105,7 @@ public class LockMetaNodeDialog extends IconAndMessageDialog {
      */
     public LockMetaNodeDialog(final Shell parent, final WorkflowManager mgr) {
         super(parent);
-        super.message = "Node Locking";
+        super.message = "Metanode Locking";
         m_workflow = mgr;
         setShellStyle(SWT.DIALOG_TRIM | SWT.RESIZE | SWT.APPLICATION_MODAL);
     }
@@ -218,7 +218,7 @@ public class LockMetaNodeDialog extends IconAndMessageDialog {
     @Override
     protected void configureShell(final Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Node Locking");
+        newShell.setText("Metanode Locking");
     }
 
     /**
