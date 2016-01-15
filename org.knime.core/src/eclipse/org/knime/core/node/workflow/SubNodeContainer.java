@@ -771,7 +771,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         ((MetaNodeDialogPane)dialogPane).setQuickformNodes(nodes);
         NodeSettings settings = new NodeSettings("subnode_settings");
         saveSettings(settings);
-        Node.invokeDialogInternalLoad(dialogPane, settings, inSpecs, inData,
+        // remove the flow variable port from the specs and data
+        PortObjectSpec[] correctedInSpecs = ArrayUtils.remove(inSpecs, 0);
+        PortObject[] correctedInData = ArrayUtils.remove(inData, 0);
+        // the next call will call dialogPane.internalLoadSettingsFrom()
+        // dialogPane is a MetaNodeDialogPane and does not handle the flow variable port correctly
+        // this is why we remove it first
+        Node.invokeDialogInternalLoad(dialogPane, settings, correctedInSpecs, correctedInData,
             getFlowObjectStack(), new CredentialsProvider(this, m_wfm.getCredentialsStore()),
             getParent().isWriteProtected());
         return dialogPane;
