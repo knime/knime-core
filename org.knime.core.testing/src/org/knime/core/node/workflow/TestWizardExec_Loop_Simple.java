@@ -83,7 +83,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         m_qfIntIn_Subnode14_09 = new NodeID(new NodeID(m_subnodeInLOOPQueryInt14, 0), 9);
     }
 
-    public void tesstExecuteAll() throws Exception {
+    public void testExecuteAll() throws Exception {
         executeAllAndWait();
         final WorkflowManager wfm = getManager();
         checkState(wfm, InternalNodeContainerState.EXECUTED);
