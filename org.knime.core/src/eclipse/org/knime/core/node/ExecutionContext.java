@@ -222,6 +222,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * written to disc. This method is provided for convenience. (All it does
      * is to create a BufferedDataContainer, adding the rows to it and
      * returning a handle to it.)
+     * <br /><br />Note: If table is already a BufferedDataTable it is simply returned.
      * <p>This method refers to the first way of storing data,
      * see <a href="#new_data">here</a>.
      * @param table The table to cache.
