@@ -80,7 +80,8 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
     }
 
     private TestWorkflowLoadHelper initFlow(final TestWorkflowLoadHelper loadHelper) throws Exception {
-        WorkflowManager manager = loadWorkflow(m_workflowDirTemp, new ExecutionMonitor(), loadHelper);
+        WorkflowManager manager = loadWorkflow(
+            m_workflowDirTemp, new ExecutionMonitor(), loadHelper).getWorkflowManager();
         setManager(manager);
         NodeID baseID = manager.getID();
         m_credentialsInput_1 = baseID.createChild(1);

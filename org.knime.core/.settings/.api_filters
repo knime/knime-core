@@ -78,11 +78,35 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
+        <filter comment="non-used methods" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.CopyNodePersistor"/>
+                <message_argument value="getModelSettingsFailPolicy()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/FileNodePersistor.java" type="org.knime.core.node.FileNodePersistor">
+        <filter comment="non-used methods" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.FileNodePersistor"/>
+                <message_argument value="getModelSettingsFailPolicy()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
         <filter comment="as part of bug 4754" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.Node"/>
                 <message_argument value="areSettingsValid(NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodePersistor.java" type="org.knime.core.node.NodePersistor">
+        <filter comment="non-used methods" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodePersistor"/>
+                <message_argument value="getModelSettingsFailPolicy()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -222,6 +246,14 @@
         <filter id="337768515">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.ExecutionEnvironment"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FileSingleNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSingleNodeContainerPersistor">
+        <filter comment="internal &quot;api&quot;" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileSingleNodeContainerPersistor"/>
+                <message_argument value="getModelSettingsFailPolicy()"/>
             </message_arguments>
         </filter>
     </resource>

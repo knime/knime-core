@@ -74,12 +74,6 @@ public class CopyNodePersistor implements NodePersistor {
 
     /** {@inheritDoc} */
     @Override
-    public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
-        return LoadNodeModelSettingsFailPolicy.IGNORE;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public boolean isConfigured() {
         return false;
     }

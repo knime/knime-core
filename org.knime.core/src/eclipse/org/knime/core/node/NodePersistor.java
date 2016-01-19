@@ -110,7 +110,4 @@ public interface NodePersistor extends NodeContentPersistor {
      */
     void setDirtyAfterLoad();
 
-    // may return null in which case the node decides what to do.
-    LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy();
-
 }

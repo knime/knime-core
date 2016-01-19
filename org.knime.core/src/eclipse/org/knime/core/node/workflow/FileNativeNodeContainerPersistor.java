@@ -213,7 +213,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         final NodeSettingsRO modelSettings,
         final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec, final LoadResult result)
                 throws InvalidSettingsException, CanceledExecutionException, IOException {
-        FileNodePersistor nodePersistor = createNodePersistor(settingsForNode);
+        final FileNodePersistor nodePersistor = createNodePersistor(settingsForNode);
+        nodePersistor.preLoad(m_node, result);
         NodeSettingsRO washedModelSettings = modelSettings;
         try {
             if (modelSettings != null) { // null if the node never had settings - no reason to load them
@@ -238,16 +239,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 error = "Caught \"" + e.getClass().getSimpleName() + "\", " + "Loading model settings failed: "
                         + e.getMessage();
             }
-            LoadNodeModelSettingsFailPolicy pol = getModelSettingsFailPolicy();
-            if (pol == null) {
-                if (!nodePersistor.isConfigured()) {
-                    pol = LoadNodeModelSettingsFailPolicy.IGNORE;
-                } else if (nodePersistor.isExecuted()) {
-                    pol = LoadNodeModelSettingsFailPolicy.WARN;
-                } else {
-                    pol = LoadNodeModelSettingsFailPolicy.FAIL;
-                }
-            }
+            final LoadNodeModelSettingsFailPolicy pol = getModelSettingsFailPolicy(
+                getMetaPersistor().getState(), nodePersistor.isInactive());
             switch (pol) {
                 case IGNORE:
                     if (!(e instanceof InvalidSettingsException)) {

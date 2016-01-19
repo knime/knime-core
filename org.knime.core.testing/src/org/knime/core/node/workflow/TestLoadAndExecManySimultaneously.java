@@ -168,7 +168,8 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
         }
 
         private void loadWorkflow(final InternalNodeContainerState exectedState) throws Exception {
-            m_loadWorkflow = TestLoadAndExecManySimultaneously.this.loadWorkflow(m_instanceDir, new ExecutionMonitor());
+            m_loadWorkflow = TestLoadAndExecManySimultaneously.this.loadWorkflow(
+                m_instanceDir, new ExecutionMonitor()).getWorkflowManager();
             m_fileReader = m_loadWorkflow.getNodeContainer(new NodeID(m_loadWorkflow.getID(), 1));
             m_diffChecker = m_loadWorkflow.getNodeContainer(new NodeID(m_loadWorkflow.getID(), 5));
             checkState(m_fileReader, exectedState);

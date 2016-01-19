@@ -103,16 +103,16 @@ public abstract class WorkflowTestCase extends TestCase {
     }
 
     protected NodeID loadAndSetWorkflow(final File workflowDir) throws Exception {
-        WorkflowManager m = loadWorkflow(workflowDir, new ExecutionMonitor());
+        WorkflowManager m = loadWorkflow(workflowDir, new ExecutionMonitor()).getWorkflowManager();
         setManager(m);
         return m.getID();
     }
 
-    protected WorkflowManager loadWorkflow(final File workflowDir, final ExecutionMonitor exec) throws Exception {
+    protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec) throws Exception {
         return loadWorkflow(workflowDir, exec, new WorkflowLoadHelper(workflowDir));
     }
 
-    protected WorkflowManager loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
+    protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper) throws Exception {
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(workflowDir, exec, loadHelper, false);
         WorkflowManager m = loadResult.getWorkflowManager();
@@ -129,7 +129,7 @@ public abstract class WorkflowTestCase extends TestCase {
                     LoadResultEntryType.Warning));
             }
         }
-        return m;
+        return loadResult;
     }
 
     /**

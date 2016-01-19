@@ -848,8 +848,9 @@ public class FileNodePersistor implements NodePersistor {
      * Accessor for derived class, not part of interface!
      *
      * @return Inactive (dead IF branch)
+     * @noreference This method is not intended to be referenced by clients.
      */
-    protected boolean isInactive() {
+    public boolean isInactive() {
         return m_isInactive;
     }
 
@@ -884,6 +885,58 @@ public class FileNodePersistor implements NodePersistor {
     }
 
     /**
+     * Pre-load instance to fill fields that are used in calling class before final load is performed.
+     *
+     * @param node The target node, used only for meta information (factory class name).
+     * @param loadResult where to add errors to
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public final void preLoad(final Node node, final LoadResult loadResult) {
+        try {
+            m_hasContent = loadHasContent(m_settings);
+        } catch (InvalidSettingsException ise) {
+            String e = "Unable to load hasContent flag: " + ise.getMessage();
+            loadResult.addError(e);
+            getLogger().warn(e, ise);
+            setNeedsResetAfterLoad(); // also implies dirty
+        }
+
+        try {
+            m_isInactive = loadIsInactive(m_settings);
+        } catch (InvalidSettingsException ise) {
+            String e = "Unable to load isInactive flag: " + ise.getMessage();
+            loadResult.addError(e);
+            getLogger().warn(e, ise);
+            setNeedsResetAfterLoad(); // also implies dirty
+        }
+
+        try {
+            m_isExecuted = loadIsExecuted(m_settings);
+            if (m_isExecuted && OLD_AUTOEXECUTABLE_NODEFACTORIES.contains(node.getFactory().getClass().getSimpleName())) {
+                getLogger().debug(
+                    "Setting executed flag of node \"" + node.getFactory().getClass().getSimpleName()
+                    + "\" to false due to version bump (loaded as true)");
+                m_isExecuted = false;
+                setNeedsResetAfterLoad();
+            }
+        } catch (InvalidSettingsException ise) {
+            String e = "Unable to load execution flag: " + ise.getMessage();
+            loadResult.addError(e);
+            getLogger().warn(e, ise);
+            setNeedsResetAfterLoad();
+        }
+
+        try {
+            m_isConfigured = loadIsConfigured(m_settings);
+        } catch (InvalidSettingsException ise) {
+            String e = "Unable to load configuration flag: " + ise.getMessage();
+            loadResult.addError(e);
+            getLogger().warn(e, ise);
+            setNeedsResetAfterLoad();
+        }
+    }
+
+    /**
      * Loads content into node instance.
      *
      * @param node The target node, used for meta info (#ports, e.g) and to invoke the
@@ -912,49 +965,6 @@ public class FileNodePersistor implements NodePersistor {
         m_portObjectSpecs = new PortObjectSpec[node.getNrOutPorts()];
         m_portObjectSummaries = new String[node.getNrOutPorts()];
         String nodeName = node.getName();
-
-        try {
-            m_hasContent = loadHasContent(m_settings);
-        } catch (InvalidSettingsException ise) {
-            String e = "Unable to load hasContent flag: " + ise.getMessage();
-            loadResult.addError(e);
-            getLogger().warn(e, ise);
-            setNeedsResetAfterLoad(); // also implies dirty
-        }
-
-        try {
-            m_isInactive = loadIsInactive(m_settings);
-        } catch (InvalidSettingsException ise) {
-            String e = "Unable to load isInactive flag: " + ise.getMessage();
-            loadResult.addError(e);
-            getLogger().warn(e, ise);
-            setNeedsResetAfterLoad(); // also implies dirty
-        }
-
-        try {
-            m_isExecuted = loadIsExecuted(m_settings);
-            if (m_isExecuted && OLD_AUTOEXECUTABLE_NODEFACTORIES.contains(node.getFactory().getClass().getSimpleName())) {
-                getLogger().debug(
-                    "Setting executed flag of node \"" + node.getFactory().getClass().getSimpleName()
-                        + "\" to false due to version bump (loaded as true)");
-                m_isExecuted = false;
-                setNeedsResetAfterLoad();
-            }
-        } catch (InvalidSettingsException ise) {
-            String e = "Unable to load execution flag: " + ise.getMessage();
-            loadResult.addError(e);
-            getLogger().warn(e, ise);
-            setNeedsResetAfterLoad();
-        }
-
-        try {
-            m_isConfigured = loadIsConfigured(m_settings);
-        } catch (InvalidSettingsException ise) {
-            String e = "Unable to load configuration flag: " + ise.getMessage();
-            loadResult.addError(e);
-            getLogger().warn(e, ise);
-            setNeedsResetAfterLoad();
-        }
 
         // load internals
         if (m_hasContent) {
@@ -1052,28 +1062,6 @@ public class FileNodePersistor implements NodePersistor {
         }
         String message = "Loaded node " + node + status;
         exec.setProgress(1.0, message);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
-        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
-            // we explicitly return null here as the node decides on how
-            // to behave (in workflows 1.x.x it's not known what is the correct
-            // state of the node at this point)
-            return null;
-        } else {
-            LoadNodeModelSettingsFailPolicy result = getNativeNodeContainerPersistor().getModelSettingsFailPolicy();
-            if (isInactive()) {
-                // silently ignore invalid settings for dead branches
-                // (nodes may be saved as EXECUTED but they were never actually
-                // executed but only set to be inactive)
-                return LoadNodeModelSettingsFailPolicy.IGNORE;
-            }
-            assert result != null : "fail policy is null";
-            return result;
-        }
-
     }
 
     protected final ReferencedFile getNodeDirectory() {

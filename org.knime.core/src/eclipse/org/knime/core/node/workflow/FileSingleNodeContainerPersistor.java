@@ -109,8 +109,6 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
 
     private List<FlowObject> m_flowObjects;
 
-    private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
-
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
 
     private final boolean m_mustWarnOnDataLoadError;
@@ -245,7 +243,6 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec,
         final LoadResult result) throws InvalidSettingsException, CanceledExecutionException, IOException {
         final NodeSettingsRO settingsForNode = loadSettingsForNode(result);
-        m_settingsFailPolicy = translateToFailPolicy(m_metaPersistor.getState());
         m_sncSettings = new SingleNodeContainerSettings();
         exec.checkCanceled();
         try {
@@ -512,14 +509,18 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     }
 
     /**
-     * @return the settingsFailPolicy
+     * @param state State of the node, not null.
+     * @param isInactive whether node is inactive - special case where invalid settings are OK.
+     * @return policy describing whether failures during configuration load are accepted, not null.
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
-        return m_settingsFailPolicy;
-    }
-
-    static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(final InternalNodeContainerState nodeState) {
-        switch (nodeState) {
+    public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy(
+        final InternalNodeContainerState state, final boolean isInactive) {
+        if (isInactive) {
+            // ignore state for inactive nodes as they can always be executed independent of their settings (bug 6729)
+            return LoadNodeModelSettingsFailPolicy.IGNORE;
+        }
+        switch (state) {
             case IDLE:
                 return LoadNodeModelSettingsFailPolicy.IGNORE;
             case EXECUTED:
