@@ -4363,21 +4363,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     boolean performStateTransitionQUEUED() {
         assert !isLocalWFM() : "Not to be called on workflow manager running locally (expected different job manager)";
-        assert Thread.holdsLock(m_nodeMutex);
-        // switch state from marked to queued
-        switch (getInternalState()) {
-        // also allow unconfigured-mark as there may be configured_marked nodes also
-        case UNCONFIGURED_MARKEDFOREXEC:
-        case CONFIGURED_MARKEDFOREXEC:
-            setInternalState(CONFIGURED_QUEUED);
-            break;
-        case EXECUTED_MARKEDFOREXEC:
-            setInternalState(EXECUTED_QUEUED);
-            break;
-        default:
-            throwIllegalStateException();
+        try (WorkflowLock lock = lock()) {
+            // switch state from marked to queued
+            switch (getInternalState()) {
+                // also allow unconfigured-mark as there may be configured_marked nodes also
+                case UNCONFIGURED_MARKEDFOREXEC:
+                case CONFIGURED_MARKEDFOREXEC:
+                    setInternalState(CONFIGURED_QUEUED);
+                    break;
+                case EXECUTED_MARKEDFOREXEC:
+                    setInternalState(EXECUTED_QUEUED);
+                    break;
+                default:
+                    throwIllegalStateException();
+            }
+            return true;
         }
-        return true;
     }
 
     /** {@inheritDoc} */
@@ -4433,7 +4434,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     void performStateTransitionEXECUTED(final NodeContainerExecutionStatus status) {
         assert !isLocalWFM() : "Execution of metanode not allowed for locally executing (sub-)flows";
-        synchronized (m_nodeMutex) {
+        try (WorkflowLock lock = lock()) {
             mimicRemoteExecuted(status);
             String stateList = printNodeSummary(getID(), 0);
             // this method is called from the parent's doAfterExecute
