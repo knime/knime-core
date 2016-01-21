@@ -434,7 +434,8 @@ public class ClusterNodeModel extends NodeModel {
                 for (double d : cluster) {
                     cells.add(new DoubleCell(d));
                 }
-                clusterCenterContainer.addRowToTable(new DefaultRow(new RowKey("Cluster" + i++), cells));
+                clusterCenterContainer.addRowToTable(new DefaultRow(new RowKey(
+                    PMMLClusterTranslator.CLUSTER_NAME_PREFIX + i++), cells));
             }
             clusterCenterContainer.close();
             return new PortObject[]{outData, (BufferedDataTable)clusterCenterContainer.getTable(), outPMMLPort};
