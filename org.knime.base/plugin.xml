@@ -1906,14 +1906,12 @@
       </node>
       <node
             category-path="/database/database-manipulation"
-            expert-flag="false"
             factory-class="org.knime.base.node.io.database.pivot.DBPivotNodeFactory"
             id="org.knime.base.node.io.database.pivot.DBPivotNodeFactory">
       </node>
       <node
             category-path="/database/database-manipulation"
             deprecated="false"
-            expert-flag="false"
             factory-class="org.knime.base.node.io.database.sampling.DBSamplingNodeFactory"
             id="org.knime.base.node.io.database.sampling.DBSamplingNodeFactory">
       </node>
