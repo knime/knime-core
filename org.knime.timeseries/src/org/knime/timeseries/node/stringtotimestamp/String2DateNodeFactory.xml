@@ -36,13 +36,16 @@
             <ul>
             <li>G: era designator</li>
             <li>y: year</li>
-            <li>M: month in year</li>
+            <li>Y: year that belongs to week in year</li>
+            <li>M: month in year (context sensitive)</li>
+            <li>L: month in year (standalone form)</li>
             <li>w: Week in year</li>
             <li>W: week in month</li>
             <li>D: Day in year</li>
             <li>d: day in month</li>
             <li>F: Day of week in month</li>
-            <li>E: day in week</li>
+            <li>E: day (name) in week</li>
+            <li>u: day (number) in week (1 is Monday, 7 is Sunday)</li>
             <li>a: Am/pm marker</li>
             <li>H: hour in day (0-23)</li>
             <li>k: hour in day (1-24)</li>
@@ -53,6 +56,7 @@
             <li>S: millisecond</li>
             <li>z: Timezone (General time zone)</li>
             <li>Z: RFC 822 time zone</li>
+            <li>X: ISO 8601 time zone</li>
             </ul>
         </option>
         <option name="Abort execution">If checked the node will abort the 

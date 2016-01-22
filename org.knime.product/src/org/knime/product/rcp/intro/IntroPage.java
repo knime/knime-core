@@ -350,7 +350,7 @@ public class IntroPage implements LocationListener {
         if (serverBundle != null) {
             Class<Action> clazz;
             try {
-                clazz = (Class<Action>)serverBundle.loadClass("com.knime.explorer.server.ExampleServerLoginAction");
+                clazz = (Class<Action>)serverBundle.loadClass("com.knime.explorer.server.internal.ExampleServerLoginAction");
                 Action action = clazz.newInstance();
                 action.run();
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {

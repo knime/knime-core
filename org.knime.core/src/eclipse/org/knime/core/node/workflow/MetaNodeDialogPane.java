@@ -102,7 +102,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
     }
 
     /** Constructor.
-     * @param usedInSubnode false for metanodes, true for sub node. */
+     * @param usedInSubnode false for meta nodes, true for sub node. */
     MetaNodeDialogPane(final boolean usedInSubnode) {
         m_nodes = new LinkedHashMap<NodeID, MetaNodeDialogNode>();
         m_quickFormInputNodePanels = new LinkedHashMap<NodeID, QuickFormConfigurationPanel>();
@@ -125,6 +125,13 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         }
     }
 
+    /** used in test framework to assert node count.
+     * @return the nodes
+     */
+    Map<NodeID, MetaNodeDialogNode> getNodes() {
+        return m_nodes;
+    }
+
     /**
      * Set quickform nodes into this dialog; called just before
      * {@link #loadSettingsFrom(NodeSettingsRO,
@@ -135,17 +142,13 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         m_nodes.clear();
         m_quickFormInputNodePanels.clear();
         m_dialogNodePanels.clear();
-        // If metanode contains new quickform nodes, ignore old ones
-        boolean containsNewNodes = m_usedInSubnode;
-        for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
-            containsNewNodes |= e.getValue() instanceof DialogNode;
-        }
         // remove all quickform components from current panel
         m_panel.removeAll();
         List<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>> sortedNodeList =
                 new ArrayList<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>>();
         for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
-            if (!containsNewNodes && e.getValue() instanceof QuickFormInputNode) {
+            // only accept old qf nodes for metanodes
+            if (!m_usedInSubnode && e.getValue() instanceof QuickFormInputNode) {
                 AbstractQuickFormConfiguration
                     <? extends AbstractQuickFormValueInConfiguration> config =
                         ((QuickFormInputNode)e.getValue()).getConfiguration();
@@ -161,7 +164,8 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                     new Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>(
                             config.getWeight(), new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
                 sortedNodeList.add(weightNodePair);
-            } else if (e.getValue() instanceof DialogNode) {
+            // only accept new qf nodes for subnodes
+            } else if (m_usedInSubnode && e.getValue() instanceof DialogNode) {
                 DialogNodeRepresentation<? extends DialogNodeValue> representation
                     = ((DialogNode)e.getValue()).getDialogRepresentation();
                 if (((DialogNode)e.getValue()).isHideInDialog() || representation == null) {
@@ -175,7 +179,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair =
                         new Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>(
                                 Integer.MAX_VALUE, new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
-                    sortedNodeList.add(weightNodePair);
+                sortedNodeList.add(weightNodePair);
             }
         }
 

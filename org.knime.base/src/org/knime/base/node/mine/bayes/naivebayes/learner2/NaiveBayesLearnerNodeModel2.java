@@ -423,7 +423,7 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         final SettingsModelString colName = m_classifyColumnName.createCloneWithValidatedValue(settings);
-        if (colName == null || colName.getStringValue().trim().length() < 1) {
+        if (colName == null || colName.getStringValue() == null || colName.getStringValue().trim().length() < 1) {
             throw new InvalidSettingsException("No class column selected");
         }
         final SettingsModelIntegerBounded maxNoOfNomVals =

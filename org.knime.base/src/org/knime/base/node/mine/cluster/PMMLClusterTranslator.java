@@ -80,6 +80,12 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  */
 public class PMMLClusterTranslator implements PMMLTranslator {
 
+    /**
+     * The prefix for cluster names. A running number is appended to it.
+     * @since 3.1
+     */
+    public static final String CLUSTER_NAME_PREFIX = "cluster_";
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(PMMLClusterTranslator.class);
 
@@ -143,7 +149,7 @@ public class PMMLClusterTranslator implements PMMLTranslator {
 
         m_labels = new String[m_nrOfClusters];
         for (int i = 0; i < m_nrOfClusters; i++) {
-            m_labels[i] = "cluster_" + i;
+            m_labels[i] = CLUSTER_NAME_PREFIX + i;
         }
     }
 
@@ -334,7 +340,7 @@ public class PMMLClusterTranslator implements PMMLTranslator {
             ClusterDocument.Cluster pmmlCluster =
                 clusteringModel.addNewCluster();
 
-            String name = "cluster_" + i;
+            String name = CLUSTER_NAME_PREFIX + i;
             pmmlCluster.setName(name);
             if (m_clusterCoverage != null
                     && m_clusterCoverage.length == m_prototypes.length) {
