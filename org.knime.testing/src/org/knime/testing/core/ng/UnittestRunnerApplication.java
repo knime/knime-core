@@ -59,6 +59,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.regex.Pattern;
 
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTaskMirror.JUnitTestRunnerMirror;
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
@@ -106,6 +107,8 @@ public class UnittestRunnerApplication implements IApplication {
     private File m_destDir;
 
     private boolean m_outputToSeparateFile;
+
+    private Pattern m_includePattern = Pattern.compile(".+");
 
     private void dispatchLoop(final Display display) {
         while (!m_stopped) {
@@ -172,7 +175,10 @@ public class UnittestRunnerApplication implements IApplication {
             if (m_stopped) {
                 syserr.println("Tests aborted");
                 break;
+            } else if (!m_includePattern.matcher(testClass.getName()).matches()) {
+                continue;
             }
+
 
             sysout.printf("=> Running %-" + maxNameLength + "s ...", testClass.getName());
             long startTime = System.currentTimeMillis();
@@ -319,6 +325,14 @@ public class UnittestRunnerApplication implements IApplication {
             } else if (stringArgs[i].equals("-outputToSeparateFile")) {
                 i++;
                 m_outputToSeparateFile = true;
+            } else if (stringArgs[i].equals("-include")) {
+                i++;
+                if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <pattern> for option -include.");
+                    printUsage();
+                    return false;
+                }
+                m_includePattern = Pattern.compile(stringArgs[i++]);
             } else {
                 System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
                 return false;
@@ -337,6 +351,8 @@ public class UnittestRunnerApplication implements IApplication {
                 + " be used to initialize preferences");
         System.err.println("    -outputToSeparateFile: optional, specifies that system out and system err are written "
             + "to a separate text file instead of being included in the XML result file (similar to Surefire)");
+        System.err.println("    -include <pattern>: optional, specifies a regular expression that matches all test classes  "
+                + "that should should be included in the test run; default is to include all classes");
     }
 
     private static class WriterOutputStream extends OutputStream {
