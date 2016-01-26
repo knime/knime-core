@@ -59,6 +59,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -339,6 +340,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     /** The job for auto-saving. Reused for each save, init when first needed. */
     private AutoSaveJob m_autoSaveJob;
 
+    private final Semaphore m_workflowCanBeDeleted = new Semaphore(1);
+
     /**
      * No arg constructor, creates the edit domain for this editor.
      */
@@ -523,20 +526,17 @@ public class WorkflowEditor extends GraphicalEditor implements
                 // after the workflow is deleted we can delete the temp location
                 final AbstractExplorerFileStore flowLoc = getFileStore(m_fileResource);
                 if (flowLoc != null) {
-                    KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                File d = flowLoc.toLocalFile();
-                                if (d != null) {
-                                    FileUtils.deleteDirectory(d.getParentFile());
-                                }
-                            } catch (CoreException | IOException e) {
-                                LOGGER.warn("Error during deletion of temporary workflow location: " + e.getMessage(),
-                                    e);
+                    new Thread(() -> {
+                        try {
+                            m_workflowCanBeDeleted.acquire();
+                            File d = flowLoc.toLocalFile();
+                            if (d != null) {
+                                FileUtils.deleteDirectory(d.getParentFile());
                             }
+                        } catch (CoreException | IOException | InterruptedException e) {
+                            LOGGER.warn("Error during deletion of temporary workflow location: " + e.getMessage(), e);
                         }
-                    });
+                    } , "Delete temporary copy of " + m_origRemoteLocation).start();
                 }
             }
         }
@@ -1712,14 +1712,16 @@ public class WorkflowEditor extends GraphicalEditor implements
                 return;
             }
             try {
+                m_workflowCanBeDeleted.acquire();
                 newWorkflowDir.getContentProvider().performUploadAsync((LocalExplorerFileStore)localFS,
                     (RemoteExplorerFileStore)newWorkflowDir, /*deleteSource=*/false, new AfterRunCallback() {
                         @Override
                         public void afterCompletion(final Throwable throwable) {
                             // TODO: find ExplorerView and select newWorkflowDir.
+                            m_workflowCanBeDeleted.release();
                         }
                     });
-            } catch (CoreException e) {
+            } catch (CoreException | InterruptedException e) {
                 String msg =
                     "\"Save As...\" failed to upload the workflow to the selected remote location\n(" + e.getMessage()
                         + ")";
