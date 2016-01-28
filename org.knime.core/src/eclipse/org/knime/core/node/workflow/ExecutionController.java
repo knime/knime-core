@@ -61,6 +61,9 @@ package org.knime.core.node.workflow;
  */
 class ExecutionController {
 
+    /** Singleton instance that is used when not run in a wizard. */
+    static final ExecutionController NO_OP = new ExecutionController();
+
     /**
      * Check if execution was halted at this node previously. If so, no successors
      * should be queued.

@@ -196,6 +196,13 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         return m_underlyingPort.getNodeState();
     }
 
+    /** {@inheritDoc}
+     * @since 3.2 */
+    @Override
+    public SingleNodeContainer getConnectedNodeContainer() {
+        return m_underlyingPort == null ? null : m_underlyingPort.getConnectedNodeContainer();
+    }
+
     /**
      * {@inheritDoc}
      */

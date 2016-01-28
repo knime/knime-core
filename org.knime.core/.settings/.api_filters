@@ -14,4 +14,31 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerOutPort.java" type="org.knime.core.node.workflow.NodeContainerOutPort">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="3.2"/>
+                <message_argument value="3.1"/>
+                <message_argument value="getConnectedNodeContainer()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeOutPort.java" type="org.knime.core.node.workflow.NodeOutPort">
+        <filter id="1209008130">
+            <message_arguments>
+                <message_argument value="3.2"/>
+                <message_argument value="3.1"/>
+                <message_argument value="getConnectedNodeContainer()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeOutPortWrapper.java" type="org.knime.core.node.workflow.NodeOutPortWrapper">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="3.2"/>
+                <message_argument value="3.1"/>
+                <message_argument value="getConnectedNodeContainer()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
