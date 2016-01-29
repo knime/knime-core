@@ -47,6 +47,7 @@ package org.knime.workbench.ui.navigator.actions;
 import java.io.File;
 
 import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileInfo;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -131,14 +132,7 @@ public class EditMetaInfoAction extends Action {
         if (m_parent == null) {
             return false;
         }
-        // check whether it contains a meta.info file
-        if (m_parent.getChild(
-                WorkflowPersistor.METAINFO_FILE).fetchInfo().exists()
-                || m_parent.getChild(
-                        WorkflowPersistor.WORKFLOW_FILE).fetchInfo().exists()) {
-            return true;
-        }
-        return false;
+        return true;
     }
 
     /**
@@ -154,7 +148,8 @@ public class EditMetaInfoAction extends Action {
         }
         // if no meta file is available
         IFileStore metaFileTest = m_parent.getChild(WorkflowPersistor.METAINFO_FILE);
-        if (!metaFileTest.fetchInfo().exists()) {
+        IFileInfo fetchInfo = metaFileTest.fetchInfo();
+        if (!fetchInfo.exists() || (fetchInfo.getLength() == 0)) {
             // create one
             File parentFile;
             try {
