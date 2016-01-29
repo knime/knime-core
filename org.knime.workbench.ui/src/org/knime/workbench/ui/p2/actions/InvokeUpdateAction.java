@@ -66,8 +66,9 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.eclipseUtil.UpdateChecker;
+import org.knime.core.eclipseUtil.UpdateChecker.UpdateInfo;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.ui.p2.actions.UpdateChecker.UpdateInfo;
 
 /**
  * Custom action to open the install wizard. In addition to just opening the update manager, it also checks if there is

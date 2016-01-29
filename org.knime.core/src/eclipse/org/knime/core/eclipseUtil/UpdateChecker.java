@@ -44,7 +44,7 @@
  *
  * Created on 31.03.2014 by thor
  */
-package org.knime.workbench.ui.p2.actions;
+package org.knime.core.eclipseUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -73,6 +73,7 @@ import org.eclipse.core.runtime.Platform;
  *
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 3.1
  */
 public class UpdateChecker {
     private static final int URL_INDEX = 0;
