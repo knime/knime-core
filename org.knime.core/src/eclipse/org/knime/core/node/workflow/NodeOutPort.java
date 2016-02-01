@@ -98,6 +98,13 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener, NodeCont
      */
     public InternalNodeContainerState getNodeState();
 
+    /** The single node container associated with this port. For 'standard' nodes this is just the corresponding node;
+     * for metanodes it's the node indirectly connected outside (or inside) or null if not connected.
+     * @return the node container as described above, possibly null.
+     * @since 3.2
+     */
+    public SingleNodeContainer getConnectedNodeContainer();
+
     /**
      * Returns the hilite handler for this port as set by the node this port is
      * output for.

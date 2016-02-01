@@ -130,10 +130,15 @@ public final class MetaInfoFile {
         }
         String fileName = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getString(key);
-        if (fileName == null || fileName.isEmpty()) {
+        if ((fileName == null) || fileName.isEmpty()) {
             return null;
         }
-        return new File(fileName);
+
+        File f = new File(fileName);
+        if (!f.exists() || (f.length() == 0)) {
+            return null;
+        }
+        return f;
     }
 
     private static void createDefaultFileFallback(final File parent) {

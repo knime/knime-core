@@ -318,7 +318,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private final WorkflowContext m_workflowContext;
 
     /** Non-null object to check if successor execution is allowed - usually it is except for wizard execution. */
-    private ExecutionController m_executionController = new ExecutionController();
+    private ExecutionController m_executionController;
 
     /** The root of everything, a workflow with no in- or outputs.
      * This workflow holds the top level projects. */
@@ -2462,6 +2462,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** The private access method to get the execution controller. Built-in logic to init or retrieve controller from
+     * parent workflow if run within a meta node. */
+    private ExecutionController getExecutionController() {
+        assert isLockedByCurrentThread();
+        final WorkflowManager parent = getParent();
+        if (isProject() || parent == null) { // a project or the wfm within a subnode
+            if (m_executionController == null) {
+                m_executionController = ExecutionController.NO_OP;
+            }
+            return m_executionController;
+        } else {
+            return parent.getExecutionController();
+        }
+    }
+
     /** Creates lazy and returns an instance that controls the wizard execution of this workflow. These controller
      * are not meant to be used by multiple clients (only one steps back/forth in the workflow), though this is not
      * asserted by the returned controller object.
@@ -2812,8 +2827,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (allDataAvailable) {
                 NodeID[] predecessors = assemblePredecessors(nc.getID());
                 boolean mustHalt = false;
+                final ExecutionController executionController = getExecutionController();
                 for (NodeID p : predecessors) {
-                    if (p != null && m_executionController.isHalted(p)) {
+                    if (p != null && executionController.isHalted(p)) {
                         mustHalt = true;
                     }
                 }
@@ -3114,7 +3130,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (canConfigureSuccessors) {
                 // may be SingleNodeContainer or WFM contained within this
                 // one but then it can be treated like a SNC
-                m_executionController.checkHaltingCriteria(nc.getID());
+                getExecutionController().checkHaltingCriteria(nc.getID());
                 configureNodeAndPortSuccessors(nc.getID(), null, false, true, false);
             }
             lock.queueCheckForNodeStateChangeNotification(true);
@@ -5613,28 +5629,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * ports of a given node.
      *
      * @param id of node
-     * @return array of NodeIDs connected to argument node
+     * @return array of NodeIDs connected to argument node (possibly containing null)
      */
     private NodeID[] assemblePredecessors(final NodeID id) {
-        NodeContainer nc = getNodeContainer(id);
-        int nrIns = nc.getNrInPorts();
-        NodeID[] result = new NodeID[nrIns];
-        Set<ConnectionContainer> incoming = m_workflow.getConnectionsByDest(id);
-        for (ConnectionContainer conn : incoming) {
-            assert conn.getDest().equals(id);
-            // get info about destination
-            int destPortIndex = conn.getDestPort();
-            if (conn.getSource() != this.getID()) {
-                // connected to another node inside this WFM
-                assert conn.getType() == ConnectionType.STD;
-                result[destPortIndex] = m_workflow.getNode(conn.getSource()).getID();
-            } else {
-                // connected to a WorkflowInport
-                assert conn.getType() == ConnectionType.WFMIN;
-                result[destPortIndex] = getID();
-            }
-        }
-        return result;
+        return Stream.of(assemblePredecessorOutPorts(id))
+                .map(p -> p != null ? p.getConnectedNodeContainer() : null)
+                .map(snc -> snc == null ? null : snc.getID()).toArray(NodeID[]::new);
     }
 
     /** Assemble array of all NodeOutPorts connected to the input

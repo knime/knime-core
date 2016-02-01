@@ -365,9 +365,9 @@ public final class WizardExecutionController extends ExecutionController {
             // we will add it again).
             return;
         }
-        // only consider nodes that are...
-        NodeContainer sourceNC = m_manager.getNodeContainer(source);
-        // ...SubNodes and...
+        // potentially null when queried from contained metanode
+        NodeContainer sourceNC = m_manager.getWorkflow().getNode(source);
+        // only consider nodes that are...SubNodes and...
         if (!(sourceNC instanceof SubNodeContainer)) {
             return;
         }

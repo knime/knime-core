@@ -59,6 +59,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ViewUtils;
 
 /**
@@ -101,7 +102,7 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
 
     private NodeContainerOutPort(final SingleNodeContainer snc, final PortType type, final int portIndex) {
         super(portIndex, type);
-        m_snc = snc;
+        m_snc = CheckUtils.checkArgumentNotNull(snc);
         m_portView = null;
         // TODO register this object as listener to spec/object... changes with Node!!
         m_snc.addNodeStateChangeListener(this);
@@ -272,6 +273,13 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
     @Override
     public InternalNodeContainerState getNodeState() {
         return m_snc.getInternalState();
+    }
+
+    /** {@inheritDoc}
+     * @since 3.2 */
+    @Override
+    public SingleNodeContainer getConnectedNodeContainer() {
+        return m_snc;
     }
 
     /** {@inheritDoc}
