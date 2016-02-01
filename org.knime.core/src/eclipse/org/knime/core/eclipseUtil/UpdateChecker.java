@@ -73,7 +73,7 @@ import org.eclipse.core.runtime.Platform;
  *
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 3.1
+ * @since 3.2
  */
 public class UpdateChecker {
     private static final int URL_INDEX = 0;
