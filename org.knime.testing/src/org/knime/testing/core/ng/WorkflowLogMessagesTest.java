@@ -100,7 +100,7 @@ class WorkflowLogMessagesTest extends WorkflowTest {
         @Override
         protected void append(final LoggingEvent event) {
             if (!Level.ERROR.equals(event.getLevel())
-                || !X_RANDR_PATTERN.matcher(event.getMessage().toString()).matches()) {
+                || !X_RANDR_PATTERN.matcher(event.getRenderedMessage().trim()).matches()) {
                 m_logEvents.add(event);
             }
         }
