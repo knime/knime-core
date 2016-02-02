@@ -214,6 +214,9 @@ public class DBReaderImpl implements DBReader {
                     // Bug 4071: statement(s) not closed when fetching meta data
                     stmt.close();
                 }
+                if (!conn.getAutoCommit()) {
+                    conn.commit();
+                }
             }
         }
         return m_spec;
