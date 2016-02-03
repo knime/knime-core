@@ -44,7 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.NodeID;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -57,10 +58,8 @@ public class TestWorkflowLoopReset2 extends WorkflowTestCase {
     private NodeID m_loopEndInMeta3;
     private NodeID m_tableView3;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGen1 = new NodeID(baseID, 1);
         NodeID metaID = new NodeID(baseID, 2);
@@ -69,6 +68,7 @@ public class TestWorkflowLoopReset2 extends WorkflowTestCase {
         m_tableView3 = new NodeID(baseID, 3);
     }
 
+    @Test
     public void testLoopEndReset() throws Exception {
         executeAllAndWait();
         checkState(m_tableView3, InternalNodeContainerState.EXECUTED);
@@ -79,6 +79,7 @@ public class TestWorkflowLoopReset2 extends WorkflowTestCase {
         checkState(m_dataGen1, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testDataGenReset() throws Exception {
         executeAllAndWait();
         checkState(m_tableView3, InternalNodeContainerState.EXECUTED);

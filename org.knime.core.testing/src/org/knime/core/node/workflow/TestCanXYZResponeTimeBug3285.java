@@ -44,10 +44,16 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**
@@ -66,10 +72,8 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
     private NodeID m_lastJoin97;
     private NodeID m_tableView98;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
         BlockingRepository.put(LOCK_ID, new ReentrantLock());
         NodeID baseID = loadAndSetWorkflow();
@@ -81,6 +85,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         m_tableView98 = new NodeID(baseID, 98);
     }
 
+    @Test
     public void testCanXYZ() throws Exception {
         checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
         checkState(m_tableView98, InternalNodeContainerState.CONFIGURED);
@@ -102,6 +107,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
     }
 
+    @Test
     public void testCanXYZAfterExecute() throws Exception {
         executeAllAndWait();
         checkState(m_dataGen1, InternalNodeContainerState.EXECUTED);
@@ -124,6 +130,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
     }
 
+    @Test
     public void testShutdownAfterExecute() throws Exception {
         executeAllAndWait();
         checkState(m_dataGen1, InternalNodeContainerState.EXECUTED);
@@ -135,6 +142,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
     }
 
+    @Test
     public void testShutdownBeforeExecute() throws Exception {
         long time = System.currentTimeMillis();
         WorkflowManager m = getManager();
@@ -143,6 +151,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
     }
 
+    @Test
     public void testCanXYZWhileStartIsExecuting() throws Exception {
         deleteConnection(m_firstSplitter2, 1);
         WorkflowManager m = getManager();
@@ -179,6 +188,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         waitWhileInExecution();
     }
 
+    @Test
     public void testCanXYZAfterStartHasFailed() throws Exception {
         deleteConnection(m_firstSplitter2, 1);
         WorkflowManager m = getManager();
@@ -198,7 +208,8 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         BlockingRepository.remove(LOCK_ID);
         super.tearDown();
     }

@@ -44,6 +44,10 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_QUEUED;
@@ -53,6 +57,9 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.PREEXECUTE
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**
@@ -67,10 +74,8 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
     private NodeID m_colFilter;
     private NodeID m_tblView;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
         BlockingRepository.put(LOCK_ID, new ReentrantLock());
         NodeID baseID = loadAndSetWorkflow();
@@ -80,6 +85,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
         m_tblView = new NodeID(baseID, 4);
     }
 
+    @Test
     public void testExecuteNoBlocking() throws Exception {
         checkState(m_dataGen, CONFIGURED);
         checkState(m_blocker, CONFIGURED);
@@ -90,6 +96,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
         checkState(m_tblView, EXECUTED);
     }
 
+    @Test
     public void testBlockingStates() throws Exception {
         WorkflowManager m = getManager();
         ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
@@ -110,6 +117,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
         waitWhileNodeInExecution(m_tblView);
     }
 
+    @Test
     public void testPropertiesOfExecutingNode() throws Exception {
         WorkflowManager m = getManager();
         ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
@@ -173,6 +181,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
         // give the workflow manager time to wrap up
     }
 
+    @Test
     public void testPropertiesOfMarkedNode() throws Exception {
         WorkflowManager m = getManager();
         ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
@@ -233,7 +242,8 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         BlockingRepository.remove(LOCK_ID);
         super.tearDown();
     }

@@ -44,6 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -56,10 +59,8 @@ public class TestFailSideBranchInLoop extends WorkflowTestCase {
     private NodeID m_csvWriterInLoop13;
     private NodeID m_loopEnd4;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGen2 = new NodeID(baseID, 2);
         m_loopStart3 = new NodeID(baseID, 3);
@@ -67,7 +68,9 @@ public class TestFailSideBranchInLoop extends WorkflowTestCase {
         m_loopEnd4 = new NodeID(baseID, 4);
     }
 
-    public void disabledBug3292testExecuteFlowWithUnconfiguredCSVWriter() throws Exception {
+    @Test
+    public void bug3292testExecuteFlowWithUnconfiguredCSVWriter() throws Exception {
+        Assume.assumeTrue("Disabled - outstanding hidden problems", false);
         checkState(m_dataGen2, InternalNodeContainerState.CONFIGURED);
         checkState(m_loopEnd4, InternalNodeContainerState.CONFIGURED);
         checkState(m_csvWriterInLoop13, InternalNodeContainerState.IDLE);
@@ -88,6 +91,7 @@ public class TestFailSideBranchInLoop extends WorkflowTestCase {
         checkState(m_loopStart3, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testExecuteFlowNoCSVWriter() throws Exception {
         checkState(m_dataGen2, InternalNodeContainerState.CONFIGURED);
         checkState(m_loopEnd4, InternalNodeContainerState.CONFIGURED);

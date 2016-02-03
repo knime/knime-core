@@ -48,9 +48,16 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.workflow.TestWizardExec_Loop_Simple.WizardHold;
 import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
@@ -70,12 +77,8 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
     private NodeID m_intInputInNoClusterSubnode;
     private NodeID m_stringInputInLabelClustersSubnode;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_filterSubnode = new NodeID(baseID, 101);
         m_noClustersSubnode = new NodeID(baseID, 102);
@@ -87,12 +90,14 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         m_stringInputInLabelClustersSubnode = new NodeID(new NodeID(m_labelClustersSubnode, 0), 93);
     }
 
+    @Test
     public void testExecuteAll() throws Exception {
         executeAllAndWait();
         final WorkflowManager wfm = getManager();
         checkState(wfm, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testWizardStepThroughWithSeveralLoopIterations() throws Exception {
         final int numLoops = 3;
         final WorkflowManager wfm = getManager();
@@ -147,6 +152,7 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         checkState(wfm, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testWizardStepBackInsideLoop() throws Exception {
         final WorkflowManager wfm = getManager();
         WizardExecutionController wizardController = wfm.getWizardExecutionController();

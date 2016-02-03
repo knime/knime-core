@@ -43,11 +43,17 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
 import java.io.File;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -64,10 +70,8 @@ public class TestSubnode_StreamingPortObject extends WorkflowTestCase {
     private NodeID m_tableViewInSubNode_8_8;
     private File m_tmpWorkflowDir;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         m_tmpWorkflowDir = FileUtil.createTempDir(getClass().getSimpleName() + "-tempTestInstance");
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_tmpWorkflowDir);
         loadFlow();
@@ -83,6 +87,7 @@ public class TestSubnode_StreamingPortObject extends WorkflowTestCase {
 
     /** Just run and compare.
      * @throws Exception ...*/
+    @Test
     public void testExecuteAndCompare() throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, IDLE);
@@ -96,6 +101,7 @@ public class TestSubnode_StreamingPortObject extends WorkflowTestCase {
 
     /** Run, save all, close, load, reset meta node, re-execute all,
      * make sure the subnode output is loaded correctly. */
+    @Test
     public void testExecSaveLoadCheck() throws Exception {
         WorkflowManager manager = getManager();
         executeAllAndWait();
@@ -126,7 +132,8 @@ public class TestSubnode_StreamingPortObject extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         if (!FileUtil.deleteRecursively(m_tmpWorkflowDir)) {
             getLogger().errorWithFormat("Could not fully delete the temporary workflow dir \"%s\" " +

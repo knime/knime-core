@@ -47,7 +47,9 @@
  */
 package org.knime.core.node.workflow;
 
-import junit.framework.Assert;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 
 /**
@@ -63,19 +65,15 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
     private NodeID m_javaEdit_out_7;
     private NodeID m_javaEdit_out_8;
     private NodeID m_javaEdit_in_5;
-    private NodeID m_javaEdit_in_2;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_subNode6 = new NodeID(baseID, 6);
         m_javaEdit_out_1 = new NodeID(baseID, 1);
         m_javaEdit_out_8 = new NodeID(baseID, 8);
         m_javaEdit_out_7 = new NodeID(baseID, 7);
         NodeID subnodeWFM = new NodeID(m_subNode6, 0);
-        m_javaEdit_in_2 = new NodeID(subnodeWFM, 2);
         m_javaEdit_in_5 = new NodeID(subnodeWFM, 5);
     }
 
@@ -88,6 +86,7 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
 
     /** Just loading and making sure all is green with expected output.
      * @throws Exception ... */
+    @Test
     public void testVariablesAfterLoad() throws Exception {
         checkState(m_javaEdit_out_7, InternalNodeContainerState.IDLE);
         checkState(m_javaEdit_out_8, InternalNodeContainerState.IDLE);
@@ -108,6 +107,7 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
      * flow variables down stream but currently it doesn't. Problem is that upon execution some nodes turn
      * inactive and the downstream nodes would still see the variables produced during configured.
      * @throws Exception ... */
+    @Test
     public void testVariablesAfterExecuteUpstream() throws Exception {
         executeAndWait(m_javaEdit_out_1);
 
@@ -125,6 +125,7 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
 
     /** Fully execute workflow. It should populate variables and set the node at the first subnode output inactive.
      * @throws Exception ... */
+    @Test
     public void testVariablesAfterFullExecute() throws Exception {
         executeAllAndWait();
 
@@ -140,6 +141,7 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
 
     /** Fully execute workflow, then re-wire to disable the inactive switch
      * @throws Exception ... */
+    @Test
     public void testVariablesAfterFullExecuteThenRewire() throws Exception {
         executeAllAndWait();
         deleteConnection(m_javaEdit_in_5, 1);

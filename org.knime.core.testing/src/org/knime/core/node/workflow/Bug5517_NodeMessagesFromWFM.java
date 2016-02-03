@@ -48,8 +48,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.util.Pair;
 
@@ -70,10 +71,8 @@ public class Bug5517_NodeMessagesFromWFM extends WorkflowTestCase {
     private NodeID m_failInSub_6_1;
     private NodeID m_rowFilterNone_5;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreator_1 = new NodeID(baseID, 1);
         m_rowFilterEmpty_2 = new NodeID(baseID, 2);
@@ -85,6 +84,7 @@ public class Bug5517_NodeMessagesFromWFM extends WorkflowTestCase {
         m_rowFilterNone_5 = new NodeID(baseID, 5);
     }
 
+    @Test
     public void testMessageAfterExecute() throws Exception {
         WorkflowManager manager = getManager();
         List<Pair<String, NodeMessage>> messages = manager.getNodeMessages(Type.WARNING, Type.ERROR);

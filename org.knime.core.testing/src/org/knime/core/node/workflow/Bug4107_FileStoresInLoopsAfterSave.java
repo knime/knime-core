@@ -43,12 +43,18 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.io.File;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
 import org.knime.testing.node.blocking.BlockingRepository;
@@ -68,10 +74,8 @@ public class Bug4107_FileStoresInLoopsAfterSave extends WorkflowTestCase {
     private NodeID m_innerLoopStart_21;
     private File m_tmpWorkflowDir;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
         BlockingRepository.put(LOCK_ID, new ReentrantLock());
         m_tmpWorkflowDir = FileUtil.createTempDir(getClass().getSimpleName() + "-tempTestInstance");
@@ -88,6 +92,7 @@ public class Bug4107_FileStoresInLoopsAfterSave extends WorkflowTestCase {
         return getManager();
     }
 
+    @Test
     public void testMain() throws Exception {
         WorkflowManager m = getManager();
         checkState(m, CONFIGURED);
@@ -121,7 +126,8 @@ public class Bug4107_FileStoresInLoopsAfterSave extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         BlockingRepository.remove(LOCK_ID);
         super.tearDown();
         if (!FileUtil.deleteRecursively(m_tmpWorkflowDir)) {

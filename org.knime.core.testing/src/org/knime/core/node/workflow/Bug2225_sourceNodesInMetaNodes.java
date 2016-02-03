@@ -46,7 +46,9 @@ package org.knime.core.node.workflow;
 
 import java.util.Map;
 
-import org.knime.core.node.workflow.NodeID;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.testing.node.executioncount.ExecutionCountNodeModel;
 
 /**
@@ -61,10 +63,8 @@ public class Bug2225_sourceNodesInMetaNodes extends WorkflowTestCase {
     private NodeID m_counterOutLoop;
     private NodeID m_tblView;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_loopStart = new NodeID(baseID, 2);
         m_loopEnd = new NodeID(baseID, 3);
@@ -74,6 +74,7 @@ public class Bug2225_sourceNodesInMetaNodes extends WorkflowTestCase {
         m_tblView = new NodeID(baseID, 6);
     }
 
+    @Test
     public void testExecuteFlow() throws Exception {
         checkState(m_loopStart, InternalNodeContainerState.CONFIGURED);
         checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
@@ -104,7 +105,8 @@ public class Bug2225_sourceNodesInMetaNodes extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

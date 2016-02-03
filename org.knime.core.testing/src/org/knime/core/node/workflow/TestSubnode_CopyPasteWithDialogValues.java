@@ -47,6 +47,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -70,10 +77,8 @@ public class TestSubnode_CopyPasteWithDialogValues extends WorkflowTestCase {
     private NodeID m_loopEndSuccess16;
     private NodeID m_diffChecker20;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_subNode8 = new NodeID(baseID, 8);
         m_javaEdit_test1_11 = new NodeID(baseID, 11);
@@ -100,6 +105,7 @@ public class TestSubnode_CopyPasteWithDialogValues extends WorkflowTestCase {
 
     /** Just loading and making sure all is green with expected output.
      * @throws Exception ... */
+    @Test
     public void testLoadExecutedFlow() throws Exception {
         checkState(m_tableView13, InternalNodeContainerState.EXECUTED);
         checkTableContent("test2@knime.com", 4);
@@ -111,6 +117,7 @@ public class TestSubnode_CopyPasteWithDialogValues extends WorkflowTestCase {
 
     /** Load workflow and reconnect it to another input that has different, valid data.
      * @throws Exception ... */
+    @Test
     public void testConnectToValidInput() throws Exception {
         deleteConnection(m_subNode8, 0);
         checkState(m_subNode8, InternalNodeContainerState.IDLE);
@@ -129,6 +136,7 @@ public class TestSubnode_CopyPasteWithDialogValues extends WorkflowTestCase {
 
     /** Load workflow and reconnect it to another input that has different, valid data.
      * @throws Exception ... */
+    @Test
     public void testConnectToInvalidInput() throws Exception {
         deleteConnection(m_subNode8, 0);
 
@@ -142,6 +150,7 @@ public class TestSubnode_CopyPasteWithDialogValues extends WorkflowTestCase {
 
     /** Load workflow and delete input connection, exec all. Expected to fail.
      * @throws Exception ... */
+    @Test
     public void testNotConnected() throws Exception {
         deleteConnection(m_subNode8, 0);
 
@@ -155,6 +164,7 @@ public class TestSubnode_CopyPasteWithDialogValues extends WorkflowTestCase {
 
     /** Reconnect to second loop, which is expected to complete with no problem - all data valid.
      * @throws Exception ... */
+    @Test
     public void testConnectInLoop_ValidPattern() throws Exception {
         deleteConnection(m_subNode8, 0);
         getManager().addConnection(m_loopStartSuccess17, 1, m_subNode8, 0);
@@ -172,6 +182,7 @@ public class TestSubnode_CopyPasteWithDialogValues extends WorkflowTestCase {
 
     /** Reconnect to first loop, which is expected to fail due to invalid email pattern.
      * @throws Exception ... */
+    @Test
     public void testConnectInLoop_InvalidPattern() throws Exception {
         deleteConnection(m_subNode8, 0);
         getManager().addConnection(m_loopStartFail15, 1, m_subNode8, 0);

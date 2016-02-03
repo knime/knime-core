@@ -44,8 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collections;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
 
@@ -67,10 +72,8 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
     private NodeID m_qfBooleanIn_Subnode15_04;
     private NodeID m_qfIntIn_Subnode14_09;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreateNode1 = new NodeID(baseID, 1);
         m_subnodeQueryStringBool15 = new NodeID(baseID, 15);
@@ -83,6 +86,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         m_qfIntIn_Subnode14_09 = new NodeID(new NodeID(m_subnodeInLOOPQueryInt14, 0), 9);
     }
 
+    @Test
     public void testExecuteAll() throws Exception {
         executeAllAndWait();
         final WorkflowManager wfm = getManager();
@@ -92,6 +96,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         assertTrue("Node not inactive but should", inactiveNode.getOutputObject(1) instanceof InactiveBranchPortObject);
     }
 
+    @Test
     public void testWizardStepThrough() throws Exception {
         final WorkflowManager wfm = getManager();
         assertTrue("should have new wizard execution", WizardExecutionController.hasWizardExecution(wfm));
@@ -133,6 +138,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         checkState(wfm, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testWizardStepHalfWayThrougAndBack() throws Exception {
         final WorkflowManager wfm = getManager();
         WizardExecutionController wizardController = wfm.getWizardExecutionController();

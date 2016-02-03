@@ -44,9 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  *
@@ -63,10 +63,8 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
     private NodeID m_javaEditInMetaThroughNode8_7;
     private NodeID m_javaEditInMetaNewSourceNode8_8;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreateNode1 = new NodeID(baseID, 1);
         m_loopStartNode2 = new NodeID(baseID, 2);
@@ -78,6 +76,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
         m_javaEditInMetaNewSourceNode8_8 = new NodeID(m_metaInLoopNode8, 8);
     }
 
+    @Test
     public void testUpStreamOfLoopReset() throws Exception {
         executeAllAndWait();
         checkState(m_loopEndNode4, InternalNodeContainerState.EXECUTED);
@@ -90,6 +89,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
         checkState(m_javaEditInMetaNewSourceNode8_8, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testNodeInLoopReset() throws Exception {
         executeAllAndWait();
         reset(m_groupByInLoopNode3);
@@ -102,6 +102,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
         checkState(m_javaEditInMetaNewSourceNode8_8, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testSourceNodeInLoopReset() throws Exception {
         executeAllAndWait();
         reset(m_tableCreateNode6);
@@ -116,6 +117,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
 
 
     /** disabled, see bug 3246. */
+    @Test
     public void testNodeInMetaNodeInLoopReset() throws Exception {
         executeAllAndWait();
         reset(m_javaEditInMetaThroughNode8_7);
@@ -128,6 +130,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
     }
 
     /** disabled, see bug 3246. */
+    @Test
     public void testSourceNodeInMetaNodeInLoopReset() throws Exception {
         executeAllAndWait();
         reset(m_javaEditInMetaNewSourceNode8_8);
@@ -139,6 +142,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
         checkState(m_tableCreateNode6, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testDeleteConnectionInLoop() throws Exception {
         executeAllAndWait();
         deleteConnection(m_groupByInLoopNode3, 1);
@@ -151,6 +155,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
     }
 
     /** disabled, see bug 3246. */
+    @Test
     public void testDeleteConnectionInMetaNodeInLoop() throws Exception {
         executeAllAndWait();
         deleteConnection(m_javaEditInMetaThroughNode8_7, 1);
@@ -163,6 +168,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
     }
 
     /** disabled, see bug 3246. */
+    @Test
     public void testDeleteConnectionInMetaNodeInIndirectLoop() throws Exception {
         executeAllAndWait();
         deleteConnection(m_javaEditInMetaThroughNode8_7, 0);
@@ -174,6 +180,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
         checkState(m_groupByInLoopNode3, InternalNodeContainerState.CONFIGURED);
     }
 
+    @Test
     public void testAddConnectionInExecutedLoop() throws Exception {
         deleteConnection(m_groupByInLoopNode3, 0);
         executeAllAndWait();
@@ -189,6 +196,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
         checkState(m_groupByInLoopNode3, InternalNodeContainerState.CONFIGURED);
     }
 
+    @Test
     public void testChangeConfigInExecutedLoop() throws Exception {
         NodeSettings s = new NodeSettings("groupByModel");
         WorkflowManager m = getManager();

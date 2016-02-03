@@ -46,6 +46,9 @@ package org.knime.core.node.workflow;
 
 import java.io.File;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
 
@@ -61,10 +64,8 @@ public class Bug6680_autobinner_save_to_cell extends WorkflowTestCase {
     private File m_workflowTempDir;
 
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         File workflowDirSVN = getDefaultWorkflowDirectory();
         m_workflowTempDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(workflowDirSVN, m_workflowTempDir);
@@ -77,6 +78,7 @@ public class Bug6680_autobinner_save_to_cell extends WorkflowTestCase {
         m_validator_4 = new NodeID(baseID, 4);
     }
 
+    @Test
     public void testExecuteAll() throws Exception {
         checkState(getManager(), InternalNodeContainerState.CONFIGURED);
         checkState(m_modelToCell_3, InternalNodeContainerState.CONFIGURED);
@@ -84,6 +86,7 @@ public class Bug6680_autobinner_save_to_cell extends WorkflowTestCase {
         checkState(m_validator_4, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testExecSaveLoad() throws Exception {
         executeAllAndWait();
         getManager().save(m_workflowTempDir, new ExecutionMonitor(), true);
@@ -98,7 +101,8 @@ public class Bug6680_autobinner_save_to_cell extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowTempDir);
     }

@@ -44,9 +44,12 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -59,10 +62,8 @@ public class Simplechainofnodes extends WorkflowTestCase {
     private NodeID m_rowFilter;
     private NodeID m_tblView;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGen = new NodeID(baseID, 1);
         m_colFilter = new NodeID(baseID, 2);
@@ -70,6 +71,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
         m_tblView = new NodeID(baseID, 4);
     }
 
+    @Test
     public void testExecuteOneByOne() throws Exception {
         checkState(m_dataGen, InternalNodeContainerState.CONFIGURED);
         checkState(m_colFilter, InternalNodeContainerState.CONFIGURED);
@@ -102,6 +104,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
 
     }
 
+    @Test
     public void testExecuteLast() throws Exception {
         executeAndWait(m_tblView);
         checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
@@ -110,6 +113,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
         checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testExecuteAll() throws Exception {
         getManager().executeAllAndWaitUntilDone();
         checkState(getManager(), InternalNodeContainerState.EXECUTED);
@@ -119,6 +123,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
         checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testRandomExecuteAndReset() throws Exception {
         executeAndWait(m_rowFilter);
         checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
@@ -150,6 +155,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
         }
     }
 
+    @Test
     public void testDeleteConnectionTryExecuteInsertAgain() throws Exception {
         WorkflowManager m = getManager();
         ConnectionContainer connection = findInConnection(m_rowFilter, 1);
@@ -179,6 +185,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
         checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testExecuteDeleteConnection() throws Exception {
         WorkflowManager m = getManager();
         executeAndWait(m_tblView);
@@ -191,6 +198,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
         assertFalse(m.canExecuteNode(m_tblView));
     }
 
+    @Test
     public void testDeleteNodeExecute() throws Exception {
         WorkflowManager m = getManager();
         assertTrue(m.canRemoveNode(m_rowFilter));
@@ -200,6 +208,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
         assertFalse(m.canExecuteNode(m_tblView));
     }
 
+    @Test
     public void testExecuteDeleteNode() throws Exception {
         WorkflowManager m = getManager();
         executeAndWait(m_tblView);

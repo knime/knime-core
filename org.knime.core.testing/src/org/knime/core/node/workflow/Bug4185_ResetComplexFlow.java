@@ -47,6 +47,9 @@ package org.knime.core.node.workflow;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
+
+import org.junit.Before;
+import org.junit.Test;
 /**
  *
  * @author wiswedel, University of Konstanz
@@ -57,16 +60,15 @@ public class Bug4185_ResetComplexFlow extends WorkflowTestCase {
     private NodeID m_javaEditEnd;
     private NodeID m_metaMiddle;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_javaEditStart = new NodeID(baseID, 610);
         m_javaEditEnd = new NodeID(baseID, 705);
         m_metaMiddle = new NodeID(baseID, 704);
     }
 
+    @Test
     public void testExecuteAllAndReset() throws Exception {
         executeAllAndWait();
         checkState(getManager(), EXECUTED);
@@ -76,6 +78,7 @@ public class Bug4185_ResetComplexFlow extends WorkflowTestCase {
         checkState(m_javaEditEnd, CONFIGURED);
     }
 
+    @Test
     public void testExecuteAllResetStart() throws Exception {
         executeAllAndWait();
         checkState(getManager(), EXECUTED);
@@ -84,15 +87,17 @@ public class Bug4185_ResetComplexFlow extends WorkflowTestCase {
         checkState(m_javaEditStart, CONFIGURED);
         checkState(m_javaEditEnd, CONFIGURED);
     }
-    
+
+    @Test
     public void testDeleteConnectionToMetaExecuteFirst() throws Exception {
         internalTestDeleteConnectionToMeta(true);
     }
-        
+
+    @Test
     public void testDeleteConnectionToMetaDontExecute() throws Exception {
         internalTestDeleteConnectionToMeta(false);
     }
-    
+
     private void internalTestDeleteConnectionToMeta(final boolean executeFirst) throws Exception {
         if (executeFirst) {
             executeAllAndWait();
@@ -103,6 +108,6 @@ public class Bug4185_ResetComplexFlow extends WorkflowTestCase {
         checkState(m_javaEditStart, CONFIGURED, EXECUTED);
         checkState(m_javaEditEnd, IDLE);
     }
-    
+
 
 }

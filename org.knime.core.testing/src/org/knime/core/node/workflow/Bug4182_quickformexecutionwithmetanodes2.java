@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.quickform.in.QuickFormInputNode;
 
 /**
@@ -54,14 +56,13 @@ public class Bug4182_quickformexecutionwithmetanodes2 extends WorkflowTestCase {
 
     private NodeID m_tableViewEnd;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableViewEnd = new NodeID(baseID, 5);
     }
 
+    @Test
     public void testExecuteFlow() throws Exception {
         checkState(m_tableViewEnd, InternalNodeContainerState.CONFIGURED);
     	getManager().stepExecutionUpToNodeType(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);

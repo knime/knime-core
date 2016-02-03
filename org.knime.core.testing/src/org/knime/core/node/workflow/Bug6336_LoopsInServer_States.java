@@ -44,11 +44,19 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 
@@ -64,10 +72,8 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     private NodeID m_loopStart3;
     private NodeID m_loopEnd4;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGenerator1 = new NodeID(baseID, 1);
         m_loopStart3 = new NodeID(baseID, 3);
@@ -76,6 +82,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     }
 
     /** Loads workflow and executes as is - expects certain event count. */
+    @Test
     public void testExecutePlain() throws Exception {
         final WorkflowManager manager = getManager();
         checkState(manager, InternalNodeContainerState.IDLE);
@@ -83,6 +90,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     }
 
     /** Loads workflow and collapses almost all nodes, then executes - expects certain event count. */
+    @Test
     public void testExecuteAfterCollapse() throws Exception {
         final WorkflowManager manager = getManager();
         checkState(manager, InternalNodeContainerState.IDLE);
@@ -97,7 +105,9 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     }
 
     /** Collapse to meta node, then copy and connect to its original instance, then exec all. */
-    public void disabled_testExecuteAfterCollapseAndClone() throws Exception {
+    @Test
+    public void testExecuteAfterCollapseAndClone() throws Exception {
+        Assume.assumeTrue("Disabled - occassionally failing, expecting one more rare problem", false);
         final WorkflowManager manager = getManager();
         WorkflowManager metaNode = collapseToMetaNode(manager);
         WorkflowCopyContent copyContent = new WorkflowCopyContent();
@@ -172,12 +182,6 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
         if (msg.length() > 0) {
             fail(msg.toString());
         }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
 }

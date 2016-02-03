@@ -44,9 +44,15 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.Arrays;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
 
@@ -63,10 +69,8 @@ public class Bug5510_LoopEndEmptyTable extends WorkflowTestCase {
     private NodeID m_loopEnd_Double_8;
     private File m_workflowDirTemp;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         File workflowDirSVN = getDefaultWorkflowDirectory();
         // will save the workflow in one of the test ...don't write SVN folder
         m_workflowDirTemp = FileUtil.createTempDir(workflowDirSVN.getName());
@@ -83,6 +87,7 @@ public class Bug5510_LoopEndEmptyTable extends WorkflowTestCase {
         m_loopEnd_Double_8 = new NodeID(baseID, 8);
     }
 
+    @Test
     public void testExecuteThenSave() throws Exception {
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreate_1, m_loopEnd_Single_3, m_loopEnd_Double_8);
         executeAllAndWait();
@@ -102,7 +107,8 @@ public class Bug5510_LoopEndEmptyTable extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         if (m_workflowDirTemp != null && m_workflowDirTemp.isDirectory()) {
             FileUtil.deleteRecursively(m_workflowDirTemp);

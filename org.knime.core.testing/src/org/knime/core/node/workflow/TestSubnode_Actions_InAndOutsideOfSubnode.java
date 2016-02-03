@@ -44,6 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
@@ -53,6 +56,9 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGUR
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**
@@ -76,10 +82,8 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
     private NodeID m_dataGenInner_12_14;
     private NodeID m_blockInner_12_10;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
         BlockingRepository.put(INNER_LOCK_ID, new ReentrantLock());
         BlockingRepository.put(OUTER_LOCK_ID, new ReentrantLock());
@@ -97,11 +101,13 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
         m_dataGenInner_12_14 = new NodeID(subnodeWFM, 14);
     }
 
+    @Test
     public void testInit() throws Exception {
         checkStateOfMany(CONFIGURED, m_dataGen1, m_javaEditInput2);
         checkStateOfMany(IDLE, m_subnode12, m_javaEditOutput6, m_javaEditInner_12_9, m_blockOuter8, m_blockInner_12_10);
     }
 
+    @Test
     public void testExecuteAllAndResetStart() throws Exception {
         executeAllAndWait();
         checkStateOfMany(EXECUTED, m_dataGen1, m_javaEditInput2, m_subnode12,
@@ -111,12 +117,14 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
         checkStateOfMany(IDLE, m_subnode12, m_blockInner_12_10, m_blockOuter8, m_dataGenInner_12_14);
     }
 
+    @Test
     public void testExecuteOneEndAndReset() throws Exception {
         executeAndWait(m_tableView7);
         checkStateOfMany(EXECUTED, m_subnode12, m_tableView7, m_blockOuter8, m_blockInner_12_10, m_subnode12);
         checkState(m_javaEditOutput6, CONFIGURED);
     }
 
+    @Test
     public void testBlockInnerAndExecuteEnd() throws Exception {
         WorkflowManager m = getManager();
         ReentrantLock innerLock = BlockingRepository.get(INNER_LOCK_ID);
@@ -178,6 +186,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
         }
     }
 
+    @Test
     public void testShutdownBeforeExecute() throws Exception {
         long time = System.currentTimeMillis();
         WorkflowManager m = getManager();
@@ -188,7 +197,8 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         BlockingRepository.remove(INNER_LOCK_ID);
         BlockingRepository.remove(OUTER_LOCK_ID);
         super.tearDown();

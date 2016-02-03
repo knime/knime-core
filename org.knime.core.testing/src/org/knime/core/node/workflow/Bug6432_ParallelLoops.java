@@ -44,9 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -56,14 +60,13 @@ import org.knime.core.node.util.ConvenienceMethods;
  */
 public class Bug6432_ParallelLoops extends WorkflowTestCase {
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         loadAndSetWorkflow();
     }
 
     /** Loads workflow and executes as is - expects certain event count. */
+    @Test
     public void testExecutePlain() throws Exception {
         final WorkflowManager manager = getManager();
         checkState(manager, InternalNodeContainerState.IDLE);

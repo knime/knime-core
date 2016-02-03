@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.Callable;
@@ -56,6 +58,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
 
@@ -69,10 +74,8 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
     private OneInstanceWorkflowTest[] m_instances;
     private static final int NR_CONCURRENT = 100;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         m_executorService = Executors.newFixedThreadPool(NR_CONCURRENT);
         m_instances = new OneInstanceWorkflowTest[NR_CONCURRENT];
         for (int i = 0; i < NR_CONCURRENT; i++) {
@@ -80,6 +83,7 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
         }
     }
 
+    @Test
     public void testConcurrency() throws Exception {
         final CyclicBarrier barrier = new CyclicBarrier(NR_CONCURRENT);
         Future<Void>[] futures = new Future[NR_CONCURRENT];
@@ -140,7 +144,8 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
     }
 
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         m_executorService.shutdown();
         for (int i = 0; i < m_instances.length; i++) {

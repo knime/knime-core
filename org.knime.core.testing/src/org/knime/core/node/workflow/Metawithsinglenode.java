@@ -44,6 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -56,10 +63,8 @@ public class Metawithsinglenode extends WorkflowTestCase {
     private NodeID m_meta;
     private NodeID m_tblView;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGen = new NodeID(baseID, 1);
         m_meta = new NodeID(baseID, 2);
@@ -67,6 +72,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         m_tblView = new NodeID(baseID, 3);
     }
 
+    @Test
     public void testExecuteOneByOne() throws Exception {
         checkState(m_dataGen, InternalNodeContainerState.CONFIGURED);
         checkState(m_colFilterInMeta, InternalNodeContainerState.CONFIGURED);
@@ -97,6 +103,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
 
     }
 
+    @Test
     public void testExecuteLast() throws Exception {
         executeAndWait(m_tblView);
         checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
@@ -105,6 +112,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testExecuteInMeta() throws Exception {
         executeAndWait(m_colFilterInMeta);
         checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
@@ -113,6 +121,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
     }
 
+    @Test
     public void testExecuteAll() throws Exception {
         getManager().executeAllAndWaitUntilDone();
         checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
@@ -121,6 +130,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testRandomExecuteAndReset() throws Exception {
         executeAndWait(m_colFilterInMeta);
         checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
@@ -153,6 +163,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         }
     }
 
+    @Test
     public void testDeleteOuterConnectionTryExecuteInsertAgain()
         throws Exception {
         WorkflowManager m = getManager();
@@ -184,8 +195,8 @@ public class Metawithsinglenode extends WorkflowTestCase {
         checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
     }
 
-    public void testDeleteInnerConnectionTryExecuteInsertAgain()
-    throws Exception {
+    @Test
+    public void testDeleteInnerConnectionTryExecuteInsertAgain() throws Exception {
         WorkflowManager m = getManager();
         WorkflowManager meta = findParent(m_colFilterInMeta);
         ConnectionContainer c = findInConnection(m_colFilterInMeta, 1);
@@ -199,7 +210,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         checkMetaOutState(m_meta, 0, InternalNodeContainerState.IDLE);
         assertFalse(m.canExecuteNode(m_colFilterInMeta));
          assertFalse(m.canExecuteNode(m_tblView));
-         // temporarily disabled, see 
+         // temporarily disabled, see
          // 4776: Metanodes with only idle (unconnected) nodes can still be executed if an upstream node is executable
          // http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=4776
 //        assertFalse(m.canExecuteNode(m_meta));
@@ -218,6 +229,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testExecuteDeleteOuterConnection() throws Exception {
         WorkflowManager m = getManager();
         WorkflowManager meta = findParent(m_colFilterInMeta);
@@ -232,6 +244,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         assertFalse(m.canExecuteNode(m_tblView));
     }
 
+    @Test
     public void testExecuteDeleteInnerConnection() throws Exception {
         WorkflowManager m = getManager();
         WorkflowManager meta = findParent(m_colFilterInMeta);
@@ -246,6 +259,7 @@ public class Metawithsinglenode extends WorkflowTestCase {
         assertFalse(m.canExecuteNode(m_tblView));
     }
 
+    @Test
     public void testExecuteDeleteNode() throws Exception {
         WorkflowManager m = getManager();
         WorkflowManager meta = findParent(m_colFilterInMeta);

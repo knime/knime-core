@@ -44,9 +44,14 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.NoSuchElementException;
 
-import junit.framework.Assert;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -61,10 +66,8 @@ public class Trycatch extends WorkflowTestCase {
     private NodeID m_endloop;
     private NodeID m_finalnode;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_try = new NodeID(baseID, 10);
         m_catch = new NodeID(baseID, 8);
@@ -74,6 +77,7 @@ public class Trycatch extends WorkflowTestCase {
         m_finalnode = new NodeID(baseID, 7);
     }
 
+    @Test(expected=NoSuchElementException.class)
     public void testExecuted() throws Exception {
     	executeAllAndWait();
     	// check node states - inactive interna/active end.
@@ -93,12 +97,11 @@ public class Trycatch extends WorkflowTestCase {
         	endifNNC.getNode().getNodeModel().peekFlowVariableString("innerScopeVariable");
         } catch (NoSuchElementException nsee) {
         	Assert.fail("Variable does not exist but should!");
-        };
+        }
         SingleNodeContainer finalnodeSNC = (SingleNodeContainer)(getManager().getNodeContainer(m_finalnode));
-        try {
-        	finalnodeSNC.getOutgoingFlowObjectStack().peekFlowVariable("innerScopeVariable", FlowVariable.Type.STRING);
-        	Assert.fail("Variable exists but shouldn't!");
-        } catch (NoSuchElementException nsee) {};
+        // expected to fail
+        finalnodeSNC.getOutgoingFlowObjectStack().peekFlowVariable("innerScopeVariable", FlowVariable.Type.STRING);
+        Assert.fail("Variable exists but shouldn't!");
     }
 
 }

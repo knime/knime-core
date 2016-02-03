@@ -47,8 +47,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
@@ -66,10 +71,8 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
     private NodeID m_javaEdit_7;
     private NodeID m_tableView_6;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_columnFilter_2 = new NodeID(baseID, 2);
         m_columnFilter_3 = new NodeID(baseID, 3);
@@ -79,6 +82,7 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
     }
 
     /** Collect nodes, collapse them, undo. */
+    @Test
     public void testCollapseIntoMetaNodeThenUndo() throws Exception {
         WorkflowManager mgr = getManager();
         executeAllAndWait();
@@ -106,6 +110,7 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
     }
 
     /** Collect nodes, collapse them, convert to meta node and wrap/unwrap. */
+    @Test
     public void testCollapseIntoMetaNodeThenWrapUnwrap() throws Exception {
         WorkflowManager mgr = getManager();
         executeAllAndWait();

@@ -44,6 +44,11 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.fail;
+
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 
@@ -61,10 +66,8 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
     private NodeID m_tableChecker_5;
     private NodeID m_tableChecker_6;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreator_1 = new NodeID(baseID, 1);
         m_metaNode_2 = new NodeID(baseID, 2);
@@ -78,30 +81,33 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
      * the old quickform nodes in conjunction with meta nodes are likely not be deprecated in the future.
      * @throws Exception ...
      */
-//    public void testLoadBogusIntoMetaNode() throws Exception {
-//        WorkflowManager manager = getManager();
-//        checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreator_1, m_metaNode_2, m_tableChecker_5);
-//        NodeSettings s = new NodeSettings("meta-node");
-//        manager.saveNodeSettings(m_metaNode_2, s);
-//        NodeSettings bogusSettings = new NodeSettings("meta-node");
-//        s.copyTo(bogusSettings);
-//        executeAllAndWait();
-//        checkState(manager, InternalNodeContainerState.EXECUTED);
-//        try {
-//            manager.loadNodeSettings(m_metaNode_2, bogusSettings);
-//            fail("not expected to reach this point");
-//        } catch (InvalidSettingsException ise) {
-//            // expected
-//        }
-//        checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableCreator_1, m_metaNode_2, m_tableChecker_5);
-//        reset(m_tableCreator_1);
-//        executeAllAndWait();
-//        checkState(manager, InternalNodeContainerState.EXECUTED);
-//    }
+    @Test
+    public void testLoadBogusIntoMetaNode() throws Exception {
+        Assume.assumeTrue("No settings validation in metanodes (yet)", false);
+        WorkflowManager manager = getManager();
+        checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreator_1, m_metaNode_2, m_tableChecker_5);
+        NodeSettings s = new NodeSettings("meta-node");
+        manager.saveNodeSettings(m_metaNode_2, s);
+        NodeSettings bogusSettings = new NodeSettings("meta-node");
+        s.copyTo(bogusSettings);
+        executeAllAndWait();
+        checkState(manager, InternalNodeContainerState.EXECUTED);
+        try {
+            manager.loadNodeSettings(m_metaNode_2, bogusSettings);
+            fail("not expected to reach this point");
+        } catch (InvalidSettingsException ise) {
+            // expected
+        }
+        checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableCreator_1, m_metaNode_2, m_tableChecker_5);
+        reset(m_tableCreator_1);
+        executeAllAndWait();
+        checkState(manager, InternalNodeContainerState.EXECUTED);
+    }
 
     /** Try to load invalid settings into executed sub node.
      * @throws Exception ...
      */
+    @Test
     public void testLoadBogusIntoSubNode() throws Exception {
         WorkflowManager manager = getManager();
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreator_1);
@@ -128,6 +134,7 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
     /** Try to load invalid settings into native node.
      * @throws Exception ...
      */
+    @Test
     public void testLoadBogusIntoNativeNode() throws Exception {
         WorkflowManager manager = getManager();
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreator_1, m_rowSampler_4, m_tableChecker_5);

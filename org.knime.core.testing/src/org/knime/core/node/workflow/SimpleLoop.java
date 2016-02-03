@@ -44,9 +44,12 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Map;
 
-import org.knime.core.node.workflow.NodeID;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.testing.node.executioncount.ExecutionCountNodeModel;
 
 /**
@@ -62,10 +65,8 @@ public class SimpleLoop extends WorkflowTestCase {
     private NodeID m_counterOutSinkLoop;
     private NodeID m_tblView;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_loopStart = new NodeID(baseID, 2);
         m_loopEnd = new NodeID(baseID, 3);
@@ -75,6 +76,7 @@ public class SimpleLoop extends WorkflowTestCase {
         m_tblView = new NodeID(baseID, 5);
     }
 
+    @Test
     public void testExecuteFlow() throws Exception {
         checkState(m_loopStart, InternalNodeContainerState.CONFIGURED);
         checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
@@ -103,12 +105,6 @@ public class SimpleLoop extends WorkflowTestCase {
 
         getManager().resetAndConfigureAll();
         assertEquals(getNrTablesInGlobalRepository(), 0);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
 }

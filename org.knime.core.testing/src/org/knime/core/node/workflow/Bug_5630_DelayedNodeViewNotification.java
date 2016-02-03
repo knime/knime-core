@@ -52,6 +52,9 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.varia.LevelRangeFilter;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.util.ViewUtils;
@@ -94,10 +97,8 @@ public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
         }
     };
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_crossTab2 = new NodeID(baseID, 2);
         Logger.getRootLogger().addAppender(m_logAppender);
@@ -109,6 +110,7 @@ public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
      *
      * @throws Exception if an error occurs
      */
+    @Test
     public void testExecuteAndClose() throws Exception {
         NativeNodeContainer crossTabNode = (NativeNodeContainer)findNodeContainer(m_crossTab2);
         NodeView<?> view = (NodeView<?>)crossTabNode.getView(0);
@@ -150,7 +152,8 @@ public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
      * {@inheritDoc}
      */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         Logger.getRootLogger().removeAppender(m_logAppender);
         super.tearDown();
     }

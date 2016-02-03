@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.fail;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -58,6 +60,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.core.runtime.FileLocator;
+import org.junit.After;
+import org.junit.Assert;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
@@ -68,34 +72,15 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public abstract class WorkflowTestCase extends TestCase {
+public abstract class WorkflowTestCase {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private WorkflowManager m_manager;
-
-    /**
-     *
-     */
-    public WorkflowTestCase() {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setUp() throws Exception {
-        // cannot be set as during jenkins testing "Appender 'stdout' does not exist"
-        // NodeLogger.setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, LEVEL.DEBUG, LEVEL.WARN);
-        super.setUp();
-    }
 
     protected NodeID loadAndSetWorkflow() throws Exception {
         File workflowDir = getDefaultWorkflowDirectory();
@@ -209,7 +194,7 @@ public abstract class WorkflowTestCase extends TestCase {
             WorkflowManager project = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getParent();
             project = project.getProjectWFM();
             dumpWorkflowToLog(project);
-            fail(error);
+            org.junit.Assert.fail(error);
         }
     }
 
@@ -235,7 +220,7 @@ public abstract class WorkflowTestCase extends TestCase {
                 + " (dump follows)";
             m_logger.info("Test failed: " + error);
             dumpWorkflowToLog((WorkflowManager)nc);
-            fail(error);
+            Assert.fail(error);
         }
     }
 
@@ -457,11 +442,8 @@ public abstract class WorkflowTestCase extends TestCase {
         nc.removeNodeStateChangeListener(l);
     }
 
-
-    /** {@inheritDoc} */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
         closeWorkflow();
     }
 

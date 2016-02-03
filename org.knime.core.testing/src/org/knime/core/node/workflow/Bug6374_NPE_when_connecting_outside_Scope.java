@@ -44,8 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /** Problems with nested scope nodes and exceptions while dragging connection.
  * 6374: nested scopes of different type with wrong wiring can result in NPE
@@ -60,10 +65,8 @@ public class Bug6374_NPE_when_connecting_outside_Scope extends WorkflowTestCase 
     private NodeID m_catchErrors_5;
 
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_varToTableCol_7 = new NodeID(baseID, 7);
         m_tableColToVar_8 = new NodeID(baseID, 8);
@@ -72,6 +75,7 @@ public class Bug6374_NPE_when_connecting_outside_Scope extends WorkflowTestCase 
     }
 
     /** Add connection, all nodes reset. */
+    @Test
     public void testAddConnection_ThenExecute() throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, CONFIGURED);
@@ -86,6 +90,7 @@ public class Bug6374_NPE_when_connecting_outside_Scope extends WorkflowTestCase 
     }
 
     /** Partially execute, then add connection. This used to cause errors. */
+    @Test
     public void testPartialExecute_ThenAddConnection() throws Exception {
         WorkflowManager manager = getManager();
         executeAndWait(m_catchErrors_5, m_tableColToVar_8);

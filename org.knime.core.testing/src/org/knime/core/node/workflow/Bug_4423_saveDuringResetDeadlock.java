@@ -44,16 +44,20 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
-
-import junit.framework.Assert;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.Node;
@@ -71,10 +75,8 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
     private NodeID m_tableView2;
     private File m_workflowDirTemp;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         File workflowDirSVN = getDefaultWorkflowDirectory();
         // will save the workflow in one of the test ...don't write SVN folder
         m_workflowDirTemp = FileUtil.createTempDir(workflowDirSVN.getName());
@@ -96,6 +98,7 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
         Done;
     }
 
+    @Test
     public void testExecAfterLoad() throws Exception {
         final Pointer<Exception> throwablePointer = Pointer.newInstance(null);
 
@@ -120,7 +123,7 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
         final Thread displayThread = currentDisplay.getThread();
         final Thread currentThread = Thread.currentThread();
         // reset and save are getting called from UI thread - replicate it here.
-        Assert.assertTrue("Not executing in display thread: " + currentThread, currentThread == displayThread);
+        assertTrue("Not executing in display thread: " + currentThread, currentThread == displayThread);
 
         final WorkflowManager workflowManager = getManager();
         executeAllAndWait();
@@ -215,9 +218,9 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
         }
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         if (m_workflowDirTemp != null && m_workflowDirTemp.isDirectory()) {
             FileUtil.deleteRecursively(m_workflowDirTemp);

@@ -48,6 +48,11 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -61,15 +66,14 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
     private NodeID m_tableCreator1;
     private NodeID m_columnFilter2;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreator1 = new NodeID(baseID, 1);
         m_columnFilter2 = new NodeID(baseID, 2);
     }
 
+    @Test
     public void testBundleVersionOnLoad() throws Exception {
         checkState(m_tableCreator1, InternalNodeContainerState.EXECUTED);
 
@@ -90,6 +94,7 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
         assertEquals(colFilterBundle.getSymbolicName(), colFilterBundleInfo.getBundleSymbolicName().get());
     }
 
+    @Test
     public void testBundleVersionAfterReexecute() throws Exception {
         reset(m_tableCreator1);
         // table creator is executed and must have version as from execution time (which was faked but still...)
@@ -104,6 +109,7 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
         assertEquals(tableBundle.getVersion(), tableBundleInfo.getBundleVersion().get());
     }
 
+    @Test
     public void testBundleVersionAfterCopyPaste() throws Exception {
         WorkflowCopyContent copyContent = new WorkflowCopyContent();
         copyContent.setNodeIDs(m_tableCreator1);

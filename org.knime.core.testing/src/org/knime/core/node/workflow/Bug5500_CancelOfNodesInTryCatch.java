@@ -44,6 +44,10 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /** Bug 5500: Cancelled R snippet in Try-catch produces an invalid state
  * http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=5500
@@ -59,10 +63,8 @@ public class Bug5500_CancelOfNodesInTryCatch extends WorkflowTestCase {
     private NodeID m_javaSnippet_10;
     private NodeID m_failBranch_BigDataGenerator_12;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tryStart_8 = new NodeID(baseID, 8);
         m_tryEnd_7 = new NodeID(baseID, 7);
@@ -70,6 +72,7 @@ public class Bug5500_CancelOfNodesInTryCatch extends WorkflowTestCase {
         m_failBranch_BigDataGenerator_12 = new NodeID(baseID, 12);
     }
 
+    @Test
     public void testExecuteThenCancel() throws Exception {
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tryEnd_7, m_tryStart_8, m_javaSnippet_10,
             m_failBranch_BigDataGenerator_12);

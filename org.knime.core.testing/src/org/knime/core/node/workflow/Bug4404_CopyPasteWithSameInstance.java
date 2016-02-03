@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.NodeSettings;
 
 
@@ -57,16 +59,15 @@ public class Bug4404_CopyPasteWithSameInstance extends WorkflowTestCase {
     private NodeID m_javaSnippet200_7;
     private NodeID m_javaSnippet300_8;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_meta100_5 = new NodeID(baseID, 5);
         m_javaSnippet200_7 = new NodeID(baseID, 7);
         m_javaSnippet300_8 = new NodeID(baseID, 8);
     }
 
+    @Test
     public void testCopyAndPasteTwice() throws Exception {
         WorkflowManager manager = getManager();
         WorkflowCopyContent copyContent = new WorkflowCopyContent();
@@ -78,14 +79,14 @@ public class Bug4404_CopyPasteWithSameInstance extends WorkflowTestCase {
         NodeID meta300 = paste2.getNodeIDs()[0];
         fixDataGeneratorSettings(meta200, 200);
         fixDataGeneratorSettings(meta300, 300);
-        
+
         manager.addConnection(meta200, 0, m_javaSnippet200_7, 1);
         manager.addConnection(meta300, 0, m_javaSnippet300_8, 1);
         executeAllAndWait();
         checkState(m_javaSnippet200_7, InternalNodeContainerState.EXECUTED);
         checkState(m_javaSnippet300_8, InternalNodeContainerState.EXECUTED);
     }
-    
+
     private void fixDataGeneratorSettings(final NodeID metanodeID, final int rowCount) throws Exception {
         final NodeID dataGenID = new NodeID(metanodeID, 1);
         final WorkflowManager manager = getManager();
@@ -97,5 +98,5 @@ public class Bug4404_CopyPasteWithSameInstance extends WorkflowTestCase {
         model.addInt("patcount", rowCount);
         metanode.loadNodeSettings(dataGenID, ns);
     }
-    
+
 }

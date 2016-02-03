@@ -44,10 +44,16 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
@@ -74,12 +80,8 @@ public class Enh1536_CancelDuringLoad extends WorkflowTestCase {
     private static ThreadLocal<LoadNodeState> LOAD_NODE_STATE_THREAD_LOCAL = new ThreadLocal<>();
     private File m_workflowDirectory;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         m_workflowDirectory = FileUtil.createTempDir(getClass().getSimpleName());
         NODE_PROGRESS_THREAD_LOCAL.set(new DefaultNodeProgressMonitor());
         final WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
@@ -98,6 +100,7 @@ public class Enh1536_CancelDuringLoad extends WorkflowTestCase {
         WorkflowManager.ROOT.removeNode(wm.getID());
     }
 
+    @Test
     public void testCancelWhileLoad() throws Exception {
         int previousChildCount = WorkflowManager.ROOT.getNodeContainers().size();
         LOAD_NODE_STATE_THREAD_LOCAL.set(LoadNodeState.Default);
@@ -116,7 +119,8 @@ public class Enh1536_CancelDuringLoad extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDirectory);
         NODE_PROGRESS_THREAD_LOCAL.set(null);

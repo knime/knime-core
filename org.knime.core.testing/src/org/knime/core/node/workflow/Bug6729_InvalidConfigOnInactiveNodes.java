@@ -47,6 +47,7 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
@@ -54,6 +55,9 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 import java.io.File;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -68,10 +72,8 @@ public class Bug6729_InvalidConfigOnInactiveNodes extends WorkflowTestCase {
     private NodeID m_fileReader2;
     private File m_workflowDirTemp;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         File workflowDirSVN = getDefaultWorkflowDirectory();
         // will save the workflow in one of the test ...don't write SVN folder
         m_workflowDirTemp = FileUtil.createTempDir(workflowDirSVN.getName());
@@ -92,6 +94,7 @@ public class Bug6729_InvalidConfigOnInactiveNodes extends WorkflowTestCase {
     }
 
     /** Just load and double-check state of filereader is idle. */
+    @Test
     public void testStateAfterLoad() throws Exception {
         checkState(m_fileReader2, IDLE);
         NodeMessage message = getManager().getNodeContainer(m_fileReader2).getNodeMessage();
@@ -101,6 +104,7 @@ public class Bug6729_InvalidConfigOnInactiveNodes extends WorkflowTestCase {
     }
 
     /** Just load and double-check state of filereader is idle. */
+    @Test
     public void testStateAfterExecute() throws Exception {
         executeAllAndWait();
         checkState(m_fileReader2, EXECUTED);
@@ -111,6 +115,7 @@ public class Bug6729_InvalidConfigOnInactiveNodes extends WorkflowTestCase {
     }
 
     /** Just load and double-check state of filereader is idle. */
+    @Test
     public void testStateAfterExecuteAndLoad() throws Exception {
         executeAllAndWait();
         checkState(m_fileReader2, EXECUTED);
@@ -127,7 +132,8 @@ public class Bug6729_InvalidConfigOnInactiveNodes extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         if (m_workflowDirTemp != null && m_workflowDirTemp.isDirectory()) {
             FileUtil.deleteRecursively(m_workflowDirTemp);

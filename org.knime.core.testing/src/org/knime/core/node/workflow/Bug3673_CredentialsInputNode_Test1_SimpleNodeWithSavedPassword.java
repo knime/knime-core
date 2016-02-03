@@ -44,11 +44,17 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.io.File;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.util.FileUtil;
@@ -64,10 +70,8 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
     private NodeID m_activeBranchInverter_3;
     private File m_workflowDirTemp;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         File workflowDirSVN = getDefaultWorkflowDirectory();
         // will save the workflow in one of the test ...don't write SVN folder
         m_workflowDirTemp = FileUtil.createTempDir(workflowDirSVN.getName());
@@ -82,6 +86,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         m_activeBranchInverter_3 = baseID.createChild(3);
     }
 
+    @Test
     public void testExecuteFlow() throws Exception {
         checkState(m_credentialsValidate_2, CONFIGURED);
         assertFalse("Not expected to be dirty", getManager().isDirty());
@@ -90,6 +95,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         assertFalse(((NativeNodeContainer)findNodeContainer(m_credentialsInput_1)).isInactive());
     }
 
+    @Test
     public void testCopyPasteExecuteFlow() throws Exception {
         WorkflowCopyContent cnt = new WorkflowCopyContent();
         cnt.setNodeIDs(m_credentialsInput_1, m_credentialsValidate_2);
@@ -99,6 +105,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         checkStateOfMany(EXECUTED, pasteCNT.getNodeIDs());
     }
 
+    @Test
     public void testCollapseToSubnodeThenSaveLoad() throws Exception {
 //        WorkflowCopyContent cnt = new WorkflowCopyContent();
 //        cnt.setNodeIDs(m_credentialsInput_1);
@@ -142,6 +149,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         checkState(m_credentialsValidate_2, EXECUTED);
     }
 
+    @Test
     public void testPartialExecuteSaveLoadExecute() throws Exception {
         executeAndWait(m_credentialsInput_1);
         checkState(m_credentialsInput_1, InternalNodeContainerState.EXECUTED);
@@ -157,6 +165,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         checkState(m_credentialsValidate_2, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testLoadWhileInactive() throws Exception {
         getManager().addConnection(m_activeBranchInverter_3, 1, m_credentialsInput_1, 0);
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
@@ -176,7 +185,8 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDirTemp);
     }

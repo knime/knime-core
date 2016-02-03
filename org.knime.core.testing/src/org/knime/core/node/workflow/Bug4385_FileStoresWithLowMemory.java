@@ -44,6 +44,10 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 
 /**
@@ -56,16 +60,15 @@ public class Bug4385_FileStoresWithLowMemory extends WorkflowTestCase {
     private NodeID m_testAfterLoop2;
     private NodeID m_testSingle8;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGenStart1 = new NodeID(baseID, 1);
         m_testAfterLoop2 = new NodeID(baseID, 2);
         m_testSingle8 = new NodeID(baseID, 8);
     }
 
+    @Test
     public void testExecuteFlow() throws Exception {
         checkState(InternalNodeContainerState.CONFIGURED);
         executeAllAndWait();
@@ -80,12 +83,6 @@ public class Bug4385_FileStoresWithLowMemory extends WorkflowTestCase {
         checkState(InternalNodeContainerState.EXECUTED);
         // interesting part (where the error used to occur) happens in shutdown.
         // it threw an exception as documented in the bug report
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        // m_manger is shut down, which caused exceptions
-        super.tearDown();
     }
 
     private void checkState(final InternalNodeContainerState state) throws Exception {

@@ -43,12 +43,16 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertNull;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
 import java.io.File;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
 
@@ -64,10 +68,8 @@ public class Bug6339_LoopEndColAppend_PathTooLong extends WorkflowTestCase {
     private NodeID m_javaSnippet_7;
     private File m_tmpWorkflowDir;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         m_tmpWorkflowDir = FileUtil.createTempDir(getClass().getSimpleName() + "-tempTestInstance");
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_tmpWorkflowDir);
         loadFlow();
@@ -82,6 +84,7 @@ public class Bug6339_LoopEndColAppend_PathTooLong extends WorkflowTestCase {
     }
 
     /** Load workflow, execute, check, save, close, reopen, check, reset, execute, check. */
+    @Test
     public void testMain() throws Exception {
         WorkflowManager m = getManager();
         checkState(m, IDLE);
@@ -107,7 +110,8 @@ public class Bug6339_LoopEndColAppend_PathTooLong extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         if (!FileUtil.deleteRecursively(m_tmpWorkflowDir)) {
             getLogger().errorWithFormat("Could not fully delete the temporary workflow dir \"%s\" " +

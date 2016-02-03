@@ -44,9 +44,17 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.quickform.in.QuickFormInputNode;
 
 /**
@@ -58,22 +66,22 @@ public class Bug4175_endless_quickform extends WorkflowTestCase {
     private NodeID m_quickFormBoolean;
     private NodeID m_tableViewEnd;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_quickFormBoolean = new NodeID(baseID, 1);
         m_tableViewEnd = new NodeID(baseID, 14);
     }
 
+    @Test
     public void testExecuteFlow() throws Exception {
         checkState(m_quickFormBoolean, InternalNodeContainerState.CONFIGURED);
         checkState(m_tableViewEnd, InternalNodeContainerState.IDLE);
         executeAndWait(m_tableViewEnd);
         checkState(m_tableViewEnd, InternalNodeContainerState.EXECUTED);
     }
-    
+
+    @Test
     public void testStepExecute() throws Exception {
         WorkflowManager m = getManager();
         m.stepExecutionUpToNodeType(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
@@ -81,7 +89,7 @@ public class Bug4175_endless_quickform extends WorkflowTestCase {
         WorkflowManager waitingWFM = m.findNextWaitingWorkflowManager(
                 QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
         assertSame(m, waitingWFM);
-        Map<NodeID, QuickFormInputNode> waitingNodes = 
+        Map<NodeID, QuickFormInputNode> waitingNodes =
                 waitingWFM.findWaitingNodes(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
         assertEquals(waitingNodes.size(), 1);
         QuickFormInputNode booleanIn = waitingNodes.get(m_quickFormBoolean);
@@ -95,6 +103,7 @@ public class Bug4175_endless_quickform extends WorkflowTestCase {
         checkState(m_tableViewEnd, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testStepExecuteAfterExecuteAll() throws Exception {
         long start = System.currentTimeMillis();
         executeAllAndWait();
@@ -110,7 +119,8 @@ public class Bug4175_endless_quickform extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

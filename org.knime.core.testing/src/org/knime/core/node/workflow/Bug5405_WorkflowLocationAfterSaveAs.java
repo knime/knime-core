@@ -47,11 +47,12 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.util.HashMap;
 
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
-
-import junit.framework.Assert;
 
 /**
  * Tests Save As.
@@ -63,10 +64,8 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
     private NodeID m_fileReader2;
     private NodeID m_diffChecker3;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_fileReader1 = new NodeID(baseID, 1);
         m_fileReader2 = new NodeID(baseID, 2);
@@ -74,6 +73,7 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
     }
 
     /** Basic tests that execution works and the NC dir and workflow context folder are the same. */
+    @Test
     public void testExecAfterLoad() throws Exception {
         WorkflowManager manager = getManager();
         ContainerTable fileReaderTable = getExecuteFileReaderTable();
@@ -89,6 +89,7 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
     }
 
     /** Loads the workflow, saves it to new location, then executes. */
+    @Test
     public void testExecAfterSaveAs() throws Exception {
         WorkflowManager manager = getManager();
         ContainerTable fileReaderTable = getExecuteFileReaderTable();

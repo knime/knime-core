@@ -44,6 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
@@ -52,6 +55,9 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
@@ -69,10 +75,8 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
     private NodeID m_activeBranchInverter_3;
     private File m_workflowDirTemp;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         File workflowDirSVN = getDefaultWorkflowDirectory();
         // will save the workflow in one of the test ...don't write SVN folder
         m_workflowDirTemp = FileUtil.createTempDir(workflowDirSVN.getName());
@@ -91,6 +95,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         return loadHelper;
     }
 
+    @Test
     public void testExecuteFlow() throws Exception {
         TestWorkflowLoadHelper loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
         assertTrue("No password prompted", loadHelper.hasBeenPrompted());
@@ -102,6 +107,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         assertFalse(((NativeNodeContainer)findNodeContainer(m_credentialsInput_1)).isInactive());
     }
 
+    @Test
     public void testExecuteWrongPassword() throws Exception {
         TestWorkflowLoadHelper loadHelper = initFlow(new TestWorkflowLoadHelper("some-wrong-password"));
         checkState(m_credentialsValidate_2, IDLE);
@@ -113,6 +119,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         assertTrue("No password prompted", loadHelper.hasBeenPrompted());
     }
 
+    @Test
     public void testCopyPasteExecuteFlow() throws Exception {
         initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
         WorkflowCopyContent cnt = new WorkflowCopyContent();
@@ -123,6 +130,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         checkStateOfMany(EXECUTED, pasteCNT.getNodeIDs());
     }
 
+    @Test
     public void testPartialExecuteSaveLoadExecute() throws Exception {
         TestWorkflowLoadHelper loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
         executeAndWait(m_credentialsInput_1);
@@ -147,6 +155,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         checkState(m_credentialsValidate_4, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testLoadWhileInactive() throws Exception {
         TestWorkflowLoadHelper loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
         assertTrue("No password prompted", loadHelper.hasBeenPrompted());
@@ -164,6 +173,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         checkState(getManager(), EXECUTED);
     }
 
+    @Test
     public void testCollapseToSubnodeThenSaveLoad() throws Exception {
         TestWorkflowLoadHelper loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
         assertTrue("No password prompted", loadHelper.hasBeenPrompted());
@@ -233,7 +243,8 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDirTemp);
     }

@@ -45,6 +45,8 @@
 package org.knime.core.node.workflow;
 
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
@@ -53,6 +55,8 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGUR
 
 import java.util.Collections;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
 
 
@@ -74,10 +78,8 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
     private NodeID m_javaEdit_InMetaNode_8_4;
     private NodeID m_javaEdit_3;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_subnodeFirstPage_6 = baseID.createChild(6);
         m_subnodeSecondPage_7 = baseID.createChild(7);
@@ -87,6 +89,7 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
         m_javaEdit_3 = baseID.createChild(3);
     }
 
+    @Test
     public void testExecuteAll() throws Exception {
         checkState(m_subnodeFirstPage_6, CONFIGURED);
         checkStateOfMany(IDLE, m_subnodeSecondPage_7, m_subnodeThirdPage_9, m_metaNode_8);
@@ -95,6 +98,7 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
         checkState(wfm, EXECUTED);
     }
 
+    @Test
     public void testWizardStepThrough() throws Exception {
         final WorkflowManager wfm = getManager();
         assertTrue("should have new wizard execution", WizardExecutionController.hasWizardExecution(wfm));

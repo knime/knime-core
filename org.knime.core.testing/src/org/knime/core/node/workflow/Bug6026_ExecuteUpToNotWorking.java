@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Problem was that workflow only consisting of meta nodes don't update their status after parent#executeUpToHere
@@ -53,24 +55,17 @@ package org.knime.core.node.workflow;
  */
 public class Bug6026_ExecuteUpToNotWorking extends WorkflowTestCase {
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         loadAndSetWorkflow();
     }
 
+    @Test
     public void testExecuteUpToHere() throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, InternalNodeContainerState.CONFIGURED);
         manager.getParent().executeUpToHere(manager.getID());
         checkState(manager, InternalNodeContainerState.EXECUTING, InternalNodeContainerState.EXECUTED);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
 }

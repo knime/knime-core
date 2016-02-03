@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -59,10 +59,8 @@ public class MetaWithIndependentThroughConns extends WorkflowTestCase {
     private NodeID m_bottomSink;
     private NodeID m_metaWithOnlyThrough;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_topSource = new NodeID(baseID, 1);
         m_bottomSource = new NodeID(baseID, 2);
@@ -71,6 +69,7 @@ public class MetaWithIndependentThroughConns extends WorkflowTestCase {
         m_bottomSink = new NodeID(baseID, 5);
     }
 
+    @Test
     public void testStateOfMeta() throws Exception {
         checkState(m_topSource, InternalNodeContainerState.CONFIGURED);
         checkState(m_bottomSource, InternalNodeContainerState.CONFIGURED);
@@ -95,6 +94,7 @@ public class MetaWithIndependentThroughConns extends WorkflowTestCase {
         checkState(m_metaWithOnlyThrough, InternalNodeContainerState.CONFIGURED);
     }
 
+    @Test
     public void testPullExecutionFromSink() throws Exception {
         checkState(m_topSource, InternalNodeContainerState.CONFIGURED);
         executeAndWait(m_topSink);
@@ -106,6 +106,7 @@ public class MetaWithIndependentThroughConns extends WorkflowTestCase {
         checkState(m_metaWithOnlyThrough, InternalNodeContainerState.CONFIGURED);
     }
 
+    @Test
     public void testExecuteAllThenDeleteOneSourceConnection() throws Exception {
         executeAllAndWait();
         checkState(m_topSink, InternalNodeContainerState.EXECUTED);
@@ -119,6 +120,7 @@ public class MetaWithIndependentThroughConns extends WorkflowTestCase {
         checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testExecuteAllThenDeleteThroughConnection() throws Exception {
         executeAllAndWait();
         checkState(m_topSink, InternalNodeContainerState.EXECUTED);
@@ -134,6 +136,7 @@ public class MetaWithIndependentThroughConns extends WorkflowTestCase {
         checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testExecuteAllThenResetOneSource() throws Exception {
         executeAllAndWait();
         checkState(m_topSink, InternalNodeContainerState.EXECUTED);
@@ -146,6 +149,7 @@ public class MetaWithIndependentThroughConns extends WorkflowTestCase {
         checkState(m_bottomSink, InternalNodeContainerState.CONFIGURED);
     }
 
+    @Test
     public void testInsertConnection() throws Exception {
 
         // top input deleted

@@ -51,8 +51,11 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 
 /**
@@ -66,10 +69,8 @@ public class Bug6029_ExpandSubnode extends WorkflowTestCase {
     private NodeID m_javaSnippet_After_Expand_3;
     private NodeID m_stringInput5;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableDiffer7 = new NodeID(baseID, 7);
         m_subnode8 = new NodeID(baseID, 8);
@@ -77,6 +78,7 @@ public class Bug6029_ExpandSubnode extends WorkflowTestCase {
         m_stringInput5 = new NodeID(baseID, 5);
     }
 
+    @Test
     public void testSimpleLoadAndExecute() throws Exception {
         checkState(m_tableDiffer7, InternalNodeContainerState.IDLE);
         checkState(m_subnode8, InternalNodeContainerState.IDLE);
@@ -89,6 +91,7 @@ public class Bug6029_ExpandSubnode extends WorkflowTestCase {
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_tableDiffer7, m_subnode8);
     }
 
+    @Test
     public void testExecuteAfterExpandAndCollapse() throws Exception {
         WorkflowManager mgr = getManager();
         ExpandSubnodeResult expandSubWorkflowResult = mgr.expandSubWorkflow(m_subnode8);

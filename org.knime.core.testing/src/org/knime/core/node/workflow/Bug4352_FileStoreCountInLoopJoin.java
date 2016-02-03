@@ -44,7 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import java.io.File;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -57,10 +63,8 @@ public class Bug4352_FileStoreCountInLoopJoin extends WorkflowTestCase {
     private NodeID m_createFS7;
     private NodeID m_loopStart6;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         // will save the workflow in one of the test ...don't write SVN folder
         NodeID baseID = loadAndSetWorkflow();
         m_testFS1 = new NodeID(baseID, 1);
@@ -69,6 +73,7 @@ public class Bug4352_FileStoreCountInLoopJoin extends WorkflowTestCase {
         m_loopStart6 = new NodeID(baseID, 6);
     }
 
+    @Test
     public void testExecuteAllAndCountFileStores() throws Exception {
         checkState(m_testFS1, InternalNodeContainerState.IDLE);
         assertEquals(0, getWriteFileStoreHandlers().size());

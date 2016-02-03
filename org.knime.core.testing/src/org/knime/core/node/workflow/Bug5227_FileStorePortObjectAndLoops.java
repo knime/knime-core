@@ -47,7 +47,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import java.io.File;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests the handling of file store port objects, which are collected/created in loop end nodes.
@@ -62,10 +68,8 @@ public class Bug5227_FileStorePortObjectAndLoops extends WorkflowTestCase {
     private NodeID m_fsPortToCell5;
     private NodeID m_testFS6;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         // will save the workflow in one of the test ...don't write SVN folder
         NodeID baseID = loadAndSetWorkflow();
         m_dataGen1 = new NodeID(baseID, 1);
@@ -76,6 +80,7 @@ public class Bug5227_FileStorePortObjectAndLoops extends WorkflowTestCase {
         m_testFS6 = new NodeID(baseID, 6);
     }
 
+    @Test
     public void testStatusAndCountAfterLoad() throws Exception {
         checkState(m_loopStart3, InternalNodeContainerState.EXECUTED);
         checkState(m_loopEndFS4, InternalNodeContainerState.EXECUTED);
@@ -93,6 +98,7 @@ public class Bug5227_FileStorePortObjectAndLoops extends WorkflowTestCase {
         }
     }
 
+    @Test
     public void testExecuteAllAndCountFileStores() throws Exception {
         checkState(m_testFS6, InternalNodeContainerState.CONFIGURED);
         assertEquals(1, getWriteFileStoreHandlers().size());
@@ -101,6 +107,7 @@ public class Bug5227_FileStorePortObjectAndLoops extends WorkflowTestCase {
         checkState(getManager(), InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testReExecuteAll() throws Exception {
         reset(m_dataGen1);
         executeAllAndWait();
@@ -109,6 +116,7 @@ public class Bug5227_FileStorePortObjectAndLoops extends WorkflowTestCase {
         assertEquals(10 + (5 - 1) * 5, countFilesInDirectory(startFSDir));
     }
 
+    @Test
     public void testReExecuteTestNodeAfterLoad() throws Exception {
         reset(m_testFS6);
         checkState(m_testFS6, InternalNodeContainerState.CONFIGURED);

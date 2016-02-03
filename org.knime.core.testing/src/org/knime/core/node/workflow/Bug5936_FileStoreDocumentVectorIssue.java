@@ -44,8 +44,12 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.fail;
+
 import java.util.List;
 
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.Pair;
 
@@ -62,16 +66,15 @@ public class Bug5936_FileStoreDocumentVectorIssue extends WorkflowTestCase {
     private NodeID m_docVector_3;
     private NodeID m_tagger_4;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableReader_1 = new NodeID(baseID, 1);
         m_docVector_3 = new NodeID(baseID, 3);
         m_tagger_4 = new NodeID(baseID, 4);
     }
 
+    @Test
     public void testExecAllThenReexecute() throws Exception {
         WorkflowManager manager = getManager();
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableReader_1, m_docVector_3, m_tagger_4);

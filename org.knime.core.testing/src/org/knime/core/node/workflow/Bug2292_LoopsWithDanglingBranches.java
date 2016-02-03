@@ -44,8 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * bug 2292: Loop restart with dangling branches flaky.
@@ -59,10 +64,8 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
     private NodeID m_javaSnippet13;
     private NodeID m_loopEnd12;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_javaSnippet7 = new NodeID(baseID, 7);
         m_javaSnippet13 = new NodeID(baseID, 13);
@@ -71,6 +74,7 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
     }
 
     /** Exec all - expect everything to be executed. */
+    @Test
     public void testExecuteAll() throws Exception {
         checkState(getManager(), CONFIGURED);
         executeAllAndWait();
@@ -80,6 +84,7 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
     }
 
     /** Execute top loop (one iteration) - the side branch used to be not executed. */
+    @Test
     public void testSingleIterationExecuteUpToHere() throws Exception {
         executeAndWait(m_loopEnd4);
         checkState(m_loopEnd4, EXECUTED);
@@ -91,6 +96,7 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
     }
 
     /** Execute bottom loop (many iterations) - the is executed (and has always been). */
+    @Test
     public void testManyIterationsExecuteUpToHere() throws Exception {
         executeAndWait(m_loopEnd12);
         waitWhileInExecution();
@@ -100,7 +106,8 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
     }
 

@@ -44,7 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -58,10 +59,8 @@ public class Bug4409_inactiveInnerLoop extends WorkflowTestCase {
     private NodeID m_innerLoopEnd_780;
     private NodeID m_innerJavaSnippet_782;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_outerLoopStart_137 = new NodeID(baseID, 137);
         m_outerLoopEnd_138 = new NodeID(baseID, 138);
@@ -69,33 +68,36 @@ public class Bug4409_inactiveInnerLoop extends WorkflowTestCase {
         m_innerLoopEnd_780 = new NodeID(baseID, 780);
         m_innerJavaSnippet_782 = new NodeID(baseID, 782);
     }
-    
+
+    @Test
     public void testExecuteAll() throws Exception {
         checkState(m_outerLoopEnd_138, InternalNodeContainerState.CONFIGURED);
         executeAllAndWait();
         checkState(m_outerLoopEnd_138, InternalNodeContainerState.EXECUTED);
     }
 
+    @Test
     public void testExecuteAllThenReset() throws Exception {
         executeAllAndWait();
         reset(m_innerLoopStart_767); // propagates to outer loop
         checkState(m_outerLoopStart_137, InternalNodeContainerState.CONFIGURED);
         checkState(m_innerLoopStart_767, InternalNodeContainerState.CONFIGURED);
     }
-    
+
+    @Test
     public void testPartialExecuteThenResetInnerLoop() throws Exception {
         executeAndWait(m_innerLoopEnd_780);
         checkState(m_innerLoopEnd_780, InternalNodeContainerState.EXECUTED);
         checkState(m_innerLoopStart_767, InternalNodeContainerState.EXECUTED);
         reset(m_innerLoopEnd_780);
         checkState(m_innerLoopEnd_780, InternalNodeContainerState.CONFIGURED);
-        // this currently doesn't work: if you reset an inactive loop end 
+        // this currently doesn't work: if you reset an inactive loop end
         // it doesn't reset its loop start - not sure if it should?
         // checkState(m_innerLoopStart_767, InternalNodeContainerState.CONFIGURED);
-        
+
         // execute all again.
         executeAllAndWait();
         checkState(m_outerLoopEnd_138, InternalNodeContainerState.EXECUTED);
     }
-    
+
 }

@@ -44,13 +44,18 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -70,10 +75,8 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
     private NodeID m_meta86;
     private File m_workflowDirTemp;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         File workflowDirSVN = getDefaultWorkflowDirectory();
         // will save the workflow in one of the test ...don't write SVN folder
         m_workflowDirTemp = FileUtil.createTempDir(workflowDirSVN.getName());
@@ -96,6 +99,7 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
         m_meta86 = new NodeID(baseID, 86);
     }
 
+    @Test
     public void testExecuteAllAndCountFileStores() throws Exception {
         checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
         assertEquals(0, getWriteFileStoreHandlers().size());
@@ -127,17 +131,19 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
         checkState(m_loopStartOuter15, InternalNodeContainerState.CONFIGURED);
 
         System.gc(); // we have seen problems on windows where the folder still exists, hopefully this will help
-        assertFalse("Directory must have been deleted: " + startFSDir.getAbsolutePath() 
-                + " found " + (startFSDir.exists() ? countFilesInDirectory(startFSDir) : "-1") 
+        assertFalse("Directory must have been deleted: " + startFSDir.getAbsolutePath()
+                + " found " + (startFSDir.exists() ? countFilesInDirectory(startFSDir) : "-1")
                 + " files", startFSDir.exists());
     }
 
+    @Test
     public void testExecuteAllAndCountFileStoresWithUnconnectedNestedLoop() throws Exception {
         deleteConnection(m_loopEndOuter32, 0);
         deleteConnection(m_testFS31, 0);
         testExecuteAllAndCountFileStores();
     }
 
+    @Test
     public void testFileStoresAfterSaveAndReload() throws Exception {
         executeAllAndWait();
         WorkflowManager mgr = getManager();
@@ -187,7 +193,8 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         super.tearDown();
         if (m_workflowDirTemp != null && m_workflowDirTemp.isDirectory()) {
             FileUtil.deleteRecursively(m_workflowDirTemp);

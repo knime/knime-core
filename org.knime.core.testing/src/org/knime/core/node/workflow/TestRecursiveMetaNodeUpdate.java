@@ -44,6 +44,10 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
+import org.junit.Test;
 import org.knime.core.node.ExecutionMonitor;
 
 
@@ -69,10 +73,8 @@ public class TestRecursiveMetaNodeUpdate extends WorkflowTestCase {
     private NodeID m_metaDifferentDefault_7;
     private NodeID m_metaHiddenLink_19;
 
-    /** {@inheritDoc} */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow(
             getWorkflowDirectory("testRecursiveMetaNodeUpdate_Group/TestRecursiveMetaNodeUpdate"));
         m_tableDiff_BeforeUpdate_11 = new NodeID(baseID, 11);
@@ -91,50 +93,53 @@ public class TestRecursiveMetaNodeUpdate extends WorkflowTestCase {
         m_metaDifferentDefault_7 = new NodeID(baseID, 7);
         m_metaHiddenLink_19 = new NodeID(baseID, 19);
     }
-    
+
     private WorkflowLoadHelper createTemplateLoadHelper() {
         return new WorkflowLoadHelper(true, getManager().getContext());
     }
 
+    @Test
     public void testNoUpdateAfterLoad() throws Exception {
-        assertTrue("expected update to be available", 
+        assertTrue("expected update to be available",
             getManager().checkUpdateMetaNodeLink(m_metaUpdateTwoChildren_6, createTemplateLoadHelper()));
         executeAllAndWait();
-        checkStateOfMany(InternalNodeContainerState.EXECUTED, 
-            m_tableDiff_BeforeUpdate_11, m_tableDiff_BeforeUpdate_13, m_tableDiff_BeforeUpdate_15, 
+        checkStateOfMany(InternalNodeContainerState.EXECUTED,
+            m_tableDiff_BeforeUpdate_11, m_tableDiff_BeforeUpdate_13, m_tableDiff_BeforeUpdate_15,
             m_tableDiff_BeforeUpdate_17, m_tableDiff_BeforeUpdate_21);
-        checkStateOfMany(InternalNodeContainerState.EXECUTED, 
-            m_metaNoUpdateAvail_4, m_metaUpdateOnlyInChild_5, m_metaUpdateTwoChildren_6, 
-            m_metaDifferentDefault_7, m_metaHiddenLink_19); 
-        
+        checkStateOfMany(InternalNodeContainerState.EXECUTED,
+            m_metaNoUpdateAvail_4, m_metaUpdateOnlyInChild_5, m_metaUpdateTwoChildren_6,
+            m_metaDifferentDefault_7, m_metaHiddenLink_19);
+
         checkStateOfMany(InternalNodeContainerState.CONFIGURED,
-            m_tableDiff_AfterUpdate_22, m_tableDiff_AfterUpdate_23, m_tableDiff_AfterUpdate_27, 
+            m_tableDiff_AfterUpdate_22, m_tableDiff_AfterUpdate_23, m_tableDiff_AfterUpdate_27,
             m_tableDiff_AfterUpdate_28, m_tableDiff_AfterUpdate_30);
     }
-    
+
+    @Test
     public void testAllUpdateAfterLoad() throws Exception {
         getManager().updateMetaNodeLinks(createTemplateLoadHelper(), true, new ExecutionMonitor());
         executeAllAndWait();
 
-        checkStateOfMany(InternalNodeContainerState.CONFIGURED, 
-            m_tableDiff_BeforeUpdate_11, m_tableDiff_BeforeUpdate_13, m_tableDiff_BeforeUpdate_15, 
+        checkStateOfMany(InternalNodeContainerState.CONFIGURED,
+            m_tableDiff_BeforeUpdate_11, m_tableDiff_BeforeUpdate_13, m_tableDiff_BeforeUpdate_15,
             m_tableDiff_BeforeUpdate_17, m_tableDiff_BeforeUpdate_21);
-        
-        checkStateOfMany(InternalNodeContainerState.EXECUTED, 
-            m_metaNoUpdateAvail_4, m_metaUpdateOnlyInChild_5, m_metaUpdateTwoChildren_6, 
-            m_metaDifferentDefault_7, m_metaHiddenLink_19); 
-        
+
         checkStateOfMany(InternalNodeContainerState.EXECUTED,
-            m_tableDiff_AfterUpdate_22, m_tableDiff_AfterUpdate_23, m_tableDiff_AfterUpdate_27, 
+            m_metaNoUpdateAvail_4, m_metaUpdateOnlyInChild_5, m_metaUpdateTwoChildren_6,
+            m_metaDifferentDefault_7, m_metaHiddenLink_19);
+
+        checkStateOfMany(InternalNodeContainerState.EXECUTED,
+            m_tableDiff_AfterUpdate_22, m_tableDiff_AfterUpdate_23, m_tableDiff_AfterUpdate_27,
             m_tableDiff_AfterUpdate_28, m_tableDiff_AfterUpdate_30);
     }
-    
+
+    @Test
     public void testUpdateMetaDifferentDefault() throws Exception {
         executeAndWait(m_tableDiff_BeforeUpdate_11);
         checkState(m_tableDiff_BeforeUpdate_11, InternalNodeContainerState.EXECUTED);
         executeAndWait(m_tableDiff_AfterUpdate_28);
         checkState(m_tableDiff_AfterUpdate_28, InternalNodeContainerState.CONFIGURED); // failed
-        assertTrue("Expected meta node update available", 
+        assertTrue("Expected meta node update available",
             getManager().checkUpdateMetaNodeLink(m_metaDifferentDefault_7, createTemplateLoadHelper()));
         getManager().updateMetaNodeLink(m_metaDifferentDefault_7, new ExecutionMonitor(), createTemplateLoadHelper());
         checkState(m_tableDiff_BeforeUpdate_11, InternalNodeContainerState.CONFIGURED);
@@ -143,13 +148,14 @@ public class TestRecursiveMetaNodeUpdate extends WorkflowTestCase {
         executeAndWait(m_tableDiff_AfterUpdate_28);
         checkState(m_tableDiff_AfterUpdate_28, InternalNodeContainerState.EXECUTED); // failed
     }
-    
+
+    @Test
     public void testUpdateOnlyInChild() throws Exception {
         executeAndWait(m_tableDiff_BeforeUpdate_15);
         checkState(m_tableDiff_BeforeUpdate_15, InternalNodeContainerState.EXECUTED);
         executeAndWait(m_tableDiff_AfterUpdate_22);
         checkState(m_tableDiff_AfterUpdate_22, InternalNodeContainerState.CONFIGURED); // failed
-        assertTrue("Expected meta node update available", 
+        assertTrue("Expected meta node update available",
             getManager().checkUpdateMetaNodeLink(m_metaUpdateOnlyInChild_5, createTemplateLoadHelper()));
         getManager().updateMetaNodeLink(m_metaUpdateOnlyInChild_5, new ExecutionMonitor(), createTemplateLoadHelper());
         checkState(m_tableDiff_BeforeUpdate_15, InternalNodeContainerState.CONFIGURED);
