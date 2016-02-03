@@ -49,15 +49,19 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Collection;
 
-import javax.swing.Box;
+import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
@@ -70,6 +74,7 @@ import javax.swing.text.AbstractDocument;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.SettingsModelAuthentication.Type;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.CredentialsProvider;
 
@@ -91,35 +96,76 @@ public final class DialogComponentAuthentication extends DialogComponent {
     private final JPasswordField m_passwordField;
 
     /**
-     * @param authModel
+     * Constructor for this dialog component.
+     *
+     * @param authModel The {@link SettingsModel}.
+     *
      */
     public DialogComponentAuthentication(final SettingsModelAuthentication authModel) {
+        this(authModel, null);
+    }
+
+    /**
+     * Constructor for this dialog component.
+     *
+     * @param authModel The {@link SettingsModel}.
+     * @param label The label.
+     */
+    public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label) {
         super(authModel);
+        getComponentPanel().setLayout(new GridBagLayout());
+        final JPanel authBox = new JPanel(new GridBagLayout());
 
-        final Box authBox = Box.createVerticalBox();
+        final Insets neutralInset = new Insets(0, 0, 0, 0);
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.LINE_START;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
 
+        if (label != null) {
+            authBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " " + label + " "));
+
+        }
+
+        final int leftInset = 23;
+        gbc.gridwidth = 2;
         m_checkCredential = new JRadioButton("Use credentials");
-        authBox.add(m_checkCredential);
-
+        authBox.add(m_checkCredential, gbc);
+        gbc.gridy++;
         m_credentialField = new JComboBox<>();
-        authBox.add(m_credentialField);
+        gbc.insets = new Insets(0, leftInset, 0, 0);
+        authBox.add(m_credentialField, gbc);
+        gbc.insets = neutralInset;
 
+        gbc.gridy++;
+        gbc.gridwidth = 2;
         m_checkUser = new JRadioButton("Use username & password");
-        authBox.add(m_checkUser);
-
-        authBox.add(new JLabel("Username:"));
-        m_usernameField = new JTextField();
-        authBox.add(m_usernameField);
-
-        authBox.add(new JLabel("Password:"));
-        m_passwordField = new JPasswordField();
-        authBox.add(m_passwordField);
+        authBox.add(m_checkUser, gbc);
+        gbc.gridwidth = 1;
+        gbc.gridy++;
+        gbc.insets = new Insets(0, leftInset, 0, 5);
+        authBox.add(new JLabel("Username:", 10), gbc);
+        gbc.gridx = 1;
+        gbc.insets = neutralInset;
+        gbc.ipadx = 10;
+        m_usernameField = new JTextField(20);
+        authBox.add(m_usernameField, gbc);
+        gbc.ipadx = 0;
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.insets = new Insets(0, leftInset, 0, 5);
+        authBox.add(new JLabel("Password:", 10), gbc);
+        gbc.gridx = 1;
+        gbc.insets = neutralInset;
+        m_passwordField = new JPasswordField(20);
+        authBox.add(m_passwordField, gbc);
 
         m_checkCredential.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                setSelected(m_checkCredential.isSelected());
+                setSelectedType(SettingsModelAuthentication.Type.CREDENTIALS);
             }
 
         });
@@ -128,7 +174,7 @@ public final class DialogComponentAuthentication extends DialogComponent {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                setSelected(!m_checkUser.isSelected());
+                setSelectedType(SettingsModelAuthentication.Type.USER_PWD);
             }
         });
 
@@ -204,18 +250,20 @@ public final class DialogComponentAuthentication extends DialogComponent {
 
         final SettingsModelAuthentication model = (SettingsModelAuthentication)getModel();
 
-//        model.setCredentialSelected(m_checkCredential.isSelected());
-//
-//        model.setCredential((String)m_credentialField.getSelectedItem());
-//        model.setUsername(m_usernameField.getText());
         char[] password = m_passwordField.getPassword();
         String pwd = null;
         if (password != null && password.length > 1) {
             pwd = new String(password);
         }
-//        model.setPassword(pwd);
 
-        model.setValues((String)m_credentialField.getSelectedItem(), m_checkCredential.isSelected(), m_usernameField.getText(), pwd);
+        final Type type;
+        if (m_checkCredential.isSelected()) {
+            type = Type.CREDENTIALS;
+        } else {
+            type = Type.USER_PWD;
+        }
+
+        model.setValues((String)m_credentialField.getSelectedItem(), type, m_usernameField.getText(), pwd);
 
     }
 
@@ -227,7 +275,9 @@ public final class DialogComponentAuthentication extends DialogComponent {
         // only update component if values are off
         final SettingsModelAuthentication model = (SettingsModelAuthentication)getModel();
         setEnabledComponents(model.isEnabled());
-        setSelected(model.isCredentialSelected());
+
+        setSelectedType(model.getSelectedType());
+
         if (m_credentialField.getSelectedItem() != null
             && !((String)m_credentialField.getSelectedItem()).equals(model.getCredential())) {
             ItemListener[] itemListeners = m_credentialField.getItemListeners();
@@ -256,8 +306,6 @@ public final class DialogComponentAuthentication extends DialogComponent {
             }
         }
 
-
-
     }
 
     private static void updateNoListener(final JTextField txtField, final String text) {
@@ -272,7 +320,21 @@ public final class DialogComponentAuthentication extends DialogComponent {
         }
     }
 
-    private void setSelected(final boolean credentialIsSelected) {
+    private void setSelectedType(final Type type) {
+        boolean credentialIsSelected;
+        switch (type) {
+            case USER_PWD:
+                credentialIsSelected = false;
+                break;
+
+            case CREDENTIALS:
+                credentialIsSelected = true;
+                break;
+
+            default:
+                credentialIsSelected = false;
+                break;
+        }
         m_checkCredential.setSelected(credentialIsSelected);
         m_credentialField.setEnabled(credentialIsSelected);
         m_checkUser.setSelected(!credentialIsSelected);

@@ -64,11 +64,11 @@ public class SettingsModelAuthentication extends SettingsModel {
 
     private String m_credential;
 
+    private Type m_type;
+
     private final String m_configName;
 
-    private boolean m_credentialIsSelected;
-
-    private final static String secretKey = "DasAlsoWarDesPudelsKern!";
+    private final static String secretKey = "DasAlsoWarDesPudelsKern!VonGoethe";
 
     private final static String CREDENTIAL = "credential";
 
@@ -76,13 +76,27 @@ public class SettingsModelAuthentication extends SettingsModel {
 
     private final static String USERNAME = "username";
 
-    private final static String CRED_IS_SELECTED = "credentialSelected";
+    private final static String SELECTED_TYPE = "selectedType";
 
     /**
-     * @param configName
-     * @param defaultUsername
-     * @param defaultPassword
-     * @param defaultCredential
+     *
+     * @author Lara Gorini
+     */
+    public enum Type {
+            /**
+             * Authentication with username and password.
+             */
+        USER_PWD, /**
+                   * Authentication with workflow credentials.
+                   */
+        CREDENTIALS,
+    }
+
+    /**
+     * @param configName The identifier the values are stored with in the {@link org.knime.core.node.NodeSettings} object.
+     * @param defaultUsername Initial username.
+     * @param defaultPassword Initial password.
+     * @param defaultCredential Initial credential name.
      */
     public SettingsModelAuthentication(final String configName, final String defaultUsername,
         final String defaultPassword, final String defaultCredential) {
@@ -95,6 +109,8 @@ public class SettingsModelAuthentication extends SettingsModel {
 
         m_credential = defaultCredential;
         m_configName = configName;
+
+        m_type = Type.USER_PWD;
     }
 
     /**
@@ -139,7 +155,7 @@ public class SettingsModelAuthentication extends SettingsModel {
         config.getString(CREDENTIAL);
         config.getString(USERNAME);
         config.getPassword(PASSWORD, secretKey);
-        config.getBoolean(CRED_IS_SELECTED);
+        config.getString(SELECTED_TYPE);
     }
 
     /**
@@ -149,7 +165,8 @@ public class SettingsModelAuthentication extends SettingsModel {
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         // no default value, throw an exception instead
         Config config = settings.getConfig(m_configName);
-        setValues(config.getString(CREDENTIAL), config.getBoolean(CRED_IS_SELECTED), config.getString(USERNAME), config.getPassword(PASSWORD, secretKey));
+        setValues(config.getString(CREDENTIAL), Type.valueOf(config.getString(SELECTED_TYPE)),
+            config.getString(USERNAME), config.getPassword(PASSWORD, secretKey));
     }
 
     /**
@@ -162,12 +179,12 @@ public class SettingsModelAuthentication extends SettingsModel {
         final Config config;
         try {
             config = settings.getConfig(m_configName);
-            setValues(config.getString(CREDENTIAL, m_credential), config.getBoolean(CRED_IS_SELECTED, m_credentialIsSelected),
-                config.getString(USERNAME, m_username), config.getPassword(PASSWORD, secretKey, m_password));
+            setValues(config.getString(CREDENTIAL, m_credential),
+                Type.valueOf(config.getString(SELECTED_TYPE, m_type.name())), config.getString(USERNAME, m_username),
+                config.getPassword(PASSWORD, secretKey, m_password));
         } catch (InvalidSettingsException ex) {
             throw new NotConfigurableException(ex.getMessage());
         }
-
 
     }
 
@@ -180,7 +197,7 @@ public class SettingsModelAuthentication extends SettingsModel {
         config.addString(CREDENTIAL, m_credential);
         config.addString(USERNAME, m_username);
         config.addPassword(PASSWORD, secretKey, m_password);
-        config.addBoolean(CRED_IS_SELECTED, m_credentialIsSelected);
+        config.addString(SELECTED_TYPE, m_type.name());
     }
 
     /**
@@ -192,14 +209,14 @@ public class SettingsModelAuthentication extends SettingsModel {
     }
 
     /**
-     * @param selectedCredential
-     * @param useCredential
-     * @param userName
-     * @param pwd
+     * @param selectedCredential Credential that is selected.
+     * @param type Type of authentication that is selected.
+     * @param userName Given username.
+     * @param pwd Given password.
      */
-    public void setValues(final String selectedCredential, final boolean useCredential, final String userName, final String pwd) {
+    public void setValues(final String selectedCredential, final Type type, final String userName, final String pwd) {
         boolean changed = false;
-        changed = setCredentialSelected(useCredential) || changed;
+        changed = setType(type) || changed;
         changed = setCredential(selectedCredential) || changed;
         changed = setUsername(userName) || changed;
         changed = setPassword(pwd) || changed;
@@ -208,20 +225,12 @@ public class SettingsModelAuthentication extends SettingsModel {
         }
     }
 
-    /**
-     * @param selected
-     * @return
-     */
-    private boolean setCredentialSelected(final boolean selected) {
-        boolean sameValue = selected == m_credentialIsSelected;
-        m_credentialIsSelected = selected;
+    private boolean setType(final Type type) {
+        boolean sameValue = type.name().equals(m_type.name());
+        m_type = type;
         return !sameValue;
     }
 
-    /**
-     * @param newValue
-     * @return
-     */
     private boolean setCredential(final String newValue) {
 
         boolean sameValue;
@@ -234,10 +243,6 @@ public class SettingsModelAuthentication extends SettingsModel {
         return !sameValue;
     }
 
-    /**
-     * @param newValue
-     * @return <code>true</code> if value has changed
-     */
     private boolean setUsername(final String newValue) {
         boolean sameValue;
         if (newValue == null) {
@@ -249,10 +254,6 @@ public class SettingsModelAuthentication extends SettingsModel {
         return !sameValue;
     }
 
-    /**
-     * @param pwd
-     * @return
-     */
     private boolean setPassword(final String pwd) {
         boolean sameValue;
         if (pwd == null) {
@@ -265,31 +266,31 @@ public class SettingsModelAuthentication extends SettingsModel {
     }
 
     /**
-     * @return
+     * @return credential name.
      */
     public String getCredential() {
         return m_credential;
     }
 
     /**
-     * @return
+     * @return username.
      */
     public String getUsername() {
         return m_username;
     }
 
     /**
-     * @return
+     * @return password.
      */
     public String getPassword() {
         return m_password;
     }
 
     /**
-     * @return
+     * @return selected type.
      */
-    public boolean isCredentialSelected() {
-        return m_credentialIsSelected;
+    public Type getSelectedType() {
+        return m_type;
     }
 
 }
