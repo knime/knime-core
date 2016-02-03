@@ -219,6 +219,7 @@ final class CorrelationComputeNodeView extends NodeView<CorrelationComputeNodeMo
                 if (r instanceof JLabel) {
                     ((JLabel)r).setUI(new VerticalLabelUI());
                 }
+                m_tableView.setColumnHeaderViewHeight(-1);
             } else {
                 cornerRenderer.setPaintLegend(false);
                 m_tableView.setColumnHeaderViewHeight(16);
