@@ -28,8 +28,9 @@
 			 remains the same. Only exact matches are possible.
 		 </p>
 		 <p>
-		 	Note: The dictionary does not get saved to the archive when the flow is
-		 	exported. The dictionary file needs to be saved/exported separately.
+		 	Note, the dictionary does not get saved to the archive when the flow is
+		 	exported. The dictionary file needs to be saved/exported separately. In general it's advisable
+            to use the Cell Replacer node as this has a dedicated dictionary port.
 		 </p>
 		</intro>
 		<option name="Target Column">The column containing the to-be-replaced elements.</option>
