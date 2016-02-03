@@ -57,7 +57,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
+import org.apache.commons.io.FileUtils;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -300,10 +302,54 @@ public final class SandboxedNodeCreator {
             // save workflow in the local job dir
             if (m_localWorkflowDir != null) {
                 tempWFM.save(m_localWorkflowDir, exec, true);
+                deepCopyFilesInWorkflowDir(m_nc, tempWFM);
             }
             return new SandboxedNode(tempWFM, targetNodeID);
         } finally {
             portObjectRepositoryIDs.stream().forEach(PortObjectRepository::remove);
+        }
+    }
+
+    private static final String[] MAGIC_DATA_FOLDERS = {"data", "drop"};
+
+    /**
+     * Deep copies data and drop folders contained in the source directory to the target directory.
+     * @param source Source node
+     * @param targetParent Target node's parent
+     */
+    private static void deepCopyFilesInWorkflowDir(final NodeContainer source, final WorkflowManager targetParent) {
+        NodeContainer target = targetParent.getNodeContainer(
+            targetParent.getID().createChild(source.getID().getIndex()));
+        ReferencedFile sourceDirRef = source.getNodeContainerDirectory();
+        ReferencedFile targetDirRef = target.getNodeContainerDirectory();
+        File sourceDir = sourceDirRef.getFile();
+        File targetDir = targetDirRef.getFile();
+
+        for (String magicFolderName : MAGIC_DATA_FOLDERS) {
+            File dataSourceDir = new File(sourceDir, magicFolderName);
+            if (dataSourceDir.isDirectory()) {
+                File dataTargetDir = new File(targetDir, magicFolderName);
+                try {
+                    FileUtils.copyDirectory(dataSourceDir, dataTargetDir);
+                    LOGGER.debugWithFormat("Copied directory \"%s\" to \"%s\"",
+                        dataSourceDir.getAbsolutePath(), dataTargetDir.getAbsolutePath());
+                } catch (IOException ex) {
+                    LOGGER.error(String.format("Could not copy directory \"%s\" to \"%s\": %s",
+                        dataSourceDir.getAbsolutePath(), dataTargetDir.getAbsolutePath(), ex.getMessage()), ex);
+                }
+            }
+        }
+        Collection<NodeContainer> childrenList = Collections.emptyList();
+        WorkflowManager childTargetParent = null;
+        if (source instanceof WorkflowManager) {
+            childrenList = ((WorkflowManager)source).getNodeContainers();
+            childTargetParent = (WorkflowManager)target;
+        } else if (source instanceof SubNodeContainer) {
+            childrenList = ((SubNodeContainer)source).getWorkflowManager().getNodeContainers();
+            childTargetParent = ((SubNodeContainer)target).getWorkflowManager();
+        }
+        for (NodeContainer child : childrenList) {
+            deepCopyFilesInWorkflowDir(child, childTargetParent);
         }
     }
 
