@@ -185,6 +185,10 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
                 Connection conn = it.next();
                 if (conn.getMetaData().getURL().contains(m_dbName)) {
                     if (!conn.isClosed()) {
+                        NodeLogger.getLogger(getClass()).debug("Closing connection " + conn.getMetaData().getURL()
+                            + " for user " + conn.getMetaData().getUserName());
+                        conn.setAutoCommit(false);
+                        conn.rollback();
                         conn.close();
                     }
                     it.remove();
