@@ -317,6 +317,11 @@ public class NodeMonitorView extends ViewPart
      */
     @Override
     public void dispose() {
+        NodeContainer cont = m_lastNode;
+        if (cont != null) {
+            cont.removeNodeStateChangeListener(this);
+            m_lastNode = null;
+        }
         getViewSite().getPage().removeSelectionListener(this);
         super.dispose();
     }
