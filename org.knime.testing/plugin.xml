@@ -176,6 +176,9 @@
       <DifferenceCheckerFactory
             class="org.knime.testing.internal.diffcheckers.IgnoreChecker$Factory">
       </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.XMLChecker$Factory">
+      </DifferenceCheckerFactory>
    </extension>
    <extension
          id="NGTestflowRunner"
