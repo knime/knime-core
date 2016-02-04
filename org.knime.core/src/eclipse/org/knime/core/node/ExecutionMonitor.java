@@ -130,13 +130,16 @@ public class ExecutionMonitor {
         m_progress.setProgress(progress, message);
     }
 
-    /** Set progress value and message as per arguments. The progress value needs to be in [0, 1] (others are ignored)
-     * and are absolute (not incremental). The message is provided by given supplier, whereby its {@linkplain
-     * Supplier#get() get-method} is not evaluated until actually needed (which might be a performance boost in case
-     * many progress/message updates are generated).
+    /**
+     * Set progress value and message as per arguments. The progress value needs to be in [0, 1] (others are ignored)
+     * and be an absolute progress value (not incremental). The message is provided by given supplier, whereby it's
+     * {@linkplain Supplier#get() get-method} is not evaluated until actually needed (which might be a performance boost
+     * in case many progress/message updates are generated).
+     *
      * @param progress Progress in [0, 1] - invalid values are ignored.
-     * @param messageSupplier The message supplier, not null (though provided value may be null).
-     * @throws IllegalArgumentException If supplier argument is null.
+     * @param messageSupplier The message supplier, not <code>null</code> (though the supplied value may be
+     *            <code>null</code>).
+     * @throws IllegalArgumentException If supplier argument is <code>null</code>.
      * @see NodeProgressMonitor#setProgress(double, Supplier)
      * @since 3.2
      */
@@ -152,9 +155,12 @@ public class ExecutionMonitor {
         m_progress.setMessage(message);
     }
 
-    /** Set a new message based on a supplier. For further details see {@link #setProgress(double, String)}.
-     * @param messageSupplier The non-null message supplier.
-     * @since 3.2 */
+    /**
+     * Set a new message based on a supplier. For further details see {@link #setProgress(double, Supplier)}.
+     *
+     * @param messageSupplier The non-<code>null</code> message supplier.
+     * @since 3.2
+     */
     public void setMessage(final Supplier<String> messageSupplier) {
         m_progress.setMessage(messageSupplier);
     }
