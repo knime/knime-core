@@ -692,8 +692,13 @@ public class DatabaseConnectionSettings {
                 conn.commit();
             }
         } catch (SQLException ex) {
-            if ((conn != null) && !conn.getAutoCommit()) {
-                conn.rollback();
+            try {
+                if ((conn != null) && !conn.getAutoCommit()) {
+                    conn.rollback();
+                }
+            } catch (SQLException ex2) {
+                // ignore this one and throw the original exception
+                LOGGER.debug("Caught another SQL exception while rolling back transaction: " + ex2.getMessage(), ex2);
             }
             throw ex;
         } finally {
