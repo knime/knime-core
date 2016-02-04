@@ -44,18 +44,21 @@
  */
 package org.knime.testing.core;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.Arrays;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.knime.core.node.NodeFactory;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
@@ -77,6 +80,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
     private static final String PARAM_FILE_NAME = "-outFile";
     private static final String PARAM_DIRECTORY = "-outDir";
     private static final String DEFAULT_FILE_NAME = "overview.html";
+    private static final String DEFAULT_CSV_FILE_NAME = "overview.csv";
     private static final String DETAIL_DIR_NAME = "details";
     private boolean m_createDir = false;
     private File m_detailsDir;
@@ -114,6 +118,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
         }
 
         File file = null;
+        File csvFile = new File(directory, DEFAULT_CSV_FILE_NAME);
         if (m_createDir) {
             String name = null;
             if (!found) {
@@ -134,7 +139,6 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
                     + " descriptions of the nodes are created in addition.");
             return IApplication.EXIT_OK;
         }
-        Writer writer = new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8"));
 
         // unless the user specified this property, we set it to true here
         // (true means no icons etc will be loaded, if it is false, the
@@ -142,12 +146,19 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
         if (System.getProperty("java.awt.headless") == null) {
             System.setProperty("java.awt.headless", "true");
         }
-
         Root root = RepositoryManager.INSTANCE.getRoot();
-        writer.write("<html><body>\n");
-        print(writer, 0, root, false);
-        writer.write("</body></html>\n");
-        writer.close();
+
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8"))) {;
+            writer.write("<html><body>\n");
+            print(writer, 0, root, false);
+            writer.write("</body></html>\n");
+        }
+
+        // generate CSV
+        try (BufferedWriter csvwriter = Files.newBufferedWriter(csvFile.toPath())) {
+            printCSV(csvwriter, root, "");
+        }
+
         System.out.println("Node description generation successfully finished");
         return IApplication.EXIT_OK;
     }
@@ -230,6 +241,58 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
             writer.write("</li>");
         }
     }
+
+
+
+    /** Recursive print of nodes to argument writer. */
+    private void printCSV(final BufferedWriter writer, final IRepositoryObject object, final String hist)
+        throws IOException {
+
+        // write header
+
+        writer.append("True path" + ',' + "System path" + ',' + "Name" + ',' + "Factory" + "," + "NodeModel");
+        writer.newLine();
+
+        if (object instanceof Root) {
+            Root r = (Root)object;
+            for (IRepositoryObject child : r.getChildren()) {
+                printCSV(writer, child, hist +  "/"+ child.getName());
+            }
+        } else {
+            if (object instanceof Category) {
+                Category c = (Category)object;
+                for (IRepositoryObject child : c.getChildren()) {
+                    printCSV(writer, child, hist + "/"+ child.getName());
+                }
+            } else if (object instanceof NodeTemplate) {
+                NodeTemplate t = (NodeTemplate)object;
+                String nodeModel = "";
+                try {
+                    NodeFactory nf = t.getFactory().newInstance();
+                    nodeModel = nf.createNodeModel().getClass().getName();
+                } catch (Exception e) {
+                    nodeModel = "n/a"; // some nodesfactorys don't have nodemodels. e.g.
+                }
+                writer.append(hist + ','
+                    + t.getCategoryPath()  + ','
+                    + t.getName()  + ','
+                    + t.getFactory().toString() + ','
+                    + nodeModel);
+                writer.newLine();
+            }
+
+//            NativeNodeContainer nc;
+//            else if (object instanceof MetaNodeTemplate) {
+//            // Metanodes are not of interest for the usage statics analysis
+//                MetaNodeTemplate m = (MetaNodeTemplate)object;
+//                writer.append(hist + ','
+//                    + m.getCategoryPath()  + ','
+//                    + m.getName()  + ','
+//                    + m.getContributingPlugin());
+//            }
+        }
+    }
+
 
     private static String readShortDescriptionFromXML(final Element knimeNode,
             final int indent) {
