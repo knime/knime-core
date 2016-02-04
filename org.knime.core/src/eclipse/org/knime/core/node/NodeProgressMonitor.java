@@ -85,12 +85,13 @@ public interface NodeProgressMonitor {
     void setProgress(final double progress, final String message);
 
     /**
-     * Sets a new progress value and message based on supplier. This message is generally preferred over setting
-     * the message directly as KNIME's UI updater has a built-in delay so the majority of messages is never
-     * reported (and string construction is expensive).
+     * Sets a new progress value and message based on supplier. This message is generally preferred over setting the
+     * message directly as KNIME's UI updater has a built-in delay so the majority of messages is never reported (and
+     * string construction is expensive).
+     *
      * @param progress The value between 0 and 1 (out of range values are ignored).
-     * @param message A non-null message supplier to generate a string shown in the progress monitor (message may be
-     * <code>null</code>).
+     * @param message A non-<code>null</code> message supplier to generate a string shown in the progress monitor
+     *            (message may be <code>null</code>).
      * @since 3.2
      */
     default void setProgress(final double progress, final Supplier<String> message) {
