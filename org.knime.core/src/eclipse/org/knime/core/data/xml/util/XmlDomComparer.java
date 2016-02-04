@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.xml.util.XmlDomComparer.Diff.Type;
 import org.knime.core.node.util.filter.InputFilter;
@@ -639,6 +640,23 @@ public final class XmlDomComparer {
          */
         public Type getType() {
             return m_type;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            // why on earth do we store the reverse path???
+            List<Node> temp = new ArrayList<>();
+            for (int i = getReversePath().size() - 1; i >= 0; i--) {
+                temp.add(getReversePath().get(i));
+            }
+
+            return getType() + " at /"
+                + temp.stream().map(n -> ((n instanceof Attr) ? "@" : "") + n.getNodeName())
+                    .collect(Collectors.joining("/"))
+                + ": expected '" + getExpectedValue() + "', actual '" + getActualValue() + "'";
         }
     }
 }
