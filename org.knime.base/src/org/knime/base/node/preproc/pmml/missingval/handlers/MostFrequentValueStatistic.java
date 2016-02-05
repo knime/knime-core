@@ -70,8 +70,9 @@ public class MostFrequentValueStatistic extends Statistic {
      * Constructor for a new instance of MostFrequentValueStatistic.
      * @param col the column this statistic is calculated for
      */
+    @SuppressWarnings("unchecked")
     public MostFrequentValueStatistic(final String col) {
-        super(org.knime.core.data.NominalValue.class, col);
+        super(new Class[]{org.knime.core.data.NominalValue.class, org.knime.core.data.IntValue.class}, col);
     }
 
     private Map<DataCell, MutableInteger> m_nominalValues;
