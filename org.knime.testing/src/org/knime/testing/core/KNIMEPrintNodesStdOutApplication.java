@@ -148,15 +148,17 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
         }
         Root root = RepositoryManager.INSTANCE.getRoot();
 
-        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8"))) {;
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8"))) {
             writer.write("<html><body>\n");
             print(writer, 0, root, false);
             writer.write("</body></html>\n");
         }
 
         // generate CSV
-        try (BufferedWriter csvwriter = Files.newBufferedWriter(csvFile.toPath())) {
-            printCSV(csvwriter, root, "");
+        try (BufferedWriter writer = Files.newBufferedWriter(csvFile.toPath())) {
+            writer.append("True path" + ',' + "System path" + ',' + "Name" + ',' + "Factory" + "," + "NodeModel");
+            writer.newLine();
+            printCSV(writer, root, "");
         }
 
         System.out.println("Node description generation successfully finished");
@@ -247,11 +249,6 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
     /** Recursive print of nodes to argument writer. */
     private void printCSV(final BufferedWriter writer, final IRepositoryObject object, final String hist)
         throws IOException {
-
-        // write header
-
-        writer.append("True path" + ',' + "System path" + ',' + "Name" + ',' + "Factory" + "," + "NodeModel");
-        writer.newLine();
 
         if (object instanceof Root) {
             Root r = (Root)object;
