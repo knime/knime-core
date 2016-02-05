@@ -59,6 +59,9 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.xml.transform.TransformerException;
 
@@ -406,10 +409,13 @@ public class NodeDocuGenerator implements IApplication {
      * Writes the stream into the given file (within the target directory)
      */
     private void writeStreamToFile(final InputStream in, final String fileName) throws IOException {
-        OutputStream out = new FileOutputStream(new File(m_directory.getAbsolutePath() + File.separator + fileName));
-        IOUtils.copy(in, out);
+        Path p = Paths.get(m_directory.getAbsolutePath(), fileName);
+        Files.createDirectories(p.getParent());
+
+        try (OutputStream out = Files.newOutputStream(p)) {
+            IOUtils.copy(in, out);
+        }
         in.close();
-        out.close();
     }
 
     /*
