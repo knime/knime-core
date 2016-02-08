@@ -82,7 +82,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     }
 
     /** Loads workflow and collapses almost all nodes, then executes - expects certain event count. */
-    public void testExecuteAfterCollapse() throws Exception {
+    public void disable_testExecuteAfterCollapse() throws Exception {
         final WorkflowManager manager = getManager();
         checkState(manager, InternalNodeContainerState.IDLE);
         WorkflowManager metaNode = collapseToMetaNode(manager);
