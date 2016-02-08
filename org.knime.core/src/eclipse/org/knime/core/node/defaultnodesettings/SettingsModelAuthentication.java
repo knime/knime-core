@@ -89,7 +89,7 @@ public class SettingsModelAuthentication extends SettingsModel {
         USER_PWD, /**
                    * Authentication with workflow credentials.
                    */
-        CREDENTIALS,
+        CREDENTIALS;
     }
 
     /**
