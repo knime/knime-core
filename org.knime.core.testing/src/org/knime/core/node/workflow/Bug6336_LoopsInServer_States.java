@@ -92,6 +92,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     /** Loads workflow and collapses almost all nodes, then executes - expects certain event count. */
     @Test
     public void testExecuteAfterCollapse() throws Exception {
+        Assume.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
         final WorkflowManager manager = getManager();
         checkState(manager, InternalNodeContainerState.IDLE);
         WorkflowManager metaNode = collapseToMetaNode(manager);
@@ -107,7 +108,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     /** Collapse to meta node, then copy and connect to its original instance, then exec all. */
     @Test
     public void testExecuteAfterCollapseAndClone() throws Exception {
-        Assume.assumeTrue("Disabled - occassionally failing, expecting one more rare problem", false);
+        Assume.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
         final WorkflowManager manager = getManager();
         WorkflowManager metaNode = collapseToMetaNode(manager);
         WorkflowCopyContent copyContent = new WorkflowCopyContent();
