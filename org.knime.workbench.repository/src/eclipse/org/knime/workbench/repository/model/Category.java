@@ -48,6 +48,7 @@
 package org.knime.workbench.repository.model;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -204,37 +205,29 @@ public class Category extends AbstractContainerObject {
         return result;
     }
 
-//    /**
-//     * {@inheritDoc}
-//     */
-//    @Override
-//    public boolean equals(final Object obj) {
-//        if (this == obj) {
-//            return true;
-//        }
-//        if (!super.equals(obj)) {
-//            return false;
-//        }
-//        if (getClass() != obj.getClass()) {
-//            return false;
-//        }
-//        Category other = (Category)obj;
-//        if (m_description == null) {
-//            if (other.m_description != null) {
-//                return false;
-//            }
-//        } else if (!m_description.equals(other.m_description)) {
-//            return false;
-//        }
-//        if (m_path == null) {
-//            if (other.m_path != null) {
-//                return false;
-//            }
-//        } else if (!m_path.equals(other.m_path)) {
-//            return false;
-//        }
-//        return true;
-//    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        Category other = (Category)obj;
+        if (!Objects.equals(m_description, other.m_description)) {
+            return false;
+        }
+        if (!Objects.equals(m_path, other.m_path)) {
+            return false;
+        }
+        return true;
+    }
 
     private static final Pattern NUMERICAL_END_PATTERN = Pattern.compile("(.*?)(\\d+)$");
 

@@ -47,8 +47,11 @@
  */
 package org.knime.workbench.repository.model;
 
+import static org.knime.core.node.util.CheckUtils.checkArgumentNotNull;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Abstract base implementation of a generic repository object.
@@ -78,19 +81,9 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
      * @param contributingPlugin the contributing plug-in's ID, must not be <code>null</code>
      */
     protected AbstractRepositoryObject(final String id, final String name, final String contributingPlugin) {
-        if (name == null) {
-            throw new IllegalArgumentException("Name must not be null");
-        }
-        if (id == null) {
-            throw new IllegalArgumentException("ID must not be null");
-        }
-        if (contributingPlugin == null) {
-            throw new IllegalArgumentException("Contributing plug-in must not be null");
-        }
-
-        m_id = id;
-        m_name = name;
-        m_contributingPlugin = contributingPlugin;
+        m_name = checkArgumentNotNull(name, "Name must not be null");
+        m_id = checkArgumentNotNull(id, "ID must not be null");
+        m_contributingPlugin = checkArgumentNotNull(contributingPlugin, "Contributing plug-in must not be null");
         m_additionalInfo = new HashMap<String, String>();
     }
 
@@ -245,7 +238,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
      */
     @Override
     public int compareTo(final AbstractRepositoryObject o) {
-        return m_name.compareTo(o.m_name);
+        return m_id.compareTo(o.m_id);
     }
 
     /**
@@ -255,7 +248,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((m_name == null) ? 0 : m_name.hashCode());
+        result = prime * result + ((m_id == null) ? 0 : m_id.hashCode());
         return result;
     }
 
@@ -274,14 +267,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
             return false;
         }
         AbstractRepositoryObject other = (AbstractRepositoryObject)obj;
-        if (m_name == null) {
-            if (other.m_name != null) {
-                return false;
-            }
-        } else if (!m_name.equals(other.m_name)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(m_id, other.m_id);
     }
 
     /**
