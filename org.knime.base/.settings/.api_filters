@@ -1,11 +1,118 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.base" version="2">
+    <resource path="src-deprecated/org/knime/base/node/mine/regression/linear/view/LinRegLineNodeView.java" type="org.knime.base.node.mine.regression.linear.view.LinRegLineNodeView">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.linear.view.LinRegLineNodeView"/>
+                <message_argument value="LinRegLineNodeView(NodeModel)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="LinRegLineNodeView(LinRegLearnerNodeModel)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/mine/cluster/PMMLClusterTranslator.java" type="org.knime.base.node.mine.cluster.PMMLClusterTranslator">
         <filter id="1141899266">
             <message_arguments>
                 <message_argument value="3.1"/>
                 <message_argument value="3.2"/>
                 <message_argument value="CLUSTER_NAME_PREFIX"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/cluster/hierarchical/HierarchicalClusterNodeFactory.java" type="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeView(int, HierarchicalClusterNodeModel)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/cluster/hierarchical/HierarchicalClusterNodeView.java" type="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeView">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeView"/>
+                <message_argument value="HierarchicalClusterNodeView(NodeModel, DendrogramPlotter)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/viz/plotter/line/LinePlotterNodeFactory.java" type="org.knime.base.node.viz.plotter.line.LinePlotterNodeFactory">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeView(int, DefaultVisualizationNodeModel)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/viz/plotter/parcoord/ParallelCoordinateNodeFactory.java" type="org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeFactory">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeView(int, DefaultVisualizationNodeModel)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/viz/plotter/parcoord/ParallelCoordinateNodeView.java" type="org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeView">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeView"/>
+                <message_argument value="ParallelCoordinateNodeView(NodeModel, ParallelCoordinatesPlotter)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="ParallelCoordinateNodeView(DefaultVisualizationNodeModel, ParallelCoordinatesPlotter)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/viz/plotter/scatter/ScatterPlotterNodeFactory.java" type="org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeFactory">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeView(int, DefaultVisualizationNodeModel)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/viz/plotter/scatter/ScatterPlotterNodeView.java" type="org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeView">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeView"/>
+                <message_argument value="ScatterPlotterNodeView(NodeModel, ScatterPlotter)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="ScatterPlotterNodeView(DefaultVisualizationNodeModel, ScatterPlotter)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/viz/plotter/scattermatrix/ScatterMatrixNodeFactory.java" type="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeView(int, DefaultVisualizationNodeModel)"/>
             </message_arguments>
         </filter>
     </resource>

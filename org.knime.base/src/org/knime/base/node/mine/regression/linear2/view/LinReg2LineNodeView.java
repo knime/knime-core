@@ -66,7 +66,7 @@ import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
  *
  * @author Heiko Hofer
  */
-public class LinReg2LineNodeView extends DefaultVisualizationNodeView {
+public class LinReg2LineNodeView extends DefaultVisualizationNodeView<LinReg2LearnerNodeModel> {
 
     private final LinReg2LinePlotter m_plotter;
     private Component m_scatterPlot;
@@ -101,7 +101,7 @@ public class LinReg2LineNodeView extends DefaultVisualizationNodeView {
     protected void modelChanged() {
         super.modelChanged();
         m_plotter.updatePaintModel();
-        LinearRegressionContent content = ((LinReg2LearnerNodeModel)getNodeModel()).getLinRegContent();
+        LinearRegressionContent content = getNodeModel().getLinRegContent();
         if (content != null && content.getCovariates().size() > 0) {
             if (getComponent() != m_scatterPlot) {
                 setComponent(m_scatterPlot);

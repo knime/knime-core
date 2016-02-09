@@ -94,7 +94,7 @@ import org.knime.core.node.tableview.TableView;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class TableNodeView extends NodeView {
+public class TableNodeView<T extends TableNodeModel> extends NodeView<T> {
 
     /** The Component displaying the table. */
     private final TableView m_tableView;
@@ -106,7 +106,7 @@ public class TableNodeView extends NodeView {
      *
      * @param nodeModel the underlying model
      */
-    public TableNodeView(final TableNodeModel nodeModel) {
+    public TableNodeView(final T nodeModel) {
         super(nodeModel);
         // get data model, init view
         TableContentModel cntModel = nodeModel.getContentModel();

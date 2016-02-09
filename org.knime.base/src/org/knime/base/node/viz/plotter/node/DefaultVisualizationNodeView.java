@@ -71,7 +71,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class DefaultVisualizationNodeView extends NodeView {
+public class DefaultVisualizationNodeView<T extends NodeModel> extends NodeView<T> {
 
     private JTabbedPane m_tabs;
 
@@ -87,7 +87,7 @@ public class DefaultVisualizationNodeView extends NodeView {
      * @param model the node model (must implement DataProvider).
      * @param plotter the plotter
      */
-    public DefaultVisualizationNodeView(final NodeModel model,
+    public DefaultVisualizationNodeView(final T model,
             final AbstractPlotter plotter) {
         super(model);
         if (!(model instanceof DataProvider)) {
@@ -114,7 +114,7 @@ public class DefaultVisualizationNodeView extends NodeView {
      * @param plotter the plotter
      * @param title the title for the first tab
      */
-    public DefaultVisualizationNodeView(final NodeModel model,
+    public DefaultVisualizationNodeView(final T model,
             final AbstractPlotter plotter, final String title) {
         super(model);
         if (!(model instanceof DataProvider)) {
@@ -196,6 +196,7 @@ public class DefaultVisualizationNodeView extends NodeView {
         JMenu menu = new JMenu(HiLiteHandler.HILITE);
         menu.add(new AbstractAction(HiLiteHandler.HILITE_SELECTED) {
 
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 getActivePlotter().getHiliteAction().actionPerformed(e);
             }
@@ -203,12 +204,14 @@ public class DefaultVisualizationNodeView extends NodeView {
         });
         menu.add(new AbstractAction(HiLiteHandler.UNHILITE_SELECTED) {
 
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 getActivePlotter().getUnhiliteAction().actionPerformed(e);
             }
         });
         menu.add(new AbstractAction(HiLiteHandler.CLEAR_HILITE) {
 
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 getActivePlotter().getClearHiliteAction().actionPerformed(e);
             }

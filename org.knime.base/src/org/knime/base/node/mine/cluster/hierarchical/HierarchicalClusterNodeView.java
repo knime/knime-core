@@ -71,7 +71,7 @@ import org.knime.core.node.NodeModel;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
+public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView<HierarchicalClusterNodeModel> {
 
     private DendrogramPlotter m_dendroPlotter;
 
@@ -90,8 +90,9 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
      *
      * @param nodeModel The underlying <code>NodeModel</code>.
      * @param dendrogramPlotter the dendrogram plotter.
+     * @since 3.2
      */
-    public HierarchicalClusterNodeView(final NodeModel nodeModel,
+    public HierarchicalClusterNodeView(final HierarchicalClusterNodeModel nodeModel,
             final DendrogramPlotter dendrogramPlotter) {
         super(nodeModel, dendrogramPlotter, "Dendrogram");
         m_dendroPlotter = dendrogramPlotter;
@@ -122,6 +123,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
 
         m_properties.getDotSizeSpinner().addChangeListener(
                 new ChangeListener() {
+                    @Override
                     public void stateChanged(final ChangeEvent e) {
                         int dotSize = (Integer)
                         m_properties.getDotSizeSpinner().getValue();
@@ -133,6 +135,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         });
         m_properties.getThicknessSpinner().addChangeListener(
                 new ChangeListener() {
+                    @Override
                     public void stateChanged(final ChangeEvent e) {
                         m_thickness = (Integer)m_properties
                             .getThicknessSpinner().getValue();
@@ -142,6 +145,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         });
         m_properties.getShowHideCheckbox().addChangeListener(
                 new ChangeListener() {
+                    @Override
                     public void stateChanged(final ChangeEvent e) {
                         m_distancePlotter.setHideMode(
                                 !m_properties.getShowHideCheckbox()
@@ -172,8 +176,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         m_dendroPlotter.setDataProvider((DataProvider)model);
         m_distancePlotter.setDataProvider((DataProvider)model);
         m_distancePlotter.setHiLiteHandler(model.getInHiLiteHandler(0));
-        DendrogramNode rootNode = ((HierarchicalClusterNodeModel)getNodeModel())
-            .getRootNode();
+        DendrogramNode rootNode = getNodeModel().getRootNode();
         DataArray distanceTable = ((DataProvider)getNodeModel())
             .getDataArray(0);
         m_dendroPlotter.setRootNode(rootNode);

@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.cluster.hierarchical;
 
@@ -49,22 +49,20 @@ package org.knime.base.node.mine.cluster.hierarchical;
 import org.knime.base.node.viz.plotter.dendrogram.DendrogramPlotter;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * The Factory for the hierarchical clustering node.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
-public class HierarchicalClusterNodeFactory extends NodeFactory {
+public class HierarchicalClusterNodeFactory extends NodeFactory<HierarchicalClusterNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
-        
+    public HierarchicalClusterNodeModel createNodeModel() {
         return new HierarchicalClusterNodeModel(); // new ManhattanDist());
     }
 
@@ -80,7 +78,8 @@ public class HierarchicalClusterNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int i, final NodeModel nodeModel) {
+    public NodeView<HierarchicalClusterNodeModel> createNodeView(final int i,
+        final HierarchicalClusterNodeModel nodeModel) {
         if (i != 0) {
             throw new IllegalArgumentException();
         }
@@ -88,7 +87,7 @@ public class HierarchicalClusterNodeFactory extends NodeFactory {
                 nodeModel, new DendrogramPlotter());
         return view;
     }
-    
+
     /**
      * @return <b>true</b>.
      * @see org.knime.core.node.NodeFactory#hasDialog()

@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.09.2006 (Fabian Dill): created
  */
@@ -51,14 +51,13 @@ import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeDialog;
 import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeModel;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class ParallelCoordinateNodeFactory extends NodeFactory {
+public class ParallelCoordinateNodeFactory extends NodeFactory<DefaultVisualizationNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -72,7 +71,7 @@ public class ParallelCoordinateNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public DefaultVisualizationNodeModel createNodeModel() {
         return new DefaultVisualizationNodeModel();
     }
 
@@ -80,9 +79,9 @@ public class ParallelCoordinateNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
-        return new ParallelCoordinateNodeView(nodeModel, 
+    public NodeView<DefaultVisualizationNodeModel> createNodeView(final int viewIndex,
+            final DefaultVisualizationNodeModel nodeModel) {
+        return new ParallelCoordinateNodeView(nodeModel,
                 new ParallelCoordinatesPlotter());
     }
 

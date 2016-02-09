@@ -41,34 +41,31 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.09.2006 (Fabian Dill): created
  */
 package org.knime.base.node.viz.plotter.scatter;
 
+import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeModel;
 import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
-import org.knime.core.node.NodeModel;
 
 /**
- * Extends the 
+ * Extends the
  * {@link org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView} by
  * adding an additional menu to show, fade or hide unhilited dots.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class ScatterPlotterNodeView extends DefaultVisualizationNodeView {
-    
+public class ScatterPlotterNodeView extends DefaultVisualizationNodeView<DefaultVisualizationNodeModel> {
     /**
      * Adds  a show/hide menu to the menu bar.
-     * 
+     *
      * @param model the node model
      * @param plotter the plotter
      */
-    public ScatterPlotterNodeView(final NodeModel model, 
-            final ScatterPlotter plotter) {
+    public ScatterPlotterNodeView(final DefaultVisualizationNodeModel model, final ScatterPlotter plotter) {
         super(model, plotter);
         getJMenuBar().add(plotter.getShowHideMenu());
     }
-    
 }

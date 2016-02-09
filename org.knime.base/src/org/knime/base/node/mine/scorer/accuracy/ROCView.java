@@ -62,7 +62,7 @@ import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
  * @author Thorsten Meinl, University of Konstanz
  */
 @Deprecated
-public class ROCView extends DefaultVisualizationNodeView {
+public class ROCView extends DefaultVisualizationNodeView<AccuracyScorerNodeModel> {
     /* (BW, 20. Dec 2006) Disabled this view as a ROC curve is senseless for
      * the scorer */
     private static class ROCPlotter extends BasicPlotterImpl {

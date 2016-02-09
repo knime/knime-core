@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   03.10.2006 (Fabian Dill): created
  */
@@ -52,14 +52,13 @@ import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeModel;
 import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class ScatterMatrixNodeFactory extends NodeFactory {
+public class ScatterMatrixNodeFactory extends NodeFactory<DefaultVisualizationNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -73,7 +72,7 @@ public class ScatterMatrixNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public DefaultVisualizationNodeModel createNodeModel() {
         return new DefaultVisualizationNodeModel();
     }
 
@@ -81,10 +80,10 @@ public class ScatterMatrixNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
+    public NodeView<DefaultVisualizationNodeModel> createNodeView(final int viewIndex,
+            final DefaultVisualizationNodeModel nodeModel) {
         assert viewIndex == viewIndex;
-        return new DefaultVisualizationNodeView(nodeModel, 
+        return new DefaultVisualizationNodeView(nodeModel,
                 new ScatterMatrixPlotter());
     }
 

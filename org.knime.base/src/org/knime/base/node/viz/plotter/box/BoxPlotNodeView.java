@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.09.2006 (Fabian Dill): created
  */
@@ -52,19 +52,19 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class BoxPlotNodeView extends NodeView {
-    
+public class BoxPlotNodeView extends NodeView<BoxPlotNodeModel> {
+
     private BoxPlotter m_plotter;
-    
+
     /**
-     * 
+     *
      * @param model the model
      * @param plotter the plotter
      */
-    public BoxPlotNodeView(final BoxPlotNodeModel model, 
+    public BoxPlotNodeView(final BoxPlotNodeModel model,
             final BoxPlotter plotter) {
         super(model);
         m_plotter = plotter;

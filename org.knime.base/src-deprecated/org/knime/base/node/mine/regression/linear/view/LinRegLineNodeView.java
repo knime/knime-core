@@ -47,8 +47,8 @@
  */
 package org.knime.base.node.mine.regression.linear.view;
 
+import org.knime.base.node.mine.regression.linear.learn.LinRegLearnerNodeModel;
 import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
-import org.knime.core.node.NodeModel;
 
 /**
  * 2D plot showing the linear regression line. The plot allows to choose one
@@ -58,7 +58,7 @@ import org.knime.core.node.NodeModel;
  * @author Bernd Wiswedel, University of Konstanz
  */
 @Deprecated
-public class LinRegLineNodeView extends DefaultVisualizationNodeView {
+public class LinRegLineNodeView extends DefaultVisualizationNodeView<LinRegLearnerNodeModel> {
 
     private final LinRegLinePlotter m_plotter;
 
@@ -67,13 +67,13 @@ public class LinRegLineNodeView extends DefaultVisualizationNodeView {
      *
      * @param nodeModel the model to look at
      */
-    public LinRegLineNodeView(final NodeModel nodeModel) {
+    public LinRegLineNodeView(final LinRegLearnerNodeModel nodeModel) {
         this(nodeModel, new LinRegLinePlotter(
                 new LinRegLineDrawingPane(),
                 new LinRegLinePlotterProperties()));
     }
 
-    private LinRegLineNodeView(final NodeModel nodeModel,
+    private LinRegLineNodeView(final LinRegLearnerNodeModel nodeModel,
             final LinRegLinePlotter plotter) {
         super(nodeModel, plotter);
         m_plotter = plotter;
