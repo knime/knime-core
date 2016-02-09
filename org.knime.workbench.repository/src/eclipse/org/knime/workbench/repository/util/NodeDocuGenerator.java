@@ -59,6 +59,9 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.xml.transform.TransformerException;
 
@@ -113,7 +116,7 @@ public class NodeDocuGenerator implements IApplication {
 
     private static final String[] FILES_TO_COPY = new String[]{"index.html", "empty_node_description.html",
         "plus-square-o.png", "minus-square.png", "knime_logo.png", "knime_default_icon.png"};
-    
+
     /* target directory */
     private File m_directory;
 
@@ -348,7 +351,7 @@ public class NodeDocuGenerator implements IApplication {
                 } else {
                     catIcon = "knime_default_icon.png";
                 }
-                
+
                 m_nodeRepository.append("<li class=\"knime-category\">");
                 m_nodeRepository.append("<img width=\"16px\" src=\"");
                 m_nodeRepository.append(catIcon);
@@ -419,10 +422,13 @@ public class NodeDocuGenerator implements IApplication {
      * Writes the stream into the given file (within the target directory)
      */
     private void writeStreamToFile(final InputStream in, final String fileName) throws IOException {
-        OutputStream out = new FileOutputStream(new File(m_directory.getAbsolutePath() + File.separator + fileName));
-        IOUtils.copy(in, out);
+        Path p = Paths.get(m_directory.getAbsolutePath(), fileName);
+        Files.createDirectories(p.getParent());
+
+        try (OutputStream out = Files.newOutputStream(p)) {
+            IOUtils.copy(in, out);
+        }
         in.close();
-        out.close();
     }
 
     /*
