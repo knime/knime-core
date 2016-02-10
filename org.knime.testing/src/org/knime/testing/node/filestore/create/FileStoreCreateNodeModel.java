@@ -58,16 +58,14 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelLong;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.testing.data.filestore.LargeFile;
 import org.knime.testing.data.filestore.LargeFileStoreCell;
 
@@ -75,18 +73,13 @@ import org.knime.testing.data.filestore.LargeFileStoreCell;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class FileStoreCreateNodeModel extends NodeModel {
+public class FileStoreCreateNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private final SettingsModelBoolean m_keepInMemorySettingsModel = createKeepInMemorySettingsModel();
 
-    /**
-     *  */
-    protected FileStoreCreateNodeModel() {
-        super(1, 1);
-    }
-
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec,
-            final ExecutionContext ec) {
+    /** {@inheritDoc} */
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
         final ColumnRearranger r = new ColumnRearranger(spec);
         final String name = DataTableSpec.getUniqueColumnName(spec, "large-file-store");
         final DataColumnSpec s = new DataColumnSpecCreator(name, LargeFileStoreCell.TYPE).createSpec();
@@ -97,7 +90,7 @@ public class FileStoreCreateNodeModel extends NodeModel {
                 LargeFile lf;
                 final long seed = Double.doubleToLongBits(Math.random());
                 try {
-                    final FileStore fs = ec.createFileStore(row.getKey().getString());
+                    final FileStore fs = getFileStoreFactory().createFileStore(row.getKey().getString());
                     lf = LargeFile.create(fs, seed, keepInMemory);
                 } catch (final IOException e) {
                     throw new RuntimeException(e);
@@ -106,24 +99,6 @@ public class FileStoreCreateNodeModel extends NodeModel {
             }
         });
         return r;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-        final ColumnRearranger r = createColumnRearranger(inSpecs[0], null);
-        return new DataTableSpec[] {r.createSpec()};
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        final ColumnRearranger r = createColumnRearranger(inData[0].getSpec(), exec);
-        final BufferedDataTable out = exec.createColumnRearrangeTable(
-                inData[0], r, exec);
-        return new BufferedDataTable[] {out};
     }
 
     /**
