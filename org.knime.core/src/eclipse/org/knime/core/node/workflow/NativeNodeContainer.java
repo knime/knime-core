@@ -648,14 +648,21 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    private IWriteFileStoreHandler initFileStore(
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
-        FlowLoopContext upstreamFLC = getFlowObjectStack().peek(FlowLoopContext.class);
+    private IWriteFileStoreHandler initFileStore(final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
+        final FlowObjectStack flowObjectStack = getFlowObjectStack();
+        FlowLoopContext upstreamFLC = flowObjectStack.peek(FlowLoopContext.class);
+        if (upstreamFLC == null) {
+            // if node is contained in subnode check if the subnode is in a loop (see AP-5667)
+            final FlowSubnodeScopeContext subnodeSC = flowObjectStack.peek(FlowSubnodeScopeContext.class);
+            if (subnodeSC != null) {
+                upstreamFLC = subnodeSC.getOuterFlowLoopContext();
+            }
+        }
         NodeID outerStartNodeID = upstreamFLC == null ? null : upstreamFLC.getHeadNode();
         // loop start nodes will put their loop context on the outgoing flow object stack
         assert !getID().equals(outerStartNodeID) : "Loop start on incoming flow stack can't be node itself";
 
-        FlowLoopContext innerFLC = getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
+        final FlowLoopContext innerFLC = getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
         NodeID innerStartNodeID = innerFLC == null ? null : innerFLC.getHeadNode();
         // if there is a loop context on this node's stack, this node must be the start
         assert !(this.isModelCompatibleTo(LoopStartNode.class)) || getID().equals(innerStartNodeID);

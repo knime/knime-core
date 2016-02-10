@@ -262,8 +262,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     SubNodeContainer(final WorkflowManager parent, final NodeID id, final SubNodeContainerPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
-        m_subnodeScopeContext = new FlowSubnodeScopeContext();
-        m_subnodeScopeContext.setOwner(id);
+        m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         WorkflowPersistor workflowPersistor = persistor.getWorkflowPersistor();
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), workflowPersistor,
             parent.getGlobalTableRepository(), parent.getFileStoreHandlerRepository());
@@ -307,8 +306,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 parent.getContext(), name, Optional.of(parent.getGlobalTableRepository()),
                 Optional.of(parent.getFileStoreHandlerRepository()));
         m_wfm.setJobManager(null);
-        m_subnodeScopeContext = new FlowSubnodeScopeContext();
-        m_subnodeScopeContext.setOwner(id);
+        m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         // and copy content
         WorkflowCopyContent c = new WorkflowCopyContent();
         c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
