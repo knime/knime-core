@@ -6159,7 +6159,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NodeContainer nc = m_workflow.getNode(id);
                     if (nc instanceof WorkflowManager) {
                         build.append(((WorkflowManager)nc).printNodeSummary(
-                                nc.getID(), indent + 2));
+                            nc.getID(), indent + 2));
+                    } else if (nc instanceof SubNodeContainer) {
+                        build.append(((SubNodeContainer)nc).getWorkflowManager().printNodeSummary(
+                                nc.getID(), indent + 6));
                     } else {
                         build.append(indentString);
                         build.append("  ");
