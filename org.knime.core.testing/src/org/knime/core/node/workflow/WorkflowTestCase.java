@@ -320,7 +320,13 @@ public abstract class WorkflowTestCase {
             if (nc instanceof SingleNodeContainer) {
                 result.add((SingleNodeContainer)nc);
             } else if (recurse) {
-                result.addAll(iterateSNCs((WorkflowManager)nc, true));
+                WorkflowManager m;
+                if (nc instanceof WorkflowManager) {
+                    m = (WorkflowManager)nc;
+                } else {
+                    m = ((SubNodeContainer)nc).getWorkflowManager();
+                }
+                result.addAll(iterateSNCs(m, true));
             }
         }
         return result;
