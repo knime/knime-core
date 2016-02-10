@@ -371,6 +371,7 @@ public final class SandboxedNodeCreator {
                 origParentID.createChild(runNCIndex), NativeNodeContainer.class, true);
             if (origNNC.getNodeContainerState().isExecutionInProgress()) {
                 final IFileStoreHandler fsHdl = nullIt ? null : origNNC.getNode().getFileStoreHandler();
+                runNNC.clearFileStoreHandler();
                 runNNC.getNode().setFileStoreHandler(fsHdl);
             }
         } else if (runNC instanceof WorkflowManager) {

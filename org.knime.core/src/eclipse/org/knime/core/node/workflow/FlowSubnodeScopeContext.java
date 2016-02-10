@@ -48,11 +48,36 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.util.CheckUtils;
 
 /** A scope context used by the subnode to have all contained nodes inherit an inactive flag.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class FlowSubnodeScopeContext extends FlowScopeContext {
+
+    private final SubNodeContainer m_snc;
+
+    FlowSubnodeScopeContext(final SubNodeContainer snc) {
+        m_snc = CheckUtils.checkArgumentNotNull(snc, "Owning SNC must not be null");
+        setOwner(snc.getID());
+    }
+
+    /** Get the flow loop context this subnode is part of or null if not in a loop. It also unwraps if this subnode
+     * is nested.
+     * @return flow loop context or null
+     */
+    FlowLoopContext getOuterFlowLoopContext() {
+        FlowObjectStack flowObjectStack = m_snc.getFlowObjectStack();
+        FlowLoopContext flowLoopContext = flowObjectStack.peek(FlowLoopContext.class);
+        if (flowLoopContext != null) {
+            return flowLoopContext;
+        }
+        FlowSubnodeScopeContext outerSubnodeScope = flowObjectStack.peek(FlowSubnodeScopeContext.class);
+        if (outerSubnodeScope != null) {
+            return outerSubnodeScope.getOuterFlowLoopContext();
+        }
+        return null;
+    }
 
     /** {@inheritDoc} */
     @Override
