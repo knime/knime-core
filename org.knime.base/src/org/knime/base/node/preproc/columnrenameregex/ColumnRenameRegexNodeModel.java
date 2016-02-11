@@ -48,6 +48,7 @@ package org.knime.base.node.preproc.columnrenameregex;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -57,6 +58,15 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /** Model to node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -112,6 +122,46 @@ final class ColumnRenameRegexNodeModel extends NodeModel {
         DataTableSpec newSpec = getNewSpec(oldSpec);
         BufferedDataTable result = exec.createSpecReplacerTable(in, newSpec);
         return new BufferedDataTable[] {result};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                //just pass through since only the column names have been changed
+                RowInput rowInput = (RowInput)inputs[0];
+                RowOutput rowOutput = (RowOutput)outputs[0];
+                DataRow row;
+                while ((row = rowInput.poll()) != null) {
+                    rowOutput.push(row);
+                }
+                rowInput.close();
+                rowOutput.close();
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     /**
