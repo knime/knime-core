@@ -306,7 +306,7 @@ public class QuickNodeInsertionHandler extends AbstractHandler {
     /**
      * @param event
      */
-    private static void createNode(final Object o) {
+    static void createNode(final Object o) {
         if (o instanceof NodeTemplate) {
             NodeTemplate tmplt = (NodeTemplate)o;
             NodeFactory<? extends NodeModel> nodeFact;

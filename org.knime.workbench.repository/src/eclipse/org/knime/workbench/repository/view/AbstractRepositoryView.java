@@ -131,7 +131,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
 
     private final IPropertySourceProvider m_propertyProvider = new PropertyProvider();
 
-    private FilterViewContributionItem m_toolbarFilterCombo;
+    private SearchQueryContributionItem m_toolbarSearchText;
 
     private FilterStreamableNodesAction m_filterStreamNodesButton;
 
@@ -190,7 +190,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
             @Override
             public void partActivated(final IWorkbenchPart part) {
                 if (part == AbstractRepositoryView.this) {
-                    m_toolbarFilterCombo.getCombo().setFocus();
+                    m_toolbarSearchText.getText().setFocus();
                 }
             }
         });
@@ -439,15 +439,15 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         manager.add(new Separator());
 
         // create the combo contribution item that provides the query string
-        m_toolbarFilterCombo = new FilterViewContributionItem(m_viewer, m_fuzzySearchButton.isChecked()
+        m_toolbarSearchText = new SearchQueryContributionItem(m_viewer, m_fuzzySearchButton.isChecked()
             ? m_fuzzyTextInfoFilter.getDelegateFilter() : m_textInfoFilter.getDelegateFilter(), !NON_INSTANT_SEARCH);
         //set the streamable-node filter (that wraps the other one)
         m_viewer
             .setFilters(new ViewerFilter[]{m_fuzzySearchButton.isChecked() ? m_fuzzyTextInfoFilter : m_textInfoFilter});
-        m_toolbarFilterCombo.setQueryChangedCallback(() -> {
+        m_toolbarSearchText.setQueryChangedCallback(() -> {
             onSearchQueryChanged();
         });
-        manager.add(m_toolbarFilterCombo);
+        manager.add(m_toolbarSearchText);
         manager.add(new Separator());
     }
 
@@ -500,7 +500,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     private void onFuzzySearchButtonClicked(final AdditionalInfoViewFilter extFuzzyFilter, final AdditionalInfoViewFilter extTextFilter) {
         if (m_fuzzySearchButton.isChecked()) {
             m_viewer.setFilters(new ViewerFilter[]{extFuzzyFilter});
-            m_toolbarFilterCombo.setFilter(extFuzzyFilter.getDelegateFilter());
+            m_toolbarSearchText.setFilter(extFuzzyFilter.getDelegateFilter());
 
             //sync streamable filter settings
             extTextFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
@@ -520,7 +520,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         } else {
             m_viewer.setContentProvider(new RepositoryContentProvider());
             m_viewer.setFilters(new ViewerFilter[]{extTextFilter});
-            m_toolbarFilterCombo.setFilter(extTextFilter.getDelegateFilter());
+            m_toolbarSearchText.setFilter(extTextFilter.getDelegateFilter());
 
             //sync streamable filter settings
             extTextFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
