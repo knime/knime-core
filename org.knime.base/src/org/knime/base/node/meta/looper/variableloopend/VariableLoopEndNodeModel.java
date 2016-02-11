@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   31.05.2012 (kilian): created
  */
@@ -87,20 +87,20 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  * iteration the variable values will be set to the according columns. It is
  * possible to select no variables at all, than a data table with only row
  * keys will be created.
- * 
+ *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
 class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(VariableLoopEndNodeModel.class);
-    
+
     private long m_startTime;
 
     private BufferedDataContainer m_resultContainer;
 
     private int m_count;
-    
+
     private FlowVariableFilterConfiguration m_selection;
 
     /**
@@ -121,15 +121,15 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
             throws InvalidSettingsException {
         return new DataTableSpec[]{createDataTableSpec()};
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, 
+    protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec)
             throws Exception {
-        
+
         // check for loop start node.
         if (!(this.getLoopStartNode() instanceof LoopStartNodeTerminator)) {
             throw new IllegalStateException("Loop End is not connected"
@@ -141,14 +141,14 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
             // first time we are getting to this: open container
             m_startTime = System.currentTimeMillis();
             m_resultContainer = exec.createDataContainer(amendedSpec);
-            
+
         // if initially created data table spec and current spec differ, fail
         } else if (!amendedSpec
                 .equalStructure(m_resultContainer.getTableSpec())) {
             DataTableSpec predSpec = m_resultContainer.getTableSpec();
             StringBuilder error =
                     new StringBuilder(
-                            "Input table's structure differs from reference "
+                            "Output table's structure differs from reference "
                                     + "(first iteration) table: ");
             if (amendedSpec.getNumColumns() != predSpec.getNumColumns()) {
                 error.append("different column counts ");
@@ -165,9 +165,10 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
                     }
                 }
             }
+            error.append(". Have the input variables changed in number, name or type?");
             throw new IllegalArgumentException(error.toString());
         }
-        
+
         // after all data table checks we are fine now and can add a single row
         // containing the values of the flow variables
         m_resultContainer.addRowToTable(createNewRow());
@@ -194,17 +195,17 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
     }
 
     /**
-     * Creates and returns new instance of <code>DataRow</code> with the 
+     * Creates and returns new instance of <code>DataRow</code> with the
      * iteration count as row key and the specified and available flow vars as
      * columns.
-     * @return <code>DataRow</code> with the iteration count as row key and 
+     * @return <code>DataRow</code> with the iteration count as row key and
      * the specified and available flow vars as columns.
-     * @throws InvalidSettingsException If flow variable is of any not 
+     * @throws InvalidSettingsException If flow variable is of any not
      * compatible type.
      */
     private DataRow createNewRow() throws InvalidSettingsException {
         // get available flow vars and selected vars
-        Map<String, FlowVariable> availableFlowVars = 
+        Map<String, FlowVariable> availableFlowVars =
             getAvailableFlowVariables();
         // for now take all variable names
 
@@ -216,12 +217,12 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
             for (int i = 0; i < flowVarNames.length; i++) {
                 String varName = flowVarNames[i];
                 FlowVariable var = availableFlowVars.get(varName);
-                
+
                 // if flow var is available use flow var value
                 if (var != null) {
                     cells[i] = getCompatibleDataCell(var);
-                    
-                // if flow var is not available insert missing cell 
+
+                // if flow var is not available insert missing cell
                 } else {
                     cells[i] = DataType.getMissingCell();
                 }
@@ -229,41 +230,41 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
         }
         return new DefaultRow(RowKey.createRowKey(m_count), cells);
     }
-    
+
     /**
      * Creates and returns a new instance of <code>DataTableSpec</code>. The
-     * spec consists of one column for each specified and available flow 
+     * spec consists of one column for each specified and available flow
      * variable. If any specified variable is not available an exception will
      * be thrown.
-     * @return A new instance of <code>DataTableSpec</code>. The spec consists 
+     * @return A new instance of <code>DataTableSpec</code>. The spec consists
      * of one column for each specified and available flow variable.
      * @throws InvalidSettingsException If any specified flow variable is not
      * available.
      */
-    private DataTableSpec createDataTableSpec() 
+    private DataTableSpec createDataTableSpec()
     throws InvalidSettingsException {
         // get available flow vars and selected vars
-        Map<String, FlowVariable> availableFlowVars = 
-            getAvailableFlowVariables();        
+        Map<String, FlowVariable> availableFlowVars =
+            getAvailableFlowVariables();
         // for now take all variable names
 
         String[] flowVarNames = m_selection.applyTo(availableFlowVars).getIncludes();
 
         DataColumnSpec[] colSpecs = new DataColumnSpec[0];
-        
+
         // create for each  specified flow variable a column spec, if available
         if (flowVarNames != null && flowVarNames.length > 0) {
             colSpecs = new DataColumnSpec[flowVarNames.length];
             for (int i = 0; i < flowVarNames.length; i++) {
                 String varName = flowVarNames[i];
                 FlowVariable var = availableFlowVars.get(varName);
-                
+
                 // if flow var is available create col spec for var type
                 if (var != null) {
                     colSpecs[i] = new DataColumnSpecCreator(varName,
                             getCompatibleDataType(var.getType())).createSpec();
-                    
-                // if specified flow var is not available fail 
+
+                // if specified flow var is not available fail
                 } else {
                     throw new InvalidSettingsException(
                             "Specified flow variable " + varName
@@ -273,7 +274,7 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
         }
         return new DataTableSpec(colSpecs);
     }
-    
+
     /**
      * Returns the compatible data type according to the given flow variable
      * type.
@@ -281,7 +282,7 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
      * data type for.
      * @return The compatible data type according to the given flow variable
      * type.
-     * @throws InvalidSettingsException If type of flow variable is not 
+     * @throws InvalidSettingsException If type of flow variable is not
      * supported.
      */
     private static DataType getCompatibleDataType(
@@ -303,20 +304,20 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
         }
         return type;
     }
-    
+
     /**
      * Creates and returns an instance of <code>DataCell</code>. The cell
      * is of a compatible type according to the type of the given flow var
-     * and the value of the cell is equal to the value of the flow var. 
-     * 
-     * @param var The flow variable to create a data cell for (with compatible 
+     * and the value of the cell is equal to the value of the flow var.
+     *
+     * @param var The flow variable to create a data cell for (with compatible
      * type and equal value).
      * @return an instance of <code>DataCell</code> with compatible type to the
      * given flow var and equal value.
-     * @throws InvalidSettingsException If given flow var is of any 
+     * @throws InvalidSettingsException If given flow var is of any
      * unsupported type.
      */
-    private static DataCell getCompatibleDataCell(final FlowVariable var) 
+    private static DataCell getCompatibleDataCell(final FlowVariable var)
     throws InvalidSettingsException {
         DataCell cell;
         FlowVariable.Type flowType = var.getType();
@@ -336,7 +337,7 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
         }
         return cell;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -382,7 +383,7 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // Nothing to do ...
@@ -392,7 +393,7 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // Nothing to do ...
