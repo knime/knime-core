@@ -90,7 +90,7 @@ class BufferedDataContainerRowOutput extends RowOutput {
     public void push(final DataRow row) throws InterruptedException {
         if (m_dataContainer == null) {
             throw new IllegalStateException(
-                "Table can only be set by the 'setFully'-method. Rows can not be added individually.");
+                "Table can only be set by the 'setFully'-method. Rows can not be added individually. Possible reason: DataTableSpec==null at configure-time (must be non-null for streamable ports).");
         }
         m_dataContainer.addRowToTable(row);
     }

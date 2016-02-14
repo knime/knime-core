@@ -341,7 +341,11 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 LOGGER.info("call: StreamableOperator#runFinal");
                 ExecutionContext exec = remoteNodeContainers[i].createExecutionContext();
                 remoteNodeContainers[i].getNode().openFileStoreHandler(exec);
+                try {
                 streamableOperator.runFinal(portInputs[i], portOutputs, exec);
+                }catch(ClassCastException e) {
+                    throw new ClassCastException(e.getMessage() + ". Likely reason: port-role is not set as streamable -> overwrite get[Input|Ouptut]PortRoles()-methods in NodeModel.");
+                }
                 checkClosedPortOutputs(portOutputs);
                 if (localMergeOperator != null) {
                     LOGGER.info("call: StreamableOperator#saveInternals");
