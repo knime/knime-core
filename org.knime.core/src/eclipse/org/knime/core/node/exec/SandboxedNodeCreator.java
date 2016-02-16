@@ -322,6 +322,10 @@ public final class SandboxedNodeCreator {
             targetParent.getID().createChild(source.getID().getIndex()));
         ReferencedFile sourceDirRef = source.getNodeContainerDirectory();
         ReferencedFile targetDirRef = target.getNodeContainerDirectory();
+        if (sourceDirRef == null) {
+            // The source node has never been saved, there are no files to copy
+            return;
+        }
         File sourceDir = sourceDirRef.getFile();
         File targetDir = targetDirRef.getFile();
 
