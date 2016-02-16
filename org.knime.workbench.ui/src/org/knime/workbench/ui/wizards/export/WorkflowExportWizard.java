@@ -87,7 +87,10 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class WorkflowExportWizard extends ExportWizard
     implements IExportWizard {
     private WorkflowExportPage m_page;

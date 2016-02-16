@@ -82,7 +82,6 @@
          <viewShortcut
                id="org.eclipse.pde.runtime.LogView">
          </viewShortcut>
-         <viewShortcut id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"/>
          <viewShortcut id="org.knime.workbench.repository.view.RepositoryView"/>
          <viewShortcut id="org.knime.workbench.ui.favorites">
          </viewShortcut>
@@ -217,22 +216,6 @@
       <category
             id="org.knime.workbench.ui.category"
             name="KNIME Views"/>
-   </extension>
-   <extension
-         point="org.eclipse.ui.exportWizards">
-      <wizard
-            class="org.knime.workbench.explorer.view.actions.export.WorkflowExportWizard"
-            icon="icons/knime_export.png"
-            id="org.knime.workbench.explorer.view.actions.export.WorkflowExportWizard"
-            name="Export KNIME Workflow"/>
-   </extension>
-   <extension
-         point="org.eclipse.ui.importWizards">
-      <wizard
-            class="org.knime.workbench.explorer.view.actions.imports.WorkflowImportWizard"
-            icon="icons/knime_import.png"
-            id="org.knime.workbench.explorer.view.actions.imports.WorkflowImportWizard"
-            name="Import KNIME Workflow"/>
    </extension>
    
    <extension

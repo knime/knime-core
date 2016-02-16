@@ -77,7 +77,10 @@ import org.knime.workbench.ui.navigator.actions.selection.ResourceSelectDialog;
 /**
  *
  * @author Fabian Dill, KNIME.com AG
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class MoveWorkflowAction extends Action implements IRunnableWithProgress {
 
     private static final NodeLogger LOGGER = NodeLogger

@@ -64,7 +64,10 @@ import org.knime.workbench.ui.wizards.workflowgroup.KnimeResourceLabelProviderWi
 /**
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class ResourceSelectDialog extends Dialog {
 
     private final IContainer m_root;

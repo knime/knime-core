@@ -64,7 +64,10 @@ import org.knime.workbench.ui.wizards.export.WorkflowExportWizard;
  * Action to invoke the knime export wizard.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class ExportKnimeWorkflowAction extends Action {
 
     private static final int SIZING_WIZARD_WIDTH = 470;

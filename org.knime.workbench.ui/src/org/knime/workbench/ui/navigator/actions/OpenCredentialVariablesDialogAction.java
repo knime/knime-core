@@ -56,7 +56,10 @@ import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 /**
  *
  * @author Thomas Gabriel, KNIME.com AG
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class OpenCredentialVariablesDialogAction
         extends AbstractWorkflowAction {
 

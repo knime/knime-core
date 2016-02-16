@@ -49,7 +49,10 @@ import org.eclipse.jface.action.Action;
 /**
  * 
  * @author Fabian Dill, KNIME.com AG
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class OpenJobManagerDialogAction extends Action {
 
     /* 

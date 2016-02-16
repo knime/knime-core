@@ -56,7 +56,10 @@ import org.eclipse.jface.viewers.StructuredSelection;
  * Action to open a knime project.
  * 
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class OpenKnimeProjectAction extends Action {
     private final KnimeResourceNavigator m_knimeResourceNavigator;
 

@@ -67,8 +67,10 @@ import org.knime.workbench.ui.navigator.actions.RenameAction;
 /**
  *
  * @author ohl, University of Konstanz
+ * 
+ * @deprecated since AP 3.0
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public class KNIMEResourceNavigatorActionGroup extends MainActionGroup {
     private DeleteAction m_delAction;
 

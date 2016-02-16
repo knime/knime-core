@@ -82,7 +82,10 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 /**
  *
  * @author ohl, University of Konstanz
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class PasteAction extends SelectionListenerAction {
 
     private static final NodeLogger LOGGER = NodeLogger
@@ -264,6 +267,7 @@ public class PasteAction extends SelectionListenerAction {
         final String[] result = new String[1];
         final String newName = getDefaultReplacementName(sourceName);
         Display.getDefault().syncExec(new Runnable() {
+            @Override
             public void run() {
                 InputDialog inpDlg =
                         new InputDialog(Display.getDefault().getActiveShell(),

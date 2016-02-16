@@ -63,7 +63,10 @@ import org.knime.workbench.ui.wizards.project.NewProjectWizard;
  * Action to invoke the knime new workflow wizard.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class NewKnimeWorkflowAction extends Action {
 
     private static final int SIZING_WIZARD_WIDTH = 470;

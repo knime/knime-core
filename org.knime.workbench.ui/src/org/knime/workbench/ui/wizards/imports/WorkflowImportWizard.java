@@ -70,7 +70,10 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  * archive file into the workspace.
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class WorkflowImportWizard extends Wizard {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(

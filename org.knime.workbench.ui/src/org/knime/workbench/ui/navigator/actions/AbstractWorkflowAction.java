@@ -56,7 +56,10 @@ import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 /**
  *
  * @author Fabian Dill, KNIME.com AG
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public abstract class AbstractWorkflowAction extends Action {
 
     private WorkflowManager m_workflow;

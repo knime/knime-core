@@ -72,7 +72,10 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 /**
  *
  * @author ohl, University of Konstanz
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class CopyToClipboard extends SelectionListenerAction {
 
     /** The id of this action. */

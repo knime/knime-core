@@ -85,7 +85,10 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  *
  * @author Florian Georg, University of Konstanz
  * @author Fabian Dill, KNIME.com AG
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class NewProjectWizard extends Wizard implements INewWizard {
 
     private NewProjectWizardPage m_page;

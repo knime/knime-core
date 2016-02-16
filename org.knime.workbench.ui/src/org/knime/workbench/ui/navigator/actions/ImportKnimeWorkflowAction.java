@@ -63,7 +63,10 @@ import org.knime.workbench.ui.wizards.imports.WorkflowImportWizard;
  * 
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class ImportKnimeWorkflowAction extends Action {
     
     private static final ImageDescriptor ICON 

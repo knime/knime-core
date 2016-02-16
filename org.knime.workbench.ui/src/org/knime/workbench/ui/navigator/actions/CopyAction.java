@@ -63,7 +63,10 @@ import org.knime.core.util.VMFileLocker;
  * Copies a resource to a target resource.
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class CopyAction extends MoveWorkflowAction {
 
     public static final String ID = "org.knime.workbench.CopyAction";

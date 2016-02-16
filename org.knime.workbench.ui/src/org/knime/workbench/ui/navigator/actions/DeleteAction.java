@@ -77,7 +77,10 @@ import org.knime.workbench.ui.navigator.WorkflowEditorAdapter;
 /**
  *
  * @author ohl, University of Konstanz
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class DeleteAction extends SelectionListenerAction {
 
     /** ID of this action. */

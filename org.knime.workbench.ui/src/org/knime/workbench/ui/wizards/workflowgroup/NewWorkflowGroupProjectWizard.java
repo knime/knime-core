@@ -61,7 +61,10 @@ import org.knime.workbench.ui.wizards.project.NewProjectWizardPage;
  * Wizard to create a new workflow group.
  *
  * @author Fabian Dill, KNIME.com AG
+ * 
+ * @deprecated since AP 3.0
  */
+ @Deprecated
 public class NewWorkflowGroupProjectWizard extends Wizard
     implements INewWizard {
 

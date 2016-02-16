@@ -56,7 +56,10 @@ import org.knime.core.node.workflow.NodeContainer;
  * the project has to be shown.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class KnimeResourcePatternFilter extends ResourcePatternFilter {
     /**
      * {@inheritDoc}

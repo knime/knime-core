@@ -59,7 +59,10 @@ import org.knime.workbench.ui.wizards.workflowgroup.NewWorkflowGroupProjectWizar
  * Action to create a workflow group.
  * 
  * @author Fabian Dill, KNIME.com AG
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class CreateWorkflowGroupAction extends Action {
 
     private static ImageDescriptor icon;

@@ -72,7 +72,10 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 /**
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class RenameAction extends SelectionListenerAction {
 
     private static final NodeLogger LOGGER = NodeLogger

@@ -67,7 +67,10 @@ import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 /**
  *
  * @author Fabian Dill, KNIME.com AG
+ * 
+ * @deprecated since AP 3.0
  */
+@Deprecated
 public class EditMetaInfoAction extends Action {
 
     /** Action ID. */
