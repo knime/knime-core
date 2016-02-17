@@ -47,6 +47,9 @@
  */
 package org.knime.base.node.io.filereader;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -55,10 +58,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import junit.framework.TestCase;
-
 import org.knime.base.node.io.filereader.FileAnalyzer.HeaderHelper;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.util.tokenizer.Quote;
+
+import junit.framework.TestCase;
 
 /**
  *
@@ -521,4 +526,28 @@ public class FileAnalyzerTest extends TestCase {
 
     } // initTempFile()
 
+
+    /**
+     * Testcase for bug AP-4163.
+     *
+     * @throws Exception if an error occurs
+     */
+    public void testDatesWithThousandSeparator() throws Exception {
+        URL url = initTempFile("1.000,5;24.05.2015\n1.000,5;24.05.2015");
+        FileReaderNodeSettings settings = new FileReaderNodeSettings();
+        settings.setFileHasRowHeadersUserSet(true);
+        settings.setFileHasRowHeaders(false);
+        settings.setFileHasColumnHeadersUserSet(true);
+        settings.setFileHasColumnHeaders(false);
+        settings.setDecimalSeparator(',');
+        settings.setThousandsSeparator('.');
+        settings.setDataFileLocationAndUpdateTableName(url);
+        FileReaderNodeSettings analSettings = FileAnalyzer.analyze(settings, null);
+
+        assertThat("Unexpected number of columns detected", analSettings.getColumnProperties().size(), is(2));
+        assertThat("Unexpected guessed type for double column",
+            analSettings.getColumnProperties().get(0).getColumnSpec().getType(), is(DoubleCell.TYPE));
+        assertThat("Unexpected guessed type for string (date) column",
+            analSettings.getColumnProperties().get(1).getColumnSpec().getType(), is(StringCell.TYPE));
+    }
 }

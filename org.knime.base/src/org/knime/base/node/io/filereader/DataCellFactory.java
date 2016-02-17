@@ -44,6 +44,7 @@
  *
  * History
  *   05.03.2008 (ohl): created
+ *   08.01.2016 (ferry.abt): Fix Bug4957
  */
 package org.knime.base.node.io.filereader;
 
@@ -295,7 +296,13 @@ public class DataCellFactory {
             // cells
             // remove thousands grouping
             if (m_thousandsRegExpr != null) {
-                data = data.replaceAll(m_thousandsRegExpr, "");
+                if (data.matches("\\d{1,3}(" + m_thousandsRegExpr + "\\d{3})*(" + m_decimalSeparator + "\\d+)?")) {
+                    //Only continue processing if input is a valid number (wrong thousands separators are targeted to identify dates
+                    data = data.replaceAll(m_thousandsRegExpr, "");
+                } else {
+                    m_lastErrorMessage = "Wrong data format. Got '" + data + "' for a floating point.";
+                    return null;
+                }
             }
 
             // replace decimal separator with java separator '.'
