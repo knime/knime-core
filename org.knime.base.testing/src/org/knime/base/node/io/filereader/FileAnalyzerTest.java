@@ -533,7 +533,8 @@ public class FileAnalyzerTest extends TestCase {
      * @throws Exception if an error occurs
      */
     public void testDatesWithThousandSeparator() throws Exception {
-        URL url = initTempFile("1.000,5;24.05.2015\n1.000,5;24.05.2015");
+        // URL url = initTempFile("1.000,5;24.05.2015\n");
+        URL url = initTempFile("1.000,5;24.05.2015\n1.000,5;24.05.2015\n");
         FileReaderNodeSettings settings = new FileReaderNodeSettings();
         settings.setFileHasRowHeadersUserSet(true);
         settings.setFileHasRowHeaders(false);
