@@ -293,8 +293,8 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         try {
             while (localNodeContainer.getNodeModel().iterate(operatorInternals)) {
 
-                newInternals = performIntermediateIteration(remoteNodeContainers, inSpecsNoFlowPort, portInputs,
-                    numChunks, localMergeOperator != null);
+                newInternals = performIntermediateIteration(remoteNodeContainers, operatorInternals, inSpecsNoFlowPort,
+                    portInputs, numChunks, localMergeOperator != null);
 
                 if (localMergeOperator != null) {
                     LOGGER.info("call local: MergeOperator#mergeIntermediate");
@@ -464,21 +464,21 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
      * @throws Exception
      *
      */
-    private StreamableOperatorInternals[] performIntermediateIteration(final NativeNodeContainer[] remoteNodeContainers,
+    private StreamableOperatorInternals[] performIntermediateIteration(final NativeNodeContainer[] remoteNodeContainers, final StreamableOperatorInternals internals,
         final PortObjectSpec[] inSpecsNoFlowPort, final PortInput[][] portInputs, final int numChunks,
         final boolean mergeOpAvailable) throws Exception {
         StreamableOperatorInternals[] newInternals = new StreamableOperatorInternals[numChunks];
         for (int i = 0; i < numChunks; i++) {
             ExecutionContext exec = remoteNodeContainers[i].createExecutionContext();
-            LOGGER.info("call remote: NodeModel#createInitialStreamableOperatorInternals");
-            StreamableOperatorInternals internals =
-                remoteNodeContainers[i].getNodeModel().createInitialStreamableOperatorInternals();
-            LOGGER.info("call remote: NodeModel#createStreamableOperator");
+            //            LOGGER.info("call remote: NodeModel#createInitialStreamableOperatorInternals");
+            //            StreamableOperatorInternals internals =
+            //                remoteNodeContainers[i].getNodeModel().createInitialStreamableOperatorInternals();
+            //            LOGGER.info("call remote: NodeModel#createStreamableOperator");
             StreamableOperator streamableOperator = remoteNodeContainers[i].getNodeModel()
                 .createStreamableOperator(new PartitionInfo(i, numChunks), inSpecsNoFlowPort);
             if (mergeOpAvailable) {
                 LOGGER.info("call: StreamableOperator#loadInternals");
-                streamableOperator.loadInternals(internals);
+                streamableOperator.loadInternals(saveAndLoadInternals(internals));
             }
             LOGGER.info("call: StreamableOperator#runIntermediate");
             remoteNodeContainers[i].getNode().openFileStoreHandler(exec);
