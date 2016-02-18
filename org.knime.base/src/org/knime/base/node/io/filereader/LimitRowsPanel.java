@@ -44,11 +44,14 @@
  *
  * History
  *   Apr 26, 2007 (ohl): created
+ *   07.01.2016 (ferry.abt): Fix Bug 4962
  */
 package org.knime.base.node.io.filereader;
 
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -71,6 +74,8 @@ import org.knime.core.node.util.ViewUtils;
  */
 class LimitRowsPanel extends JPanel {
 
+    private static final long serialVersionUID = -3925078784275176264L;
+
     private JCheckBox m_limitRows;
 
     private JTextField m_maxNumber;
@@ -84,8 +89,7 @@ class LimitRowsPanel extends JPanel {
     private String m_lastValidSkips;
 
     /**
-     * Constructs the panels and loads it with the settings from the passed
-     * object.
+     * Constructs the panels and loads it with the settings from the passed object.
      *
      * @param settings containing the settings to show in the panel
      */
@@ -99,20 +103,16 @@ class LimitRowsPanel extends JPanel {
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JPanel skipLinesPanel = new JPanel();
-        skipLinesPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
-                "Skip lines at the beginning of the file:"));
-        skipLinesPanel
-                .setLayout(new BoxLayout(skipLinesPanel, BoxLayout.Y_AXIS));
+        skipLinesPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+            "Skip lines at the beginning of the file:"));
+        skipLinesPanel.setLayout(new BoxLayout(skipLinesPanel, BoxLayout.Y_AXIS));
         skipLinesPanel.add(getSkipPanel());
         add(skipLinesPanel);
 
         JPanel limitRowsPanel = new JPanel();
-        limitRowsPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(),
-                "Limit the number of rows read:"));
-        limitRowsPanel.setLayout(
-                new BoxLayout(limitRowsPanel, BoxLayout.Y_AXIS));
+        limitRowsPanel.setBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Limit the number of rows read:"));
+        limitRowsPanel.setLayout(new BoxLayout(limitRowsPanel, BoxLayout.Y_AXIS));
         limitRowsPanel.add(getLimitPanel());
         limitRowsPanel.add(getLimitTextBox());
         limitRowsPanel.add(Box.createVerticalGlue());
@@ -134,31 +134,49 @@ class LimitRowsPanel extends JPanel {
         // make sure we always have a valid value. Reject invalid characters.
         m_skipNumber.getDocument().addDocumentListener(new DocumentListener() {
 
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 checkAndFixSkipCount();
             }
 
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 checkAndFixSkipCount();
             }
 
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 checkAndFixSkipCount();
             }
 
         });
 
+        m_skipNumber.addFocusListener(new FocusListener() {
+
+            @Override
+            public void focusLost(final FocusEvent e) {
+                if (m_skipNumber.getText().trim().length() == 0) {
+                    // can't handle no empty strings.
+                    m_lastValidSkips = "0";
+                    m_skipNumber.setText(m_lastValidSkips);
+                }
+            }
+
+            @Override
+            public void focusGained(final FocusEvent e) {
+
+            }
+        });
+
         m_skipLines.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 // en/disable the textfield
                 m_skipNumber.setEnabled(m_skipLines.isSelected());
                 // also - if the textfield is enabled and empty set a value
                 if (m_skipNumber.isEnabled()) {
-                    if ((m_skipNumber.getText() == null)
-                            || (m_skipNumber.getText().trim().length() == 0)) {
-                        // set a valid value, so we can safely
-                        // assume that if there is a value in there
-                        // it's always valid.
+                    if ((m_skipNumber.getText() == null) || (m_skipNumber.getText().trim().length() == 0)) {
+                        // set a valid value, so we can safely assume that if there is a value in there it's always valid.
                         m_skipNumber.setText("0");
                         m_lastValidSkips = "0";
                     }
@@ -168,7 +186,6 @@ class LimitRowsPanel extends JPanel {
         });
 
         Box result = Box.createHorizontalBox();
-//        result.add(Box.createHorizontalGlue());
         result.add(m_skipLines);
         result.add(Box.createHorizontalStrut(3));
         result.add(m_skipNumber);
@@ -192,35 +209,48 @@ class LimitRowsPanel extends JPanel {
         // make sure we always have a valid value. Reject invalid characters.
         m_maxNumber.getDocument().addDocumentListener(new DocumentListener() {
 
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 checkAndFixTextfield();
             }
 
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 checkAndFixTextfield();
             }
 
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 checkAndFixTextfield();
             }
 
         });
 
+        m_maxNumber.addFocusListener(new FocusListener() {
+
+            @Override
+            public void focusLost(final FocusEvent e) {
+                if (m_maxNumber.getText().trim().length() == 0) {
+                    // can't handle no empty strings.
+                    m_lastValidValue = "0";
+                    m_maxNumber.setText(m_lastValidValue);
+                }
+            }
+
+            @Override
+            public void focusGained(final FocusEvent e) {
+            }
+        });
+
         m_limitRows.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 // en/disable the textfield
                 m_maxNumber.setEnabled(m_limitRows.isSelected());
-                // also - if the textfield is enabled and empty set
-                // a
-                // value
+                // also - if the textfield is enabled and empty set a value
                 if (m_maxNumber.isEnabled()) {
-                    if ((m_maxNumber.getText() == null)
-                            || (m_maxNumber.getText().trim().length() == 0)) {
-                        // set a valid value, so we can safely
-                        // assume
-                        // that if
-                        // there is a value in there it's always
-                        // valid.
+                    if ((m_maxNumber.getText() == null) || (m_maxNumber.getText().trim().length() == 0)) {
+                        // set a valid value, so we can safely assume that if there is a value in there it's always valid.
                         m_maxNumber.setText("1000");
                         m_lastValidValue = "1000";
                     }
@@ -230,7 +260,6 @@ class LimitRowsPanel extends JPanel {
         });
 
         Box result = Box.createHorizontalBox();
-//        result.add(Box.createHorizontalGlue());
         result.add(m_limitRows);
         result.add(Box.createHorizontalStrut(3));
         result.add(m_maxNumber);
@@ -240,21 +269,17 @@ class LimitRowsPanel extends JPanel {
         return result;
     }
 
-    /*
-     * ensures that the textfield contains a valid integer number. If it doesn't
-     * it changes it content to the last valid number. Also updates the last
-     * valid value variable.
+    /**
+     * ensures that the textfield contains a valid integer number. If it doesn't it changes it content to the last valid
+     * number. Also updates the last valid value variable.
      */
     private void checkAndFixTextfield() {
         // this is called from inside the change listener - invoke is later
         ViewUtils.invokeLaterInEDT(new Runnable() {
+            @Override
             public void run() {
 
-                if (m_maxNumber.getText().trim().length() == 0) {
-                    // can't handle no empty strings.
-                    m_lastValidValue = "0";
-                    m_maxNumber.setText(m_lastValidValue);
-                } else {
+                if (m_maxNumber.getText().trim().length() != 0) {
                     // make sure we only get numbers
                     String s = m_maxNumber.getText();
                     boolean onlyNumbers = true;
@@ -275,21 +300,16 @@ class LimitRowsPanel extends JPanel {
         });
     }
 
-    /*
-     * ensures that the textfield contains a valid integer number. If it doesn't
-     * it changes it content to the last valid number. Also updates the last
-     * valid value variable.
+    /**
+     * ensures that the textfield contains a valid integer number. If it doesn't it changes it content to the last valid
+     * number. Also updates the last valid value variable.
      */
     private void checkAndFixSkipCount() {
         // this is called from inside the change listener - invoke is later
         ViewUtils.invokeLaterInEDT(new Runnable() {
             @Override
             public void run() {
-                if (m_skipNumber.getText().trim().length() == 0) {
-                    // can't handle no empty strings.
-                    m_lastValidSkips = "0";
-                    m_skipNumber.setText(m_lastValidSkips);
-                } else {
+                if (m_skipNumber.getText().trim().length() != 0) {
                     // make sure we only get numbers
                     String s = m_skipNumber.getText();
                     boolean onlyNumbers = true;
@@ -323,33 +343,29 @@ class LimitRowsPanel extends JPanel {
     /**
      * Checks the current values in the panel.
      *
-     * @return null, if settings are okay and can be applied. An error message
-     *         if not.
+     * @return null, if settings are okay and can be applied. An error message if not.
      */
-    String checkSettings() {
+        String checkSettings() {
         // we've made huge efforts to ensure a valid panel all the time.
         return null;
     }
 
     /**
-     * Transfers the current settings from the panel in the passed object.
-     * Overwriting the corresponding values in the object.
+     * Transfers the current settings from the panel in the passed object. Overwriting the corresponding values in the
+     * object.
      *
      * @param settings the settings object to fill in the currently set values
      * @return always false.
      */
-    boolean overrideSettings(final FileReaderNodeSettings settings) {
+        boolean overrideSettings(final FileReaderNodeSettings settings) {
         if (m_limitRows.isSelected()) {
             // the text in the maxNumber should really be a number
             try {
-                settings.setMaximumNumberOfRowsToRead(Long
-                        .parseLong(m_maxNumber.getText().trim()));
+                settings.setMaximumNumberOfRowsToRead(Long.parseLong(m_maxNumber.getText().trim()));
             } catch (NumberFormatException nfe) {
                 // that's kinda bad...
-                NodeLogger.getLogger(LimitRowsPanel.class).error(
-                        "Entered invalid number for "
-                                + "maximum number of rows to "
-                                + "read. Reading ALL rows!");
+                NodeLogger.getLogger(LimitRowsPanel.class)
+                    .error("Entered invalid number for " + "maximum number of rows to " + "read. Reading ALL rows!");
                 settings.setMaximumNumberOfRowsToRead(-1);
             }
         } else {
@@ -358,14 +374,11 @@ class LimitRowsPanel extends JPanel {
         if (m_skipLines.isSelected()) {
             // the text in the maxNumber should really be a number
             try {
-                settings.setSkipFirstLines(Long
-                        .parseLong(m_skipNumber.getText().trim()));
+                settings.setSkipFirstLines(Long.parseLong(m_skipNumber.getText().trim()));
             } catch (NumberFormatException nfe) {
                 // that's kinda bad...
-                NodeLogger.getLogger(LimitRowsPanel.class).error(
-                        "Entered invalid number for "
-                                + "number of rows to skip."
-                                + "Reading ALL rows!");
+                NodeLogger.getLogger(LimitRowsPanel.class)
+                    .error("Entered invalid number for " + "number of rows to skip." + "Reading ALL rows!");
                 settings.setSkipFirstLines(0);
             }
         } else {
