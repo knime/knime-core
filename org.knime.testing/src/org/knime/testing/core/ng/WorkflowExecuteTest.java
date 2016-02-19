@@ -54,6 +54,7 @@ import java.util.TimerTask;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -78,12 +79,26 @@ import junit.framework.TestResult;
 class WorkflowExecuteTest extends WorkflowTest {
     private static final Timer TIMEOUT_TIMER = new Timer("Workflow watchdog", true);
 
-    private final TestrunConfiguration m_runConfiguration;
+    /**
+     * The current testrun configuration.
+     */
+    protected final TestrunConfiguration m_runConfiguration;
 
     WorkflowExecuteTest(final String workflowName, final IProgressMonitor monitor,
                         final TestrunConfiguration runConfiguration, final WorkflowTestContext context) {
         super(workflowName, monitor, context);
         m_runConfiguration = runConfiguration;
+    }
+
+    /**
+     * Hook that is called before the workflow is executed where the workflow manager can be configured. The default
+     * implementation does nothing.
+     *
+     * @param wfm the workflow manager, never <code>null</code>
+     * @throws InvalidSettingsException if settings cannot be loaded into a node (e.g.)
+     */
+    protected void configureWorkflowManager(final WorkflowManager wfm) throws InvalidSettingsException {
+        // do nothing
     }
 
     /**
@@ -95,6 +110,7 @@ class WorkflowExecuteTest extends WorkflowTest {
 
         TimerTask watchdog = null;
         try {
+            configureWorkflowManager(m_context.getWorkflowManager());
             resetTestflowConfigNode();
 
             final TestflowConfiguration flowConfiguration = m_context.getTestflowConfiguration();
@@ -129,12 +145,13 @@ class WorkflowExecuteTest extends WorkflowTest {
                         if (m_runConfiguration.isStacktraceOnTimeout()) {
                             MemoryUsage usage = getHeapUsage();
 
-                            Formatter formatter = new Formatter();
-                            formatter.format("Memory usage: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free",
-                                usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
-                                (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
-                            message += "\n" + formatter.out().toString();
-                            message += "\nThread status:\n" + GUIDeadlockDetector.createStacktrace();
+                            try (Formatter formatter = new Formatter()) {
+                                formatter.format("Memory usage: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free",
+                                    usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
+                                    (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
+                                message += "\n" + formatter.out().toString();
+                                message += "\nThread status:\n" + GUIDeadlockDetector.createStacktrace();
+                            }
                         }
                         NodeLogger.getLogger(WorkflowExecuteTest.class).info(message);
                         result.addFailure(WorkflowExecuteTest.this, new AssertionFailedError(message));

@@ -48,31 +48,21 @@
 package org.knime.testing.core.ng;
 
 import java.io.File;
-import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
-import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainerState;
-import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.util.GUIDeadlockDetector;
 import org.knime.testing.core.TestrunConfiguration;
-import org.knime.testing.node.config.TestConfigNodeModel;
 import org.knime.testing.streaming.testexecutor.StreamingTestNodeExecutionJob;
 import org.knime.testing.streaming.testexecutor.StreamingTestNodeExecutionJobManager;
 
@@ -80,32 +70,19 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 /**
- * Executes a workflows in streaming mode (i.e. sets for each single node the {@link StreamingTestNodeExecutionJob}) and checks if all nodes are executed (except nodes that are supposed to fail). The workflow is
- * canceled if it still running after the configured timeout.
+ * Executes a workflows in streaming mode (i.e. sets for each single node the {@link StreamingTestNodeExecutionJob}) and
+ * checks if all nodes are executed (except nodes that are supposed to fail). The workflow is canceled if it still
+ * running after the configured timeout.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @author Martin Horn, University of Konstanz
  */
-class WorkflowExecuteStreamingTest extends WorkflowTest {
-
-    private final static NodeLogger LOGGER = NodeLogger.getLogger(WorkflowExecuteStreamingTest.class);
-
-    private static final Timer TIMEOUT_TIMER = new Timer("Workflow watchdog", true);
-
-    private final TestrunConfiguration m_runConfiguration;
-
-    private File m_workflowDir;
-
-    private File m_testcaseRoot;
-
-    WorkflowExecuteStreamingTest(final File workflowDir, final File testcaseRoot, final String workflowName, final IProgressMonitor monitor,
-                        final TestrunConfiguration runConfiguration, final WorkflowTestContext context) {
-        super(workflowName, monitor, context);
-        m_workflowDir = workflowDir;
-        m_runConfiguration = runConfiguration;
-        m_testcaseRoot = testcaseRoot;
+class WorkflowExecuteStreamingTest extends WorkflowExecuteTest {
+    WorkflowExecuteStreamingTest(final File workflowDir, final File testcaseRoot, final String workflowName,
+        final IProgressMonitor monitor, final TestrunConfiguration runConfiguration,
+        final WorkflowTestContext context) {
+        super(workflowName, monitor, runConfiguration, context);
     }
-
 
 
     /**
@@ -117,77 +94,10 @@ class WorkflowExecuteStreamingTest extends WorkflowTest {
             result.endTest(this);
             return;
         }
-
-        TimerTask watchdog = null;
+        super.run(result);
 
         try {
-            result.startTest(this);
-
-            //load the workflow
-            LOGGER.info("Loading workflow '" + m_workflowName + "' for streaming test");
-            WorkflowManager wfm =
-                WorkflowLoadTest.loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration);
-            m_context.setWorkflowManager(wfm);
-
-            // recursively set the test streaming executor for all non-executed nodes
-            setStreamingTestExecutor(wfm);
-
-            resetTestflowConfigNode();
-
-            final TestflowConfiguration flowConfiguration = m_context.getTestflowConfiguration();
-
-            watchdog = new TimerTask() {
-                private final long timeout = ((flowConfiguration.getTimeout() > 0) ? flowConfiguration.getTimeout()
-                    : m_runConfiguration.getTimeout()) * 1000;
-
-                private final long startTime = System.currentTimeMillis();
-
-                @Override
-                public void run() {
-                    try {
-                        internalRun();
-                    } catch (Exception ex) {
-                        result.addError(WorkflowExecuteStreamingTest.this, ex);
-                    }
-                }
-
-                private void internalRun() {
-                    if (m_progressMonitor.isCanceled()) {
-                        result.addError(WorkflowExecuteStreamingTest.this,
-                            new InterruptedException("Testflow canceled by user"));
-                        m_context.getWorkflowManager().getParent().cancelExecution(m_context.getWorkflowManager());
-                        this.cancel();
-                    } else if (System.currentTimeMillis() > startTime + timeout) {
-                        String status =
-                            m_context.getWorkflowManager().printNodeSummary(m_context.getWorkflowManager().getID(), 0);
-                        String message = "Worklow running longer than " + (timeout / 1000.0) + " seconds.\n"
-                            + "Node status:\n" + status;
-                        if (m_runConfiguration.isStacktraceOnTimeout()) {
-                            MemoryUsage usage = getHeapUsage();
-
-                            try (Formatter formatter = new Formatter()) {
-                                formatter.format("Memory usage: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free",
-                                    usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
-                                    (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
-                                message += "\n" + formatter.out().toString();
-                                message += "\nThread status:\n" + GUIDeadlockDetector.createStacktrace();
-                            }
-                        }
-                        NodeLogger.getLogger(WorkflowExecuteStreamingTest.class).info(message);
-                        result.addFailure(WorkflowExecuteStreamingTest.this, new AssertionFailedError(message));
-                        m_context.getWorkflowManager().getParent().cancelExecution(m_context.getWorkflowManager());
-                        this.cancel();
-                    }
-                }
-            };
-
-            TIMEOUT_TIMER.schedule(watchdog, 500, 500);
-            m_context.getWorkflowManager().executeAllAndWaitUntilDone();
-            if (!m_progressMonitor.isCanceled()) {
-                checkExecutionStatus(result, m_context.getWorkflowManager(), flowConfiguration);
-            }
-
-
+            WorkflowManager wfm = m_context.getWorkflowManager();
             //close workflow
             wfm.shutdown();
             wfm.getParent().removeNode(wfm.getID());
@@ -201,26 +111,8 @@ class WorkflowExecuteStreamingTest extends WorkflowTest {
 
         } catch (Throwable t) {
             result.addError(this, t);
-        } finally {
-            result.endTest(this);
-            if (watchdog != null) {
-                watchdog.cancel();
-            }
-        }
-
-    }
-
-    private void resetTestflowConfigNode() {
-        WorkflowManager wfm = m_context.getWorkflowManager();
-
-        for (NodeContainer cont : wfm.getNodeContainers()) {
-            if ((cont instanceof NativeNodeContainer)
-                    && (((NativeNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel)) {
-                wfm.resetAndConfigureNode(cont.getID());
-            }
         }
     }
-
 
     /**
      * {@inheritDoc}
@@ -230,44 +122,18 @@ class WorkflowExecuteStreamingTest extends WorkflowTest {
         return "execute workflow in streaming mode";
     }
 
-    private void checkExecutionStatus(final TestResult result, final WorkflowManager wfm,
-                                      final TestflowConfiguration flowConfiguration) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void configureWorkflowManager(final WorkflowManager wfm) throws InvalidSettingsException {
         for (NodeContainer node : wfm.getNodeContainers()) {
             NodeContainerState status = node.getNodeContainerState();
 
             if (node instanceof SubNodeContainer) {
-                checkExecutionStatus(result, ((SubNodeContainer)node).getWorkflowManager(), flowConfiguration);
+                configureWorkflowManager(((SubNodeContainer)node).getWorkflowManager());
             } else if (node instanceof WorkflowManager) {
-                checkExecutionStatus(result, (WorkflowManager)node, flowConfiguration);
-            } else if (node instanceof SingleNodeContainer) {
-                if (!status.isExecuted() && !flowConfiguration.nodeMustFail(node.getID())) {
-                    NodeMessage nodeMessage = node.getNodeMessage();
-                    String error =
-                            "Node '" + node.getNameWithID() + "' is not executed. Error message is: "
-                                    + nodeMessage.getMessage();
-                    result.addFailure(this, new AssertionFailedError(error));
-
-                    Pattern p = Pattern.compile(Pattern.quote(nodeMessage.getMessage()));
-                    flowConfiguration.addNodeErrorMessage(node.getID(), p);
-                    flowConfiguration.addRequiredError(p);
-                } else if (status.isExecuted() && flowConfiguration.nodeMustFail(node.getID())) {
-                    String error = "Node '" + node.getNameWithID() + "' is executed although it should have failed.";
-                    result.addFailure(this, new AssertionFailedError(error));
-                }
-            } else {
-                throw new IllegalStateException("Unknown node container type: " + node.getClass());
-            }
-        }
-    }
-
-    private void setStreamingTestExecutor(final WorkflowManager wfm) throws InvalidSettingsException {
-        for (NodeContainer node : wfm.getNodeContainers()) {
-            NodeContainerState status = node.getNodeContainerState();
-
-            if (node instanceof SubNodeContainer) {
-                setStreamingTestExecutor(((SubNodeContainer)node).getWorkflowManager());
-            } else if (node instanceof WorkflowManager) {
-                setStreamingTestExecutor((WorkflowManager)node);
+                configureWorkflowManager((WorkflowManager)node);
             } else if (node instanceof SingleNodeContainer) {
 
                 //only set the streaming executor if not loop start or end node and node is not executed
