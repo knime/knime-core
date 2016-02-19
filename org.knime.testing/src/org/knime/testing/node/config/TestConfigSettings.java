@@ -480,7 +480,7 @@ public class TestConfigSettings {
             m_usedJanitors.add(j);
         }
 
-        m_streamingTest = settings.getBoolean("streamingTest", false);
+        m_streamingTest = settings.getBoolean("streamingTest", true);
 
     }
 

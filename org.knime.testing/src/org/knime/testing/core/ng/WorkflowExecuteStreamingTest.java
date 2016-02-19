@@ -96,8 +96,6 @@ class WorkflowExecuteStreamingTest extends WorkflowExecuteTest {
      */
     @Override
     public void run(final TestResult result) {
-        result.startTest(this);
-
         try {
             if (m_context.getTestflowConfiguration().runStreamingTest()) {
                 LOGGER.info("Loading workflow '" + m_workflowName + "' for streaming test");
@@ -108,11 +106,13 @@ class WorkflowExecuteStreamingTest extends WorkflowExecuteTest {
                 super.run(result);
 
                 WorkflowCloseTest.closeWorkflow(this, result, m_context);
+            } else {
+                result.startTest(this);
+                ((WorkflowTestResult) result).testIgnored(this);
+                result.endTest(this);
             }
         } catch (Throwable t) {
             result.addError(this, t);
-        } finally {
-            result.endTest(this);
         }
     }
 

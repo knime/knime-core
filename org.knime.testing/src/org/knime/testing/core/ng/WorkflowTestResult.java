@@ -48,8 +48,13 @@
 package org.knime.testing.core.ng;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.apache.tools.ant.taskdefs.optional.junit.IgnoredTestResult;
 
 import junit.framework.Test;
 import junit.framework.TestResult;
@@ -59,7 +64,7 @@ import junit.framework.TestResult;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class WorkflowTestResult extends TestResult {
+public class WorkflowTestResult extends IgnoredTestResult {
     private final TestWithName m_suite;
 
     private final StringBuilder m_sysout = new StringBuilder();
@@ -68,6 +73,8 @@ public class WorkflowTestResult extends TestResult {
 
     private final List<Test> m_allTests = new ArrayList<Test>();
 
+    private final Set<Test> m_skipped = new HashSet<>();
+
     /**
      * Creates a new test result for the given test suite.
      *
@@ -75,6 +82,15 @@ public class WorkflowTestResult extends TestResult {
      */
     public WorkflowTestResult(final TestWithName suite) {
         m_suite = suite;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void testIgnored(final Test test) throws Exception {
+        super.testIgnored(test);
+        m_skipped.add(test);
     }
 
     /**
@@ -143,5 +159,14 @@ public class WorkflowTestResult extends TestResult {
      */
     public List<Test> getAllTests() {
         return Collections.unmodifiableList(m_allTests);
+    }
+
+    /**
+     * Returns a (possibly empty) list of skipped tests.
+     *
+     * @return a list with skipped tests, never <code>null</code>
+     */
+    public Collection<Test> getSkippedTests() {
+        return Collections.unmodifiableSet(m_skipped);
     }
 }

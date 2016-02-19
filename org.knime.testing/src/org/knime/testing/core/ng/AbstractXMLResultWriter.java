@@ -54,6 +54,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -165,6 +166,7 @@ public abstract class AbstractXMLResultWriter implements TestListener {
         testSuite.setAttribute("tests", Integer.toString(result.runCount()));
         testSuite.setAttribute("failures", Integer.toString(result.failureCount()));
         testSuite.setAttribute("errors", Integer.toString(result.errorCount()));
+        testSuite.setAttribute("skipped", Long.toString(result.skippedCount()));
         testSuite.setAttribute("time", Double.toString((m_endTimes.get(result.getSuite()) - m_startTimes.get(result
                 .getSuite())) / 1000.0));
         testSuite.setAttribute("timestamp", m_timestampFormat.format(new Date(m_startTimes.get(result.getSuite()))));
@@ -193,16 +195,20 @@ public abstract class AbstractXMLResultWriter implements TestListener {
     private void addTestcases(final WorkflowTestResult result, final Document doc, final Element testSuite) {
         Map<Test, Element> testcases = new HashMap<Test, Element>();
 
-        for (Test t : result.getAllTests()) {
-            if ((t instanceof TestWithName) && !(t instanceof WorkflowTestSuite)) {
-                Element tc = createTestcaseElement((TestWithName)t, doc);
+        Collection<Test> skippedTests = result.getSkippedTests();
+        for (Test test : result.getAllTests()) {
+            if ((test instanceof TestWithName) && !(test instanceof WorkflowTestSuite)) {
+                Element tc = createTestcaseElement((TestWithName)test, doc);
                 testSuite.appendChild(tc);
-                testcases.put(t, tc);
+                testcases.put(test, tc);
+                if (skippedTests.contains(test)) {
+                    tc.appendChild(doc.createElement("skipped"));
+                }
             }
         }
 
         processIssues(result.failures(), "failure", doc, testSuite, testcases);
-        processIssues(result.errors(), "failure", doc, testSuite, testcases);
+        processIssues(result.errors(), "error", doc, testSuite, testcases);
     }
 
     private void processIssues(final Enumeration<TestFailure> issues, final String type, final Document doc,
