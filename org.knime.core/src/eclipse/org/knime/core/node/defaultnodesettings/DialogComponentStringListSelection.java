@@ -249,6 +249,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
         getComponentPanel().add(scrollPane);
 
         m_selectBox.addListSelectionListener(new ListSelectionListener() {
+            @Override
             public void valueChanged(final ListSelectionEvent e) {
                 try {
                     updateModel(false);
@@ -259,6 +260,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
         });
         // we need to update the selection, when the model changes.
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -354,6 +356,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
             m_selectBox.setBackground(Color.RED);
             // put the color back to normal with the next selection.
             m_selectBox.addListSelectionListener(new ListSelectionListener() {
+                @Override
                 public void valueChanged(final ListSelectionEvent e) {
                     m_selectBox.setBackground(DialogComponent.DEFAULT_BG);
                 }
@@ -506,8 +509,8 @@ public final class DialogComponentStringListSelection extends DialogComponent {
             }
             m_selectBox.setSelectedIndices(indices);
         }
-        if (!found && newItems.length > 0) {
-            //if none of the preseleted items was found select the first
+        if (!found && m_required && (newItems.length > 0)) {
+            //if none of the preseleted items was found *and* a selection is required select the first
             m_selectBox.setSelectedIndex(0);
         }
         //update the size of the comboBox and force the repainting
