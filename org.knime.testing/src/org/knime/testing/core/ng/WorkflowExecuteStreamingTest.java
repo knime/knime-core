@@ -165,12 +165,13 @@ class WorkflowExecuteStreamingTest extends WorkflowTest {
                         if (m_runConfiguration.isStacktraceOnTimeout()) {
                             MemoryUsage usage = getHeapUsage();
 
-                            Formatter formatter = new Formatter();
-                            formatter.format("Memory usage: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free",
-                                usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
-                                (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
-                            message += "\n" + formatter.out().toString();
-                            message += "\nThread status:\n" + GUIDeadlockDetector.createStacktrace();
+                            try (Formatter formatter = new Formatter()) {
+                                formatter.format("Memory usage: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free",
+                                    usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
+                                    (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
+                                message += "\n" + formatter.out().toString();
+                                message += "\nThread status:\n" + GUIDeadlockDetector.createStacktrace();
+                            }
                         }
                         NodeLogger.getLogger(WorkflowExecuteStreamingTest.class).info(message);
                         result.addFailure(WorkflowExecuteStreamingTest.this, new AssertionFailedError(message));
@@ -284,7 +285,7 @@ class WorkflowExecuteStreamingTest extends WorkflowTest {
                     NodeContainerSettings ncSettings = new NodeContainerSettings();
                     ncSettings.load(oldSettings);
 
-                    ncSettings.setJobManager(StreamingTestNodeExecutionJobManager.INSTANCE);
+                    ncSettings.setJobManager(StreamingTestNodeExecutionJobManager.getDefaultInstance());
 
                     ncSettings.save(newSettings);
                     wfm.loadNodeSettings(node.getID(), newSettings);

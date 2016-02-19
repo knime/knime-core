@@ -59,6 +59,7 @@ import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitTyp
 import org.knime.core.node.workflow.NodeExecutionJobManagerPanel;
 
 /**
+ * Configuration panel for the test streaming executor.
  *
  * @author Martin Horn, University of Konstanz
  */
@@ -73,6 +74,8 @@ public class StreamingTestJobMgrSettingsPanel extends NodeExecutionJobManagerPan
     private JTextField m_numChunks;
 
     /**
+     * Creates a new panel.
+     *
      * @param nodeSplitType type of splitting permitted by the underlying node
      */
     public StreamingTestJobMgrSettingsPanel(final SplitType nodeSplitType) {

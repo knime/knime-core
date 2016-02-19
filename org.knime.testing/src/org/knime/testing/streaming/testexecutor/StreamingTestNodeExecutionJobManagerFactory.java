@@ -52,16 +52,12 @@ import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
 
 /**
+ * Factory for creating test streaming job managers.
  *
  * @author Martin Horn, University of Konstanz
  */
 public class StreamingTestNodeExecutionJobManagerFactory implements NodeExecutionJobManagerFactory {
-
     static final String ID = StreamingTestNodeExecutionJobManagerFactory.class.getName();
-
-    public static final StreamingTestNodeExecutionJobManagerFactory INSTANCE =
-            new StreamingTestNodeExecutionJobManagerFactory();
-
 
     /**
      * {@inheritDoc}
@@ -84,7 +80,6 @@ public class StreamingTestNodeExecutionJobManagerFactory implements NodeExecutio
      */
     @Override
     public NodeExecutionJobManager getInstance() {
-       return StreamingTestNodeExecutionJobManager.INSTANCE;
+       return StreamingTestNodeExecutionJobManager.getDefaultInstance();
     }
-
 }

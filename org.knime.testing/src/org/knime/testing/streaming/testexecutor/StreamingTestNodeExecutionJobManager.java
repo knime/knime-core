@@ -65,24 +65,38 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.util.ThreadPool;
 
 /**
+ * Job manager that execute a single node in streaming mode.
  *
  * @author Martin Horn, University of Konstanz
  */
 public class StreamingTestNodeExecutionJobManager extends AbstractNodeExecutionJobManager {
-
-    public static final StreamingTestNodeExecutionJobManager INSTANCE = new StreamingTestNodeExecutionJobManager();
+    private static final StreamingTestNodeExecutionJobManager INSTANCE = new StreamingTestNodeExecutionJobManager();
 
     private final ThreadPool m_pool;
 
     private int m_numChunks = StreamingTestJobMgrSettingsPanel.DEFAULT_NUM_CHUNKS;
 
-    public StreamingTestNodeExecutionJobManager() {
+    /**
+     * Returns a default instance that uses the global thread pool.
+     *
+     * @return a shared default instance
+     */
+    public static StreamingTestNodeExecutionJobManager getDefaultInstance() {
+        return INSTANCE;
+    }
+
+    private StreamingTestNodeExecutionJobManager() {
         this(KNIMEConstants.GLOBAL_THREAD_POOL);
     }
 
+    /**
+     * Creates a new job manager that used the given thread pool.
+     *
+     * @param pool a thread pool, must not be <code>null</code>
+     */
     public StreamingTestNodeExecutionJobManager(final ThreadPool pool) {
         if (pool == null) {
-            throw new NullPointerException("arg must not be null");
+            throw new IllegalArgumentException("Thread pool must not be null");
         }
         m_pool = pool;
     }
