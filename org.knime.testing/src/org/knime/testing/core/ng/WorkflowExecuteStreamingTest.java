@@ -48,11 +48,10 @@
 package org.knime.testing.core.ng;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
@@ -66,7 +65,6 @@ import org.knime.testing.core.TestrunConfiguration;
 import org.knime.testing.streaming.testexecutor.StreamingTestNodeExecutionJob;
 import org.knime.testing.streaming.testexecutor.StreamingTestNodeExecutionJobManager;
 
-import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 /**
@@ -78,10 +76,18 @@ import junit.framework.TestResult;
  * @author Martin Horn, University of Konstanz
  */
 class WorkflowExecuteStreamingTest extends WorkflowExecuteTest {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowExecuteStreamingTest.class);
+
+    private final File m_workflowDir;
+    private final File m_testcaseRoot;
+
     WorkflowExecuteStreamingTest(final File workflowDir, final File testcaseRoot, final String workflowName,
         final IProgressMonitor monitor, final TestrunConfiguration runConfiguration,
         final WorkflowTestContext context) {
         super(workflowName, monitor, runConfiguration, context);
+
+        m_workflowDir = workflowDir;
+        m_testcaseRoot = testcaseRoot;
     }
 
 
@@ -90,27 +96,23 @@ class WorkflowExecuteStreamingTest extends WorkflowExecuteTest {
      */
     @Override
     public void run(final TestResult result) {
-        if(!m_context.getTestflowConfiguration().runStreamingTest()) {
-            result.endTest(this);
-            return;
-        }
-        super.run(result);
+        result.startTest(this);
 
         try {
-            WorkflowManager wfm = m_context.getWorkflowManager();
-            //close workflow
-            wfm.shutdown();
-            wfm.getParent().removeNode(wfm.getID());
+            if (m_context.getTestflowConfiguration().runStreamingTest()) {
+                LOGGER.info("Loading workflow '" + m_workflowName + "' for streaming test");
+                WorkflowManager wfm =
+                    WorkflowLoadTest.loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration);
+                m_context.setWorkflowManager(wfm);
 
-            List<NodeContainer> openWorkflows = new ArrayList<NodeContainer>(WorkflowManager.ROOT.getNodeContainers());
-            openWorkflows.removeAll(m_context.getAlreadyOpenWorkflows());
-            if (openWorkflows.size() > 0) {
-                result.addFailure(this, new AssertionFailedError(openWorkflows.size()
-                        + " dangling workflows detected: " + openWorkflows));
+                super.run(result);
+
+                WorkflowCloseTest.closeWorkflow(this, result, m_context);
             }
-
         } catch (Throwable t) {
             result.addError(this, t);
+        } finally {
+            result.endTest(this);
         }
     }
 
