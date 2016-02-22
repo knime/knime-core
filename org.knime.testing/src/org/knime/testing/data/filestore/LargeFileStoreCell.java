@@ -58,6 +58,7 @@ import org.knime.core.data.filestore.FileStoreCell;
 
 /**
  * A cell implementation that mimics a file store cell - it has "large" binary content with some information.
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class LargeFileStoreCell extends FileStoreCell implements LargeFileStoreValue {
@@ -65,18 +66,16 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
      * Serializer for {@link LargeFileStoreCell}s.
      */
     public static final class Serializer implements DataCellSerializer<LargeFileStoreCell> {
-            /** {@inheritDoc} */
-            @Override
-            public LargeFileStoreCell deserialize(final DataCellDataInput input)
-                    throws IOException {
-                long seed = input.readLong();
-                return new LargeFileStoreCell(seed);
-            }
+        /** {@inheritDoc} */
+        @Override
+        public LargeFileStoreCell deserialize(final DataCellDataInput input) throws IOException {
+            long seed = input.readLong();
+            return new LargeFileStoreCell(seed);
+        }
 
         /** {@inheritDoc} */
         @Override
-        public void serialize(final LargeFileStoreCell cell, final DataCellDataOutput output)
-                throws IOException {
+        public void serialize(final LargeFileStoreCell cell, final DataCellDataOutput output) throws IOException {
             cell.m_largeFile.flushToFileStore(); // does nothing if already written (handles "keepInMemory")
             output.writeLong(cell.m_seed);
         }
@@ -100,15 +99,20 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
         return m_seed;
     }
 
-    /** Deserialization constructor.
+    /**
+     * Deserialization constructor.
+     *
      * @param input
-     * @throws IOException */
+     * @throws IOException
+     */
     LargeFileStoreCell(final long seed) throws IOException {
         m_seed = seed;
     }
 
-    /** @param largeFile
-     * @param seed the expected seed as hidden in largeFile. */
+    /**
+     * @param largeFile
+     * @param seed the expected seed as hidden in largeFile.
+     */
     public LargeFileStoreCell(final LargeFile largeFile, final long seed) {
         super(largeFile.getFileStore());
         m_largeFile = largeFile;
@@ -123,6 +127,18 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     @Override
     protected void flushToFileStore() throws IOException {
         m_largeFile.flushToFileStore();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        try {
+            return "Content of LargeFile: " + getLargeFile().read();
+        } catch (Exception e) {
+            throw new IllegalStateException("Large file not accessible!", e);
+        }
     }
 
     /** {@inheritDoc} */
