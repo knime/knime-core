@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.locks.Lock;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -58,6 +59,15 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /**
  *
@@ -85,6 +95,44 @@ class BlockingNodeModel extends NodeModel {
         } finally {
             lock.unlock();
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[] {InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[] {OutputPortRole.DISTRIBUTED};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
+                final ExecutionContext exec) throws Exception {
+                Lock lock = getLock();
+                lock.lockInterruptibly();
+                try {
+                    final RowInput rowInput = (RowInput)inputs[0];
+                    final RowOutput rowOutput = (RowOutput)outputs[0];
+                    DataRow r;
+                    while ((r = rowInput.poll()) != null) {
+                        rowOutput.push(r);
+                    }
+                    rowInput.close();
+                    rowOutput.close();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        };
     }
 
     /** {@inheritDoc} */
