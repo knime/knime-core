@@ -968,10 +968,10 @@ public class BaseRuleParser<PredicateType> {
      */
     private void reportNotString(final int beforeLeft, final Expression left, final Operators op,
         final int beforeRight, final Expression right) throws ParseException {
-        if (!StringCell.TYPE.isASuperTypeOf(left.getOutputType())) {
+        if (!left.getOutputType().isCompatible(StringValue.class)) {
             throw new ParseException("Expression before '" + op + "' is not a string.", beforeLeft);
         }
-        if (!StringCell.TYPE.isASuperTypeOf(right.getOutputType())) {
+        if (!right.getOutputType().isCompatible(StringValue.class)) {
             throw new ParseException("Expression after '" + op + "' is not a string.", beforeRight);
         }
     }
