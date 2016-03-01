@@ -201,7 +201,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                     final ExpressionValue expressionVal = right.evaluate(null, null);
                     final DataCell cell = expressionVal.getValue();
                     if (cell instanceof StringValue) {
-                        pattern = Pattern.compile(transform(((StringValue)cell).getStringValue()));
+                        pattern = createPattern((StringValue)cell);
                         map = expressionVal.getMatchedObjects();
                     }
                 }
@@ -210,6 +210,14 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
             }
             m_pattern = pattern;
             m_rightConstantMap = map;
+        }
+
+        /**
+         * @param cell A non-{@code null} {@link StringValue}.
+         * @return The {@link Pattern} object created from the string value of {@code cell}.
+         */
+        protected Pattern createPattern(final StringValue cell) {
+            return Pattern.compile(transform(cell.getStringValue()));
         }
 
         /**
@@ -1386,6 +1394,11 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
             @Override
             protected String transform(final String string) {
                 return WildcardMatcher.wildcardToRegex(string);
+            }
+
+            @Override
+            protected Pattern createPattern(final StringValue cell) {
+                return Pattern.compile(transform(cell.getStringValue()), Pattern.DOTALL | Pattern.MULTILINE);
             }
 
             /**
