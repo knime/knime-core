@@ -64,7 +64,7 @@ public class StreamingTestNodeExecutionJobManagerFactory implements NodeExecutio
      */
     @Override
     public String getID() {
-        return getClass().getName();
+        return ID;
     }
 
     /**
@@ -80,6 +80,6 @@ public class StreamingTestNodeExecutionJobManagerFactory implements NodeExecutio
      */
     @Override
     public NodeExecutionJobManager getInstance() {
-       return StreamingTestNodeExecutionJobManager.getDefaultInstance();
+       return new StreamingTestNodeExecutionJobManager();
     }
 }

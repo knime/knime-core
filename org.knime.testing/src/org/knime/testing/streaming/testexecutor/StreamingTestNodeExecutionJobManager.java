@@ -70,22 +70,15 @@ import org.knime.core.util.ThreadPool;
  * @author Martin Horn, University of Konstanz
  */
 public class StreamingTestNodeExecutionJobManager extends AbstractNodeExecutionJobManager {
-    private static final StreamingTestNodeExecutionJobManager INSTANCE = new StreamingTestNodeExecutionJobManager();
 
     private final ThreadPool m_pool;
 
     private int m_numChunks = StreamingTestJobMgrSettingsPanel.DEFAULT_NUM_CHUNKS;
 
     /**
-     * Returns a default instance that uses the global thread pool.
-     *
-     * @return a shared default instance
+     * Creates a new job manager using the {@link KNIMEConstants#GLOBAL_THREAD_POOL}.
      */
-    public static StreamingTestNodeExecutionJobManager getDefaultInstance() {
-        return INSTANCE;
-    }
-
-    private StreamingTestNodeExecutionJobManager() {
+    public StreamingTestNodeExecutionJobManager() {
         this(KNIMEConstants.GLOBAL_THREAD_POOL);
     }
 

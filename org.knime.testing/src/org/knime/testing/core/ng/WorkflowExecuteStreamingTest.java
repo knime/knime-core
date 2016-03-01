@@ -153,7 +153,7 @@ class WorkflowExecuteStreamingTest extends WorkflowExecuteTest {
                     NodeContainerSettings ncSettings = new NodeContainerSettings();
                     ncSettings.load(oldSettings);
 
-                    ncSettings.setJobManager(StreamingTestNodeExecutionJobManager.getDefaultInstance());
+                    ncSettings.setJobManager(new StreamingTestNodeExecutionJobManager());
 
                     ncSettings.save(newSettings);
                     wfm.loadNodeSettings(node.getID(), newSettings);
