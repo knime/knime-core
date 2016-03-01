@@ -204,6 +204,24 @@ public class WorkflowImportSelectionPage extends WizardPage {
     }
 
     /**
+     * Sets the location of the zip file to import.
+     * @param loc loc the location of the zip file
+     * @since 3.1
+     */
+    public void setZipLocation(final String loc) {
+        // If the UI is not initialized, we set the initial values
+        // else we set the text directly and update.
+        if (m_fromZipTextUI == null) {
+            initialFromDir = false;
+            initialZipLocation = loc;
+        } else {
+            m_fromZipTextUI.setText(loc);
+            m_fromZipUI.setSelection(true);
+            collectWorkflowsFromZipFile(loc);
+        }
+    }
+
+    /**
      *
      * @param parent parent
      * @return composite to select the destination of the import
