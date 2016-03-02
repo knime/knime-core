@@ -54,6 +54,7 @@ import java.io.File;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -186,6 +187,14 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
             }
         }
 
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        super.tearDown();
+        FileUtil.deleteRecursively(m_workflowDir);
     }
 
 }
