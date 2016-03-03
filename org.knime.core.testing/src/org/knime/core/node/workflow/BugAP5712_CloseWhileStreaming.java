@@ -67,8 +67,7 @@ import org.knime.core.util.FileUtil;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**
- * Test the ability create file store cells in wrapped meta nodes.
- * https://bugs.knime.org/AP-5667
+ * Run a streaming executor and while it's running save &amp; close. See AP-5712.
  * @author wiswedel, University of Konstanz
  */
 public class BugAP5712_CloseWhileStreaming extends WorkflowTestCase {
