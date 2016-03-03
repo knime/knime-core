@@ -430,8 +430,8 @@ public abstract class WorkflowTestCase {
                 }
             }
         };
-        nc.addNodeStateChangeListener(l);
         lock.lock();
+        nc.addNodeStateChangeListener(l);
         try {
             while (hold.shouldHold()) {
                 int secToWait = hold.getSecondsToWaitAtMost();
@@ -444,8 +444,8 @@ public abstract class WorkflowTestCase {
             }
         } finally {
             lock.unlock();
+            nc.removeNodeStateChangeListener(l);
         }
-        nc.removeNodeStateChangeListener(l);
     }
 
     @After

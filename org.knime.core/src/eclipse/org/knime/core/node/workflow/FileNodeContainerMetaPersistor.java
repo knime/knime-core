@@ -595,8 +595,10 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
                 if (nc.findJobManager().canDisconnect(nc.getExecutionJob())) {
                     // state will also be CONFIGURED only ... we set executing later
                     mustAlsoSaveExecutorSettings = true;
+                    state = InternalNodeContainerState.EXECUTINGREMOTELY.toString();
+                } else {
+                    state = InternalNodeContainerState.IDLE.toString();
                 }
-                state = InternalNodeContainerState.EXECUTINGREMOTELY.toString();
                 break;
             default:
                 state = InternalNodeContainerState.CONFIGURED.toString();

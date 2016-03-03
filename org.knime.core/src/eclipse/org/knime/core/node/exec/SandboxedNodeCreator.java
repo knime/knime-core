@@ -191,9 +191,10 @@ public final class SandboxedNodeCreator {
      * @throws IOException
      * @throws CanceledExecutionException
      * @throws LockFailedException
+     * @throws InterruptedException
      */
-    public SandboxedNode createSandbox(final ExecutionMonitor exec)
-        throws InvalidSettingsException, IOException, CanceledExecutionException, LockFailedException {
+    public SandboxedNode createSandbox(final ExecutionMonitor exec) throws InvalidSettingsException, IOException,
+    CanceledExecutionException, LockFailedException, InterruptedException {
         exec.setMessage("Creating virtual workflow");
 
         // get all the flow variables currently available at the node to copy
@@ -260,7 +261,7 @@ public final class SandboxedNodeCreator {
                 ins[i] = inID;
             }
             // execute inPort object nodes to store the input data in them
-            if (ins.length > 0 && !tempWFM.executeAllAndWaitUntilDone()) {
+            if (ins.length > 0 && !tempWFM.executeAllAndWaitUntilDoneInterruptibly()) {
                 String error = "Unable to execute virtual workflow, status sent to log facilities";
                 LOGGER.debug(error + ":");
                 LOGGER.debug(tempWFM.toString());
@@ -288,7 +289,7 @@ public final class SandboxedNodeCreator {
                 new CopyContentIntoTempFlowNodeExecutionJobManager(origResult);
             NodeExecutionJobManager oldJobManager = targetNode.getJobManager();
             tempWFM.setJobManager(targetNodeID, copyDataIntoTmpFlow);
-            tempWFM.executeAllAndWaitUntilDone();
+            tempWFM.executeAllAndWaitUntilDoneInterruptibly();
             tempWFM.setJobManager(targetNodeID, oldJobManager);
 
             // do not use the cluster executor on the cluster...

@@ -754,13 +754,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContainer nc;
         try (WorkflowLock lock = lock()) {
             // if node does not exist, simply return
-            if (m_workflow.getNode(nodeID) == null) {
+            final NodeContainer node = m_workflow.getNode(nodeID);
+            if (node == null) {
                 return;
             }
             // check to make sure we can safely remove this node
-            if (!canRemoveNode(nodeID)) {
-                throw new IllegalStateException("Node cannot be removed");
-            }
+            CheckUtils.checkState(canRemoveNode(nodeID), "Node cannot be removed (node has state %s)",
+                node.getInternalState());
             // remove lists of in- and outgoing connections.
             while (!m_workflow.getConnectionsByDest(nodeID).isEmpty()) {
                 ConnectionContainer toDel =  m_workflow.getConnectionsByDest(nodeID).iterator().next();
@@ -1854,25 +1854,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     SingleNodeContainer snc = (SingleNodeContainer)nc;
                     if (flag) {
                         switch (nc.getInternalState()) {
-                        case CONFIGURED:
-                        case IDLE:
-                            changed = true;
-                            snc.markForExecution(true);
-                            break;
-                        default:
-                            // either executed or to-be-executed
+                            case CONFIGURED:
+                            case IDLE:
+                                changed = true;
+                                snc.markForExecution(true);
+                                break;
+                            default:
+                                // either executed or to-be-executed
                         }
 
                     } else {
                         switch (nc.getInternalState()) {
-                        case EXECUTED_MARKEDFOREXEC:
-                        case CONFIGURED_MARKEDFOREXEC:
-                        case UNCONFIGURED_MARKEDFOREXEC:
-                            changed = true;
-                            snc.markForExecution(false);
-                            break;
-                        default:
-                            // ignore all other
+                            case EXECUTED_MARKEDFOREXEC:
+                            case CONFIGURED_MARKEDFOREXEC:
+                            case UNCONFIGURED_MARKEDFOREXEC:
+                                changed = true;
+                                snc.markForExecution(false);
+                                break;
+                            default:
+                                // ignore all other
                         }
                     }
                 } else {
@@ -5163,21 +5163,36 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
    /**
-    * Convenience method: execute all and wait for execution to be done.
+    * Convenience method: execute all and wait for execution to be done. This method silently swallows
+    * {@link InterruptedException} and returns the state at the time of interrupt -- the interrupt state of the calling
+    * thread is reset then so use with caution.
     *
     * @return true if execution was successful
+    * @see #executeAllAndWaitUntilDoneInterruptibly()
     */
     public boolean executeAllAndWaitUntilDone() {
-        if (this == ROOT) {
-            throw new IllegalStateException("Can't execute ROOT workflow");
-        }
-        executeAll();
         try {
-            waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
+            return executeAllAndWaitUntilDoneInterruptibly();
         } catch (InterruptedException e) {
             LOGGER.warn("Thread interrupted while waiting for finishing execution");
         }
-        return this.getInternalState().equals(EXECUTED);
+        return getInternalState().isExecuted();
+    }
+
+    /**
+     * Execute all nodes and wait until workflow reaches a stable state.
+     * @return true if execution was successful
+     * @throws InterruptedException If the calling thread is interrupted. This will not cancel the execution of
+     * the workflow.
+     * @since 3.2
+     */
+    public boolean executeAllAndWaitUntilDoneInterruptibly() throws InterruptedException {
+        checkState(this != ROOT, "Can't execute ROOT workflow");
+        try (WorkflowLock lock = lock()) {
+            executeAll();
+            waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
+            return getInternalState().isExecuted();
+        }
     }
 
     /** Causes the current thread to wait until the the workflow has reached
@@ -5226,11 +5241,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
         };
         lock.lockInterruptibly();
-        for (NodeContainerStateObservable nc : ncs) {
-            if (nc != null) {
-                nc.addNodeStateChangeListener(listener);
-            }
-        }
+        Arrays.stream(ncs).filter(nc -> nc != null).forEach(nc -> nc.addNodeStateChangeListener(listener));
         try {
             if (!containsExecutingNode(ncs)) {
                 return true;
@@ -5243,11 +5254,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         } finally {
             lock.unlock();
-            for (NodeContainerStateObservable nc : ncs) {
-                if (nc != null) {
-                    nc.removeNodeStateChangeListener(listener);
-                }
-            }
+            Arrays.stream(ncs).filter(nc -> nc != null).forEach(nc -> nc.removeNodeStateChangeListener(listener));
         }
     }
 
