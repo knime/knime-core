@@ -125,7 +125,7 @@ public class MedianNumberMissingCellHandler extends DefaultMissingCellHandler {
         if (median.isMissing()) {
             return null;
         }
-        return createValueReplacingDerivedField(getPMMLDataTypeForColumn(), median.toString());
+        return createValueReplacingDerivedField(org.dmg.pmml.DATATYPE.DOUBLE, median.toString());
     }
 
     /**
