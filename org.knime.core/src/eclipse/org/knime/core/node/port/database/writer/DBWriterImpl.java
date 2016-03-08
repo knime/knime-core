@@ -853,7 +853,7 @@ public class DBWriterImpl implements DBWriter {
                 if (!dateCell.hasTime() && !dateCell.hasMillis()) {
                     java.sql.Date date = new java.sql.Date(corrDate);
                     stmt.setDate(dbIdx, date);
-                } else if (!dateCell.hasMillis()) {
+                } else if (!dateCell.hasDate()) {
                     java.sql.Time time = new java.sql.Time(corrDate);
                     stmt.setTime(dbIdx, time);
                 } else {
