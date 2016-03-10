@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./treeensemble.png" type="Manipulator">
+	<name>Tree Ensemble Statistics</name>
+
+	<shortDescription>Provides basic statistics on the ensemble and its
+		trees</shortDescription>
+
+	<fullDescription>
+		<intro>
+			This node calculates some simple statistics concerning the
+			depth of trees and the number of nodes of trees.
+		</intro>
+	</fullDescription>
+
+	<ports>
+		<inPort name="Ensemble" index="0">
+			Ensemble to calculate statistics
+			on
+		</inPort>
+		<outPort name="Tree Ensemble Statistic" index="0">
+			Statistics of
+			the whole ensemble
+		</outPort>
+		<outPort name="Tree Statistics" index="1">
+			Statistics of the
+			individual trees
+		</outPort>
+	</ports>
+</knimeNode>

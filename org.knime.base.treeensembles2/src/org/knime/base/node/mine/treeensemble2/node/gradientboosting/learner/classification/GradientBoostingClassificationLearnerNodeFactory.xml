@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="GradientBoostingLearner.png" type="Learner">
+  <name>Gradient Boosting Learner</name>
+
+  <shortDescription>
+    Learns a gradient boosting model.
+  </shortDescription>
+
+  <fullDescription>
+    <intro>
+      <p>
+        Learns an ensemble of regression trees (such as random forest variants). Each of the regression tree models is
+        learned on a different set of rows (records) and/or a different set of columns (describing attributes), whereby 
+        the latter can also be a bit-vector descriptor (e.g. molecular fingerprint). The output model describes an
+        ensemble of regression tree models and is applied in the corresponding predictor node using a simply mean
+        of the individual predictions. 
+      </p>
+      <p>
+        For a more general description and suggested default parameters see the node description of the classification 
+        <i>Tree Ensemble Learner</i>.
+      </p>
+    </intro>
+    <tab name="Attribute Selection">
+      <option name="Target Column">
+        Select the column containing the value to be learned. Rows with missing values in this column will be ignored
+        during the learning process.
+      </option>
+      <option name="Attribute Selection">
+        <p>Select the attributes to use learn the model. Two variants are possible.</p>
+        <p>
+          <i>Fingerprint attribute</i> uses the different bit/byte positions in the selected bit/byte vector as learning 
+          attributes (for instance a bit vector of length 1024 is expanded to 1024 binary attributes or 1024 long byte
+          vector is expanded to the corresponding number of numeric attributes). All vectors in the selected column must
+          have the same length. 
+        </p>
+        <p>
+          <i>Column attributes</i> are nominal and numeric columns used as descriptors. Numeric columns are split in a
+          &lt;= fashion; nominal columns are currently split by creating child nodes for each of the values. 
+        </p>
+      </option>
+      <option name="Ignore columns without domain information">
+        If selected, nominal columns with no domain information are ignored (as they likely have too many possible
+        values anyway). 
+      </option>
+      <option name="Enable Hightlighting (#patterns to store)">
+        If selected, the node stores the selected number of rows and allows highlighting them in the node view.
+      </option>
+    </tab>
+    <tab name="Tree Options">
+      <option name="Use mid points splits (only for numeric attributes)">
+        Uses for numerical splits the middle point between two class boundaries. If unselected the split attribute value
+        is the smaller value with "&lt;=" relationship.
+      </option>
+      <option name="Limit number of levels (tree depth)">
+        Number of tree levels to be learned. For instance, a value of 1 would only split the (single) root node
+        (decision stump). 
+      </option>
+      <option name="Minimum split node size">Minimum number of records in a decision tree node so that another split 
+        is attempted. Note, this option does not make any implications on the minimum number of records in a 
+        terminal node. If enabled, this number needs to be at least twice as large as the minimum child node size
+        (as otherwise for binary splits one of the two children would have less records than specified).
+      </option>
+      <option name="Minimum child node size">Minimum number of records in child nodes. It can be at most half of 
+         the minimum split node size (see above). Note, this parameter is currently ignored for nominal splits. 
+      </option>
+      <option name="Use fixed root attribute">
+        If selected the chosen column will be used as root split attribute in all decision trees -- even if the column 
+        is not in the attribute sample (see below). 
+      </option>
+    </tab>
+    <tab name="Ensemble Configuration">
+      <option name="Number of models">
+        The number of decision trees to learn. A "reasonable" value can range from very few (say 10) to many thousands
+        for small data sets with few target category values.
+      </option>
+      <option name="Data Sampling (Rows)">
+        The sampling of the data rows for each individual tree: If disabled each tree learner gets the full data set,
+        otherwise each tree is learned with a different data sample. A data fraction of 1 (=100%) chosen 
+        "with replacement" is called bootstrapping. For sufficiently large data sets this bootstrap sample contains 
+        about 2/3 different data rows from the input, some of which replicated multiple times. Rows which are not used
+        in the training of a tree are called out-of-bag (see below). 
+      </option>
+      <option name="Attribute Sampling (Columns)">
+        Defines the sampling of attributes to learn an individual tree. This can either be a function based on the 
+        number of attributes (linear fraction or square root) or some absolute value. The latter can be used in 
+        conjunction with flow variables to inject some other value derived from the number of attributes (e.g. Breiman
+        suggests to start with the square root of number of attributes but also try to double/half that number). 
+      </option>
+      <option name="Attribute Selection">
+        <p>
+          <i>Use same set of attributes for each tree</i> describes that the attributes are sampled once for each tree
+          and this sample is then used to construct the tree.
+        </p>
+        <p>
+          <i>Use different set of attributes for each tree node</i> samples a different set of candidate attributes in 
+          each of the tree nodes from which the optimal one is chosen to perform the split.
+        </p>
+      </option>
+      <option name="Use static random seed">
+        Choose a seed to get reproducible results.
+      </option>
+    </tab>
+  </fullDescription>
+  <ports>
+    <inPort index="0" name="Input Data">The data to learn from. It must contain at least one numeric target column and 
+      either a fingerprint (bitvector) column or another numeric or nominal column.
+    </inPort>
+    <outPort index="0" name="Gradient Boosting Model">The trained model.</outPort>
+  </ports>
+</knimeNode>

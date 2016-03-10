@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="treeensemble_predictor_regression.png" type="Predictor">
+    <name>Simple Regression Tree Predictor</name>
+
+    <shortDescription>
+        Applies regression from a regression tree model by using the mean of the individual predictions.
+    </shortDescription>
+
+	<fullDescription>
+		<intro>
+            Applies regression from a regression tree model by using the mean of the individual predictions.
+		</intro>
+	    <option name="Response Column Name">
+	       Name of the 1st output column. It contains the mean response of all models. 
+        </option>
+	</fullDescription>
+
+	<ports>
+	    <inPort index="0" name="Model">Regression Tree Model as produced by Regression Tree Learner node.</inPort>
+	    <inPort index="1" name="Input Data">The data to predict</inPort>
+		<outPort index="0" name="Predicted Output">The predicted data.</outPort>
+	</ports>
+</knimeNode>
