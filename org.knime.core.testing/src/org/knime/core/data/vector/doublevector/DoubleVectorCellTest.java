@@ -52,12 +52,15 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.stream.IntStream;
 
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.number.OrderingComparison;
 import org.junit.Assert;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
@@ -105,7 +108,23 @@ public class DoubleVectorCellTest {
 
         Assert.assertNotSame(c, cell2);
         Assert.assertEquals(cell, cell2);
+    }
 
+    @Test
+    public void testCompare() throws Exception {
+        double[] d1 = IntStream.range(0, 10000).mapToDouble(i -> i).toArray();
+        DataCell cell1 = DoubleVectorCellFactory.createCell(d1);
+        double[] d2 = IntStream.range(0, 10000).mapToDouble(i -> i).toArray();
+        d2[100] = 99.0;
+        DataCell cell2 = DoubleVectorCellFactory.createCell(d2);
+
+        DataValueComparator comparator = DoubleVectorCellFactory.TYPE.getComparator();
+        Assert.assertThat("must be equal", comparator.compare(cell1, cell1), CoreMatchers.equalTo(0));
+        Assert.assertThat("must be smaller", comparator.compare(cell1, cell2), OrderingComparison.greaterThan(0));
+        Assert.assertThat("must be larger", comparator.compare(cell2, cell1), OrderingComparison.lessThan(0));
+
+        Assert.assertThat("shorter array must be smaller", comparator.compare(
+            DoubleVectorCellFactory.createCell(new double[0]), cell2), OrderingComparison.lessThan(0));
     }
 
 }
