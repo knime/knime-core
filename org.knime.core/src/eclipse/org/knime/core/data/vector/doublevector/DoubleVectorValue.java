@@ -57,6 +57,7 @@ import org.knime.core.data.ExtensibleUtilityFactory;
 /**
  * Interface for (dense or sparse) double vector.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 3.2
  */
 public interface DoubleVectorValue extends DataValue {
 

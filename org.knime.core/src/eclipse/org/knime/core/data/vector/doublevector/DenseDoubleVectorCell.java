@@ -66,6 +66,7 @@ import org.knime.core.node.util.ConvenienceMethods;
 /**
  * {@link DoubleVectorValue} as dense representation, backed by a double[].
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 3.2
  */
 public class DenseDoubleVectorCell extends DataCell implements DoubleVectorValue, CollectionDataValue {
 

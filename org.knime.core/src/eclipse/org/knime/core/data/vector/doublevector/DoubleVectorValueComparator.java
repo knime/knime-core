@@ -55,6 +55,7 @@ import org.knime.core.data.DataValueComparator;
  * Comparator returned by the {@link DoubleVectorValue} interface.
  *
  * @author Michael Berthold, University of Konstanz
+ * @since 3.2
  */
 public class DoubleVectorValueComparator extends DataValueComparator {
 

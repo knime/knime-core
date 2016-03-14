@@ -54,6 +54,7 @@ import org.knime.core.data.def.DoubleCell;
 /**
  * Creates cell instances implementing the {@link DoubleVectorValue} interface.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 3.2
  */
 public class DoubleVectorCellFactory {
 

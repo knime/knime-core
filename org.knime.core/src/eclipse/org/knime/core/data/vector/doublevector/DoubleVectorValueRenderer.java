@@ -42,7 +42,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 14, 2016 (wiswedel): created
  */
@@ -51,8 +51,9 @@ package org.knime.core.data.vector.doublevector;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
 /**
- * 
+ *
  * @author wiswedel
+ * @since 3.2
  */
 public class DoubleVectorValueRenderer extends DefaultDataValueRenderer {
 
