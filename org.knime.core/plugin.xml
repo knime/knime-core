@@ -159,6 +159,13 @@
          </renderer>
       </dataValue>
       <dataValue
+            valueClass="org.knime.core.data.vector.doublevector.DoubleVectorValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.renderer.DoubleVectorValueRenderer$Factory"
+               suggestAsDefault="true">
+         </renderer>
+      </dataValue>
+      <dataValue
             valueClass="org.knime.core.data.FuzzyIntervalValue">
          <renderer
                rendererFactoryClass="org.knime.core.data.renderer.DefaultDataValueRenderer$Factory"
@@ -259,6 +266,14 @@
          <serializer
                cellClass="org.knime.core.data.def.DoubleCell"
                serializerClass="org.knime.core.data.def.DoubleCell$DoubleSerializer">
+         </serializer>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.data.vector.doublevector.DenseDoubleVectorCell"
+            factoryClass="org.knime.core.data.vector.doublevector.DoubleVectorCellFactory">
+         <serializer
+               cellClass="org.knime.core.data.vector.doublevector.DenseDoubleVectorCell"
+               serializerClass="org.knime.core.data.vector.doublevector.DenseDoubleVectorCell$DenseDoubleVectorSerializer">
          </serializer>
       </DataType>
       <DataType
