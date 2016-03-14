@@ -48,11 +48,20 @@
  */
 package org.knime.core.data.vector.doublevector;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.stream.IntStream;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  *
@@ -70,6 +79,33 @@ public class DoubleVectorCellTest {
         Assert.assertEquals("length mismatch", 10000, v.getLength());
 
         IntStream.range(0, 10000).forEach(i -> Assert.assertEquals("value, index " + i, i, v.getValue(i), 0.0));
+    }
+
+    @Test
+    public void testSerialization() throws Exception {
+        double[] d = IntStream.range(0, 10000).mapToDouble(i -> i).toArray();
+        DataCell cell = DoubleVectorCellFactory.createCell(d);
+        DataContainer c = new DataContainer(
+            new DataTableSpec(new DataColumnSpecCreator("foo", DoubleVectorCellFactory.TYPE).createSpec()));
+        c.addRowToTable(new DefaultRow("row", cell));
+        c.close();
+        DataTable table = c.getTable();
+        byte[] bytes;
+        try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            DataContainer.writeToStream(table, output, new ExecutionMonitor());
+            output.close();
+            bytes = output.toByteArray();
+        }
+
+        ContainerTable containerTable;
+        try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
+            containerTable = DataContainer.readFromStream(input);
+        }
+        DataCell cell2 = containerTable.iterator().next().getCell(0);
+
+        Assert.assertNotSame(c, cell2);
+        Assert.assertEquals(cell, cell2);
+
     }
 
 }
