@@ -68,12 +68,6 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class DenseDoubleVectorCell extends DataCell implements DoubleVectorValue, CollectionDataValue {
-    /**
-     * Convenience access member for <code>DataType.getType(DenseDoubleVectorCell.class)</code>.
-     *
-     * @see DataType#getType(Class)
-     */
-    public static final DataType TYPE = DataType.getType(DenseDoubleVectorCell.class);
 
     private final double[] m_doubleVector;
 
@@ -98,7 +92,7 @@ public class DenseDoubleVectorCell extends DataCell implements DoubleVectorValue
     /** {@inheritDoc} */
     @Override
     public double getValue(final int index) {
-        return m_doubleVector.length;
+        return m_doubleVector[index];
     }
 
     /* ########################

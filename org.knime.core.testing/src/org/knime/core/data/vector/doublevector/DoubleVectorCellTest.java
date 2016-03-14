@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,34 +44,32 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.09.2008 (ohl): created
+ *   Mar 14, 2016 (wiswedel): created
  */
 package org.knime.core.data.vector.doublevector;
 
+import java.util.stream.IntStream;
+
+import org.junit.Assert;
+import org.junit.Test;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.def.DoubleCell;
 
 /**
- * Creates cell instances implementing the {@link DoubleVectorValue} interface.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ *
+ * @author wiswedel
  */
-public class DoubleVectorCellFactory {
+public class DoubleVectorCellTest {
 
-    /**
-     * Convenience access member for <code>DataType.getType(DenseDoubleVectorCell.class)</code>.
-     *
-     * @see DataType#getType(Class)
-     */
-    public static final DataType TYPE = DataType.getType(DenseDoubleVectorCell.class, DoubleCell.TYPE);
+    @Test
+    public void testCreation() throws Exception {
+        double[] d = IntStream.range(0, 10000).mapToDouble(i -> i).toArray();
+        DataCell cell = DoubleVectorCellFactory.createCell(d);
+        Assert.assertTrue(cell instanceof DenseDoubleVectorCell);
+        Assert.assertTrue(cell instanceof DoubleVectorValue);
+        DoubleVectorValue v = (DoubleVectorValue)cell;
+        Assert.assertEquals("length mismatch", 10000, v.getLength());
 
-
-    /** Create cell wrapping argument array - array reference is used (so do not modify aftwards!)
-     * @param vector The non-null vector to use.
-     * @return a cell
-     */
-    public static <T extends DataCell, DoubleVectorValue> T createCell(final double[] vector) {
-        return (T)new DenseDoubleVectorCell(vector);
+        IntStream.range(0, 10000).forEach(i -> Assert.assertEquals("value, index " + i, i, v.getValue(i), 0.0));
     }
 
 }
