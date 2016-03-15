@@ -1967,7 +1967,7 @@
             id="org.knime.base.node.preproc.rank.RankNodeFactory">
       </node>
       <node
-            category-path="/manipulation/row"
+            category-path="/manipulation/column/column-convert+replace"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.doublevector.sampleandexpand.SampleDoubleVectorNodeFactory"
             id="org.knime.base.node.preproc.doublevector.sampleandexpand.SampleDoubleVectorNode">
