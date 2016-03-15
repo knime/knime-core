@@ -590,6 +590,11 @@
       <node
             after="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"
             category-path="/io/read"
+            factory-class="org.knime.base.node.io.csvreader.CSVArrayReaderNodeFactory"
+            id="org.knime.base.node.io.csvreader.CSVArrayReaderNodeFactory"/>
+      <node
+            after="org.knime.base.node.io.csvreader.CSVArrayReaderNodeFactory"
+            category-path="/io/read"
             factory-class="org.knime.base.node.io.linereader.LineReaderNodeFactory"
             id="org.knime.base.node.io.linereader.LineReaderNodeFactory">
       </node>
