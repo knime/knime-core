@@ -45,7 +45,7 @@
  * History
  *   03.09.2008 (ohl): created
  */
-package org.knime.core.data.vector.doublevector;
+package org.knime.core.data.vector.stringvector;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -59,45 +59,50 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
- * {@link DoubleVectorValue} as dense representation, backed by a double[].
+ * {@link StringVectorValue} as dense representation, backed by a String[].
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 3.2
  */
-public class DenseDoubleVectorCell extends DataCell implements DoubleVectorValue, CollectionDataValue {
+public class DenseStringVectorCell extends DataCell implements StringVectorValue, CollectionDataValue {
 
     /**
      *
      */
-    private static final long serialVersionUID = -8368133562348971016L;
-    private final double[] m_doubleVector;
+    private static final long serialVersionUID = 2032495375214103971L;
+    private final String[] m_stringVector;
 
     /**
-     * Use the {@link DenseDoubleVectorCellFactory} to create instances of this cell.
-     * @param doubleVector underlying vector.
+     * Use the {@link DenseStringVectorCellFactory} to create instances of this cell.
+     * @param stringVector underlying vector.
      */
-    DenseDoubleVectorCell(final double[] doubleVector) {
-        m_doubleVector = CheckUtils.checkArgumentNotNull(doubleVector);
+    DenseStringVectorCell(final String[] stringVector) {
+        m_stringVector = CheckUtils.checkArgumentNotNull(stringVector);
+        for (String s : m_stringVector) {
+            if (s == null) {
+                throw new IllegalArgumentException("Elements in the string vector must not be null");
+            }
+        }
     }
 
     /* ########################
-     * DoubleVectorValue
+     * StringVectorValue
      * ######################## */
 
     /** {@inheritDoc} */
     @Override
     public int getLength() {
-        return m_doubleVector.length;
+        return m_stringVector.length;
     }
 
     /** {@inheritDoc} */
     @Override
-    public double getValue(final int index) {
-        return m_doubleVector[index];
+    public String getValue(final int index) {
+        return m_stringVector[index];
     }
 
     /* ########################
@@ -113,7 +118,7 @@ public class DenseDoubleVectorCell extends DataCell implements DoubleVectorValue
     /** {@inheritDoc} */
     @Override
     public DataType getElementType() {
-        return DoubleCell.TYPE;
+        return StringCell.TYPE;
     }
 
     /** {@inheritDoc} */
@@ -125,63 +130,63 @@ public class DenseDoubleVectorCell extends DataCell implements DoubleVectorValue
     /** {@inheritDoc} */
     @Override
     public Iterator<DataCell> iterator() {
-        return Arrays.stream(m_doubleVector).boxed().map(d -> (DataCell)new DoubleCell(d)).iterator();
+        return Arrays.stream(m_stringVector).map(d -> (DataCell)new StringCell(d)).iterator();
     }
 
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return Arrays.hashCode(m_doubleVector);
+        return Arrays.hashCode(m_stringVector);
     }
 
     /** {@inheritDoc} */
     @Override
     protected boolean equalContent(final DataValue otherValue) {
-        DoubleVectorValue other = (DoubleVectorValue)otherValue;
+        StringVectorValue other = (StringVectorValue)otherValue;
         if (other.getLength() != getLength()) {
             return false;
         }
-        return IntStream.range(0, m_doubleVector.length).allMatch(i -> getValue(i) == other.getValue(i));
+        return IntStream.range(0, m_stringVector.length).allMatch(i -> getValue(i).equals(other.getValue(i)));
     }
 
     /** {@inheritDoc} */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        DenseDoubleVectorCell o = (DenseDoubleVectorCell)dc;
-        return Arrays.equals(m_doubleVector, o.m_doubleVector);
+        DenseStringVectorCell o = (DenseStringVectorCell)dc;
+        return Arrays.equals(m_stringVector, o.m_stringVector);
     }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return ConvenienceMethods.getShortStringFrom(iterator(), m_doubleVector.length, 3);
+        return ConvenienceMethods.getShortStringFrom(iterator(), m_stringVector.length, 3);
     }
 
     /**
-     * Serializer {@link DenseDoubleVectorCell}s.
+     * Serializer {@link DenseStringVectorCell}s.
      *
      * @noreference This class is not intended to be referenced by clients.
      */
-    public static final class DenseDoubleVectorSerializer implements DataCellSerializer<DenseDoubleVectorCell> {
+    public static final class DenseStringVectorSerializer implements DataCellSerializer<DenseStringVectorCell> {
         /** {@inheritDoc} */
         @Override
-        public void serialize(final DenseDoubleVectorCell cell, final DataCellDataOutput out) throws IOException {
-            double[] cnts = cell.m_doubleVector;
+        public void serialize(final DenseStringVectorCell cell, final DataCellDataOutput out) throws IOException {
+            String[] cnts = cell.m_stringVector;
             out.writeInt(cnts.length);
             for (int i = 0; i < cnts.length; i++) {
-                out.writeDouble(cnts[i]);
+                out.writeUTF(cnts[i]);
             }
         }
 
         /** {@inheritDoc} */
         @Override
-        public DenseDoubleVectorCell deserialize(final DataCellDataInput input) throws IOException {
+        public DenseStringVectorCell deserialize(final DataCellDataInput input) throws IOException {
             int arrayLength = input.readInt();
-            double[] vector = new double[arrayLength];
+            String[] vector = new String[arrayLength];
             for (int i = 0; i < arrayLength; i++) {
-                vector[i] = input.readDouble();
+                vector[i] = input.readUTF();
             }
-            return new DenseDoubleVectorCell(vector);
+            return new DenseStringVectorCell(vector);
         }
     }
 }

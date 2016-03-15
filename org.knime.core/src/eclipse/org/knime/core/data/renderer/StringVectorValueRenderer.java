@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,88 +40,67 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
- *   Mar 14, 2016 (wiswedel): created
+ *   12.08.2005 (bernd): created
  */
-package org.knime.core.data.vector.doublevector;
+package org.knime.core.data.renderer;
 
-import javax.swing.Icon;
-
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.vector.stringvector.StringVectorValue;
 
 /**
- * Interface for (dense or sparse) double vector.
+ * Renderer for DataCells that are compatible with {@link StringVectorValue} classes.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 3.2
  */
-public interface DoubleVectorValue extends DataValue {
-
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
+public final class StringVectorValueRenderer extends DefaultDataValueRenderer {
+    /**
+     * Factory for the {@link StringVectorValueRenderer}.
+     * @since 3.2
      */
-    UtilityFactory UTILITY = new DoubleVectorUtilityFactory();
-
-    /** The length of the array (&gt;= 0).
-     * @return The length.
-     */
-    public int getLength();
-
-    /** The value at a given index.
-     * @param index The requested index.
-     * @return The value at index
-     * @throws IndexOutOfBoundsException if index is invalid (smaller than 0 or &gt;= {@link #getLength()})
-     */
-    public double getValue(final int index);
-
-    /** Implementations of the meta information of this value class. */
-    class DoubleVectorUtilityFactory extends ExtensibleUtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(DoubleVectorValue.class, "/doublevectoricon.png");
-
-        private static final DoubleVectorValueComparator DOUBLE_VECTOR_COMPARATOR =
-            new DoubleVectorValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected DoubleVectorUtilityFactory() {
-            super(DoubleVectorValue.class);
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public Icon getIcon() {
-            return ICON;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return DOUBLE_VECTOR_COMPARATOR;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return "Double Vector";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getGroupName() {
-            return "Basic";
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new StringVectorValueRenderer();
         }
     }
 
+    private static final String DESCRIPTION = "String Vector";
+
+    /**
+     * Formats the object using the cell's toString method.
+     */
+    @Override
+    protected void setValue(final Object value) {
+        Object newValue;
+        if (value instanceof StringVectorValue) {
+            StringVectorValue cell = (StringVectorValue)value;
+            newValue = cell.toString();
+        } else {
+            // missing data cells will also end up here
+            newValue = value;
+        }
+        super.setValue(newValue);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
 }

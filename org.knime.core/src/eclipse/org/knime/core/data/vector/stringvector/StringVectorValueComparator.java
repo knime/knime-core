@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,88 +40,47 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
- *   Mar 14, 2016 (wiswedel): created
+ *   07.07.2005 (mb): created
+ *   21.06.06 (bw & po): reviewed
  */
-package org.knime.core.data.vector.doublevector;
-
-import javax.swing.Icon;
+package org.knime.core.data.vector.stringvector;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.ExtensibleUtilityFactory;
 
 /**
- * Interface for (dense or sparse) double vector.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * Comparator returned by the {@link StringVectorValue} interface.
+ *
+ * @author Michael Berthold, University of Konstanz
  * @since 3.2
  */
-public interface DoubleVectorValue extends DataValue {
+public class StringVectorValueComparator extends DataValueComparator {
 
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
+    /**
+     * Compares two {@link StringVectorValue}s. Order is defined by index -- first comparing values at position 0;
+     * if they are equal continuing with index 1, etc.
+     * @see org.knime.core.data.DataValueComparator#compareDataValues(DataValue, DataValue)
      */
-    UtilityFactory UTILITY = new DoubleVectorUtilityFactory();
-
-    /** The length of the array (&gt;= 0).
-     * @return The length.
-     */
-    public int getLength();
-
-    /** The value at a given index.
-     * @param index The requested index.
-     * @return The value at index
-     * @throws IndexOutOfBoundsException if index is invalid (smaller than 0 or &gt;= {@link #getLength()})
-     */
-    public double getValue(final int index);
-
-    /** Implementations of the meta information of this value class. */
-    class DoubleVectorUtilityFactory extends ExtensibleUtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(DoubleVectorValue.class, "/doublevectoricon.png");
-
-        private static final DoubleVectorValueComparator DOUBLE_VECTOR_COMPARATOR =
-            new DoubleVectorValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected DoubleVectorUtilityFactory() {
-            super(DoubleVectorValue.class);
+    @Override
+    public int compareDataValues(final DataValue v1, final DataValue v2) {
+        StringVectorValue vector1 = (StringVectorValue)v1;
+        StringVectorValue vector2 = (StringVectorValue)v2;
+        int vector1Length = vector1.getLength();
+        int vector2Length = vector2.getLength();
+        int minLength = Math.min(vector1Length, vector2Length);
+        for (int i = 0; i < minLength; i++) {
+            String s1 = vector1.getValue(i);
+            String s2 = vector2.getValue(i);
+            int compare = s1.compareTo(s2);
+            if (compare != 0) {
+                return compare;
+            }
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Icon getIcon() {
-            return ICON;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return DOUBLE_VECTOR_COMPARATOR;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return "Double Vector";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getGroupName() {
-            return "Basic";
-        }
+        // shorter vectors with same content are 'smaller'
+        return Integer.compare(vector1Length, vector2Length);
     }
 
 }

@@ -46,7 +46,7 @@
  * History
  *   Mar 14, 2016 (wiswedel): created
  */
-package org.knime.core.data.vector.doublevector;
+package org.knime.core.data.vector.stringvector;
 
 import javax.swing.Icon;
 
@@ -55,16 +55,16 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.ExtensibleUtilityFactory;
 
 /**
- * Interface for (dense or sparse) double vector.
+ * Interface for (dense or sparse) string vector.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 3.2
  */
-public interface DoubleVectorValue extends DataValue {
+public interface StringVectorValue extends DataValue {
 
     /** Meta information to this value type.
      * @see DataValue#UTILITY
      */
-    UtilityFactory UTILITY = new DoubleVectorUtilityFactory();
+    UtilityFactory UTILITY = new StringVectorUtilityFactory();
 
     /** The length of the array (&gt;= 0).
      * @return The length.
@@ -76,20 +76,20 @@ public interface DoubleVectorValue extends DataValue {
      * @return The value at index
      * @throws IndexOutOfBoundsException if index is invalid (smaller than 0 or &gt;= {@link #getLength()})
      */
-    public double getValue(final int index);
+    public String getValue(final int index);
 
     /** Implementations of the meta information of this value class. */
-    class DoubleVectorUtilityFactory extends ExtensibleUtilityFactory {
+    class StringVectorUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-            loadIcon(DoubleVectorValue.class, "/doublevectoricon.png");
+            loadIcon(StringVectorValue.class, "/icon/stringvectoricon.png");
 
-        private static final DoubleVectorValueComparator DOUBLE_VECTOR_COMPARATOR =
-            new DoubleVectorValueComparator();
+        private static final StringVectorValueComparator STRING_VECTOR_COMPARATOR =
+            new StringVectorValueComparator();
 
         /** Only subclasses are allowed to instantiate this class. */
-        protected DoubleVectorUtilityFactory() {
-            super(DoubleVectorValue.class);
+        protected StringVectorUtilityFactory() {
+            super(StringVectorValue.class);
         }
 
         /**
@@ -105,7 +105,7 @@ public interface DoubleVectorValue extends DataValue {
          */
         @Override
         protected DataValueComparator getComparator() {
-            return DOUBLE_VECTOR_COMPARATOR;
+            return STRING_VECTOR_COMPARATOR;
         }
 
         /**
@@ -113,7 +113,7 @@ public interface DoubleVectorValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Double Vector";
+            return "String Vector";
         }
 
         /**

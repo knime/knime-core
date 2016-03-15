@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -44,85 +43,34 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Mar 14, 2016 (wiswedel): created
+ *   04.09.2008 (ohl): created
  */
-package org.knime.core.data.vector.doublevector;
+package org.knime.core.data.vector.stringvector;
 
-import javax.swing.Icon;
-
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.StringCell;
 
 /**
- * Interface for (dense or sparse) double vector.
+ * Creates cell instances implementing the {@link StringVectorValue} interface.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 3.2
  */
-public interface DoubleVectorValue extends DataValue {
+public class StringVectorCellFactory {
 
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
+    /**
+     * Convenience access member for <code>DataType.getType(DenseStringVectorCell.class)</code>.
+     *
+     * @see DataType#getType(Class)
      */
-    UtilityFactory UTILITY = new DoubleVectorUtilityFactory();
+    public static final DataType TYPE = DataType.getType(DenseStringVectorCell.class, StringCell.TYPE);
 
-    /** The length of the array (&gt;= 0).
-     * @return The length.
+
+    /** Create cell wrapping argument array - array reference is used (so do not modify afterwards!)
+     * @param vector The non-null vector - with non-null elements!! - to use.
+     * @return a cell
      */
-    public int getLength();
-
-    /** The value at a given index.
-     * @param index The requested index.
-     * @return The value at index
-     * @throws IndexOutOfBoundsException if index is invalid (smaller than 0 or &gt;= {@link #getLength()})
-     */
-    public double getValue(final int index);
-
-    /** Implementations of the meta information of this value class. */
-    class DoubleVectorUtilityFactory extends ExtensibleUtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(DoubleVectorValue.class, "/doublevectoricon.png");
-
-        private static final DoubleVectorValueComparator DOUBLE_VECTOR_COMPARATOR =
-            new DoubleVectorValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected DoubleVectorUtilityFactory() {
-            super(DoubleVectorValue.class);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Icon getIcon() {
-            return ICON;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return DOUBLE_VECTOR_COMPARATOR;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return "Double Vector";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getGroupName() {
-            return "Basic";
-        }
+    public static <T extends DataCell, StringVectorValue> T createCell(final String[] vector) {
+        return (T)new DenseStringVectorCell(vector);
     }
 
 }

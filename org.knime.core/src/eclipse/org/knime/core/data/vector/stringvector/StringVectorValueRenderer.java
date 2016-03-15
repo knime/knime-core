@@ -46,83 +46,15 @@
  * History
  *   Mar 14, 2016 (wiswedel): created
  */
-package org.knime.core.data.vector.doublevector;
+package org.knime.core.data.vector.stringvector;
 
-import javax.swing.Icon;
-
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
 /**
- * Interface for (dense or sparse) double vector.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ *
+ * @author wiswedel
  * @since 3.2
  */
-public interface DoubleVectorValue extends DataValue {
-
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
-     */
-    UtilityFactory UTILITY = new DoubleVectorUtilityFactory();
-
-    /** The length of the array (&gt;= 0).
-     * @return The length.
-     */
-    public int getLength();
-
-    /** The value at a given index.
-     * @param index The requested index.
-     * @return The value at index
-     * @throws IndexOutOfBoundsException if index is invalid (smaller than 0 or &gt;= {@link #getLength()})
-     */
-    public double getValue(final int index);
-
-    /** Implementations of the meta information of this value class. */
-    class DoubleVectorUtilityFactory extends ExtensibleUtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(DoubleVectorValue.class, "/doublevectoricon.png");
-
-        private static final DoubleVectorValueComparator DOUBLE_VECTOR_COMPARATOR =
-            new DoubleVectorValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected DoubleVectorUtilityFactory() {
-            super(DoubleVectorValue.class);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Icon getIcon() {
-            return ICON;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return DOUBLE_VECTOR_COMPARATOR;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return "Double Vector";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getGroupName() {
-            return "Basic";
-        }
-    }
+public class StringVectorValueRenderer extends DefaultDataValueRenderer {
 
 }
