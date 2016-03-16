@@ -161,7 +161,12 @@ class ChopperVectorCellFactory extends AbstractCellFactory {
                         if (splits[i].trim().isEmpty()) {
                             items[i] = Double.NaN;
                         } else {
-                            items[i] = Double.parseDouble(splits[i]);
+                            try {
+                                items[i] = Double.parseDouble(splits[i]);
+                            } catch (NumberFormatException nfe) {
+                                throw new RuntimeException(
+                                    "Can't convert '" + splits[i] + "' to floating point. Item #" + i + " Row " + row.getKey(), nfe);
+                            }
                         }
                     } else {
                         items[i] = 0.0d;

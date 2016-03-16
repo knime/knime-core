@@ -156,7 +156,16 @@ class ChopperCollectionCellFactory extends AbstractCellFactory {
                     if (m_itemType.isASuperTypeOf(StringCell.TYPE)) {
                         items[i] = StringCellFactory.create(splits[i]);
                     } else {
-                        items[i] = DoubleCellFactory.create(splits[i]);
+                        if (splits[i].trim().isEmpty()) {
+                            items[i] = DoubleCellFactory.create(Double.NaN);
+                        } else {
+                            try {
+                                items[i] = DoubleCellFactory.create(splits[i]);
+                            } catch (NumberFormatException nfe) {
+                                throw new RuntimeException(
+                                    "Can't convert '" + splits[i] + "' to floating point. Item #" + i + " Row " + row.getKey(), nfe);
+                            }
+                        }
                     }
                 } else {
                     items[i] = missing;

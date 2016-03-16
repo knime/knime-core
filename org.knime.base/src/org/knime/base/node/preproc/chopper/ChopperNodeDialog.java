@@ -77,7 +77,7 @@ public class ChopperNodeDialog extends DefaultNodeSettingsPane {
 
         createNewGroup("Newly created columns:");
         addDialogComponent(new DialogComponentNumber(ChopperNodeModel.createNumberOfColsSettingsModel(),
-            "Number of items to chop off:", 1));
+            "Number of items to chop off:", 1, 8));
         String[] typeNames = Stream.of(ChopperNodeModel.TokenType.values()).map(a -> a.name()).toArray(String[]::new);
         addDialogComponent(new DialogComponentStringSelection(ChopperNodeModel.createExtractedTypeSettingsModel(),
             "Select the type of the items:", Arrays.asList(typeNames)));
