@@ -155,8 +155,8 @@ class ChopperCellFactory extends AbstractCellFactory {
                             try {
                                 result[i] = DoubleCellFactory.create(splits[i]);
                             } catch (NumberFormatException nfe) {
-                                throw new RuntimeException(
-                                    "Can't convert '" + splits[i] + "' to floating point. Item #" + i + " Row " + row.getKey(), nfe);
+                                throw new RuntimeException("Can't convert '" + splits[i] + "' to floating point. Item #"
+                                    + i + " Row " + row.getKey(), nfe);
                             }
                         }
                     }
@@ -169,7 +169,7 @@ class ChopperCellFactory extends AbstractCellFactory {
         }
 
         if (m_keepRest) {
-            result[m_numOfChops + 1] = theRest;
+            result[m_numOfChops] = theRest;
         }
         return result;
     }
