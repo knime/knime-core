@@ -81,6 +81,7 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeInPort;
@@ -206,7 +207,8 @@ public final class SandboxedNodeCreator {
         }
 
         final WorkflowManager parent = m_nc.getParent();
-        final WorkflowContext origContext = parent.getContext();
+        // derive workflow context via NodeContext as the parent could only a be a meta node in a meta node...
+        final WorkflowContext origContext = NodeContext.getContext().getWorkflowManager().getContext();
         WorkflowContext.Factory ctxFactory;
         // this if-elseif-etc is OK for both streaming in cluster but not 100% certain for other cases
         // (specifically reading knime://knime.workflow files)
