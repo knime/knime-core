@@ -214,9 +214,9 @@ public abstract class NodeFactory<T extends NodeModel> {
             m_nodeDescription = new NoDescriptionProxy(getClass());
         }
 
-        if (NodeFactoryRepository.getInstance().isDeprecated(this)) {
-            setIsDeprecated(true);
-        }
+//        if (NodeFactoryRepository.getInstance().isDeprecated(this)) {
+//            setIsDeprecated(true);
+//        }
 
         m_icon = resolveIcon(m_nodeDescription.getIconPath());
 
