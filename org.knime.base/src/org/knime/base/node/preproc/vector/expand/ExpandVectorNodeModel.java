@@ -94,12 +94,12 @@ public class ExpandVectorNodeModel extends NodeModel {
      * @return the settings model used to store the source column name.
      */
     static SettingsModelString createVectorColSelectSettingsModel() {
-        return new SettingsModelString("SelectedColumn", null);
+        return new SettingsModelString("VectorColumn", null);
     }
     private final SettingsModelString m_vectorColumn = createVectorColSelectSettingsModel();
 
     static SettingsModelString createIndexColSelectSettingsModel() {
-        return new SettingsModelString("SelectedColumn", null);
+        return new SettingsModelString("IndexColumn", null);
     }
     private final SettingsModelString m_indexColumn = createIndexColSelectSettingsModel();
 

@@ -69,7 +69,7 @@ public class ExpandVectorNodeDialog extends DefaultNodeSettingsPane {
             "Column to split:", 0, true, DoubleVectorValue.class));
         addDialogComponent(new DialogComponentColumnNameSelection(
             ExpandVectorNodeModel.createIndexColSelectSettingsModel(),
-            "Column holding indices:", 0, true, IntValue.class));
+            "Column holding indices:", 1, true, IntValue.class));
     }
 
 }
