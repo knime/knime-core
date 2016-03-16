@@ -42,39 +42,9 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 2014.03.20. by gabor
+ * Created on 2016.03.15 (mb)
  */
-package org.knime.base.node.preproc.vector.sampleandexpand;
-
-import org.knime.core.data.vector.doublevector.DoubleVectorValue;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-
 /**
- * <code>NodeDialog</code> for the {@link SampleAndExpandVectorNodeModel} Node.
- * Expands the double vector to individual double columns.
- *
- * @author M. Berthold
- * @since 3.2
+ * Take selected (or all) elements from a double or string vector and turn them into individual columns.
  */
-public class SampleAndExpandVectorNodeDialog extends DefaultNodeSettingsPane {
-
-    /**
-     * Setup dialog pane.
-     */
-    protected SampleAndExpandVectorNodeDialog() {
-        createNewGroup("Source Column");
-        addDialogComponent(new DialogComponentColumnNameSelection(
-            SampleAndExpandVectorNodeModel.createColSelectSettingsModel(),
-            "Column to split:", 0, true, DoubleVectorValue.class));
-        closeCurrentGroup();
-        createNewGroup("Column Sampling");
-        addDialogComponent(new DialogComponentNumber(
-            SampleAndExpandVectorNodeModel.createNrColumnsSettingsModel(), "Number of Doubles to sample", 1));
-        addDialogComponent(new DialogComponentNumber(
-            SampleAndExpandVectorNodeModel.createRandomSeedSettingsModel(), "Random Seed", 43));
-        closeCurrentGroup();
-    }
-
-}
+package org.knime.base.node.preproc.vector.expand;

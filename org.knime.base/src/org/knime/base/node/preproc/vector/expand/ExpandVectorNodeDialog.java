@@ -44,37 +44,32 @@
  *
  * Created on 2014.03.20. by gabor
  */
-package org.knime.base.node.preproc.vector.sampleandexpand;
+package org.knime.base.node.preproc.vector.expand;
 
+import org.knime.core.data.IntValue;
 import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 
 /**
- * <code>NodeDialog</code> for the {@link SampleAndExpandVectorNodeModel} Node.
- * Expands the double vector to individual double columns.
+ * <code>NodeDialog</code> for the {@link ExpandVectorNodeModel} Node.
+ * Expands the double/string vector to individual double columns.
  *
  * @author M. Berthold
  * @since 3.2
  */
-public class SampleAndExpandVectorNodeDialog extends DefaultNodeSettingsPane {
+public class ExpandVectorNodeDialog extends DefaultNodeSettingsPane {
 
     /**
      * Setup dialog pane.
      */
-    protected SampleAndExpandVectorNodeDialog() {
-        createNewGroup("Source Column");
+    protected ExpandVectorNodeDialog() {
         addDialogComponent(new DialogComponentColumnNameSelection(
-            SampleAndExpandVectorNodeModel.createColSelectSettingsModel(),
+            ExpandVectorNodeModel.createVectorColSelectSettingsModel(),
             "Column to split:", 0, true, DoubleVectorValue.class));
-        closeCurrentGroup();
-        createNewGroup("Column Sampling");
-        addDialogComponent(new DialogComponentNumber(
-            SampleAndExpandVectorNodeModel.createNrColumnsSettingsModel(), "Number of Doubles to sample", 1));
-        addDialogComponent(new DialogComponentNumber(
-            SampleAndExpandVectorNodeModel.createRandomSeedSettingsModel(), "Random Seed", 43));
-        closeCurrentGroup();
+        addDialogComponent(new DialogComponentColumnNameSelection(
+            ExpandVectorNodeModel.createIndexColSelectSettingsModel(),
+            "Column holding indices:", 0, true, IntValue.class));
     }
 
 }
