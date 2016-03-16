@@ -237,6 +237,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     @Override
                     public Thread newThread(final Runnable r) {
                         Thread t = new Thread(r, "KNIME-WFM-Parent-Notifier");
+                        t.setDaemon(true);
                         return t;
                     }
                 }, new ThreadPoolExecutor.DiscardPolicy());

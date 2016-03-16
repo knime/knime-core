@@ -94,17 +94,20 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
     public static final String NODE_FILE = "node.xml";
 
-    private static final Method REPOS_LOAD_METHOD;
-    private static final Object REPOS_MANAGER;
-    static {
-        Class<?> repManClass;
-        try {
-            repManClass = Class.forName("org.knime.workbench.repository.RepositoryManager");
-            Field instanceField = repManClass.getField("INSTANCE");
-            REPOS_MANAGER = instanceField.get(null);
-            REPOS_LOAD_METHOD = repManClass.getMethod("getRoot");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+    private static Method reposLoadMethod;
+    private static Object reposManager;
+
+    private void initRepos() {
+        if (reposLoadMethod == null || reposManager == null) {
+            Class<?> repManClass;
+            try {
+                repManClass = Class.forName("org.knime.workbench.repository.RepositoryManager");
+                Field instanceField = repManClass.getField("INSTANCE");
+                reposManager = instanceField.get(null);
+                reposLoadMethod = repManClass.getMethod("getRoot");
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -327,7 +330,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 // may be loaded. Therefore in order to search for a matching
                 // factory below we need to initialize the whole repository
                 // first
-                REPOS_LOAD_METHOD.invoke(REPOS_MANAGER);
+                initRepos();
+                reposLoadMethod.invoke(reposManager);
             } catch (Exception ex1) {
                 getLogger().error("Could not load repository manager", ex1);
             }
