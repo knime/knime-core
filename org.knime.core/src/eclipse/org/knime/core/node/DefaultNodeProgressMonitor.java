@@ -105,7 +105,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     private boolean m_changed = false;
 
     private static final ScheduledExecutorService NOTIFICATION_SERVICE =
-            Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, "KNIME Progress Updater"));
+            Executors.newSingleThreadScheduledExecutor(r -> {Thread t = new Thread(r, "KNIME Progress Updater"); t.setDaemon(true); return t;});
 
     static {
         // The timer task which informs all currently active progress monitors about new progress information.
