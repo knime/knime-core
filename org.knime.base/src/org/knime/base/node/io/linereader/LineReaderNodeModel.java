@@ -55,7 +55,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -64,6 +63,13 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
 
 /** Model implementation of the line reader node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -89,48 +95,9 @@ final class LineReaderNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTableSpec spec = createOutputSpec();
-        URL url = m_config.getURL();
-        BufferedDataContainer container = exec.createDataContainer(spec);
-        BufferedFileReader fileReader = BufferedFileReader.createNewReader(url);
-        long fileSize = fileReader.getFileSize();
-        int currentRow = 0;
-        final int limitRows = m_config.getLimitRowCount();
-        final boolean isSkipEmpty = m_config.isSkipEmptyLines();
-        String line;
-        String rowPrefix = m_config.getRowPrefix();
-        try {
-            while ((line = fileReader.readLine()) != null) {
-                String progMessage = "Reading row " + (currentRow + 1);
-                if (fileSize > 0) {
-                    long numberOfBytesRead = fileReader.getNumberOfBytesRead();
-                    double prog = (double)numberOfBytesRead / fileSize;
-                    exec.setProgress(prog, progMessage);
-                } else {
-                    exec.setMessage(progMessage);
-                }
-                exec.checkCanceled();
-                if (isSkipEmpty && line.trim().length() == 0) {
-                    // do not increment currentRow
-                    continue;
-                }
-                if (limitRows > 0 && currentRow >= limitRows) {
-                    setWarningMessage("Read only " + limitRows
-                            + " row(s) due to user settings.");
-                    break;
-                }
-                RowKey key = new RowKey(rowPrefix + (currentRow++));
-                DefaultRow row = new DefaultRow(key, new StringCell(line));
-                container.addRowToTable(row);
-            }
-        } finally {
-            container.close();
-            try {
-                fileReader.close();
-            } catch (IOException ioe2) {
-                // ignore
-            }
-        }
-        return new BufferedDataTable[] {container.getTable()};
+        BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(exec.createDataContainer(spec));
+        createStreamableOperator(null, null).runFinal(new PortInput[0], new PortOutput[] {output}, exec);
+        return new BufferedDataTable[] {output.getDataTable()};
     }
 
     private DataTableSpec createOutputSpec() throws InvalidSettingsException {
@@ -156,6 +123,65 @@ final class LineReaderNodeModel extends NodeModel {
     @Override
     protected void reset() {
         // no internals
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+        throws InvalidSettingsException {
+
+        return new StreamableOperator() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                RowOutput rowOutput = (RowOutput)outputs[0]; // data output port
+
+                URL url = m_config.getURL();
+                BufferedFileReader fileReader = BufferedFileReader.createNewReader(url);
+                long fileSize = fileReader.getFileSize();
+                int currentRow = 0;
+                final int limitRows = m_config.getLimitRowCount();
+                final boolean isSkipEmpty = m_config.isSkipEmptyLines();
+                String line;
+                String rowPrefix = m_config.getRowPrefix();
+                try {
+                    while ((line = fileReader.readLine()) != null) {
+                        String progMessage = "Reading row " + (currentRow + 1);
+                        if (fileSize > 0) {
+                            long numberOfBytesRead = fileReader.getNumberOfBytesRead();
+                            double prog = (double)numberOfBytesRead / fileSize;
+                            exec.setProgress(prog, progMessage);
+                        } else {
+                            exec.setMessage(progMessage);
+                        }
+                        exec.checkCanceled();
+                        if (isSkipEmpty && line.trim().length() == 0) {
+                            // do not increment currentRow
+                            continue;
+                        }
+                        if (limitRows > 0 && currentRow >= limitRows) {
+                            setWarningMessage("Read only " + limitRows
+                                    + " row(s) due to user settings.");
+                            break;
+                        }
+                        RowKey key = new RowKey(rowPrefix + (currentRow++));
+                        DefaultRow row = new DefaultRow(key, new StringCell(line));
+                        rowOutput.push(row);
+                    }
+                } finally {
+                    rowOutput.close();
+                    try {
+                        fileReader.close();
+                    } catch (IOException ioe2) {
+                        // ignore
+                    }
+                }
+            }
+        };
     }
 
     /** {@inheritDoc} */
