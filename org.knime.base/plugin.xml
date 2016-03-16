@@ -1983,6 +1983,12 @@
             factory-class="org.knime.base.node.preproc.vector.expand.ExpandVectorNodeFactory"
             id="org.knime.base.node.preproc.vector.expand.ExpandVectorNodeFactory">
       </node>
+      <node
+            category-path="/io/read"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.chopper.ChopperNodeFactory"
+            id="org.knime.base.node.preproc.chopper.ChopperNodeFactory">
+      </node>
    </extension>
    
       
