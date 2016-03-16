@@ -47,4 +47,4 @@
 /**
  * Sample elements from a double or string vector and turn them into individual columns.
  */
-package org.knime.base.node.preproc.doublevector.sampleandexpand;
+package org.knime.base.node.preproc.vector.sampleandexpand;

@@ -44,7 +44,7 @@
  *
  * Created on 2014.03.20. by gabor
  */
-package org.knime.base.node.preproc.doublevector.sampleandexpand;
+package org.knime.base.node.preproc.vector.sampleandexpand;
 
 
 import java.io.File;
