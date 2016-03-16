@@ -45,6 +45,6 @@
  * Created on 2016.03.15 (mb)
  */
 /**
- * Sample elements from a double vector.
+ * Sample elements from a double or string vector and turn them into individual columns.
  */
 package org.knime.base.node.preproc.doublevector.sampleandexpand;

@@ -3,4 +3,4 @@
  *
  * @author mb
  */
-package org.knime.base.node.preproc.doublevector;
+package org.knime.base.node.preproc.vector;

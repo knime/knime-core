@@ -22,5 +22,6 @@
     <ports>
         <inPort index="0" name="Data with Double Vector">Table containing at least one double vector column.</inPort>
         <outPort index="0" name="Data table">Table with generated columns.</outPort>
+        <outPort index="1" name="Sampled Columns">Table with list of sampled columns.</outPort>
     </ports>    
 </knimeNode>

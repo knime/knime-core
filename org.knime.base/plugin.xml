@@ -1974,8 +1974,8 @@
       <node
             category-path="/manipulation/column/column-convert+replace"
             deprecated="false"
-            factory-class="org.knime.base.node.preproc.doublevector.sampleandexpand.SampleDoubleVectorNodeFactory"
-            id="org.knime.base.node.preproc.doublevector.sampleandexpand.SampleDoubleVectorNode">
+            factory-class="org.knime.base.node.preproc.vector.sampleandexpand.SampleAndExpandVectorNodeFactory"
+            id="org.knime.base.node.preproc.vector.sampleandexpand.SampleAndExapndVectorNode">
       </node>
    </extension>
    

@@ -46,59 +46,33 @@
  */
 package org.knime.base.node.preproc.doublevector.sampleandexpand;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.data.vector.doublevector.DoubleVectorValue;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 
 /**
- * <code>NodeFactory</code> for the {@link SampleDoubleVectorNodeModel} Node.
- * Expands the doublevector to individual double columns.
+ * <code>NodeDialog</code> for the {@link SampleAndExpandVectorNodeModel} Node.
+ * Expands the double vector to individual double columns.
  *
  * @author M. Berthold
  * @since 3.2
  */
-public class SampleDoubleVectorNodeFactory extends NodeFactory<SampleDoubleVectorNodeModel> {
+public class SampleAndExpandVectorNodeDialog extends DefaultNodeSettingsPane {
 
     /**
-     * {@inheritDoc}
+     * Setup dialog pane.
      */
-    @Override
-    public SampleDoubleVectorNodeModel createNodeModel() {
-        return new SampleDoubleVectorNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<SampleDoubleVectorNodeModel> createNodeView(final int viewIndex,
-            final SampleDoubleVectorNodeModel nodeModel) {
-        throw new IndexOutOfBoundsException("No views! " + viewIndex);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new SampleDoubleVectorNodeDialog();
+    protected SampleAndExpandVectorNodeDialog() {
+        createNewGroup("Source Column");
+        addDialogComponent(new DialogComponentColumnNameSelection(
+            SampleAndExpandVectorNodeModel.createColSelectSettingsModel(),
+            "Column to split:", 0, true, DoubleVectorValue.class));
+        closeCurrentGroup();
+        createNewGroup("Column Sampling");
+        addDialogComponent(new DialogComponentNumber(
+            SampleAndExpandVectorNodeModel.createNrColumnsSettingsModel(), "Number of Doubles to sample", 1));
+        closeCurrentGroup();
     }
 
 }
-
