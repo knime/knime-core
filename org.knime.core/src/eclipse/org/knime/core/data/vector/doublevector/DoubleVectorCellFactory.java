@@ -48,6 +48,7 @@
 package org.knime.core.data.vector.doublevector;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
 
@@ -56,7 +57,7 @@ import org.knime.core.data.def.DoubleCell;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 3.2
  */
-public class DoubleVectorCellFactory {
+public class DoubleVectorCellFactory implements DataCellFactory {
 
     /**
      * Convenience access member for <code>DataType.getType(DenseDoubleVectorCell.class)</code>.
@@ -72,6 +73,13 @@ public class DoubleVectorCellFactory {
      */
     public static <T extends DataCell, DoubleVectorValue> T createCell(final double[] vector) {
         return (T)new DenseDoubleVectorCell(vector);
+    }
+
+
+    /** {@inheritDoc} */
+    @Override
+    public DataType getDataType() {
+        return TYPE;
     }
 
 }
