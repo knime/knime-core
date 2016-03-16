@@ -48,6 +48,7 @@
 package org.knime.core.data.vector.stringvector;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.StringCell;
 
@@ -55,7 +56,7 @@ import org.knime.core.data.def.StringCell;
  * Creates cell instances implementing the {@link StringVectorValue} interface.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class StringVectorCellFactory {
+public class StringVectorCellFactory implements DataCellFactory {
 
     /**
      * Convenience access member for <code>DataType.getType(DenseStringVectorCell.class)</code>.
@@ -71,6 +72,13 @@ public class StringVectorCellFactory {
      */
     public static <T extends DataCell, StringVectorValue> T createCell(final String[] vector) {
         return (T)new DenseStringVectorCell(vector);
+    }
+
+
+    /** {@inheritDoc} */
+    @Override
+    public DataType getDataType() {
+        return TYPE;
     }
 
 }
