@@ -82,7 +82,7 @@ public interface StringVectorValue extends DataValue {
     class StringVectorUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-            loadIcon(StringVectorValue.class, "/icon/stringvectoricon.png");
+            loadIcon(StringVectorValue.class, "/stringvectoricon.png");
 
         private static final StringVectorValueComparator STRING_VECTOR_COMPARATOR =
             new StringVectorValueComparator();
