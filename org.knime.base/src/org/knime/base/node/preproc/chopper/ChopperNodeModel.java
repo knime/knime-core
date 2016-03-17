@@ -214,9 +214,7 @@ public class ChopperNodeModel extends SimpleStreamableFunctionNodeModel {
         ColumnRearranger c = new ColumnRearranger(inTableSpec);
 
         c.append(factory);
-        if (m_keepRest.getBooleanValue()) {
-            c.remove(m_column.getStringValue());
-        }
+        c.remove(m_column.getStringValue());
         return c;
 
     }
