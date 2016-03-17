@@ -156,10 +156,11 @@ class ChopperVectorCellFactory extends AbstractCellFactory {
                 result = StringVectorCellFactory.createCell(items);
             } else {
                 double[] items = new double[m_numOfChops];
+                double missing = Double.NaN;
                 for (int i = 0; i < m_numOfChops; i++) {
                     if (i < splits.length) {
                         if (splits[i].trim().isEmpty()) {
-                            items[i] = Double.NaN;
+                            items[i] = missing;
                         } else {
                             try {
                                 items[i] = Double.parseDouble(splits[i]);
@@ -169,7 +170,7 @@ class ChopperVectorCellFactory extends AbstractCellFactory {
                             }
                         }
                     } else {
-                        items[i] = 0.0d;
+                        items[i] = missing;
                     }
                 }
                 result = DoubleVectorCellFactory.createCell(items);

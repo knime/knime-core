@@ -143,7 +143,7 @@ class ChopperCellFactory extends AbstractCellFactory {
             String val = ((StringValue)col).getStringValue();
             String[] splits = val.split(m_delimiter, m_numOfChops + 1);
             DataCell missing = m_itemType.isASuperTypeOf(StringCell.TYPE) ? StringCellFactory.create("")
-                : DoubleCellFactory.create(0.0);
+                : DoubleCellFactory.create(Double.NaN);
             for (int i = 0; i < m_numOfChops; i++) {
                 if (i < splits.length) {
                     if (m_itemType.isASuperTypeOf(StringCell.TYPE)) {
