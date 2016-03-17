@@ -48,8 +48,12 @@ package org.knime.base.node.io.linereader;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.concurrent.Semaphore;
 import java.util.function.Supplier;
 
+import org.apache.commons.io.input.Tailer;
+import org.apache.commons.io.input.TailerListener;
+import org.apache.commons.io.input.TailerListenerAdapter;
 import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -78,6 +82,11 @@ import org.knime.core.node.streamable.StreamableOperator;
 final class LineReaderNodeModel extends NodeModel {
 
     private LineReaderConfig m_config;
+
+    private RowOutput m_rowOutput;
+    private long m_currentRow;
+    private String m_rowPrefix;
+    private boolean m_isSkipEmpty;
 
     /** No input, one output. */
     public LineReaderNodeModel() {
@@ -146,19 +155,20 @@ final class LineReaderNodeModel extends NodeModel {
     }
 
     protected void readLines(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec, final boolean isStreamingMode) throws Exception {
-        RowOutput rowOutput = (RowOutput)outputs[0]; // data output port
+        m_rowOutput = (RowOutput)outputs[0]; // data output port
 
         URL url = m_config.getURL();
         BufferedFileReader fileReader = BufferedFileReader.createNewReader(url);
         long fileSize = fileReader.getFileSize();
-        long currentRow = 0;
+        m_currentRow = 0;
         final int limitRows = m_config.getLimitRowCount();
-        final boolean isSkipEmpty = m_config.isSkipEmptyLines();
+        m_isSkipEmpty = m_config.isSkipEmptyLines();
         String line;
-        String rowPrefix = m_config.getRowPrefix();
+        m_rowPrefix = m_config.getRowPrefix();
+        System.out.println("Read lines");
         try {
             while ((line = fileReader.readLine()) != null) {
-                final long currentRowFinal = currentRow;
+                final long currentRowFinal = m_currentRow;
                 Supplier<String> progMessage = () -> "Reading row " + (currentRowFinal + 1);
                 if (fileSize > 0) {
                     long numberOfBytesRead = fileReader.getNumberOfBytesRead();
@@ -168,25 +178,62 @@ final class LineReaderNodeModel extends NodeModel {
                     exec.setMessage(progMessage);
                 }
                 exec.checkCanceled();
-                if (isSkipEmpty && line.trim().length() == 0) {
+                if (m_isSkipEmpty && line.trim().length() == 0) {
                     // do not increment currentRow
                     continue;
                 }
-                if (limitRows > 0 && currentRow >= limitRows) {
+                if (limitRows > 0 && m_currentRow >= limitRows) {
                     setWarningMessage("Read only " + limitRows
                             + " row(s) due to user settings.");
                     break;
                 }
-                RowKey key = new RowKey(rowPrefix + (currentRow++));
+                RowKey key = new RowKey(m_rowPrefix + (m_currentRow++));
                 DefaultRow row = new DefaultRow(key, new StringCell(line));
-                rowOutput.push(row);
+                m_rowOutput.push(row);
             }
         } finally {
-            rowOutput.close();
             try {
                 fileReader.close();
             } catch (IOException ioe2) {
                 // ignore
+            }
+
+            if (isStreamingMode && m_config.isWatchFile()) {
+                TailerListener listener = new LineReaderTailerListener();
+                Tailer tailer = null;
+                try {
+                    Semaphore mutex = new Semaphore(1);
+                    mutex.acquire();
+                    System.out.println("Start watching the file");
+                    //tailer.run();
+                    tailer = Tailer.create(new File(url.toURI()), listener, 1000, true);
+                    mutex.acquire();
+                } finally {
+                    m_rowOutput.close();
+                    if (tailer != null) {
+                        tailer.stop();
+                    }
+                    System.out.println("Stop tailer");
+                }
+            } else {
+                m_rowOutput.close();
+            }
+        }
+    }
+
+    private class LineReaderTailerListener extends TailerListenerAdapter {
+        @Override
+        public void handle(final String line) {
+            System.out.println("New line: " + line);
+            if (m_isSkipEmpty && line.trim().length() == 0) {
+                return;
+            }
+            RowKey key = new RowKey(m_rowPrefix + (m_currentRow++));
+            DefaultRow row = new DefaultRow(key, new StringCell(line));
+            try {
+                m_rowOutput.push(row);
+            } catch (InterruptedException e) {
+
             }
         }
     }
