@@ -208,7 +208,7 @@
          point="org.knime.distmatrix.distanceMeasures">
       <DistanceMeasure
             factoryClass="org.knime.base.node.mine.treeensemble2.distance.RandomForestDistanceFactory"
-            id="org.knime.base.node.mine.treeensemble.distance.RandomForestDistanceFactory">
+            id="org.knime.base.node.mine.treeensemble2.distance.RandomForestDistanceFactory">
       </DistanceMeasure>
    </extension>
 

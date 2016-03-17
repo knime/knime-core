@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   20.10.2015 (Adrian Nembach): created
+ *   16.03.2016 (adrian): created
  */
 package org.knime.base.node.mine.treeensemble2.data;
 
@@ -56,26 +56,47 @@ import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerCo
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.vector.bytevector.ByteVectorValue;
+import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class TreeByteNumericColumnDataCreator implements TreeAttributeColumnDataCreator {
+public class TreeDoubleVectorNumericColumnDataCreator implements TreeAttributeColumnDataCreator {
 
-    private static final int MAX_COUNT = (1 << Byte.SIZE) - 1;
+    private static class DoubleTuple implements Comparable<DoubleTuple> {
+        private final double m_value;
 
-    private List<ByteTuple>[] m_byteTupleLists;
+        private final int m_indexInColumn;
+
+        public DoubleTuple(final double value, final int indexInOriginal) {
+            m_value = value;
+            m_indexInColumn = indexInOriginal;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int compareTo(final DoubleTuple o) {
+            return Double.compare(m_value, o.m_value);
+        }
+
+    }
+
+    private List<DoubleTuple>[] m_doubleTupleLists;
+
+    private int[] m_missingCounts;
 
     private int m_index;
 
     /**
-     * @param column
+     * @param column DataColumnSpec of the column from which the tree ensemble should be learned
+     *
      */
-    public TreeByteNumericColumnDataCreator(final DataColumnSpec column) {
-        if (!column.getType().isCompatible(ByteVectorValue.class)) {
-            throw new IllegalStateException("Can't derive byte vector data from non-bytevector column: " + column);
+    public TreeDoubleVectorNumericColumnDataCreator(final DataColumnSpec column) {
+        if (!column.getType().isCompatible(DoubleVectorValue.class)) {
+            throw new IllegalStateException("Can't derive double vector data from non-doublevector column: " + column);
         }
     }
 
@@ -84,50 +105,46 @@ public class TreeByteNumericColumnDataCreator implements TreeAttributeColumnData
      */
     @Override
     public boolean acceptsMissing() {
-        // TODO Auto-generated method stub
+        // missing means in this case that the whole vector is missing
         return false;
     }
 
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings({"unchecked"})
     @Override
     public void add(final RowKey rowKey, final DataCell cell) {
         if (cell.isMissing()) {
             throw new IllegalStateException("Missing values not supported");
         }
-        ByteVectorValue v = (ByteVectorValue)cell;
-        final long lengthLong = v.length();
+        final DoubleVectorValue v = (DoubleVectorValue)cell;
+        final long lengthLong = v.getLength();
         if (lengthLong > Integer.MAX_VALUE) {
-            throw new IllegalStateException("Sparse byte vectors not supported");
+            throw new IllegalStateException("Sparse double vectors not supported");
         }
         final int length = (int)lengthLong;
 
-        if (m_byteTupleLists == null) {
-            m_byteTupleLists = new ArrayList[length];
+        if (m_doubleTupleLists == null) {
+            m_doubleTupleLists = new ArrayList[length];
+            m_missingCounts = new int[length];
             for (int i = 0; i < length; i++) {
-                m_byteTupleLists[i] = new ArrayList<ByteTuple>();
+                m_doubleTupleLists[i] = new ArrayList<DoubleTuple>();
             }
-        } else if (m_byteTupleLists.length != length) {
-            throw new IllegalArgumentException("Byte vectors in table have different length, expected "
-                + m_byteTupleLists.length + " bytes but got " + length + " bytes in row \"" + rowKey + "\"");
+        } else if (m_doubleTupleLists.length != length) {
+            throw new IllegalArgumentException("Double vectors in table have different length, expected "
+                + m_doubleTupleLists.length + " Doubles but got " + length + " Doubles in row \"" + rowKey + "\"");
         }
 
         for (int attrIndex = 0; attrIndex < length; attrIndex++) {
-            ByteTuple tuple = new ByteTuple();
-            int val = v.get(attrIndex);
-            if (val > MAX_COUNT) {
-                throw new IllegalArgumentException(
-                    "The value \"" + val + "\" is larger than the maximum value \"" + MAX_COUNT + "\".");
-            } else if (val < 0) {
-                throw new IllegalArgumentException("Negative values are not allowed.");
+            double val = v.getValue(attrIndex);
+            DoubleTuple tuple = new DoubleTuple(val, m_index);
+            m_doubleTupleLists[attrIndex].add(tuple);
+            if (val == Double.NaN) {
+                m_missingCounts[attrIndex]++;
             }
-            tuple.m_value = (byte)val;
-            tuple.m_indexInColumn = m_index;
-            m_byteTupleLists[attrIndex].add(tuple);
         }
         m_index++;
+
     }
 
     /**
@@ -136,19 +153,21 @@ public class TreeByteNumericColumnDataCreator implements TreeAttributeColumnData
     @Override
     public TreeAttributeColumnData createColumnData(final int attributeIndex,
         final TreeEnsembleLearnerConfiguration configuration) {
-        ByteTuple[] tuples =
-            m_byteTupleLists[attributeIndex].toArray(new ByteTuple[m_byteTupleLists[attributeIndex].size()]);
+        DoubleTuple[] tuples =
+            m_doubleTupleLists[attributeIndex].toArray(new DoubleTuple[m_doubleTupleLists[attributeIndex].size()]);
         Arrays.sort(tuples);
-        byte[] sortedData = new byte[tuples.length];
+        double[] sortedData = new double[tuples.length];
         int[] sortIndex = new int[tuples.length];
         for (int i = 0; i < tuples.length; i++) {
-            ByteTuple t = tuples[i];
+            DoubleTuple t = tuples[i];
             sortedData[i] = t.m_value;
             sortIndex[i] = t.m_indexInColumn;
         }
         final String n = TreeNumericColumnMetaData.getAttributeName(attributeIndex);
         TreeNumericColumnMetaData metaData = new TreeNumericColumnMetaData(n);
-        return new TreeByteNumericColumnData(metaData, configuration, sortedData, sortIndex);
+        final int missingCount = m_missingCounts[attributeIndex];
+        return new TreeDoubleVectorNumericColumnData(metaData, configuration, sortIndex, sortedData,
+            sortedData.length - missingCount, missingCount > 0);
     }
 
     /**
@@ -156,32 +175,10 @@ public class TreeByteNumericColumnDataCreator implements TreeAttributeColumnData
      */
     @Override
     public int getNrAttributes() {
-        if (m_byteTupleLists == null) {
-            throw new IllegalStateException("No rows have been added or " + "all were rejected due to missing values");
+        if (m_doubleTupleLists == null) {
+            throw new IllegalStateException("No rows have been added or all were rejected due to missing values");
         }
-        return m_byteTupleLists.length;
-    }
-
-    private class ByteTuple implements Comparable<ByteTuple> {
-
-        private byte m_value;
-
-        private int m_indexInColumn;
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int compareTo(final ByteTuple o) {
-            int val1 = m_value & 0xFF;
-            int val2 = o.m_value & 0xFF;
-            int comp = Integer.compare(val1, val2);
-            if (comp == 0) {
-                return m_indexInColumn - o.m_indexInColumn;
-            }
-            return comp;
-        }
-
+        return m_doubleTupleLists.length;
     }
 
 }

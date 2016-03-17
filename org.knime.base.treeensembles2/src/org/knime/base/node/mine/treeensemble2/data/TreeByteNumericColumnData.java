@@ -54,7 +54,7 @@ import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerCo
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class TreeByteNumericColumnData extends TreeNumericColumnData {
 

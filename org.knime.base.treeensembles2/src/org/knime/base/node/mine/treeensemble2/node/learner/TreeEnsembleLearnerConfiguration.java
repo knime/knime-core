@@ -80,6 +80,7 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
+import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -104,7 +105,7 @@ public class TreeEnsembleLearnerConfiguration {
 
     protected static final String KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE = "isUseDifferentAttributesAtEachNode";
 
-//    private static final String KEY_INCLUDE_ALL_COLUMNS = "includeAllColumns";
+    //    private static final String KEY_INCLUDE_ALL_COLUMNS = "includeAllColumns";
 
     private static final String KEY_INCLUDE_COLUMNS = "includeColumns";
 
@@ -150,14 +151,14 @@ public class TreeEnsembleLearnerConfiguration {
              */
         Surrogate("Surrogate"),
 
-        /**
-         * Calculate direction for missing values based on which gives the better gain during training
-         */
+            /**
+             * Calculate direction for missing values based on which gives the better gain during training
+             */
         XGBoost("XGBoost"),
 
-        /**
-         * Don't do any missing value handling
-         */
+            /**
+             * Don't do any missing value handling
+             */
         None("None");
 
         private final String m_string;
@@ -183,15 +184,15 @@ public class TreeEnsembleLearnerConfiguration {
              */
         InformationGain("Information Gain"),
 
-        /**
-         * Information Gain Ratio See https://en.wikipedia.org/wiki/Information_gain_ratio for further information on
-         * the subject.
-         */
+            /**
+             * Information Gain Ratio See https://en.wikipedia.org/wiki/Information_gain_ratio for further information
+             * on the subject.
+             */
         InformationGainRatio("Information Gain Ratio"),
 
-        /**
-         * Gini Index See https://en.wikipedia.org/wiki/Gini_coefficient for further information on the subject.
-         */
+            /**
+             * Gini Index See https://en.wikipedia.org/wiki/Gini_coefficient for further information on the subject.
+             */
         Gini("Gini Index");
 
         private final String m_string;
@@ -213,24 +214,24 @@ public class TreeEnsembleLearnerConfiguration {
      */
     public enum ColumnSamplingMode {
 
-        /**
-         * Use a linear fraction of the available attributes for training
-         */
+            /**
+             * Use a linear fraction of the available attributes for training
+             */
         Linear,
 
-        /**
-         * Use the sqrt of the number of available attributes for training (standard for random forests)
-         */
+            /**
+             * Use the sqrt of the number of available attributes for training (standard for random forests)
+             */
         SquareRoot,
 
-        /**
-         * Use an absolute number of the available attributes for training
-         */
+            /**
+             * Use an absolute number of the available attributes for training
+             */
         Absolute,
 
-        /**
-         * Use the full set of available attributes for training
-         */
+            /**
+             * Use the full set of available attributes for training
+             */
         None
     }
 
@@ -934,7 +935,8 @@ public class TreeEnsembleLearnerConfiguration {
             DataColumnSpec colSpec = inSpec.getColumnSpec(i);
             DataType colType = colSpec.getType();
             String colName = colSpec.getName();
-            if (colType.isCompatible(BitVectorValue.class) || colType.isCompatible(ByteVectorValue.class)) {
+            if (colType.isCompatible(BitVectorValue.class) || colType.isCompatible(ByteVectorValue.class)
+                || colType.isCompatible(DoubleVectorValue.class)) {
                 defFingerprintColumn = colName;
             } else if (colType.isCompatible(NominalValue.class) || colType.isCompatible(DoubleValue.class)) {
                 if (colType.isCompatible(targetClass)) {
@@ -950,12 +952,12 @@ public class TreeEnsembleLearnerConfiguration {
         }
         if (defTargetColumn == null) {
             throw new NotConfigurableException(
-                "No categorical data in input " + "(node not connected?) -- unable to configure.");
+                "No possible target in input (node not connected?) -- unable to configure.");
         }
         if (!hasAttributeColumns && defFingerprintColumn == null) {
             throw new NotConfigurableException(
                 "No appropriate learning column " + "in input (need to have at least one additional "
-                    + "numeric/categorical column, fingerprint data or byte vector data)");
+                    + "numeric/categorical column, fingerprint data or byte or double vector data)");
         }
 
         // assign fields:
@@ -1074,7 +1076,8 @@ public class TreeEnsembleLearnerConfiguration {
         m_useAverageSplitPoints = settings.getBoolean(KEY_USE_AVERAGE_SPLIT_POINTS, DEF_AVERAGE_SPLIT_POINTS);
         m_useBinaryNominalSplits = settings.getBoolean(KEY_USE_BINARY_NOMINAL_SPLITS, DEF_BINARY_NOMINAL_SPLITS);
 
-        String missingValueHandlingS = settings.getString(KEY_MISSING_VALUE_HANDLING, DEF_MISSING_VALUE_HANDLING.name());
+        String missingValueHandlingS =
+            settings.getString(KEY_MISSING_VALUE_HANDLING, DEF_MISSING_VALUE_HANDLING.name());
         MissingValueHandling missingValueHandling;
         if (missingValueHandlingS == null) {
             missingValueHandling = DEF_MISSING_VALUE_HANDLING;
@@ -1195,7 +1198,8 @@ public class TreeEnsembleLearnerConfiguration {
             // use fingerprint data
             DataColumnSpec fpCol = spec.getColumnSpec(m_fingerprintColumn);
             if (fpCol == null || !(fpCol.getType().isCompatible(BitVectorValue.class)
-                || fpCol.getType().isCompatible(ByteVectorValue.class))) {
+                || fpCol.getType().isCompatible(ByteVectorValue.class)
+                || fpCol.getType().isCompatible(DoubleVectorValue.class))) {
                 throw new InvalidSettingsException("Fingerprint columnn \"" + m_fingerprintColumn
                     + "\" does not exist or is not " + "of correct type.");
             }
@@ -1345,7 +1349,7 @@ public class TreeEnsembleLearnerConfiguration {
         /**
          * @param warning the warning to set
          */
-            void setWarning(final String warning) {
+        void setWarning(final String warning) {
             m_warning = warning;
         }
 

@@ -61,6 +61,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
+import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -128,6 +129,12 @@ public class TreeDataCreator {
                     throw new IllegalStateException("Can't use multiple columns for byte vector based tree");
                 }
                 treeType = TreeType.ByteVector;
+            } else if (colType.isCompatible(DoubleVectorValue.class)) {
+                m_attrColCreators[i] = new TreeDoubleVectorNumericColumnDataCreator(col);
+                if (nrLearnCols > 1) {
+                    throw new IllegalStateException("Can't use multiple columns for double vector based tree");
+                }
+                treeType = TreeType.DoubleVector;
             } else {
                 throw new IllegalStateException("Unsupported column at index " + i + " (column \"" + col.getName()
                     + "\"): " + colType);
