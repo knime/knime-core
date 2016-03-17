@@ -9,10 +9,10 @@
     </shortDescription>
     
     <fullDescription>
-        <intro>This node takes a string that consists of tokens that are separated by a certain patter (e.g. 
-        TAB, space, etc.), it separates a certain number of these tokens from the beginning of that string and
-        converts them either in floating point numbers or keeps them as strings. It stores those new values in 
-        one new column (as a collection or a vector) or stores each extracted token in a new column. 
+        <intro>This node takes a string that consists of tokens which are separated by a certain patter (e.g. 
+        TAB, space, etc.) and separates a certain number of these tokens from the beginning of the string. It
+        converts them either in floating point numbers or keeps them as strings. The new values are stored in 
+        one new column (as a collection or a vector) or each in a separate new column. 
         If the string consists of more than the extracted tokens, the remaining part of the string can be stored in
         a new column for further processing.<br/>
         The string must be comprised of simple tokens; there is no support for quoted tokens, different decimal 
@@ -25,7 +25,7 @@
         </option>
         <option name="Number of items">
         Enter the number of tokens that should be extracted from the string. Tokens are taken from the start (from the 
-        left) of the string. If less tokens are in the string, an empty string or zero is inserted. 
+        left) of the string. If less tokens are in the string, an empty string or NaN (Not a Number) is inserted. 
         </option>
         <option name="Select the type of the items">
         Specify if the tokens extracted should be converted to a &quote;Double&quote; (floating point) or should be 
