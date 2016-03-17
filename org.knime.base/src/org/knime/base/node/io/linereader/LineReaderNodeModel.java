@@ -48,6 +48,7 @@ package org.knime.base.node.io.linereader;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.function.Supplier;
 
 import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -96,7 +97,7 @@ final class LineReaderNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         DataTableSpec spec = createOutputSpec();
         BufferedDataTableRowOutput output = new BufferedDataTableRowOutput(exec.createDataContainer(spec));
-        createStreamableOperator(null, null).runFinal(new PortInput[0], new PortOutput[] {output}, exec);
+        readLines(new PortInput[0], new PortOutput[] {output}, exec, false);
         return new BufferedDataTable[] {output.getDataTable()};
     }
 
@@ -123,6 +124,7 @@ final class LineReaderNodeModel extends NodeModel {
     @Override
     protected void reset() {
         // no internals
+
     }
 
     /**
@@ -138,50 +140,55 @@ final class LineReaderNodeModel extends NodeModel {
              */
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
-                RowOutput rowOutput = (RowOutput)outputs[0]; // data output port
-
-                URL url = m_config.getURL();
-                BufferedFileReader fileReader = BufferedFileReader.createNewReader(url);
-                long fileSize = fileReader.getFileSize();
-                int currentRow = 0;
-                final int limitRows = m_config.getLimitRowCount();
-                final boolean isSkipEmpty = m_config.isSkipEmptyLines();
-                String line;
-                String rowPrefix = m_config.getRowPrefix();
-                try {
-                    while ((line = fileReader.readLine()) != null) {
-                        String progMessage = "Reading row " + (currentRow + 1);
-                        if (fileSize > 0) {
-                            long numberOfBytesRead = fileReader.getNumberOfBytesRead();
-                            double prog = (double)numberOfBytesRead / fileSize;
-                            exec.setProgress(prog, progMessage);
-                        } else {
-                            exec.setMessage(progMessage);
-                        }
-                        exec.checkCanceled();
-                        if (isSkipEmpty && line.trim().length() == 0) {
-                            // do not increment currentRow
-                            continue;
-                        }
-                        if (limitRows > 0 && currentRow >= limitRows) {
-                            setWarningMessage("Read only " + limitRows
-                                    + " row(s) due to user settings.");
-                            break;
-                        }
-                        RowKey key = new RowKey(rowPrefix + (currentRow++));
-                        DefaultRow row = new DefaultRow(key, new StringCell(line));
-                        rowOutput.push(row);
-                    }
-                } finally {
-                    rowOutput.close();
-                    try {
-                        fileReader.close();
-                    } catch (IOException ioe2) {
-                        // ignore
-                    }
-                }
+                readLines(inputs, outputs, exec, true);
             }
         };
+    }
+
+    protected void readLines(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec, final boolean isStreamingMode) throws Exception {
+        RowOutput rowOutput = (RowOutput)outputs[0]; // data output port
+
+        URL url = m_config.getURL();
+        BufferedFileReader fileReader = BufferedFileReader.createNewReader(url);
+        long fileSize = fileReader.getFileSize();
+        long currentRow = 0;
+        final int limitRows = m_config.getLimitRowCount();
+        final boolean isSkipEmpty = m_config.isSkipEmptyLines();
+        String line;
+        String rowPrefix = m_config.getRowPrefix();
+        try {
+            while ((line = fileReader.readLine()) != null) {
+                final long currentRowFinal = currentRow;
+                Supplier<String> progMessage = () -> "Reading row " + (currentRowFinal + 1);
+                if (fileSize > 0) {
+                    long numberOfBytesRead = fileReader.getNumberOfBytesRead();
+                    double prog = (double)numberOfBytesRead / fileSize;
+                    exec.setProgress(prog, progMessage);
+                } else {
+                    exec.setMessage(progMessage);
+                }
+                exec.checkCanceled();
+                if (isSkipEmpty && line.trim().length() == 0) {
+                    // do not increment currentRow
+                    continue;
+                }
+                if (limitRows > 0 && currentRow >= limitRows) {
+                    setWarningMessage("Read only " + limitRows
+                            + " row(s) due to user settings.");
+                    break;
+                }
+                RowKey key = new RowKey(rowPrefix + (currentRow++));
+                DefaultRow row = new DefaultRow(key, new StringCell(line));
+                rowOutput.push(row);
+            }
+        } finally {
+            rowOutput.close();
+            try {
+                fileReader.close();
+            } catch (IOException ioe2) {
+                // ignore
+            }
+        }
     }
 
     /** {@inheritDoc} */
