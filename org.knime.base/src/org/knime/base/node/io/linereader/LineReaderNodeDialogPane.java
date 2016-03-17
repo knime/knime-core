@@ -87,6 +87,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
     private final JCheckBox m_limitRowCountChecker;
     private final JCheckBox m_skipEmptyLinesChecker;
     private final JSpinner m_limitRowCountSpinner;
+    private final JCheckBox m_watchFileChecker;
 
     /** Create new dialog, init layout. */
     LineReaderNodeDialogPane() {
@@ -117,6 +118,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             }
         });
         m_limitRowCountSpinner.setEnabled(false);
+        m_watchFileChecker = new JCheckBox("Watch file (streaming only)");
         JPanel panel = initLayout();
         addTab("Line Reader", panel);
     }
@@ -157,6 +159,12 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         panel.add(m_limitRowCountChecker, gbc);
         gbc.gridx += 1;
         panel.add(m_limitRowCountSpinner, gbc);
+
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+        panel.add(m_watchFileChecker, gbc);
+
         return panel;
     }
 
@@ -184,6 +192,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             }
             m_limitRowCountSpinner.setValue(limitRows);
         }
+        m_watchFileChecker.setSelected(config.isWatchFile());
     }
 
 
@@ -205,6 +214,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         } else {
             config.setLimitRowCount(-1);
         }
+        config.setWatchFile(m_watchFileChecker.isSelected());
         config.saveConfiguration(settings);
         m_filePanel.addToHistory();
     }

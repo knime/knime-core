@@ -68,6 +68,7 @@ final class LineReaderConfig {
     private String m_columnHeader;
     private boolean m_skipEmptyLines;
     private int m_limitRowCount;
+    private boolean m_watchFile;
 
     /** @return the url */
     String getUrlString() {
@@ -154,6 +155,19 @@ final class LineReaderConfig {
     void setSkipEmptyLines(final boolean skipEmptyLines) {
         m_skipEmptyLines = skipEmptyLines;
     }
+    /**
+     * @return the m_watchFile
+     */
+    boolean isWatchFile() {
+        return m_watchFile;
+    }
+    /**
+     * @param watchFile the m_watchFile to set
+     */
+    void setWatchFile(final boolean watchFile) {
+        this.m_watchFile = watchFile;
+    }
+
 
     /** Save current configuration.
      * @param settings to save to. */
@@ -163,6 +177,7 @@ final class LineReaderConfig {
         settings.addString("columnHeader", m_columnHeader);
         settings.addBoolean("skipEmptyLines", m_skipEmptyLines);
         settings.addInt("limitRowCount", m_limitRowCount);
+        settings.addBoolean("watchFile", m_watchFile);
     }
 
     /** Load configuration in NodeModel.
@@ -185,6 +200,7 @@ final class LineReaderConfig {
         }
         m_skipEmptyLines = settings.getBoolean("skipEmptyLines");
         m_limitRowCount = settings.getInt("limitRowCount");
+        m_watchFile = settings.getBoolean("watchFile", false);
     }
 
     /** Load configuration in dialog, init defaults if invalid.
@@ -195,6 +211,7 @@ final class LineReaderConfig {
         m_columnHeader = settings.getString("columnHeader", "Column");
         m_skipEmptyLines = settings.getBoolean("skipEmptyLines", false);
         m_limitRowCount = settings.getInt("limitRowCount", -1);
+        m_watchFile = settings.getBoolean("watchFile", false);
     }
 
 }
