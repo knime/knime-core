@@ -59,7 +59,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
@@ -85,7 +84,6 @@ import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
-import org.osgi.framework.BundleContext;
 
 /**
  *
@@ -191,24 +189,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         }
         NodeFactory<NodeModel> nodeFactory;
         try {
-            // Ensure that the bundle containing the node is started
-            BundleContext context = Platform.getBundle("org.knime.core").getBundleContext();
-            String bundleName = nodeInfo.getBundleSymbolicName().get();
-            System.out.println("Activating bundle '" + bundleName + "'");
-//            for (Bundle bundle : context.getBundles()) {
-//                if (bundle.getSymbolicName().equals(bundleName)) {
-//                    System.out.println("Bundle found, starting...");
-//                    //bundle.update();
-//                    bundle.start();
-//                    System.out.println("Bundle started");
-//                    break;
-//                }
-//            }
-            System.out.println("Loading class '" + nodeInfo.getFactoryClass() + "'");
-            Class clazz = Class.forName(nodeInfo.getFactoryClass());
-            System.out.println("Loaded class '" + clazz.getCanonicalName() + "'");
-            nodeFactory = (NodeFactory<NodeModel>)clazz.newInstance();
-//            nodeFactory = loadNodeFactory(nodeInfo.getFactoryClass());
+            nodeFactory = loadNodeFactory(nodeInfo.getFactoryClass());
         } catch (Exception e) {
             // setDirtyAfterLoad(); // don't set dirty, missing node placeholder will be used instead
             throw new NodeFactoryUnknownException(nodeInfo, additionalFactorySettings, e);
