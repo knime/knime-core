@@ -77,8 +77,8 @@ import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.OutputPortRole;
 
 /**
- * This is the model implementation for a node which samples and expands a double vector
- * to individual double columns.
+ * This is the model implementation for a node which extracts a given subset of elements of
+ * a string or double vector to individual string/double columns.
  *
  * @author M. Berthold
  * @since 3.2
@@ -115,7 +115,7 @@ public class ExpandVectorNodeModel extends NodeModel {
      */
     @Override
     public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE,
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_NONSTREAMABLE,
             InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
     }
 
@@ -124,7 +124,7 @@ public class ExpandVectorNodeModel extends NodeModel {
      */
     @Override
     public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.NONDISTRIBUTED};
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
     }
 
     /**
