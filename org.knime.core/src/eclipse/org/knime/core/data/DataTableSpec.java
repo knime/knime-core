@@ -54,6 +54,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
@@ -858,6 +860,12 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         // both method do not copy the data but only keep a reference.
         return Collections.unmodifiableList(
                 Arrays.asList(m_columnSpecs)).iterator();
+    }
+
+    /** @return a stream on all contained columns.
+     * @since 3.2 */
+    public Stream<DataColumnSpec> stream() {
+        return StreamSupport.stream(spliterator(), false);
     }
 
     /**
