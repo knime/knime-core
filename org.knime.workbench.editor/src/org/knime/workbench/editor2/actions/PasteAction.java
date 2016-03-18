@@ -47,6 +47,15 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.draw2d.Viewport;
+import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.EditPart;
+import org.eclipse.gef.GraphicalViewer;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -56,18 +65,16 @@ import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand;
 import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand.ShiftCalculator;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
- * Implements the clipboard paste action to paste nodes and connections from the
- * clipboard into the editor.
+ * Implements the clipboard paste action to paste nodes and connections from the clipboard into the editor.
  *
  * @author Christoph Sieb, University of Konstanz
  */
 public class PasteAction extends AbstractClipboardAction {
-
-    private static final int OFFSET = 120;
-
 
     /**
      * Constructs a new clipboard paste action.
@@ -91,8 +98,7 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        ISharedImages sharedImages =
-                PlatformUI.getWorkbench().getSharedImages();
+        ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
         return sharedImages.getImageDescriptor(ISharedImages.IMG_TOOL_PASTE);
     }
 
@@ -125,45 +131,124 @@ public class PasteAction extends AbstractClipboardAction {
         ClipboardObject clipObject = getEditor().getClipboardContent();
         ShiftCalculator shiftCalculator = newShiftCalculator();
         PasteFromWorkflowPersistorCommand pasteCommand =
-            new PasteFromWorkflowPersistorCommand(
-                    getEditor(), clipObject, shiftCalculator);
+            new PasteFromWorkflowPersistorCommand(getEditor(), clipObject, shiftCalculator);
         getCommandStack().execute(pasteCommand); // enables undo
 
         // update the actions
         getEditor().updateActions();
 
-        // Give focus to the editor again. Otherwise the actions (selection)
-        // is not updated correctly.
+        // Give focus to the editor again. Otherwise the actions (selection) is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
     }
 
-
     /**
-     * A shift operator that calculates a fixed offset. The sub class
-     * {@link PasteActionContextMenu} overrides this method to return a
-     * different shift calculator that respects the current mouse
-     * pointer location.
+     * A shift operator that calculates a fixed offset. The sub class {@link PasteActionContextMenu} overrides this
+     * method to return a different shift calculator that respects the current mouse pointer location.
+     *
      * @return A new shift calculator.
      */
     protected ShiftCalculator newShiftCalculator() {
         return new ShiftCalculator() {
             /** {@inheritDoc} */
             @Override
-            public int[] calculateShift(final Iterable<int[]> boundsList,
-                    final WorkflowManager manager,
-                    final ClipboardObject clipObject) {
-                final int counter =
-                    clipObject.incrementAndGetRetrievalCounter();
-                int offsetX = OFFSET;
-                int offsetY = OFFSET;
-                if (getEditor().getEditorSnapToGrid()) {
-                    // with grid
-                    offsetX = getEditor().getEditorGridXOffset(OFFSET);
-                    offsetY = getEditor().getEditorGridYOffset(OFFSET);
+            public int[] calculateShift(final Iterable<int[]> boundsList, final WorkflowManager manager,
+                final ClipboardObject clipObject) {
+
+
+                GraphicalViewer viewer = getEditor().getViewer();
+                ZoomManager zoomManager = (ZoomManager)viewer.getProperty(ZoomManager.class.toString());
+                Viewport viewPort = zoomManager.getViewport();
+                Rectangle box = getSurroundingRect(boundsList);
+
+                // determine destination location (either right of selection or middle of viewport)
+                int destX;
+                int destY;
+                @SuppressWarnings("unchecked")
+                List<EditPart> selectedEditParts = viewer.getSelectedEditParts();
+                if (selectedEditParts.isEmpty()) {
+                    destX = viewPort.getSize().width / 2;
+                    destY = viewPort.getSize().height / 2;
+                    // account for viewport scrolling and zoom
+                    Point viewPortLocation = viewPort.getViewLocation();
+                    destX += viewPortLocation.x;
+                    destY += viewPortLocation.y;
+                    double zoom = zoomManager.getZoom();
+                    destX /= zoom;
+                    destY /= zoom;
+                    Point dest = new Point(destX, destY);
+                    if (WorkflowEditor.isNodeAtAbs(viewer, dest)) {
+                        EditPart conflict = viewer.findObjectAt(dest);
+                        if (conflict instanceof NodeContainerEditPart) {
+                            dest = WorkflowEditor.getLocationRightOf(viewer, (NodeContainerEditPart)conflict);
+                        }
+                    }
+                } else {
+                    Rectangle selectionBox = getSurroundingRect(selectedEditParts);
+                    // these coordinates are absolute (no need to add zoom/scrolling)
+                    destX = selectionBox.x + selectionBox.width;
+                    int distance = (int)(0.5 * NodeContainerFigure.WIDTH);
+                    destX += getEditor().getEditorGridXOffset(distance);
+                    destY = selectionBox.y;
+                    if (selectedEditParts.size() == 1) {
+                        // make sure there is nothing at the destination
+                        Point locationRightOf = WorkflowEditor.getLocationRightOf(viewer, (NodeContainerEditPart)selectedEditParts.get(0));
+                        destX = locationRightOf.x;
+                        destY = locationRightOf.y;
+                    }
                 }
-                int newX = (offsetX * counter);
-                int newY = (offsetY * counter);
-                return new int[] {newX, newY};
+
+                int shiftx = destX - box.x;
+                int shifty = destY - box.y;
+                if (getEditor().getEditorSnapToGrid()) {
+                    shiftx = getEditor().getEditorGridXOffset(shiftx);
+                    shifty = getEditor().getEditorGridYOffset(shifty);
+                }
+                return new int[]{shiftx, shifty};
+            }
+
+            private Rectangle getSurroundingRect(final Iterable<int[]> boundsList) {
+                int smallestX = Integer.MAX_VALUE;
+                int smallestY = Integer.MAX_VALUE;
+                int biggestX = Integer.MIN_VALUE;
+                int biggestY = Integer.MIN_VALUE;
+
+                for (int[] bounds : boundsList) {
+                    int currentX = bounds[0];
+                    int currentY = bounds[1];
+                    int width = bounds[2];
+                    int height = bounds[3];
+                    if (currentX < smallestX) {
+                        smallestX = currentX;
+                    }
+                    if (currentY < smallestY) {
+                        smallestY = currentY;
+                    }
+                    if (currentX + width > biggestX) {
+                        biggestX = currentX + width;
+                    }
+                    if (currentY + height > biggestY) {
+                        biggestY = currentY + height;
+                    }
+                }
+                return new Rectangle(smallestX, smallestY, biggestX - smallestX, biggestY - smallestY);
+            }
+
+            private Rectangle getSurroundingRect(final List<EditPart> elements) {
+                ArrayList<int[]> bounds = new ArrayList<int[]>();
+                for (EditPart e : elements) {
+                    if (e instanceof NodeContainerEditPart) {
+                        bounds.add(((NodeContainerEditPart)e).getNodeContainer().getUIInformation().getBounds());
+                    }
+                    if (e instanceof AnnotationEditPart) {
+                        int[] b = new int[4];
+                        b[0] = ((AnnotationEditPart)e).getModel().getX();
+                        b[1] = ((AnnotationEditPart)e).getModel().getY();
+                        b[2] = ((AnnotationEditPart)e).getModel().getWidth();
+                        b[3] = ((AnnotationEditPart)e).getModel().getHeight();
+                        bounds.add(b);
+                    }
+                }
+                return getSurroundingRect(bounds);
             }
         };
     }

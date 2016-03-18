@@ -2067,7 +2067,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     public EditorUIInformation getCurrentEditorSettings() {
         EditorUIInformation editorInfo = new EditorUIInformation();
-        editorInfo.setZoomLevel(getZoomfactor());
+        editorInfo.setZoomLevel(getZoomfactor(getViewer()));
         editorInfo.setSnapToGrid(getEditorSnapToGrid());
         editorInfo.setShowGrid(getEditorIsGridVisible());
         editorInfo.setGridX(getEditorGridX());
@@ -2271,7 +2271,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             nodeLoc = getViewportCenterLocation();
             nodeLoc = toAbsolute(nodeLoc);
         } else {
-            nodeLoc = getLocationRightOf(preNode);
+            nodeLoc = getLocationRightOf(getViewer(), preNode);
             preID = preNode.getNodeContainer().getID();
         }
         if (getEditorSnapToGrid()) {
@@ -2308,7 +2308,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             // this command accepts/requires relative coordinates
             newNodeCmd = new CreateNodeCommand(m_manager, nodeFactory, nodeLoc, getEditorSnapToGrid());
         } else {
-            nodeLoc = getLocationRightOf(preNode);
+            nodeLoc = getLocationRightOf(getViewer(), preNode);
             newNodeCmd =
                     new CreateNewConnectedNodeCommand(getViewer(), m_manager,
                             nodeFactory, nodeLoc, preNode.getNodeContainer()
@@ -2373,7 +2373,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // make sure we have a free spot
         int stepX = getEditorSnapToGrid() ? getEditorGridXOffset(10) : 10;
         int stepY = getEditorSnapToGrid() ? getEditorGridYOffset(10) : 10;
-        while (isNodeAtRel(nodeLoc)) {
+        while (isNodeAtRel(getViewer(), nodeLoc)) {
             // move it a bit
             nodeLoc.x += stepX;
             nodeLoc.y += stepY;
@@ -2383,41 +2383,41 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    private Point getLocationRightOf(final NodeContainerEditPart refNode) {
+    public static Point getLocationRightOf(final GraphicalViewer viewer, final NodeContainerEditPart refNode) {
         NodeUIInformation ui =
                 refNode.getNodeContainer()
                 .getUIInformation();
         int xOffset = 100;
         int yOffset = 120;
         // adjust offset to grid location
-        if (getEditorSnapToGrid()) {
+        if (getActiveEditorSnapToGrid()) {
             // with grid enabled we use the grid size as offset (but at least a bit mire than the node width)
-            xOffset = getEditorGridXOffset((int)(refNode.getFigure().getBounds().width * 1.1));
-            yOffset = getEditorGridYOffset((int)(refNode.getFigure().getBounds().height * 1.1));
+            xOffset = getActiveEditorGridXOffset((int)(refNode.getFigure().getBounds().width * 1.1));
+            yOffset = getActiveEditorGridYOffset((int)(refNode.getFigure().getBounds().height * 1.1));
         }
 
         // first try: right of reference node
         Point loc = new Point(ui.getBounds()[0] + xOffset, ui.getBounds()[1]);
         // make sure we have a free spot
-        while (isNodeAtAbs(loc)) {
+        while (isNodeAtAbs(viewer, loc)) {
             // move it down a bit
             loc.y += yOffset;
         }
         return loc;
     }
 
-    private boolean isNodeAtAbs(final Point absoluteLoc) {
-        return isNodeAtRel(toRelative(absoluteLoc));
+    public static boolean isNodeAtAbs(final GraphicalViewer viewer, final Point absoluteLoc) {
+        return isNodeAtRel(viewer, toRelative(viewer, absoluteLoc));
 
     }
 
-    private Point toRelative(final Point absLoc) {
+    public static Point toRelative(final GraphicalViewer viewer, final Point absLoc) {
         ScalableFreeformRootEditPart rootEditPart
-            = (ScalableFreeformRootEditPart) getViewer().getRootEditPart();
+            = (ScalableFreeformRootEditPart) viewer.getRootEditPart();
         Viewport viewport = (Viewport) rootEditPart.getFigure();
         Rectangle area = viewport.getClientArea();
         Point loc = absLoc.getCopy();
-        double z = getZoomfactor();
+        double z = getZoomfactor(viewer);
         loc.x = (int)Math.round((loc.x - area.x) * z);
         loc.y = (int)Math.round((loc.y - area.y) * z);
         return loc;
@@ -2436,8 +2436,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
 
-    private double getZoomfactor() {
-        GraphicalViewer viewer = getViewer();
+    public static double getZoomfactor(final GraphicalViewer viewer) {
         if (viewer == null) {
             return 1.0;
         }
@@ -2455,8 +2454,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         zoomManager.setZoom(z);
     }
 
-    private boolean isNodeAtRel(final Point relativeLoc) {
-        EditPart ep = getViewer().findObjectAt(relativeLoc);
+    public static boolean isNodeAtRel(final GraphicalViewer viewer, final Point relativeLoc) {
+        EditPart ep = viewer.findObjectAt(relativeLoc);
         if (ep == null) {
             return false;
         }
