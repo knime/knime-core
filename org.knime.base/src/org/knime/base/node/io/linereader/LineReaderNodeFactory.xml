@@ -34,7 +34,7 @@
 		</option>
 		<option name="Watch file">
 			If set, after reading the whole file, the node will monitor the file and yield new lines.
-			Works only in streaming mode. Limit number of rows option then will be ignored.
+			Works only for local files ands in streaming mode. Limit number of rows option then will be ignored.
 		</option>
 	</fullDescription>
 
