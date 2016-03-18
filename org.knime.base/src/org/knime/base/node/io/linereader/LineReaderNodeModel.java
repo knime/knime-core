@@ -163,29 +163,31 @@ final class LineReaderNodeModel extends NodeModel {
         String line;
         String rowPrefix = m_config.getRowPrefix();
         try {
-            while ((line = fileReader.readLine()) != null) {
-                final long currentRowFinal = currentRow;
-                Supplier<String> progMessage = () -> "Reading row " + (currentRowFinal + 1);
-                if (fileSize > 0) {
-                    long numberOfBytesRead = fileReader.getNumberOfBytesRead();
-                    double prog = (double)numberOfBytesRead / fileSize;
-                    exec.setProgress(prog, progMessage);
-                } else {
-                    exec.setMessage(progMessage);
+            if (!m_config.isOutputOnlyNewLines()) {
+                while ((line = fileReader.readLine()) != null) {
+                    final long currentRowFinal = currentRow;
+                    Supplier<String> progMessage = () -> "Reading row " + (currentRowFinal + 1);
+                    if (fileSize > 0) {
+                        long numberOfBytesRead = fileReader.getNumberOfBytesRead();
+                        double prog = (double)numberOfBytesRead / fileSize;
+                        exec.setProgress(prog, progMessage);
+                    } else {
+                        exec.setMessage(progMessage);
+                    }
+                    exec.checkCanceled();
+                    if (isSkipEmpty && line.trim().length() == 0) {
+                        // do not increment currentRow
+                        continue;
+                    }
+                    if (limitRows > 0 && currentRow >= limitRows) {
+                        setWarningMessage("Read only " + limitRows
+                                + " row(s) due to user settings.");
+                        break;
+                    }
+                    RowKey key = new RowKey(rowPrefix + (currentRow++));
+                    DefaultRow row = new DefaultRow(key, new StringCell(line));
+                    output.push(row);
                 }
-                exec.checkCanceled();
-                if (isSkipEmpty && line.trim().length() == 0) {
-                    // do not increment currentRow
-                    continue;
-                }
-                if (limitRows > 0 && currentRow >= limitRows) {
-                    setWarningMessage("Read only " + limitRows
-                            + " row(s) due to user settings.");
-                    break;
-                }
-                RowKey key = new RowKey(rowPrefix + (currentRow++));
-                DefaultRow row = new DefaultRow(key, new StringCell(line));
-                output.push(row);
             }
         } finally {
             try {

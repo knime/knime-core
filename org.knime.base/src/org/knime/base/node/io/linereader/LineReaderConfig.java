@@ -69,6 +69,7 @@ final class LineReaderConfig {
     private boolean m_skipEmptyLines;
     private int m_limitRowCount;
     private boolean m_watchFile;
+    private boolean m_outputOnlyNewLines;
 
     /** @return the url */
     String getUrlString() {
@@ -167,6 +168,18 @@ final class LineReaderConfig {
     void setWatchFile(final boolean watchFile) {
         this.m_watchFile = watchFile;
     }
+    /**
+     * @return the m_outputOnlyNewLines
+     */
+    boolean isOutputOnlyNewLines() {
+        return m_outputOnlyNewLines;
+    }
+    /**
+     * @param outputOnlyNewLines the m_outputOnlyNewLines to set
+     */
+    void setOutputOnlyNewLines(final boolean outputOnlyNewLines) {
+        this.m_outputOnlyNewLines = outputOnlyNewLines;
+    }
 
 
     /** Save current configuration.
@@ -178,6 +191,7 @@ final class LineReaderConfig {
         settings.addBoolean("skipEmptyLines", m_skipEmptyLines);
         settings.addInt("limitRowCount", m_limitRowCount);
         settings.addBoolean("watchFile", m_watchFile);
+        settings.addBoolean("outputOnlyNewLines", m_outputOnlyNewLines);
     }
 
     /** Load configuration in NodeModel.
@@ -201,6 +215,7 @@ final class LineReaderConfig {
         m_skipEmptyLines = settings.getBoolean("skipEmptyLines");
         m_limitRowCount = settings.getInt("limitRowCount");
         m_watchFile = settings.getBoolean("watchFile", false);
+        m_outputOnlyNewLines = settings.getBoolean("outputOnlyNewLines", false);
     }
 
     /** Load configuration in dialog, init defaults if invalid.
@@ -212,6 +227,6 @@ final class LineReaderConfig {
         m_skipEmptyLines = settings.getBoolean("skipEmptyLines", false);
         m_limitRowCount = settings.getInt("limitRowCount", -1);
         m_watchFile = settings.getBoolean("watchFile", false);
+        m_outputOnlyNewLines = settings.getBoolean("outputOnlyNewLines", false);
     }
-
 }

@@ -88,6 +88,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
     private final JCheckBox m_skipEmptyLinesChecker;
     private final JSpinner m_limitRowCountSpinner;
     private final JCheckBox m_watchFileChecker;
+    private final JCheckBox m_outputOnlyNewLinesChecker;
 
     /** Create new dialog, init layout. */
     LineReaderNodeDialogPane() {
@@ -119,8 +120,18 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         });
         m_limitRowCountSpinner.setEnabled(false);
         m_watchFileChecker = new JCheckBox("Watch file (streaming only)");
+        m_outputOnlyNewLinesChecker = new JCheckBox("Output only new lines");
+
         JPanel panel = initLayout();
         addTab("Line Reader", panel);
+
+        m_watchFileChecker.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                m_outputOnlyNewLinesChecker.setEnabled(m_watchFileChecker.isSelected());
+            }
+        });
     }
 
     private JPanel initLayout() {
@@ -162,8 +173,11 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
 
         gbc.gridy += 1;
         gbc.gridx = 0;
-        gbc.gridwidth = 2;
+        gbc.gridwidth = 1;
         panel.add(m_watchFileChecker, gbc);
+        gbc.gridx += 1;
+        gbc.gridwidth = 1;
+        panel.add(m_outputOnlyNewLinesChecker, gbc);
 
         return panel;
     }
@@ -193,6 +207,8 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             m_limitRowCountSpinner.setValue(limitRows);
         }
         m_watchFileChecker.setSelected(config.isWatchFile());
+        m_outputOnlyNewLinesChecker.setSelected(config.isOutputOnlyNewLines());
+        m_outputOnlyNewLinesChecker.setEnabled(config.isWatchFile());
     }
 
 
@@ -215,6 +231,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             config.setLimitRowCount(-1);
         }
         config.setWatchFile(m_watchFileChecker.isSelected());
+        config.setOutputOnlyNewLines(m_outputOnlyNewLinesChecker.isSelected());
         config.saveConfiguration(settings);
         m_filePanel.addToHistory();
     }

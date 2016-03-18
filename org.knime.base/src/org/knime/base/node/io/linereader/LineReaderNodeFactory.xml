@@ -36,6 +36,9 @@
 			If set, after reading the whole file, the node will monitor the file and yield new lines.
 			Works only for local files ands in streaming mode. Limit number of rows option then will be ignored.
 		</option>
+		<option name="Output only new lines">
+			If set, the node will skip the current file content and output only new coming lines. Available, only if watch file option selected.
+		</option>
 	</fullDescription>
 
 	<ports>
