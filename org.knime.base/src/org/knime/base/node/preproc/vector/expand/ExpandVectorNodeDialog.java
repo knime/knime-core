@@ -49,6 +49,7 @@ package org.knime.base.node.preproc.vector.expand;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 
 /**
@@ -67,9 +68,13 @@ public class ExpandVectorNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentColumnNameSelection(
             ExpandVectorNodeModel.createVectorColSelectSettingsModel(),
             "Column to split:", 0, true, DoubleVectorValue.class));
+        addDialogComponent(new DialogComponentBoolean(
+            ExpandVectorNodeModel.createRemoveSourceColSettingModel(), "Remove Source Column"));
         addDialogComponent(new DialogComponentColumnNameSelection(
             ExpandVectorNodeModel.createIndexColSelectSettingsModel(),
             "Column holding indices:", 1, true, IntValue.class));
+        addDialogComponent(new DialogComponentBoolean(
+            ExpandVectorNodeModel.createExpandColumnsSettingModel(), "Expand elements to individual columns"));
     }
 
 }

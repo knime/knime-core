@@ -62,17 +62,19 @@ import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.vector.doublevector.DoubleVectorCellFactory;
 import org.knime.core.data.vector.doublevector.DoubleVectorValue;
+import org.knime.core.data.vector.stringvector.StringVectorCellFactory;
 import org.knime.core.data.vector.stringvector.StringVectorValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.OutputPortRole;
 
@@ -83,21 +85,9 @@ import org.knime.core.node.streamable.OutputPortRole;
  * @author M. Berthold
  * @since 3.2
  */
-public class ExpandVectorNodeModel extends NodeModel {
-
-    private int[] m_indices = null;
-    private enum VType { String, Double };
-    private VType m_vectorType = null;
+public class ExpandVectorNodeModel extends BaseExpandVectorNodeModel {
 
     /* static factory methods for the SettingsModels used here and in the NodeDialog. */
-    /**
-     * @return the settings model used to store the source column name.
-     */
-    static SettingsModelString createVectorColSelectSettingsModel() {
-        return new SettingsModelString("VectorColumn", null);
-    }
-    private final SettingsModelString m_vectorColumn = createVectorColSelectSettingsModel();
-
     static SettingsModelString createIndexColSelectSettingsModel() {
         return new SettingsModelString("IndexColumn", null);
     }
@@ -107,7 +97,8 @@ public class ExpandVectorNodeModel extends NodeModel {
      * Initialize model. One Data Inport, two Data Outports.
      */
     protected ExpandVectorNodeModel() {
-        super(2, 1);
+        super(new PortType[] {BufferedDataTable.TYPE, BufferedDataTable.TYPE},
+            new PortType[] {BufferedDataTable.TYPE});
     }
 
     /**
@@ -115,7 +106,7 @@ public class ExpandVectorNodeModel extends NodeModel {
      */
     @Override
     public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.DISTRIBUTED_NONSTREAMABLE,
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE,
             InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
     }
 
@@ -133,26 +124,7 @@ public class ExpandVectorNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         // user settings must be set and valid
-        assert m_vectorColumn.getStringValue() != null;
-        assert m_indexColumn.getStringValue() != null;
-        // selected columns should exist in input table
-        if (!inSpecs[0].containsName(m_vectorColumn.getStringValue())) {
-            throw new InvalidSettingsException("Selected column '"
-                    + m_vectorColumn.getStringValue() + "' does not exist in input table!");
-        }
-        if (!inSpecs[1].containsName(m_indexColumn.getStringValue())) {
-            throw new InvalidSettingsException("Selected column '"
-                    + m_indexColumn.getStringValue() + "' does not exist in second input table!");
-        }
-        // and it should be of type double or string vector
-        if (inSpecs[0].getColumnSpec(m_vectorColumn.getStringValue()).getType().isCompatible(DoubleVectorValue.class)) {
-            m_vectorType = VType.Double;
-        } else if (inSpecs[0].getColumnSpec(m_vectorColumn.getStringValue()).getType().isCompatible(DoubleVectorValue.class)) {
-            m_vectorType = VType.String;
-        } else {
-            throw new InvalidSettingsException("Selected column '"
-                    + m_vectorColumn.getStringValue() + "' does not contain double or string vectors!");
-        }
+        checkBaseSettings(inSpecs[0]);
         if (!inSpecs[1].getColumnSpec(m_indexColumn.getStringValue()).getType().isCompatible(IntValue.class)) {
             throw new InvalidSettingsException("Selected column '"
                     + m_indexColumn.getStringValue() + "' does not contain indices!");
@@ -172,7 +144,7 @@ public class ExpandVectorNodeModel extends NodeModel {
         if (dt.size() > 100000) {
             throw new IllegalArgumentException("Refusing to generate output table with >100k columns!");
         }
-        m_indices = new int[(int)dt.size()];
+        m_sampledIndices = new int[(int)dt.size()];
         int indexCol = dt.getSpec().findColumnIndex(m_indexColumn.getStringValue());
         int i = 0;
         for (DataRow row : dt) {
@@ -180,7 +152,7 @@ public class ExpandVectorNodeModel extends NodeModel {
             if (!(cell instanceof IntValue)) {
                 throw new IllegalArgumentException("Not an index in row " + i + "!");
             }
-            m_indices[i] = ((IntValue)cell).getIntValue();
+            m_sampledIndices[i] = ((IntValue)cell).getIntValue();
             i++;
         }
         BufferedDataTable outTable = exec.createColumnRearrangeTable(inData[0],
@@ -200,25 +172,54 @@ public class ExpandVectorNodeModel extends NodeModel {
         DataColumnSpec sourceSpec = inTableSpec.getColumnSpec(sourceColumnIndex);
         ColumnRearranger c = new ColumnRearranger(inTableSpec);
         DataColumnSpec[] newSpecs;
-        newSpecs = IntStream.range(0, m_indices.length).mapToObj(
-            i -> new DataColumnSpecCreator(sourceSpec.getElementNames().get(m_indices[i]),
-                                           m_vectorType.equals(VType.Double) ? DoubleCell.TYPE : StringCell.TYPE
-                                               ).createSpec()).toArray(DataColumnSpec[]::new);
+        if (m_expandToColumns.getBooleanValue()) {
+            newSpecs = m_sampledIndices == null ? null
+                : IntStream.range(0, m_sampledIndices.length).mapToObj(
+                  i -> new DataColumnSpecCreator(sourceSpec.getElementNames().get(m_sampledIndices[i]),
+                                               m_vectorType.equals(VType.Double) ? DoubleCell.TYPE : StringCell.TYPE
+                                                   ).createSpec()).toArray(DataColumnSpec[]::new);
+        } else {
+            newSpecs = new DataColumnSpec[1];
+            newSpecs[0] = new DataColumnSpecCreator(sourceSpec.getName() + " (sampled)",
+                m_vectorType.equals(VType.Double) ? DoubleVectorCellFactory.TYPE : StringVectorCellFactory.TYPE
+                ).createSpec();
+        }
+        if (m_removeSourceCol.getBooleanValue()) {
+            c.remove(sourceColumnIndex);
+        }
         c.append(new AbstractCellFactory(true, newSpecs) {
             @Override
             public DataCell[] getCells(final DataRow row) {
                 DataCell dc = row.getCell(sourceColumnIndex);
                 if ((m_vectorType.equals(VType.Double) && dc instanceof DoubleVectorValue)
                         || (m_vectorType.equals(VType.String) && dc instanceof StringVectorValue)) {
-                    DataCell[] res = new DataCell[m_indices.length];
-                    for (int i = 0; i < m_indices.length; i++) {
-                        res[i] = m_vectorType.equals(VType.Double) ?
-                              new DoubleCell(((DoubleVectorValue)dc).getValue(m_indices[i]))
-                            : new StringCell(((StringVectorValue)dc).getValue(m_indices[i]));
+                    DataCell[] res;
+                    if (m_expandToColumns.getBooleanValue()) {
+                        res = new DataCell[m_sampledIndices.length];
+                        for (int i = 0; i < m_sampledIndices.length; i++) {
+                            res[i] = m_vectorType.equals(VType.Double) ?
+                                  new DoubleCell(((DoubleVectorValue)dc).getValue(m_sampledIndices[i]))
+                                : new StringCell(((StringVectorValue)dc).getValue(m_sampledIndices[i]));
+                        }
+                    } else {
+                        res = new DataCell[1];
+                        if (m_vectorType.equals(VType.Double)) {
+                            double[] d = new double[m_sampledIndices.length];
+                            for (int i = 0; i < m_sampledIndices.length; i++) {
+                                d[i] = ((DoubleVectorValue)dc).getValue(m_sampledIndices[i]);
+                            }
+                            res[0] = DoubleVectorCellFactory.createCell(d);
+                        } else {
+                            String[] s = new String[m_sampledIndices.length];
+                            for (int i = 0; i < m_sampledIndices.length; i++) {
+                                s[i] = ((StringVectorValue)dc).getValue(m_sampledIndices[i]);
+                            }
+                            res[0] = StringVectorCellFactory.createCell(s);
+                        }
                     }
                     return res;
                 }
-                return new MissingCell[m_indices.length];
+                return new MissingCell[m_sampledIndices.length];
             }
         });
         return c;
@@ -229,7 +230,7 @@ public class ExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // nothing to do.
+        m_sampledIndices = null;
     }
 
     /**
@@ -237,7 +238,7 @@ public class ExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_vectorColumn.saveSettingsTo(settings);
+        super.saveSettingsTo(settings);
         m_indexColumn.saveSettingsTo(settings);
     }
 
@@ -246,7 +247,7 @@ public class ExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_vectorColumn.validateSettings(settings);
+        super.validateSettings(settings);
         m_indexColumn.validateSettings(settings);
     }
 
@@ -255,7 +256,7 @@ public class ExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_vectorColumn.loadSettingsFrom(settings);
+        super.loadValidatedSettingsFrom(settings);
         m_indexColumn.loadSettingsFrom(settings);
     }
 

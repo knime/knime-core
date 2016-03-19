@@ -231,10 +231,10 @@ final class CSVArrayReaderNodeModel2 extends NodeModel {
             int dblSize = (dblCnt < 0) ? 50 : dblCnt;
             ArrayList<Double> doubleVals = new ArrayList<Double>(dblSize);
             while (idx < splitLength) {
-                if (split[idx].isEmpty()) {
-                    idx++; // ignore consecutive tabs
-                    continue;
-                }
+//                if (split[idx].isEmpty()) {
+//                    idx++; // ignore consecutive tabs
+//                    continue;
+//                }
                 if (split[idx].trim().isEmpty()) {
                     doubleVals.add(0.0d);
                 } else {
@@ -259,10 +259,10 @@ final class CSVArrayReaderNodeModel2 extends NodeModel {
             int strSize = (strCnt < 0) ? 50 : strCnt;
             ArrayList<String> strVals = new ArrayList<String>(strSize);
             while (idx < splitLength) {
-                if (split[idx].isEmpty()) {
-                    idx++; // ignore consecutive tabs
-                    continue;
-                }
+//                if (split[idx].isEmpty()) {
+//                    idx++; // ignore consecutive tabs
+//                    continue;
+//                }
                 strVals.add(split[idx].trim());
                 idx++;
             }

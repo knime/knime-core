@@ -48,6 +48,7 @@ package org.knime.base.node.preproc.vector.sampleandexpand;
 
 import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 
@@ -66,12 +67,20 @@ public class SampleAndExpandVectorNodeDialog extends DefaultNodeSettingsPane {
     protected SampleAndExpandVectorNodeDialog() {
         createNewGroup("Source Column");
         addDialogComponent(new DialogComponentColumnNameSelection(
-            SampleAndExpandVectorNodeModel.createColSelectSettingsModel(),
+            SampleAndExpandVectorNodeModel.createVectorColSelectSettingsModel(),
             "Column to split:", 0, true, DoubleVectorValue.class));
+        addDialogComponent(new DialogComponentBoolean(
+            SampleAndExpandVectorNodeModel.createRemoveSourceColSettingModel(), "Remove Source Column"));
         closeCurrentGroup();
         createNewGroup("Column Sampling");
         addDialogComponent(new DialogComponentNumber(
-            SampleAndExpandVectorNodeModel.createNrColumnsSettingsModel(), "Number of Doubles to sample", 1));
+            SampleAndExpandVectorNodeModel.createNrColumnsSettingsModel(), "Number of Elements to sample", 1));
+        addDialogComponent(new DialogComponentBoolean(
+            SampleAndExpandVectorNodeModel.createExpandColumnsSettingModel(), "Expand sampled elements to individual columns"));
+        closeCurrentGroup();
+        createNewGroup("Randomness");
+        addDialogComponent(new DialogComponentBoolean(
+            SampleAndExpandVectorNodeModel.createStaticSeedSettingsModel(), "Use Static Random Seed"));
         addDialogComponent(new DialogComponentNumber(
             SampleAndExpandVectorNodeModel.createRandomSeedSettingsModel(), "Random Seed", 43));
         closeCurrentGroup();

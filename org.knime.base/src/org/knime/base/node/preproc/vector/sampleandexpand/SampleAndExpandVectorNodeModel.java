@@ -51,24 +51,27 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Vector;
 import java.util.stream.IntStream;
 
 import org.apache.commons.math3.random.RandomDataGenerator;
+import org.knime.base.node.preproc.vector.expand.BaseExpandVectorNodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
+import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.AbstractCellFactory;
-import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.vector.doublevector.DoubleVectorCellFactory;
 import org.knime.core.data.vector.doublevector.DoubleVectorValue;
+import org.knime.core.data.vector.stringvector.StringVectorCellFactory;
 import org.knime.core.data.vector.stringvector.StringVectorValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -76,40 +79,47 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectOutput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
- * This is the model implementation for a node which samples and expands a double vector
- * to individual double columns.
+ * This is the model implementation for a node which samples and optionally expands a string/double vector
+ * to individual string/double columns.
  *
  * @author M. Berthold
  * @since 3.2
  */
-public class SampleAndExpandVectorNodeModel extends NodeModel {
+public class SampleAndExpandVectorNodeModel extends BaseExpandVectorNodeModel {
 
-    private int[] m_samplingScheme = null;
-    private enum VType { String, Double };
-    private VType m_vectorType = null;
+    private String[] m_sampledNames = null;
 
-    /* static factory methods for the SettingsModels used here and in the NodeDialog. */
-    /**
-     * @return the settings model used to store the source column name.
-     */
-    static SettingsModelString createColSelectSettingsModel() {
-        return new SettingsModelString("SelectedColumn", null);
-    }
-    private final SettingsModelString m_selColumn = createColSelectSettingsModel();
 
     static SettingsModelInteger createNrColumnsSettingsModel() {
         return new SettingsModelInteger("NrSampledColumns", 100);
     }
     private final SettingsModelInteger m_nrSampledCols = createNrColumnsSettingsModel();
+
+    static SettingsModelBoolean createStaticSeedSettingsModel() {
+        return new SettingsModelBoolean("Static Seed", true);
+    }
+    private final SettingsModelBoolean m_staticRandomSeed = createStaticSeedSettingsModel();
 
     static SettingsModelInteger createRandomSeedSettingsModel() {
         return new SettingsModelInteger("Random Seed", 43);
@@ -120,7 +130,8 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
      * Initialize model. One Data Inport, two Data Outports.
      */
     protected SampleAndExpandVectorNodeModel() {
-        super(1, 2);
+        super(new PortType[] {BufferedDataTable.TYPE},
+            new PortType[] {BufferedDataTable.TYPE, BufferedDataTable.TYPE});
     }
 
     /**
@@ -128,7 +139,7 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
      */
     @Override
     public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
     }
 
     /**
@@ -136,7 +147,7 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
      */
     @Override
     public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.NONDISTRIBUTED, OutputPortRole.NONDISTRIBUTED};
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED, OutputPortRole.NONDISTRIBUTED};
     }
 
     /**
@@ -145,23 +156,68 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         // user settings must be set and valid
-        assert m_selColumn.getStringValue() != null;
-        // selected column should exist in input table
-        if (!inSpecs[0].containsName(m_selColumn.getStringValue())) {
-            throw new InvalidSettingsException("Selected column '"
-                    + m_selColumn.getStringValue() + "' does not exist in input table!");
+        super.checkBaseSettings(inSpecs[0]);
+        // checks passed - create the sampling scheme here so we know the column names that
+        // execute will produce. After each reset we will shuffle again.
+        if (m_sampledIndices == null) {
+            generateSamplingSchema(
+                inSpecs[0].getColumnSpec(m_sourceColumnIndex).getElementNames(), m_nrSampledCols.getIntValue());
         }
-        // and it should be of type double or string vector
-        if (inSpecs[0].getColumnSpec(m_selColumn.getStringValue()).getType().isCompatible(DoubleVectorValue.class)) {
-            m_vectorType = VType.Double;
-        } else if (inSpecs[0].getColumnSpec(m_selColumn.getStringValue()).getType().isCompatible(DoubleVectorValue.class)) {
-            m_vectorType = VType.String;
-        } else {
-            throw new InvalidSettingsException("Selected column '"
-                    + m_selColumn.getStringValue() + "' does not contain double or string vectors!");
-        }
-        // checks passed - let's start doing the real stuff
-        return new DataTableSpec[]{createColumnRearranger(inSpecs[0], m_vectorType).createSpec(), createdSecondSpec()};
+        return new DataTableSpec[]{createFirstSpec(inSpecs[0]), createdSecondSpec()};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new StreamableOperator() {
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                executeStreaming((RowInput)inputs[0], (RowOutput)outputs[0], -1, exec);
+                // FIXME: the following should work but results in a NPE in distributed execution:
+                ((PortObjectOutput)outputs[1]).setPortObject(null);
+            }
+            @Override
+            public void loadInternals(final StreamableOperatorInternals internals) {
+                SimpleStreamableOperatorInternals soi = (SimpleStreamableOperatorInternals)internals;
+                try {
+                    m_expandToColumns.setBooleanValue(soi.getConfig().getBoolean("Expand"));
+                    m_removeSourceCol.setBooleanValue(soi.getConfig().getBoolean("RemoveSource"));
+                    m_sampledIndices = soi.getConfig().getIntArray("Indices");
+                    m_sampledNames = soi.getConfig().getStringArray("Names");
+                } catch (InvalidSettingsException ise) {
+
+                }
+            }
+            @Override
+            public StreamableOperatorInternals saveInternals() {
+                return super.saveInternals();
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
+        SimpleStreamableOperatorInternals soi = new SimpleStreamableOperatorInternals();
+        soi.getConfig().addBoolean("Expand", m_expandToColumns.getBooleanValue());
+        soi.getConfig().addBoolean("RemoveSource", m_removeSourceCol.getBooleanValue());
+        soi.getConfig().addIntArray("Indices", m_sampledIndices);
+        soi.getConfig().addStringArray("Names", m_sampledNames);
+        return soi;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
+        final PortOutput[] output) throws Exception {
+        ((RowOutput)output[1]).setFully(createIndexTable(exec));
     }
 
     /**
@@ -169,64 +225,135 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
-        BufferedDataTable outTable = exec.createColumnRearrangeTable(inData[0],
-            createColumnRearranger(inData[0].getDataTableSpec(), m_vectorType), exec);
-//        RowOutput rowOutput1 = new BufferedDataTableRowOutput(outTable);
-//        RowInput rowInput = new DataTableRowInput(inData[0]);
-//        this.execute(rowInput, rowOutput1, rowOutput2, inData[0].size(), exec);
-        // create second output
-        List<String> colNames = inData[0].getDataTableSpec().getColumnSpec(m_selColumn.getStringValue()).getElementNames();
-        BufferedDataContainer sampledColsTable = exec.createDataContainer(createdSecondSpec());
-        for (int i = 0; i < m_samplingScheme.length; i++) {
-            int ix = m_samplingScheme[i];
-            String colName = colNames.get(ix);
-            sampledColsTable.addRowToTable(
-                new DefaultRow(RowKey.createRowKey((long)i), new IntCell(ix), new StringCell(colName)));
+        BufferedDataContainer out1 = exec.createDataContainer(createFirstSpec(inData[0].getDataTableSpec()));
+        RowOutput rowOutput = new BufferedDataTableRowOutput(out1);
+        RowInput rowInput = new DataTableRowInput(inData[0]);
+        this.executeStreaming(rowInput, rowOutput, inData[0].size(), exec);
+        BufferedDataTable out2 = createIndexTable(exec);
+        return new BufferedDataTable[]{out1.getTable(), out2};
+    }
+
+    /*
+     * The main work is done here - execute processing in streaming mode.
+     *
+     * @param rows total number of rows. Can be -1 if not available.
+     */
+    private void executeStreaming(final RowInput in, final RowOutput out, final long rows,
+        final ExecutionContext exec) throws InterruptedException, CanceledExecutionException {
+        try {
+            long rowIdx = -1;
+            DataRow row;
+            while ((row = in.poll()) != null) {
+                rowIdx++;
+                if (rows > 0) {
+                    exec.setProgress(rowIdx / (double)rows, "Adding row " + rowIdx + " of " + rows);
+                } else {
+                    exec.setProgress("Adding row " + rowIdx + ".");
+                }
+                exec.checkCanceled();
+                out.push(computeNewRow(row));
+            }
+        } finally {
+            out.close();
         }
-        sampledColsTable.close();
-        return new BufferedDataTable[]{outTable, sampledColsTable.getTable()};
     }
 
     /**
-     * Creates the ColumnRearranger for the re-arranger table. Also used to compute the output table spec.
+     * Creates the TableSpec for the first outport, holding the data with the sampled/expanded vector.
      *
      * @param inTableSpec the spec of the source table
-     * @return the column rearranger
+     * @return the new spec
      */
-    protected ColumnRearranger createColumnRearranger(final DataTableSpec inTableSpec, final VType vtype)
-            throws InvalidSettingsException {
-        int sourceColumnIndex = inTableSpec.findColumnIndex(m_selColumn.getStringValue());
-        DataColumnSpec sourceSpec = inTableSpec.getColumnSpec(sourceColumnIndex);
-        if (m_samplingScheme == null) {
-            m_samplingScheme = generateSamplingSchema(sourceSpec.getElementNames().size(),
-                m_nrSampledCols.getIntValue());
-        }
-        ColumnRearranger c = new ColumnRearranger(inTableSpec);
-        DataColumnSpec[] newSpecs;
-        newSpecs = IntStream.range(0, m_nrSampledCols.getIntValue()).mapToObj(
-            i -> new DataColumnSpecCreator(sourceSpec.getElementNames().get(m_samplingScheme[i]),
-                                           m_vectorType.equals(VType.Double) ? DoubleCell.TYPE : StringCell.TYPE
-                                               ).createSpec()).toArray(DataColumnSpec[]::new);
-        c.append(new AbstractCellFactory(true, newSpecs) {
-            @Override
-            public DataCell[] getCells(final DataRow row) {
-                DataCell dc = row.getCell(sourceColumnIndex);
-                if ((m_vectorType.equals(VType.Double) && dc instanceof DoubleVectorValue)
-                        || (m_vectorType.equals(VType.String) && dc instanceof StringVectorValue)) {
-                    DataCell[] res = new DataCell[m_nrSampledCols.getIntValue()];
-                    for (int i = 0; i < m_nrSampledCols.getIntValue(); i++) {
-                        res[i] = m_vectorType.equals(VType.Double) ?
-                              new DoubleCell(((DoubleVectorValue)dc).getValue(m_samplingScheme[i]))
-                            : new StringCell(((StringVectorValue)dc).getValue(m_samplingScheme[i]));
-                    }
-                    return res;
-                }
-                return new MissingCell[m_samplingScheme.length];
+    protected DataTableSpec createFirstSpec(final DataTableSpec inSpec) throws InvalidSettingsException {
+        DataColumnSpec sourceSpec = inSpec.getColumnSpec(m_sourceColumnIndex);
+        DataTableSpecCreator dtsc = new DataTableSpecCreator();
+        dtsc.setName(inSpec.getName()+ " (sampled)");
+        // copy original column specs
+        int ix = 0;
+        for (DataColumnSpec dcs : inSpec) {
+            if (m_removeSourceCol.getBooleanValue() && (ix == m_sourceColumnIndex)) {
+                // drop source column (if selected)
+            } else {
+                dtsc.addColumns(dcs);
             }
-        });
-        return c;
+            ix++;
+        }
+        // add new columns
+        DataColumnSpec[] newSpecs;
+        if (m_expandToColumns.getBooleanValue()) {
+            newSpecs = IntStream.range(0, m_nrSampledCols.getIntValue()).mapToObj(
+                i -> new DataColumnSpecCreator(sourceSpec.getElementNames().get(m_sampledIndices[i]),
+                                               m_vectorType.equals(VType.Double) ? DoubleCell.TYPE : StringCell.TYPE
+                                                   ).createSpec()).toArray(DataColumnSpec[]::new);
+        } else {
+            newSpecs = new DataColumnSpec[1];
+            newSpecs[0] = new DataColumnSpecCreator(sourceSpec.getName() + " (sampled)",
+                m_vectorType.equals(VType.Double) ? DoubleVectorCellFactory.TYPE : StringVectorCellFactory.TYPE
+                ).createSpec();
+        }
+        dtsc.addColumns(newSpecs);
+        return dtsc.createSpec();
     }
 
+    /**
+     * Compute new output row given an input.
+     *
+     * @param inRow
+     * @return corresponding output
+     */
+    protected DataRow computeNewRow(final DataRow inRow) {
+        Vector<DataCell> outCells = new Vector<DataCell>();
+        // copy original cells
+        int ix = 0;
+        for (DataCell dc : inRow) {
+            if (m_removeSourceCol.getBooleanValue() && (ix == m_sourceColumnIndex)) {
+                // drop cell in source column (if selected)
+            } else {
+                outCells.add(dc);
+            }
+            ix++;
+        }
+        // add new cells
+        DataCell sourceCell = inRow.getCell(m_sourceColumnIndex);
+        DataCell[] res;
+        if ((m_vectorType.equals(VType.Double) && sourceCell instanceof DoubleVectorValue)
+                || (m_vectorType.equals(VType.String) && sourceCell instanceof StringVectorValue)) {
+            if (m_expandToColumns.getBooleanValue()) {
+                res = new DataCell[m_nrSampledCols.getIntValue()];
+                for (int i = 0; i < m_nrSampledCols.getIntValue(); i++) {
+                    res[i] = m_vectorType.equals(VType.Double) ?
+                          new DoubleCell(((DoubleVectorValue)sourceCell).getValue(m_sampledIndices[i]))
+                        : new StringCell(((StringVectorValue)sourceCell).getValue(m_sampledIndices[i]));
+                }
+            } else {
+                res = new DataCell[1];
+                if (m_vectorType.equals(VType.Double)) {
+                    double[] d = new double[m_nrSampledCols.getIntValue()];
+                    for (int i = 0; i < m_nrSampledCols.getIntValue(); i++) {
+                        d[i] = ((DoubleVectorValue)sourceCell).getValue(m_sampledIndices[i]);
+                    }
+                    res[0] = DoubleVectorCellFactory.createCell(d);
+                } else {
+                    String[] s = new String[m_nrSampledCols.getIntValue()];
+                    for (int i = 0; i < m_nrSampledCols.getIntValue(); i++) {
+                        s[i] = ((StringVectorValue)sourceCell).getValue(m_sampledIndices[i]);
+                    }
+                    res[0] = StringVectorCellFactory.createCell(s);
+                }
+            }
+        } else {
+            res = new MissingCell[m_expandToColumns.getBooleanValue() ? m_sampledIndices.length : 1];
+            Arrays.fill(res, DataType.getMissingCell());
+        }
+        outCells.addAll(Arrays.asList(res));
+        return new DefaultRow(inRow.getKey(), outCells);
+    }
+
+    /**
+     * Creates the TableSpec for the second outport, holding the list of sampled columns.
+     *
+     * @return the new spec
+     */
     private DataTableSpec createdSecondSpec() {
         DataTableSpecCreator dtsc = new DataTableSpecCreator();
         dtsc.setName("Used Columns");
@@ -235,13 +362,43 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
         return dtsc.createSpec();
     }
 
-    private int[] generateSamplingSchema(final int nrCols, final int nrSamples) {
-        RandomDataGenerator r = new RandomDataGenerator();
-        r.reSeed(m_randomSeed.getIntValue());
-        int[] sampledIndices = r.nextPermutation(nrCols, nrSamples);
-        Arrays.sort(sampledIndices);
-        return sampledIndices;
+    /**
+     * Create second table holding the indeces of the selected cells.
+     *
+     * @param inSpec
+     * @param exec
+     * @return table
+     */
+    private BufferedDataTable createIndexTable(final ExecutionContext exec) {
+        // create second output
+        BufferedDataContainer out2 = exec.createDataContainer(createdSecondSpec());
+        for (int i = 0; i < m_sampledIndices.length; i++) {
+            int ix = m_sampledIndices[i];
+            String colName = m_sampledNames[i];
+            out2.addRowToTable(
+                new DefaultRow(RowKey.createRowKey((long)i), new IntCell(ix), new StringCell(colName)));
+        }
+        out2.close();
+        return out2.getTable();
+    }
 
+    /**
+     * Draw (without replacement) a given number of elements from the list of column names.
+     *
+     * @param names
+     * @param nrSamples
+     */
+    private void generateSamplingSchema(final List<String> names, final int nrSamples) {
+        RandomDataGenerator r = new RandomDataGenerator();
+        if (m_staticRandomSeed.getBooleanValue()) {
+            r.reSeed(m_randomSeed.getIntValue());
+        }
+        m_sampledIndices = r.nextPermutation(names.size(), nrSamples);
+        Arrays.sort(m_sampledIndices);
+        m_sampledNames = new String[m_sampledIndices.length];
+        for (int i = 0; i < m_sampledIndices.length; i++) {
+            m_sampledNames[i] = names.get(m_sampledIndices[i]);
+        }
     }
 
     /**
@@ -249,8 +406,8 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // delete previous random samping scheme so that a new one is selected upon configure.
-        m_samplingScheme = null;
+        // delete previous random sampling scheme so that a new one is selected upon the next configure.
+        m_sampledIndices = null;
     }
 
     /**
@@ -258,8 +415,9 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_selColumn.saveSettingsTo(settings);
+        super.saveSettingsTo(settings);
         m_nrSampledCols.saveSettingsTo(settings);
+        m_staticRandomSeed.saveSettingsTo(settings);
         m_randomSeed.saveSettingsTo(settings);
     }
 
@@ -268,8 +426,9 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_selColumn.validateSettings(settings);
+        super.validateSettings(settings);
         m_nrSampledCols.validateSettings(settings);
+        m_staticRandomSeed.validateSettings(settings);
         m_randomSeed.validateSettings(settings);
     }
 
@@ -278,8 +437,9 @@ public class SampleAndExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_selColumn.loadSettingsFrom(settings);
+        super.loadValidatedSettingsFrom(settings);
         m_nrSampledCols.loadSettingsFrom(settings);
+        m_staticRandomSeed.loadSettingsFrom(settings);
         m_randomSeed.loadSettingsFrom(settings);
     }
 
