@@ -53,6 +53,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -66,6 +67,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
@@ -381,6 +383,16 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     if(nonDistrPortOutputs[i]!=null) {
                         portOutputs[i] = nonDistrPortOutputs[i];
                     }
+                }
+            } else {
+                //make sure that if the NodeModel#finishStreamableExecution-method is implemented, the NodeModel#createMergeOperator is implemented as well
+                //check whether the current node model overrides the #finishStreamableExecution-method
+                Method m = localNodeContainer.getNodeModel().getClass().getMethod("finishStreamableExecution",
+                    StreamableOperatorInternals.class, ExecutionContext.class, PortOutput[].class);
+                if (m.getDeclaringClass() != NodeModel.class) {
+                    //method has been overriden -> createMergeOperator-method actually needs to be implemented as well!
+                    throw new IllegalStateException(
+                        "The 'NodeModel#finishStreamExecution'-method is overridden but no merge operator provided. Please override the 'NodeModel#createMergeOperator'-method as well.");
                 }
             }
 
