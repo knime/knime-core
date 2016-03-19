@@ -48,8 +48,27 @@
  */
 package org.knime.base.node.preproc.vector.expand;
 
+import java.util.Arrays;
+import java.util.Vector;
+import java.util.stream.IntStream;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
+import org.knime.core.data.DataType;
+import org.knime.core.data.MissingCell;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.data.vector.doublevector.DoubleVectorCellFactory;
 import org.knime.core.data.vector.doublevector.DoubleVectorValue;
+import org.knime.core.data.vector.stringvector.StringVectorCellFactory;
+import org.knime.core.data.vector.stringvector.StringVectorValue;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
@@ -57,6 +76,11 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
  * Abstract base model implementation for a node which extracts a given subset of elements of
@@ -68,19 +92,11 @@ import org.knime.core.node.port.PortType;
  */
 public abstract class BaseExpandVectorNodeModel extends NodeModel {
 
-    /**
-     * @param inPortTypes
-     * @param outPortTypes
-     */
-    protected BaseExpandVectorNodeModel(final PortType[] inPortTypes, final PortType[] outPortTypes) {
-        super(inPortTypes, outPortTypes);
-    }
-
     // members holding the sampling scheme:
     protected int[] m_sampledIndices = null;
     protected enum VType { String, Double };
     protected VType m_vectorType = null;
-
+    // other info set during configuration:
     protected int m_sourceColumnIndex = -1;
 
     /* static factory methods for the SettingsModels used here and in the NodeDialog. */
@@ -102,6 +118,16 @@ public abstract class BaseExpandVectorNodeModel extends NodeModel {
     }
     protected final SettingsModelBoolean m_expandToColumns = createExpandColumnsSettingModel();
 
+    /**
+     * @param inPortTypes
+     * @param outPortTypes
+     */
+    protected BaseExpandVectorNodeModel(final PortType[] inPortTypes, final PortType[] outPortTypes) {
+        super(inPortTypes, outPortTypes);
+    }
+
+    /* Check settings of this base class.
+     */
     protected void checkBaseSettings(final DataTableSpec spec) throws InvalidSettingsException {
         assert m_vectorColumn.getStringValue() != null;
         // selected column should exist in input table
@@ -121,6 +147,153 @@ public abstract class BaseExpandVectorNodeModel extends NodeModel {
                     + m_vectorColumn.getStringValue() + "' does not contain double or string vectors!");
         }
     }
+
+    /**
+     * Creates the TableSpec for the first outport, holding the data with the sampled/expanded vector.
+     *
+     * @param inTableSpec the spec of the source table
+     * @return the new spec
+     */
+    protected DataTableSpec createFirstSpec(final DataTableSpec inSpec) throws InvalidSettingsException {
+        DataColumnSpec sourceSpec = inSpec.getColumnSpec(m_sourceColumnIndex);
+        DataTableSpecCreator dtsc = new DataTableSpecCreator();
+        dtsc.setName(inSpec.getName()+ " (sampled)");
+        // copy original column specs
+        int ix = 0;
+        for (DataColumnSpec dcs : inSpec) {
+            if (m_removeSourceCol.getBooleanValue() && (ix == m_sourceColumnIndex)) {
+                // drop source column (if selected)
+            } else {
+                dtsc.addColumns(dcs);
+            }
+            ix++;
+        }
+        // add new columns
+        DataColumnSpec[] newSpecs;
+        if (m_expandToColumns.getBooleanValue()) {
+            newSpecs = IntStream.range(0, m_sampledIndices.length).mapToObj(
+                i -> new DataColumnSpecCreator(sourceSpec.getElementNames().get(m_sampledIndices[i]),
+                                               m_vectorType.equals(VType.Double) ? DoubleCell.TYPE : StringCell.TYPE
+                                                   ).createSpec()).toArray(DataColumnSpec[]::new);
+        } else {
+            newSpecs = new DataColumnSpec[1];
+            newSpecs[0] = new DataColumnSpecCreator(sourceSpec.getName() + " (sampled)",
+                m_vectorType.equals(VType.Double) ? DoubleVectorCellFactory.TYPE : StringVectorCellFactory.TYPE
+                ).createSpec();
+        }
+        dtsc.addColumns(newSpecs);
+        return dtsc.createSpec();
+    }
+
+    /*
+     * The main work is done here - execute processing in streaming mode.
+     *
+     * @param rows total number of rows. Can be -1 if not available.
+     */
+    protected void executeStreaming(final RowInput in, final RowOutput out, final long rows,
+        final ExecutionContext exec) throws InterruptedException, CanceledExecutionException {
+        try {
+            long rowIdx = -1;
+            DataRow row;
+            while ((row = in.poll()) != null) {
+                rowIdx++;
+                if (rows > 0) {
+                    exec.setProgress(rowIdx / (double)rows, "Adding row " + rowIdx + " of " + rows);
+                } else {
+                    exec.setProgress("Adding row " + rowIdx + ".");
+                }
+                exec.checkCanceled();
+                out.push(computeNewRow(row));
+            }
+        } finally {
+            out.close();
+        }
+    }
+
+    /**
+     * Compute new output row given an input.
+     *
+     * @param inRow
+     * @return corresponding output
+     */
+    protected DataRow computeNewRow(final DataRow inRow) {
+        Vector<DataCell> outCells = new Vector<DataCell>();
+        // copy original cells
+        int ix = 0;
+        for (DataCell dc : inRow) {
+            if (m_removeSourceCol.getBooleanValue() && (ix == m_sourceColumnIndex)) {
+                // drop cell in source column (if selected)
+            } else {
+                outCells.add(dc);
+            }
+            ix++;
+        }
+        // add new cells
+        DataCell sourceCell = inRow.getCell(m_sourceColumnIndex);
+        DataCell[] res;
+        if ((m_vectorType.equals(VType.Double) && sourceCell instanceof DoubleVectorValue)
+                || (m_vectorType.equals(VType.String) && sourceCell instanceof StringVectorValue)) {
+            if (m_expandToColumns.getBooleanValue()) {
+                res = new DataCell[m_sampledIndices.length];
+                for (int i = 0; i < m_sampledIndices.length; i++) {
+                    res[i] = m_vectorType.equals(VType.Double) ?
+                          new DoubleCell(((DoubleVectorValue)sourceCell).getValue(m_sampledIndices[i]))
+                        : new StringCell(((StringVectorValue)sourceCell).getValue(m_sampledIndices[i]));
+                }
+            } else {
+                res = new DataCell[1];
+                if (m_vectorType.equals(VType.Double)) {
+                    double[] d = new double[m_sampledIndices.length];
+                    for (int i = 0; i < m_sampledIndices.length; i++) {
+                        d[i] = ((DoubleVectorValue)sourceCell).getValue(m_sampledIndices[i]);
+                    }
+                    res[0] = DoubleVectorCellFactory.createCell(d);
+                } else {
+                    String[] s = new String[m_sampledIndices.length];
+                    for (int i = 0; i < m_sampledIndices.length; i++) {
+                        s[i] = ((StringVectorValue)sourceCell).getValue(m_sampledIndices[i]);
+                    }
+                    res[0] = StringVectorCellFactory.createCell(s);
+                }
+            }
+        } else {
+            res = new MissingCell[m_expandToColumns.getBooleanValue() ? m_sampledIndices.length : 1];
+            Arrays.fill(res, DataType.getMissingCell());
+        }
+        outCells.addAll(Arrays.asList(res));
+        return new DefaultRow(inRow.getKey(), outCells);
+    }
+
+    protected abstract class BaseStreamableOperator extends StreamableOperator {
+        @Override
+        public void loadInternals(final StreamableOperatorInternals internals) {
+            SimpleStreamableOperatorInternals soi = (SimpleStreamableOperatorInternals)internals;
+            try {
+                m_expandToColumns.setBooleanValue(soi.getConfig().getBoolean("Expand"));
+                m_removeSourceCol.setBooleanValue(soi.getConfig().getBoolean("RemoveSource"));
+                m_sampledIndices = soi.getConfig().getIntArray("Indices");
+            } catch (InvalidSettingsException ise) {
+
+            }
+        }
+        @Override
+        public StreamableOperatorInternals saveInternals() {
+            return super.saveInternals();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
+        SimpleStreamableOperatorInternals soi = new SimpleStreamableOperatorInternals();
+        soi.getConfig().addBoolean("Expand", m_expandToColumns.getBooleanValue());
+        soi.getConfig().addBoolean("RemoveSource", m_removeSourceCol.getBooleanValue());
+        soi.getConfig().addIntArray("Indices", m_sampledIndices);
+        return soi;
+    }
+
 
     /**
      * {@inheritDoc}

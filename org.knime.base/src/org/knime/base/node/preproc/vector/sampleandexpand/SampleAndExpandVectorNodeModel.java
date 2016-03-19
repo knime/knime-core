@@ -51,28 +51,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Vector;
-import java.util.stream.IntStream;
 
 import org.apache.commons.math3.random.RandomDataGenerator;
 import org.knime.base.node.preproc.vector.expand.BaseExpandVectorNodeModel;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
-import org.knime.core.data.DataType;
-import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.vector.doublevector.DoubleVectorCellFactory;
-import org.knime.core.data.vector.doublevector.DoubleVectorValue;
-import org.knime.core.data.vector.stringvector.StringVectorCellFactory;
-import org.knime.core.data.vector.stringvector.StringVectorValue;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -97,7 +85,6 @@ import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
-import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
  * This is the model implementation for a node which samples and optionally expands a string/double vector
@@ -172,43 +159,14 @@ public class SampleAndExpandVectorNodeModel extends BaseExpandVectorNodeModel {
     @Override
     public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new StreamableOperator() {
+        return new BaseStreamableOperator() {
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
                 executeStreaming((RowInput)inputs[0], (RowOutput)outputs[0], -1, exec);
                 // FIXME: the following should work but results in a NPE in distributed execution:
                 ((PortObjectOutput)outputs[1]).setPortObject(null);
             }
-            @Override
-            public void loadInternals(final StreamableOperatorInternals internals) {
-                SimpleStreamableOperatorInternals soi = (SimpleStreamableOperatorInternals)internals;
-                try {
-                    m_expandToColumns.setBooleanValue(soi.getConfig().getBoolean("Expand"));
-                    m_removeSourceCol.setBooleanValue(soi.getConfig().getBoolean("RemoveSource"));
-                    m_sampledIndices = soi.getConfig().getIntArray("Indices");
-                    m_sampledNames = soi.getConfig().getStringArray("Names");
-                } catch (InvalidSettingsException ise) {
-
-                }
-            }
-            @Override
-            public StreamableOperatorInternals saveInternals() {
-                return super.saveInternals();
-            }
         };
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
-        SimpleStreamableOperatorInternals soi = new SimpleStreamableOperatorInternals();
-        soi.getConfig().addBoolean("Expand", m_expandToColumns.getBooleanValue());
-        soi.getConfig().addBoolean("RemoveSource", m_removeSourceCol.getBooleanValue());
-        soi.getConfig().addIntArray("Indices", m_sampledIndices);
-        soi.getConfig().addStringArray("Names", m_sampledNames);
-        return soi;
     }
 
     /**
@@ -231,122 +189,6 @@ public class SampleAndExpandVectorNodeModel extends BaseExpandVectorNodeModel {
         this.executeStreaming(rowInput, rowOutput, inData[0].size(), exec);
         BufferedDataTable out2 = createIndexTable(exec);
         return new BufferedDataTable[]{out1.getTable(), out2};
-    }
-
-    /*
-     * The main work is done here - execute processing in streaming mode.
-     *
-     * @param rows total number of rows. Can be -1 if not available.
-     */
-    private void executeStreaming(final RowInput in, final RowOutput out, final long rows,
-        final ExecutionContext exec) throws InterruptedException, CanceledExecutionException {
-        try {
-            long rowIdx = -1;
-            DataRow row;
-            while ((row = in.poll()) != null) {
-                rowIdx++;
-                if (rows > 0) {
-                    exec.setProgress(rowIdx / (double)rows, "Adding row " + rowIdx + " of " + rows);
-                } else {
-                    exec.setProgress("Adding row " + rowIdx + ".");
-                }
-                exec.checkCanceled();
-                out.push(computeNewRow(row));
-            }
-        } finally {
-            out.close();
-        }
-    }
-
-    /**
-     * Creates the TableSpec for the first outport, holding the data with the sampled/expanded vector.
-     *
-     * @param inTableSpec the spec of the source table
-     * @return the new spec
-     */
-    protected DataTableSpec createFirstSpec(final DataTableSpec inSpec) throws InvalidSettingsException {
-        DataColumnSpec sourceSpec = inSpec.getColumnSpec(m_sourceColumnIndex);
-        DataTableSpecCreator dtsc = new DataTableSpecCreator();
-        dtsc.setName(inSpec.getName()+ " (sampled)");
-        // copy original column specs
-        int ix = 0;
-        for (DataColumnSpec dcs : inSpec) {
-            if (m_removeSourceCol.getBooleanValue() && (ix == m_sourceColumnIndex)) {
-                // drop source column (if selected)
-            } else {
-                dtsc.addColumns(dcs);
-            }
-            ix++;
-        }
-        // add new columns
-        DataColumnSpec[] newSpecs;
-        if (m_expandToColumns.getBooleanValue()) {
-            newSpecs = IntStream.range(0, m_nrSampledCols.getIntValue()).mapToObj(
-                i -> new DataColumnSpecCreator(sourceSpec.getElementNames().get(m_sampledIndices[i]),
-                                               m_vectorType.equals(VType.Double) ? DoubleCell.TYPE : StringCell.TYPE
-                                                   ).createSpec()).toArray(DataColumnSpec[]::new);
-        } else {
-            newSpecs = new DataColumnSpec[1];
-            newSpecs[0] = new DataColumnSpecCreator(sourceSpec.getName() + " (sampled)",
-                m_vectorType.equals(VType.Double) ? DoubleVectorCellFactory.TYPE : StringVectorCellFactory.TYPE
-                ).createSpec();
-        }
-        dtsc.addColumns(newSpecs);
-        return dtsc.createSpec();
-    }
-
-    /**
-     * Compute new output row given an input.
-     *
-     * @param inRow
-     * @return corresponding output
-     */
-    protected DataRow computeNewRow(final DataRow inRow) {
-        Vector<DataCell> outCells = new Vector<DataCell>();
-        // copy original cells
-        int ix = 0;
-        for (DataCell dc : inRow) {
-            if (m_removeSourceCol.getBooleanValue() && (ix == m_sourceColumnIndex)) {
-                // drop cell in source column (if selected)
-            } else {
-                outCells.add(dc);
-            }
-            ix++;
-        }
-        // add new cells
-        DataCell sourceCell = inRow.getCell(m_sourceColumnIndex);
-        DataCell[] res;
-        if ((m_vectorType.equals(VType.Double) && sourceCell instanceof DoubleVectorValue)
-                || (m_vectorType.equals(VType.String) && sourceCell instanceof StringVectorValue)) {
-            if (m_expandToColumns.getBooleanValue()) {
-                res = new DataCell[m_nrSampledCols.getIntValue()];
-                for (int i = 0; i < m_nrSampledCols.getIntValue(); i++) {
-                    res[i] = m_vectorType.equals(VType.Double) ?
-                          new DoubleCell(((DoubleVectorValue)sourceCell).getValue(m_sampledIndices[i]))
-                        : new StringCell(((StringVectorValue)sourceCell).getValue(m_sampledIndices[i]));
-                }
-            } else {
-                res = new DataCell[1];
-                if (m_vectorType.equals(VType.Double)) {
-                    double[] d = new double[m_nrSampledCols.getIntValue()];
-                    for (int i = 0; i < m_nrSampledCols.getIntValue(); i++) {
-                        d[i] = ((DoubleVectorValue)sourceCell).getValue(m_sampledIndices[i]);
-                    }
-                    res[0] = DoubleVectorCellFactory.createCell(d);
-                } else {
-                    String[] s = new String[m_nrSampledCols.getIntValue()];
-                    for (int i = 0; i < m_nrSampledCols.getIntValue(); i++) {
-                        s[i] = ((StringVectorValue)sourceCell).getValue(m_sampledIndices[i]);
-                    }
-                    res[0] = StringVectorCellFactory.createCell(s);
-                }
-            }
-        } else {
-            res = new MissingCell[m_expandToColumns.getBooleanValue() ? m_sampledIndices.length : 1];
-            Arrays.fill(res, DataType.getMissingCell());
-        }
-        outCells.addAll(Arrays.asList(res));
-        return new DefaultRow(inRow.getKey(), outCells);
     }
 
     /**

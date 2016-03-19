@@ -49,23 +49,13 @@ package org.knime.base.node.preproc.vector.expand;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.stream.IntStream;
+import java.util.Vector;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IntValue;
-import org.knime.core.data.MissingCell;
-import org.knime.core.data.container.AbstractCellFactory;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.data.vector.doublevector.DoubleVectorCellFactory;
-import org.knime.core.data.vector.doublevector.DoubleVectorValue;
-import org.knime.core.data.vector.stringvector.StringVectorCellFactory;
-import org.knime.core.data.vector.stringvector.StringVectorValue;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -74,9 +64,19 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
 
 /**
  * This is the model implementation for a node which extracts a given subset of elements of
@@ -107,7 +107,7 @@ public class ExpandVectorNodeModel extends BaseExpandVectorNodeModel {
     @Override
     public InputPortRole[] getInputPortRoles() {
         return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE,
-            InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
+            InputPortRole.NONDISTRIBUTED_STREAMABLE};
     }
 
     /**
@@ -140,89 +140,58 @@ public class ExpandVectorNodeModel extends BaseExpandVectorNodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception {
         // retrieve indices from second table
-        BufferedDataTable dt = inData[1];
-        if (dt.size() > 100000) {
-            throw new IllegalArgumentException("Refusing to generate output table with >100k columns!");
-        }
-        m_sampledIndices = new int[(int)dt.size()];
-        int indexCol = dt.getSpec().findColumnIndex(m_indexColumn.getStringValue());
-        int i = 0;
-        for (DataRow row : dt) {
-            DataCell cell = row.getCell(indexCol);
+        readIndexTable(new DataTableRowInput(inData[1]));
+        // and now start data processing
+        BufferedDataContainer out1 = exec.createDataContainer(createFirstSpec(inData[0].getDataTableSpec()));
+        RowOutput rowOutput = new BufferedDataTableRowOutput(out1);
+        RowInput rowInput = new DataTableRowInput(inData[0]);
+        this.executeStreaming(rowInput, rowOutput, inData[0].size(), exec);
+        return new BufferedDataTable[]{out1.getTable()};
+    }
+
+    /*
+     * read second table providing the list of indices to extract.
+     */
+    private void readIndexTable(final RowInput inData) throws InterruptedException {
+        Vector<Integer> indices = new Vector<Integer>();
+        DataRow row;
+        int ix = 0;
+        while ((row = inData.poll()) != null) {
+            DataCell cell = row.getCell(m_sourceColumnIndex);
             if (!(cell instanceof IntValue)) {
-                throw new IllegalArgumentException("Not an index in row " + i + "!");
+                throw new IllegalArgumentException("Not an index in row " + ix + "!");
             }
-            m_sampledIndices[i] = ((IntValue)cell).getIntValue();
-            i++;
+            indices.add(Integer.valueOf(((IntValue)cell).getIntValue()));
+            ix++;
         }
-        BufferedDataTable outTable = exec.createColumnRearrangeTable(inData[0],
-            createColumnRearranger(inData[0].getDataTableSpec(), m_vectorType), exec);
-        return new BufferedDataTable[]{outTable};
+        m_sampledIndices = indices.stream().mapToInt(i -> i).toArray();
     }
 
     /**
-     * Creates the ColumnRearranger for the re-arranger table. Also used to compute the output table spec.
-     *
-     * @param inTableSpec the spec of the source table
-     * @return the column rearranger
+     * {@inheritDoc}
      */
-    protected ColumnRearranger createColumnRearranger(final DataTableSpec inTableSpec, final VType vtype)
-            throws InvalidSettingsException {
-        int sourceColumnIndex = inTableSpec.findColumnIndex(m_vectorColumn.getStringValue());
-        DataColumnSpec sourceSpec = inTableSpec.getColumnSpec(sourceColumnIndex);
-        ColumnRearranger c = new ColumnRearranger(inTableSpec);
-        DataColumnSpec[] newSpecs;
-        if (m_expandToColumns.getBooleanValue()) {
-            newSpecs = m_sampledIndices == null ? null
-                : IntStream.range(0, m_sampledIndices.length).mapToObj(
-                  i -> new DataColumnSpecCreator(sourceSpec.getElementNames().get(m_sampledIndices[i]),
-                                               m_vectorType.equals(VType.Double) ? DoubleCell.TYPE : StringCell.TYPE
-                                                   ).createSpec()).toArray(DataColumnSpec[]::new);
-        } else {
-            newSpecs = new DataColumnSpec[1];
-            newSpecs[0] = new DataColumnSpecCreator(sourceSpec.getName() + " (sampled)",
-                m_vectorType.equals(VType.Double) ? DoubleVectorCellFactory.TYPE : StringVectorCellFactory.TYPE
-                ).createSpec();
-        }
-        if (m_removeSourceCol.getBooleanValue()) {
-            c.remove(sourceColumnIndex);
-        }
-        c.append(new AbstractCellFactory(true, newSpecs) {
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new BaseStreamableOperator() {
             @Override
-            public DataCell[] getCells(final DataRow row) {
-                DataCell dc = row.getCell(sourceColumnIndex);
-                if ((m_vectorType.equals(VType.Double) && dc instanceof DoubleVectorValue)
-                        || (m_vectorType.equals(VType.String) && dc instanceof StringVectorValue)) {
-                    DataCell[] res;
-                    if (m_expandToColumns.getBooleanValue()) {
-                        res = new DataCell[m_sampledIndices.length];
-                        for (int i = 0; i < m_sampledIndices.length; i++) {
-                            res[i] = m_vectorType.equals(VType.Double) ?
-                                  new DoubleCell(((DoubleVectorValue)dc).getValue(m_sampledIndices[i]))
-                                : new StringCell(((StringVectorValue)dc).getValue(m_sampledIndices[i]));
-                        }
-                    } else {
-                        res = new DataCell[1];
-                        if (m_vectorType.equals(VType.Double)) {
-                            double[] d = new double[m_sampledIndices.length];
-                            for (int i = 0; i < m_sampledIndices.length; i++) {
-                                d[i] = ((DoubleVectorValue)dc).getValue(m_sampledIndices[i]);
-                            }
-                            res[0] = DoubleVectorCellFactory.createCell(d);
-                        } else {
-                            String[] s = new String[m_sampledIndices.length];
-                            for (int i = 0; i < m_sampledIndices.length; i++) {
-                                s[i] = ((StringVectorValue)dc).getValue(m_sampledIndices[i]);
-                            }
-                            res[0] = StringVectorCellFactory.createCell(s);
-                        }
-                    }
-                    return res;
-                }
-                return new MissingCell[m_sampledIndices.length];
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                    throws Exception {
+                // read the entire (non distributed) table of indices
+                readIndexTable((RowInput)inputs[1]);
+                // and then stream the actual row processing
+                executeStreaming((RowInput)inputs[0], (RowOutput)outputs[0], -1, exec);
             }
-        });
-        return c;
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
+        final PortOutput[] output) throws Exception {
+        // Nothing to do here.
     }
 
     /**
