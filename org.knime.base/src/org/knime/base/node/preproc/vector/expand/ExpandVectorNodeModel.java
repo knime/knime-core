@@ -156,15 +156,16 @@ public class ExpandVectorNodeModel extends BaseExpandVectorNodeModel {
         Vector<Integer> indices = new Vector<Integer>();
         DataRow row;
         int ix = 0;
+        int indexColIx = inData.getDataTableSpec().findColumnIndex(m_indexColumn.getStringValue());
         while ((row = inData.poll()) != null) {
-            DataCell cell = row.getCell(m_sourceColumnIndex);
+            DataCell cell = row.getCell(indexColIx);
             if (!(cell instanceof IntValue)) {
                 throw new IllegalArgumentException("Not an index in row " + ix + "!");
             }
             indices.add(Integer.valueOf(((IntValue)cell).getIntValue()));
             ix++;
         }
-        m_sampledIndices = indices.stream().mapToInt(i -> i).toArray();
+        setSampledIndices(indices.stream().mapToInt(i -> i).toArray());
     }
 
     /**
@@ -199,7 +200,7 @@ public class ExpandVectorNodeModel extends BaseExpandVectorNodeModel {
      */
     @Override
     protected void reset() {
-        m_sampledIndices = null;
+        setSampledIndices(null);
     }
 
     /**

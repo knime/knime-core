@@ -93,11 +93,12 @@ import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 public abstract class BaseExpandVectorNodeModel extends NodeModel {
 
     // members holding the sampling scheme:
-    protected int[] m_sampledIndices = null;
+    private int[] m_sampledIndices = null;
     protected enum VType { String, Double };
-    protected VType m_vectorType = null;
+    private VType m_vectorType = null;
     // other info set during configuration:
-    protected int m_sourceColumnIndex = -1;
+    private int m_sourceColumnIndex = -1;
+
 
     /* static factory methods for the SettingsModels used here and in the NodeDialog. */
     /**
@@ -271,7 +272,7 @@ public abstract class BaseExpandVectorNodeModel extends NodeModel {
             try {
                 m_expandToColumns.setBooleanValue(soi.getConfig().getBoolean("Expand"));
                 m_removeSourceCol.setBooleanValue(soi.getConfig().getBoolean("RemoveSource"));
-                m_sampledIndices = soi.getConfig().getIntArray("Indices");
+                setSampledIndices(soi.getConfig().getIntArray("Indices"));
             } catch (InvalidSettingsException ise) {
 
             }
@@ -323,5 +324,26 @@ public abstract class BaseExpandVectorNodeModel extends NodeModel {
         m_vectorColumn.loadSettingsFrom(settings);
         m_removeSourceCol.loadSettingsFrom(settings);
         m_expandToColumns.loadSettingsFrom(settings);
+    }
+
+    /**
+     * @return the index of the column holding the vectors.
+     */
+    protected int getSourceColumnIndex() {
+        return m_sourceColumnIndex;
+    }
+
+    /**
+     * @return the m_sampledIndices
+     */
+    protected int[] getSampledIndices() {
+        return m_sampledIndices;
+    }
+
+    /**
+     * @param m_sampledIndices the m_sampledIndices to set
+     */
+    protected void setSampledIndices(final int[] m_sampledIndices) {
+        this.m_sampledIndices = m_sampledIndices;
     }
 }

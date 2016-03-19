@@ -146,9 +146,9 @@ public class SampleAndExpandVectorNodeModel extends BaseExpandVectorNodeModel {
         super.checkBaseSettings(inSpecs[0]);
         // checks passed - create the sampling scheme here so we know the column names that
         // execute will produce. After each reset we will shuffle again.
-        if (m_sampledIndices == null) {
+        if (getSampledIndices() == null) {
             generateSamplingSchema(
-                inSpecs[0].getColumnSpec(m_sourceColumnIndex).getElementNames(), m_nrSampledCols.getIntValue());
+                inSpecs[0].getColumnSpec(getSourceColumnIndex()).getElementNames(), m_nrSampledCols.getIntValue());
         }
         return new DataTableSpec[]{createFirstSpec(inSpecs[0]), createdSecondSpec()};
     }
@@ -214,8 +214,8 @@ public class SampleAndExpandVectorNodeModel extends BaseExpandVectorNodeModel {
     private BufferedDataTable createIndexTable(final ExecutionContext exec) {
         // create second output
         BufferedDataContainer out2 = exec.createDataContainer(createdSecondSpec());
-        for (int i = 0; i < m_sampledIndices.length; i++) {
-            int ix = m_sampledIndices[i];
+        for (int i = 0; i < getSampledIndices().length; i++) {
+            int ix = getSampledIndices()[i];
             String colName = m_sampledNames[i];
             out2.addRowToTable(
                 new DefaultRow(RowKey.createRowKey((long)i), new IntCell(ix), new StringCell(colName)));
@@ -235,11 +235,11 @@ public class SampleAndExpandVectorNodeModel extends BaseExpandVectorNodeModel {
         if (m_staticRandomSeed.getBooleanValue()) {
             r.reSeed(m_randomSeed.getIntValue());
         }
-        m_sampledIndices = r.nextPermutation(names.size(), nrSamples);
-        Arrays.sort(m_sampledIndices);
-        m_sampledNames = new String[m_sampledIndices.length];
-        for (int i = 0; i < m_sampledIndices.length; i++) {
-            m_sampledNames[i] = names.get(m_sampledIndices[i]);
+        setSampledIndices(r.nextPermutation(names.size(), nrSamples));
+        Arrays.sort(getSampledIndices());
+        m_sampledNames = new String[getSampledIndices().length];
+        for (int i = 0; i < getSampledIndices().length; i++) {
+            m_sampledNames[i] = names.get(getSampledIndices()[i]);
         }
     }
 
@@ -249,7 +249,7 @@ public class SampleAndExpandVectorNodeModel extends BaseExpandVectorNodeModel {
     @Override
     protected void reset() {
         // delete previous random sampling scheme so that a new one is selected upon the next configure.
-        m_sampledIndices = null;
+        setSampledIndices(null);
     }
 
     /**
