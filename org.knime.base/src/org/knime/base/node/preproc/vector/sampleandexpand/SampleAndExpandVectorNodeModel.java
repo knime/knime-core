@@ -76,15 +76,16 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.streamable.BufferedDataTableRowOutput;
 import org.knime.core.node.streamable.DataTableRowInput;
 import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.MergeOperator;
 import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.PortInput;
-import org.knime.core.node.streamable.PortObjectOutput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
  * This is the model implementation for a node which samples and optionally expands a string/double vector
@@ -162,9 +163,22 @@ public class SampleAndExpandVectorNodeModel extends BaseExpandVectorNodeModel {
         return new BaseStreamableOperator() {
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+                //write to the distributed output ports only - non-distributed output ports will be set in the finishStreamableExecution-method
                 executeStreaming((RowInput)inputs[0], (RowOutput)outputs[0], -1, exec);
-                // FIXME: the following should work but results in a NPE in distributed execution:
-                ((PortObjectOutput)outputs[1]).setPortObject(null);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MergeOperator createMergeOperator() {
+        return new MergeOperator() {
+
+            @Override
+            public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] operators) {
+                return new SimpleStreamableOperatorInternals();
             }
         };
     }
@@ -175,6 +189,7 @@ public class SampleAndExpandVectorNodeModel extends BaseExpandVectorNodeModel {
     @Override
     public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
         final PortOutput[] output) throws Exception {
+        //write to the non-distributed output ports
         ((RowOutput)output[1]).setFully(createIndexTable(exec));
     }
 
