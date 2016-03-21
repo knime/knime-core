@@ -85,10 +85,10 @@ public class TreeOrdinaryNumericColumnDataCreator implements TreeAttributeColumn
         Tuple t = new Tuple();
         if (cell.isMissing()) {
             //            throw new UnsupportedOperationException("missing vals not supported");
-            t.m_value = Double.NaN;
+            t.m_value = (float)Double.NaN;
             m_numMissing++;
         } else {
-            t.m_value = ((DoubleValue)cell).getDoubleValue();
+            t.m_value = (float)((DoubleValue)cell).getDoubleValue();
         }
         t.m_indexInColumn = m_tuples.size();
         m_tuples.add(t);
@@ -108,7 +108,7 @@ public class TreeOrdinaryNumericColumnDataCreator implements TreeAttributeColumn
         Tuple[] tuples = m_tuples.toArray(new Tuple[m_tuples.size()]);
         Arrays.sort(tuples);
         final int length = tuples.length;
-        final double[] sortedData = new double[length];
+        final float[] sortedData = new float[length];
         final int[] sortIndex = new int[length];
         for (int i = 0; i < tuples.length; i++) {
             Tuple t = tuples[i];
@@ -124,7 +124,7 @@ public class TreeOrdinaryNumericColumnDataCreator implements TreeAttributeColumn
     }
 
     private static class Tuple implements Comparable<Tuple> {
-        private double m_value;
+        private float m_value;
 
         private int m_indexInColumn;
 

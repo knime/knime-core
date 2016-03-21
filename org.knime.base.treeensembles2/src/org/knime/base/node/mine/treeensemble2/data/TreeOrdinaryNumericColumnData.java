@@ -57,14 +57,14 @@ import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerCo
  */
 public class TreeOrdinaryNumericColumnData extends TreeNumericColumnData {
 
-    private final double[] m_sortedData;
+    private final float[] m_sortedData;
     private final int m_indexFirstMissing;
     private final boolean m_containsMissingValues;
 
 //    private final int[] m_originalIndexInColumnList;
 
     TreeOrdinaryNumericColumnData(final TreeNumericColumnMetaData metaData,
-        final TreeEnsembleLearnerConfiguration configuration, final double[] sortedData,
+        final TreeEnsembleLearnerConfiguration configuration, final float[] sortedData,
         final int[] orginalIndexInColumnList, final boolean containsMissingValues, final int indexFirstMissing) {
         super(metaData, configuration, orginalIndexInColumnList);
         m_sortedData = sortedData;
@@ -98,7 +98,7 @@ public class TreeOrdinaryNumericColumnData extends TreeNumericColumnData {
      */
     @Override
     protected int getFirstIndexWithValue(final double value) {
-        return Arrays.binarySearch(m_sortedData, value);
+        return Arrays.binarySearch(m_sortedData, (float)value);
     }
 
     /**
