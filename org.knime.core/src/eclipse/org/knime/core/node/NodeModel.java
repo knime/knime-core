@@ -1751,7 +1751,7 @@ public abstract class NodeModel {
     }
 
     /**
-     * Streaming API (pending): Finally determines the specifiction of the output (tables). In most cases
+     * Streaming API (pending): Finally determines the specification of the output (tables). In most cases
      * implementations just return the result of {@link #configure(PortObjectSpec[])} here (which is also the default
      * implementation). In some cases the node needs access on the data to determine the output spec (e.g. for nodes
      * such as "Transpose" or "One-to-Many"), which is iterated as described in
