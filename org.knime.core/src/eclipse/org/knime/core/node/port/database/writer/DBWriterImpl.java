@@ -47,7 +47,6 @@ package org.knime.core.node.port.database.writer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.ConnectionPendingException;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -59,9 +58,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Spliterator;
 import java.util.TimeZone;
-import java.util.function.Consumer;
 
 import org.apache.commons.io.IOUtils;
 import org.knime.core.data.BooleanValue;
@@ -69,7 +66,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
@@ -853,7 +849,7 @@ public class DBWriterImpl implements DBWriter {
                 if (!dateCell.hasTime() && !dateCell.hasMillis()) {
                     java.sql.Date date = new java.sql.Date(corrDate);
                     stmt.setDate(dbIdx, date);
-                } else if (!dateCell.hasMillis()) {
+                } else if (!dateCell.hasDate()) {
                     java.sql.Time time = new java.sql.Time(corrDate);
                     stmt.setTime(dbIdx, time);
                 } else {
@@ -916,70 +912,9 @@ public class DBWriterImpl implements DBWriter {
     protected void fillArray(final PreparedStatement stmt, final int dbIdx, final DataCell cell, final TimeZone tz)
         throws SQLException {
         if (cell.isMissing()) {
-            stmt.setNull(dbIdx, Types.ARRAY);
+            stmt.setNull(dbIdx, Types.VARCHAR);
         } else {
-            final CollectionDataValue collection = (CollectionDataValue)cell;
-            final Spliterator<DataCell> spliterator = collection.spliterator();
-            final DataType baseType = cell.getType().getCollectionElementType();
-            final Object[] vals = new Object[collection.size()];
-            final String type;
-            if (baseType.isCompatible(BooleanValue.class)) {
-                type = "boolean";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : ((BooleanValue)t).getBooleanValue();
-                    }
-                });
-            } else if (baseType.isCompatible(IntValue.class)) {
-                type = "integer";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : ((IntValue)t).getIntValue();
-                    }
-                });
-            } else if (baseType.isCompatible(LongValue.class)) {
-                type = "bigint";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : ((LongValue)t).getLongValue();
-                    }
-                });
-            } else if (baseType.isCompatible(DoubleValue.class)) {
-                type = "double";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        if (t.isMissing()) {
-                            vals[idx++] = null;
-                        } else {
-                            final double value = ((DoubleValue)t).getDoubleValue();
-                            vals[idx++] = Double.isNaN(value) ? null : value;
-                        }
-                    }
-                });
-            } else if (baseType.isCompatible(DateAndTimeValue.class)) {
-                type = "timestamp";
-            } else {
-                type = "varchar";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : t.toString();
-                    }
-                });
-            }
-            @SuppressWarnings("resource") //will be closed by the framework
-            final Connection conn = stmt.getConnection();
-            final Array array = conn.createArrayOf(type, vals);
-            stmt.setArray(dbIdx, array);
+            stmt.setString(dbIdx, cell.toString());
         }
     }
 

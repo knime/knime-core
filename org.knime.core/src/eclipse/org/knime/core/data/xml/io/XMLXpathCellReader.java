@@ -49,6 +49,10 @@ package org.knime.core.data.xml.io;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -63,6 +67,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
+import org.knime.core.util.Pair;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -89,10 +94,11 @@ public class XMLXpathCellReader implements XMLCellReader {
 	private final List<String> m_base;
 	private final List<String> m_space;
 	private final List<String> m_lang;
+	private final Deque<List<Pair<String, String>>> m_namespaceStack = new ArrayDeque<>();
 
 	/**
 	 * Create a new instance.
-	 * 
+	 *
 	 * @param is the xml source
 	 * @param xpathMatcher nodes of the input that match will be read, only
 	 * @throws ParserConfigurationException
@@ -131,6 +137,25 @@ public class XMLXpathCellReader implements XMLCellReader {
 		m_parser = factory.createXMLStreamReader(m_in);
 	}
 
+	private void pushNamespaceContext() {
+	    if (m_parser.getNamespaceCount() > 0) {
+	        List<Pair<String, String>> currentNSDeclarations = new ArrayList<>(m_parser.getNamespaceCount());
+	        m_namespaceStack.push(currentNSDeclarations);
+
+    	    for (int i = 0; i < m_parser.getNamespaceCount(); i++) {
+    	        String prefix = m_parser.getNamespacePrefix(i);
+                currentNSDeclarations.add(new Pair<String, String>(prefix != null ? ("xmlns:" + prefix) : "xmlns",
+                    m_parser.getNamespaceURI(i)));
+    	    }
+	    } else {
+	        m_namespaceStack.push(Collections.emptyList());
+	    }
+	}
+
+	private void popNamespaceContext() {
+	    m_namespaceStack.pop();
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -139,6 +164,7 @@ public class XMLXpathCellReader implements XMLCellReader {
 		if (!m_xpathMatcher.nodeMatches()) {
 			return null;
 		}
+
 		try {
 			while (m_parser.hasNext()) {
 				switch (m_parser.getEventType()) {
@@ -146,16 +172,23 @@ public class XMLXpathCellReader implements XMLCellReader {
 					updateBasePath();
 					updateXmlSpaceDefinition();
 					updateXmlLangDefinition();
+					pushNamespaceContext();
+
 					for (int i = 0; i < m_docs.size(); i++) {
 						Element element = createElement(m_docs.get(i));
 						m_currNodes.get(i).appendChild(element);
 						m_currNodes.set(i, element);
 					}
+
 					boolean match = m_xpathMatcher.startElement(
 							m_parser.getName());
 					if (match) {
 						Document doc = m_builder.newDocument();
 						Element element = createElement(doc);
+
+                        m_namespaceStack.stream().flatMap(e -> e.stream()).forEach(p -> element
+                            .setAttributeNS(XMLConstants.XMLNS_ATTRIBUTE_NS_URI, p.getFirst(), p.getSecond()));
+
 						// set standard xml attributes
 						// (see: http://www.w3.org/XML/1998/namespace)
 						if (!m_base.isEmpty() && null != m_base.get(0)) {
@@ -174,7 +207,7 @@ public class XMLXpathCellReader implements XMLCellReader {
 						m_docs.add(doc);
 						m_currNodes.add(element);
 					}
-	
+
 					break;
 				case XMLStreamConstants.END_ELEMENT:
 					if (!m_reentrent) {
@@ -203,6 +236,7 @@ public class XMLXpathCellReader implements XMLCellReader {
 							m_currNodes.set(i, curr.getParentNode());
 						}
 					}
+					popNamespaceContext();
 					m_reentrent = false;
 					break;
 				case XMLStreamConstants.CHARACTERS:
@@ -233,12 +267,12 @@ public class XMLXpathCellReader implements XMLCellReader {
 						Comment comment = m_docs.get(i).createComment(str);
 						m_currNodes.get(i).appendChild(comment);
 					}
-	
+
 					break;
 				case XMLStreamConstants.ENTITY_REFERENCE:
 					for (int i = 0; i < m_docs.size(); i++) {
 						String str = m_parser.getText();
-						EntityReference ref = 
+						EntityReference ref =
 							m_docs.get(i).createEntityReference(str);
 						m_currNodes.get(i).appendChild(ref);
 					}
@@ -289,7 +323,7 @@ public class XMLXpathCellReader implements XMLCellReader {
 		for (int i = 0; i < m_parser.getAttributeCount(); i++) {
 			String attrLocalName = m_parser.getAttributeLocalName(i);
 			String attrPrefix = m_parser.getAttributePrefix(i);
-			String attrQName = null == attrPrefix || attrPrefix.isEmpty() 
+			String attrQName = null == attrPrefix || attrPrefix.isEmpty()
 					? attrLocalName
 					: attrPrefix + ":" + attrLocalName;
 			element.setAttributeNS(m_parser.getAttributeNamespace(i),
