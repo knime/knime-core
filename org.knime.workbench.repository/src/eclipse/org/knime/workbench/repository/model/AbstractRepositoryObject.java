@@ -233,12 +233,14 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     /**
      * Compares two repository objects lexicographically according to their
-     * name.
+     * name. If the names equal the ID breaks the tie.
+     *
      * {@inheritDoc}
      */
     @Override
     public int compareTo(final AbstractRepositoryObject o) {
-        return m_id.compareTo(o.m_id);
+        int nameOrder = m_name.compareTo(o.m_name);
+        return (nameOrder == 0 ? m_id.compareTo(o.m_id) : nameOrder);
     }
 
     /**
@@ -253,6 +255,9 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     /**
+     * Two {@code AbstractRepositoryObject}s equal iff both have the same class
+     * and have the same name and ID.
+     *
      * {@inheritDoc}
      */
     @Override
@@ -267,7 +272,9 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
             return false;
         }
         AbstractRepositoryObject other = (AbstractRepositoryObject)obj;
-        return Objects.equals(m_id, other.m_id);
+
+        return Objects.equals(m_name, other.m_name) &&
+                Objects.equals(m_id, other.m_id);
     }
 
     /**
