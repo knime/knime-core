@@ -50,17 +50,19 @@ package org.knime.base.node.mine.treeensemble2.data.memberships;
 
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashMap;
 
 import org.knime.base.node.mine.treeensemble2.data.TreeColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class RootDataMemberships implements DataMemberships {
 
@@ -69,11 +71,13 @@ public class RootDataMemberships implements DataMemberships {
     // of the data in the descendant datamemberships falls below
     private static final double NEW_ROOT_THRESHOLD = 0;
 
+    private static final long CACHE_SIZE = 1000;
+
     final private int m_numCols;
 
-    private final HashMap<Integer, IntArrayColumnMemberships> m_cachedColumnMemberships;
+//    private final HashMap<Integer, ColumnMembershipsEntry> m_cacheHashMap;
 
-    private final HashMap<Integer, int[]> m_indicesInCachedColumnMemberships;
+    private final LoadingCache<Integer, ColumnMembershipsEntry> m_cache;
 
     private final int[] m_originalIndices;
 
@@ -93,8 +97,10 @@ public class RootDataMemberships implements DataMemberships {
     public RootDataMemberships(final RowSample rowSample, final TreeData data, final DataIndexManager indexManager) {
         final int numRows = rowSample.getNrRows();
         m_numCols = data.getNrAttributes();
-        m_cachedColumnMemberships = new HashMap<Integer, IntArrayColumnMemberships>((int)(m_numCols * 1.5));
-        m_indicesInCachedColumnMemberships = new HashMap<Integer, int[]>((int)(m_numCols * 1.5));
+//        m_cacheHashMap = new HashMap<Integer, ColumnMembershipsEntry>((int)(m_numCols * 1.5));
+        m_cache = CacheBuilder.newBuilder()
+                .maximumSize(CACHE_SIZE)
+                .build(new ColumnMembershipsEntryCacheLoader(this));
         m_indexManager = indexManager;
         int approximatedNumRows = (int)(numRows * 0.7);
         ArrayList<Integer> rowCounts = new ArrayList<Integer>(approximatedNumRows);
@@ -127,8 +133,10 @@ public class RootDataMemberships implements DataMemberships {
      */
     public RootDataMemberships(final double[] rowWeights, final TreeData data, final DataIndexManager indexManager) {
         m_numCols = data.getNrAttributes();
-        m_cachedColumnMemberships = new HashMap<Integer, IntArrayColumnMemberships>();
-        m_indicesInCachedColumnMemberships = new HashMap<Integer, int[]>();
+//        m_cacheHashMap = new HashMap<Integer, ColumnMembershipsEntry>();
+        m_cache = CacheBuilder.newBuilder()
+                .maximumSize(CACHE_SIZE)
+                .build(new ColumnMembershipsEntryCacheLoader(this));
         m_indexManager = indexManager;
         ArrayList<Integer> weights = Lists.newArrayList();
         ArrayList<Integer> originalIndices = Lists.newArrayList();
@@ -157,14 +165,17 @@ public class RootDataMemberships implements DataMemberships {
         m_indexManager = indexManager;
         m_originalIndices = originalIndices;
         m_weights = weights;
-        m_cachedColumnMemberships = new HashMap<Integer, IntArrayColumnMemberships>();
-        m_indicesInCachedColumnMemberships = new HashMap<Integer, int[]>();
+//        m_cacheHashMap = new HashMap<Integer, ColumnMembershipsEntry>();
+        m_cache = CacheBuilder.newBuilder()
+                .maximumSize(CACHE_SIZE)
+                .build(new ColumnMembershipsEntryCacheLoader(this));
         m_rowCountInRoot = rowCountInRoot;
     }
 
     ColumnMemberships descendantGetColumnMemberships(final int index, final int[] indicesInRoot) {
-        final IntArrayColumnMemberships rootColMemberships = getColumnMemberships(index);
-        final int[] indicesInColMemberships = m_indicesInCachedColumnMemberships.get(index);
+        final ColumnMembershipsEntry colMemEntry = m_cache.getUnchecked(index);
+        final IntArrayColumnMemberships rootColMemberships = colMemEntry.m_colMem;
+        final int[] indicesInColMemberships = colMemEntry.m_indicesInColMem;
         final BitSet colMemBs = new BitSet(m_originalIndices.length);
 
         for (int indexInRoot : indicesInRoot) {
@@ -175,8 +186,9 @@ public class RootDataMemberships implements DataMemberships {
     }
 
     ColumnMemberships descendantGetColumnMemberships(final int index, final BitSet included) {
-        final IntArrayColumnMemberships rootColMemberships = getColumnMemberships(index);
-        final int[] indicesInColMemberships = m_indicesInCachedColumnMemberships.get(index);
+        final ColumnMembershipsEntry colMemEntry = m_cache.getUnchecked(index);
+        final IntArrayColumnMemberships rootColMemberships = colMemEntry.m_colMem;
+        final int[] indicesInColMemberships = colMemEntry.m_indicesInColMem;
         final BitSet colMemBs = new BitSet(m_originalIndices.length);
         boolean overflow = false;
         for (int indexInRoot = included.nextSetBit(0); indexInRoot >= 0; indexInRoot =
@@ -242,58 +254,52 @@ public class RootDataMemberships implements DataMemberships {
         if (index < 0 || index >= m_numCols) {
             throw new IndexOutOfBoundsException();
         }
-
-        IntArrayColumnMemberships colMemberships = m_cachedColumnMemberships.get(index);
-
-        if (colMemberships == null) {
-            colMemberships = createColumnMemberships(index);
-        }
-
-        return colMemberships;
+        return m_cache.getUnchecked(index).m_colMem;
     }
 
-    private IntArrayColumnMemberships createColumnMemberships(final int index) {
-        final int dataMembershipsSize = m_originalIndices.length;
-        final int[] original2Column = m_indexManager.getIndicesInColumn(index);
-        final int originalSize = original2Column.length;
-        final BitSet colBitSet = new BitSet(originalSize);
-        final int[] columnIndex2dataMemIndex = new int[originalSize];
-        for (int dataMemIndex = 0; dataMemIndex < dataMembershipsSize; dataMemIndex++) {
-            final int indexInColumn = original2Column[m_originalIndices[dataMemIndex]];
-            colBitSet.set(indexInColumn);
-            columnIndex2dataMemIndex[indexInColumn] = dataMemIndex;
-        }
-
-        final int[] indicesInDataMemberships = new int[dataMembershipsSize];
-        final int[] indicesInColumn = new int[dataMembershipsSize];
-        final int[] indicesInColumnMemberships = new int[dataMembershipsSize];
-        int indexInColumnMembership = 0;
-
-        boolean overflow = false;
-        for (int indexInColumn = colBitSet.nextSetBit(0); indexInColumn >= 0; indexInColumn =
-            colBitSet.nextSetBit(indexInColumn + 1)) {
-            indicesInColumn[indexInColumnMembership] = indexInColumn;
-            final int dataMembershipsIndex = columnIndex2dataMemIndex[indexInColumn];
-            indicesInDataMemberships[indexInColumnMembership] = dataMembershipsIndex;
-            indicesInColumnMemberships[dataMembershipsIndex] = indexInColumnMembership;
-            indexInColumnMembership++;
-
-            if (indexInColumn == Integer.MAX_VALUE) {
-                overflow = true;
-                break;
-            }
-        }
-
-        if (overflow) {
-            throw new IllegalStateException("An overflow occurred, please check the implementation.");
-        }
-        IntArrayColumnMemberships colMem =
-            new IntArrayColumnMemberships(indicesInColumn, indicesInDataMemberships, this);
-        m_cachedColumnMemberships.put(index, colMem);
-        m_indicesInCachedColumnMemberships.put(index, indicesInColumnMemberships);
-
-        return colMem;
-    }
+    // no longer needed
+    // the cache that is now used, automatically loads the entries as needed
+//    private IntArrayColumnMemberships createColumnMemberships(final int index) {
+//        final int dataMembershipsSize = m_originalIndices.length;
+//        final int[] original2Column = m_indexManager.getIndicesInColumn(index);
+//        final int originalSize = original2Column.length;
+//        final BitSet colBitSet = new BitSet(originalSize);
+//        final int[] columnIndex2dataMemIndex = new int[originalSize];
+//        for (int dataMemIndex = 0; dataMemIndex < dataMembershipsSize; dataMemIndex++) {
+//            final int indexInColumn = original2Column[m_originalIndices[dataMemIndex]];
+//            colBitSet.set(indexInColumn);
+//            columnIndex2dataMemIndex[indexInColumn] = dataMemIndex;
+//        }
+//
+//        final int[] indicesInDataMemberships = new int[dataMembershipsSize];
+//        final int[] indicesInColumn = new int[dataMembershipsSize];
+//        final int[] indicesInColumnMemberships = new int[dataMembershipsSize];
+//        int indexInColumnMembership = 0;
+//
+//        boolean overflow = false;
+//        for (int indexInColumn = colBitSet.nextSetBit(0); indexInColumn >= 0; indexInColumn =
+//            colBitSet.nextSetBit(indexInColumn + 1)) {
+//            indicesInColumn[indexInColumnMembership] = indexInColumn;
+//            final int dataMembershipsIndex = columnIndex2dataMemIndex[indexInColumn];
+//            indicesInDataMemberships[indexInColumnMembership] = dataMembershipsIndex;
+//            indicesInColumnMemberships[dataMembershipsIndex] = indexInColumnMembership;
+//            indexInColumnMembership++;
+//
+//            if (indexInColumn == Integer.MAX_VALUE) {
+//                overflow = true;
+//                break;
+//            }
+//        }
+//
+//        if (overflow) {
+//            throw new IllegalStateException("An overflow occurred, please check the implementation.");
+//        }
+//        IntArrayColumnMemberships colMem =
+//            new IntArrayColumnMemberships(indicesInColumn, indicesInDataMemberships, this);
+//        m_cacheHashMap.put(index, new ColumnMembershipsEntry(colMem, indicesInColumnMemberships));
+//
+//        return colMem;
+//    }
 
     @Override
     public DataMemberships createChildMemberships(final BitSet inChild) {
@@ -354,5 +360,65 @@ public class RootDataMemberships implements DataMemberships {
     @Override
     public int getRowCountInRoot() {
         return m_rowCountInRoot;
+    }
+
+    private static class ColumnMembershipsEntry {
+        private final IntArrayColumnMemberships m_colMem;
+        private final int[] m_indicesInColMem;
+
+        public ColumnMembershipsEntry(final IntArrayColumnMemberships columnMemberships, final int[] indicesInColMem) {
+            m_colMem = columnMemberships;
+            m_indicesInColMem = indicesInColMem;
+        }
+    }
+
+    private class ColumnMembershipsEntryCacheLoader extends CacheLoader<Integer, ColumnMembershipsEntry> {
+        private final DataMemberships m_dataMem;
+
+        public ColumnMembershipsEntryCacheLoader(final DataMemberships dataMem) {
+            m_dataMem = dataMem;
+        }
+
+        @Override
+        public ColumnMembershipsEntry load(final Integer key) throws Exception {
+            final int dataMembershipsSize = m_originalIndices.length;
+            final int[] original2Column = m_indexManager.getIndicesInColumn(key);
+            final int originalSize = original2Column.length;
+            final BitSet colBitSet = new BitSet(originalSize);
+            final int[] columnIndex2dataMemIndex = new int[originalSize];
+            for (int dataMemIndex = 0; dataMemIndex < dataMembershipsSize; dataMemIndex++) {
+                final int indexInColumn = original2Column[m_originalIndices[dataMemIndex]];
+                colBitSet.set(indexInColumn);
+                columnIndex2dataMemIndex[indexInColumn] = dataMemIndex;
+            }
+
+            final int[] indicesInDataMemberships = new int[dataMembershipsSize];
+            final int[] indicesInColumn = new int[dataMembershipsSize];
+            final int[] indicesInColumnMemberships = new int[dataMembershipsSize];
+            int indexInColumnMembership = 0;
+
+            boolean overflow = false;
+            for (int indexInColumn = colBitSet.nextSetBit(0); indexInColumn >= 0; indexInColumn =
+                colBitSet.nextSetBit(indexInColumn + 1)) {
+                indicesInColumn[indexInColumnMembership] = indexInColumn;
+                final int dataMembershipsIndex = columnIndex2dataMemIndex[indexInColumn];
+                indicesInDataMemberships[indexInColumnMembership] = dataMembershipsIndex;
+                indicesInColumnMemberships[dataMembershipsIndex] = indexInColumnMembership;
+                indexInColumnMembership++;
+
+                if (indexInColumn == Integer.MAX_VALUE) {
+                    overflow = true;
+                    break;
+                }
+            }
+
+            if (overflow) {
+                throw new IllegalStateException("An overflow occurred, please check the implementation.");
+            }
+            final IntArrayColumnMemberships colMem =
+                new IntArrayColumnMemberships(indicesInColumn, indicesInDataMemberships, m_dataMem);
+            return new ColumnMembershipsEntry(colMem, indicesInColumnMemberships);
+        }
+
     }
 }
