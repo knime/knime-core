@@ -344,6 +344,7 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
                         skipNominalColumnsWithoutDomainModel.getBooleanValue());
             }
         });
+        model.setEnabled(skipNominalColumnsWithoutDomainModel.getBooleanValue());
         return model;
     }
 
