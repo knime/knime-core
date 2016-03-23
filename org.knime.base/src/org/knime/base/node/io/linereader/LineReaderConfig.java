@@ -49,6 +49,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -68,6 +70,7 @@ final class LineReaderConfig {
     private String m_columnHeader;
     private boolean m_skipEmptyLines;
     private int m_limitRowCount;
+    private String m_regex;
 
     /** @return the url */
     String getUrlString() {
@@ -154,6 +157,19 @@ final class LineReaderConfig {
     void setSkipEmptyLines(final boolean skipEmptyLines) {
         m_skipEmptyLines = skipEmptyLines;
     }
+    /**
+     * @return the User defined regular expression a line has to match or the
+     * universal ".*" if none was specified
+     */
+    String getRegex() {
+        return m_regex;
+    }
+    /**
+     * @param regex
+     */
+    void setRegex(final String regex) {
+        m_regex = regex;
+    }
 
     /** Save current configuration.
      * @param settings to save to. */
@@ -163,6 +179,7 @@ final class LineReaderConfig {
         settings.addString("columnHeader", m_columnHeader);
         settings.addBoolean("skipEmptyLines", m_skipEmptyLines);
         settings.addInt("limitRowCount", m_limitRowCount);
+        settings.addString("regex", m_regex);
     }
 
     /** Load configuration in NodeModel.
@@ -185,6 +202,14 @@ final class LineReaderConfig {
         }
         m_skipEmptyLines = settings.getBoolean("skipEmptyLines");
         m_limitRowCount = settings.getInt("limitRowCount");
+        m_regex = settings.getString("regex", "");
+        if (!"".equals(m_regex)){
+            try {
+                Pattern.compile(m_regex);
+            } catch(PatternSyntaxException e){
+                throw new InvalidSettingsException("Invalid Regex: " + m_regex, e);
+            }
+        }
     }
 
     /** Load configuration in dialog, init defaults if invalid.
@@ -195,6 +220,7 @@ final class LineReaderConfig {
         m_columnHeader = settings.getString("columnHeader", "Column");
         m_skipEmptyLines = settings.getBoolean("skipEmptyLines", false);
         m_limitRowCount = settings.getInt("limitRowCount", -1);
+        m_regex = settings.getString("regex", "");
     }
 
 }

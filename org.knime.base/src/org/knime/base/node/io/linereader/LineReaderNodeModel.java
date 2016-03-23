@@ -96,6 +96,7 @@ final class LineReaderNodeModel extends NodeModel {
         int currentRow = 0;
         final int limitRows = m_config.getLimitRowCount();
         final boolean isSkipEmpty = m_config.isSkipEmptyLines();
+        final boolean matchRegex = !"".equals(m_config.getRegex());
         String line;
         String rowPrefix = m_config.getRowPrefix();
         try {
@@ -111,6 +112,10 @@ final class LineReaderNodeModel extends NodeModel {
                 exec.checkCanceled();
                 if (isSkipEmpty && line.trim().length() == 0) {
                     // do not increment currentRow
+                    continue;
+                }
+                if (matchRegex && !line.matches(m_config.getRegex())) {
+                    //do not increment currentRow
                     continue;
                 }
                 if (limitRows > 0 && currentRow >= limitRows) {

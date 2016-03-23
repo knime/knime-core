@@ -32,6 +32,9 @@
 			If set, the node will not read more lines than specified. If "Skip empty rows"
 			is selected, empty rows do not count as valid rows.  
 		</option>
+		<option name="Match input against regex">
+		    If set, lines that do not match the specified regular expression are skipped.
+		</option>
 	</fullDescription>
 
 	<ports>

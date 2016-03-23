@@ -72,6 +72,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.FilesHistoryPanel;
+import org.knime.core.node.util.StringHistoryPanel;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -87,6 +88,8 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
     private final JCheckBox m_limitRowCountChecker;
     private final JCheckBox m_skipEmptyLinesChecker;
     private final JSpinner m_limitRowCountSpinner;
+    private final StringHistoryPanel m_regexField;
+    private final JCheckBox m_regexChecker;
 
     /** Create new dialog, init layout. */
     LineReaderNodeDialogPane() {
@@ -105,6 +108,19 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         m_columnHeaderField = new JTextField("Column", col);
         m_rowHeadPrefixField = new JTextField("Row", col);
         m_skipEmptyLinesChecker = new JCheckBox("Skip empty lines");
+        m_regexField = new StringHistoryPanel("org.knime.base.node.io.linereader.RegexHistory");
+        //set the size of the ComboBox to 42
+        m_regexField.setPrototypeDisplayValue("123456789012345678901234567890123456789012");
+        m_regexChecker = new JCheckBox("Match input against regex");
+        m_regexChecker.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                boolean selected = m_regexChecker.isSelected();
+                m_regexField.setEnabled(selected);
+            }
+        });
+        m_regexField.setEnabled(false);
         m_limitRowCountSpinner = new JSpinner(
                 new SpinnerNumberModel(1000, 0, Integer.MAX_VALUE, 100));
         m_limitRowCountChecker = new JCheckBox("Limit number of rows");
@@ -157,6 +173,13 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         panel.add(m_limitRowCountChecker, gbc);
         gbc.gridx += 1;
         panel.add(m_limitRowCountSpinner, gbc);
+
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        gbc.gridwidth = 1;
+        panel.add(m_regexChecker, gbc);
+        gbc.gridx += 1;
+        panel.add(m_regexField, gbc);
         return panel;
     }
 
@@ -184,6 +207,17 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             }
             m_limitRowCountSpinner.setValue(limitRows);
         }
+        if (!"".equals(config.getRegex())) {
+            if (!m_regexChecker.isSelected()) {
+                m_regexChecker.doClick();
+            }
+            m_regexField.setSelectedString(config.getRegex());
+            m_regexField.updateHistory();
+        } else {
+            if (m_regexChecker.isSelected()) {
+                m_regexChecker.doClick();
+            }
+        }
     }
 
 
@@ -204,6 +238,15 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             config.setLimitRowCount((Integer)m_limitRowCountSpinner.getValue());
         } else {
             config.setLimitRowCount(-1);
+        }
+        if(m_regexChecker.isSelected()){
+            if(m_regexField.getSelectedString().equals("")){
+                throw new InvalidSettingsException("Empty Regex!");
+            }
+            config.setRegex(m_regexField.getSelectedString());
+            m_regexField.commitSelectedToHistory();
+        }else{
+            config.setRegex("");
         }
         config.saveConfiguration(settings);
         m_filePanel.addToHistory();
