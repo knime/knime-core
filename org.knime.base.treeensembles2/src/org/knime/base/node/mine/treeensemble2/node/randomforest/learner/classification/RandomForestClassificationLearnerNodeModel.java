@@ -227,7 +227,6 @@ final class RandomForestClassificationLearnerNodeModel extends NodeModel
         BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(t, outOfBagRearranger, outOfBagExec);
         BufferedDataTable colStatsTable = learner.createColumnStatisticTable(exec.createSubExecutionContext(0.0));
         m_ensembleModelPortObject = modelPortObject;
-        printEnsembleStatistics(model);
         if (warn != null) {
             setWarningMessage(warn);
         }
