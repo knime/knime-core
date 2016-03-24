@@ -180,12 +180,19 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
     public static final String KEY_NUM_PROCESSORS = "numProcessors";
 
     /**
-     * Key to store the max number of nominal values for which to compute all
-     * subsets for binary splits.
+     * Key to store the name of the column to perform first split on.
      */
-    public static final String KEY_BINARY_MAX_NUM_NOMINAL_VALUES =
-            "maxNumNominalValues";
+    public static final String KEY_FIRST_SPLIT_COL = "firstSplitColumn";
 
+    /**
+     * Key to store whether the column to perform the first split on is manually specified
+     */
+    public static final String KEY_USE_FIRST_SPLIT_COL = "useFirstSplitColumn";
+
+    /**
+     * Key to store the max number of nominal values for which to compute all subsets for binary splits.
+     */
+    public static final String KEY_BINARY_MAX_NUM_NOMINAL_VALUES = "maxNumNominalValues";
 
     /** post process tree and remove test attribute values from
      * children, which have been removed further up in the tree already.
@@ -355,6 +362,11 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
 
     private double m_alloverRowCount;
 
+    /**
+     * Builder for warning message
+     */
+    private StringBuilder m_warningMessageSb;
+
     private final SettingsModelIntegerBounded m_minNumberRecordsPerNode =
         DecisionTreeLearnerNodeDialog2.createSettingsMinNumRecords();
 
@@ -388,6 +400,11 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
 
     private final SettingsModelIntegerBounded m_parallelProcessing =
             DecisionTreeLearnerNodeDialog2.createSettingsNumProcessors();
+
+    private final SettingsModelBoolean m_useFirstSplitCol =
+        DecisionTreeLearnerNodeDialog2.createSettingsUseFirstSplitColumn();
+
+    private final SettingsModelString m_firstSplitCol = DecisionTreeLearnerNodeDialog2.createSettingsFirstSplitColumn(m_useFirstSplitCol);
 
     /**
      * The decision tree model to be induced by the execute method.
@@ -428,7 +445,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
     protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws Exception {
         // holds the warning message displayed after execution
-        StringBuilder warningMessageSb = new StringBuilder();
+        m_warningMessageSb = new StringBuilder();
         ParallelProcessing parallelProcessing = new ParallelProcessing(
                 m_parallelProcessing.getIntValue());
 
@@ -479,8 +496,8 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
                     + "missing values");
         }
         if (removedRows > 0) {
-            warningMessageSb.append(removedRows);
-            warningMessageSb
+            m_warningMessageSb.append(removedRows);
+            m_warningMessageSb
                     .append(" rows removed due to missing class value;");
         }
         // the all over row count is used to report progress
@@ -509,9 +526,10 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         m_counter.set(0);
         exec.setMessage("Building tree...");
 
+        final int firstSplitColIdx = initialTable.getAttributeIndex(m_firstSplitCol.getStringValue());
+
         DecisionTreeNode root = null;
-        root = buildTree(initialTable, exec, 0, splitQualityMeasure,
-                parallelProcessing);
+        root = buildTree(initialTable, exec, 0, splitQualityMeasure, parallelProcessing, firstSplitColIdx);
         boolean isBinaryNominal = m_binaryNominalSplitMode.getBooleanValue();
         boolean isFilterInvalidAttributeValues =
             m_filterNominalValuesFromParent.getBooleanValue();
@@ -543,8 +561,8 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
                 + " nodes created with pruning method "
                 + m_pruningMethod.getStringValue());
         // set the warning message if available
-        if (warningMessageSb.length() > 0) {
-            setWarningMessage(warningMessageSb.toString());
+        if (m_warningMessageSb.length() > 0) {
+            setWarningMessage(m_warningMessageSb.toString());
         }
 
         // reset the number available threads
@@ -659,11 +677,9 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
      * @param exec the execution context for progress information
      * @param depth the current recursion depth
      */
-    private DecisionTreeNode buildTree(final InMemoryTable table,
-            final ExecutionContext exec, final int depth,
-            final SplitQualityMeasure splitQualityMeasure,
-            final ParallelProcessing parallelProcessing)
-            throws CanceledExecutionException, IllegalAccessException {
+    private DecisionTreeNode buildTree(final InMemoryTable table, final ExecutionContext exec, final int depth,
+        final SplitQualityMeasure splitQualityMeasure, final ParallelProcessing parallelProcessing,
+        final int firstSplitCol) throws CanceledExecutionException, IllegalAccessException {
 
         exec.checkCanceled();
         // derive this node's id from the counter
@@ -682,18 +698,38 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
                             + nodeId + " at level " + depth);
             return new DecisionTreeNodeLeaf(nodeId, majorityClass, frequencies);
         } else {
-            // find the best splits for all attributes
-            SplitFinder splittFinder =
-                    new SplitFinder(table, splitQualityMeasure,
-                          m_averageSplitpoint.getBooleanValue(),
+            Split split = null;
+            // find best split in specified column for first split
+            if (depth == 0 && m_useFirstSplitCol.getBooleanValue()) {
+                if (table.isNominal(firstSplitCol)) {
+                    if (m_binaryNominalSplitMode.getBooleanValue()) {
+                        split = new SplitNominalBinary(table, firstSplitCol, splitQualityMeasure,
                           m_minNumberRecordsPerNode.getIntValue(),
-                          m_binaryNominalSplitMode.getBooleanValue(),
                           m_maxNumNominalsForCompleteComputation.getIntValue());
-            // check for enough memory
-            checkMemory();
+                    } else {
+                        split = new SplitNominalNormal(table, firstSplitCol, splitQualityMeasure,
+                            m_minNumberRecordsPerNode.getIntValue());
+                    }
+                } else {
+                    split = new SplitContinuous(table, firstSplitCol, splitQualityMeasure,
+                        m_averageSplitpoint.getBooleanValue(), m_minNumberRecordsPerNode.getIntValue());
+                }
+                if (Double.isNaN(split.getBestQualityMeasure()) || split.getBestQualityMeasure() == 0.0) {
+                    m_warningMessageSb.append("The specified root split column \"")
+                    .append(split.getSplitAttributeName()).append("\" does not contain a valid split.");
+                }
+            }
+            if (split == null) { // no root split column found or selected
+                // find the best splits for all attributes
+                SplitFinder splittFinder = new SplitFinder(table, splitQualityMeasure,
+                    m_averageSplitpoint.getBooleanValue(), m_minNumberRecordsPerNode.getIntValue(),
+                    m_binaryNominalSplitMode.getBooleanValue(), m_maxNumNominalsForCompleteComputation.getIntValue());
+                // check for enough memory
+                checkMemory();
 
-            // get the best split among the best attribute splits
-            Split split = splittFinder.getSplit();
+                // get the best split among the best attribute splits
+                split = splittFinder.getSplit();
+            }
 
             // if no best split could be evaluated, create a leaf node
             if (split == null || !split.isValidSplit()) {
@@ -738,7 +774,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
                 if (partitionTable.getNumberDataRows() * m_numberAttributes
                         < 10000 || !parallelProcessing.isThreadAvailable()) {
                     children[i] = buildTree(partitionTable, exec, depth + 1,
-                            splitQualityMeasure, parallelProcessing);
+                            splitQualityMeasure, parallelProcessing, firstSplitCol);
                 } else {
                     String threadName =
                             "Build thread, node: " + nodeId + "." + i;
@@ -851,6 +887,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         // reset the tree
         m_decisionTree = null;
         m_counter.set(0);
+        m_warningMessageSb = null;
     }
 
     /**
@@ -894,6 +931,19 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             if (m_classifyColumn.getStringValue() == null) {
                 throw new InvalidSettingsException("Table contains no nominal"
                         + " attribute for classification.");
+            }
+        }
+        if (m_useFirstSplitCol.getBooleanValue()) {
+            String firstSplitCol = m_firstSplitCol.getStringValue();
+            DataColumnSpec firstSplitSpec = inSpec.getColumnSpec(firstSplitCol);
+            if (firstSplitCol == null) {
+                throw new InvalidSettingsException("Root split column should be used but is not specified.");
+            } else if (firstSplitSpec == null) {
+                throw new InvalidSettingsException("The selected column for the root split \""
+                        + firstSplitCol + "\" is not in the table.");
+            } else if (firstSplitSpec.equals(columnSpec)) {
+                throw new InvalidSettingsException("The class column can not be selected as the"
+                        + " first column to split on.");
             }
         }
         return new PortObjectSpec[]{createPMMLPortObjectSpec(modelSpec, inSpec)};
@@ -954,6 +1004,15 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             m_noTrueChild.setStringValue(PMMLNoTrueChildStrategy.RETURN_NULL_PREDICTION.toString());
             m_missingValues.setStringValue(PMMLMissingValueStrategy.LAST_PREDICTION.toString());
         }
+
+        /* Added with 3.2 to allow the specification of a column to perform the first split on */
+        if (settings.containsKey(KEY_USE_FIRST_SPLIT_COL)) {
+            m_useFirstSplitCol.loadSettingsFrom(settings);
+            m_firstSplitCol.loadSettingsFrom(settings);
+        } else {
+            // setting this to falls ensures backward compatibility
+            m_useFirstSplitCol.setBooleanValue(false);
+        }
     }
 
     /**
@@ -977,6 +1036,8 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         m_skipColumns.saveSettingsTo(settings);
         m_noTrueChild.saveSettingsTo(settings);
         m_missingValues.saveSettingsTo(settings);
+        m_useFirstSplitCol.saveSettingsTo(settings);
+        m_firstSplitCol.saveSettingsTo(settings);
     }
 
     /**
@@ -1029,6 +1090,11 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             m_noTrueChild.validateSettings(settings);
             // added true child with missing values, so when one of them is in, both are in
             m_missingValues.validateSettings(settings);
+        }
+        /* Added with 3.2 to allow the specification of the first column to split on */
+        if (settings.containsKey(KEY_USE_FIRST_SPLIT_COL)) {
+            m_useFirstSplitCol.validateSettings(settings);
+            m_firstSplitCol.validateSettings(settings);
         }
     }
 
@@ -1128,9 +1194,10 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         @Override
         protected void runWithContext() {
             try {
-                m_resultNode = buildTree(m_table, m_exec, m_depth,
-                        (SplitQualityMeasure) m_splitQM.clone(),
-                        m_parallelProcessingInner);
+                // Setting firstSplitCol to -1 is valid because only child nodes with a depth
+                // larger than 0 are built in parallel
+                m_resultNode = buildTree(m_table, m_exec, m_depth, (SplitQualityMeasure)m_splitQM.clone(),
+                    m_parallelProcessingInner, -1);
                 LOGGER.debug("Thread: " + getName() + " finished");
             } catch (Exception e) {
                 m_exception = e;
