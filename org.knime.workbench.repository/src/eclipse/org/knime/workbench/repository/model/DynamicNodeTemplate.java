@@ -63,6 +63,13 @@ import org.osgi.framework.FrameworkUtil;
  *
  */
 public class DynamicNodeTemplate extends NodeTemplate {
+
+    /**
+     * Separator to separate the node factory's class name from the node's in order to construct the id:
+     * <code>&#60;node-factory class name&#62;#&#60;node name&#62;</code>.
+     */
+    private static final String NODE_NAME_SEP = "#";
+
     private NodeSetFactory m_nodeSetFactory;
 
     private final String m_factoryId;
@@ -70,15 +77,17 @@ public class DynamicNodeTemplate extends NodeTemplate {
     /**
      * Constructs a new DynamicNodeTemplate.
      *
-     * @param nodeSetId The id of the NodeSetFactory, must not be <code>null</code>
+     * @param factoryClass the factory class
      * @param factoryId The id of the NodeFactory, must not be <code>null</code>
-     * @param nodeSetFactory the NodeSetFactory that created this
-     *            DynamicNodeTemplate, must not be <code>null</code>
+     * @param nodeSetFactory the NodeSetFactory that created this DynamicNodeTemplate, must not be <code>null</code>
      * @param name the name of this repository entry, must not be <code>null</code>
      */
-    public DynamicNodeTemplate(final String nodeSetId, final String factoryId,
-            final NodeSetFactory nodeSetFactory, final String name) {
-        super(nodeSetId + "_" + factoryId, name, FrameworkUtil.getBundle(nodeSetFactory.getClass()).getSymbolicName());
+    @SuppressWarnings("rawtypes")
+    public DynamicNodeTemplate(final Class<NodeFactory<? extends NodeModel>> factoryClass, final String factoryId,
+        final NodeSetFactory nodeSetFactory, final String name) {
+        super(factoryClass.getName() + NODE_NAME_SEP + name, name,
+            FrameworkUtil.getBundle(nodeSetFactory.getClass()).getSymbolicName());
+        setFactory(factoryClass);
         m_factoryId = factoryId;
         m_nodeSetFactory = nodeSetFactory;
     }

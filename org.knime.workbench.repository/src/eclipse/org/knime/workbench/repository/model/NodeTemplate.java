@@ -50,6 +50,7 @@ package org.knime.workbench.repository.model;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 
@@ -122,11 +123,25 @@ public class NodeTemplate extends AbstractNodeTemplate {
     /**
      * Constructs a new node template.
      *
-     * @param id the (unique) ID, must not be <code>null</code>
+     * @param factoryClass the factory class
      * @param name a human-readable name for this node
      * @param contributingPlugin the contributing plug-in's ID
      */
-    public NodeTemplate(final String id, final String name, final String contributingPlugin) {
+    public NodeTemplate(final Class<NodeFactory<? extends NodeModel>> factoryClass, final String name,
+        final String contributingPlugin) {
+        super(factoryClass.getName(), name, contributingPlugin);
+        setFactory(factoryClass);
+    }
+
+    /**
+     * Constructs a new node template. Used by sub-classes if the node id should not made up like
+     * <code>&#60;node-factory class name&#62;#&#60;node name&#62;</code> (see, e.g., {@link DynamicNodeFactory}).
+     *
+     * @param id the id to be used
+     * @param name the nodes name
+     * @param contributingPlugin the contributing plug-in's ID
+     */
+    protected NodeTemplate(final String id, final String name, final String contributingPlugin) {
         super(id, name, contributingPlugin);
     }
 
@@ -224,10 +239,7 @@ public class NodeTemplate extends AbstractNodeTemplate {
      */
     @Override
     public String toString() {
-        if (m_factory == null) {
-            return super.toString();
-        }
-        return m_factory.getName();
+        return getID();
     }
 
     /**

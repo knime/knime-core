@@ -53,11 +53,14 @@
          </appInfo>
       </annotation>
       <complexType>
-         <attribute name="id" type="string" use="required">
+         <attribute name="id" type="string">
             <annotation>
                <documentation>
-                  A unique identifier for this node
+                  Not used.
                </documentation>
+               <appInfo>
+                  <meta.attribute deprecated="true"/>
+               </appInfo>
             </annotation>
          </attribute>
          <attribute name="factory-class" type="string" use="required">
@@ -80,8 +83,8 @@
          <attribute name="after" type="string">
             <annotation>
                <documentation>
-                  Specifies the id of the node after which this node should be sorted in. 
-                  If not defined, the nodes are sorted lexicographically.
+                  Specifies the id of the node after which this node should be sorted in. The id of a node is its factory-class name.
+If not defined, the nodes are sorted lexicographically.
                </documentation>
             </annotation>
          </attribute>
