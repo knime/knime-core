@@ -570,7 +570,10 @@ public class DatabaseConnectionSettings {
     public void validateConnection(final ConfigRO settings,
             final CredentialsProvider cp)
             throws InvalidSettingsException {
-        loadConnection(settings, false, cp);
+        // fix AP-5784 (Credentials validation in all database connect nodes happens too early during load phase)
+        // passing null to the validation is better as the credentials provider may not be fully initialized
+        // null provider = no password checking.
+        loadConnection(settings, false, null);
     }
 
     /**

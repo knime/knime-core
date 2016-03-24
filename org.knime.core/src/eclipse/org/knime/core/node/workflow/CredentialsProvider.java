@@ -48,6 +48,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
 
@@ -97,7 +98,8 @@ public final class CredentialsProvider {
             return m_store.get(name, m_client);
         } else {
             FlowObjectStack flowVarStack = m_client.getFlowObjectStack();
-            Map<String, FlowVariable> credentialsStackMap = flowVarStack.getAvailableFlowVariables(Type.CREDENTIALS);
+            Map<String, FlowVariable> credentialsStackMap = flowVarStack != null ?
+                flowVarStack.getAvailableFlowVariables(Type.CREDENTIALS) : Collections.emptyMap();
             FlowVariable variable = credentialsStackMap.get(name);
             variable = CheckUtils.checkArgumentNotNull(variable, "No credentials stored to name \"%s\"", name);
             return variable.getCredentialsValue();
