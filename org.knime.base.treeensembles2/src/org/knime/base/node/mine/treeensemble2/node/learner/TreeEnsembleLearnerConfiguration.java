@@ -828,7 +828,7 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /**
-     * Loads the settings. Inteded for the use in the NodeModel.
+     * Loads the settings. Intended for the use in the NodeModel.
      *
      * @param settings
      * @throws InvalidSettingsException
