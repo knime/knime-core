@@ -55,7 +55,6 @@ import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -64,18 +63,26 @@ import org.knime.distance.DistanceMeasurementException;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class RandomForestDistance extends DistanceMeasure<RandomForestDistanceConfig> {
 
+    private final TreeEnsembleModel m_ensembleModel;
+    private final DataTableSpec m_learnTableSpec;
 
     /**
      * @param config
-     * @param spec
+     * @param spec DataTableSpec of the input table
+     * @param ensembleModel model containing the tree ensemble
+     * @param learnTableSpec DataTableSpec that was used for learning the tree ensemble
      * @throws InvalidSettingsException
      */
-    protected RandomForestDistance(final RandomForestDistanceConfig config, final DataTableSpec spec) throws InvalidSettingsException {
+    protected RandomForestDistance(final RandomForestDistanceConfig config, final DataTableSpec spec,
+        final TreeEnsembleModel ensembleModel, final DataTableSpec learnTableSpec)
+            throws InvalidSettingsException {
         super(config, spec);
+        m_ensembleModel = ensembleModel;
+        m_learnTableSpec = learnTableSpec;
     }
 
     /**
@@ -89,25 +96,23 @@ public class RandomForestDistance extends DistanceMeasure<RandomForestDistanceCo
         for (Integer index : filterIndicesList) {
             filterIndices[i++] = index;
         }
-        DataRow filterRow1 = new FilterColumnRow(row1, filterIndices);
-        DataRow filterRow2 = new FilterColumnRow(row2, filterIndices);
-        TreeEnsembleModelPortObject ensemblePO = getConfig().getEnsemblePO();
-        TreeEnsembleModel ensemble = ensemblePO.getEnsembleModel();
-        DataTableSpec learnSpec = ensemblePO.getSpec().getLearnTableSpec();
-        PredictorRecord record1 = ensemble.createPredictorRecord(filterRow1, learnSpec);
-        PredictorRecord record2 = ensemble.createPredictorRecord(filterRow2, learnSpec);
+        final DataRow filterRow1 = new FilterColumnRow(row1, filterIndices);
+        final DataRow filterRow2 = new FilterColumnRow(row2, filterIndices);
+        final PredictorRecord record1 = m_ensembleModel.createPredictorRecord(filterRow1, m_learnTableSpec);
+        final PredictorRecord record2 = m_ensembleModel.createPredictorRecord(filterRow2, m_learnTableSpec);
+        final int nrModels = m_ensembleModel.getNrModels();
 
         double proximity = 0.0;
 
-        for (int t = 0; t < ensemble.getNrModels(); t++) {
-            AbstractTreeModel<?> tree = ensemble.getTreeModel(t);
+        for (int t = 0; t < nrModels; t++) {
+            AbstractTreeModel<?> tree = m_ensembleModel.getTreeModel(t);
             AbstractTreeNode leaf1 = tree.findMatchingNode(record1);
             AbstractTreeNode leaf2 = tree.findMatchingNode(record2);
             if (leaf1.getSignature().equals(leaf2.getSignature())) {
                 proximity += 1.0;
             }
         }
-        proximity /= ensemble.getNrModels();
+        proximity /= nrModels;
         // completely similar records will have a proximity of 1 (maximum)
         // to get a distance measure, we have to subtract the proximity from 1
         return 1 - proximity;

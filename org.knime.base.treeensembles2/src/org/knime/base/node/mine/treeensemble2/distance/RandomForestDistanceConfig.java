@@ -51,32 +51,38 @@ package org.knime.base.node.mine.treeensemble2.distance;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
-import org.knime.core.node.port.PortUtil;
 import org.knime.distance.DistanceMeasureConfig;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class RandomForestDistanceConfig extends DistanceMeasureConfig<RandomForestDistance>{
 
-    private TreeEnsembleModelPortObject m_ensemblePO = null;
+    private final String CFG_TABLESPEC = "learnTableSpec";
+    private final String CFG_MODELCONTENT = "modelContent";
 
+    private TreeEnsembleModel m_ensembleModel;
+    private DataTableSpec m_learnTableSpec;
 
     /**
      * @param ensemblePO
      */
     public RandomForestDistanceConfig(final TreeEnsembleModelPortObject ensemblePO) {
         super(ensemblePO.getSpec().getLearnTableSpec().getColumnNames());
-        m_ensemblePO = ensemblePO;
+        m_ensembleModel = ensemblePO.getEnsembleModel();
+        m_learnTableSpec = ensemblePO.getSpec().getLearnTableSpec();
     }
 
     /**
@@ -99,12 +105,9 @@ public class RandomForestDistanceConfig extends DistanceMeasureConfig<RandomFore
     @Override
     public RandomForestDistance createDistanceMeasure(final DataTableSpec spec, final FlowVariableProvider flowVariableProvider)
         throws InvalidSettingsException {
-        return new RandomForestDistance(this, spec);
+        return new RandomForestDistance(this, spec, m_ensembleModel, m_learnTableSpec);
     }
 
-    public TreeEnsembleModelPortObject getEnsemblePO() {
-        return m_ensemblePO;
-    }
 
     /**
      * {@inheritDoc}
@@ -113,7 +116,13 @@ public class RandomForestDistanceConfig extends DistanceMeasureConfig<RandomFore
     protected void saveInternals(final String prefix, final PortObjectZipOutputStream outputStream, final ExecutionMonitor exec)
         throws CanceledExecutionException, IOException {
         outputStream.putNextEntry(new ZipEntry("model.zip"));
-        PortUtil.writeObjectToStream(m_ensemblePO, outputStream, exec);
+        m_ensembleModel.save(outputStream, exec);
+        outputStream.closeEntry();
+        outputStream.putNextEntry(new ZipEntry("spec.zip"));
+        ModelContent mc = new ModelContent(CFG_MODELCONTENT);
+        m_learnTableSpec.save(mc.addModelContent(CFG_TABLESPEC));
+        mc.saveToXML(outputStream);
+
     }
 
     /**
@@ -126,6 +135,10 @@ public class RandomForestDistanceConfig extends DistanceMeasureConfig<RandomFore
         if (new ZipEntry("model.zip").equals(nextEntry)) {
             throw new IOException("Expected model.zip entry");
         }
-        m_ensemblePO = (TreeEnsembleModelPortObject)PortUtil.readObjectFromStream(inputStream, exec);
+        m_ensembleModel = TreeEnsembleModel.load(inputStream, exec);
+        inputStream.closeEntry();
+        nextEntry = inputStream.getNextEntry();
+        ModelContentRO mc = ModelContent.loadFromXML(inputStream);
+        m_learnTableSpec = DataTableSpec.load(mc.getModelContent(CFG_TABLESPEC));
     }
 }
