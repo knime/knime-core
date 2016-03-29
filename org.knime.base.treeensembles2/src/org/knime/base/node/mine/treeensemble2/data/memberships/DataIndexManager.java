@@ -54,11 +54,12 @@ import org.knime.base.node.mine.treeensemble2.data.TreeData;
 /**
  * This class keeps a mapping from the original index of a row to its index in each of the attribute columns
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class DataIndexManager {
 
     private final int[][] m_original2Column;
+    private final int[][] m_column2Original;
 
     /**
      * Constructs a DataIndexManager from the given TreeData object
@@ -68,6 +69,7 @@ public class DataIndexManager {
         int numRows = data.getNrRows();
         int numCols = data.getNrAttributes();
         m_original2Column = new int[numCols][numRows];
+        m_column2Original = new int[numCols][numRows];
         TreeAttributeColumnData[] columnData = data.getColumns();
 
         for (int c = 0; c < numCols; c++) {
@@ -77,6 +79,7 @@ public class DataIndexManager {
             for (int i = 0; i < numRows; i++) {
                 m_original2Column[c][originalIndices[i]] = i;
             }
+            m_column2Original[c] = originalIndices;
         }
     }
 
@@ -88,4 +91,15 @@ public class DataIndexManager {
         return m_original2Column[colIndex];
     }
 
+    public int[] getOriginalIndices(final int colIndex) {
+        return m_column2Original[colIndex];
+    }
+
+    public int getIndexInColumn(final int colIndex, final int originalIndex) {
+        return m_original2Column[colIndex][originalIndex];
+    }
+
+    public int getOriginalIndex(final int colIndex, final int indexInColumn) {
+        return m_column2Original[colIndex][indexInColumn];
+    }
 }
