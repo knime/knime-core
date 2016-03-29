@@ -52,7 +52,7 @@ import java.util.BitSet;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class DescendantColumnMemberships implements ColumnMemberships {
 
@@ -107,7 +107,6 @@ public class DescendantColumnMemberships implements ColumnMemberships {
      */
     @Override
     public double getRowWeight() {
-        // TODO Auto-generated method stub
         return m_root.descendantGetRowWeight(m_internalIndex);
     }
 
@@ -116,7 +115,6 @@ public class DescendantColumnMemberships implements ColumnMemberships {
      */
     @Override
     public int getOriginalIndex() {
-        // TODO Auto-generated method stub
         return m_root.descendantGetIndexInOriginal(m_internalIndex);
     }
 
@@ -125,7 +123,6 @@ public class DescendantColumnMemberships implements ColumnMemberships {
      */
     @Override
     public int getIndexInColumn() {
-        // TODO Auto-generated method stub
         return m_root.descendantGetIndexInColumn(m_internalIndex);
     }
 
@@ -134,7 +131,6 @@ public class DescendantColumnMemberships implements ColumnMemberships {
      */
     @Override
     public int getIndexInDataMemberships() {
-        // TODO Auto-generated method stub
         return m_root.descendantGetIndexInDataMemberships(m_internalIndex);
     }
 
@@ -159,12 +155,11 @@ public class DescendantColumnMemberships implements ColumnMemberships {
      */
     @Override
     public boolean previous() {
-        if (m_internalIndex > 0) {
-            m_internalIndex--;
-            return true;
+        m_internalIndex = m_includedIndices.previousSetBit(m_internalIndex - 1);
+        if (m_internalIndex == -1) {
+            return false;
         }
-        m_internalIndex = -1;
-        return false;
+        return true;
     }
 
 }
