@@ -484,10 +484,10 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
         columnMemberships.reset();
         final BitSet inChild = new BitSet(columnMemberships.size());
         int startIndex = 0;
-        if (numOperator.equals(NumericOperator.LargerThan)) {
-            // jump to index with splitvalue OR first index larger than splitvalue
-            startIndex = getFirstIndexWithValue(splitValue);
-        }
+//        if (numOperator.equals(NumericOperator.LargerThan)) {
+//            // jump to index with splitvalue OR first index larger than splitvalue
+//            startIndex = getFirstIndexWithValue(splitValue);
+//        }
         if (!columnMemberships.nextIndexFrom(startIndex)) {
             throw new IllegalStateException(
                 "The current columnMemberships object contains no element that satisfies the splitcondition");
@@ -521,6 +521,11 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
 
             }
         } while (columnMemberships.next() && columnMemberships.getIndexInColumn() < lengthNonMissing);
+
+        // reached end of columnMemberships
+        if (columnMemberships.getIndexInColumn() < lengthNonMissing) {
+            return inChild;
+        }
 
         // handle missing values
         if (numOperator.equals(NumericOperator.LessThanOrEqualOrMissing)
