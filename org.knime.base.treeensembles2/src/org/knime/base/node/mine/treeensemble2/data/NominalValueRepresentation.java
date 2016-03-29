@@ -100,6 +100,21 @@ public final class NominalValueRepresentation {
         return m_nominalValue + " (" + m_assignedInteger + ")";
     }
 
+    @Override
+    public boolean equals(final Object that) {
+        if (this == that) {
+            return true;
+        } else if (!(that instanceof NominalValueRepresentation)) {
+            return false;
+        }
+        final NominalValueRepresentation thatNomVal = (NominalValueRepresentation)that;
+        if (m_nominalValue.length() != thatNomVal.m_nominalValue.length()) {
+            return false;
+        } else {
+            return m_nominalValue.equals(thatNomVal);
+        }
+    }
+
     /**
      * @param output
      * @throws IOException
