@@ -66,6 +66,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
+import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.MissingValueHandling;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerNodeView.ViewContentProvider;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictor;
 import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorConfiguration;
@@ -207,6 +208,8 @@ final class RandomForestClassificationLearnerNodeModel extends NodeModel
         }
         readInExec.setProgress(1.0);
         exec.setMessage("Learning trees");
+        // Use xgboost missing value handling
+        m_configuration.setMissingValueHandling(MissingValueHandling.XGBoost);
         TreeEnsembleLearner learner = new TreeEnsembleLearner(m_configuration, data);
         TreeEnsembleModel model;
         try {
