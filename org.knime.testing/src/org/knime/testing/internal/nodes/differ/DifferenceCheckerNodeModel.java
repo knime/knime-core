@@ -197,7 +197,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
                 if (colSpec.getType().isCollectionType() && !(checker instanceof EqualityChecker)) {
                     compareCollection(colSpec, checker, testCell, refCell);
                 } else {
-                    Result res = checker.check(testCell, refCell);
+                    Result res = checker.check(refCell, testCell);
                     if (!res.ok()) {
                         throw new IllegalStateException("Wrong value in row '" + refRow.getKey() + "' and column '"
                                 + colSpec.getName() + "': " + res.getMessage() + " (using checker '"
@@ -231,7 +231,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
         for (DataCell refCollCell : refCollection) {
             DataCell testCollCell = testCollIt.next();
 
-            Result res = checker.check(testCollCell, refCollCell);
+            Result res = checker.check(refCollCell, testCollCell);
             if (!res.ok()) {
                 throw new IllegalStateException("Wrong value at position " + index + " in collection of column '"
                         + colSpec.getName() + "': " + res.getMessage() + " (using checker '" + checker.getDescription()
