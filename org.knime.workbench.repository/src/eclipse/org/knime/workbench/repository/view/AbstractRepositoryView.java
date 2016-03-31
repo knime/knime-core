@@ -301,8 +301,8 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                     //possible TODO: parse xml description and get some more additional information (e.g. short description, ...)
                     //                    nodeTemplate.addAdditionalInfo(KEY_INFO_SHORT_DESCRIPTION,
                     //                        "this could be the short description, number of ports etc.");
-                } catch (Exception e) {
-                    LOGGER.error("Unable to instantiate the selected node " + nodeTemplate.getFactory().getName(), e);
+                } catch (Throwable t) {
+                    LOGGER.error("Unable to instantiate the node " + nodeTemplate.getFactory().getName(), t);
                     return;
                 }
 
