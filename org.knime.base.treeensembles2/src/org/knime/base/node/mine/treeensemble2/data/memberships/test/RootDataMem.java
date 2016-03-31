@@ -49,14 +49,13 @@
 package org.knime.base.node.mine.treeensemble2.data.memberships.test;
 
 import java.util.BitSet;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.base.node.mine.treeensemble2.data.memberships.ColumnMemberships;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
 import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
-
-import gnu.trove.map.TIntByteMap;
-import gnu.trove.map.hash.TIntByteHashMap;
 
 /**
  * This class is the root that holds the weights for all records in the current sample.
@@ -68,14 +67,14 @@ import gnu.trove.map.hash.TIntByteHashMap;
  */
 public class RootDataMem implements DataMemberships {
 
-//    private final Map<Integer, Byte> m_weightMap;
-    private final TIntByteMap m_weightMap;
+    private final Map<Integer, Byte> m_weightMap;
+//    private final TIntByteMap m_weightMap;
     private final BitSet m_contained;
     private final DataIndexManager m_indexManager;
 
     public RootDataMem(final RowSample rowSample, final DataIndexManager indexManager) {
-//        m_weightMap = new HashMap<Integer,Byte>(rowSample.getNrRows());
-        m_weightMap = new TIntByteHashMap(rowSample.getNrRows());
+        m_weightMap = new HashMap<Integer,Byte>(rowSample.getNrRows());
+//        m_weightMap = new TIntByteHashMap(rowSample.getNrRows());
         m_contained = new BitSet();
         m_indexManager = indexManager;
         for (int i = 0; i < rowSample.getNrRows(); i++) {

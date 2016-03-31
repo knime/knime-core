@@ -49,12 +49,11 @@
 package org.knime.base.node.mine.treeensemble2.data.memberships.test;
 
 import java.util.BitSet;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.base.node.mine.treeensemble2.data.memberships.ColumnMemberships;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
-
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
 
 /**
  * This class holds the information on which records are in the current node.
@@ -66,14 +65,14 @@ public class DescDataMem implements DataMemberships {
 
     private final BitSet m_contained;
     private final RootDataMem m_root;
-//    private final Map<Integer, ColMem> m_colMems;
-    private final TIntObjectMap<ColMem> m_colMems;
+    private final Map<Integer, ColMem> m_colMems;
+//    private final TIntObjectMap<ColMem> m_colMems;
 
     DescDataMem(final RootDataMem root, final BitSet contained) {
         m_root = root;
         m_contained = contained;
-//        m_colMems = new HashMap<Integer, ColMem>();
-        m_colMems = new TIntObjectHashMap<ColMem>();
+        m_colMems = new HashMap<Integer, ColMem>();
+//        m_colMems = new TIntObjectHashMap<ColMem>();
     }
 
     /**
