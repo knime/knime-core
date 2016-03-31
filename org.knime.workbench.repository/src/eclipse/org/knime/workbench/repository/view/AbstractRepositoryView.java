@@ -321,7 +321,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                         public void run() {
                             if (!m_viewer.getControl().isDisposed()) {
                                 m_viewer.update(parent, null);
-                                TreeViewerUpdater.update(m_viewer, true);
+                                TreeViewerUpdater.update(m_viewer, true, false);
                             }
                         }
                     });
@@ -536,7 +536,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
         onShowAdditionalInfoClicked();
 
         if (extTextFilter.getDelegateFilter().hasNonEmptyQuery()) {
-            TreeViewerUpdater.update(m_viewer, true);
+            TreeViewerUpdater.update(m_viewer, true, true);
         }
     }
 
@@ -595,7 +595,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                         public void run() {
                             if (!m_viewer.getControl().isDisposed()) {
                                 //update view
-                                TreeViewerUpdater.update(m_viewer, true);
+                                TreeViewerUpdater.update(m_viewer, true, false);
                             }
                         }
                     });
@@ -609,7 +609,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
             infoTextFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
             infoFuzzyFilter.setDoFilter(m_filterStreamNodesButton.isChecked());
             //update view
-            TreeViewerUpdater.update(m_viewer, true);
+            TreeViewerUpdater.update(m_viewer, true, true);
         }
     }
 
