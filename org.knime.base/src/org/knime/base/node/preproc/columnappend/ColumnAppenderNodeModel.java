@@ -277,7 +277,9 @@ final class ColumnAppenderNodeModel extends NodeModel {
 
         //throw error messages if the "wrap"-option is set and tables vary in size
         if(m_wrapTable.getBooleanValue()) {
-            errorDifferingTableSize(rowCount + extraRowsTab1, rowCount + extraRowsTab2);
+            if (extraRowsTab1 != extraRowsTab2) {
+                errorDifferingTableSize(rowCount + extraRowsTab1, rowCount + extraRowsTab2);
+            }
         }
     }
 
