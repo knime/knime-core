@@ -51,7 +51,7 @@ package org.knime.base.node.mine.treeensemble2.data.memberships;
 /**
  * Holds the indices of the rows included in the current sample and current branch for a column.
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class IntArrayColumnMemberships implements ColumnMemberships {
 
@@ -94,9 +94,9 @@ public class IntArrayColumnMemberships implements ColumnMemberships {
         return m_dataMemberships.getOriginalIndex(m_indexInDataMemberships[internalIndex]);
     }
 
-    int getIndexInColumn(final int dataMembershipsIndex) {
-        return m_indexInColumn[dataMembershipsIndex];
-    }
+//    int getIndexInColumn(final int dataMembershipsIndex) {
+//        return m_indexInColumn[dataMembershipsIndex];
+//    }
 
     /**
      * {@inheritDoc}
