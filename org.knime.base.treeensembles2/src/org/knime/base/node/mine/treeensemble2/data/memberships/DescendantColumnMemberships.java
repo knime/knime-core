@@ -61,6 +61,12 @@ public class DescendantColumnMemberships implements ColumnMemberships {
 
     private int m_internalIndex = -1;
 
+    /**
+     * Creates a DescendantColumnMemberships object
+     *
+     * @param root the corresponding IntArrayColumnMemberships that is stored at the root of the tree
+     * @param includedIndices the indices of the root ColumnMemberships of the records that are included in the current node.
+     */
     public DescendantColumnMemberships(final IntArrayColumnMemberships root, final BitSet includedIndices) {
         m_root = root;
         m_includedIndices = includedIndices;
