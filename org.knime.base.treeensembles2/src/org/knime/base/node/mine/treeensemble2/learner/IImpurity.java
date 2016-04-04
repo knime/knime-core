@@ -48,16 +48,40 @@
 package org.knime.base.node.mine.treeensemble2.learner;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface IImpurity {
 
+    /**
+     * Calculates the impurity of a partition
+     *
+     * @param targetCounts the counts for the individual target values
+     * @param partitionWeight the total weight of the partition (must be the sum of <b>targetCounts</b>
+     * @return the impurity of the partition
+     */
     public double getPartitionImpurity(final double[] targetCounts, final double partitionWeight);
 
+    /**
+     * Calculates the impurity after splitting
+     *
+     * @param partitionValues the impurity of the individual partitions
+     * @param partitionWeights the weights of the individual partitions
+     * @param totalWeight the sum of the weight of all partitions
+     * @return the impurity after splitting
+     */
     public double getPostSplitImpurity(final double[] partitionValues, final double[] partitionWeights,
         final double totalWeight);
 
+    /**
+     * Calculates the gain of a split
+     *
+     * @param priorImpurity the impurity before splitting
+     * @param postSplitImpurity the impurity after splitting
+     * @param partitionWeights the weights of the partitions
+     * @param totalWeight the total weight (sum of <b>partitionWeights</b>)
+     * @return the gain of a split
+     */
     public double getGain(final double priorImpurity, final double postSplitImpurity, final double[] partitionWeights,
         final double totalWeight);
 }
