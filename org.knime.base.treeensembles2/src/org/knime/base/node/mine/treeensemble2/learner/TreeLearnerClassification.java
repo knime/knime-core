@@ -61,7 +61,7 @@ import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnData;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
-import org.knime.base.node.mine.treeensemble2.data.memberships.test.RootDataMem;
+import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelClassification;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeClassification;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
@@ -105,8 +105,8 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
         final RowSample rowSampling = getRowSampling();
         final TreeEnsembleLearnerConfiguration config = getConfig();
         final TreeTargetNominalColumnData targetColumn = (TreeTargetNominalColumnData)data.getTargetColumn();
-        final DataMemberships rootDataMemberships = new RootDataMem(rowSampling, getIndexManager());
-        //                new RootDataMemberships(rowSampling, data, getIndexManager());
+        final DataMemberships rootDataMemberships = //new RootDataMem(rowSampling, getIndexManager());
+                        new RootDataMemberships(rowSampling, data, getIndexManager());
         ClassificationPriors targetPriors = targetColumn.getDistribution(rootDataMemberships, config);
         BitSet forbiddenColumnSet = new BitSet(data.getNrAttributes());
         //        final DataMemberships rootDataMemberships = new IntArrayDataMemberships(sampleWeights, data);
@@ -299,6 +299,7 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
             if (currentColSplit != null) {
                 final double currentGain = currentColSplit.getGainValue();
                 final boolean tiebreaker = currentGain == bestGainValue ? (rd.nextInt(0, 1) == 0) : false;
+                assert currentGain <= 1.0 : "The gain can never be larger than 1.0 (but was " + currentGain + ")";
                 if (currentColSplit.getGainValue() > bestGainValue || tiebreaker) {
                     splitCandidate = currentColSplit;
                     bestGainValue = currentGain;
