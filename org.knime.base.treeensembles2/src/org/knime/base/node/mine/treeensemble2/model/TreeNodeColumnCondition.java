@@ -55,17 +55,20 @@ import org.knime.base.node.mine.treeensemble2.data.TreeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeNodeColumnCondition extends TreeNodeCondition {
 
     private final TreeAttributeColumnMetaData m_columnMetaData;
 
+    private final boolean m_acceptsMissings;
+
     /**
      *  */
-    TreeNodeColumnCondition(final TreeAttributeColumnMetaData columnMetaData) {
+    TreeNodeColumnCondition(final TreeAttributeColumnMetaData columnMetaData, final boolean acceptsMissings) {
         m_columnMetaData = columnMetaData;
+        m_acceptsMissings = acceptsMissings;
     }
 
     /**
@@ -78,6 +81,7 @@ public abstract class TreeNodeColumnCondition extends TreeNodeCondition {
         }
         m_columnMetaData = treeMetaData.getAttributeMetaData(index);
         assert m_columnMetaData.getAttributeIndex() == index;
+        m_acceptsMissings = input.readBoolean();
     }
 
     protected final void checkTypeCorrectness(final TreeColumnMetaData instance,
@@ -98,11 +102,16 @@ public abstract class TreeNodeColumnCondition extends TreeNodeCondition {
         return getColumnMetaData().getAttributeName();
     }
 
+    public boolean acceptsMissings() {
+        return m_acceptsMissings;
+    }
+
     /** {@inheritDoc} */
     @Override
     public void save(final DataOutputStream dataOutput) throws IOException {
         super.save(dataOutput);
         dataOutput.writeInt(m_columnMetaData.getAttributeIndex());
+        dataOutput.writeBoolean(m_acceptsMissings);
         saveContent(dataOutput);
     }
 

@@ -71,8 +71,9 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
      * @param nomColumnMetaData
      * @param valueIndex
      */
-    public TreeNodeNominalCondition(final TreeNominalColumnMetaData nomColumnMetaData, final int valueIndex) {
-        super(nomColumnMetaData);
+    public TreeNodeNominalCondition(final TreeNominalColumnMetaData nomColumnMetaData, final int valueIndex,
+        final boolean acceptsMissings) {
+        super(nomColumnMetaData, acceptsMissings);
         assert valueIndex < nomColumnMetaData.getValues().length;
         m_valueIndex = valueIndex;
     }
@@ -116,7 +117,8 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
         Object value = record.getValue(getColumnMetaData().getAttributeName());
         int valIdx = -1;
         if (value == null) {
-            throw new UnsupportedOperationException("Missing values currently not supported");
+//            throw new UnsupportedOperationException("Missing values currently not supported");
+            return acceptsMissings();
         }
         if (!(value instanceof Integer)) {
             throw new IllegalArgumentException("Can't test nominal condition (" + toString()

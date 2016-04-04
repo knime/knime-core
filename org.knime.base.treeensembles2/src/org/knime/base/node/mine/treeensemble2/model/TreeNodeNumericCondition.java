@@ -120,8 +120,8 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
      * @param splitValue
      */
     public TreeNodeNumericCondition(final TreeNumericColumnMetaData columnMetaData, final double splitValue,
-        final NumericOperator operator) {
-        super(columnMetaData);
+        final NumericOperator operator, final boolean acceptsMissings) {
+        super(columnMetaData, acceptsMissings);
         m_numericOperator = operator;
         m_splitValue = splitValue;
     }
@@ -165,7 +165,8 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
         double v = 0;
         if (value == null) {
 //            throw new UnsupportedOperationException("Missing values currently not supported");
-            v = Double.NaN;
+//            v = Double.NaN;
+            return acceptsMissings();
         } else if (!(value instanceof Integer || value instanceof Double)) {
             throw new IllegalArgumentException("Can't test numeric condition (" + toString()
                 + ") -- expected query object of type Double " + "but got " + value.getClass().getSimpleName());

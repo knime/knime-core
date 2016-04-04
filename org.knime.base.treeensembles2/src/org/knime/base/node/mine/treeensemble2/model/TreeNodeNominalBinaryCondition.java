@@ -113,8 +113,8 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
      * @param isINSet true for "is-in", false for "is-not-in"
      */
     public TreeNodeNominalBinaryCondition(final TreeNominalColumnMetaData nomColumnMetaData,
-        final BigInteger valuesMask, final boolean isINSet) {
-        super(nomColumnMetaData);
+        final BigInteger valuesMask, final boolean isINSet, final boolean acceptsMissings) {
+        super(nomColumnMetaData, acceptsMissings);
         assert checkValuesMask(valuesMask) == null : checkValuesMask(valuesMask);
         m_valuesMask = valuesMask;
         m_setLogic = isINSet ? SetLogic.IS_IN : SetLogic.IS_NOT_IN;
@@ -192,9 +192,10 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
         Integer assignedInteger = null;
         if (value == null) {
             //            throw new UnsupportedOperationException("Missing values currently not supported");
-            NominalValueRepresentation[] values = getColumnMetaData().getValues();
-            int l = values.length;
-            assignedInteger = values[l - 1].equals(NominalValueRepresentation.MISSING_VALUE) ? l - 1 : l;
+//            NominalValueRepresentation[] values = getColumnMetaData().getValues();
+//            int l = values.length;
+//            assignedInteger = values[l - 1].equals(NominalValueRepresentation.MISSING_VALUE) ? l - 1 : l;
+            return acceptsMissings();
         } else if (!(value instanceof Integer)) {
             throw new IllegalArgumentException("Can't test nominal condition (" + toString()
                 + ") -- expected query object of type Integer (representing the nominal value) but got "

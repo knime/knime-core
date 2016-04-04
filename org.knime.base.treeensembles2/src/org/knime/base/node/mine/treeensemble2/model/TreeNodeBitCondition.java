@@ -58,7 +58,7 @@ import org.knime.base.node.mine.treeensemble2.data.TreeBitColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeBitCondition extends TreeNodeColumnCondition {
@@ -70,7 +70,8 @@ public final class TreeNodeBitCondition extends TreeNodeColumnCondition {
      * @param value
      */
     public TreeNodeBitCondition(final TreeBitColumnMetaData columnMetaData, final boolean value) {
-        super(columnMetaData);
+        // missing values cannot appear in bit conditions
+        super(columnMetaData, false);
         m_value = value;
     }
 
@@ -98,7 +99,7 @@ public final class TreeNodeBitCondition extends TreeNodeColumnCondition {
     public boolean testCondition(final PredictorRecord record) {
         Object value = record.getValue(getColumnMetaData().getAttributeName());
         if (value == null) {
-            throw new UnsupportedOperationException("Missing values currently not supported");
+            throw new UnsupportedOperationException("Missing values currently not supported for bitvectors");
         }
         if (!(value instanceof Boolean)) {
             throw new IllegalArgumentException("Can't test bitvector " + "condition (" + toString()
