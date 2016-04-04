@@ -55,13 +55,14 @@ import java.util.Map;
 import org.knime.base.node.mine.treeensemble2.data.memberships.ColumnMemberships;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
+import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
 import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
 
 /**
- * This class is the root that holds the weights for all records in the current sample.
- * It does not have an own internal index but uses the original index instead.
- * The idea is to avoid the memory problems of the original rootdatamemberships structure, when
- * faced with many columns
+ * This class represents an more memory efficient alternative to the approach of {@link RootDataMemberships}.<br>
+ * The idea is to store the rowWeights in a Map with the original index as key, and using BitSet like structures
+ * to store which original indices are in which nodes. <br>
+ * This reduces memory requirements because it makes caching superfluous.
  *
  * @author Adrian Nembach, KNIME.com
  */
@@ -72,6 +73,13 @@ public class RootDataMem implements DataMemberships {
     private final BitSet m_contained;
     private final DataIndexManager m_indexManager;
 
+    /**
+     * Creates a RootDataMem object
+     *
+     * @param rowSample the subset for the tree to be built.
+     * @param indexManager the DataIndexManager object that contains the projections
+     *        from original index to column indices and vice versa
+     */
     public RootDataMem(final RowSample rowSample, final DataIndexManager indexManager) {
         m_weightMap = new HashMap<Integer,Byte>(rowSample.getNrRows());
 //        m_weightMap = new TIntByteHashMap(rowSample.getNrRows());
