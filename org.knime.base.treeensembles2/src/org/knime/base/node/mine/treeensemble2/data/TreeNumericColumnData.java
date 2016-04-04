@@ -54,7 +54,6 @@ import org.apache.commons.math.util.MathUtils;
 import org.knime.base.node.mine.treeensemble2.data.memberships.ColumnMemberships;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
 import org.knime.base.node.mine.treeensemble2.learner.IImpurity;
-import org.knime.base.node.mine.treeensemble2.learner.NumericMissingSplitCandidate;
 import org.knime.base.node.mine.treeensemble2.learner.NumericSplitCandidate;
 import org.knime.base.node.mine.treeensemble2.learner.SplitCandidate;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
@@ -315,10 +314,13 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
         }
 
         if (useXGBoostMissingValueHandling) {
-            return new NumericMissingSplitCandidate(this, bestSplit, bestGainValueForSplit, missingsGoLeft);
+            //            return new NumericMissingSplitCandidate(this, bestSplit, bestGainValueForSplit, missingsGoLeft);
+            return new NumericSplitCandidate(this, bestSplit, bestGainValueForSplit, new BitSet(),
+                missingsGoLeft ? NumericSplitCandidate.MISSINGS_GO_LEFT : NumericSplitCandidate.MISSINGS_GO_RIGHT);
         }
 
-        return new NumericSplitCandidate(this, bestSplit, bestGainValueForSplit, getMissedRows(columnMemberships));
+        return new NumericSplitCandidate(this, bestSplit, bestGainValueForSplit, getMissedRows(columnMemberships),
+            NumericSplitCandidate.NO_MISSINGS);
     }
 
     @Override
@@ -431,9 +433,11 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
         //            + " but was " + lastSeenY * lastSeenWeight;
         if (bestImprovement > 0.0) {
             if (useXGBoostMissingValueHandling) {
-                return new NumericMissingSplitCandidate(this, bestSplit, bestImprovement, missingsGoLeft);
+                //                return new NumericMissingSplitCandidate(this, bestSplit, bestImprovement, missingsGoLeft);
+                return new NumericSplitCandidate(this, bestSplit, bestImprovement, new BitSet(),
+                    missingsGoLeft ? NumericSplitCandidate.MISSINGS_GO_LEFT : NumericSplitCandidate.MISSINGS_GO_RIGHT);
             }
-            return new NumericSplitCandidate(this, bestSplit, bestImprovement, getMissedRows(columnMemberships));
+            return new NumericSplitCandidate(this, bestSplit, bestImprovement, getMissedRows(columnMemberships), NumericSplitCandidate.NO_MISSINGS);
         } else {
             return null;
         }
@@ -484,10 +488,10 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
         columnMemberships.reset();
         final BitSet inChild = new BitSet(columnMemberships.size());
         int startIndex = 0;
-//        if (numOperator.equals(NumericOperator.LargerThan)) {
-//            // jump to index with splitvalue OR first index larger than splitvalue
-//            startIndex = getFirstIndexWithValue(splitValue);
-//        }
+        //        if (numOperator.equals(NumericOperator.LargerThan)) {
+        //            // jump to index with splitvalue OR first index larger than splitvalue
+        //            startIndex = getFirstIndexWithValue(splitValue);
+        //        }
         if (!columnMemberships.nextIndexFrom(startIndex)) {
             throw new IllegalStateException(
                 "The current columnMemberships object contains no element that satisfies the splitcondition");
@@ -514,11 +518,6 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
             }
             if (matches) {
                 inChild.set(columnMemberships.getIndexInDataMemberships());
-            } else if (numOperator.equals(NumericOperator.LessThanOrEqual)) {
-                // any further instance will be greater than the splitvalue
-                break;
-            } else if (numOperator.equals(NumericOperator.LessThanOrEqualOrMissing)) {
-
             }
         } while (columnMemberships.next() && columnMemberships.getIndexInColumn() < lengthNonMissing);
 
@@ -529,7 +528,7 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
 
         // handle missing values
         if (numOperator.equals(NumericOperator.LessThanOrEqualOrMissing)
-            || numOperator.equals(NumericOperator.LargerThanOrMissing)) {
+            || numOperator.equals(NumericOperator.LargerThanOrMissing) || numCondition.acceptsMissings()) {
             do {
                 inChild.set(columnMemberships.getIndexInDataMemberships());
             } while (columnMemberships.next());

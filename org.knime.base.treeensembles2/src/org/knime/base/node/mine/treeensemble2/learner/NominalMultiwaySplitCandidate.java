@@ -64,16 +64,28 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeNominalCondition;
  */
 public final class NominalMultiwaySplitCandidate extends SplitCandidate {
 
+    /**
+     * Use this constant if missing values should not be sent to any child
+     */
+    public static final int NO_MISSINGS = -1;
+
     private final double[] m_sumWeightsAttributes;
+    private final int m_missingsGoToChildIdx;
 
     /**
+     * @param nominalColumn
      * @param gainValue
+     * @param sumWeightsAttributes
+     * @param missedRows
+     * @param missingsGoToChildIdx index of the child, that missing values should go to
+     *          (-1 if missing values should not be sent to any child).
      */
     public NominalMultiwaySplitCandidate(final TreeNominalColumnData nominalColumn, final double gainValue,
-        final double[] sumWeightsAttributes, final BitSet missedRows) {
+        final double[] sumWeightsAttributes, final BitSet missedRows, final int missingsGoToChildIdx) {
         super(nominalColumn, gainValue, missedRows);
         assert sumWeightsAttributes.length == nominalColumn.getMetaData().getValues().length;
         m_sumWeightsAttributes = sumWeightsAttributes;
+        m_missingsGoToChildIdx = missingsGoToChildIdx;
     }
 
     /** {@inheritDoc} */
@@ -96,7 +108,7 @@ public final class NominalMultiwaySplitCandidate extends SplitCandidate {
         List<TreeNodeCondition> resultList = new ArrayList<TreeNodeCondition>(values.length);
         for (int i = 0; i < values.length; i++) {
             if (m_sumWeightsAttributes[i] >= TreeColumnData.EPSILON) {
-                resultList.add(new TreeNodeNominalCondition(columnMeta, i));
+                resultList.add(new TreeNodeNominalCondition(columnMeta, i, i == m_missingsGoToChildIdx));
             }
         }
         return resultList.toArray(new TreeNodeNominalCondition[resultList.size()]);

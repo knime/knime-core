@@ -60,14 +60,24 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeNumericCondition.Num
  */
 public class NumericSplitCandidate extends SplitCandidate {
 
+    public static final byte NO_MISSINGS = 0;
+
+    public static final byte MISSINGS_GO_LEFT = 1;
+
+    public static final byte MISSINGS_GO_RIGHT = 2;
+
     private final double m_splitValue;
+
+    private final byte m_missingsStrategy;
 
     /**
      * @param treeNumericColumnData
      */
-    public NumericSplitCandidate(final TreeNumericColumnData treeNumericColumnData, final double splitValue, final double gainValue, final BitSet missedRows) {
+    public NumericSplitCandidate(final TreeNumericColumnData treeNumericColumnData, final double splitValue,
+        final double gainValue, final BitSet missedRows, final byte missingsStrategy) {
         super(treeNumericColumnData, gainValue, missedRows);
         m_splitValue = splitValue;
+        m_missingsStrategy = missingsStrategy;
     }
 
     /** {@inheritDoc} */
@@ -84,9 +94,21 @@ public class NumericSplitCandidate extends SplitCandidate {
     @Override
     public TreeNodeNumericCondition[] getChildConditions() {
         TreeNumericColumnMetaData meta = getColumnData().getMetaData();
-        return new TreeNodeNumericCondition[]{
-            new TreeNodeNumericCondition(meta, m_splitValue, NumericOperator.LessThanOrEqual),
-            new TreeNodeNumericCondition(meta, m_splitValue, NumericOperator.LargerThan),};
+        switch (m_missingsStrategy) {
+            case (MISSINGS_GO_LEFT) :
+                return new TreeNodeNumericCondition[]{
+                    new TreeNodeNumericCondition(meta, m_splitValue, NumericOperator.LessThanOrEqual, true),
+                    new TreeNodeNumericCondition(meta, m_splitValue, NumericOperator.LargerThan, false)};
+            case (MISSINGS_GO_RIGHT) :
+                return new TreeNodeNumericCondition[]{
+                    new TreeNodeNumericCondition(meta, m_splitValue, NumericOperator.LessThanOrEqual, false),
+                    new TreeNodeNumericCondition(meta, m_splitValue, NumericOperator.LargerThan, true)};
+            // same as no specified direction
+            default :
+                return new TreeNodeNumericCondition[]{
+                    new TreeNodeNumericCondition(meta, m_splitValue, NumericOperator.LessThanOrEqual, false),
+                    new TreeNodeNumericCondition(meta, m_splitValue, NumericOperator.LargerThan, false)};
+        }
     }
 
     /** {@inheritDoc} */

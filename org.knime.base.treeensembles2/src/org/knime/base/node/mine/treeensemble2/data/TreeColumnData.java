@@ -47,11 +47,15 @@
  */
 package org.knime.base.node.mine.treeensemble2.data;
 
+import java.util.BitSet;
+
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeColumnData {
+
+    public static final BitSet NO_MISSING_VALUES = new BitSet();
 
     /** This is the substitute for 0 to avoid rounding errors. */
     public static final double EPSILON = 1E-8;
