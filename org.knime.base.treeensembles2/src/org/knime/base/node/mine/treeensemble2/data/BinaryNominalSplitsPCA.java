@@ -61,7 +61,7 @@ import org.apache.commons.math3.linear.RealVector;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 class BinaryNominalSplitsPCA {
 
@@ -187,7 +187,12 @@ class BinaryNominalSplitsPCA {
             calculateWeightedCovarianceMatrix(attVals, meanClassProbabilityVec, totalWeight, numTargetVals);
 
         // eigenvalue decomposition
-        EigenDecomposition eig = new EigenDecomposition(weightedCovarianceMatrix);
+        EigenDecomposition eig;
+        try {
+            eig = new EigenDecomposition(weightedCovarianceMatrix);
+        } catch (Exception e) {
+            return null;
+        }
 
         // get principal component
         RealVector principalComponent = eig.getEigenvector(argMax(eig.getRealEigenvalues()));
