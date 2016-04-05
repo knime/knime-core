@@ -1611,6 +1611,13 @@
       </node>
       <node
             category-path="/manipulation/column/column-transform"
+            deprecated="false"
+            after="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory"
+            factory-class="org.knime.base.node.preproc.refcolumnresorter.ReferenceColumnResorterNodeFactory"
+            id="org.knime.base.node.preproc.refcolumnresorter.ReferenceColumnResorterNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.columnlag.LagColumnNodeFactory"
             id="org.knime.base.node.preproc.columnlag.LagColumnNodeFactory"
             after="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory">
