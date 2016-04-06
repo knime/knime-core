@@ -50,6 +50,8 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -502,9 +504,10 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     }
 
     public static class LoadResult extends LoadResultEntry {
-
         private final List<LoadResultEntry> m_errors =
             new ArrayList<LoadResultEntry>();
+
+        private final List<NodeAndBundleInformation> m_missingNodes = new ArrayList<>();
 
         /** */
         public LoadResult(final String name) {
@@ -547,10 +550,36 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             return m_errors.toArray(new LoadResultEntry[m_errors.size()]);
         }
 
+        /**
+         * Adds information about missing nodes.
+         *
+         * @param missingNodes information about missing nodes; must not be <code>null</code>
+         */
+        void addMissingNodes(final Collection<NodeAndBundleInformation> missingNode) {
+            m_missingNodes.addAll(missingNode);
+        }
+
+        /**
+         * Adds information about a missing node.
+         *
+         * @param missingNode information about a missing node; must not be <code>null</code>
+         */
+        void addMissingNode(final NodeAndBundleInformation missingNode) {
+            m_missingNodes.add(missingNode);
+        }
+
+        /**
+         * Returns an unmodifiable list of missing nodes.
+         *
+         * @return a (possibly empty) list of information about missing nodes
+         * @since 3.2
+         */
+        public List<NodeAndBundleInformation> getMissingNodes() {
+            return Collections.unmodifiableList(m_missingNodes);
+        }
     }
 
     public static final class WorkflowLoadResult extends MetaNodeLinkUpdateResult {
-
         /** @param name */
         public WorkflowLoadResult(final String name) {
             super(name);
@@ -559,7 +588,6 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         public WorkflowManager getWorkflowManager() {
             return (WorkflowManager)super.getLoadedInstance();
         }
-
     }
 
     public static class MetaNodeLinkUpdateResult extends LoadResult {

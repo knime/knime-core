@@ -7840,6 +7840,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             loadResult.addChildError(subResult);
+            loadResult.addMissingNodes(subResult.getMissingNodes());
             // set warning message on node if we have loading errors
             // do this only if these are critical errors or data-load errors,
             // which must be reported.
