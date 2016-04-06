@@ -195,6 +195,26 @@ public final class DatabaseDriverLoader {
     }
 
     /**
+     * Registers given <code>Driver</code> at the <code>DriverManager</code>.
+     *
+     * @param driverClass class of te driver to register
+     * @return an SQL Driver instance
+     * @throws InvalidSettingsException if the database driver could not registered
+     * @since 3.2
+     */
+    public static Driver registerDriver(final Class<? extends Driver> driverClass) throws InvalidSettingsException {
+        try {
+            DatabaseWrappedDriver driver = new DatabaseWrappedDriver(driverClass.newInstance());
+            DRIVER_MAP.put(driverClass.getName(), driver);
+            DriverManager.registerDriver(driver);
+            return driver;
+        } catch (Throwable t) {
+            throw new InvalidSettingsException("Could not register database"
+                  + " driver \"" + driverClass.getName() + "\", reason: " + t.getMessage(), t);
+        }
+    }
+
+    /**
      * Loads <code>Driver</code> from the given file.
      *
      * @param file Load driver from.
