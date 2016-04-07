@@ -2,8 +2,13 @@
 	font-family: 'Roboto',sans-serif !important;
 }
 
+html {
+	font-size:62.5%; 
+}
+
 body {
-	 font-size: 0.75em;
+	 font-size: 12px;
+	 font-size: 1.2rem;
 	 color: #3E3A39;
 	 margin: 0px;
 	 padding: 0px;
@@ -14,20 +19,25 @@ body {
 
 h1 {
 	text-align: center;
-	font-size: 1.5em;
+	font-size: 24px;
+	font-size: 2.4rem;
 	color: #575757;
 }
 
 h2 {
-	font-size: 1.2em;
+	font-size: 18px;
+	font-size: 1.8rem;
+	
 }
 
 h3 {
-	font-size: 1em;
+	font-size: 16px;
+	font-size: 1.6rem;
+	
 }
 
 #intro p {
-	font-size: 1em;
+
 	text-align: justify;
 	line-height: 1.6em;
 	margin: 8px;
@@ -154,7 +164,6 @@ div.floating-link {
 
 .floating-link  a {
     font-weight: bold;
-    font-size: 1em !important;
     color: #3E3A39;
     display:block;
     vertical-align: middle;
