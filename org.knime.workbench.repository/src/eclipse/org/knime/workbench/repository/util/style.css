@@ -1,10 +1,15 @@
 /* Import font */
 @import url(https://fonts.googleapis.com/css?family=Roboto:400,700);
 
+html {
+	font-size: 62.5%;
+}
+
 body.origin {
      
      font-family: 'Roboto',sans-serif;
-	 font-size: 0.75em;
+     font-size: 12px;
+     font-size: 1.2rem;
 	 color: #3E3A39;
 	 margin: 0px;
 	 padding: 0px;
@@ -18,7 +23,8 @@ body.origin {
 body {
      
      font-family: 'Roboto',sans-serif;
-	 font-size: 0.75em;
+     font-size: 12px;
+     font-size: 1.2rem;
 	 color: #3E3A39;
 	 margin: 0px;
 	 padding: 0px;
@@ -421,7 +427,6 @@ div.container {
 
 tt, pre {
 	font-family: "Roboto",sans-serif; 
-	font-size: 1em;
 	color: #3E3A39;
 }
 
@@ -431,25 +436,33 @@ tt, pre {
 
 p {
 	text-align: justify;
-	font-size: 1em;
+	font-size: 12px;
+	font-size:1.2rem;
 	margin: 8px;
 	line-height: 1.6em;
 }
 
 
 h1 {  
-	font-size: 1.5em;
+	font-size: 24px;
+	font-size: 2.4rem;
 	text-align: center;
 	color: #575757;
 	margin: 10px 15px 10px 15px;
  }
 
 h2{
-	font-size: 1.5em;
+	font-size: 18px;
+	font-size: 1.8rem;
 	margin:8px;
 	border-bottom: 1px solid #e5e5e5;
   	color: #ff9f00;
 	
+}
+
+h2 > div {
+	font-size: 12px;
+	font-size: 1.2rem;
 }
 
 .deprecated {
@@ -459,6 +472,8 @@ h2{
 dl{
 	padding: 0;
 	margin: 8px;
+	font-size: 12px;
+	font-size: 1.2rem;
 }
 
 dt {
@@ -473,7 +488,8 @@ dd{
 }
 
 table{
-	font-size: 1em;
+	font-size: 12px;
+	font-size: 1.2rem;
 }
 
 table.introtable {
@@ -574,7 +590,9 @@ div.group-description {
 
 div#origin-bundle {
 	color: #3E3A39;
-    font-size: 83.03%;
+    /*font-size: 83.03%;*/
+    font-size: 12px;
+    font-size: 1.2rem;
     margin-top: 2em;
     padding-top: 0.5em;
     border-top: 1px solid #bbbbbb;
@@ -715,8 +733,14 @@ li.treeMenu_closed ul {
 	display: none;
 }
   
-ul ul {
+ul {
 	margin-left: 8px;
+}
+
+ul li {
+	font-size: 12px;
+	font-size: 1.2rem;
+
 }
   
 li {
@@ -823,7 +847,8 @@ div.footer-inner {
 .m-footer li a {
 	color: #aaa;
 	text-decoration: none;
-	font-size: 82.33% !important;
+	font-size: 13px !important;
+	font-size: 1.3rem !important;
 	line-height: 1.8em;
 } 
 /* End */
