@@ -156,7 +156,6 @@ public class FilterViewContributionItem extends ControlContribution implements K
      */
     @Override
     public void keyReleased(final KeyEvent e) {
-        boolean shouldExpand = true;
         String str = m_combo.getText();
         boolean update = m_liveUpdate;
 
@@ -175,13 +174,8 @@ public class FilterViewContributionItem extends ControlContribution implements K
         if (m_callback != null) {
             m_callback.run();
         }
-        TreeViewerUpdater.collapseAndUpdate(m_viewer, update | str.length() == 0, str.length() == 0,
-            shouldExpand | str.length() != 0);
-        if (str.length() == 0) {
-            m_viewer.collapseAll();
-            shouldExpand = false;
-            update = true;
-        }
+        TreeViewerUpdater.collapseAndUpdate(m_viewer, update || str.length() == 0, str.length() == 0,
+            str.length() != 0);
     }
 
     /**
