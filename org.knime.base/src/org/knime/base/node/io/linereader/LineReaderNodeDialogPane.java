@@ -211,8 +211,8 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             if (!m_regexChecker.isSelected()) {
                 m_regexChecker.doClick();
             }
-            m_regexField.setSelectedString(config.getRegex());
             m_regexField.updateHistory();
+            m_regexField.setSelectedString(config.getRegex());
         } else {
             if (m_regexChecker.isSelected()) {
                 m_regexChecker.doClick();
