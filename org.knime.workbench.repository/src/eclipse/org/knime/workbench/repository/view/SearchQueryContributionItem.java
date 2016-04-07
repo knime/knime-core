@@ -63,6 +63,16 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.ui.PlatformUI;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.core.nodeprovider.NodeProvider;
+import org.knime.workbench.repository.NodeUsageRegistry;
+import org.knime.workbench.repository.model.MetaNodeTemplate;
+import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
  * Contribution Item within the RepositoryView. It's essentially the text box to type the search query.
@@ -166,7 +176,7 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
         } else if (e.character == SWT.CR) {
             //enter was pressed, insert the selected node, if there is one selected
             //and select the whole search string (such that the user can just further type text in
-            QuickNodeInsertionHandler.createNode(((IStructuredSelection)m_viewer.getSelection()).getFirstElement());
+            createNode(((IStructuredSelection)m_viewer.getSelection()).getFirstElement());
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
@@ -174,6 +184,10 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
                 }
             });
             m_text.selectAll();
+        } else if(e.character == SWT.ESC) {
+            //give focus to the workflow editor
+            PlatformUI.getWorkbench()
+                    .getActiveWorkbenchWindow().getActivePage().getActiveEditor().setFocus();
         }
     }
 
@@ -248,5 +262,33 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
     void setFilter(final TextualViewFilter filter) {
         m_treeItems = null;
         m_filter = filter;
+    }
+
+    /**
+     * Helper to insert a node into the workflow editor.
+     *
+     * @param event
+     */
+    private void createNode(final Object o) {
+        if (o instanceof NodeTemplate) {
+            NodeTemplate tmplt = (NodeTemplate)o;
+            NodeFactory<? extends NodeModel> nodeFact;
+            try {
+                nodeFact = tmplt.createFactoryInstance();
+            } catch (Exception e) {
+                NodeLogger.getLogger(SearchQueryContributionItem.class)
+                    .error("Unable to instantiate the selected node " + tmplt.getFactory().getName(), e);
+                return;
+            }
+            boolean added = NodeProvider.INSTANCE.addNode(nodeFact);
+            if (added) {
+                NodeUsageRegistry.addNode(tmplt);
+            }
+        }
+        if (o instanceof MetaNodeTemplate) {
+            MetaNodeTemplate mnt = (MetaNodeTemplate)o;
+            NodeID metaNode = mnt.getManager().getID();
+            NodeProvider.INSTANCE.addMetaNode(WorkflowManager.META_NODE_ROOT, metaNode);
+        }
     }
 }

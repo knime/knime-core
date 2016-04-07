@@ -68,6 +68,9 @@ import org.knime.workbench.repository.model.Root;
  * @since 2.6
  */
 public class DefaultRepositoryView extends AbstractRepositoryView {
+
+    static final String ID = "org.knime.workbench.repository.view.RepositoryView";
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DefaultRepositoryView.class);
 
