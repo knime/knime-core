@@ -52,14 +52,13 @@ import java.io.File;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettings;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.TestrunConfiguration;
 import org.knime.testing.streaming.testexecutor.StreamingTestNodeExecutionJob;
@@ -129,35 +128,21 @@ class WorkflowExecuteStreamingTest extends WorkflowExecuteTest {
      */
     @Override
     protected void configureWorkflowManager(final WorkflowManager wfm) throws InvalidSettingsException {
-        for (NodeContainer node : wfm.getNodeContainers()) {
-            NodeContainerState status = node.getNodeContainerState();
+        try (WorkflowLock lock = null) {
+            for (NodeContainer node : wfm.getNodeContainers()) {
+                NodeContainerState status = node.getNodeContainerState();
 
-            if (node instanceof SubNodeContainer) {
-                configureWorkflowManager(((SubNodeContainer)node).getWorkflowManager());
-            } else if (node instanceof WorkflowManager) {
-                configureWorkflowManager((WorkflowManager)node);
-            } else if (node instanceof SingleNodeContainer) {
+                if (node instanceof SubNodeContainer) {
+                    configureWorkflowManager(((SubNodeContainer)node).getWorkflowManager());
+                } else if (node instanceof WorkflowManager) {
+                    configureWorkflowManager((WorkflowManager)node);
+                } else if (node instanceof SingleNodeContainer) {
 
-                //only set the streaming executor if not loop start or end node and node is not executed
-                if (!status.isExecuted() && !((SingleNodeContainer)node).isModelCompatibleTo(LoopStartNode.class)
-                    && !((SingleNodeContainer)node).isModelCompatibleTo(LoopEndNode.class)) {
-                    //set the job manager (mainly copied from AbstractClusterJob#setDefaultJobExecutor(...))
-                    // TODO Can this be replaced by simply calling
-                    // parent.setJobManager(nodeID, manager) ???
-                    NodeSettings oldSettings = new NodeSettings("old");
-                    NodeSettings newSettings = new NodeSettings("new");
-
-                    wfm.saveNodeSettings(node.getID(), oldSettings);
-                    wfm.saveNodeSettings(node.getID(), newSettings);
-
-                    NodeContainerSettings ncSettings = new NodeContainerSettings();
-                    ncSettings.load(oldSettings);
-
-                    ncSettings.setJobManager(new StreamingTestNodeExecutionJobManager());
-
-                    ncSettings.save(newSettings);
-                    wfm.loadNodeSettings(node.getID(), newSettings);
-
+                    //only set the streaming executor if not loop start or end node and node is not executed
+                    if (!status.isExecuted() && !((SingleNodeContainer)node).isModelCompatibleTo(LoopStartNode.class)
+                        && !((SingleNodeContainer)node).isModelCompatibleTo(LoopEndNode.class)) {
+                        wfm.setJobManager(node.getID(), new StreamingTestNodeExecutionJobManager());
+                    }
                 }
             }
         }
