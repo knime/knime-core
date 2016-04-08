@@ -237,7 +237,7 @@ abstract class AbstractColumnTableSorter {
             columnPartitions.add(tableSorter);
         }
 
-        exec.setMessage("Reading table.");
+        exec.setMessage("Reading table");
         RowIterator iterator = dataTable.iterator();
 
         ExecutionMonitor readProgress = exec.createSubProgress(0.7);
@@ -245,26 +245,27 @@ abstract class AbstractColumnTableSorter {
         // phase one: create as big chunks as possible from the given input table
         // for each sort description
         int chunkCount = 0;
-        int currentTotalRows = 0;
+        long currentTotalRows = 0L;
         while (iterator.hasNext()) {
-            LOGGER.debugWithFormat("Reading temporary tables -- ", chunkCount);
+            LOGGER.debugWithFormat("Reading temporary tables -- (chunk %d)", chunkCount);
             fillBuffer(iterator, exec);
-            int bufferedRows = m_buffer.entrySet().iterator().next().getValue().size();
-            LOGGER.debugWithFormat("Writing temporary tables -- %d/%d ", chunkCount, bufferedRows);
+            long bufferedRows = m_buffer.entrySet().iterator().next().getValue().size();
+            LOGGER.debugWithFormat("Writing temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
             currentTotalRows += bufferedRows;
-            readProgress.setProgress(currentTotalRows / (double)m_rowCount, "Writing temporary tables -- "
-                + chunkCount++ + "/" + bufferedRows);
-            LOGGER.debugWithFormat("Sorting temporary tables -- %d/%d ", chunkCount, bufferedRows);
+            readProgress.setProgress(currentTotalRows / (double)m_rowCount,
+                String.format("Writing temporary tables (chunk %d with %d rows)", chunkCount, bufferedRows));
+            chunkCount += 1;
+            LOGGER.debugWithFormat("Sorting temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
             sortBufferInParallel();
 
             for (AbstractTableSorter tableSorter : columnPartitions) {
                 tableSorter.openChunk();
             }
 
-            LOGGER.debugWithFormat("Writing temporary tables -- %d/%d ", chunkCount, bufferedRows);
+            LOGGER.debugWithFormat("Writing temporary tables (chunk %d with %d rows)", chunkCount, bufferedRows);
             for (int i = 0; i < m_sortDescriptions.length; i++) {
                 SortingDescription sortingDescription = m_sortDescriptions[i];
-                LOGGER.debugWithFormat("Writing temporary table -- %d/%d ", chunkCount, i);
+                LOGGER.debugWithFormat("Writing temporary table (chunk %d, column %d)", chunkCount, i);
                 AbstractTableSorter tableSorter = columnPartitions.get(i);
                 ListIterator<DataRow> rowIterator = m_buffer.get(sortingDescription).listIterator();
                 while (rowIterator.hasNext()) {
@@ -298,7 +299,7 @@ abstract class AbstractColumnTableSorter {
 
         // publish the results to the listener
         List<DataRow> currentRow = new ArrayList<>();
-        int rowNo = 0;
+        long rowNo = 0;
         while (partitionRowIterators.get(0).hasNext()) {
             for (int i = 0; i < partitionRowIterators.size(); i++) {
                 currentRow.add(partitionRowIterators.get(i).next());
@@ -417,22 +418,22 @@ abstract class AbstractColumnTableSorter {
     }
 
     private void sortBufferInParallel() {
+        List<Future<?>> futures = new ArrayList<>();
         try {
-            List<Future<?>> futures = new ArrayList<>();
             for (final Entry<SortingDescription, List<DataRow>> descr : m_buffer.entrySet()) {
                 futures.add(m_executor.enqueue(new Runnable() {
-
                     @Override
                     public void run() {
                         Collections.sort(descr.getValue(), descr.getKey());
                     }
                 }));
             }
-            //wait until the inserting is finished
+            // wait until the inserting is finished
             for (Future<?> f : futures) {
                 f.get();
             }
         } catch (ExecutionException | InterruptedException e) {
+            futures.stream().forEach(f -> f.cancel(true));
             throw new RuntimeException("Execution has been interrupted!", e);
         }
     }
