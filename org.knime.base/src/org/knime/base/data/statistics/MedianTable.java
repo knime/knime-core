@@ -47,18 +47,24 @@
 package org.knime.base.data.statistics;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.lang.mutable.MutableLong;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.sort.ColumnBufferedDataTableSorter;
+import org.knime.core.data.sort.SortingConsumer;
+import org.knime.core.data.sort.SortingDescription;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 
 /**
  * Finds the median for selected ({@link DoubleValue}d) columns.
@@ -77,8 +83,6 @@ class MedianTable {
     private final boolean m_includeMissingValues;
 
     private double[] m_medians;
-
-    private boolean m_inMemory = false;
 
     /**
      * @param table The input table.
@@ -168,45 +172,91 @@ class MedianTable {
                 incList.add(columnNames[i]);
             }
 
-            int[][] k = new int[2][m_indices.length];
-            for (int i = 0; i < 2; ++i) {
-                for (int j = m_indices.length; j-- > 0;) {
+            // two indices per column that denote the lower and upper index of the median value (or both the same)
+            long[][] k = new long[2][m_indices.length];
+            for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < m_indices.length; j++) {
                     k[i][j] = validCount[j] > 0 ? (validCount[j] - 1 + i) / 2 : 0;
                 }
             }
-            BufferedSelectRank selectRank = new BufferedSelectRank(m_table, incList, k);
-            selectRank.setSortInMemory(m_inMemory);
-            BufferedDataTable dataTable = selectRank.select(context);
-            final CloseableRowIterator iterator = dataTable.iterator();
-            if (!iterator.hasNext()) {
-                Arrays.fill(m_medians, Double.NaN);
-                return m_medians.clone();
-            }
-            try {
-                DataRow row1 = iterator.next();
-                DataRow row2 = iterator.next();
-                for (int i = 0; i < m_indices.length; ++i) {
-                    final DataCell cell1 = row1.getCell(i);
-                    final DataCell cell2 = row2.getCell(i);
-                    if (cell1 instanceof DoubleValue && cell2 instanceof DoubleValue) {
-                        DoubleValue dv1 = (DoubleValue)cell1;
-                        DoubleValue dv2 = (DoubleValue)cell2;
-                        m_medians[i] = (dv1.getDoubleValue() + dv2.getDoubleValue()) / 2;
-                    } else {
-                        m_medians[i] = Double.NaN;
-                    }
-                }
-            } finally {
-                iterator.close();
-            }
+            sortOnDisk(context, k);
         }
         return m_medians.clone();
     }
 
     /**
-     * @param inMemory the inMemory to set
+     * Sorts the data on the disk, it moves the missing values to the end.
+     *
+     * @param context An {@link ExecutionContext}.
+     * @param k The indices to read from the different columns
+     *        (first dim: length 2 (above & below median indices), second dim: columns)
+     * @throws CanceledExecutionException Execution was cancelled.
      */
+    private void sortOnDisk(final ExecutionContext context, final long[][] k) throws CanceledExecutionException {
+        final SortingDescription[] sorting = new SortingDescription[m_indices.length];
+        final DataTableSpec spec = m_table.getSpec();
+        for (int i = 0; i < m_indices.length; i++) {
+            final DataColumnSpec columnSpec = spec.getColumnSpec(m_indices[i]);
+            final DataValueComparator comparator = columnSpec.getType().getComparator();
+            sorting[i] = new SortingDescription(columnSpec.getName()) {
+
+                @Override
+                public int compare(final DataRow o1, final DataRow o2) {
+                    // Move missing values to the end.
+                    final DataCell c1 = o1.getCell(0);
+                    final DataCell c2 = o2.getCell(0);
+                    if (c1.isMissing()) {
+                        return c2.isMissing() ? 0 : 1;
+                    }
+                    if (c2.isMissing()) {
+                        return -1;
+                    }
+                    return comparator.compare(c1, c2);
+                }
+            };
+        }
+        final ColumnBufferedDataTableSorter tableSorter;
+        try {
+            tableSorter = new ColumnBufferedDataTableSorter(m_table.getSpec(), m_table.size(), sorting);
+        } catch (InvalidSettingsException e) {
+            throw new IllegalStateException(e);
+        }
+        final MutableLong counter = new MutableLong();
+        final DoubleValue[][] cells = new DoubleValue[2][m_indices.length];
+        tableSorter.sort(m_table, context, new SortingConsumer() {
+            @Override
+            public void consume(final DataRow row) {
+                for (int kindex = 0; kindex < 2; kindex++) {
+                    for (int i = 0; i < m_indices.length; i++) {
+                        if (counter.longValue() == k[kindex][i]) {
+                            DataCell cell = row.getCell(i);
+                            if (cell instanceof DoubleValue) {
+                                DoubleValue dv = (DoubleValue)cell;
+                                cells[kindex][i] = dv;
+                            } else {
+                                cells[kindex][i] = new DoubleCell(Double.NaN);
+                            }
+                        }
+                    }
+                }
+                counter.increment();
+            }
+        });
+        for (int index = m_indices.length; index-- > 0;) {
+            if (cells[0][index] == null || cells[1][index] == null) {
+                //No non-missing rows
+                m_medians[index] = Double.NaN;
+            } else {
+                m_medians[index] = (cells[0][index].getDoubleValue() + cells[1][index].getDoubleValue()) / 2;
+            }
+        }
+    }
+
+    /**
+     * @param inMemory the inMemory to set
+     * @deprecated No longer in use - KNIME decided when to swap to disc
+     */
+    @Deprecated
     public synchronized void setInMemory(final boolean inMemory) {
-        this.m_inMemory = inMemory;
     }
 }

@@ -261,32 +261,17 @@ public class StatisticCalculatorTest {
         int cols = 100;
         final BufferedDataTable table = createRandomTableWithMissingValues(cols, 500000);
 
-        doTimed("Median of Median", new Callable<Void>() {
+        System.out.println("MEASSURING NOW: " + "Sorting");
+        long t = System.currentTimeMillis();
 
-            @Override
-            public Void call() throws Exception {
-                MedianTable medianTable = new MedianTable(table, ascendingIntArray(100));
-                medianTable.setInMemory(false);
-                double[] median = medianTable.medianValues(EXEC_CONTEXT);
+        Median median = new Median();
+        //                Mean mean = new Mean();
+        StatisticCalculator statisticCalculator =
+                new StatisticCalculator(table.getDataTableSpec(), table.getDataTableSpec().getColumnNames(), median);
 
-                System.out.println("Result: " + median);
-                return null;
-            }
-        });
-        doTimed("Sorting", new Callable<Void>() {
-
-            @Override
-            public Void call() throws Exception {
-                Median median = new Median();
-                //                Mean mean = new Mean();
-                StatisticCalculator statisticCalculator =
-                    new StatisticCalculator(table.getDataTableSpec(), table.getDataTableSpec().getColumnNames(), median);
-
-                statisticCalculator.evaluate(table, EXEC_CONTEXT);
-                System.out.println("Result: " + median.getMedian("0"));
-                return null;
-            }
-        });
+        statisticCalculator.evaluate(table, EXEC_CONTEXT);
+        System.out.println("Result: " + median.getMedian("0"));
+        System.out.println("finished: " + (System.currentTimeMillis() - t) / 1000d + " sec");
     }
 
     private static BufferedDataTable createRandomTableWithMissingValues(final int cols, final int rows) {
