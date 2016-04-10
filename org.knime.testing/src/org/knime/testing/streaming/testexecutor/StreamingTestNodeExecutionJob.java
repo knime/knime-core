@@ -456,7 +456,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 localNodeContainer.setNodeMessage(NodeMessage.newWarning("Execution canceled"));
                 return NodeContainerExecutionStatus.FAILURE;
             }
-            localNodeContainer.getNode().createErrorMessageAndNotify("Execute failed: ".concat(e.getMessage()), e);
+            localNodeContainer.getNode().createErrorMessageAndNotify("Execute failed: " + e.getMessage(), e);
             return NodeContainerExecutionStatus.FAILURE;
         } finally {
             /* --- remove virtual nodes from workflow --- */
