@@ -78,6 +78,8 @@ public final class TreeNodeClassification extends AbstractTreeNode {
     private final double[] m_targetDistribution;
 
     /**
+     * Constructor for a leaf node with no children.
+     *
      * @param signature
      * @param targetPriors
      * @param configuration
@@ -87,12 +89,30 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         this(signature, targetPriors, EMPTY_CHILD_ARRAY, configuration);
     }
 
+    /**
+     * Constructor that does not contain child nodes. <br>
+     * If this is a leaf node, it is recommended to use
+     * {@link TreeNodeClassification#TreeNodeClassification(TreeNodeSignature, ClassificationPriors, TreeEnsembleLearnerConfiguration)}
+     * instead. <br>
+     * <b>NOTE</b>: If you use this constructor, you have to use {@link TreeNodeClassification#registerChild(int, AbstractTreeNode)} later on to
+     * register the child nodes.
+     *
+     * @param signature
+     * @param targetPriors
+     * @param configuration
+     * @param childCount
+     */
     public TreeNodeClassification(final TreeNodeSignature signature, final ClassificationPriors targetPriors,
         final TreeEnsembleLearnerConfiguration configuration, final int childCount) {
         this(signature, targetPriors, new TreeNodeClassification[childCount], configuration);
     }
 
     /**
+     * Constructor for inner nodes with child nodes. <br>
+     * It is recommended to use
+     * {@link TreeNodeClassification#TreeNodeClassification(TreeNodeSignature, ClassificationPriors, TreeEnsembleLearnerConfiguration)}
+     * instead to create leaf nodes.
+     *
      * @param signature
      * @param targetPriors
      * @param childNodes
@@ -230,6 +250,7 @@ public final class TreeNodeClassification extends AbstractTreeNode {
      *
      * @param in
      * @param metaData
+     * @param treeBuildingInterner interns BigInteger and TreeNodeSignature to save memory
      * @return a TreeNodeClassification
      * @throws IOException
      */
