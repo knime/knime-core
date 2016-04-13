@@ -175,7 +175,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         columnMemberships.next();
         for (int att = 0; att < lengthNonMissing; att++) {
             int end = start + m_nominalValueCounts[att];
-            Arrays.fill(targetCountsSplit, 0.0);
+            Arrays.fill(targetCountsSplit[att], 0.0);
             double currentAttValWeight = 0.0;
             boolean reachedEnd = false;
             for (int index = columnMemberships.getIndexInColumn(); index < end; index =
@@ -1247,7 +1247,8 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         final DataMemberships parentMemberships) {
         String value = nomCondition.getValue();
         int att = -1;
-        for (NominalValueRepresentation rep : getMetaData().getValues()) {
+        final NominalValueRepresentation[] reps = getMetaData().getValues();
+        for (final NominalValueRepresentation rep : reps) {
             if (rep.getNominalValue().equals(value)) {
                 att = rep.getAssignedInteger();
                 break;
@@ -1267,14 +1268,29 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         if (!columnMemberships.nextIndexFrom(start)) {
             return inChild;
         }
+        boolean reachedEnd = false;
         int end = start + m_nominalValueCounts[att];
         for (int index = columnMemberships.getIndexInColumn(); index < end; index =
             columnMemberships.getIndexInColumn()) {
             inChild.set(columnMemberships.getIndexInDataMemberships());
             if (!columnMemberships.next()) {
+                reachedEnd = true;
                 break;
             }
         }
+
+        if (!reachedEnd && containsMissingValues() && nomCondition.acceptsMissings()) {
+            // move to missing values
+            for (int i = att; i < reps.length - 1; i++) {
+                start += m_nominalValueCounts[i];
+            }
+            if (columnMemberships.nextIndexFrom(start)) {
+                do {
+                    inChild.set(columnMemberships.getIndexInDataMemberships());
+                } while (columnMemberships.next());
+            }
+        }
+
 
         return inChild;
     }
@@ -1287,8 +1303,9 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         // TODO Check if this can be done more efficiently
         NominalValueRepresentation[] reps = getMetaData().getValues();
         int start = 0;
-        for (NominalValueRepresentation rep : getMetaData().getValues()) {
-            int att = rep.getAssignedInteger();
+        boolean reachedEnd = false;
+        final int lengthNonMissing = containsMissingValues() ? reps.length - 1 : reps.length;
+        for (int att = 0; att < lengthNonMissing; att++) {
             if (childBinaryCondition.testCondition(att)) {
                 // move columnMemberships to correct position
                 if (!columnMemberships.nextIndexFrom(start)) {
@@ -1300,11 +1317,20 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                     columnMemberships.getIndexInColumn()) {
                     inChild.set(columnMemberships.getIndexInDataMemberships());
                     if (!columnMemberships.next()) {
+                        reachedEnd = true;
                         break;
                     }
                 }
             }
             start += m_nominalValueCounts[att];
+        }
+
+        if (!reachedEnd && containsMissingValues() && childBinaryCondition.acceptsMissings()) {
+            if (columnMemberships.nextIndexFrom(start)) {
+                do {
+                    inChild.set(columnMemberships.getIndexInDataMemberships());
+                } while (columnMemberships.next());
+            }
         }
 
         return inChild;
