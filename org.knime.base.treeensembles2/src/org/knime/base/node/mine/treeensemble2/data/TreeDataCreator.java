@@ -156,6 +156,9 @@ public class TreeDataCreator {
      */
     public TreeData readData(final BufferedDataTable learnData, final TreeEnsembleLearnerConfiguration configuration,
         final ExecutionMonitor exec) throws CanceledExecutionException {
+        if (learnData.size() <= 1) {
+            throw new IllegalArgumentException("The input table must contain at least 2 rows!");
+        }
         int index = 0;
         final long nrRows = learnData.size();
         final int nrLearnCols = m_attrColCreators.length;
