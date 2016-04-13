@@ -124,9 +124,9 @@ class UpdateMessageInjector extends AbstractInjector {
     private void injectNoUpdateMessage(final Document doc) throws ParserConfigurationException, SAXException,
         IOException, XPathExpressionException, TransformerException {
         XPath xpath = m_xpathFactory.newXPath();
-        Element noUpdatesSpan =
-            (Element)xpath.evaluate("//span[@id='no-updates']", doc.getDocumentElement(), XPathConstants.NODE);
-        noUpdatesSpan.removeAttribute("style"); // removes the "hidden" style
+//        Element noUpdatesSpan =
+//            (Element)xpath.evaluate("//span[@id='no-updates']", doc.getDocumentElement(), XPathConstants.NODE);
+//        noUpdatesSpan.removeAttribute("style"); // removes the "hidden" style
 
         Element checkingUpdatesSpan =
             (Element)xpath.evaluate("//span[@id='checking-updates']", doc.getDocumentElement(), XPathConstants.NODE);
