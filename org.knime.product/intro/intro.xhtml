@@ -81,11 +81,9 @@ function showUpdate(show) {
         <div class="hide-button">
             <img src="img/close-button.png" title="Hide update notifications" onclick="showUpdate(false);" />
         </div>
-        <span id="checking-updates">Checking for updates...</span>
-        <span id="no-updates" style="display: none;">Currently no updates are available.</span>
-        <span id="updates-available" style="display: none;">New releases of the following components are available:</span>
+        <span id="release-available" style="display: none;">New releases of the following components are available:</span>
         
-        <ul id="update-list" style="display: none;">
+        <ul id="release-list" style="display: none;">
         </ul>
         <span style="display: none;"
             id="update-not-possible">Unfortunately an update is not possible, but you can download the new
@@ -93,6 +91,15 @@ function showUpdate(show) {
         </span>
         <span style="display: none;" id="update-possible"> Click <a href="intro://invokeUpdate/">here</a>
             in order to upgrade to the new version.
+        </span>
+        
+        <span id="bugfixes-available" style="display: none;">Bugfixes for the following components are available:</span>
+        
+        <ul id="bugfixes-list" style="display: none;">
+        </ul>
+        
+        <span style="display: none;" id="install-bugfixes"> Click <a href="intro://invokeUpdate/">here</a>
+            in order to install updates.
         </span>
     </div>
 

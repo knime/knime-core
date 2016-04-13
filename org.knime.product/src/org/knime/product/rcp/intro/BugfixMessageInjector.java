@@ -49,12 +49,12 @@ package org.knime.product.rcp.intro;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -65,11 +65,11 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.equinox.p2.operations.RepositoryTracker;
+import org.eclipse.equinox.p2.operations.UpdateOperation;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
-import org.knime.core.eclipseUtil.UpdateChecker;
-import org.knime.core.eclipseUtil.UpdateChecker.UpdateInfo;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -81,10 +81,10 @@ import org.xml.sax.SAXException;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class UpdateMessageInjector extends AbstractInjector {
-    private List<UpdateInfo> m_newVersions;
+class BugfixMessageInjector extends AbstractInjector {
+    private List<String> m_bugfixes;
 
-    protected UpdateMessageInjector(final File templateFile, final ReentrantLock introFileLock,
+    protected BugfixMessageInjector(final File templateFile, final ReentrantLock introFileLock,
         final IEclipsePreferences preferences, final boolean isFreshWorkspace,
         final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
         final TransformerFactory transformerFactory) {
@@ -97,10 +97,10 @@ class UpdateMessageInjector extends AbstractInjector {
      */
     @Override
     protected void prepareData() throws Exception {
-        m_newVersions = checkNewVersion();
+        m_bugfixes = checkNewMinorVersion();
     }
 
-    private List<UpdateInfo> checkNewVersion() throws IOException, URISyntaxException {
+    private List<String> checkNewMinorVersion() throws IOException, URISyntaxException {
         final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
         RepositoryTracker tracker = provUI.getRepositoryTracker();
         if (tracker == null) {
@@ -108,33 +108,10 @@ class UpdateMessageInjector extends AbstractInjector {
             return Collections.emptyList();
         }
 
-        List<UpdateInfo> updateList = new ArrayList<>();
-        for (URI uri : tracker.getKnownRepositories(provUI.getSession())) {
-            if (("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
-                && uri.getHost().endsWith(".knime.org")) {
-                UpdateInfo newRelease = UpdateChecker.checkForNewRelease(uri);
-                if (newRelease != null) {
-                    updateList.add(newRelease);
-                }
-            }
-        }
-        return updateList;
-    }
-
-    private void injectNoUpdateMessage(final Document doc) throws ParserConfigurationException, SAXException,
-        IOException, XPathExpressionException, TransformerException {
-        XPath xpath = m_xpathFactory.newXPath();
-//        Element noUpdatesSpan =
-//            (Element)xpath.evaluate("//span[@id='no-updates']", doc.getDocumentElement(), XPathConstants.NODE);
-//        noUpdatesSpan.removeAttribute("style"); // removes the "hidden" style
-
-        Element checkingUpdatesSpan =
-            (Element)xpath.evaluate("//span[@id='checking-updates']", doc.getDocumentElement(), XPathConstants.NODE);
-        checkingUpdatesSpan.setAttribute("style", "display: none;");
-
-        Element updateDiv =
-            (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
-        updateDiv.setAttribute("style", "display: none;");
+        UpdateOperation op = new UpdateOperation(provUI.getSession());
+        op.resolveModal(new NullProgressMonitor());
+        return Stream.of(op.getPossibleUpdates()).map(u -> u.toUpdate.getProperty("org.eclipse.equinox.p2.name"))
+                .sorted().distinct().collect(Collectors.toList());
     }
 
     private void injectUpdateMessage(final Document doc) throws ParserConfigurationException, SAXException,
@@ -143,35 +120,27 @@ class UpdateMessageInjector extends AbstractInjector {
         Element updateNode =
             (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
 
-        Element updatesAvailableSpan =
-            (Element)xpath.evaluate("//span[@id='updates-available']", updateNode, XPathConstants.NODE);
-        updatesAvailableSpan.removeAttribute("style"); // removes the "hidden" style and makes it visible
+        Element minorUpdatesAvailableSpan =
+            (Element)xpath.evaluate("//span[@id='bugfixes-available']", updateNode, XPathConstants.NODE);
+        minorUpdatesAvailableSpan.removeAttribute("style"); // removes the "hidden" style and makes it visible
 
-        Element checkingUpdatesSpan =
-            (Element)xpath.evaluate("//span[@id='checking-updates']", doc.getDocumentElement(), XPathConstants.NODE);
-        checkingUpdatesSpan.setAttribute("style", "display: none;");
-
-        Element updateList = (Element)xpath.evaluate(".//ul[@id='update-list']", updateNode, XPathConstants.NODE);
+        Element updateList = (Element)xpath.evaluate(".//ul[@id='bugfixes-list']", updateNode, XPathConstants.NODE);
         updateList.removeAttribute("style"); // removes the "hidden" style and makes it visible
 
-        boolean updatePossible = true;
-        for (UpdateInfo ui : m_newVersions) {
-            updatePossible &= ui.isUpdatePossible();
-
+        for (int i = 0; i < Math.min(5, m_bugfixes.size()); i++) {
             Element li = doc.createElement("li");
-            li.setTextContent(ui.getName());
+            li.setTextContent(m_bugfixes.get(i));
+            updateList.appendChild(li);
+        }
+        if (m_bugfixes.size() > 5) {
+            Element li = doc.createElement("li");
+            li.setTextContent("... and " + (m_bugfixes.size() - 5) + " more");
             updateList.appendChild(li);
         }
 
-        if (updatePossible) {
-            Element updatePossibleNode =
-                (Element)xpath.evaluate(".//span[@id='update-possible']", updateNode, XPathConstants.NODE);
-            updatePossibleNode.removeAttribute("style");
-        } else {
-            Element updateNotPossibleNode =
-                (Element)xpath.evaluate(".//span[@id='update-not-possible']", updateNode, XPathConstants.NODE);
-            updateNotPossibleNode.removeAttribute("style");
-        }
+        Element updatePossibleNode =
+            (Element)xpath.evaluate(".//span[@id='install-bugfixes']", updateNode, XPathConstants.NODE);
+        updatePossibleNode.removeAttribute("style");
 
         if (m_prefs.getBoolean("org.knime.product.intro.update", true)) {
             updateNode.removeAttribute("style"); // removes the "hidden" style
@@ -184,10 +153,8 @@ class UpdateMessageInjector extends AbstractInjector {
     @Override
     protected void injectData(final Document doc, final XPath xpath) throws XPathExpressionException,
         ParserConfigurationException, SAXException, IOException, TransformerException {
-        if (!m_newVersions.isEmpty()) {
+        if (!m_bugfixes.isEmpty()) {
             injectUpdateMessage(doc);
-        } else {
-            injectNoUpdateMessage(doc);
         }
     }
 }

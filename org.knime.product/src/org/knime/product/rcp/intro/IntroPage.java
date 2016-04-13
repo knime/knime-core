@@ -168,7 +168,9 @@ public class IntroPage implements LocationListener {
             m_introFile = copyTemplate("intro/intro.xhtml");
             new MRUInjector(m_introFile, introFileLock, m_prefs, m_freshWorkspace, m_parserFactory, m_xpathFactory,
                 m_transformerFactory).run();
-            KNIMEConstants.GLOBAL_THREAD_POOL.submit(new UpdateMessageInjector(m_introFile, introFileLock, m_prefs,
+            KNIMEConstants.GLOBAL_THREAD_POOL.submit(new BugfixMessageInjector(m_introFile, introFileLock, m_prefs,
+                m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory));
+            KNIMEConstants.GLOBAL_THREAD_POOL.submit(new NewReleaseMessageInjector(m_introFile, introFileLock, m_prefs,
                 m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory));
             KNIMEConstants.GLOBAL_THREAD_POOL.submit(new TipsAndNewsInjector(m_introFile, introFileLock, m_prefs,
                 m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory));
