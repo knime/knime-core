@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
@@ -115,6 +114,7 @@ public class AbstractColumnTableSorterTest {
 
         assertSorting(testTable, FEATURE1, CLASS);
         assertSorting(testTable, FEATURE1, STRING_FEATURE);
+        assertSorting(testTable);
     }
 
     /**
@@ -208,7 +208,7 @@ public class AbstractColumnTableSorterTest {
      */
     private void assertSorting(final BufferedDataTable table, final String... toSort) throws CanceledExecutionException, InvalidSettingsException {
         ColumnBufferedDataTableSorter dataTableSorter =
-            new ColumnBufferedDataTableSorter(table.getDataTableSpec(), table.getRowCount(), toSort);
+            new ColumnBufferedDataTableSorter(table.getDataTableSpec(), table.size(), toSort);
 
         final Comparator<DataRow> ascendingOrderAssertion = createAscendingOrderAssertingComparator(table, toSort);
 
@@ -227,10 +227,9 @@ public class AbstractColumnTableSorterTest {
     }
 
     private Comparator<DataRow> createAscendingOrderAssertingComparator(final BufferedDataTable testTable2,
-        String... cols) {
+        final String... cols) {
         final List<Comparator<DataCell>> innerComp = new ArrayList<>();
         final int[] indexes = new int[cols.length];
-        cols = ArrayUtils.isEmpty(cols) ? testTable2.getDataTableSpec().getColumnNames() : cols;
         for (int i = 0; i < cols.length; i++) {
             DataColumnSpec columnSpec = testTable2.getDataTableSpec().getColumnSpec(cols[i]);
             indexes[i] = testTable2.getDataTableSpec().findColumnIndex(cols[i]);

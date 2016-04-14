@@ -67,6 +67,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -75,6 +76,7 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobSupportDataRow;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.util.memory.MemoryAlertSystem.MemoryActionIndicator;
 import org.knime.core.node.CanceledExecutionException;
@@ -158,13 +160,13 @@ abstract class AbstractColumnTableSorter {
      */
     AbstractColumnTableSorter(final DataTableSpec spec, final long rowsCount, final SortingDescription... descriptions)
         throws InvalidSettingsException {
-        checkNotNullAndNotEmpty(descriptions);
+        checkArgument(!ArrayUtils.contains(descriptions, null), "Null values are not permitted.");
         m_dataTableSpec = checkNotNull(spec);
         m_sortDescriptions = descriptions;
         m_rowCount = rowsCount;
         m_buffer = new LinkedHashMap<>();
         for (SortingDescription desc : descriptions) {
-            m_buffer.put(desc, new ArrayList<DataRow>(20000));
+            m_buffer.put(desc, new ArrayList<DataRow>());
         }
         validateAndInit(spec, descriptions);
     }
@@ -186,8 +188,14 @@ abstract class AbstractColumnTableSorter {
     void sort(final DataTable dataTable, final ExecutionMonitor exec, final SortingConsumer resultListener)
         throws CanceledExecutionException {
 
-        clearBuffer();
-        sortOnDisk(dataTable, exec, resultListener);
+        if (m_sortDescriptions.length < 0) {
+            for (DataRow r : dataTable) {
+                resultListener.consume(new DefaultRow(r.getKey(), new DataCell[0]));
+            }
+        } else {
+            clearBuffer();
+            sortOnDisk(dataTable, exec, resultListener);
+        }
     }
 
     /**
@@ -222,9 +230,8 @@ abstract class AbstractColumnTableSorter {
      * @param exec an execution context for reporting progress and creating BufferedDataContainers
      * @throws CanceledExecutionException if the user has canceled execution
      */
-    private void
-        sortOnDisk(final DataTable dataTable, final ExecutionMonitor exec, final SortingConsumer resultListener)
-            throws CanceledExecutionException {
+    private void sortOnDisk(final DataTable dataTable, final ExecutionMonitor exec,
+        final SortingConsumer resultListener) throws CanceledExecutionException {
 
         final List<AbstractTableSorter> columnPartitions =
             new ArrayList<AbstractTableSorter>(m_sortDescriptions.length);
@@ -281,13 +288,6 @@ abstract class AbstractColumnTableSorter {
             }
 
             clearBuffer();
-        }
-
-        clearBuffer();
-
-        // if the table is empty or has only one row, we can stop here
-        if (currentTotalRows <= 1) {
-            return;
         }
 
         readProgress.setProgress(1.0);
@@ -363,7 +363,7 @@ abstract class AbstractColumnTableSorter {
 
     private static SortingDescription[] toSortDescriptions(final DataTableSpec dataTableSpec, final String[] toSort)
         throws InvalidSettingsException {
-        checkNotNullAndNotEmpty(toSort);
+        checkArgument(!ArrayUtils.contains(toSort, null), "Null values are not permitted.");
 
         SortingDescription[] toReturn = new SortingDescription[toSort.length];
         int index = 0;
@@ -380,11 +380,6 @@ abstract class AbstractColumnTableSorter {
             };
         }
         return toReturn;
-    }
-
-    private static <T> void checkNotNullAndNotEmpty(final T[] toSort) {
-        checkArgument(ArrayUtils.isNotEmpty(toSort), "Array cannot be empty.");
-        checkArgument(!ArrayUtils.contains(toSort, null), "Null values are not permitted.");
     }
 
     /**
