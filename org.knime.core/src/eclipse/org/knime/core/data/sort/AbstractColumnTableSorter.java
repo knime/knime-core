@@ -254,8 +254,8 @@ abstract class AbstractColumnTableSorter {
         long currentTotalRows = 0L;
         while (iterator.hasNext()) {
             LOGGER.debugWithFormat("Reading temporary tables -- (chunk %d)", chunkCount);
-            fillBuffer(iterator, exec);
-            long bufferedRows = m_buffer.entrySet().iterator().next().getValue().size();
+            assert m_buffer.values().stream().allMatch(l -> l.isEmpty());
+            long bufferedRows = fillBuffer(iterator, exec);
             LOGGER.debugWithFormat("Writing temporary tables -- (chunk %d with %d rows)", chunkCount, bufferedRows);
             currentTotalRows += bufferedRows;
             readProgress.setProgress(currentTotalRows / (double)m_rowCount,
@@ -390,21 +390,23 @@ abstract class AbstractColumnTableSorter {
      * @param exec
      * @throws CanceledExecutionException
      */
-    private void fillBuffer(final RowIterator iterator, final ExecutionMonitor readExec)
+    private long fillBuffer(final RowIterator iterator, final ExecutionMonitor readExec)
         throws CanceledExecutionException {
 
-        // read at least two rows, otherwise we won't make any progress
         long count = 0;
         while (iterator.hasNext()) {
+            count += 1;
             readExec.checkCanceled();
             DataRow r = iterator.next();
             for (Entry<SortingDescription, List<DataRow>> descr : m_buffer.entrySet()) {
                 descr.getValue().add(descr.getKey().createSubRow(r));
             }
-            if ((++count >= 2) &&  m_memActionIndicator.lowMemoryActionRequired()) {
+            // read at least two rows, otherwise we won't make any progress
+            if ((count >= 2) &&  m_memActionIndicator.lowMemoryActionRequired()) {
                 break;
             }
         }
+        return count;
     }
 
     private void clearBuffer() {
