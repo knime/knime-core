@@ -76,7 +76,7 @@ import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -197,7 +197,8 @@ public class RuleSetToTable {
         DataType outcomeType = targetCols.get(0).getType();
 
         List<Rule> rules = ruleTranslator.getRules();
-        int idx = 0, rulesSize = rules.size();
+        long idx = 0L;
+        int rulesSize = rules.size();
         Map<String, DataType> types = new LinkedHashMap<>();
         for (DataColumnSpec col : pmmlPo.getSpec().getLearningCols()) {
             types.put(col.getName(), col.getType());
@@ -306,7 +307,7 @@ public class RuleSetToTable {
             return new StringCell(outcome);
         }
         if (outcomeType.isCompatible(BooleanValue.class)) {
-            return BooleanCell.get(Boolean.parseBoolean(outcome));
+            return BooleanCellFactory.create(outcome);
         }
         if (outcomeType.isCompatible(IntValue.class)) {
             return new IntCell(Integer.parseInt(outcome));

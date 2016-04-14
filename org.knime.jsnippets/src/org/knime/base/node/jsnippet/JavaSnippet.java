@@ -882,7 +882,7 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
         DataTableSpec spec = new DataTableSpec();
         CellFactory factory = new JavaSnippetCellFactory(this, spec,
                 flowVariableRepository, 1);
-        factory.getCells(new DefaultRow(RowKey.createRowKey(0),
+        factory.getCells(new DefaultRow(RowKey.createRowKey(0L),
                 new DataCell[0]));
     }
 

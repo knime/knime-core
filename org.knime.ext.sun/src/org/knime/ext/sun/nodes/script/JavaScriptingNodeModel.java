@@ -51,6 +51,7 @@ import java.io.IOException;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -73,7 +74,7 @@ public class JavaScriptingNodeModel
     private JavaScriptingSettings m_settings;
 
     /** The current row count or -1 if not in execute(). */
-    private int m_rowCount = -1;
+    private long m_rowCount = -1;
 
     private final JavaScriptingCustomizer m_customizer;
 
@@ -125,7 +126,7 @@ public class JavaScriptingNodeModel
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         ColumnRearranger c = createColumnRearranger(inSpec);
-        m_rowCount = inData[0].getRowCount();
+        m_rowCount = inData[0].size();
         try {
             BufferedDataTable o = exec.createColumnRearrangeTable(
                     inData[0], c, exec);
@@ -215,9 +216,20 @@ public class JavaScriptingNodeModel
         }
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @deprecated*/
+    @Deprecated
     @Override
     public int getRowCount() {
+        return KnowsRowCountTable.checkRowCount(m_rowCount);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.2
+     */
+    @Override
+    public long getRowCountLong() {
         return m_rowCount;
     }
 

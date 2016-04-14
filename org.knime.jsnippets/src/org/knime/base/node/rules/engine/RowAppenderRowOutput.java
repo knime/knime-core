@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,37 +41,64 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Oct 3, 2010 (wiswedel): created
+ *   11.03.2015 (ohl): created
  */
-package org.knime.ext.sun.nodes.script.calculator;
+package org.knime.base.node.rules.engine;
 
+import java.io.Closeable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+import org.knime.core.data.DataRow;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.RowAppender;
+import org.knime.core.node.streamable.RowOutput;
 
 /**
- * Provides access to flow variables.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * Convenient class to wrap a {@link RowAppender} where a {@link RowOutput} is required.
+ *
+ * @author ohl
+ * @author Gabor Bakos
+ * @since 3.2
  */
-public interface FlowVariableProvider {
+public class RowAppenderRowOutput extends RowOutput {
 
-    /** Reads a variable from the node.
-     * @param name The name of variable.
-     * @param type Type of variable.
-     * @return The value
-     */
-    public Object readVariable(final String name, final Class<?> type);
+    private final RowAppender m_table;
 
     /**
-     * @return the row count of the BDT being processed, otherwise -1.
-     * @deprecated Use {@link #getRowCountLong()}.
+     *
+     * @param rowAppender pass a created and still open container. #close() closes the container and
+     * allows you to retrieve the data table.
      */
-    @Deprecated
-    public int getRowCount();
+    public RowAppenderRowOutput(final RowAppender rowAppender) {
+        m_table = rowAppender;
+    }
 
-    /** @return the row count of the BDT being processed, otherwise -1.
-     * @since 3.2 */
-    public default long getRowCountLong() {
-        return getRowCount();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void push(final DataRow row) throws InterruptedException {
+        m_table.addRowToTable(row);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws InterruptedException {
+        if (m_table instanceof Closeable) {
+            final AutoCloseable closeable = (AutoCloseable)m_table;
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                throw new InterruptedException(e.getMessage());
+            }
+        } else if (m_table instanceof DataContainer) {
+            ((DataContainer)m_table).close();
+        }
     }
 }

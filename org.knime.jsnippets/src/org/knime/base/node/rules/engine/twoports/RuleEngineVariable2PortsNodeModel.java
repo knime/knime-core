@@ -88,6 +88,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
@@ -154,20 +156,39 @@ class RuleEngineVariable2PortsNodeModel extends NodeModel implements FlowVariabl
      * @throws InvalidSettingsException Missing values in outcomes are not supported.
      */
     static List<String> rules(final BufferedDataTable rulesTable, final RuleEngine2PortsSimpleSettings settings, final RuleNodeSettings ruleType) throws InvalidSettingsException {
+        try {
+            return rules(new DataTableRowInput(rulesTable), settings, ruleType);
+        } catch (InterruptedException e) {
+            throw new IllegalStateException("DataTableRowInput should not throw InterruptedException!", e);
+        }
+    }
+
+    /**
+     * Helper method to read the rules similarly in all (Dictionary) nodes from rule tables.
+     *
+     * @param rules The rules as {@link DataRow}s.
+     * @param settings The configuration settings.
+     * @param ruleType The kind of the node.
+     * @return The list of rules read.
+     * @throws InvalidSettingsException Missing values in outcomes are not supported.
+     * @throws InterruptedException When the processing was interrupted.
+     */
+    static List<String> rules(final RowInput rules, final RuleEngine2PortsSimpleSettings settings, final RuleNodeSettings ruleType) throws InvalidSettingsException, InterruptedException {
         List<String> ret = new ArrayList<>();
-        int ruleIdx = rulesTable.getSpec().findColumnIndex(settings.getRuleColumn()), outcomeIdx =
-            rulesTable.getSpec().findColumnIndex(settings.getOutcomeColumn());
+        int ruleIdx = rules.getDataTableSpec().findColumnIndex(settings.getRuleColumn()), outcomeIdx =
+            rules.getDataTableSpec().findColumnIndex(settings.getOutcomeColumn());
         assert ruleIdx >= 0 : ruleIdx;
-        for (DataRow dataRow : rulesTable) {
-            DataCell ruleCell = dataRow.getCell(ruleIdx);
-            CheckUtils.checkArgument(ruleCell instanceof StringValue, "The rule in the row: " + dataRow.getKey()
+        DataRow ruleRow;
+        while ((ruleRow = rules.poll()) != null) {
+            DataCell ruleCell = ruleRow.getCell(ruleIdx);
+            CheckUtils.checkArgument(ruleCell instanceof StringValue, "The rule in the row: " + ruleRow.getKey()
                 + " is not a String: " + ruleCell.getType() + " (" + ruleCell + ")");
             StringValue ruleSv = (StringValue)ruleCell;
             String rule = ruleSv.getStringValue().replaceAll("[\r\n]+", " ");
             if (outcomeIdx >= 0) {
                 String outcomeString;
                 try {
-                    outcomeString = RuleSetToTable.toStringFailForMissing(dataRow.getCell(outcomeIdx));
+                    outcomeString = RuleSetToTable.toStringFailForMissing(ruleRow.getCell(outcomeIdx));
                 } catch (InvalidSettingsException e) {
                     if (RuleSupport.isComment(rule)) {
                         outcomeString = "?";
@@ -186,6 +207,7 @@ class RuleEngineVariable2PortsNodeModel extends NodeModel implements FlowVariabl
             }
             ret.add(rule);
         }
+        rules.close();
         return ret;
     }
 
@@ -210,12 +232,24 @@ class RuleEngineVariable2PortsNodeModel extends NodeModel implements FlowVariabl
             }
 
             @Override
+            @Deprecated
             public int getRowCount() {
                 throw new IllegalStateException("Row count is not available.");
             }
 
             @Override
+            public long getRowCountLong() {
+                throw new IllegalStateException("Row count is not available.");
+            }
+
+            @Override
+            @Deprecated
             public int getRowIndex() {
+                throw new IllegalStateException("Row index is not available.");
+            }
+
+            @Override
+            public long getRowIndexLong() {
                 throw new IllegalStateException("Row index is not available.");
             }
         };
@@ -308,9 +342,18 @@ class RuleEngineVariable2PortsNodeModel extends NodeModel implements FlowVariabl
     /**
      * {@inheritDoc}
      */
+    @Deprecated
     @Override
     public int getRowCount() {
         return -1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long getRowCountLong() {
+        return -1L;
     }
 
     /**

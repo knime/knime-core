@@ -57,6 +57,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -98,7 +99,7 @@ public class JavaRowSplitterNodeModel extends NodeModel
     private JavaScriptingSettings m_settings;
 
     /** The current row count or -1 if not in execute(). */
-    private int m_rowCount = -1;
+    private long m_rowCount = -1;
 
     /**
      *
@@ -219,13 +220,13 @@ public class JavaRowSplitterNodeModel extends NodeModel
     /** {@inheritDoc} */
     @Override
     public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
-        return saveInt(-1);
+        return saveLong(-1);
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean iterate(final StreamableOperatorInternals internals) {
-        return !getInputPortRoles()[0].isStreamable() && readInt(internals) < 0;
+        return !getInputPortRoles()[0].isStreamable() && readLong(internals) < 0;
     }
 
     /** {@inheritDoc} */
@@ -266,6 +267,15 @@ public class JavaRowSplitterNodeModel extends NodeModel
     /** {@inheritDoc} */
     @Override
     public int getRowCount() {
+        return KnowsRowCountTable.checkRowCount(m_rowCount);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 3.2
+     */
+    @Override
+    public long getRowCountLong() {
         return m_rowCount;
     }
 
@@ -314,7 +324,7 @@ public class JavaRowSplitterNodeModel extends NodeModel
         /** {@inheritDoc} */
         @Override
         public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] operators) {
-            return saveInt(Stream.of(operators).mapToInt(o -> readInt(o)).sum());
+            return saveLong(Stream.of(operators).mapToLong(o -> readLong(o)).sum());
         }
 
         /** {@inheritDoc} */
@@ -349,31 +359,31 @@ public class JavaRowSplitterNodeModel extends NodeModel
         /** {@inheritDoc} */
         @Override
         public StreamableOperatorInternals saveInternals() {
-            return saveInt(m_rowCount);
+            return saveLong(m_rowCount);
         }
 
         /** {@inheritDoc} */
         @Override
         public void loadInternals(final StreamableOperatorInternals internals) {
-            m_rowCount = readInt(internals);
+            m_rowCount = readLong(internals);
         }
 
     }
 
-    private static int readInt(final StreamableOperatorInternals internals) {
+    private static long readLong(final StreamableOperatorInternals internals) {
         CheckUtils.checkArgument(internals instanceof SimpleStreamableOperatorInternals, "Not of expected class,"
             + "expected \"%s\", got \"%s\"", SimpleStreamableOperatorInternals.class.getSimpleName(),
             internals == null ? "<null" : internals.getClass().getSimpleName());
         try {
-            return ((SimpleStreamableOperatorInternals)internals).getConfig().getInt(SIMPLE_STREAMABLE_ROWCOUNT_KEY);
+            return ((SimpleStreamableOperatorInternals)internals).getConfig().getLong(SIMPLE_STREAMABLE_ROWCOUNT_KEY);
         } catch (InvalidSettingsException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static SimpleStreamableOperatorInternals saveInt(final int rowCount) {
+    private static SimpleStreamableOperatorInternals saveLong(final long rowCount) {
         SimpleStreamableOperatorInternals internals = new SimpleStreamableOperatorInternals();
-        internals.getConfig().addInt(SIMPLE_STREAMABLE_ROWCOUNT_KEY, rowCount);
+        internals.getConfig().addLong(SIMPLE_STREAMABLE_ROWCOUNT_KEY, rowCount);
         return internals;
     }
 

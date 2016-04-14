@@ -70,6 +70,9 @@ public class RuleEngineSettings {
     private String m_newColName = RuleEngineNodeDialog.NEW_COL_NAME;
     private String m_replaceColumn = "";
     private boolean m_appendColumn = true;
+    /** since 3.2 the node can produce long output ($$ROWINDEX$$) but old instances of that node in old workflows
+     * will map that to int ... will force that using this (hidden) setting. */
+    private boolean m_disallowLongOutputForCompatibility = false;
 
     /**
      * Sets the name of the new column containing the matching rule's outcome.
@@ -87,6 +90,14 @@ public class RuleEngineSettings {
      */
     public String getNewColName() {
         return m_newColName;
+    }
+
+    /**
+     * @return the disallowLongOutputForCompatibility
+     * @since 3.2
+     */
+    public boolean isDisallowLongOutputForCompatibility() {
+        return m_disallowLongOutputForCompatibility;
     }
 
     /**
@@ -161,6 +172,8 @@ public class RuleEngineSettings {
         m_newColName = settings.getString("new-column-name");
         m_replaceColumn = settings.getString(REPLACE_COLUMN_NAME, "");
         m_appendColumn = settings.getBoolean(APPEND_COLUMN, true);
+        // added in 3.2
+        m_disallowLongOutputForCompatibility = settings.getBoolean("disallowLongOutputForCompatibility", true);
     }
 
     /**
@@ -179,6 +192,7 @@ public class RuleEngineSettings {
         m_newColName = settings.getString("new-column-name", RuleEngineNodeDialog.NEW_COL_NAME);
         m_replaceColumn = settings.getString(REPLACE_COLUMN_NAME, "");
         m_appendColumn = settings.getBoolean(APPEND_COLUMN, true);
+        m_disallowLongOutputForCompatibility = settings.getBoolean("disallowLongOutputForCompatibility", false);
     }
 
     /**
@@ -191,5 +205,6 @@ public class RuleEngineSettings {
         settings.addString("new-column-name", m_newColName);
         settings.addString(REPLACE_COLUMN_NAME, m_replaceColumn);
         settings.addBoolean(APPEND_COLUMN, m_appendColumn);
+        settings.addBoolean("disallowLongOutputForCompatibility", m_disallowLongOutputForCompatibility);
     }
 }

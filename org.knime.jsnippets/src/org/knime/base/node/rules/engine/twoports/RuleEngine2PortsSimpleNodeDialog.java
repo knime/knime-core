@@ -345,7 +345,7 @@ abstract class RuleEngine2PortsSimpleNodeDialog extends DataAwareNodeDialogPane 
             getRules() == null ? -1 : getRules().getSpec().findColumnIndex(m_outcomeColumn.getSelectedColumn());
         if (getRules() != null && isSpecAvailable() && ruleIdx >= 0) {
             RuleFactory factory = ruleFactory();
-            int lineNo = 0;
+            long lineNo = 0;
             boolean wasCatchAll = false;
             final boolean firstHit = isFirstHit();
             List<Rule> rules = new ArrayList<>();
@@ -386,7 +386,7 @@ abstract class RuleEngine2PortsSimpleNodeDialog extends DataAwareNodeDialogPane 
                         String origWarning = !m_warnings.getText().isEmpty() ? m_warnings.getText() + "\n" : "";
                         Condition cond = rule.getCondition();
                         if (cond.isEnabled()) {//not comment
-                            if (cond.isCatchAll() && !wasCatchAll && firstHit && lineNo < getRules().getRowCount()) {
+                            if (cond.isCatchAll() && !wasCatchAll && firstHit && lineNo < getRules().size()) {
                                 m_warnings.setText(origWarning + "No rules will match after line " + lineNo + " ("
                                     + dataRow.getKey() + "). Because of rule: " + ruleText);
                             }
@@ -409,7 +409,9 @@ abstract class RuleEngine2PortsSimpleNodeDialog extends DataAwareNodeDialogPane 
                 }
             }
             final DataColumnSpec outcomeSpec = m_outcomeColumn.getSelectedColumnAsSpec();
-            DataType dataType = RuleEngineNodeModel.computeOutputType(rules, outcomeSpec == null ? StringCell.TYPE : outcomeSpec.getType(), m_ruleType);
+            DataType dataType = RuleEngineNodeModel.computeOutputType(rules,
+                outcomeSpec == null ? StringCell.TYPE : outcomeSpec.getType(), m_ruleType,
+                    getSettings().isDisallowLongOutputForCompatibility());
             if (dataType != null) {
                 m_outcomeType.setIcon(dataType.getIcon());
             }

@@ -53,6 +53,7 @@ import java.io.IOException;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -75,7 +76,7 @@ public class StringManipulationNodeModel extends NodeModel
     private StringManipulationSettings m_settings;
 
     /** The current row count or -1 if not in execute(). */
-    private int m_rowCount = -1;
+    private long m_rowCount = -1L;
 
     /**
      * One input, one output.
@@ -103,13 +104,13 @@ public class StringManipulationNodeModel extends NodeModel
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         ColumnRearranger c = createColumnRearranger(inSpec);
-        m_rowCount = inData[0].getRowCount();
+        m_rowCount = inData[0].size();
         try {
             BufferedDataTable o = exec.createColumnRearrangeTable(
                     inData[0], c, exec);
             return new BufferedDataTable[]{o};
         } finally {
-            m_rowCount = -1;
+            m_rowCount = -1L;
         }
     }
 
@@ -160,9 +161,18 @@ public class StringManipulationNodeModel extends NodeModel
         }
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @deprecated*/
+    @Deprecated
     @Override
     public int getRowCount() {
+        return KnowsRowCountTable.checkRowCount(m_rowCount);
+    }
+
+    /** {@inheritDoc}
+     * @since 3.2 */
+    @Override
+    public long getRowCountLong() {
         return m_rowCount;
     }
 

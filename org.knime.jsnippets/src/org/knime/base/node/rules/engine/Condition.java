@@ -394,6 +394,14 @@ public interface Condition extends Line {
         }
 
         /**
+         * @return the expression
+         * @since 3.2
+         */
+        Expression getExpression() {
+            return m_expression;
+        }
+
+        /**
          * {@inheritDoc}
          */
         @Override

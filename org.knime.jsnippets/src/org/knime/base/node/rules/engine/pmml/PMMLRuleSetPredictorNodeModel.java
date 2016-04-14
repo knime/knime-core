@@ -72,6 +72,7 @@ import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -91,6 +92,14 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortObjectInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.pmml.PMMLModelType;
 import org.knime.core.util.Pair;
 import org.w3c.dom.Node;
@@ -127,11 +136,11 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
 
     private SettingsModelString m_outputColumn = new SettingsModelString(CFGKEY_OUTPUT_COLUMN, DEFAULT_OUTPUT_COLUMN);
 
-    private SettingsModelBoolean m_addConfidence = new SettingsModelBoolean(CFGKEY_ADD_CONFIDENCE,
-        DEFAULT_ADD_CONFIDENCE);
+    private SettingsModelBoolean m_addConfidence =
+        new SettingsModelBoolean(CFGKEY_ADD_CONFIDENCE, DEFAULT_ADD_CONFIDENCE);
 
-    private SettingsModelString m_confidenceColumn = new SettingsModelString(CFGKEY_CONFIDENCE_COLUMN,
-        DEFAULT_CONFIDENCE_COLUN);
+    private SettingsModelString m_confidenceColumn =
+        new SettingsModelString(CFGKEY_CONFIDENCE_COLUMN, DEFAULT_CONFIDENCE_COLUN);
 
     private final SettingsModelString m_replaceColumn = createReplaceColumn();
 
@@ -204,13 +213,11 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
     private ColumnRearranger createColumnRearranger(final PMMLPortObject obj, final DataTableSpec spec,
         final ExecutionMonitor exec) throws InvalidSettingsException {
         exec.setMessage("Loading model.");
-        return createRearranger(
-            obj,
-            spec,
-            m_doReplaceColumn.getBooleanValue(),
-            m_doReplaceColumn.getBooleanValue() ? m_replaceColumn.getStringValue() : DataTableSpec.getUniqueColumnName(
-                spec, m_outputColumn.getStringValue()), m_addConfidence.getBooleanValue(),
-            m_confidenceColumn.getStringValue(), /*no validation column*/-1, /* no statistics computed, so concurrent processing is allowed*/
+        return createRearranger(obj, spec, m_doReplaceColumn.getBooleanValue(),
+            m_doReplaceColumn.getBooleanValue() ? m_replaceColumn.getStringValue()
+                : DataTableSpec.getUniqueColumnName(spec, m_outputColumn.getStringValue()),
+            m_addConfidence.getBooleanValue(), m_confidenceColumn.getStringValue(),
+            /*no validation column*/-1, /* no statistics computed, so concurrent processing is allowed*/
             true);
     }
 
@@ -259,7 +266,6 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
             throw new InvalidSettingsException("Expected exactly on RuleSetModel, but got: " + models.size());
         }
         final PMMLRuleTranslator translator = new PMMLRuleTranslator();
-        obj.addModelTranslater(translator);
         obj.initializeModelTranslator(translator);
         if (!translator.isScorable()) {
             throw new UnsupportedOperationException("The model is not scorable.");
@@ -269,11 +275,11 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         final List<DataColumnSpec> targetCols = obj.getSpec().getTargetCols();
         final DataType dataType = targetCols.isEmpty() ? StringCell.TYPE : targetCols.get(0).getType();
         DataColumnSpecCreator specCreator = new DataColumnSpecCreator(outputColumnName, dataType);
-        Set<DataCell> outcomes = new LinkedHashSet<DataCell>();
+        Set<DataCell> outcomes = new LinkedHashSet<>();
         for (Rule rule : rules) {
             DataCell outcome;
             if (dataType.equals(BooleanCell.TYPE)) {
-                outcome = BooleanCell.get(Boolean.parseBoolean(rule.getOutcome()));
+                outcome = BooleanCellFactory.create(rule.getOutcome());
             } else if (dataType.equals(StringCell.TYPE)) {
                 outcome = new StringCell(rule.getOutcome());
             } else if (dataType.equals(DoubleCell.TYPE)) {
@@ -309,11 +315,10 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         final Double defaultConfidence = translator.getDefaultConfidence();
         final DataColumnSpec[] specs;
         if (addConfidence) {
-            specs =
-                new DataColumnSpec[]{
-                    new DataColumnSpecCreator(
-                        DataTableSpec.getUniqueColumnName(ret.createSpec(), confidenceColumnName), DoubleCell.TYPE)
-                        .createSpec(), colSpec};
+            specs = new DataColumnSpec[]{
+                new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(ret.createSpec(), confidenceColumnName),
+                    DoubleCell.TYPE).createSpec(),
+                colSpec};
         } else {
             specs = new DataColumnSpec[]{colSpec};
         }
@@ -382,8 +387,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                         ++matchedRuleCount;
                         Double sumWeight = scoreToSumWeight.get(rule.getOutcome());
                         if (sumWeight == null) {
-                            throw new IllegalStateException("The score value: " + rule.getOutcome()
-                                + " is not in the data dictionary.");
+                            throw new IllegalStateException(
+                                "The score value: " + rule.getOutcome() + " is not in the data dictionary.");
                         }
                         final Double wRaw = rule.getWeight();
                         final double w = wRaw == null ? 0.0 : wRaw.doubleValue();
@@ -471,7 +476,7 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                 }
                 try {
                     if (dataType.isCompatible(BooleanValue.class)) {
-                        return BooleanCell.get(Boolean.parseBoolean(outcome));
+                        return BooleanCellFactory.create(outcome);
                     }
                     if (IntCell.TYPE.isASuperTypeOf(dataType)) {
                         return new IntCell(Integer.parseInt(outcome));
@@ -571,9 +576,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
             }
         }
         if (!notFound.isEmpty()) {
-            StringBuilder sb =
-                new StringBuilder(
-                    "Incompatible to the table, the following columns are not present, or have a wrong type:");
+            StringBuilder sb = new StringBuilder(
+                "Incompatible to the table, the following columns are not present, or have a wrong type:");
             for (DataColumnSpec dataColumnSpec : notFound) {
                 sb.append("\n   ").append(dataColumnSpec);
             }
@@ -586,9 +590,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
             String col = m_replaceColumn.getStringValue();
             specCreator = new DataColumnSpecCreator(col, dataType);
         } else {
-            specCreator =
-                new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(original, m_outputColumn.getStringValue()),
-                    dataType);
+            specCreator = new DataColumnSpecCreator(
+                DataTableSpec.getUniqueColumnName(original, m_outputColumn.getStringValue()), dataType);
         }
         SingleCellFactory dummy = new SingleCellFactory(specCreator.createSpec()) {
             /**
@@ -600,8 +603,9 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
             }
         };
         if (m_addConfidence.getBooleanValue()) {
-            rearranger.append(new SingleCellFactory(new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(
-                rearranger.createSpec(), m_confidenceColumn.getStringValue()), DoubleCell.TYPE).createSpec()) {
+            rearranger.append(new SingleCellFactory(new DataColumnSpecCreator(
+                DataTableSpec.getUniqueColumnName(rearranger.createSpec(), m_confidenceColumn.getStringValue()),
+                DoubleCell.TYPE).createSpec()) {
                 @Override
                 public DataCell getCell(final DataRow row) {
                     throw new IllegalStateException();
@@ -676,8 +680,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
-        CanceledExecutionException {
+    protected void loadInternals(final File internDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         // No internal state
     }
 
@@ -685,9 +689,70 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
-        CanceledExecutionException {
+    protected void saveInternals(final File internDir, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         // No internal state
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        final InputPortRole[] inputPortRoles = super.getInputPortRoles();
+        inputPortRoles[DATA_INDEX] = InputPortRole.DISTRIBUTED_STREAMABLE;
+        return inputPortRoles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        final OutputPortRole[] outputPortRoles = super.getOutputPortRoles();
+        outputPortRoles[0] = OutputPortRole.DISTRIBUTED;
+        return outputPortRoles;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        final DataTableSpec preSpec = (DataTableSpec)inSpecs[DATA_INDEX];
+        return new StreamableOperator() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                final PortObjectInput modelPort = (PortObjectInput)inputs[MODEL_INDEX];
+                final ColumnRearranger rearranger = createRearranger((PMMLPortObject)modelPort.getPortObject(), preSpec,
+                    m_doReplaceColumn.getBooleanValue(),
+                    m_doReplaceColumn.getBooleanValue() ? m_replaceColumn.getStringValue()
+                        : DataTableSpec.getUniqueColumnName(preSpec, m_outputColumn.getStringValue()),
+                    m_addConfidence.getBooleanValue(), m_confidenceColumn.getStringValue(),
+                    /*no validation column*/-1, /* no statistics computed, so concurrent processing is allowed*/
+                    true);
+                final DataTableSpec tableSpec = rearranger.createSpec();
+                if (m_doReplaceColumn.getBooleanValue()) {
+                    DataColumnSpec[] columns = new DataColumnSpec[preSpec.getNumColumns()];
+                    for (int i = columns.length; i-- > 0;) {
+                        columns[i] = preSpec.getColumnSpec(i);
+                    }
+                    int columnIndex = preSpec.findColumnIndex(m_replaceColumn.getStringValue());
+                    if (m_addConfidence.getBooleanValue()) {
+                        //Move confidence to the end
+                        rearranger.move(columnIndex, tableSpec.getNumColumns());
+                        //Move the result to its place
+                        rearranger.move(tableSpec.getNumColumns() - 2, columnIndex);
+                    }
+                }
+                final StreamableFunction function = rearranger.createStreamableFunction(DATA_INDEX, 0);
+                function.runFinal(inputs, outputs, exec);
+            }
+        };
+    }
 }

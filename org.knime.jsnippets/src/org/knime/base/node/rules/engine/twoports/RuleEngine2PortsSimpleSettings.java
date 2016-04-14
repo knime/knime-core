@@ -69,10 +69,15 @@ class RuleEngine2PortsSimpleSettings {
     protected static final String RULES_COLUMN = "rules.column";
     /** Config key for the outcomes column (which can be {@code <none>}). */
     protected static final String OUTCOMES_COLUMN = "outcomes.column";
+    /** Config key for whether we need to force int compatibility at the output. */
+    private static final String DISALLOW_LONG_OUTPUT_FOR_COMPATIBILITY = "disallowLongOutputForCompatibility";
     /** The name of the rule column. */
     private String m_ruleColumn = null;
     /** The name of the outcome column.*/
     private String m_outcomeColumn = null;
+    /** since 3.2 the node can produce long output ($$ROWINDEX$$) but old instances of that node in old workflows
+     * will map that to int ... will force that using this (hidden) setting. */
+    private boolean m_disallowLongOutputForCompatibility = false;
 
     /**
      * Constructs the simple settings.
@@ -93,6 +98,14 @@ class RuleEngine2PortsSimpleSettings {
      */
     protected final void setRuleColumn(final String ruleColumn) {
         this.m_ruleColumn = ruleColumn;
+    }
+
+    /**
+     * @return the disallowLongOutputForCompatibility
+     * @since 3.2
+     */
+    protected final boolean isDisallowLongOutputForCompatibility() {
+        return m_disallowLongOutputForCompatibility;
     }
 
     /**
@@ -138,6 +151,7 @@ class RuleEngine2PortsSimpleSettings {
         String ruleColumn = inSpec == null ? null : columnNameOrNull(secondSpec, StringValue.class);
         m_ruleColumn = settings.getString(RULES_COLUMN, ruleColumn);
         m_outcomeColumn = settings.getString(OUTCOMES_COLUMN, null);
+        m_disallowLongOutputForCompatibility = settings.getBoolean(DISALLOW_LONG_OUTPUT_FOR_COMPATIBILITY, false);
     }
 
     /**
@@ -149,6 +163,8 @@ class RuleEngine2PortsSimpleSettings {
     protected void loadSettingsModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_ruleColumn = settings.getString(RULES_COLUMN);
         m_outcomeColumn = settings.getString(OUTCOMES_COLUMN);
+        // added in 3.2
+        m_disallowLongOutputForCompatibility = settings.getBoolean(DISALLOW_LONG_OUTPUT_FOR_COMPATIBILITY, true);
     }
 
     /**
@@ -159,5 +175,6 @@ class RuleEngine2PortsSimpleSettings {
     protected void saveSettings(final NodeSettingsWO settings) {
         settings.addString(RULES_COLUMN, m_ruleColumn);
         settings.addString(OUTCOMES_COLUMN, m_outcomeColumn);
+        settings.addBoolean(DISALLOW_LONG_OUTPUT_FOR_COMPATIBILITY, m_disallowLongOutputForCompatibility);
     }
 }
