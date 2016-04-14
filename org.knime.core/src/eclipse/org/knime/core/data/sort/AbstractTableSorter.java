@@ -575,7 +575,7 @@ abstract class AbstractTableSorter {
                 }
             }
         }
-        throw new RuntimeException("Merging iterator should never been already returned");
+        return Collections.<DataRow>emptyList().iterator();
     }
 
     private long createInitialChunks(final ExecutionMonitor exec, final DataTable dataTable)

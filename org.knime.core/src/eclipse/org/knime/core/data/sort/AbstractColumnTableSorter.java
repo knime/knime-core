@@ -233,8 +233,7 @@ abstract class AbstractColumnTableSorter {
     private void sortOnDisk(final DataTable dataTable, final ExecutionMonitor exec,
         final SortingConsumer resultListener) throws CanceledExecutionException {
 
-        final List<AbstractTableSorter> columnPartitions =
-            new ArrayList<AbstractTableSorter>(m_sortDescriptions.length);
+        final List<AbstractTableSorter> columnPartitions = new ArrayList<>(m_sortDescriptions.length);
 
         // Each sorting description is done as a single external merge sort of their parts of the data
         for (int i = 0; i < m_sortDescriptions.length; i++) {
@@ -300,7 +299,9 @@ abstract class AbstractColumnTableSorter {
         // publish the results to the listener
         List<DataRow> currentRow = new ArrayList<>();
         long rowNo = 0;
-        while (partitionRowIterators.get(0).hasNext()) {
+        Iterator<DataRow> firstPartitionIterator = partitionRowIterators.isEmpty()
+                ? Collections.<DataRow>emptyList().iterator() : partitionRowIterators.get(0);
+        while (firstPartitionIterator.hasNext()) {
             for (int i = 0; i < partitionRowIterators.size(); i++) {
                 currentRow.add(partitionRowIterators.get(i).next());
             }
