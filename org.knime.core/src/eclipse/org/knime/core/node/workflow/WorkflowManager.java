@@ -9188,10 +9188,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Counterpart to {@link #getInputNodes()} - it sets new values into quickform nodes on the root level.
-     * All nodes as per map argument will be reset as part of this call.
-     * @param input a map from {@link org.knime.core.node.dialog.DialogNode#getParameterName() node's parameter name}
-     * to its (JSON or string object value). Invalid entries cause an exception.
+    /**
+     * Counterpart to {@link #getInputNodes()} - it sets new values into quickform nodes on the root level. All nodes as
+     * per map argument will be reset as part of this call.
+     *
+     * @param input a map from {@link org.knime.core.node.dialog.DialogNode#getParameterName() node's parameter name} to
+     *            its (JSON or string object value). Invalid entries cause an exception.
      * @since 2.12
      */
     public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
@@ -9218,26 +9220,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
                 NodeID id = null;
                 InputNode inputNode = null;
-                if(idSuffix == null) {
+                if (idSuffix == null) {
                     //try to find node without id, check for duplicates
                     for (Map.Entry<NodeID, InputNode> dNode : nodeMap.entrySet()) {
                         if (paramBase.equals(dNode.getValue().getInputData().getID())) {
-                            CheckUtils.checkArgument(id == null,
-                                    "Duplicate parameter name \"%s\" in workflow. "
-                                    + "Cannot set parameter without ID notation.",
-                                    parameterName);
+                            CheckUtils.checkArgument(id == null, "Duplicate parameter name \"%s\" in workflow. "
+                                + "Cannot set parameter without ID notation.", parameterName);
                             id = dNode.getKey();
                             inputNode = dNode.getValue();
                         }
                     }
-                    CheckUtils.checkArgumentNotNull(id, "Invalid parameter name \"%s\" - "
-                            + "could not locate corresponding node in workflow", parameterName);
+                    CheckUtils.checkArgumentNotNull(id,
+                        "Invalid parameter name \"%s\" - could not locate corresponding node in workflow",
+                        parameterName);
                 } else {
                     id = new NodeID(getID(), idSuffix);
                     inputNode = nodeMap.get(id);
-                    CheckUtils.checkArgument(inputNode != null && paramBase.equals(StringUtils.defaultString(
-                        inputNode.getInputData().getID())),
-                        "Invalid parameter name \"%s\" - could not locate corresponding node in workflow", parameterName);
+                    CheckUtils.checkArgument(
+                        inputNode != null
+                            && paramBase.equals(StringUtils.defaultString(inputNode.getInputData().getID())),
+                        "Invalid parameter name \"%s\" - could not locate corresponding node in workflow",
+                        parameterName);
                 }
 
                 LOGGER.debugWithFormat("Setting new parameter for node \"%s\" (%s)", id, entry.getValue().getID());
