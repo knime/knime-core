@@ -484,10 +484,10 @@
             after="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory"
             category-path="/view/property"
             factory-class="org.knime.base.node.viz.property.color.ColorAppender2NodeFactory"
-            id="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory">
+            id="org.knime.base.node.viz.property.color.ColorAppender2NodeFactory">
       </node>
       <node
-            after="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory"
+            after="org.knime.base.node.viz.property.color.ColorAppender2NodeFactory"
             category-path="/view/property"
             factory-class="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory"
             id="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory">
@@ -853,10 +853,10 @@
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"/>
     <node
-         after="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"
+         after="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"
    		 category-path="/manipulation/column/binning"
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelapply.Discretization2ApplyNodeFactory"
-         id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
+         id="org.knime.base.node.preproc.discretization.caim2.modelapply.Discretization2ApplyNodeFactory"/>
     <node
          factory-class="org.knime.base.node.preproc.rowkey2.RowKeyNodeFactory2"
          category-path="/manipulation/row/row-other"
@@ -1117,9 +1117,9 @@
             after="org.knime.base.node.io.database.DBSorterNodeFactory"
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.groupby.DBGroupByNodeFactory2"
-            id="org.knime.base.node.io.database.DBGroupByNodeFactory"/>
+            id="org.knime.base.node.io.database.groupby.DBGroupByNodeFactory2"/>
       <node
-            after="org.knime.base.node.io.database.DBGroupByNodeFactory"
+            after="org.knime.base.node.io.database.groupby.DBGroupByNodeFactory2"
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBJoinerNodeFactory"
             id="org.knime.base.node.io.database.DBJoinerNodeFactory"/>
@@ -1207,10 +1207,10 @@
             after="org.knime.base.node.io.predictor.PredictorWriterNodeFactory"
             category-path="/io/write"
             factory-class="org.knime.base.node.image.writeimage.WriteImageNodeFactory"
-            id="org.knime.base.node.image.writemage.WriteImageNodeFactory">
+            id="org.knime.base.node.image.writeimage.WriteImageNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.image.writemage.WriteImageNodeFactory"
+            after="org.knime.base.node.image.writeimage.WriteImageNodeFactory"
             category-path="/io/write"
             factory-class="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory"
             id="org.knime.base.node.image.imagecolwriter.ImageColumnWriterNodeFactory">
