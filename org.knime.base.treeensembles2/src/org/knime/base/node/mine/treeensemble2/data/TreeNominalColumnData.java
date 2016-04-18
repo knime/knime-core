@@ -747,9 +747,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
         nomValProbabilities.sort(null);
         int highestBitPosition = getMetaData().getValues().length - 1;
-        // in case of XGBoost missing value handling, we want to consider missing values
-        // as additional nominal value
-        if (containsMissingValues() /*&& !useXGBoostMissingValueHandling*/) {
+        if (containsMissingValues()) {
             highestBitPosition--;
         }
 
