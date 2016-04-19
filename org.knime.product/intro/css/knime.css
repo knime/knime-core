@@ -2,8 +2,22 @@
 	font-family: 'Roboto',sans-serif !important;
 }
 
+/* Default font size for old or unscaled browsers. */
 html {
-	font-size:10px; 
+	font-size: 10px;
+}
+
+/* Catching scaled font sizes and/or retina displays for modern browsers only.
+   Setting font size to 62.5%, so that the default (usually 16px unscaled) is reset to 10px. */
+@media	only screen and (-webkit-min-device-pixel-ratio: 1.2),
+		only screen and (-o-min-device-pixel-ratio: 12/10),
+		only screen and (min-resolution: 115dpi),
+		only screen and (min-resolution: 1.2dppx) {
+	
+	html {
+    	font-size: 62.5%;
+	}
+
 }
 
 body {
