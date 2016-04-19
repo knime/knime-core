@@ -281,9 +281,12 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         // Creating the brows button here in order to get its preferred height
         JButton browse = new JButton("Browse...");
+        JButton rescan = new JButton("Rescan");
         int buttonHeight = browse.getPreferredSize().height;
         FlowVariableModel flowVarBrowseModel = createFlowVariableModel(FileReaderSettings.CFGKEY_DATAURL, Type.STRING);
         FlowVariableModelButton flowVarBrowseButton = new FlowVariableModelButton(flowVarBrowseModel);
+
+        rescan.setPreferredSize(browse.getPreferredSize());
 
         m_urlCombo = new JComboBox();
         m_urlCombo.setEditable(true);
@@ -326,6 +329,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         m_preserveSettings.setEnabled(true);
         preserveBox.add(Box.createHorizontalGlue());
         preserveBox.add(m_preserveSettings);
+        preserveBox.add(rescan);
         preserveBox.add(Box.createHorizontalGlue());
 
         panel.add(fileBox);
@@ -375,6 +379,16 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     m_urlCombo.setSelectedItem(newFile);
                     // fileLocationChanged();
                 }
+            }
+        });
+        rescan.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                if (!m_preserveSettings.isSelected()) {
+                    resetSettings();
+                }
+                analyzeDataFileAndUpdatePreview(true);
             }
         });
         return panel;
