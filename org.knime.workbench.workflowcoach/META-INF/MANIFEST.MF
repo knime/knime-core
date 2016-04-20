@@ -2,10 +2,10 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench Workflow Coach
 Bundle-SymbolicName: org.knime.workbench.workflowcoach;singleton:=true
-Bundle-Version: 1.0
+Bundle-Version: 3.2.0.qualifier
 Bundle-ClassPath: .
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-RegisterBuddy: org.knime.base
 Require-Bundle: org.eclipse.jface;bundle-version="[3.11.0,4.0.0)",
  org.knime.core;bundle-version="[3.2.0,4.0.0)",
