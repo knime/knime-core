@@ -60,7 +60,7 @@
                relative="org.eclipse.ui.editorss"/>
          <view
                closeable="true"
-               id="org.knime.workbench.ui.favorites"
+               id="org.knime.workbench.workflowcoach.view"
                moveable="true"
                ratio="0.2"
                relationship="top"
@@ -83,7 +83,7 @@
                id="org.eclipse.pde.runtime.LogView">
          </viewShortcut>
          <viewShortcut id="org.knime.workbench.repository.view.RepositoryView"/>
-         <viewShortcut id="org.knime.workbench.ui.favorites">
+         <viewShortcut id="org.knime.workbench.workflowcoach.view">
          </viewShortcut>
       </perspectiveExtension>
       <perspectiveExtension
