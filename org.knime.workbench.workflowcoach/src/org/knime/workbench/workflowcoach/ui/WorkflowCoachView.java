@@ -302,7 +302,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         List<NodeRecommendation[]> recommendationsWithoutDups = new ArrayList<>(recommendationsJoined.size());
         for (NodeRecommendation[] nrs : recommendationsJoined) {
             int idx = getNonNullIdx(nrs);
-            if (!duplicates.add(nrs[idx].toString())) {
+            if (duplicates.add(nrs[idx].toString())) {
                 recommendationsWithoutDups.add(nrs);
             }
         }
