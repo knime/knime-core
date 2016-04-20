@@ -62,7 +62,7 @@ public class WorkflowCoachContentProvider implements IStructuredContentProvider 
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     @Override
     public Object[] getElements(final Object inputElement) {
         if (inputElement instanceof List) {

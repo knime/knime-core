@@ -27,6 +27,4 @@ Require-Bundle: org.eclipse.jface;bundle-version="[3.11.0,4.0.0)",
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin
 Export-Package: org.knime.workbench.workflowcoach,
- org.knime.workbench.workflowcoach.data,
- org.knime.workbench.workflowcoach.prefs,
- org.knime.workbench.workflowcoach.ui
+ org.knime.workbench.workflowcoach.data

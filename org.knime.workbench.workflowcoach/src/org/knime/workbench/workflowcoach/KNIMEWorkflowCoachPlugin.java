@@ -165,7 +165,6 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
      *         supported.
      */
     public synchronized List<NodeTripleProvider> getNodeTripleProviders() {
-
         if (m_tripleProviders == null) {
             //add community triple provider
             m_tripleProviders = new ArrayList<NodeTripleProvider>(3);
@@ -176,7 +175,9 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
                 Platform.getExtensionRegistry().getExtensionPoint(TRIPLE_PROVIDER_EXTENSION_POINT_ID);
             if (extPoint == null) {
                 LOGGER.error("Invalid extension point: " + TRIPLE_PROVIDER_EXTENSION_POINT_ID);
+                return Collections.emptyList();
             }
+
             IExtension[] extensions = extPoint.getExtensions();
             for (IExtension ext : extensions) {
                 for (IConfigurationElement conf : ext.getConfigurationElements()) {

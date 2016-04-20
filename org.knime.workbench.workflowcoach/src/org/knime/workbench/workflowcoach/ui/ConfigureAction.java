@@ -51,7 +51,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.dialogs.PreferencesUtil;
-import org.knime.core.node.NodeLogger;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
@@ -64,8 +63,6 @@ import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
  *
  */
 public class ConfigureAction extends Action {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ConfigureAction.class);
-
     /** ID of the global rename action in the explorer menu. */
     public static final String CONFIGUREWORKFLOWCOACH_ACTION_ID = "org.knime.workbench.workflowcoach.configure";
 

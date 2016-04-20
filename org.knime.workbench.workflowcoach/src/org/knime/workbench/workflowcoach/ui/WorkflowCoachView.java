@@ -48,17 +48,12 @@
  */
 package org.knime.workbench.workflowcoach.ui;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -66,6 +61,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -73,8 +69,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.util.LocalSelectionTransfer;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -106,9 +100,8 @@ import org.knime.core.util.Pair;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.NodeTemplate;
-import org.knime.workbench.repository.model.Root;
-import org.knime.workbench.ui.favorites.FavoriteNodesManager;
 import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager.NodeRecommendation;
@@ -122,7 +115,11 @@ import org.osgi.framework.FrameworkUtil;
  * @author Martin Horn, University of Konstanz
  */
 public class WorkflowCoachView extends ViewPart implements ISelectionListener {
+    private static final DateTimeFormatter DATE_PARSER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
+    /**
+     * ID for this view.
+     */
     public static final String ID = "org.knime.workbench.workflowcoach.view";
 
     private static final String SELECTION_HINT_MESSAGE = "No selection.";
@@ -192,7 +189,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         Job nodesLoader = new KNIMEJob("Nodes Loader", FrameworkUtil.getBundle(getClass())) {
             @Override
             protected IStatus run(final IProgressMonitor monitor) {
-                final Root root = FavoriteNodesManager.getInstance().getRoot();
+                RepositoryManager.INSTANCE.getRoot(); // wait until the repository is fully loaded
 
                 if (monitor.isCanceled()) {
                     return Status.CANCEL_STATUS;
@@ -300,14 +297,12 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         List<NodeRecommendation[]> recommendationsJoined = joinRecommendations(recommendations, maxSize);
 
         //remove duplicates from list
-        Set<String> duplicates = new HashSet<String>();
+        Set<String> duplicates = new HashSet<>();
 
-        List<NodeRecommendation[]> recommendationsWithoutDups =
-            new ArrayList<NodeRecommendationManager.NodeRecommendation[]>(recommendationsJoined.size());
+        List<NodeRecommendation[]> recommendationsWithoutDups = new ArrayList<>(recommendationsJoined.size());
         for (NodeRecommendation[] nrs : recommendationsJoined) {
             int idx = getNonNullIdx(nrs);
-            if (!duplicates.contains(nrs[idx].toString())) {
-                duplicates.add(nrs[idx].toString());
+            if (!duplicates.add(nrs[idx].toString())) {
                 recommendationsWithoutDups.add(nrs);
             }
         }
@@ -330,22 +325,21 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      * @param namesAndToolTips list of {@link Pair}s with the name the first and the tooltip the second entry
      */
     public void setFrequencyColumnHeadersAndToolTips(final List<Pair<String, String>> namesAndToolTips) {
-        if (namesAndToolTips == null || namesAndToolTips.size() == 0) {
+        if (namesAndToolTips == null || namesAndToolTips.isEmpty()) {
             updateInputNoProvider();
             return;
         }
-        if (namesAndToolTips.size() > 0) {
-            if (m_editor != null) {
-                Control oldEditor = m_editor.getEditor();
-                if (oldEditor != null) {
-                    oldEditor.dispose();
-                }
-                m_editor.dispose();
-                m_editor = null;
+
+        if (m_editor != null) {
+            Control oldEditor = m_editor.getEditor();
+            if (oldEditor != null) {
+                oldEditor.dispose();
             }
-            m_viewer.getTable().setHeaderVisible(true);
-            m_viewer.setInput(SELECTION_HINT_MESSAGE);
+            m_editor.dispose();
+            m_editor = null;
         }
+        m_viewer.getTable().setHeaderVisible(true);
+        m_viewer.setInput(SELECTION_HINT_MESSAGE);
 
         m_viewer.getTable().setRedraw(false);
         while (m_viewer.getTable().getColumnCount() > 1) {
@@ -402,8 +396,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      */
     private List<NodeRecommendation[]> joinRecommendations(final List<NodeRecommendation>[] recommendations,
         final int maxSize) {
-        List<NodeRecommendation[]> recommendationsJoined =
-            new ArrayList<NodeRecommendationManager.NodeRecommendation[]>();
+        List<NodeRecommendation[]> recommendationsJoined = new ArrayList<>();
         for (int i = 0; i < maxSize; i++) {
             if (recommendations.length == 1) {
                 recommendationsJoined.add(new NodeRecommendation[]{recommendations[0].get(i)});
@@ -432,7 +425,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      * @return array of same length as <code>ar</code>, with the found elements non-null. <code>null</code> will be
      *         returned if <code>ar</code> only consists of <code>null</code>-entries
      */
-    @SuppressWarnings("unchecked")
     private <T> T[] getMaxSameElements(final T[] ar) {
         T[] res = ar.clone();
         for (int i = ar.length; i > 0; i--) {
@@ -469,12 +461,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      * @param o
      */
     private void updateInput(final Object o) {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                m_viewer.setInput(o);
-            }
-        });
+        Display.getDefault().syncExec(() -> m_viewer.setInput(o));
     }
 
     /**
@@ -514,9 +501,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      * Inserts a node on double click into the workflow editor.
      */
     private void hookDoubleClickAction() {
-        m_viewer.addDoubleClickListener(new IDoubleClickListener() {
-            @Override
-            public void doubleClick(final DoubleClickEvent event) {
+        m_viewer.addDoubleClickListener(event -> {
                 Object o = ((IStructuredSelection)event.getSelection()).getFirstElement();
                 if (o instanceof NodeRecommendation[]) {
                     NodeRecommendation[] nrs = (NodeRecommendation[])o;
@@ -531,15 +516,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
                     }
                     boolean added = NodeProvider.INSTANCE.addNode(nodeFact);
                     if (added) {
-                        Display.getDefault().asyncExec(new Runnable() {
-                            @Override
-                            public void run() {
-                                setFocus();
-                            }
-                        });
+                        Display.getDefault().asyncExec(() -> setFocus());
                     }
                 }
-            }
         });
     }
 
@@ -549,54 +528,36 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      * performed.
      */
     private void checkForStatisticUpdates() {
-        String lastUpdate = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
-            .getString(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE);
         int updateSchedule = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
             .getInt(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE);
-        if (lastUpdate != null && lastUpdate.length() > 0) {
-            if (updateSchedule == KNIMEWorkflowCoachPlugin.NO_AUTO_UPDATE) {
-                return;
-            }
+        if (updateSchedule == KNIMEWorkflowCoachPlugin.NO_AUTO_UPDATE) {
+            return;
+        }
 
+        String lastUpdate = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
+                .getString(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE);
+        if (StringUtils.isEmpty(lastUpdate)) {
             //check whether a automatic update is necessary
-            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             try {
-                Calendar cal1 = Calendar.getInstance();
-                cal1.setTime(dateFormat.parse(KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
-                    .getString(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE)));
-
-                Calendar cal2 = Calendar.getInstance();
-                cal2.setTime(new Date());
-
-                long weeksDiff = getWeeksBetween(cal1, cal2);
+                LocalDate t = LocalDate.from(DATE_PARSER.parse(lastUpdate));
+                long weeksDiff = ChronoUnit.WEEKS.between(t, LocalDate.now());
                 if (updateSchedule == KNIMEWorkflowCoachPlugin.WEEKLY_UPDATE && weeksDiff == 0) {
                     return;
                 } else if (updateSchedule == KNIMEWorkflowCoachPlugin.MONTHLY_UPDATE && weeksDiff < 4) {
                     return;
                 }
-            } catch (ParseException e) {
+            } catch (DateTimeParseException e) {
                 //something is wrong with the last update date, so let's update the statistics to be sure
             }
         }
 
         //trigger update, but only for updatable and enabled providers
         List<UpdatableNodeTripleProvider> toUpdate =
-            KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream().filter(ntp -> {
-                return (ntp instanceof UpdatableNodeTripleProvider) && ((UpdatableNodeTripleProvider)ntp).isEnabled();
-            }).map(ntp -> {
-                return (UpdatableNodeTripleProvider)ntp;
-            }).collect(Collectors.toList());
+            KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream()
+                .filter(ntp -> (ntp instanceof UpdatableNodeTripleProvider)
+                    && ((UpdatableNodeTripleProvider)ntp).isEnabled())
+                .map(ntp -> (UpdatableNodeTripleProvider)ntp)
+                .collect(Collectors.toList());
         UpdateJob.schedule(Optional.empty(), toUpdate);
-
-    }
-
-    private long getWeeksBetween(final Calendar earlier, final Calendar later) {
-        Instant d1i = Instant.ofEpochMilli(earlier.getTimeInMillis());
-        Instant d2i = Instant.ofEpochMilli(later.getTimeInMillis());
-
-        LocalDateTime startDate = LocalDateTime.ofInstant(d1i, ZoneId.systemDefault());
-        LocalDateTime endDate = LocalDateTime.ofInstant(d2i, ZoneId.systemDefault());
-
-        return ChronoUnit.WEEKS.between(startDate, endDate);
     }
 }

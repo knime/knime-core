@@ -88,21 +88,10 @@ public class NodeRecommendationManager {
 
     private static final String NODE_NAME_SEP = "#";
 
-    private static NodeRecommendationManager m_instance;
+    private static final NodeRecommendationManager INSTANCE = new NodeRecommendationManager();
 
     private List<Map<String, List<NodeRecommendation>>> m_recommendations;
 
-    /**
-     * @return singleton instance
-     */
-    public static synchronized NodeRecommendationManager getInstance() {
-        if (m_instance == null) {
-            m_instance = new NodeRecommendationManager();
-        }
-        return m_instance;
-    }
-
-    @SuppressWarnings("rawtypes")
     private NodeRecommendationManager() {
         //try to load statistics if possible
         try {
@@ -113,6 +102,15 @@ public class NodeRecommendationManager {
     }
 
     /**
+     * Returns the singleton instance for this class.
+     *
+     * @return a singleton instance
+     */
+    public static NodeRecommendationManager getInstance() {
+        return INSTANCE;
+    }
+
+    /**
      * (Re-)Loads the statistics for the node recommendation engine from a given set of {@link NodeTripleProvider}s.
      * @throws Exception if something went wrong while loading the statistics (e.g. a corrupt file)
      */
@@ -120,11 +118,10 @@ public class NodeRecommendationManager {
         synchronized (this) {
             //read from multiple frequency sources
             List<NodeTripleProvider> providers = KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders();
-            m_recommendations = new ArrayList<Map<String, List<NodeRecommendation>>>(providers.size());
+            m_recommendations = new ArrayList<>(providers.size());
             for (NodeTripleProvider provider : providers) {
                 if (provider.isEnabled() && !updateRequired(provider)) {
-                    Map<String, List<NodeRecommendation>> recommendationMap =
-                        new HashMap<String, List<NodeRecommendation>>();
+                    Map<String, List<NodeRecommendation>> recommendationMap = new HashMap<>();
                     m_recommendations.add(recommendationMap);
 
                     provider.getNodeTriples().forEach(nf -> {
@@ -255,20 +252,22 @@ public class NodeRecommendationManager {
      * @param nnc if it's an empty array, source nodes only will be recommended, if more than one node is given, the
      *            node recommendations for different nodes will end up in the same list
      * @return an array of lists of node recommendations, i.e. a list of node recommendations for each used node
-     *         {@link NodeTripleProvider}. It will return <code>null</code> if something went wrong with loading the node statistics!
+     *         {@link NodeTripleProvider}. It will return <code>null</code> if something went wrong with loading the
+     *         node statistics!
      */
     public List<NodeRecommendation>[] getNodeRecommendationFor(final NativeNodeContainer... nnc) {
         if (m_recommendations == null) {
             return null;
         }
         synchronized (this) {
+            @SuppressWarnings("unchecked")
             List<NodeRecommendation>[] res = new List[m_recommendations.size()];
             for (int idx = 0; idx < res.length; idx++) {
                 if (nnc.length == 0) {
                     //recommendations if no node is given -> source nodes are recommended
                     res[idx] = m_recommendations.get(idx).get(SOURCE_NODES_KEY);
                     if (res[idx] == null) {
-                        res[idx] = Collections.EMPTY_LIST;
+                        res[idx] = Collections.emptyList();
                     }
                 } else if (nnc.length == 1) {
                     String nodeID = getKey(nnc[0]);

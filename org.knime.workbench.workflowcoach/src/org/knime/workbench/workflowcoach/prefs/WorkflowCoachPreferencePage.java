@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferencePage;
@@ -85,8 +86,6 @@ import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
 public class WorkflowCoachPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
     /** The id of this preference page. */
     public static final String ID = "org.knime.workbench.workflowcoach";
-
-    private static final String SERVER_ADDRESS = "http://www.knime.org/store/rest";
 
     private Button m_checkCommunityProvider;
 
@@ -174,7 +173,6 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
         m_updateButton = new Button(manualUpdateComp, SWT.PUSH);
         m_updateButton.setText("  Manual Update  ");
         m_updateButton.addSelectionListener(new SelectionAdapter() {
-
             @Override
             public void widgetSelected(final SelectionEvent e) {
                 onUpate();
@@ -209,7 +207,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
         });
 
         //update the currently enabled providers
-        List<UpdatableNodeTripleProvider> toUpdate = new ArrayList<UpdatableNodeTripleProvider>();
+        List<UpdatableNodeTripleProvider> toUpdate = new ArrayList<>();
         //        String selectedServers = m_mountPointTable.getSelectedServers();
         for (NodeTripleProvider ntp : KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders()) {
             if (m_checkCommunityProvider.getSelection() && ntp instanceof CommunityTripleProvider) {
@@ -256,15 +254,15 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
 
         int updateSchedule = prefStore.getInt(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE);
         switch (updateSchedule) {
-            default:
-            case KNIMEWorkflowCoachPlugin.NO_AUTO_UPDATE:
-                m_noAutoUpdateButton.setSelection(true);
-                break;
             case KNIMEWorkflowCoachPlugin.WEEKLY_UPDATE:
                 m_weeklyUpdateButton.setSelection(true);
                 break;
             case KNIMEWorkflowCoachPlugin.MONTHLY_UPDATE:
                 m_monthlyUpdateButton.setSelection(true);
+                break;
+            case KNIMEWorkflowCoachPlugin.NO_AUTO_UPDATE:
+            default:
+                m_noAutoUpdateButton.setSelection(true);
         }
 
     }
@@ -360,8 +358,8 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
      * Create a new composite. If the title is non-null it will be a group (i.e. with border and title).
      */
     private Composite createComposite(final Composite parent, final int numColumns, final String title) {
-        Composite composite = null;
-        if (title != null && title.length() > 0) {
+        Composite composite;
+        if (!StringUtils.isEmpty(title)) {
             Group group = new Group(parent, SWT.NULL);
             group.setText(title);
             composite = group;

@@ -67,7 +67,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Widget;
-import org.knime.core.node.NodeLogger;
 import org.knime.workbench.explorer.ExplorerMountTable;
 import org.knime.workbench.explorer.view.AbstractContentProvider;
 import org.knime.workbench.explorer.view.AbstractContentProviderFactory;
@@ -77,9 +76,6 @@ import org.knime.workbench.explorer.view.AbstractContentProviderFactory;
  * @author Martin Horn, University of Konstanz
  */
 public class ServerMountPointTable extends CheckboxTableViewer {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ServerMountPointTable.class);
-
     private static final int MOUNT_TYPE_PROP = 2;
 
     private static final int MOUNT_ID_PROP = 1;
@@ -264,9 +260,6 @@ public class ServerMountPointTable extends CheckboxTableViewer {
     }
 
     private void selectionChanged() {
-
-        int index = m_table.getSelectionIndex();
-        int size = m_table.getItemCount();
+        // TODO what to do?
     }
-
 }
