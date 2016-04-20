@@ -181,11 +181,6 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
             IExtension[] extensions = extPoint.getExtensions();
             for (IExtension ext : extensions) {
                 for (IConfigurationElement conf : ext.getConfigurationElements()) {
-                    if (m_tripleProviders.size() == 3) {
-                        LOGGER.warn(
-                            "The maximum number (3) of possible node triple providers reached. All other triple providers are ignored.");
-                        return m_tripleProviders;
-                    }
                     try {
                         NodeTripleProvider provider =
                             (NodeTripleProvider)conf.createExecutableExtension("provider-class");
