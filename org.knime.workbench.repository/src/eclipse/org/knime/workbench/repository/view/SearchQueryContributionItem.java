@@ -49,6 +49,7 @@ package org.knime.workbench.repository.view;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jface.action.ControlContribution;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -98,6 +99,28 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
     // -> doesn't need to be determined again if the query string didn't change
     private TreeItem[] m_treeItems;
 
+    /**
+     * Flag that indicates whether the thread that delays
+     * the actual processing of the search query is running.
+     */
+    private final AtomicBoolean m_isDelayThreadRunning = new AtomicBoolean(false);
+
+    /**
+     * Flag that indicates whether the 'delay thread' should continue
+     * delaying the processing of the search query a bit further.
+     */
+    private final AtomicBoolean m_continueDelay = new AtomicBoolean(true);
+
+    /**
+     * The last key that was entered by the user.
+     */
+    private char m_lastKey;
+
+    /**
+     * Delay for a triggered (by a key event) tree viewer update process before the actually update is performed.
+     * This avoids unnecessary updates while typing the search query.
+     */
+    private static final long DELAY = 200;
 
     /**
      * Creates the contribution item.
@@ -209,35 +232,42 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
      */
     @Override
     public void keyReleased(final KeyEvent e) {
-
         //don't update the tree if the enter or down/up keys are used
         if (e.keyCode == KEY_DOWN || e.keyCode == KEY_UP || e.character == SWT.CR) {
             return;
         }
 
-        //clear the tree items since the search query possibly has been changed
-        m_treeItems = null;
+        m_lastKey = e.character;
 
-        boolean shouldExpand = true;
-        String str = m_text.getText();
-        boolean update = m_liveUpdate;
+        if (!m_isDelayThreadRunning.getAndSet(true)) {
+            //if the thread to delay the actually
+            //processing of the search query is not running, start a new one
+            delayQueryProcessing();
+        } else {
+            //if delay thread is already running
+            //and a new key event arrives,
+            //just continue delaying the actual
+            //processing of the search query a bit further
+            m_continueDelay.set(true);
+        }
+    }
 
-        if (e.character == SWT.ESC) {
-            m_text.setText("");
-            str = "";
-            update = true;
-        }
-        m_filter.setQueryString(str);
-        if (m_callback != null) {
-            m_callback.run();
-        }
-        TreeViewerUpdater.collapseAndUpdate(m_viewer, update | str.length() == 0, str.length() == 0,
-            shouldExpand | str.length() != 0);
-        if (str.length() == 0) {
-            m_viewer.collapseAll();
-            shouldExpand = false;
-            update = true;
-        }
+    private void delayQueryProcessing() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //delay the processing a bit
+                try {
+                    while (m_continueDelay.getAndSet(false)) {
+                        Thread.sleep(DELAY);
+                    }
+                    //do the actual work in the UI thread
+                    Display.getDefault().asyncExec(() -> updateRepositoryTree());
+                } catch (InterruptedException ex) {
+                    // do nothing, just return
+                }
+            }
+        }).start();
     }
 
     /**
@@ -289,6 +319,36 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
             MetaNodeTemplate mnt = (MetaNodeTemplate)o;
             NodeID metaNode = mnt.getManager().getID();
             NodeProvider.INSTANCE.addMetaNode(WorkflowManager.META_NODE_ROOT, metaNode);
+        }
+    }
+
+    private void updateRepositoryTree() {
+        m_continueDelay.set(true);
+        m_isDelayThreadRunning.set(false);
+
+        //clear the tree items since the search query possibly has been changed
+        m_treeItems = null;
+
+        boolean shouldExpand = true;
+        boolean update = m_liveUpdate;
+
+        final String searchString;
+        if (m_lastKey == SWT.ESC) {
+            m_text.setText("");
+            searchString = "";
+            update = true;
+        } else {
+            searchString = m_text.getText();
+        }
+        m_filter.setQueryString(searchString);
+        if (m_callback != null) {
+            m_callback.run();
+        }
+
+        TreeViewerUpdater.collapseAndUpdate(m_viewer, update || searchString.isEmpty(), searchString.isEmpty(),
+            shouldExpand || !searchString.isEmpty());
+        if (searchString.isEmpty()) {
+            m_viewer.collapseAll();
         }
     }
 }
