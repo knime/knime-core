@@ -55,7 +55,7 @@ import java.util.BitSet;
  */
 public abstract class TreeColumnData {
 
-    public static final BitSet NO_MISSING_VALUES = new BitSet();
+    public static final BitSet NO_MISSED_ROWS = new BitSet();
 
     /** This is the substitute for 0 to avoid rounding errors. */
     public static final double EPSILON = 1E-8;
