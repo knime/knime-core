@@ -265,7 +265,17 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             gain = impCriterion.getGain(targetPriors.getPriorImpurity(), postSplitImpurity, attWeights, totalWeight);
         }
         if (useXGBoostMissingValueHandling) {
-            new NominalMultiwaySplitCandidate(this, gain, attWeights, NO_MISSED_ROWS, missingsGoWithIdx);
+            if (!branchContainsMissingValues) {
+                // ensure that missing values are sent to the child that the majority of the rows are sent to.
+                double majorityWeight = 0.0;
+                for (int i = 0; i < attWeights.length; i++) {
+                    if (attWeights[i] > majorityWeight) {
+                        missingsGoWithIdx = i;
+                        majorityWeight = attWeights[i];
+                    }
+                }
+            }
+            return new NominalMultiwaySplitCandidate(this, gain, attWeights, NO_MISSED_ROWS, missingsGoWithIdx);
         }
         return new NominalMultiwaySplitCandidate(this, gain, attWeights, getMissedRows(columnMemberships),
             NominalMultiwaySplitCandidate.NO_MISSINGS);
@@ -485,7 +495,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         }
 
         // Start searching for split candidates
-        final int highestBitPosition = getMetaData().getValues().length - 1;
+        final int highestBitPosition = containsMissingValues() ? nomVals.length - 2 : nomVals.length - 1;
 
         final double[] binaryImpurityValues = new double[2];
         final double[] binaryPartitionWeights = new double[2];
@@ -504,8 +514,8 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         boolean isBestSplitValid = false;
         boolean missingsGoLeft = false;
 
-        for (int i = 0; i < attValList.size() - 1; i++) {
-            CombinedAttributeValues currAttVal = attValList.get(i);
+        for (int i = 0; i < attVals.length; i++) {
+            CombinedAttributeValues currAttVal = attVals[i];
             sumCurrPartitionWeight += currAttVal.m_totalWeight;
             sumRemainingWeights -= currAttVal.m_totalWeight;
 
@@ -543,8 +553,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                 boolean isValidSplitSecond =
                     sumCurrPartitionWeight >= minChildSize && sumRemainingWeights + missingWeight >= minChildSize;
                 binaryImpurityValues[0] = impCriterion.getPartitionImpurity(
-                    addMissingClassCounts(targetFrequenciesCurrentPartition.toArray(), missingClassCounts),
-                    sumCurrPartitionWeight);
+                    targetFrequenciesCurrentPartition.toArray(), sumCurrPartitionWeight);
                 binaryImpurityValues[1] = impCriterion.getPartitionImpurity(
                     addMissingClassCounts(targetFrequenciesRemaining.toArray(), missingClassCounts),
                     sumRemainingWeights + missingWeight);
