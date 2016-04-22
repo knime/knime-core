@@ -107,6 +107,7 @@ import org.knime.workbench.workflowcoach.NodeRecommendationManager;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager.NodeRecommendation;
 import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
 import org.knime.workbench.workflowcoach.prefs.UpdateJob;
+import org.knime.workbench.workflowcoach.prefs.UpdateJob.UpdateListener;
 import org.osgi.framework.FrameworkUtil;
 
 /**
@@ -194,6 +195,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
                 if (monitor.isCanceled()) {
                     return Status.CANCEL_STATUS;
                 } else {
+                  //check for update if necessary
+                    checkForStatisticUpdates();
+                    updateFrequencyColumnHeadersAndToolTips();
                     updateInput(SELECTION_HINT_MESSAGE);
                 }
                 m_nodesLoading = false;
@@ -202,9 +206,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         };
         nodesLoader.setSystem(true);
         nodesLoader.schedule();
-
-        //check for update if necessary
-        checkForStatisticUpdates();
     }
 
     /**
@@ -235,7 +236,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
     @Override
     public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
         if (part instanceof WorkflowCoachView || m_nodesLoading) {
-            //if source of the selection is this view itself, or the nodes are still loading, do nothing
+            //if source of the selection is this view itself, or the nodes or statistics are still loading, do nothing
             return;
         }
         if (!(selection instanceof IStructuredSelection) || !(part instanceof WorkflowEditor)) {
@@ -244,9 +245,38 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
             return;
         }
         if (NodeRecommendationManager.getInstance().getNumNodeTripleProvider() == 0) {
-            //no node triple provider available -> display respective message
-            updateInputNoProvider();
-            return;
+            //if there is at least one enabled triple provider than the statistics might need to be download first
+            if (KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream()
+                .anyMatch(ntp -> ntp.isEnabled())) {
+                m_nodesLoading = true;
+                updateInput("Loading statistics...");
+
+                //try updating the triple provider that are enabled and require an update
+                updateTripleProviders(Optional.of(e -> {
+                    m_nodesLoading = false;
+                    if (e.isPresent()) {
+                        updateInputNoProvider();
+                    } else {
+                        try {
+                            NodeRecommendationManager.getInstance().loadStatistics();
+                            if (NodeRecommendationManager.getInstance().getNumNodeTripleProvider() == 0) {
+                                //if there are still no triple provider, show link
+                                updateInputNoProvider();
+                            } else {
+                                updateFrequencyColumnHeadersAndToolTips();
+                                updateInput("Statistics successfully loaded. Select a node...");
+                            }
+                        } catch (Exception e1) {
+                            updateInputNoProvider();
+                        }
+                    }
+                }), true);
+                return;
+            } else {
+                //no triple provider enabled -> needs to be configured
+                updateInputNoProvider();
+                return;
+            }
         }
         IStructuredSelection structSel = (IStructuredSelection)selection;
 
@@ -274,7 +304,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         if (nodeSelected) {
             //retrieve node recommendations if exactly one node is selected
             recommendations = NodeRecommendationManager.getInstance().getNodeRecommendationFor((NativeNodeContainer)nc);
-        } else if(nc == null){
+        } else if (nc == null) {
             //retrieve node recommendations if no node is selected (most likely the source nodes etc.)
             recommendations = NodeRecommendationManager.getInstance().getNodeRecommendationFor();
         } else {
@@ -283,7 +313,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
             return;
         }
 
-        if(recommendations == null) {
+        if (recommendations == null) {
             //something went wrong with loading the node recommendations, show the configure link
             updateInputNoProvider();
             return;
@@ -320,39 +350,42 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
     }
 
     /**
-     * Sets the names and tooltips of the frequency column headers.
-     *
-     * @param namesAndToolTips list of {@link Pair}s with the name the first and the tooltip the second entry
+     * Updates the names and tooltips of the frequency column headers.
      */
-    public void setFrequencyColumnHeadersAndToolTips(final List<Pair<String, String>> namesAndToolTips) {
+    public void updateFrequencyColumnHeadersAndToolTips() {
+        List<Pair<String, String>> namesAndToolTips =
+            KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream().filter(p -> p.isEnabled())
+                .map(p -> new Pair<>(p.getName(), p.getDescription())).collect(Collectors.toList());
         if (namesAndToolTips == null || namesAndToolTips.isEmpty()) {
             updateInputNoProvider();
             return;
         }
 
-        if (m_editor != null) {
-            Control oldEditor = m_editor.getEditor();
-            if (oldEditor != null) {
-                oldEditor.dispose();
+        Display.getDefault().syncExec(() -> {
+            if (m_editor != null) {
+                Control oldEditor = m_editor.getEditor();
+                if (oldEditor != null) {
+                    oldEditor.dispose();
+                }
+                m_editor.dispose();
+                m_editor = null;
             }
-            m_editor.dispose();
-            m_editor = null;
-        }
-        m_viewer.getTable().setHeaderVisible(true);
-        m_viewer.setInput(SELECTION_HINT_MESSAGE);
+            m_viewer.getTable().setHeaderVisible(true);
 
-        m_viewer.getTable().setRedraw(false);
-        while (m_viewer.getTable().getColumnCount() > 1) {
-            m_viewer.getTable().getColumns()[1].dispose();
-        }
+            m_viewer.getTable().setRedraw(false);
+            while (m_viewer.getTable().getColumnCount() > 1) {
+                m_viewer.getTable().getColumns()[1].dispose();
+            }
 
-        for (int i = 0; i < namesAndToolTips.size(); i++) {
-            TableColumn column = new TableColumn(m_viewer.getTable(), SWT.LEFT, i + 1);
-            column.setText(namesAndToolTips.get(i).getFirst());
-            column.setToolTipText(namesAndToolTips.get(i).getSecond());
-            column.setWidth(100);
-        }
-        m_viewer.getTable().setRedraw(true);
+            for (int i = 0; i < namesAndToolTips.size(); i++) {
+                TableColumn column = new TableColumn(m_viewer.getTable(), SWT.LEFT, i + 1);
+                column.setText(namesAndToolTips.get(i).getFirst());
+                column.setToolTipText(namesAndToolTips.get(i).getSecond());
+                column.setWidth(100);
+            }
+            m_viewer.getTable().setRedraw(true);
+            m_viewer.setInput(SELECTION_HINT_MESSAGE);
+        });
     }
 
     /**
@@ -461,7 +494,17 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      * @param o
      */
     private void updateInput(final Object o) {
-        Display.getDefault().syncExec(() -> m_viewer.setInput(o));
+        Display.getDefault().syncExec(() -> {
+            if (m_editor != null) {
+                Control oldEditor = m_editor.getEditor();
+                if (oldEditor != null) {
+                    oldEditor.dispose();
+                }
+                m_editor.dispose();
+                m_editor = null;
+            }
+            m_viewer.setInput(o);
+        });
     }
 
     /**
@@ -470,31 +513,32 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
     private void updateInputNoProvider() {
         updateInput("");
 
-        //add configure hyperlink
-        Table table = m_viewer.getTable();
-        table.setHeaderVisible(false);
-        TableItem[] items = table.getItems();
-        if (m_editor == null) {
-            m_editor = new TableEditor(table);
-            Hyperlink link = new Hyperlink(table, SWT.WRAP);
-            link.setUnderlined(true);
-            link.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_BLUE));
-            link.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_WHITE));
-            link.setText("No node recommendations available. Click here to configure ...");
-            link.pack();
-            link.addHyperlinkListener(new HyperlinkAdapter() {
-                @Override
-                public void linkActivated(final HyperlinkEvent e) {
-                    new ConfigureAction(m_viewer).run();
-                }
-            });
-            link.setToolTipText("Workflow Coach is not configured properly. Click here to configure it...");
-            m_editor.minimumWidth = link.getSize().x + 10;
-            m_editor.minimumHeight = link.getSize().y - 2;
-            m_editor.horizontalAlignment = SWT.LEFT;
-            m_editor.setEditor(link, items[0], 0);
-        }
-
+        Display.getDefault().syncExec(() -> {
+            //add configure hyperlink
+            Table table = m_viewer.getTable();
+            table.setHeaderVisible(false);
+            TableItem[] items = table.getItems();
+            if (m_editor == null) {
+                m_editor = new TableEditor(table);
+                Hyperlink link = new Hyperlink(table, SWT.WRAP);
+                link.setUnderlined(true);
+                link.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_BLUE));
+                link.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_WHITE));
+                link.setText("No node recommendations available. Click here to configure ...");
+                link.pack();
+                link.addHyperlinkListener(new HyperlinkAdapter() {
+                    @Override
+                    public void linkActivated(final HyperlinkEvent e) {
+                        new ConfigureAction(m_viewer).run();
+                    }
+                });
+                link.setToolTipText("Workflow Coach is not configured properly. Click here to configure it...");
+                m_editor.minimumWidth = link.getSize().x + 10;
+                m_editor.minimumHeight = link.getSize().y - 2;
+                m_editor.horizontalAlignment = SWT.LEFT;
+                m_editor.setEditor(link, items[0], 0);
+            }
+        });
     }
 
     /**
@@ -502,23 +546,23 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      */
     private void hookDoubleClickAction() {
         m_viewer.addDoubleClickListener(event -> {
-                Object o = ((IStructuredSelection)event.getSelection()).getFirstElement();
-                if (o instanceof NodeRecommendation[]) {
-                    NodeRecommendation[] nrs = (NodeRecommendation[])o;
-                    NodeTemplate tmplt = getNonNullEntry(nrs).getNodeTemplate();
-                    NodeFactory<? extends NodeModel> nodeFact;
-                    try {
-                        nodeFact = tmplt.createFactoryInstance();
-                    } catch (Exception e) {
-                        NodeLogger.getLogger(WorkflowCoachView.class)
-                            .error("Unable to instantiate the selected node " + tmplt.getFactory().getName(), e);
-                        return;
-                    }
-                    boolean added = NodeProvider.INSTANCE.addNode(nodeFact);
-                    if (added) {
-                        Display.getDefault().asyncExec(() -> setFocus());
-                    }
+            Object o = ((IStructuredSelection)event.getSelection()).getFirstElement();
+            if (o instanceof NodeRecommendation[]) {
+                NodeRecommendation[] nrs = (NodeRecommendation[])o;
+                NodeTemplate tmplt = getNonNullEntry(nrs).getNodeTemplate();
+                NodeFactory<? extends NodeModel> nodeFact;
+                try {
+                    nodeFact = tmplt.createFactoryInstance();
+                } catch (Exception e) {
+                    NodeLogger.getLogger(WorkflowCoachView.class)
+                        .error("Unable to instantiate the selected node " + tmplt.getFactory().getName(), e);
+                    return;
                 }
+                boolean added = NodeProvider.INSTANCE.addNode(nodeFact);
+                if (added) {
+                    Display.getDefault().asyncExec(() -> setFocus());
+                }
+            }
         });
     }
 
@@ -535,7 +579,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         }
 
         String lastUpdate = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
-                .getString(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE);
+            .getString(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE);
         if (StringUtils.isEmpty(lastUpdate)) {
             //check whether a automatic update is necessary
             try {
@@ -551,13 +595,33 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
             }
         }
 
-        //trigger update, but only for updatable and enabled providers
+        //trigger update for all updatable and enabled providers
+        updateTripleProviders(Optional.of(e -> {
+            if (e.isPresent()) {
+                updateInputNoProvider();
+            } else {
+                updateFrequencyColumnHeadersAndToolTips();
+            }
+        }), false);
+    }
+
+    /**
+     * Updates all updatable and enabled triple providers.
+     *
+     * @param requiredOnly if only the enabled triple providers should be updated that require an update in order to
+     *            work
+     * @param updateListener to get feedback of the updating process
+     */
+    private void updateTripleProviders(final Optional<UpdateListener> updateListener, final boolean requiredOnly) {
         List<UpdatableNodeTripleProvider> toUpdate =
-            KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream()
-                .filter(ntp -> (ntp instanceof UpdatableNodeTripleProvider)
-                    && ((UpdatableNodeTripleProvider)ntp).isEnabled())
-                .map(ntp -> (UpdatableNodeTripleProvider)ntp)
-                .collect(Collectors.toList());
-        UpdateJob.schedule(Optional.empty(), toUpdate);
+            KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream().filter(ntp -> {
+                if (!(ntp instanceof UpdatableNodeTripleProvider)) {
+                    return false;
+                } else {
+                    UpdatableNodeTripleProvider untp = (UpdatableNodeTripleProvider)ntp;
+                    return ntp.isEnabled() && (!requiredOnly || untp.updateRequired());
+                }
+            }).map(ntp -> (UpdatableNodeTripleProvider)ntp).collect(Collectors.toList());
+        UpdateJob.schedule(updateListener, toUpdate);
     }
 }

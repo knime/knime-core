@@ -80,6 +80,8 @@ import org.knime.core.node.NodeTriple;
  */
 public abstract class AbstractFileDownloadTripleProvider implements UpdatableNodeTripleProvider {
 
+    private static final int TIMEOUT = 10000; //10 seconds
+
     private String m_url;
 
     private String m_file;
@@ -118,6 +120,7 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
     @Override
     public void upate() throws Exception {
         HttpClient client = new HttpClient();
+        client.getHttpConnectionManager().getParams().setConnectionTimeout(TIMEOUT);
         GetMethod method = new GetMethod(m_url);
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
         File f = new File(m_file);

@@ -56,17 +56,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.eclipse.ui.IViewReference;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeInfo;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeTriple;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.util.Pair;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.workflowcoach.data.NodeTripleProvider;
@@ -155,20 +151,6 @@ public class NodeRecommendationManager {
                     }
                 }
             } //end for
-
-            //update the frequency column names in the node commendations table in the workflow coach view
-            //TODO: not a very clean separation: recommendation manager should probably not care about a view that uses its information
-            IViewReference viewRef = PlatformUI.getWorkbench().getWorkbenchWindows()[0]
-                .getActivePage().findViewReference(WorkflowCoachView.ID);
-            if (viewRef != null) {
-                WorkflowCoachView view = (WorkflowCoachView)viewRef.getView(false);
-                if (view != null) {
-                    List<Pair<String, String>> namesAndToolTips = providers.stream().filter(p -> p.isEnabled())
-                        .map(p -> new Pair<>(p.getName(), p.getDescription())).collect(Collectors.toList());
-
-                    view.setFrequencyColumnHeadersAndToolTips(namesAndToolTips);
-                }
-            }
         }
     }
 

@@ -81,8 +81,11 @@ public class UpdateJob extends Job {
      */
     public static void schedule(final Optional<UpdateListener> listener,
         final List<UpdatableNodeTripleProvider> providers) {
+        if(providers.isEmpty()) {
+            return;
+        }
         UpdateJob j = new UpdateJob(listener, providers);
-        j.setUser(true);
+        j.setUser(false);
         j.schedule();
     }
 
@@ -124,12 +127,13 @@ public class UpdateJob extends Job {
         } else {
             final Exception e = exception;
             m_listener.ifPresent(l -> l.updateFinished(Optional.of(e)));
-            return new Status(IStatus.ERROR, FrameworkUtil.getBundle(getClass()).getSymbolicName(),
+            //don't return IStatus.ERROR -> otherwise an annoying error message will be opened
+            return new Status(IStatus.OK, FrameworkUtil.getBundle(getClass()).getSymbolicName(),
                 "Error while updating the statistics for the node recommendations (Workflow Coach).", exception);
         }
     }
 
-    interface UpdateListener {
+    public interface UpdateListener {
 
         /**
          * Called when the update process is finished.

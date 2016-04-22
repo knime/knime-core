@@ -50,6 +50,8 @@ import java.util.List;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.ui.IViewReference;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
@@ -98,7 +100,12 @@ public class ConfigureAction extends Action {
         PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(m_viewer.getControl().getShell(),
             WorkflowCoachPreferencePage.ID, prefPageIDs, null);
         dialog.open();
-
+        IViewReference viewRef =
+            PlatformUI.getWorkbench().getWorkbenchWindows()[0].getActivePage().findViewReference(WorkflowCoachView.ID);
+        if (viewRef != null) {
+            WorkflowCoachView view = (WorkflowCoachView)viewRef.getView(false);
+            view.updateFrequencyColumnHeadersAndToolTips();
+        }
     }
 
 }
