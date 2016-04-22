@@ -44,33 +44,36 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 
 /**
- *
+ * Model representing credentials, either username/password or a selected credentials variable.
  * @author Lara Gorini
  * @since 3.2
+ * @see DialogComponentAuthentication
  */
-public class SettingsModelAuthentication extends SettingsModel {
+public final class SettingsModelAuthentication extends SettingsModel {
 
     private String m_username;
 
     private String m_password;
 
-    private String m_credential;
+    private String m_credentials;
 
     private Type m_type;
 
     private final String m_configName;
 
-    private final static String secretKey = "DasAlsoWarDesPudelsKern!VonGoethe";
+    private final static String secretKey = "c-rH4Tkyk";
 
-    private final static String CREDENTIAL = "credential";
+    private final static String CREDENTIAL = "credentials";
 
     private final static String PASSWORD = "password";
 
@@ -78,17 +81,11 @@ public class SettingsModelAuthentication extends SettingsModel {
 
     private final static String SELECTED_TYPE = "selectedType";
 
-    /**
-     *
-     * @author Lara Gorini
-     */
+    /** Whether to use a credentials identifier or plain username/password. */
     public enum Type {
-            /**
-             * Authentication with username and password.
-             */
-        USER_PWD, /**
-                   * Authentication with workflow credentials.
-                   */
+        /** Authentication with username and password. */
+        USER_PWD,
+        /** Authentication with workflow credentials. */
         CREDENTIALS;
     }
 
@@ -100,14 +97,12 @@ public class SettingsModelAuthentication extends SettingsModel {
      */
     public SettingsModelAuthentication(final String configName, final String defaultUsername,
         final String defaultPassword, final String defaultCredential) {
-        if ((configName == null) || "".equals(configName)) {
-            throw new IllegalArgumentException("The configName must be a " + "non-empty string");
-        }
+        CheckUtils.checkArgument(StringUtils.isNotEmpty(configName), "The configName must be a non-empty string");
 
         m_username = defaultUsername == null ? "" : defaultUsername;
         m_password = defaultPassword == null ? "" : defaultPassword;
 
-        m_credential = defaultCredential;
+        m_credentials = defaultCredential;
         m_configName = configName;
 
         m_type = Type.USER_PWD;
@@ -119,7 +114,7 @@ public class SettingsModelAuthentication extends SettingsModel {
     @SuppressWarnings("unchecked")
     @Override
     protected SettingsModelAuthentication createClone() {
-        return new SettingsModelAuthentication(m_configName, m_username, m_password, m_credential);
+        return new SettingsModelAuthentication(m_configName, m_username, m_password, m_credentials);
     }
 
     /**
@@ -179,7 +174,7 @@ public class SettingsModelAuthentication extends SettingsModel {
         final Config config;
         try {
             config = settings.getConfig(m_configName);
-            setValues(config.getString(CREDENTIAL, m_credential),
+            setValues(config.getString(CREDENTIAL, m_credentials),
                 Type.valueOf(config.getString(SELECTED_TYPE, m_type.name())), config.getString(USERNAME, m_username),
                 config.getPassword(PASSWORD, secretKey, m_password));
         } catch (InvalidSettingsException ex) {
@@ -194,7 +189,7 @@ public class SettingsModelAuthentication extends SettingsModel {
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
         Config config = settings.addConfig(m_configName);
-        config.addString(CREDENTIAL, m_credential);
+        config.addString(CREDENTIAL, m_credentials);
         config.addString(USERNAME, m_username);
         config.addPassword(PASSWORD, secretKey, m_password);
         config.addString(SELECTED_TYPE, m_type.name());
@@ -209,15 +204,15 @@ public class SettingsModelAuthentication extends SettingsModel {
     }
 
     /**
-     * @param selectedCredential Credential that is selected.
+     * @param selectedCredentials Credentials that is selected.
      * @param type Type of authentication that is selected.
      * @param userName Given username.
      * @param pwd Given password.
      */
-    public void setValues(final String selectedCredential, final Type type, final String userName, final String pwd) {
+    public void setValues(final String selectedCredentials, final Type type, final String userName, final String pwd) {
         boolean changed = false;
         changed = setType(type) || changed;
-        changed = setCredential(selectedCredential) || changed;
+        changed = setCredential(selectedCredentials) || changed;
         changed = setUsername(userName) || changed;
         changed = setPassword(pwd) || changed;
         if (changed) {
@@ -235,11 +230,11 @@ public class SettingsModelAuthentication extends SettingsModel {
 
         boolean sameValue;
         if (newValue == null) {
-            sameValue = (m_credential == null);
+            sameValue = (m_credentials == null);
         } else {
-            sameValue = newValue.equals(m_credential);
+            sameValue = newValue.equals(m_credentials);
         }
-        m_credential = newValue;
+        m_credentials = newValue;
         return !sameValue;
     }
 
@@ -269,7 +264,7 @@ public class SettingsModelAuthentication extends SettingsModel {
      * @return credential name.
      */
     public String getCredential() {
-        return m_credential;
+        return m_credentials;
     }
 
     /**

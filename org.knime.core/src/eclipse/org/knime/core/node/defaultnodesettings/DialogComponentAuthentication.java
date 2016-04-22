@@ -57,6 +57,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Collection;
+import java.util.Objects;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
@@ -79,7 +80,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
- *
+ * A component that allows a user to enter username/password or select credentials variable.
  * @author Lara Gorini
  * @since 3.2
  */
@@ -301,7 +302,7 @@ public final class DialogComponentAuthentication extends DialogComponent {
             if (password != null && password.length > 1) {
                 componentPwd = new String(password);
             }
-            if ((componentPwd == null && modelPwd != null) || !componentPwd.equals(modelPwd)) {
+            if (!Objects.equals(componentPwd, modelPwd)) {
                 updateNoListener(m_passwordField, modelPwd);
             }
         }
