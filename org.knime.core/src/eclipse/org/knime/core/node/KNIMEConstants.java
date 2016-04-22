@@ -203,6 +203,11 @@ public final class KNIMEConstants {
     public static final String PROPERTY_SHOW_METANODE_LOCK_ACTION =
         "knime.showaction.metanodelock";
 
+    /** For KNIME's R extension: Run the R process in debug mode and print debug messages to the logging facilities.
+     * Value is true or false (default).
+     * @since 3.2*/
+    public static final String PROPERTY_R_RSERVE_DEBUG = "org.knime.r.rserve.debug";
+
     /**
      * Java property do en-/disable the workaround for the dialog deadlocks
      * under MacOSX (see http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=3151).
