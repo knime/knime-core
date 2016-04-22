@@ -69,6 +69,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.dialog.ExternalNodeData;
+import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.web.DefaultWebTemplate;
@@ -494,6 +496,24 @@ public final class WizardExecutionController extends ExecutionController {
 //            return false;
 //        }
 //        return true;
+    }
+
+    /** Parameterizes {@link InputNode}s in the workflow (URL parameters).
+     * @param input non-null input
+     * @throws InvalidSettingsException if wfm chokes
+     * @see WorkflowManager#setInputNodes(Map)
+     * @since 3.2 */
+    public void setInputNodes(final Map<String, ExternalNodeData> input) throws InvalidSettingsException {
+        final WorkflowManager manager = m_manager;
+        try (WorkflowLock lock = manager.lock()) {
+            checkDiscard();
+            NodeContext.pushContext(manager);
+            try {
+                manager.setInputNodes(input);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
     }
 
     /** Continues the execution and executes up to, incl., the next subnode awaiting input. If no such subnode exists
