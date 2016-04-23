@@ -243,16 +243,18 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         closeListener.add("Close && Apply temporarily", cATooltip, new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                applyTriggered(false);
-                m_shell.dispose();
+                if (applyTriggered(false)) {
+                    m_shell.dispose();
+                }
             }
         });
         String cTTooltip = "Closes the view, applies the current settings as node defaults and triggers a re-execute of the node.";
         closeListener.add("Close && Apply as new default", cTTooltip, new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                applyTriggered(true);
-                m_shell.dispose();
+                if (applyTriggered(true)) {
+                    m_shell.dispose();
+                }
             }
         });
         closeButton.addSelectionListener(closeListener);
@@ -390,9 +392,9 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         m_viewSet = false;
     }
 
-    private void applyTriggered(final boolean useAsDefault) {
-        if (!checkSettingsChanged()) {
-            return;
+    private boolean applyTriggered(final boolean useAsDefault) {
+        if (!m_viewSet || !checkSettingsChanged()) {
+            return true;
         }
         boolean valid = true;
         WizardViewCreator<REP, VAL> creator = getViewCreator();
@@ -414,19 +416,31 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
                 VAL viewValue = getNodeModel().createEmptyViewValue();
                 viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
                 triggerReExecution(viewValue, useAsDefault, new DefaultReexecutionCallback());
+                return true;
             } catch (Exception e) {
-                //TODO error message
+                //TODO: display error?
+                return false;
             }
+        } else {
+            return false;
         }
     }
 
     private boolean checkSettingsChanged() {
+        if (!m_viewSet) {
+            return false;
+        }
         WizardViewCreator<REP, VAL> creator = getViewCreator();
         WebTemplate template = creator.getWebTemplate();
         String pullMethod = template.getPullViewContentMethodName();
+        String ns = creator.getNamespacePrefix();
         String evalCode =
-                creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + pullMethod + "());");
+                creator.wrapInTryCatch("if (typeof " + ns.substring(0, ns.length()-1) + " != 'undefined') { return JSON.stringify(" + ns + pullMethod + "());}");
         String jsonString = (String)m_browser.evaluate(evalCode);
+        if (jsonString == null) {
+            // no view value present in view
+            return false;
+        }
         try {
             VAL viewValue = getNodeModel().createEmptyViewValue();
             viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
@@ -481,10 +495,10 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         }
         RadioItem selectedItem = dialog.getSelectedElement();
         if (applyOption.equals(selectedItem)) {
-            applyTriggered(false);
+            return applyTriggered(false);
         }
         if (newDefaultOption.equals(selectedItem)) {
-            applyTriggered(true);
+            return applyTriggered(true);
         }
         return true;
     }
