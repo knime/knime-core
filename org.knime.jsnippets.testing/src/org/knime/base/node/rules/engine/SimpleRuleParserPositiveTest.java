@@ -63,13 +63,14 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Tests where {@link SimpleRuleParser} should parse the input, it also checks
  * the generated tree.
- * 
+ *
  * @author Gabor Bakos
  */
 @RunWith(value = Parameterized.class)
@@ -81,7 +82,7 @@ public class SimpleRuleParserPositiveTest {
 
 	/**
 	 * Construct with the parameter.
-	 * 
+	 *
 	 * @param rule
 	 *            The test {@link String}.
 	 * @param outcomeType
@@ -112,17 +113,17 @@ public class SimpleRuleParserPositiveTest {
 
 	/**
 	 * Generates parameters.
-	 * 
+	 *
 	 * @return The test parameters. (Input (String), expected outcome type
 	 *         (DataType), rule's toString())
 	 */
-	@Parameters
+	@Parameters/*(name = "{index}: rule: {0}, type: {1},\nparsed: {2}")*/
 	public static Collection<Object[]> rules() {
 		return Arrays
-				.asList(a("4 > 3 => $$ROWINDEX$$ ", IntCell.TYPE,
+				.asList(a("4 > 3 => $$ROWINDEX$$ ", LongCell.TYPE,
 						"4>3 => $$ROWINDEX$$"),
 						a("   \"Hello world\" LIKE \"Hello*\"  => $$ROWCOUNT$$  ",
-								IntCell.TYPE,
+								LongCell.TYPE,
 								"Hello world like Hello* => $$ROWCOUNT$$"),
 						a("1 < \"Hello\" => 32", IntCell.TYPE, "1<Hello => 32"),
 						a("$Dbl$ = 3 => 32", IntCell.TYPE, "$Dbl$=3 => 32"),
@@ -166,7 +167,7 @@ public class SimpleRuleParserPositiveTest {
 
 	/**
 	 * Tests parsing.
-	 * 
+	 *
 	 * @throws ParseException
 	 *             Should not happen.
 	 * @see SimpleRuleParser#parse(String)
@@ -181,7 +182,7 @@ public class SimpleRuleParserPositiveTest {
 
 	/**
 	 * Tests, whether we could disable column name check, or not.
-	 * 
+	 *
 	 * @throws ParseException Should not happen.
 	 */
 	@Test

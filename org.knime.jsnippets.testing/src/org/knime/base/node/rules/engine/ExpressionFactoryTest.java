@@ -67,12 +67,13 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Tests {@link ExpressionFactory}.
- * 
+ *
  * @author Gabor Bakos
  */
 public class ExpressionFactoryTest {
@@ -85,7 +86,7 @@ public class ExpressionFactoryTest {
 
     /**
      * Sets up the mock objects.
-     * 
+     *
      * @throws java.lang.Exception Should not happen.
      */
     @Before
@@ -336,12 +337,14 @@ public class ExpressionFactoryTest {
                         return "/tmp";
                     }
 
+                    @Deprecated
                     @Override
                     public int getRowCount() {
                         // TODO Auto-generated method stub
                         return 0;
                     }
 
+                    @Deprecated
                     @Override
                     public int getRowIndex() {
                         // TODO Auto-generated method stub
@@ -529,7 +532,7 @@ public class ExpressionFactoryTest {
      */
     @Test
     public void testTableRef() {
-        assertEquals(new IntCell(2), m_factory.tableRef(TableReference.RowCount).evaluate(null, new VariableProvider() {
+        assertEquals(new LongCell(2), m_factory.tableRef(TableReference.RowCount).evaluate(null, new VariableProvider() {
             @Override
             public Object readVariable(final String name, final Class<?> type) {
                 // TODO Auto-generated method stub
@@ -537,32 +540,53 @@ public class ExpressionFactoryTest {
             }
 
             @Override
-            public int getRowCount() {
-                return 2;
+            public long getRowCountLong() {
+                return 2L;
             }
 
             @Override
+            public long getRowIndexLong() {
+                return 0L;
+            }
+
+            @Deprecated
+            @Override
+            public int getRowCount() {
+                return 0;
+            }
+
+            @Deprecated
+            @Override
             public int getRowIndex() {
-                // TODO Auto-generated method stub
                 return 0;
             }
         }).getValue());
-        assertEquals(new IntCell(3), m_factory.tableRef(TableReference.RowIndex).evaluate(null, new VariableProvider() {
+        assertEquals(new LongCell(3), m_factory.tableRef(TableReference.RowIndex).evaluate(null, new VariableProvider() {
             @Override
             public Object readVariable(final String name, final Class<?> type) {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
-            public int getRowCount() {
-                // TODO Auto-generated method stub
-                return 0;
+            public long getRowCountLong() {
+                return 0L;
             }
 
             @Override
+            public long getRowIndexLong() {
+                return 3L;
+            }
+
+            @Deprecated
+            @Override
+            public int getRowCount() {
+                return 0;
+            }
+
+            @Deprecated
+            @Override
             public int getRowIndex() {
-                return 3;
+                return 0;
             }
         }).getValue());
         assertEquals(
@@ -575,12 +599,14 @@ public class ExpressionFactoryTest {
                         return null;
                     }
 
+                    @Deprecated
                     @Override
                     public int getRowCount() {
                         // TODO Auto-generated method stub
                         return 0;
                     }
 
+                    @Deprecated
                     @Override
                     public int getRowIndex() {
                         // TODO Auto-generated method stub
