@@ -47,6 +47,7 @@
  */
 package org.knime.core.data.renderer;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -57,13 +58,12 @@ import java.awt.Rectangle;
 import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.plaf.basic.BasicLabelUI;
 
 /**
- * Label UI that respects the linebreaks in the label to be rendered. This
- * UI does not support an icon or respects in any kind the alignment of the
- * label.
+ * Label UI that respects the linebreaks in the label to be rendered.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class MultiLineBasicLabelUI extends BasicLabelUI {
@@ -170,28 +170,40 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
         return width;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void paint(final Graphics g, final JComponent c) {
+        Insets insets = c.getInsets(m_viewInsets);
+        int verticalAlignment = c instanceof JLabel ? ((JLabel)c).getVerticalAlignment() : SwingConstants.TOP;
+        // for non top alignment run an extra run through paint to define the correct height of the rendering
+        if (verticalAlignment != SwingConstants.TOP) {
+            int totalHeight = c.getHeight() - insets.top - insets.bottom;
+            int paintHeight = runPaint(Painter.INSTANCE, c, insets);
+            if (paintHeight < totalHeight) {
+                final int offset = (totalHeight - paintHeight) / (verticalAlignment == SwingConstants.CENTER ?  2 : 1);
+                insets.top = insets.top + offset;
+            }
+        }
+        runPaint(new GraphicsPainter(g), c, insets);
+    }
+
+    int runPaint(final Painter painter, final JComponent c, final Insets insets) {
         JLabel label = (JLabel)c;
         String text = label.getText();
         Icon icon = label.isEnabled() ? label.getIcon() : label.getDisabledIcon();
 
         if (text == null && icon == null) {
-            return;
+            return 0;
         }
 
         FontMetrics fm = label.getFontMetrics(label.getFont());
-        Insets insets = c.getInsets(m_viewInsets);
 
         m_paintViewR.x = insets.left;
         m_paintViewR.y = insets.top;
         m_paintViewR.width = c.getWidth() - (insets.left + insets.right);
         m_paintViewR.height = c.getHeight() - (insets.top + insets.bottom);
 
-        // all assigments only temporary - modified by layoutCL down below
+        // all assignments only temporary - modified by layoutCL down below
         m_paintIconR.x = 0;
         m_paintIconR.y = 0;
         m_paintIconR.width = icon != null ? icon.getIconWidth() : 0;
@@ -204,7 +216,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
 
         String[] splits = splitStrings(text);
         if (icon != null) {
-            icon.paintIcon(c, g, m_paintViewR.x, m_paintViewR.y);
+            painter.paintIcon(icon, c, m_paintViewR.x, m_paintViewR.y);
         }
         int yOffset = m_paintViewR.y + fm.getAscent();
         for (int i = 0; i < splits.length; i++) {
@@ -236,13 +248,52 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
                 int textY = yOffset;
 
                 if (label.isEnabled()) {
-                    paintEnabledText(label, g, clippedText, textX, textY);
+                    painter.paintEnabledText(label, clippedText, textX, textY);
                 } else {
-                    paintDisabledText(label, g, clippedText, textX, textY);
+                    painter.paintDisabledText(label, clippedText, textX, textY);
                 }
                 yOffset += fm.getHeight();
             } while (oneMoreIteration);
         }
+        return yOffset - fm.getAscent();
+    }
+
+    /** Bundles paint rountines ... this implementation is a no-op. */
+    private static class Painter {
+
+        static final Painter INSTANCE = new Painter();
+        void paintEnabledText(final JLabel l, final String s, final int textX, final int textY) {
+        }
+        void paintDisabledText(final JLabel l, final String s, final int textX, final int textY) {
+        }
+        void paintIcon(final Icon icon, final Component c, final int x, final int y) {
+        }
+    }
+
+    /** Paints to the final graphics object. */
+    private class GraphicsPainter extends Painter {
+
+        private final Graphics m_graphics;
+
+        GraphicsPainter(final Graphics graphics) {
+            m_graphics = graphics;
+        }
+
+        @Override
+        void paintEnabledText(final JLabel l, final String s, final int textX, final int textY) {
+            MultiLineBasicLabelUI.this.paintEnabledText(l, m_graphics, s, textX, textY);
+        }
+
+        @Override
+        void paintDisabledText(final JLabel l, final String s, final int textX, final int textY) {
+            MultiLineBasicLabelUI.this.paintDisabledText(l, m_graphics, s, textX, textY);
+        }
+
+        @Override
+        void paintIcon(final Icon icon, final Component c, final int x, final int y) {
+            icon.paintIcon(c, m_graphics, x, y);
+        }
+
     }
 
     private String[] splitStrings(final String s) {
