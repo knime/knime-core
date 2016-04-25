@@ -582,8 +582,6 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
                 m_rearrangerx.createStreamableFunction(0, 0).runFinal(inputs, outputs, exec);
-                outputs[1] = new PortObjectOutput();
-                ((PortObjectOutput)outputs[1]).setPortObject(m_portObject);
             }
 
             /**
@@ -614,9 +612,7 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         final StreamInternalForPMMLPortObject poInternals = (StreamInternalForPMMLPortObject)internals;
         PMMLPortObject ret = poInternals.getObject();
         ret.validate();
-        final PortObjectOutput portObjectOutput = new PortObjectOutput();
-        portObjectOutput.setPortObject(ret);
-        output[1] = portObjectOutput;
+        ((PortObjectOutput)output[1]).setPortObject(ret);
         m_portObject = null;
     }
 
