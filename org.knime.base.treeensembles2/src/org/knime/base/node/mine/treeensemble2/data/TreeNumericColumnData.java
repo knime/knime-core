@@ -158,28 +158,17 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
             }
         } while (columnMemberships.previous());
 
-        //        double missingWeight = 0.0;
-        //        double[] missingTargetCounts = new double[targetCounts];
-        //        if (containsMissingValues) {
-        //            if (columnMemberships.nextIndexFrom(lengthNonMissing)) {
-        //                do {
-        //                    final double weight = columnMemberships.getRowWeight();
-        //                    final int target = targetColumn.getValueFor(columnMemberships.getOriginalIndex());
-        //                    missingWeight += weight;
-        //                    missingTargetCounts[target] += weight;
-        //                    targetCountsRightOfSplit[target] -= weight;
-        //                } while (columnMemberships.next());
-        //            } else {
-        //                // the columnMemberships object does not point to any missing value
-        //                containsMissingValues = false;
-        //            }
-        //        }
-        // use surrogates instead of xgboost missing value handling
-        //        containsMissingValues = false;
         columnMemberships.reset();
 
         double sumWeightsLeftOfSplit = 0.0;
         double sumWeightsRightOfSplit = totalSumWeight - missingWeight;
+
+        // all values in branch are missing
+        if (sumWeightsRightOfSplit == 0) {
+            // it is impossible to determine a split
+            return null;
+        }
+
         double bestSplit = Double.NEGATIVE_INFINITY;
         // gain for best split point, unnormalized (not using info gain ratio)
         double bestGain = Double.NEGATIVE_INFINITY;
@@ -349,7 +338,9 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
             while (columnMemberships.getIndexInColumn() >= lengthNonMissing) {
                 missingWeight += columnMemberships.getRowWeight();
 
-                columnMemberships.previous();
+                if (!columnMemberships.previous()) {
+                    break;
+                }
             }
             columnMemberships.reset();
         }
@@ -363,6 +354,12 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
 
         double ySumRight = ySumTotal;
         double nrRecordsRight = nrRecordsTotal - missingWeight;
+
+        // all values in the current branch are missing
+        if (nrRecordsRight == 0) {
+            // it is impossible to determine a split
+            return null;
+        }
 
         double bestSplit = Double.NEGATIVE_INFINITY;
         double bestImprovement = 0.0;
