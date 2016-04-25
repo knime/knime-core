@@ -51,6 +51,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -63,6 +64,7 @@ import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 
 /**
@@ -70,7 +72,14 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObjectSpec {
-    public static final class Serializer extends AbstractSimplePortObjectSpecSerializer<TreeEnsembleModelPortObjectSpec> {}
+    /**
+     * Serializer for the {@link TreeEnsembleModelPortObjectSpec}
+     *
+     * @author Adrian Nembach, KNIME.com
+     */
+    public static final class Serializer
+        extends AbstractSimplePortObjectSpecSerializer<TreeEnsembleModelPortObjectSpec> {
+    }
 
     private DataTableSpec m_learnSpec;
 
@@ -118,6 +127,9 @@ public class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObjectSpe
         return m_learnSpec;
     }
 
+    /**
+     * @return the {@link DataColumnSpec} of the target column
+     */
     public DataColumnSpec getTargetColumn() {
         return m_learnSpec.getColumnSpec(m_learnSpec.getNumColumns() - 1);
     }
@@ -144,20 +156,30 @@ public class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObjectSpe
             String toString = v.toString();
             DataCell old = result.put(toString, v);
             if (old != null) {
-                throw new InvalidSettingsException("The target column contains "
-                    + "distinct values whose string representations are "
-                    + "identical and therefore not unique; convert the " + "target column to a plain string first. "
-                    + "(Problematic value: \"" + toString + "\")");
+                throw new InvalidSettingsException(
+                    "The target column contains " + "distinct values whose string representations are "
+                        + "identical and therefore not unique; convert the " + "target column to a plain string first. "
+                        + "(Problematic value: \"" + toString + "\")");
             }
         }
         return result;
     }
 
+    /**
+     * @return the {@link DataTableSpec} of the table the model was learned on
+     */
     public DataTableSpec getLearnTableSpec() {
         // remove all but last column
         return FilterColumnTable.createFilterTableSpec(m_learnSpec, false, m_learnSpec.getNumColumns() - 1);
     }
 
+    /**
+     * Checks if the target variable matches the purpose (classification or regression) of the model. <br>
+     * This method is called in the predictor nodes to assert that the node type matches the model type.
+     *
+     * @param isRegression
+     * @throws InvalidSettingsException if the target variable does not match the purpose of the model
+     */
     public void assertTargetTypeMatches(final boolean isRegression) throws InvalidSettingsException {
         if (isRegression) {
             if (!getTargetColumn().getType().isCompatible(DoubleValue.class)) {
@@ -170,6 +192,17 @@ public class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObjectSpe
         }
     }
 
+    /**
+     * Calculates the filter indices that can be used by a {@link FilterColumnRow} to create a row that matches the spec
+     * of the learn table (except the target).<br>
+     * Since this throws a {@link InvalidSettingsException} it is also used in the configure method of the
+     * {@link NodeModel} to ensure that the test table {@link DataTableSpec} matches the learn table spec.
+     *
+     * @param testTableInput {@link DataTableSpec} of the test table
+     * @return the indices of the learn columns in the <b>testTableInput</b>
+     * @throws InvalidSettingsException thrown if the {@link DataTableSpec} of the test table does not contain all
+     *             columns of the learn table (except the target column).
+     */
     public int[] calculateFilterIndices(final DataTableSpec testTableInput) throws InvalidSettingsException {
         DataTableSpec learnSpec = getLearnTableSpec();
         // check existence and types of columns, create reordering
