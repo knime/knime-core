@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
@@ -344,9 +345,17 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 ExecutionContext exec = remoteNodeContainers[i].createExecutionContext();
                 remoteNodeContainers[i].getNode().openFileStoreHandler(exec);
                 try {
-                streamableOperator.runFinal(portInputs[i], portOutputs, exec);
-                }catch(ClassCastException e) {
-                    throw new ClassCastException(e.getMessage() + ". Likely reason: port-role is not set as streamable -> overwrite get[Input|Ouptut]PortRoles()-methods in NodeModel.");
+                    PortOutput[] tmpPortOutputs = portOutputs.clone();
+                    streamableOperator.runFinal(portInputs[i], portOutputs, exec);
+                    //make sure that the portOutputs-object hasn't been manipulated directly (only it's containing objects)
+                    if(IntStream.range(0, portOutputs.length).anyMatch(j -> {
+                        return tmpPortOutputs[j] != portOutputs[j];
+                    })) {
+                        throw new IllegalStateException("Output array must not be manipulated.");
+                    }
+                } catch (ClassCastException e) {
+                    throw new ClassCastException(e.getMessage()
+                        + ". Likely reason: port-role is not set as streamable -> overwrite get[Input|Ouptut]PortRoles()-methods in NodeModel.");
                 }
                 checkClosedPortOutputs(portOutputs);
                 if (localMergeOperator != null) {
@@ -377,7 +386,16 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     // to set warning messages etc.
                     nonDistrPortOutputs = new PortOutput[outputPortRoles.length];
                 }
-                localNodeContainer.getNodeModel().finishStreamableExecution(operatorInternals, localExec, nonDistrPortOutputs);
+
+                PortOutput[] tmpPortOutputs = nonDistrPortOutputs.clone();
+                localNodeContainer.getNodeModel().finishStreamableExecution(operatorInternals, localExec,
+                    nonDistrPortOutputs);
+                //make sure that the pArrays.equals(a, a2)ortOutputs-object hasn't been manipulated directly, only it's containing objects
+                if (IntStream.range(0, portOutputs.length).anyMatch(j -> {
+                    return tmpPortOutputs[j] != nonDistrPortOutputs[j];
+                })) {
+                    throw new IllegalStateException("Output array must not be manipulated.");
+                }
                 //merge the portOutputs and the nonDistrPortOutputs
                 for (int i = 0; i < nonDistrPortOutputs.length; i++) {
                     if(nonDistrPortOutputs[i]!=null) {
