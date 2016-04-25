@@ -299,7 +299,6 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
             if (currentColSplit != null) {
                 final double currentGain = currentColSplit.getGainValue();
                 final boolean tiebreaker = currentGain == bestGainValue ? (rd.nextInt(0, 1) == 0) : false;
-                assert currentGain <= 1.0 : "The gain can never be larger than 1.0 (but was " + currentGain + ")";
                 if (currentColSplit.getGainValue() > bestGainValue || tiebreaker) {
                     splitCandidate = currentColSplit;
                     bestGainValue = currentGain;
