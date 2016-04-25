@@ -70,13 +70,14 @@ public final class NominalValueRepresentation {
     private double m_totalFrequency;
 
     /**
-     * @param nominalValue
-     * @param assignedInteger
+     * @param nominalValue String representation of nominal value
+     * @param assignedInteger Integer representation of nominal value
+     * @param initialFrequency initial frequency with which the object is created
      */
-    public NominalValueRepresentation(final String nominalValue, final int assignedInteger, final double initialFreqency) {
+    public NominalValueRepresentation(final String nominalValue, final int assignedInteger, final double initialFrequency) {
         m_nominalValue = nominalValue;
         m_assignedInteger = assignedInteger;
-        m_totalFrequency = initialFreqency;
+        m_totalFrequency = initialFrequency;
     }
 
     /** @return the assignedInteger */
