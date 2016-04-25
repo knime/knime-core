@@ -83,7 +83,7 @@ public final class NominalMultiwaySplitCandidate extends SplitCandidate {
     public NominalMultiwaySplitCandidate(final TreeNominalColumnData nominalColumn, final double gainValue,
         final double[] sumWeightsAttributes, final BitSet missedRows, final int missingsGoToChildIdx) {
         super(nominalColumn, gainValue, missedRows);
-        assert sumWeightsAttributes.length == nominalColumn.getMetaData().getValues().length;
+//        assert sumWeightsAttributes.length == nominalColumn.getMetaData().getValues().length;
         m_sumWeightsAttributes = sumWeightsAttributes;
         m_missingsGoToChildIdx = missingsGoToChildIdx;
     }
@@ -105,8 +105,9 @@ public final class NominalMultiwaySplitCandidate extends SplitCandidate {
     public TreeNodeNominalCondition[] getChildConditions() {
         TreeNominalColumnMetaData columnMeta = getColumnData().getMetaData();
         NominalValueRepresentation[] values = columnMeta.getValues();
-        List<TreeNodeCondition> resultList = new ArrayList<TreeNodeCondition>(values.length);
-        for (int i = 0; i < values.length; i++) {
+        final int lengthNonMissing = values[values.length - 1].getNominalValue().equals(NominalValueRepresentation.MISSING_VALUE) ? values.length - 1 : values.length;
+        List<TreeNodeCondition> resultList = new ArrayList<TreeNodeCondition>(lengthNonMissing);
+        for (int i = 0; i < lengthNonMissing; i++) {
             if (m_sumWeightsAttributes[i] >= TreeColumnData.EPSILON) {
                 resultList.add(new TreeNodeNominalCondition(columnMeta, i, i == m_missingsGoToChildIdx));
             }
