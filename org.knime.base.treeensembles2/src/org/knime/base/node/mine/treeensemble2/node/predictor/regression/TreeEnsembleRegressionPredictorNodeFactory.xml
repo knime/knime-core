@@ -11,7 +11,10 @@
 		<intro>
             Applies regression from a tree ensemble model by using the mean of the individual predictions.
 		</intro>
-	    <option name="Response Column Name">
+		<option name="Change prediction column name">
+			Check if you want to alter the name of the column that will contain the prediction.
+		</option>
+	    <option name="Prediction column name">
 	       Name of the 1st output column. It contains the mean response of all models. A second column with the suffix
 	       "(Variance)" is appended containing the variance of all model responses. 
         </option>
