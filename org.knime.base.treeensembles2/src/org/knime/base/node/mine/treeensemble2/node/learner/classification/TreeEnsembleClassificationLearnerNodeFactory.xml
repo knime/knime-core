@@ -12,8 +12,8 @@
       <p>
         Learns an ensemble of decision trees (such as random forest variants). Each of the decision tree models is
         learned on a different set of rows (records) and/or a different set of columns (describing attributes), whereby 
-        the latter can also be a bit/byte-vector descriptor (e.g. molecular fingerprint). The output model describes an
-        ensemble of decision tree models and is applied in the corresponding predictor node using a simply majority 
+        the latter can also be a bit/byte/double-vector descriptor (e.g. molecular fingerprint). The output model describes an
+        ensemble of decision tree models and is applied in the corresponding predictor node using a simple majority 
         vote. 
       </p>
       <p>
@@ -34,12 +34,23 @@
         </ul>
         Experiments have shown the results on different data sets are very similar to the 
         <a href="http://cran.r-project.org/web/packages/randomForest/">Random Forest implementation available in R</a>.
-        Known differences are in the missing value handling (currently not available in this node) and the split 
-        creation for nominal attributes (the original Random Forest classifier uses binary nominal splits; this 
-        implementation creates child nodes for each possible split attribute).  
       </p>
       <p>
         The decision tree construction takes place in main memory (all data and all models are kept in memory).
+      </p>
+      <p>
+      	The missing value handling corresponds to the method described <a href="https://github.com/dmlc/xgboost/issues/21">here</a>.
+      	The basic idea is to try for each split to send the missing values in every direction and the one yielding the best results (i.e. gain)
+      	is then used. If no missing values are present during training, the direction of a split that the most records are following is chosen as
+      	direction for missing values during testing.
+      </p>
+      <p>
+      	The tree ensemble nodes now also support binary splits for nominal columns. Depending on the kind of problem (two- or multi-class)
+      	different algorithms are implemented to enable the efficient calculation of splits.
+      	<ul>
+      		<li>For two-class classification problems the method described in section 9.4 of "Classification and Regression Trees" by Breiman et al. (1984) is used.</li>
+      		<li>For multi-class classification problems the method described in "Partitioning Nominal Attributes in Decision Trees" by Coppersmith et al. (1999) is used.</li>
+      	</ul>
       </p>
     </intro>
     <tab name="Attribute Selection">
@@ -50,14 +61,15 @@
       <option name="Attribute Selection">
         <p>Select the attributes to use learn the model. Two variants are possible.</p>
         <p>
-          <i>Fingerprint attribute</i> uses the different bit/byte positions in the selected bit/byte vector as learning 
+          <i>Fingerprint attribute</i> uses the different bit/byte/double positions in the selected bit/byte/double vector as learning 
           attributes (for instance a bit vector of length 1024 is expanded to 1024 binary attributes or 1024 long byte
           vector is expanded to the corresponding number of numeric attributes). All vectors in the selected column must
           have the same length. 
         </p>
         <p>
           <i>Column attributes</i> are nominal and numeric columns used as descriptors. Numeric columns are split in a
-          &lt;= fashion; nominal columns are currently split by creating child nodes for each of the values. 
+          &lt;= fashion; nominal columns can currently be split by creating child nodes for each of the values or by determining
+          set based binary splits (see above for more details). 
         </p>
       </option>
       <option name="Ignore columns without domain information">
@@ -83,6 +95,9 @@
       <option name="Use mid points splits (only for numeric attributes)">
         Uses for numerical splits the middle point between two class boundaries. If unselected the split attribute value
         is the smaller value with "&lt;=" relationship.
+      </option>
+      <option name="Use binary splits for nominal columns">
+      	If selected, nominal columns also produce binary splits instead of multiway splits in which each nominal value corresponds to one child node.
       </option>
       <option name="Limit number of levels (tree depth)">
         Number of tree levels to be learned. For instance, a value of 1 would only split the (single) root node
@@ -136,7 +151,7 @@
   </fullDescription>
   <ports>
     <inPort index="0" name="Input Data">The data to learn from. It must contain at least one nominal target column and 
-      either a fingerprint (bitvector) column or another numeric or nominal column.
+      either a fingerprint (bit/byte/double vector) column or another numeric or nominal column.
     </inPort>
     <outPort index="0" name="Out-of-bag error estimates">
       The input data with the out-of-bag error estimates, i.e. for each input row the majority vote of all models that 
