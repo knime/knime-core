@@ -70,7 +70,7 @@ final class RandomForestClassificationLearnerNodeDialogPane extends NodeDialogPa
      *  */
     public RandomForestClassificationLearnerNodeDialogPane() {
         m_optionPanel = new OptionsPanel(false);
-        addTab("Attribute Selection", new JScrollPane(m_optionPanel));
+        addTab("Options", new JScrollPane(m_optionPanel));
 
     }
 

@@ -11,17 +11,19 @@
         <intro>
             Predicts patterns according to a majority vote in a random forest model.
         </intro>
-        <option name="Tree Ensemble Prediction">
-           Name of the output column containing the prediction.
+        <option name="Change prediction column name">
+           Select if you want to change the name of the column containing the prediction.
         </option>
+        <option name="Prediction column name">The name of the column that will contain the prediction of the tree ensemble model</option>
         <option name="Append overall prediction confidence">
            The confidence of the predicted class. It is the maximum of all confidence values 
            (which can be appended separately).
         </option>
-        <option name="Append individual class confidences">
-           For each class the prediction confidence. It's the number of trees predicting to 
+        <option name="Append individual class probabilities">
+           For each class the prediction confidence. It's the number of trees predicting to
            the current class (as per column name) divided by the total number of trees.
         </option>
+        <option name="Suffix for probability columns">Here a suffix for the names of the class probability columns can be entered.</option>
     </fullDescription>
 
     <ports>

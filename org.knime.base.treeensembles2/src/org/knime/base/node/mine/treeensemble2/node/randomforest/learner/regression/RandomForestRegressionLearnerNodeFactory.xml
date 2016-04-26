@@ -4,7 +4,7 @@
   <name>Random Forest Learner (Regression)</name>
 
   <shortDescription>
-    Learns an ensemble of regression trees.
+    Learns a random forest for regression.
   </shortDescription>
 
   <fullDescription>
@@ -12,8 +12,8 @@
       <p>
         Learns a random forest (an ensemble of decision trees) for regression. Each of the regression tree models is
         learned on a different set of rows (records) and/or a different set of columns (describing attributes), whereby 
-        the latter can also be a bit-vector or byte-vector descriptor (e.g. molecular fingerprint). The output model describes an
-        ensemble of regression tree models and is applied in the corresponding predictor node using a simply mean
+        the latter can also be a bit/byte/double vector descriptor (e.g. molecular fingerprint). The output model describes an
+        ensemble of regression tree models and is applied in the corresponding predictor node using a simple mean
         of the individual predictions. 
       </p>
       <p>
@@ -25,7 +25,7 @@
       	functionality, please check out the <i>Tree Ensemble Learner (Regression)</i>
       </p>
     </intro>
-    <tab name="Attribute Selection">
+    <tab name="Options">
       <option name="Target Column">
         Select the column containing the value to be learned. Rows with missing values in this column will be ignored
         during the learning process.
@@ -40,14 +40,12 @@
         </p>
         <p>
           <i>Column attributes</i> are nominal and numeric columns used as descriptors. Numeric columns are split in a
-          &lt;= fashion; nominal columns are currently split by creating child nodes for each of the values. 
+          &lt;= fashion; nominal columns are split using set based binary splits. 
         </p>
       </option>
       <option name="Enable Hightlighting (#patterns to store)">
         If selected, the node stores the selected number of rows and allows highlighting them in the node view.
       </option>
-    </tab>
-    <tab name="Tree Options">
       <option name="Limit number of levels (tree depth)">
         Number of tree levels to be learned. For instance, a value of 1 would only split the (single) root node
         (decision stump). 
@@ -55,8 +53,6 @@
       <option name="Minimum node size">Minimum number of records in child nodes. It can be at most half of 
          the minimum split node size (see above). Note, this parameter is currently ignored for nominal splits. 
       </option>
-    </tab>
-    <tab name="Ensemble Configuration">
       <option name="Number of models">
         The number of decision trees to learn. A "reasonable" value can range from very few (say 10) to many thousands
         for small data sets with few target category values.
