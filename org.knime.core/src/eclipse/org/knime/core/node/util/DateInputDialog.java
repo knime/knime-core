@@ -446,7 +446,12 @@ public class DateInputDialog extends JPanel {
         m_seconds = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
         m_seconds.setMaximumSize(new Dimension(SPINNER_WIDTH, 25));
         m_seconds.setMinimumSize(new Dimension(SPINNER_WIDTH, 25));
-        m_startDate = new JDateChooser();
+        m_startDate = new JDateChooser() {
+            {
+                // fixes bug AP-5865
+                popup.setFocusable(false);
+            }
+        };
         m_startDate.setLocale(Locale.US);
         m_startDate.getJCalendar().getCalendar().setTimeZone(TimeZone.getTimeZone("UTC"));
 
