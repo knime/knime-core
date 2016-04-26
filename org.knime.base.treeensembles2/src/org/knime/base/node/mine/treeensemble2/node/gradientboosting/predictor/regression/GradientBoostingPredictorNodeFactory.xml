@@ -1,25 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="GradientBoostingPredictorRegression.png" type="Predictor">
-    <name>Gradient Boosting Predictor (Regression)</name>
+<knimeNode icon="GradientBoostingPredictorRegression.png"
+	type="Predictor">
+	<name>Gradient Boosting Predictor (Regression)</name>
 
-    <shortDescription>
-        Applies regression from a gradient boosting model by using the mean of the individual predictions.
-    </shortDescription>
+	<shortDescription>
+		Applies regression from a gradient boosting model.
+	</shortDescription>
 
 	<fullDescription>
 		<intro>
-            Applies regression from a gradient boosting model by using the mean of the individual predictions.
+			Applies regression from a gradient boosting model.
+			The implementation
+			follows the algorithms described in
+			"Greedy Function
+			Approximation:
+			A Gradient Boosting
+			Machine" by
+			Jerome H. Friedman
+			(1999)". For more information you can also take a look
+			at
+			<a href="https://en.wikipedia.org/wiki/Gradient_boosting">this</a>
+			.
 		</intro>
-	    <option name="Response Column Name">
-	       Name of the 1st output column. It contains the mean response of all models. A second column with the suffix
-	       "(Variance)" is appended containing the variance of all model responses. 
-        </option>
+		<option name="Change prediction column name">Check this option if you want to use a custom name
+			for the column containing the prediction
+		</option>
+		<option name="Prediction column name">
+			Name of the output column containing the
+			prediction.
+		</option>
 	</fullDescription>
 
 	<ports>
-	    <inPort index="0" name="Model">Tree Ensemble Model as produced by Tree Ensemble Learner (Regression) node.</inPort>
-	    <inPort index="1" name="Input Data">The data to predict</inPort>
-	    <outPort name="Output Data" index="0">The predicted data</outPort>
+		<inPort index="0" name="Model">Gradient Boosting model as produced by Gradient Boosting Learner (Regression) node.</inPort>
+		<inPort index="1" name="Input Data">The data to predict</inPort>
+		<outPort name="Output Data" index="0">The predicted data</outPort>
 	</ports>
 </knimeNode>

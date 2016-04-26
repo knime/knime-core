@@ -19,6 +19,7 @@
 				"Greedy Function Approximation: A Gradient Boosting
 				Machine" by
 				Jerome H. Friedman (1999).
+				For more information you can also take a look at <a href="https://en.wikipedia.org/wiki/Gradient_boosting">this</a>.
 			</p>
 			<p>
 				The used base learner for this ensemble method is a simple
