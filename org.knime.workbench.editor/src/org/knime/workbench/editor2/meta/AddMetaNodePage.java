@@ -197,7 +197,7 @@ public class AddMetaNodePage extends WizardPage {
             } else if (m_subNode != null) {
                 m_name.setText(m_subNode.getName());
             } else {
-                m_name.setText("MetaNode");
+                m_name.setText("Metanode");
             }
             m_previewPanel.redraw();
             m_name.setFocus();
