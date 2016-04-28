@@ -169,7 +169,6 @@ class InstallMissingNodesJob extends Job {
                         NodeAndBundleInformation info = it.next();
                         if (searchInRepository(repo, info, metadataManager, monitor, featuresToInstall)) {
                             it.remove();
-                            break;
                         }
                     }
                 }
