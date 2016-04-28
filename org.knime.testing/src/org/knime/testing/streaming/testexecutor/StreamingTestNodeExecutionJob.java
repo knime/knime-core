@@ -536,7 +536,11 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                     BufferedDataTable[] tables =
                         createTableChunks((BufferedDataTable)inPortObjects[i + 1], numChunks, exec);
                     for (int j = 0; j < tables.length; j++) {
-                        portInputs[j][i] = new DataTableRowInput(tables[j]);
+                        if (inputPortRoles[i].isStreamable()) {
+                            portInputs[j][i] = new DataTableRowInput(tables[j]);
+                        } else {
+                            portInputs[j][i] = new PortObjectInput(tables[j]);
+                        }
                     }
                 } else {
                     // TODO: copy port object for each chunk to be executed
