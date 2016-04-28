@@ -204,7 +204,7 @@ public class JavaRowSplitterNodeModel extends NodeModel
             isStreamable = false;
             isDistributable = false;
         } else {
-            isStreamable = !exp.usesRowCount();
+            isStreamable = true;
             isDistributable = !exp.usesRowIndex();
         }
         return new InputPortRole[] {InputPortRole.get(isDistributable, isStreamable)};
@@ -226,7 +226,13 @@ public class JavaRowSplitterNodeModel extends NodeModel
     /** {@inheritDoc} */
     @Override
     public boolean iterate(final StreamableOperatorInternals internals) {
-        return !getInputPortRoles()[0].isStreamable() && readLong(internals) < 0;
+        if(m_settings != null) {
+            Expression exp = m_settings.getCompiledExpression();
+            if(exp != null && exp.usesRowCount() && readLong(internals) < 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** {@inheritDoc} */

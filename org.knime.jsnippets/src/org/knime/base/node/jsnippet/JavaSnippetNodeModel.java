@@ -317,8 +317,8 @@ public class JavaSnippetNodeModel extends NodeModel {
                 .warn("The ROWINDEX field is used in the snippet. Calculations cannot be done in distributed manner!");
         }
         if (usesRowCount()) {
-            //rowcount field is used -> streaming not possible but distributed execution
-            inputPortRole = InputPortRole.DISTRIBUTED_NONSTREAMABLE;
+            //rowcount field is used -> streaming actually not possible (because iteration required) but distributed execution
+            inputPortRole = InputPortRole.DISTRIBUTED_STREAMABLE;
             LOGGER.warn("The ROWCOUNT field is used in the snippet. Calculations cannot be done in streamed manner!");
         }
         return new InputPortRole[]{inputPortRole};
