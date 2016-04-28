@@ -71,6 +71,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 public class NumericScorerNodeDialog extends DefaultNodeSettingsPane {
 
     private SettingsModelBoolean m_overrideOutput;
+    private SettingsModelBoolean m_useNamePrefix;
     private SettingsModelColumnName m_predicted;
 
     /**
@@ -111,6 +112,13 @@ public class NumericScorerNodeDialog extends DefaultNodeSettingsPane {
                 }
             }
         });
+
+
+        createNewGroup("Provide scores as flow variables");
+        m_useNamePrefix = NumericScorerNodeModel.createFlowVarModel();
+        addDialogComponent(new DialogComponentBoolean(m_useNamePrefix, "Output scores as flow variables"));
+        final SettingsModelString namePrefixModel = NumericScorerNodeModel.createNamePrefix(m_useNamePrefix);
+        addDialogComponent(new DialogComponentString(namePrefixModel, "Prefix of flow variables"));
     }
 
     /**
