@@ -63,6 +63,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.timeseries.node.diff.Granularity;
@@ -92,6 +93,8 @@ public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
     public static final String CFG_VALUE_SHIFT = "Use static shift value";
 
 
+    private final SettingsModelBoolean m_replaceColumn = DateShiftConfigure.createReplaceColumnModel();
+    private final SettingsModelString m_appendedColName = DateShiftConfigure.createNewColNameModel(m_replaceColumn);
     private final SettingsModelString m_referencemodel = DateShiftConfigure.createReferenceTypeModel();
     private final SettingsModelCalendar m_fixTimeComponent = DateShiftConfigure.createCalendarModel();
     private final SettingsModelString m_columnSelComponent = DateShiftConfigure.createDateColumnModel();
@@ -136,9 +139,12 @@ public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
         // granularity selection
         addDialogComponent(new DialogComponentStringSelection(
                 DateShiftConfigure.createGranularityModel(), "Select granularity of shift", gran));
+
+        addDialogComponent(new DialogComponentBoolean(m_replaceColumn, "Replace column"));
+
         // new column name
-        addDialogComponent(new DialogComponentString(
-                DateShiftConfigure.createNewColNameModel(), "Appended column name:"));
+        addDialogComponent(new DialogComponentString(m_appendedColName, "Appended column name:"));
+        m_appendedColName.setEnabled(!m_replaceColumn.getBooleanValue());
 
         setHorizontalPlacement(true);
         closeCurrentGroup();
@@ -204,12 +210,15 @@ public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
         if (string.equals(CFG_FIXDATE)) {
             m_fixTimeComponent.setEnabled(true);
             m_columnSelComponent.setEnabled(false);
+            m_replaceColumn.setEnabled(false);
         } else if (string.equals(CFG_NOW)) {
             m_fixTimeComponent.setEnabled(false);
             m_columnSelComponent.setEnabled(false);
+            m_replaceColumn.setEnabled(false);
         } else if (string.equals(CFG_COLUMN)) {  //default: use a second column
             m_fixTimeComponent.setEnabled(false);
             m_columnSelComponent.setEnabled(true);
+            m_replaceColumn.setEnabled(true);
         } else if (string.equals(CFG_COLUMN_SHIFT)) {
             m_shiftValueModel.setEnabled(false);
             m_shiftColumnModel.setEnabled(true);

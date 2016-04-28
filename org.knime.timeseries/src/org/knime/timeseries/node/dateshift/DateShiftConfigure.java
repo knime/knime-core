@@ -84,6 +84,15 @@ public class DateShiftConfigure {
         return m_numcol;
     }
 
+    private final SettingsModelBoolean m_replaceCol = createReplaceColumnModel();
+
+    /**
+     * @return the settings model that determines whether the column should be replaced
+     */
+    public SettingsModelBoolean getReplaceColumnModel() {
+        return m_replaceCol;
+    }
+
     //  date column
     private final SettingsModelString m_dateCol = createDateColumnModel();
 
@@ -95,7 +104,7 @@ public class DateShiftConfigure {
     }
 
     // new column name
-    private final SettingsModelString m_newColName = createNewColNameModel();
+    private final SettingsModelString m_newColName = createNewColNameModel(m_replaceCol);
 
     /**
      * @return the settingsmodel for the new column name.
@@ -179,6 +188,8 @@ public class DateShiftConfigure {
         return m_hasMiliSeconds;
     }
 
+    private static final String CFG_REPLACE_COLUMN = "replace.column";
+
     private static final String CFG_COL1 = "column.lower";
 
     private static final String CFG_COL2 = "column.upper";
@@ -252,10 +263,14 @@ public class DateShiftConfigure {
 
     /**
      *
+     * @param replaceColumnModel TODO
      * @return settings model for the new column name
      */
-    public static SettingsModelString createNewColNameModel() {
-        return new SettingsModelString(CFG_NEW_COL_NAME, "ShiftDate");
+    public static SettingsModelString createNewColNameModel(final SettingsModelBoolean replaceColumnModel) {
+        final SettingsModelString result = new SettingsModelString(CFG_NEW_COL_NAME, "ShiftDate");
+        replaceColumnModel.addChangeListener((e) -> result.setEnabled(!replaceColumnModel.getBooleanValue()));
+        result.setEnabled(!replaceColumnModel.getBooleanValue());
+        return result;
     }
 
     /**
@@ -287,6 +302,13 @@ public class DateShiftConfigure {
     }
 
     /**
+     * @return settings model for determining whether the column should be replaced
+     */
+    public static SettingsModelBoolean createReplaceColumnModel() {
+        return new SettingsModelBoolean(CFG_REPLACE_COLUMN, false);
+    }
+
+    /**
      *
      * @param settings the node settings object.
      * @throws InvalidSettingsException if the settings cannot be validated.
@@ -303,6 +325,9 @@ public class DateShiftConfigure {
         m_hasTime.validateSettings(settings);
         m_typeofshift.validateSettings(settings);
         m_shiftvalue.validateSettings(settings);
+        if (settings.containsKey(CFG_REPLACE_COLUMN)) {
+            m_replaceCol.validateSettings(settings);
+        }
     }
 
     /**
@@ -321,6 +346,7 @@ public class DateShiftConfigure {
         m_hasTime.saveSettingsTo(settings);
         m_typeofshift.saveSettingsTo(settings);
         m_shiftvalue.saveSettingsTo(settings);
+        m_replaceCol.saveSettingsTo(settings);
     }
 
     /**
@@ -340,6 +366,9 @@ public class DateShiftConfigure {
         m_hasTime.loadSettingsFrom(settings);
         m_typeofshift.loadSettingsFrom(settings);
         m_shiftvalue.loadSettingsFrom(settings);
+        if (settings.containsKey(CFG_REPLACE_COLUMN)) {
+            m_replaceCol.loadSettingsFrom(settings);
+        }
     }
 
     /**
@@ -356,14 +385,21 @@ public class DateShiftConfigure {
         ColumnRearranger rearranger = new ColumnRearranger(spec);
 
         int unit = getDateTimeUnit(conf);
+
         DataColumnSpec out = createOutputColumnSpec(spec,
             DataTableSpec.getUniqueColumnName(spec, conf.getNewColumnName().getStringValue()));
 
         String typeofref = conf.gettypeofreference().getStringValue();
         if (typeofref.equals(DateShiftNodeDialog.CFG_COLUMN)) {
             int col2Idx = spec.findColumnIndex(conf.getDateColumnModel().getStringValue());
+
             // append the new column with single cell factory
-            rearranger.append(getColumnbasedCellFactory(out, col1Idx, col2Idx, unit, conf));
+            if (conf.getReplaceColumnModel().getBooleanValue()) {
+                out = createOutputColumnSpec(spec, conf.getDateColumnModel().getStringValue());
+                rearranger.replace(getColumnbasedCellFactory(out, col1Idx, col2Idx, unit, conf), col2Idx);
+            } else {
+                rearranger.append(getColumnbasedCellFactory(out, col1Idx, col2Idx, unit, conf));
+            }
         } else {
             Calendar time = Calendar.getInstance();
             time.setTimeInMillis(System.currentTimeMillis()

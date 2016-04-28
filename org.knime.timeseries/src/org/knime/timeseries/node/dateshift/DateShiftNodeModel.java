@@ -159,10 +159,10 @@ public class DateShiftNodeModel extends NodeModel {
                     + " not found in input table, Please reconfigure!");
             }
         }
-        // get unique column name based on the entered column name
-        return new DataTableSpec[]{new DataTableSpec(inSpec, new DataTableSpec(
-            DateShiftConfigure.createOutputColumnSpec(inSpec,
-                DataTableSpec.getUniqueColumnName(inSpec, m_confObj.getNewColumnName().getStringValue()))))};
+
+        // Get the spec from the column rearranger
+        ColumnRearranger rearranger = DateShiftConfigure.getTimeToValueRearranger(m_confObj, inSpec);
+        return new DataTableSpec[]{rearranger.createSpec()};
     }
     /**
      * {@inheritDoc}
