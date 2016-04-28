@@ -580,8 +580,8 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
 
         String lastUpdate = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
             .getString(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE);
-        if (StringUtils.isEmpty(lastUpdate)) {
-            //check whether a automatic update is necessary
+        if (!StringUtils.isEmpty(lastUpdate)) {
+            //check whether an automatic update is necessary
             try {
                 LocalDate t = LocalDate.from(DATE_PARSER.parse(lastUpdate));
                 long weeksDiff = ChronoUnit.WEEKS.between(t, LocalDate.now());
@@ -598,9 +598,8 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         //trigger update for all updatable and enabled providers
         updateTripleProviders(Optional.of(e -> {
             if (e.isPresent()) {
-                updateInputNoProvider();
-            } else {
-                updateFrequencyColumnHeadersAndToolTips();
+                NodeLogger.getLogger(WorkflowCoachView.class).warn("Could not update node recommendations statistics.",
+                    e.get());
             }
         }), false);
     }
