@@ -9277,7 +9277,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         Matcher nameMatcher = INPUT_NODE_NAME_PATTERN.matcher(e.getKey());
                         assert nameMatcher.matches() : String.format(
                             "No match on \"%s\" (regex \"%s\")", e.getKey(), INPUT_NODE_NAME_PATTERN.pattern());
-                        String patName = nameMatcher.group(1);
+                        // old workflows don't have parameter names -- null -> ""
+                        String patName = StringUtils.defaultString(nameMatcher.group(1));
                         assert Objects.equals(patName, e.getValue().getSecond().getID()) :
                             "Not the same parameter name: " + patName + " vs. " + e.getValue().getSecond().getID();
                         result.put(patName + "-" + childMgrIndex + ":" + nameMatcher.group(2), e.getValue());
