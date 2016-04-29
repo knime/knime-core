@@ -40,7 +40,7 @@
       </p>
       <p>
       	The missing value handling corresponds to the method described <a href="https://github.com/dmlc/xgboost/issues/21">here</a>.
-      	The basic idea is to try for each split to send the missing values in every direction and the one yielding the best results (i.e. gain)
+      	The basic idea is to try for each split to send the missing values in every direction and the one yielding the best results (i.e. largest gain)
       	is then used. If no missing values are present during training, the direction of a split that the most records are following is chosen as
       	direction for missing values during testing.
       </p>
