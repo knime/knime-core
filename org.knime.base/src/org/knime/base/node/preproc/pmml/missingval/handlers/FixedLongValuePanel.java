@@ -65,6 +65,6 @@ public class FixedLongValuePanel extends DefaultMissingValueHandlerPanel {
     public FixedLongValuePanel() {
         addDialogComponent(new DialogComponentNumber(
                                   FixedLongValueMissingCellHandler.createLongValueSettingsModel(),
-                                  "Value", 1L));
+                                  "Value", 1L, 6));
     }
 }

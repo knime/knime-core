@@ -65,6 +65,6 @@ public class FixedIntegerValuePanel extends DefaultMissingValueHandlerPanel {
     public FixedIntegerValuePanel() {
         addDialogComponent(new DialogComponentNumber(
                                   FixedIntegerValueMissingCellHandler.createIntegerValueSettingsModel(),
-                                  "Value", 1));
+                                  "Value", 1, 6));
     }
 }

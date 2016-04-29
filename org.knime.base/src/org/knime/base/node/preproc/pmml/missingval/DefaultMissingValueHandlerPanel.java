@@ -72,20 +72,12 @@ public class DefaultMissingValueHandlerPanel extends MissingValueHandlerPanel {
 
     private List<DialogComponent> m_comp;
 
-    private JPanel m_compositePanel;
-
     /**
      * Default constructor for DefaultMissingValueHandlerPanel.
      */
     public DefaultMissingValueHandlerPanel() {
         m_comp = new ArrayList<DialogComponent>();
         this.setLayout(new GridBagLayout());
-        m_compositePanel = new JPanel();
-        m_compositePanel.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.CENTER;
-        this.add(m_compositePanel, gbc);
-        //setBorder(BorderFactory.createLineBorder(Color.red));
     }
 
     /**
@@ -95,12 +87,13 @@ public class DefaultMissingValueHandlerPanel extends MissingValueHandlerPanel {
     public final void addDialogComponent(final DialogComponent c) {
         m_comp.add(c);
         JPanel p = c.getComponentPanel();
-        //p.setBorder(BorderFactory.createLineBorder(Color.GREEN));
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.weightx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.gridy = m_comp.size() - 1;
         gbc.gridx = 0;
         gbc.anchor = GridBagConstraints.LINE_END;
-        m_compositePanel.add(p, gbc);
+        this.add(p, gbc);
     }
 
     /**
