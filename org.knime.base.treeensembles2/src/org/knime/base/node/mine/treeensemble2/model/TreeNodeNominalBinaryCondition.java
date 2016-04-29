@@ -54,8 +54,12 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
+import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
+import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSetOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimpleSetPredicate;
 import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
@@ -235,7 +239,14 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
             new PMMLSimpleSetPredicate(getAttributeName(), m_setLogic.getPmmlSetOperator());
         setPredicate.setValues(Arrays.asList(getValues()));
         setPredicate.setArrayType(PMMLArrayType.STRING);
-        return setPredicate;
+        if (!acceptsMissings()) {
+            return setPredicate;
+        }
+        // create compound condition that allows missing values
+        PMMLCompoundPredicate compPredicate = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
+        compPredicate.addPredicate(setPredicate);
+        compPredicate.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.IS_MISSING, ""));
+        return compPredicate;
     }
 
 }

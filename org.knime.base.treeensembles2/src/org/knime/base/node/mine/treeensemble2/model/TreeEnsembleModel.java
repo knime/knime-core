@@ -148,7 +148,7 @@ public class TreeEnsembleModel {
     /**
      * @param models
      */
-    protected TreeEnsembleModel(final TreeMetaData metaData, final AbstractTreeModel[] models, final TreeType treeType,
+    public TreeEnsembleModel(final TreeMetaData metaData, final AbstractTreeModel[] models, final TreeType treeType,
         final boolean containsClassDistribution) {
         m_metaData = metaData;
         m_models = models;

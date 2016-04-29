@@ -69,9 +69,8 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
 
     public enum NumericOperator {
             LessThanOrEqual("<=", (byte)'s', PMMLOperator.LESS_OR_EQUAL),
-            LargerThan(">", (byte)'l', PMMLOperator.GREATER_THAN),
-            LessThanOrEqualOrMissing("<= || ?", (byte) 'm', null),
-            LargerThanOrMissing("> || ?", (byte) 'n', null);
+            LargerThan(">", (byte)'l', PMMLOperator.GREATER_THAN), LessThanOrEqualOrMissing("<= || ?", (byte)'m', null),
+            LargerThanOrMissing("> || ?", (byte)'n', null);
 
         private final String m_sign;
 
@@ -164,8 +163,8 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
         Object value = record.getValue(getColumnMetaData().getAttributeName());
         double v = 0;
         if (value == null) {
-//            throw new UnsupportedOperationException("Missing values currently not supported");
-//            v = Double.NaN;
+            //            throw new UnsupportedOperationException("Missing values currently not supported");
+            //            v = Double.NaN;
             return acceptsMissings();
         } else if (!(value instanceof Integer || value instanceof Double)) {
             throw new IllegalArgumentException("Can't test numeric condition (" + toString()
@@ -175,7 +174,6 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
         } else {
             v = (Double)value;
         }
-
 
         switch (m_numericOperator) {
             case LargerThan:
@@ -196,20 +194,33 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
     public PMMLPredicate toPMMLPredicate() {
         PMMLCompoundPredicate compound = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
         switch (m_numericOperator) {
-            case LargerThanOrMissing :
-                compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.GREATER_THAN, Double.toString(m_splitValue)));
-                compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.IS_MISSING, Double.toString(m_splitValue)));
+            case LargerThanOrMissing:
+                compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.GREATER_THAN,
+                    Double.toString(m_splitValue)));
+                compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.IS_MISSING,
+                    Double.toString(m_splitValue)));
                 return compound;
-            case LessThanOrEqualOrMissing :
-                compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.LESS_OR_EQUAL, Double.toString(m_splitValue)));
-                compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.IS_MISSING, Double.toString(m_splitValue)));
+            case LessThanOrEqualOrMissing:
+                compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.LESS_OR_EQUAL,
+                    Double.toString(m_splitValue)));
+                compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.IS_MISSING,
+                    Double.toString(m_splitValue)));
                 return compound;
         }
         final PMMLOperator pmmlOperator = m_numericOperator.m_pmmlOperator;
         if (pmmlOperator == null) {
             throw new IllegalStateException("There is no equivalent PMMLOperator for this NumericOperator.");
         }
-        return new PMMLSimplePredicate(getAttributeName(), pmmlOperator, Double.toString(m_splitValue));
+        final PMMLSimplePredicate simplePredicate =
+            new PMMLSimplePredicate(getAttributeName(), pmmlOperator, Double.toString(m_splitValue));
+        if (!acceptsMissings()) {
+            return simplePredicate;
+        }
+        // create compound to allow for missing values
+        compound.addPredicate(simplePredicate);
+        compound.addPredicate(
+            new PMMLSimplePredicate(getAttributeName(), PMMLOperator.IS_MISSING, Double.toString(m_splitValue)));
+        return compound;
     }
 
     /** {@inheritDoc} */

@@ -50,6 +50,8 @@ package org.knime.base.node.mine.treeensemble2.model;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
@@ -117,7 +119,7 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
         Object value = record.getValue(getColumnMetaData().getAttributeName());
         int valIdx = -1;
         if (value == null) {
-//            throw new UnsupportedOperationException("Missing values currently not supported");
+            //            throw new UnsupportedOperationException("Missing values currently not supported");
             return acceptsMissings();
         }
         if (!(value instanceof Integer)) {
@@ -145,7 +147,16 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
     /** {@inheritDoc} */
     @Override
     public PMMLPredicate toPMMLPredicate() {
-        return new PMMLSimplePredicate(getAttributeName(), PMMLOperator.EQUAL, getValue());
+        final PMMLSimplePredicate simplePredicate =
+            new PMMLSimplePredicate(getAttributeName(), PMMLOperator.EQUAL, getValue());
+        if (!acceptsMissings()) {
+            return simplePredicate;
+        }
+        // add compound predicate to allow for missing values
+        final PMMLCompoundPredicate compPredicate = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
+        compPredicate.addPredicate(simplePredicate);
+        compPredicate.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.IS_MISSING, getValue()));
+        return compPredicate;
     }
 
 }
