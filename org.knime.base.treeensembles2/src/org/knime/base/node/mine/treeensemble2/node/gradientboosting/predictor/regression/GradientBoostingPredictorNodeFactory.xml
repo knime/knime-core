@@ -2,15 +2,15 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="GradientBoostingPredictorRegression.png"
 	type="Predictor">
-	<name>Gradient Boosting Predictor (Regression)</name>
+	<name>Gradient Boosted Trees Predictor (Regression)</name>
 
 	<shortDescription>
-		Applies regression from a gradient boosting model.
+		Applies regression from a Gradient Boosted Trees model.
 	</shortDescription>
 
 	<fullDescription>
 		<intro>
-			Applies regression from a gradient boosting model.
+			Applies regression from a Gradient Boosted Trees model.
 			The implementation
 			follows the algorithms described in
 			"Greedy Function
@@ -33,7 +33,7 @@
 	</fullDescription>
 
 	<ports>
-		<inPort index="0" name="Model">Gradient Boosting model as produced by Gradient Boosting Learner (Regression) node.</inPort>
+		<inPort index="0" name="Model">Gradient Boosted Trees model as produced by Gradient Boosted Trees Learner (Regression) node.</inPort>
 		<inPort index="1" name="Input Data">The data to predict</inPort>
 		<outPort name="Output Data" index="0">The predicted data</outPort>
 	</ports>

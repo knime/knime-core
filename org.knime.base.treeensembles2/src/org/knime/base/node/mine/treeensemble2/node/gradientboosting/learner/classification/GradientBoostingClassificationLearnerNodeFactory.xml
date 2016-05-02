@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="GradientBoostingLearner.png" type="Learner">
-	<name>Gradient Boosting Learner</name>
+	<name>Gradient Boosted Trees Learner</name>
 
 	<shortDescription>
-		Learns a gradient boosting model.
+		Learns a Gradient Boosted Trees model.
 	</shortDescription>
 
 	<fullDescription>
@@ -105,6 +105,16 @@
 				The algorithm for determining the best binary split is described in section 8.8 of "Classification and Regression Trees" by Breiman et al. (1984).
 				If this option is unchecked, the algorithm will produce a child for each possible value of the nominal column.
 			</option>
+			<option name="Missing value handling">Here the preferred missing value handling can be specified there are the following options:
+				<ul>
+					<li>XGBoost - If this is selected (it is also the default), the learner will calculate which direction is best suited for
+					missing values, by sending the missing values in each direction of a split. The direction that yields the best result (i.e. largest gain)
+					is then used as default direction for missing values. This method works with both, binary and multiway splits.</li>
+					<li>Surrogate - This approach calculates for each split alternative splits that best approximate the best split.
+					The method was first described in the book "Classification and Regression Trees" by Breiman et al. (1984).
+					NOTE: This method can only be used with binary nominal splits.</li>
+				</ul>
+			</option>
 			<option name="Alpha">
 				Alpha controls what percentage of the data will be considered as outliers. The higher Alpha the smaller the fraction of outliers.
 				If Alpha is set to 1.0, the algorithm will consider no point to be an outlier. This is discouraged however because outliers can have
@@ -168,6 +178,6 @@
 			(bit/byte/double vector) column or another numeric or nominal
 			column.
 		</inPort>
-		<outPort index="0" name="Gradient Boosting Model">The trained model.</outPort>
+		<outPort index="0" name="Gradient Boosted Trees Model">The trained model.</outPort>
 	</ports>
 </knimeNode>

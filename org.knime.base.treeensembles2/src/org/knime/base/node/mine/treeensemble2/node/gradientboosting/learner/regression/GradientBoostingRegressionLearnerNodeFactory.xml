@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="GradientBoostingLearnerRegression.png" type="Learner">
-	<name>Gradient Boosting Learner (Regression)</name>
+	<name>Gradient Boosted Trees Learner (Regression)</name>
 
 	<shortDescription>
-		Learns a gradient boosting model.
+		Learns a Gradient Boosted Trees model.
 	</shortDescription>
 
 	<fullDescription>
@@ -91,6 +91,16 @@
 				If this option is checked (this is the default), then nominal columns are split in a binary way using set based splits.
 				The algorithm for determining the best binary split is described in section 8.8 of "Classification and Regression Trees" by Breiman et al. (1984).
 				If this option is unchecked, the algorithm will produce a child for each possible value of the nominal column.
+			</option>
+			<option name="Missing value handling">Here the preferred missing value handling can be specified there are the following options:
+				<ul>
+					<li><i>XGBoost</i> - If this is selected (it is also the default), the learner will calculate which direction is best suited for
+					missing values, by sending the missing values in each direction of a split. The direction that yields the best result (i.e. largest gain)
+					is then used as default direction for missing values. This method works with both, binary and multiway splits.</li>
+					<li><i>Surrogate</i> - This approach calculates for each split alternative splits that best approximate the best split.
+					The method was first described in the book "Classification and Regression Trees" by Breiman et al. (1984).
+					<b>NOTE:</b> This method can only be used with binary nominal splits.</li>
+				</ul>
 			</option>
 			<option name="Data Sampling (Rows)">
 				The sampling of the data rows for each individual

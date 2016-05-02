@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="GradientBoostingPredictor.png" type="Predictor">
-	<name>Gradient Boosting Predictor</name>
+	<name>Gradient Boosted Trees Predictor</name>
 
 	<shortDescription>
-		Classifies data using a gradient boosting model.
+		Classifies data using a Gradient Boosted Trees model.
 	</shortDescription>
 
 	<fullDescription>
 		<intro>
-			Classifies data using a gradient boosting model. The implementation
+			Classifies data using a Gradient Boosted Trees model. The implementation
 			follows the algorithms described in
 			"Greedy Function Approximation:
 			A Gradient Boosting
@@ -34,7 +34,7 @@
 	</fullDescription>
 
 	<ports>
-		<inPort index="0" name="Model">Gradient Boosting model as produced by the Gradient Boosting Learner node.</inPort>
+		<inPort index="0" name="Model">Gradient Boosted Trees model as produced by the Gradient Boosted Trees Learner node.</inPort>
 		<inPort index="1" name="Input Data">The data to predict</inPort>
 		<outPort name="Output Data" index="0">The predicted data</outPort>
 	</ports>
