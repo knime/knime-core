@@ -60,6 +60,7 @@ import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObj
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
+import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.MissingValueHandling;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -148,6 +149,7 @@ public class GradientBoostingClassificationLearnerNodeModel extends NodeModel {
         exec.setMessage("Learning trees");
         AbstractGradientBoostingLearner learner = new LKGradientBoostedTreesLearner(m_configuration, data);
         AbstractGradientBoostingModel model;
+        m_configuration.setMissingValueHandling(MissingValueHandling.XGBoost);
 //        try {
             model = learner.learn(learnExec);
 //        } catch (ExecutionException e) {
