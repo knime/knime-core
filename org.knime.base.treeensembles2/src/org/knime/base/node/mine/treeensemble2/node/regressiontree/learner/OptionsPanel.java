@@ -60,6 +60,7 @@ import java.util.Set;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -72,6 +73,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.ColumnSamplingMode;
+import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.MissingValueHandling;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.SplitCriterion;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -138,6 +140,8 @@ public final class OptionsPanel extends JPanel {
 //    private final JCheckBox m_useAverageSplitPointsChecker;
 
     private final JCheckBox m_useBinaryNominalSplitsCheckBox;
+
+    private final JComboBox<MissingValueHandling> m_missingValueHandlingComboBox;
 
     private final JCheckBox m_minNodeSizeChecker;
 
@@ -220,6 +224,8 @@ public final class OptionsPanel extends JPanel {
 
         m_useBinaryNominalSplitsCheckBox = new JCheckBox("Use binary splits for nominal attributes");
 
+        m_missingValueHandlingComboBox = new JComboBox<>(MissingValueHandling.values());
+
         m_minNodeSizeSpinner = new JSpinner(new SpinnerNumberModel(10, 1, Integer.MAX_VALUE, 1));
         m_minNodeSizeChecker = new JCheckBox("Minimum split node size");
         m_minNodeSizeChecker.addItemListener(new ItemListener() {
@@ -251,75 +257,6 @@ public final class OptionsPanel extends JPanel {
             }
         });
         m_minChildNodeSizeChecker.doClick();
-
-
-        // Forest Options
-
-//        m_columnFractionNoneButton = new JRadioButton("All columns (no sampling)");
-//        m_columnFractionSqrtButton = new JRadioButton("Sample (square root)");
-//        m_columnFractionLinearButton = new JRadioButton("Sample (linear fraction)  ");
-//        m_columnFractionAbsoluteButton = new JRadioButton("Sample (absolute value)  ");
-
-//        ButtonGroup columnFractionButtonGroup = new ButtonGroup();
-//        columnFractionButtonGroup.add(m_columnFractionNoneButton);
-//        columnFractionButtonGroup.add(m_columnFractionSqrtButton);
-//        columnFractionButtonGroup.add(m_columnFractionLinearButton);
-//        columnFractionButtonGroup.add(m_columnFractionAbsoluteButton);
-//        m_columnFractionLinearTreeSpinner =
-//            new JSpinner(new SpinnerNumberModel(TreeEnsembleLearnerConfiguration.DEF_COLUMN_FRACTION, 0.001, 1.0, 0.1));
-//        m_columnFractionLinearButton.addItemListener(new ItemListener() {
-//            @Override
-//            public void itemStateChanged(final ItemEvent e) {
-//                final boolean s = m_columnFractionLinearButton.isSelected();
-//                m_columnFractionLinearTreeSpinner.setEnabled(s);
-//                if (s) {
-//                    m_columnFractionLinearTreeSpinner.requestFocus();
-//                }
-//            }
-//        });
-//        m_columnFractionLinearButton.doClick();
-//        m_columnFractionAbsoluteTreeSpinner =
-//            new JSpinner(new SpinnerNumberModel(TreeEnsembleLearnerConfiguration.DEF_COLUMN_ABSOLUTE, 1,
-//                Integer.MAX_VALUE, 1));
-//        m_columnFractionAbsoluteButton.addItemListener(new ItemListener() {
-//            @Override
-//            public void itemStateChanged(final ItemEvent e) {
-//                final boolean s = m_columnFractionAbsoluteButton.isSelected();
-//                m_columnFractionAbsoluteTreeSpinner.setEnabled(s);
-//                if (s) {
-//                    m_columnFractionAbsoluteTreeSpinner.requestFocus();
-//                }
-//            }
-//        });
-//        m_columnFractionAbsoluteButton.doClick();
-//
-//        m_columnUseSameSetOfAttributesForNodes = new JRadioButton("Use same set of attributes for entire tree");
-//        m_columnUseDifferentSetOfAttributesForNodes =
-//            new JRadioButton("Use different set of attributes for each tree node");
-//        ButtonGroup attrSelectButtonGroup = new ButtonGroup();
-//        attrSelectButtonGroup.add(m_columnUseSameSetOfAttributesForNodes);
-//        attrSelectButtonGroup.add(m_columnUseDifferentSetOfAttributesForNodes);
-//        m_columnUseSameSetOfAttributesForNodes.doClick();
-//
-//        m_seedTextField = new JTextField(20);
-//        m_newSeedButton = new JButton("New");
-//        m_seedChecker = new JCheckBox("Use static random seed");
-//        m_seedChecker.addItemListener(new ItemListener() {
-//            @Override
-//            public void itemStateChanged(final ItemEvent e) {
-//                final boolean selected = m_seedChecker.isSelected();
-//                m_seedTextField.setEnabled(selected);
-//                m_newSeedButton.setEnabled(selected);
-//            }
-//        });
-//        m_newSeedButton.addActionListener(new ActionListener() {
-//
-//            @Override
-//            public void actionPerformed(final ActionEvent e) {
-//                m_seedTextField.setText(Long.toString(new Random().nextLong()));
-//            }
-//        });
-//        m_seedChecker.doClick();
 
 
         m_changeListenerList = new ArrayList<ChangeListener>();
@@ -370,7 +307,6 @@ public final class OptionsPanel extends JPanel {
         gbc.weighty = 1.0;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.BOTH;
-//        add(m_includeColumnsFilterPanel, gbc);
         add(m_includeColumnsFilterPanel2, gbc);
 
         gbc.gridy += 1;
@@ -425,8 +361,15 @@ public final class OptionsPanel extends JPanel {
         gbc.weightx = 0.0;
         gbc.gridwidth = 2;
         add(m_useBinaryNominalSplitsCheckBox, gbc);
-        gbc.gridwidth = 1;
 
+        gbc.gridwidth = 3;
+        gbc.gridy += 1;
+        add(new JLabel("Missing value handling"), gbc);
+        gbc.gridx += 1;
+        gbc.weightx = 0.0;
+        add(m_missingValueHandlingComboBox, gbc);
+
+        gbc.gridwidth = 2;
         gbc.gridy += 1;
         gbc.gridx = 0;
         gbc.weightx = 0.0;
@@ -460,75 +403,6 @@ public final class OptionsPanel extends JPanel {
 //        add(m_hardCodedRootColumnBox, gbc);
 
 
-        // Forest Options
-
-//        Insets defaultInsets = new Insets(5, 5, 5, 5);
-//        Insets noYSpaceInsets = new Insets(0, 5, 0, 5);
-//
-//        gbc.gridy += 1;
-//        gbc.gridx = 0;
-//        gbc.weightx = 1.0;
-//        gbc.gridwidth = 3;
-//        add(new JSeparator(), gbc);
-//
-//        gbc.gridy += 1;
-//        gbc.gridx = 0;
-//        add(new JLabel("Forest Options"), gbc);
-//        gbc.gridwidth = 1;
-//
-//        gbc.gridy += 1;
-//        gbc.gridx = 0;
-//        gbc.weightx = 0.0;
-//        gbc.gridwidth = 1;
-//        add(new JLabel("Attribute Sampling (Columns)"), gbc);
-//        gbc.insets = noYSpaceInsets;
-//        gbc.gridx += 1;
-//        gbc.weightx = 1.0;
-//        gbc.gridwidth = 2;
-//        add(m_columnFractionNoneButton, gbc);
-//        gbc.gridy += 1;
-//        add(m_columnFractionSqrtButton, gbc);
-//        gbc.gridy += 1;
-//        gbc.gridwidth = 1;
-//        add(m_columnFractionLinearButton, gbc);
-//        gbc.gridx += 1;
-//        add(m_columnFractionLinearTreeSpinner, gbc);
-//        gbc.gridx = 1;
-//        gbc.gridy += 1;
-//        add(m_columnFractionAbsoluteButton, gbc);
-//        gbc.gridx += 1;
-//        add(m_columnFractionAbsoluteTreeSpinner, gbc);
-//        gbc.insets = defaultInsets;
-//
-//        gbc.gridy += 1;
-//        gbc.gridx = 0;
-//        gbc.weightx = 1.0;
-//        gbc.gridwidth = 3;
-//        add(new JLabel(), gbc);
-//
-//        gbc.gridy += 1;
-//        gbc.gridx = 0;
-//        gbc.weightx = 0.0;
-//        gbc.gridwidth = 1;
-//        add(new JLabel("Attribute Selection"), gbc);
-//        gbc.insets = noYSpaceInsets;
-//        gbc.gridx += 1;
-//        gbc.weightx = 1.0;
-//        gbc.gridwidth = 2;
-//        add(m_columnUseSameSetOfAttributesForNodes, gbc);
-//        gbc.gridy += 1;
-//        add(m_columnUseDifferentSetOfAttributesForNodes, gbc);
-//        gbc.insets = defaultInsets;
-//
-//        gbc.gridy += 1;
-//        gbc.gridx = 0;
-//        gbc.weightx = 0.0;
-//        gbc.gridwidth = 1;
-//        add(m_seedChecker, gbc);
-//        gbc.gridx += 1;
-//        gbc.gridwidth = 2;
-//        gbc.weightx = 1.0;
-//        add(ViewUtils.getInFlowLayout(FlowLayout.LEFT, m_seedTextField, m_newSeedButton), gbc);
 
     }
 
@@ -619,6 +493,8 @@ public final class OptionsPanel extends JPanel {
 
         m_useBinaryNominalSplitsCheckBox.setSelected(cfg.isUseBinaryNominalSplits());
 
+        m_missingValueHandlingComboBox.setSelectedItem(cfg.getMissingValueHandling());
+
         int maxLevel = cfg.getMaxLevels();
         if ((maxLevel != TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) != m_maxLevelChecker.isSelected()) {
             m_maxLevelChecker.doClick();
@@ -672,43 +548,6 @@ public final class OptionsPanel extends JPanel {
 //            m_hardCodedRootColumnChecker.setEnabled(false);
 //        }
 
-        // Forest Options
-
-//        double colFrac = cfg.getColumnFractionLinearValue();
-//        int colAbsolute = cfg.getColumnAbsoluteValue();
-//        boolean useDifferentAttributesAtEachNode = cfg.isUseDifferentAttributesAtEachNode();
-//        ColumnSamplingMode columnFraction = cfg.getColumnSamplingMode();
-//        switch (columnFraction) {
-//            case None:
-//                m_columnFractionNoneButton.doClick();
-//                useDifferentAttributesAtEachNode = false;
-//                colFrac = 1.0;
-//                break;
-//            case Linear:
-//                m_columnFractionLinearButton.doClick();
-//                break;
-//            case Absolute:
-//                m_columnFractionAbsoluteButton.doClick();
-//                break;
-//            case SquareRoot:
-//                m_columnFractionSqrtButton.doClick();
-//                colFrac = 1.0;
-//                break;
-//        }
-//        m_columnFractionLinearTreeSpinner.setValue(colFrac);
-//        m_columnFractionAbsoluteTreeSpinner.setValue(colAbsolute);
-//        if (useDifferentAttributesAtEachNode) {
-//            m_columnUseDifferentSetOfAttributesForNodes.doClick();
-//        } else {
-//            m_columnUseSameSetOfAttributesForNodes.doClick();
-//        }
-//
-//
-//        Long seed = cfg.getSeed();
-//        if (m_seedChecker.isSelected() != (seed != null)) {
-//            m_seedChecker.doClick();
-//        }
-//        m_seedTextField.setText(Long.toString(seed != null ? seed : System.currentTimeMillis()));
 
 
         // Other
@@ -756,6 +595,13 @@ public final class OptionsPanel extends JPanel {
         cfg.setSplitCriterion(SplitCriterion.Gini);
 //        cfg.setUseAverageSplitPoints(m_useAverageSplitPointsChecker.isSelected());
         cfg.setUseBinaryNominalSplits(m_useBinaryNominalSplitsCheckBox.isSelected());
+
+        final MissingValueHandling missValHandling = (MissingValueHandling)m_missingValueHandlingComboBox.getSelectedItem();
+        if (missValHandling == MissingValueHandling.Surrogate && !m_useBinaryNominalSplitsCheckBox.isSelected()) {
+            throw new InvalidSettingsException("Surrogate missing value handling only works if binary nominal splits are enabled");
+        }
+        cfg.setMissingValueHandling(missValHandling);
+
         cfg.setUseAverageSplitPoints(true);
 
         int maxLevel =
