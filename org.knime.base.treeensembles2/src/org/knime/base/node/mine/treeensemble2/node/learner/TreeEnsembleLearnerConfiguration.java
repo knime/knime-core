@@ -153,12 +153,7 @@ public class TreeEnsembleLearnerConfiguration {
         /**
          * Calculate direction for missing values based on which gives the better gain during training
          */
-        XGBoost("XGBoost"),
-
-        /**
-         * Don't do any missing value handling
-         */
-        None("None");
+        XGBoost("XGBoost");
 
         private final String m_string;
 
@@ -285,7 +280,7 @@ public class TreeEnsembleLearnerConfiguration {
      */
     public static final boolean DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES = false;
 
-    private static final MissingValueHandling DEF_MISSING_VALUE_HANDLING = MissingValueHandling.None;
+    private static final MissingValueHandling DEF_MISSING_VALUE_HANDLING = MissingValueHandling.XGBoost;
 
     private String m_targetColumn;
 
