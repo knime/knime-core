@@ -49,7 +49,6 @@
 package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +68,6 @@ import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaDa
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.learner.TreeLearnerRegression;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
-import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
@@ -82,18 +80,18 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
 
-import com.google.common.base.Function;
 import com.google.common.math.IntMath;
 
 /**
+ * This class learns a {@link MultiClassGradientBoostedTreesModel}.
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
-public class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearner {
+public final class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearner {
 
     /**
-     * @param config
-     * @param data
+     * @param config configuration of learner
+     * @param data data to learn on
      */
     public LKGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
         super(config, data);
@@ -106,17 +104,17 @@ public class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearn
      * @throws InterruptedException
      */
     @Override
-    public AbstractGradientBoostingModel learn(final ExecutionMonitor exec)
+    public MultiClassGradientBoostedTreesModel learn(final ExecutionMonitor exec)
         throws CanceledExecutionException, InterruptedException, ExecutionException {
-        TreeData data = getData();
-        TreeTargetNominalColumnData target = (TreeTargetNominalColumnData)data.getTargetColumn();
-        NominalValueRepresentation[] classNomVals = target.getMetaData().getValues();
-        int numClasses = classNomVals.length;
-        String[] classLabels = new String[numClasses];
-        int nrModels = getConfig().getNrModels();
-        int nrRows = target.getNrRows();
-        TreeModelRegression[][] models = new TreeModelRegression[nrModels][numClasses];
-        ArrayList<ArrayList<Map<TreeNodeSignature, Double>>> coefficientMaps =
+        final TreeData data = getData();
+        final TreeTargetNominalColumnData target = (TreeTargetNominalColumnData)data.getTargetColumn();
+        final NominalValueRepresentation[] classNomVals = target.getMetaData().getValues();
+        final int numClasses = classNomVals.length;
+        final String[] classLabels = new String[numClasses];
+        final int nrModels = getConfig().getNrModels();
+        final int nrRows = target.getNrRows();
+        final TreeModelRegression[][] models = new TreeModelRegression[nrModels][numClasses];
+        final ArrayList<ArrayList<Map<TreeNodeSignature, Double>>> coefficientMaps =
             new ArrayList<ArrayList<Map<TreeNodeSignature, Double>>>(nrModels);
         // variables for parallelization
         final ThreadPool tp = KNIMEConstants.GLOBAL_THREAD_POOL;
@@ -125,19 +123,19 @@ public class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearn
 
         exec.setMessage("Transforming problem");
         // transform the original k class classification problem into k regression problems
-        TreeData[] actual = new TreeData[numClasses];
+        final TreeData[] actual = new TreeData[numClasses];
         for (int i = 0; i < numClasses; i++) {
-            double[] newTarget = calculateNewTarget(target, i);
+            final double[] newTarget = calculateNewTarget(target, i);
             actual[i] = createNumericDataFromArray(newTarget);
             classLabels[i] = classNomVals[i].getNominalValue();
         }
 
-        RandomData rd = getConfig().createRandomData();
+        final RandomData rd = getConfig().createRandomData();
 
-        double[][] previousFunctions = new double[numClasses][nrRows];
+        final double[][] previousFunctions = new double[numClasses][nrRows];
 
         TreeNodeSignatureFactory signatureFactory = null;
-        int maxLevels = getConfig().getMaxLevels();
+        final int maxLevels = getConfig().getMaxLevels();
         if (maxLevels < TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {
             int capacity = IntMath.pow(2, maxLevels - 1);
             signatureFactory = new TreeNodeSignatureFactory(capacity);
@@ -148,10 +146,10 @@ public class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearn
         exec.setMessage("Learn trees");
         for (int i = 0; i < nrModels; i++) {
             final Semaphore semaphore = new Semaphore(procCount);
-            ArrayList<Map<TreeNodeSignature, Double>> classCoefficientMaps =
+            final ArrayList<Map<TreeNodeSignature, Double>> classCoefficientMaps =
                 new ArrayList<Map<TreeNodeSignature, Double>>(numClasses);
             // prepare calculation of pseudoResiduals
-            double[][] probs = new double[numClasses][nrRows];
+            final double[][] probs = new double[numClasses][nrRows];
             for (int r = 0; r < nrRows; r++) {
                 double sumExpF = 0;
                 for (int j = 0; j < numClasses; j++) {
@@ -162,12 +160,12 @@ public class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearn
                 }
             }
 
-            Future<?>[] treeCoefficientMapPairs = new Future<?>[numClasses];
+            final Future<?>[] treeCoefficientMapPairs = new Future<?>[numClasses];
             for (int j = 0; j < numClasses; j++) {
                 checkThrowable(learnThrowableRef);
-                RandomData rdSingle =
+                final RandomData rdSingle =
                     TreeEnsembleLearnerConfiguration.createRandomData(rd.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
-                ExecutionMonitor subExec = exec.createSubProgress(0.0);
+                final ExecutionMonitor subExec = exec.createSubProgress(0.0);
                 semaphore.acquire();
                 treeCoefficientMapPairs[j] = tp.enqueue(new TreeLearnerCallable(rdSingle, probs[j], actual[j], subExec,
                     numClasses, previousFunctions[j], semaphore, learnThrowableRef, signatureFactory));
@@ -175,7 +173,7 @@ public class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearn
             for (int j = 0; j < numClasses; j++) {
                 checkThrowable(learnThrowableRef);
                 semaphore.acquire();
-                Pair<TreeModelRegression, Map<TreeNodeSignature, Double>> pair =
+                final Pair<TreeModelRegression, Map<TreeNodeSignature, Double>> pair =
                     (Pair<TreeModelRegression, Map<TreeNodeSignature, Double>>)treeCoefficientMapPairs[j].get();
                 models[i][j] = pair.getFirst();
                 classCoefficientMaps.add(pair.getSecond());
@@ -244,16 +242,16 @@ public class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearn
         public Pair<TreeModelRegression, Map<TreeNodeSignature, Double>> call() throws Exception {
             try {
                 final int nrRows = m_probs.length;
-                double residualData[] = new double[nrRows];
-                TreeTargetNumericColumnData classProbTarget = (TreeTargetNumericColumnData)m_actual.getTargetColumn();
+                final double residualData[] = new double[nrRows];
+                final TreeTargetNumericColumnData classProbTarget = (TreeTargetNumericColumnData)m_actual.getTargetColumn();
                 for (int r = 0; r < nrRows; r++) {
                     residualData[r] = classProbTarget.getValueFor(r) - m_probs[r];
                 }
-                TreeData pseudoResiduals = createResidualDataFromArray(residualData, m_actual);
-                TreeLearnerRegression treeLearner =
+                final TreeData pseudoResiduals = createResidualDataFromArray(residualData, m_actual);
+                final TreeLearnerRegression treeLearner =
                     new TreeLearnerRegression(getConfig(), pseudoResiduals, getIndexManager(), m_signatureFactory, m_rd);
-                TreeModelRegression tree = treeLearner.learnSingleTree(m_subExec, m_rd);
-                Map<TreeNodeSignature, Double> coefficientMap =
+                final TreeModelRegression tree = treeLearner.learnSingleTree(m_subExec, m_rd);
+                final Map<TreeNodeSignature, Double> coefficientMap =
                     calculateCoefficientMap(tree, pseudoResiduals, m_numClasses);
                 adaptPreviousFunction(m_previousFunction, tree, coefficientMap);
                 return new Pair<TreeModelRegression, Map<TreeNodeSignature, Double>>(tree, coefficientMap);
@@ -281,12 +279,12 @@ public class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearn
     private Map<TreeNodeSignature, Double> calculateCoefficientMap(final TreeModelRegression tree,
         final TreeData pseudoResiduals, final double numClasses) {
 
-        List<TreeNodeRegression> leafs = tree.getLeafs();
-        Map<TreeNodeSignature, Double> coefficientMap = new HashMap<TreeNodeSignature, Double>();
-        TreeTargetNumericColumnData pseudoTarget = (TreeTargetNumericColumnData)pseudoResiduals.getTargetColumn();
+        final List<TreeNodeRegression> leafs = tree.getLeafs();
+        final Map<TreeNodeSignature, Double> coefficientMap = new HashMap<TreeNodeSignature, Double>();
+        final TreeTargetNumericColumnData pseudoTarget = (TreeTargetNumericColumnData)pseudoResiduals.getTargetColumn();
         double learningRate = getConfig().getLearningRate();
         for (TreeNodeRegression leaf : leafs) {
-            int[] indices = leaf.getRowIndicesInTreeData();
+            final int[] indices = leaf.getRowIndicesInTreeData();
             double sumTop = 0;
             double sumBottom = 0;
             for (int index : indices) {
@@ -295,39 +293,10 @@ public class LKGradientBoostedTreesLearner extends AbstractGradientBoostingLearn
                 double absVal = Math.abs(val);
                 sumBottom += Math.abs(absVal) * (1 - Math.abs(absVal));
             }
-            double coefficient = (numClasses - 1) / numClasses * (sumTop / sumBottom);
+            final double coefficient = (numClasses - 1) / numClasses * (sumTop / sumBottom);
             coefficientMap.put(leaf.getSignature(), learningRate * coefficient);
         }
         return coefficientMap;
-    }
-
-    private static class CoefficientFunction implements Function<Collection<Double>, Double> {
-
-        private final double m_numClasses;
-
-        private final double m_learningRate;
-
-        public CoefficientFunction(final double numClasses, final double learningRate) {
-            m_numClasses = numClasses;
-            m_learningRate = learningRate;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Double apply(final Collection<Double> input) {
-            double sumTop = 0;
-            double sumBottom = 0;
-            for (Double val : input) {
-                sumTop += val;
-                double absVal = Math.abs(val);
-                sumBottom += Math.abs(absVal) * (1 - Math.abs(absVal));
-            }
-            double coefficient = (m_numClasses - 1) / m_numClasses * (sumTop / sumBottom);
-            return m_learningRate * coefficient;
-        }
-
     }
 
     private double[] calculateNewTarget(final TreeTargetNominalColumnData oldTarget, final int classNomValIdx) {

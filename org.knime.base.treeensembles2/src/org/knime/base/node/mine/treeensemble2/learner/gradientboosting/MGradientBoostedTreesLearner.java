@@ -74,15 +74,16 @@ import com.google.common.math.IntMath;
 import com.google.common.primitives.Doubles;
 
 /**
+ * This class learns a Gradient Boosted Trees model for regression using the Huber loss.
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
-public class MGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLearner {
+public final class MGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLearner {
 
 
     /**
-     * @param config
-     * @param data
+     * @param config the configuration for the learner
+     * @param data the data on which to learn on
      */
     public MGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
         super(config, data);
@@ -93,23 +94,23 @@ public class MGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLe
      */
     @Override
     public AbstractGradientBoostingModel learn(final ExecutionMonitor exec) throws CanceledExecutionException {
-        TreeData actualData = getData();
+        final TreeData actualData = getData();
         final GradientBoostingLearnerConfiguration config = getConfig();
         final int nrModels = config.getNrModels();
-        TreeTargetNumericColumnData actualTarget = getTarget();
-        double initialValue = actualTarget.getMedian();
-        ArrayList<TreeModelRegression> models = new ArrayList<TreeModelRegression>(nrModels);
-        ArrayList<Map<TreeNodeSignature, Double>> coefficientMaps =
+        final TreeTargetNumericColumnData actualTarget = getTarget();
+        final double initialValue = actualTarget.getMedian();
+        final ArrayList<TreeModelRegression> models = new ArrayList<TreeModelRegression>(nrModels);
+        final ArrayList<Map<TreeNodeSignature, Double>> coefficientMaps =
             new ArrayList<Map<TreeNodeSignature, Double>>(nrModels);
-        double[] previousPrediction = new double[actualTarget.getNrRows()];
+        final double[] previousPrediction = new double[actualTarget.getNrRows()];
         Arrays.fill(previousPrediction, initialValue);
-        RandomData rd = config.createRandomData();
+        final RandomData rd = config.createRandomData();
         final double alpha = config.getAlpha();
         TreeNodeSignatureFactory signatureFactory = null;
-        int maxLevels = config.getMaxLevels();
+        final int maxLevels = config.getMaxLevels();
         // this should be the default
         if (maxLevels < TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {
-            int capacity = IntMath.pow(2, maxLevels - 1);
+            final int capacity = IntMath.pow(2, maxLevels - 1);
             signatureFactory = new TreeNodeSignatureFactory(capacity);
         } else {
             signatureFactory = new TreeNodeSignatureFactory();
@@ -117,22 +118,22 @@ public class MGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLe
         exec.setMessage("Learning model");
         TreeData residualData;
         for (int i = 0; i < nrModels; i++) {
-            double[] residuals = new double[actualTarget.getNrRows()];
+            final double[] residuals = new double[actualTarget.getNrRows()];
             for (int j = 0; j < actualTarget.getNrRows(); j++) {
                 residuals[j] = actualTarget.getValueFor(j) - previousPrediction[j];
             }
-            double quantile = calculateAlphaQuantile(residuals, alpha);
-            double[] gradients = new double[residuals.length];
+            final double quantile = calculateAlphaQuantile(residuals, alpha);
+            final double[] gradients = new double[residuals.length];
             for (int j = 0; j < gradients.length; j++) {
                 gradients[j] = Math.abs(residuals[j]) <= quantile ? residuals[j] : quantile * Math.signum(residuals[j]);
             }
             residualData = createResidualDataFromArray(gradients, actualData);
-            RandomData rdSingle =
+            final RandomData rdSingle =
                 TreeEnsembleLearnerConfiguration.createRandomData(rd.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
-            TreeLearnerRegression treeLearner =
+            final TreeLearnerRegression treeLearner =
                 new TreeLearnerRegression(getConfig(), residualData, getIndexManager(), signatureFactory, rdSingle);
-            TreeModelRegression tree = treeLearner.learnSingleTree(exec, rdSingle);
-            Map<TreeNodeSignature, Double> coefficientMap = calcCoefficientMap(residuals, quantile, tree);
+            final TreeModelRegression tree = treeLearner.learnSingleTree(exec, rdSingle);
+            final Map<TreeNodeSignature, Double> coefficientMap = calcCoefficientMap(residuals, quantile, tree);
             adaptPreviousPrediction(previousPrediction, tree, coefficientMap);
             models.add(tree);
             coefficientMaps.add(coefficientMap);
@@ -146,29 +147,29 @@ public class MGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLe
 
     private Map<TreeNodeSignature, Double> calcCoefficientMap(final double[] residuals, final double quantile,
         final TreeModelRegression tree) {
-        List<TreeNodeRegression> leafs = tree.getLeafs();
-        Map<TreeNodeSignature, Double> coefficientMap =
+        final List<TreeNodeRegression> leafs = tree.getLeafs();
+        final Map<TreeNodeSignature, Double> coefficientMap =
             new HashMap<TreeNodeSignature, Double>((int)(leafs.size() / 0.75 + 1));
-        double learningRate = getConfig().getLearningRate();
+        final double learningRate = getConfig().getLearningRate();
         for (TreeNodeRegression leaf : leafs) {
-            int[] indices = leaf.getRowIndicesInTreeData();
-            double[] values = new double[indices.length];
+            final int[] indices = leaf.getRowIndicesInTreeData();
+            final double[] values = new double[indices.length];
             for (int i = 0; i < indices.length; i++) {
                 values[i] = residuals[indices[i]];
             }
-            double median = calcMedian(values);
+            final double median = calcMedian(values);
             double sum = 0;
             for (int i = 0; i < values.length; i++) {
                 sum += Math.signum(values[i] - median) * Math.min(quantile, Math.abs(values[i] - median));
             }
-            double coefficient = median + (1.0 / values.length) * sum;
+            final double coefficient = median + (1.0 / values.length) * sum;
             coefficientMap.put(leaf.getSignature(), coefficient * learningRate);
         }
         return coefficientMap;
     }
 
     private static double calculateAlphaQuantile(final double[] array, final double alpha) {
-        Integer[] idx = new Integer[array.length];
+        final Integer[] idx = new Integer[array.length];
         for (int i = 0; i < idx.length; i++) {
             idx[i] = i;
         }
@@ -181,7 +182,7 @@ public class MGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLe
 
         };
         Arrays.sort(idx, idxComp);
-        int quantileIndex = (int)(alpha * array.length);
+        final int quantileIndex = (int)(alpha * array.length);
         return array[idx[quantileIndex]];
     }
 
