@@ -44,24 +44,23 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.01.2016 (Adrian Nembach): created
+ *   18.01.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner;
+package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.math.random.RandomData;
+import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
-import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnData;
+import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
+import org.knime.base.node.mine.treeensemble2.learner.TreeLearnerRegression;
+import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
-import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
@@ -69,20 +68,18 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 import com.google.common.math.IntMath;
-import com.google.common.primitives.Doubles;
 
 /**
  *
  * @author Adrian Nembach
  */
-public class MGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLearner {
-
+public abstract class AbstractGradientBoostedTreesLearner extends AbstractGradientBoostingLearner {
 
     /**
      * @param config
      * @param data
      */
-    public MGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
+    public AbstractGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
         super(config, data);
     }
 
@@ -91,121 +88,59 @@ public class MGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLe
      */
     @Override
     public AbstractGradientBoostingModel learn(final ExecutionMonitor exec) throws CanceledExecutionException {
-        TreeData actualData = getData();
-        final GradientBoostingLearnerConfiguration config = getConfig();
-        final int nrModels = config.getNrModels();
-        TreeTargetNumericColumnData actualTarget = getTarget();
-        double initialValue = actualTarget.getMedian();
+        GradientBoostingLearnerConfiguration config = getConfig();
+        int nrModels = config.getNrModels();
         ArrayList<TreeModelRegression> models = new ArrayList<TreeModelRegression>(nrModels);
         ArrayList<Map<TreeNodeSignature, Double>> coefficientMaps =
             new ArrayList<Map<TreeNodeSignature, Double>>(nrModels);
-        double[] previousPrediction = new double[actualTarget.getNrRows()];
-        Arrays.fill(previousPrediction, initialValue);
-        RandomData rd = config.createRandomData();
-        final double alpha = config.getAlpha();
+
         TreeNodeSignatureFactory signatureFactory = null;
         int maxLevels = config.getMaxLevels();
-        // this should be the default
         if (maxLevels < TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {
             int capacity = IntMath.pow(2, maxLevels - 1);
             signatureFactory = new TreeNodeSignatureFactory(capacity);
         } else {
             signatureFactory = new TreeNodeSignatureFactory();
         }
-        exec.setMessage("Learning model");
+
+        double initialValue = getInitialValue();
+        double[] predictionPrev = new double[getTarget().getNrRows()];
+        Arrays.fill(predictionPrev, initialValue);
         TreeData residualData;
+        final RandomData rd = config.createRandomData();
         for (int i = 0; i < nrModels; i++) {
-            double[] residuals = new double[actualTarget.getNrRows()];
-            for (int j = 0; j < actualTarget.getNrRows(); j++) {
-                residuals[j] = actualTarget.getValueFor(j) - previousPrediction[j];
-            }
-            double quantile = calculateAlphaQuantile(residuals, alpha);
-            double[] gradients = new double[residuals.length];
-            for (int j = 0; j < gradients.length; j++) {
-                gradients[j] = Math.abs(residuals[j]) <= quantile ? residuals[j] : quantile * Math.signum(residuals[j]);
-            }
-            residualData = createResidualDataFromArray(gradients, actualData);
+            residualData = calculateResidualData(predictionPrev, getLossFunction());
             RandomData rdSingle =
                 TreeEnsembleLearnerConfiguration.createRandomData(rd.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
             TreeLearnerRegression treeLearner =
-                new TreeLearnerRegression(getConfig(), residualData, getIndexManager(), signatureFactory, rdSingle);
+                new TreeLearnerRegression(config, residualData, getIndexManager(), signatureFactory, rdSingle);
             TreeModelRegression tree = treeLearner.learnSingleTree(exec, rdSingle);
-            Map<TreeNodeSignature, Double> coefficientMap = calcCoefficientMap(residuals, quantile, tree);
-            adaptPreviousPrediction(previousPrediction, tree, coefficientMap);
+            Map<TreeNodeSignature, Double> coefficientMap = calculateCoefficientMap(predictionPrev, tree, residualData);
+            adaptPreviousPrediction(predictionPrev, tree, coefficientMap);
             models.add(tree);
             coefficientMaps.add(coefficientMap);
-            exec.setProgress(((double)i) / nrModels, "Finished level " + i +"/" + nrModels);
         }
-
-        return new GradientBoostedTreesModel(getConfig(), actualData.getMetaData(),
-            models.toArray(new TreeModelRegression[models.size()]), actualData.getTreeType(), initialValue,
+        return new GradientBoostedTreesModel(getConfig(), getData().getMetaData(),
+            models.toArray(new TreeModelRegression[models.size()]), getData().getTreeType(), initialValue,
             coefficientMaps);
     }
 
-    private Map<TreeNodeSignature, Double> calcCoefficientMap(final double[] residuals, final double quantile,
-        final TreeModelRegression tree) {
-        List<TreeNodeRegression> leafs = tree.getLeafs();
-        Map<TreeNodeSignature, Double> coefficientMap =
-            new HashMap<TreeNodeSignature, Double>((int)(leafs.size() / 0.75 + 1));
-        double learningRate = getConfig().getLearningRate();
-        for (TreeNodeRegression leaf : leafs) {
-            int[] indices = leaf.getRowIndicesInTreeData();
-            double[] values = new double[indices.length];
-            for (int i = 0; i < indices.length; i++) {
-                values[i] = residuals[indices[i]];
-            }
-            double median = calcMedian(values);
-            double sum = 0;
-            for (int i = 0; i < values.length; i++) {
-                sum += Math.signum(values[i] - median) * Math.min(quantile, Math.abs(values[i] - median));
-            }
-            double coefficient = median + (1.0 / values.length) * sum;
-            coefficientMap.put(leaf.getSignature(), coefficient * learningRate);
+    protected abstract LossFunction getLossFunction();
+
+    protected void adaptPreviousPrediction(final double[] previousPrediction, final TreeModelRegression tree,
+        final Map<TreeNodeSignature, Double> coefficientMap) {
+        TreeData data = getData();
+        DataIndexManager indexManager = getIndexManager();
+        for (int i = 0; i < data.getNrRows(); i++) {
+            PredictorRecord record = createPredictorRecord(data, indexManager, i);
+            previousPrediction[i] += coefficientMap.get(tree.findMatchingNode(record).getSignature());
         }
-        return coefficientMap;
     }
 
-    private static double calculateAlphaQuantile(final double[] array, final double alpha) {
-        Integer[] idx = new Integer[array.length];
-        for (int i = 0; i < idx.length; i++) {
-            idx[i] = i;
-        }
-        Comparator<Integer> idxComp = new Comparator<Integer>() {
+    protected abstract Map<TreeNodeSignature, Double> calculateCoefficientMap(double[] previousPrediction,
+        TreeModelRegression tree, TreeData residualData);
 
-            @Override
-            public int compare(final Integer arg0, final Integer arg1) {
-                return Doubles.compare(array[arg0], array[arg1]);
-            }
 
-        };
-        Arrays.sort(idx, idxComp);
-        int quantileIndex = (int)(alpha * array.length);
-        return array[idx[quantileIndex]];
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected LossFunction getLossFunction() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Map<TreeNodeSignature, Double> calculateCoefficientMap(final double[] previousPrediction,
-        final TreeModelRegression tree, final TreeData residualData) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected double getInitialValue() {
-        return 0;
-    }
+    protected abstract double getInitialValue();
 
 }

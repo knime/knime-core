@@ -44,73 +44,19 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.01.2016 (Adrian Nembach): created
+ *   12.01.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.knime.base.node.mine.treeensemble2.data.TreeData;
-import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnData;
-import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
-import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
-import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
-import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
+package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
 /**
  *
  * @author Adrian Nembach
  */
-public class LADGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLearner {
+public interface LossFunction {
 
-    private final LossFunction m_lossFunction = LeastAbsoluteDeviation.INSTANCE;
+    public double calculateGradient(double actual, double predicted);
 
-    /**
-     * @param config
-     * @param data
-     */
-    public LADGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
-        super(config, data);
-    }
+    public double calculateLoss(double actual, double predicted);
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Map<TreeNodeSignature, Double> calculateCoefficientMap(final double[] previousPrediction,
-        final TreeModelRegression tree, final TreeData residualData) {
-        TreeTargetNumericColumnData target = getTarget();
-        List<TreeNodeRegression> leafs = tree.getLeafs();
-        Map<TreeNodeSignature, Double> coefficientMap = new HashMap<TreeNodeSignature, Double>((int)(leafs.size() / 0.75 + 1));
-        for (TreeNodeRegression leaf : leafs) {
-            int[] indices = leaf.getRowIndicesInTreeData();
-            double[] values = new double[indices.length];
-            for (int i = 0; i < indices.length; i++) {
-                values[i] = target.getValueFor(indices[i]);
-            }
-            coefficientMap.put(leaf.getSignature(), calcMedian(values));
-        }
-        return coefficientMap;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected double getInitialValue() {
-        return getTarget().getMedian();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected LossFunction getLossFunction() {
-        return m_lossFunction;
-    }
-
+    public double calculateLossOnFullDataSet(double[] actual, double[] predicted);
 }

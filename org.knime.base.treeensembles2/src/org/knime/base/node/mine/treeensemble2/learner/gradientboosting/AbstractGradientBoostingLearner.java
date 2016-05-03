@@ -46,7 +46,7 @@
  * History
  *   12.01.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner;
+package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
 import java.util.ArrayList;
 import java.util.Arrays;

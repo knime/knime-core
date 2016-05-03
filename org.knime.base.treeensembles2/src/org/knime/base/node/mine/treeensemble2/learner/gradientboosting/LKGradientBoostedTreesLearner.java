@@ -46,7 +46,7 @@
  * History
  *   20.01.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner;
+package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,6 +67,8 @@ import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
+import org.knime.base.node.mine.treeensemble2.learner.TreeLearnerRegression;
+import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;

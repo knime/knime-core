@@ -46,31 +46,45 @@
  * History
  *   19.01.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner;
+package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
+
+import java.util.Map;
+
+import org.knime.base.node.mine.treeensemble2.data.TreeData;
+import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
+import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
 
 /**
  *
  * @author Adrian Nembach
  */
-public class NegBinomLogLikelihood implements LossFunction {
+public class GeneralGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLearner {
 
-    public static final NegBinomLogLikelihood INSTANCE = new NegBinomLogLikelihood();
+    /**
+     * @param config
+     * @param data
+     */
+    public GeneralGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
+        super(config, data);
+    }
 
-    private NegBinomLogLikelihood() { }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public double calculateGradient(final double actual, final double predicted) {
-        return -2 * actual / (1 + Math.exp(2*actual * predicted));
+    protected Map<TreeNodeSignature, Double> calculateCoefficientMap(final double[] previousPrediction,
+        final TreeModelRegression tree, final TreeData residualData) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public double calculateLoss(final double actual, final double predicted) {
+    protected double getInitialValue() {
         // TODO Auto-generated method stub
         return 0;
     }
@@ -79,9 +93,9 @@ public class NegBinomLogLikelihood implements LossFunction {
      * {@inheritDoc}
      */
     @Override
-    public double calculateLossOnFullDataSet(final double[] actual, final double[] predicted) {
+    protected LossFunction getLossFunction() {
         // TODO Auto-generated method stub
-        return 0;
+        return null;
     }
 
 }

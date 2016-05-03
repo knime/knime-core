@@ -44,19 +44,44 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   12.01.2016 (Adrian Nembach): created
+ *   19.01.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner;
+package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
 /**
  *
  * @author Adrian Nembach
  */
-public interface LossFunction {
+public class NegBinomLogLikelihood implements LossFunction {
 
-    public double calculateGradient(double actual, double predicted);
+    public static final NegBinomLogLikelihood INSTANCE = new NegBinomLogLikelihood();
 
-    public double calculateLoss(double actual, double predicted);
+    private NegBinomLogLikelihood() { }
 
-    public double calculateLossOnFullDataSet(double[] actual, double[] predicted);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double calculateGradient(final double actual, final double predicted) {
+        return -2 * actual / (1 + Math.exp(2*actual * predicted));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double calculateLoss(final double actual, final double predicted) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double calculateLossOnFullDataSet(final double[] actual, final double[] predicted) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
 }

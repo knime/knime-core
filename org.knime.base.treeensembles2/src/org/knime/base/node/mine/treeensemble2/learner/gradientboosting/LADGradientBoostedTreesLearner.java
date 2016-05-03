@@ -46,36 +46,32 @@
  * History
  *   19.01.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner;
+package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
-
-import com.google.common.collect.ArrayListMultimap;
 
 /**
  *
  * @author Adrian Nembach
  */
-public class L2GradientBoostedTreesLearner extends AbstractGradientBoostedTreesLearner {
+public class LADGradientBoostedTreesLearner extends AbstractGradientBoostedTreesLearner {
 
-    private final LossFunction m_lossFunction = NegBinomLogLikelihood.INSTANCE;
+    private final LossFunction m_lossFunction = LeastAbsoluteDeviation.INSTANCE;
 
     /**
      * @param config
      * @param data
      */
-    public L2GradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
+    public LADGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
         super(config, data);
     }
 
@@ -84,59 +80,37 @@ public class L2GradientBoostedTreesLearner extends AbstractGradientBoostedTreesL
      * {@inheritDoc}
      */
     @Override
-    protected LossFunction getLossFunction() {
-        return m_lossFunction;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected Map<TreeNodeSignature, Double> calculateCoefficientMap(final double[] previousPrediction,
         final TreeModelRegression tree, final TreeData residualData) {
-
-        ArrayListMultimap<TreeNodeSignature, Double> multiLeafMap = ArrayListMultimap.create();
-        DataIndexManager indexManager = getIndexManager();
-        TreeTargetNumericColumnData residualTarget = (TreeTargetNumericColumnData)residualData.getTargetColumn();
-        for (int i = 0; i < residualData.getNrRows(); i++) {
-            // we can use the residual data because it only differs in the target column from the actual data
-            PredictorRecord record = createPredictorRecord(residualData, indexManager, i);
-            multiLeafMap.put(tree.findMatchingNode(record).getSignature(), residualTarget.getValueFor(i));
-        }
-        Set<Map.Entry<TreeNodeSignature, Collection<Double>>> leafSet = multiLeafMap.asMap().entrySet();
-        HashMap<TreeNodeSignature, Double> coefficientMap =
-            new HashMap<TreeNodeSignature, Double>((int)(leafSet.size() / 0.75 + 1));
-        for (Map.Entry<TreeNodeSignature, Collection<Double>> leaf : leafSet) {
-            Collection<Double> values = leaf.getValue();
-            double ySum = 0;
-            double other = 0;
-            for (Double val : values) {
-                ySum += val;
-                double absVal = Math.abs(val);
-                other += absVal * (2 - absVal);
+        TreeTargetNumericColumnData target = getTarget();
+        List<TreeNodeRegression> leafs = tree.getLeafs();
+        Map<TreeNodeSignature, Double> coefficientMap = new HashMap<TreeNodeSignature, Double>((int)(leafs.size() / 0.75 + 1));
+        for (TreeNodeRegression leaf : leafs) {
+            int[] indices = leaf.getRowIndicesInTreeData();
+            double[] values = new double[indices.length];
+            for (int i = 0; i < indices.length; i++) {
+                values[i] = target.getValueFor(indices[i]);
             }
-            double coefficient = ySum / other;
-            coefficientMap.put(leaf.getKey(), coefficient);
+            coefficientMap.put(leaf.getSignature(), calcMedian(values));
         }
         return coefficientMap;
     }
+
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected double getInitialValue() {
-        TreeTargetNumericColumnData target = getTarget();
-        double mean = 0;
-        for (int i = 0; i < target.getNrRows(); i++) {
-            double val = target.getValueFor(i);
-            if (val != 1 && val != -1) {
-                throw new IllegalStateException(
-                    "The L2GradientBoostedTrees algorithm only works with values 1 and -1 as target values.");
-            }
-            mean += val;
-        }
-        return mean / target.getNrRows();
+        return getTarget().getMedian();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected LossFunction getLossFunction() {
+        return m_lossFunction;
     }
 
 }

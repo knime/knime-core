@@ -44,34 +44,27 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.01.2016 (Adrian Nembach): created
+ *   12.01.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner;
+package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
 /**
  *
  * @author Adrian Nembach
  */
-public class LeastAbsoluteDeviation implements LossFunction {
+public class LeastSquares implements LossFunction {
 
-    public static final LossFunction INSTANCE = new LeastAbsoluteDeviation();
+    public static LeastSquares INSTANCE = new LeastSquares();
 
-    private LeastAbsoluteDeviation() { }
+    private LeastSquares() {
+    };
 
     /**
      * {@inheritDoc}
      */
     @Override
     public double calculateGradient(final double actual, final double predicted) {
-        // can't use compare because the return value MUST be in {-1, 0, 1}
-        double diff = actual - predicted;
-        if (diff < 0) {
-            return 1;
-        } else if (diff > 0) {
-            return -1;
-        } else {
-            return 0;
-        }
+        return predicted - actual;
     }
 
     /**
@@ -79,7 +72,7 @@ public class LeastAbsoluteDeviation implements LossFunction {
      */
     @Override
     public double calculateLoss(final double actual, final double predicted) {
-        return Math.abs(actual - predicted);
+        return (actual - predicted) * (actual - predicted) / 2;
     }
 
     /**
@@ -87,7 +80,13 @@ public class LeastAbsoluteDeviation implements LossFunction {
      */
     @Override
     public double calculateLossOnFullDataSet(final double[] actual, final double[] predicted) {
-        // TODO Auto-generated method stub
+        if (actual.length != predicted.length) {
+            throw new IllegalStateException("The provided arrays must have the same length.");
+        }
+        double sum = 0;
+        for (int i = 0; i < actual.length; i++) {
+            sum += calculateLoss(actual[i], predicted[i]);
+        }
         return 0;
     }
 
