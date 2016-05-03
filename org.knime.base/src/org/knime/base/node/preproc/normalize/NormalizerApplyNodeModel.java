@@ -110,7 +110,7 @@ public class NormalizerApplyNodeModel extends NodeModel {
     protected NormalizerApplyNodeModel(final PortType modelPortType,
             final boolean passThrough) {
         super(new PortType[]{modelPortType, BufferedDataTable.TYPE},
-                passThrough 
+                passThrough
                 ? new PortType[]{modelPortType, BufferedDataTable.TYPE}
                         : new PortType[]{BufferedDataTable.TYPE});
     }
@@ -192,6 +192,8 @@ public class NormalizerApplyNodeModel extends NodeModel {
                         //TODO collect error message from remote nodes if run distributed
                         setWarningMessage(t.getErrorMessage());
                     }
+                    rowInput.close();
+                    rowOutput.close();
                 }
             };
         }
