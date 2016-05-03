@@ -50,7 +50,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -65,10 +64,6 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.dialogs.PreferencesUtil;
-import org.eclipse.ui.forms.events.HyperlinkAdapter;
-import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
@@ -106,7 +101,10 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
      */
     public WorkflowCoachPreferencePage() {
         super("KNIME Workflow Coach Settings");
-        setDescription("Configure the Node Recommendations for the Workflow Coach.");
+        setDescription("The Workflow Coach helps you build your workflows more efficiently."
+            + " It recommends the next most likely node to follow the selected node. "
+            + "Here, you can configure your Workflow Coach and also activate node "
+            + "recommendations based on community usage statistics.");
     }
 
     /**
@@ -143,18 +141,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
             hint.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));
             hint.setText(
                 "\nImportant: By activating the community node recommendations you also automatically\nagree to "
-                    + "provide you own usage statistics to the community.");
-            Hyperlink link = new Hyperlink(composite, SWT.NONE);
-            link.setText("See usage data configuration");
-            link.setUnderlined(true);
-            link.addHyperlinkListener(new HyperlinkAdapter() {
-                @Override
-                public void linkActivated(final HyperlinkEvent e) {
-                    PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(getShell(),
-                        "org.knime.workbench.ui.preferences", new String[]{"org.knime.workbench.ui.preferences"}, null);
-                    dialog.open();
-                }
-            });
+                    + "provide your own usage statistics to the community.");
         }
 
         /* from server */
