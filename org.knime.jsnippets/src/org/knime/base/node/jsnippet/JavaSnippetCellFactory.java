@@ -365,11 +365,14 @@ public class JavaSnippetCellFactory implements CellFactory {
      * {@inheritDoc}
      */
     @Override
-    public void setProgress(final int curRowNr, final int rowCount,
-            final RowKey lastKey,
-            final ExecutionMonitor exec) {
-        exec.setProgress(curRowNr / (double)rowCount, "Processed row "
-                + curRowNr + " (\"" + lastKey + "\")");
+    public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
+        exec.setProgress(curRowNr / (double)rowCount, () -> "Processed row " + curRowNr + " (\"" + lastKey + "\")");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setProgress(final long curRowNr, final long rowCount, final RowKey lastKey, final ExecutionMonitor exec) {
+        exec.setProgress(curRowNr / (double)rowCount, () -> "Processed row " + curRowNr + " (\"" + lastKey + "\")");
     }
 
     private static class DataCellProxy implements Cell {
