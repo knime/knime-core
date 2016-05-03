@@ -53,8 +53,8 @@ import java.io.IOException;
 
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeDataCreator;
-import org.knime.base.node.mine.treeensemble2.learner.AbstractGradientBoostingLearner;
-import org.knime.base.node.mine.treeensemble2.learner.LKGradientBoostedTreesLearner;
+import org.knime.base.node.mine.treeensemble2.learner.gradientboosting.AbstractGradientBoostingLearner;
+import org.knime.base.node.mine.treeensemble2.learner.gradientboosting.LKGradientBoostedTreesLearner;
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.GradientBoostingModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
