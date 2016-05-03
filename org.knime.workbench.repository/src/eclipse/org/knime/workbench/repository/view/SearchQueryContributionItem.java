@@ -329,7 +329,6 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
         //clear the tree items since the search query possibly has been changed
         m_treeItems = null;
 
-        boolean shouldExpand = true;
         boolean update = m_liveUpdate;
 
         final String searchString;
@@ -346,9 +345,6 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
         }
 
         TreeViewerUpdater.collapseAndUpdate(m_viewer, update || searchString.isEmpty(), searchString.isEmpty(),
-            shouldExpand || !searchString.isEmpty());
-        if (searchString.isEmpty()) {
-            m_viewer.collapseAll();
-        }
+            !searchString.isEmpty());
     }
 }
