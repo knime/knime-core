@@ -9274,20 +9274,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     Map<String, Pair<NativeNodeContainer, ExternalNodeData>> childResult =
                             childMgr.getExternalNodeDataNodes(nodeModelClass, retriever);
                     for (Entry<String, Pair<NativeNodeContainer, ExternalNodeData>> e : childResult.entrySet()) {
-                        Matcher nameMatcher;
-                        // old workflows don't have parameter names -- null -> ""
-                        String patName;
-                        try {
-                            nameMatcher = INPUT_NODE_NAME_PATTERN.matcher(e.getKey());
-                            // must call nameMatches.matches -- otherwise group() will fail!
-                            CheckUtils.checkState(nameMatcher.matches(), "No match on \"%s\" (regex \"%s\")",
-                                e.getKey(), INPUT_NODE_NAME_PATTERN.pattern());
-                            patName = StringUtils.defaultString(nameMatcher.group(1));
-                        } catch (Throwable ex) {
-                            ex.printStackTrace();
-                            System.out.println(ex);
-                            throw ex;
-                        }
+                        Matcher nameMatcher = INPUT_NODE_NAME_PATTERN.matcher(e.getKey());
+                        // must call nameMatches.matches -- otherwise group() will fail!
+                        CheckUtils.checkState(nameMatcher.matches(), "No match on \"%s\" (regex \"%s\")", e.getKey(),
+                            INPUT_NODE_NAME_PATTERN.pattern());
+                        // old workflows don't have parameter names; null -> ""
+                        String patName = StringUtils.defaultString(nameMatcher.group(1));
                         assert Objects.equals(patName, e.getValue().getSecond().getID()) :
                             "Not the same parameter name: " + patName + " vs. " + e.getValue().getSecond().getID();
                         result.put(patName + "-" + childMgrIndex + ":" + nameMatcher.group(2), e.getValue());
