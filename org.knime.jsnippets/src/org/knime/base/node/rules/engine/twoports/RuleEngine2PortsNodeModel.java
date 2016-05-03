@@ -786,9 +786,7 @@ public class RuleEngine2PortsNodeModel extends NodeModel implements FlowVariable
                     createColumnRearranger((DataTableSpec)inSpecs[DATA_PORT], (RowInput)inputs[RULE_PORT]);
                 pair.getFirst().createStreamableFunction(0, 0).runFinal(inputs, outputs, exec);
                 if (pair.getSecond() != null) {
-                    PortObjectOutput po = new PortObjectOutput();
-                    po.setPortObject(pair.getSecond());
-                    outputs[1] = po;
+                    ((PortObjectOutput)outputs[1]).setPortObject(pair.getSecond());
                 }
             }
         };

@@ -119,6 +119,7 @@ import org.knime.core.node.streamable.PortObjectOutput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
 
@@ -131,10 +132,6 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
 
     private RuleEngineSettings m_settings = new RuleEngineSettings();
 
-    ///Only for streaming
-    private PMMLPortObject m_portObject;
-//    ///Only for streaming
-//    private ColumnRearranger m_rearranger;
     /**
      * Constructor for the node model.
      */
@@ -148,14 +145,20 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         final BufferedDataTable table = (BufferedDataTable)inData[0];
+        RearrangerAndPMMLModel m = createRearrangerAndPMMLModel(table.getDataTableSpec());
+        return new PortObject[]{exec.createColumnRearrangeTable(table, m.getRearranger(), exec), m.getPMMLPortObject()};
+    }
+
+    private RearrangerAndPMMLModel createRearrangerAndPMMLModel(final DataTableSpec spec)
+            throws ParseException, InvalidSettingsException {
         final PMMLDocument doc = PMMLDocument.Factory.newInstance();
         final PMML pmml = doc.addNewPMML();
         RuleSetModel ruleSetModel = pmml.addNewRuleSetModel();
         RuleSet ruleSet = ruleSetModel.addNewRuleSet();
-        PMMLRuleParser parser = new PMMLRuleParser(table.getSpec(), getAvailableInputFlowVariables());
-        ColumnRearranger rearranger = createRearranger(table.getDataTableSpec(), ruleSet, parser);
+        PMMLRuleParser parser = new PMMLRuleParser(spec, getAvailableInputFlowVariables());
+        ColumnRearranger rearranger = createRearranger(spec, ruleSet, parser);
         PMMLPortObject ret =
-            new PMMLPortObject(createPMMLPortObjectSpec(rearranger.createSpec(), parser.getUsedColumns()));
+                new PMMLPortObject(createPMMLPortObjectSpec(rearranger.createSpec(), parser.getUsedColumns()));
 //        if (inData[1] != null) {
 //            PMMLPortObject po = (PMMLPortObject)inData[1];
 //            TransformationDictionary dict = TransformationDictionary.Factory.newInstance();
@@ -171,7 +174,7 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         modelTranslator.initializeFrom(doc);
         ret.addModelTranslater(modelTranslator);
         ret.validate();
-        return new PortObject[]{exec.createColumnRearrangeTable(table, rearranger, exec), ret};
+        return new RearrangerAndPMMLModel(rearranger, ret);
     }
 
     /**
@@ -532,25 +535,9 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         // TODO should this be done some place else (finish)?
         StreamInternalForPMMLPortObject poInternals = (StreamInternalForPMMLPortObject)internals;
         try {
-            final PMMLDocument doc = PMMLDocument.Factory.newInstance();
-            final PMML pmml = doc.addNewPMML();
-            RuleSetModel ruleSetModel = pmml.addNewRuleSetModel();
-            RuleSet ruleSet = ruleSetModel.addNewRuleSet();
             DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
-            PMMLRuleParser parser = new PMMLRuleParser(tableSpec, getAvailableInputFlowVariables());
-            ColumnRearranger rearranger = createRearranger(tableSpec, ruleSet, parser);
-            m_portObject =
-                new PMMLPortObject(createPMMLPortObjectSpec(rearranger.createSpec(), parser.getUsedColumns()));
-            PMMLRuleTranslator modelTranslator = new PMMLRuleTranslator();
-            ruleSetModel.setFunctionName(MININGFUNCTION.CLASSIFICATION);
-            ruleSet.setDefaultConfidence(defaultConfidenceValue());
-            PMMLMiningSchemaTranslator.writeMiningSchema(m_portObject.getSpec(), ruleSetModel);
-            PMMLDataDictionaryTranslator ddTranslator = new PMMLDataDictionaryTranslator();
-            ddTranslator.exportTo(doc, m_portObject.getSpec());
-            modelTranslator.initializeFrom(doc);
-            m_portObject.addModelTranslater(modelTranslator);
-            m_portObject.validate();
-            poInternals.setObject(m_portObject);
+            RearrangerAndPMMLModel m = createRearrangerAndPMMLModel(tableSpec);
+            poInternals.setObject(m.getPMMLPortObject());
         } catch (ParseException e) {
             throw new InvalidSettingsException(e);
         }
@@ -567,14 +554,15 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         final DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
         return new StreamableOperator() {
             private ColumnRearranger m_rearrangerx;
+            private PMMLPortObject m_portObject;
             {
                 try {
-                final PMMLDocument doc = PMMLDocument.Factory.newInstance();
-                final PMML pmml = doc.addNewPMML();
-                RuleSetModel ruleSetModel = pmml.addNewRuleSetModel();
-                RuleSet ruleSet = ruleSetModel.addNewRuleSet();
-                PMMLRuleParser parser = new PMMLRuleParser(tableSpec, getAvailableInputFlowVariables());
-                m_rearrangerx= createRearranger(tableSpec, ruleSet, parser);
+                    final PMMLDocument doc = PMMLDocument.Factory.newInstance();
+                    final PMML pmml = doc.addNewPMML();
+                    RuleSetModel ruleSetModel = pmml.addNewRuleSetModel();
+                    RuleSet ruleSet = ruleSetModel.addNewRuleSet();
+                    PMMLRuleParser parser = new PMMLRuleParser(tableSpec, getAvailableInputFlowVariables());
+                    m_rearrangerx= createRearranger(tableSpec, ruleSet, parser);
                 } catch (ParseException e) {
                     throw new InvalidSettingsException(e);
                 }
@@ -584,22 +572,19 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
                 m_rearrangerx.createStreamableFunction(0, 0).runFinal(inputs, outputs, exec);
             }
 
-            /**
-             * {@inheritDoc}
-             */
+            /** {@inheritDoc} */
             @Override
             public void loadInternals(final StreamableOperatorInternals internals) {
                 super.loadInternals(internals);
                 m_portObject = ((StreamInternalForPMMLPortObject)internals).getObject();
             }
 
-            /**
-             * {@inheritDoc}
-             */
+            /** {@inheritDoc} */
             @Override
             public StreamableOperatorInternals saveInternals() {
                 return createInitialStreamableOperatorInternals().setObject(m_portObject);
             }
+
         };
     }
 
@@ -613,7 +598,6 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         PMMLPortObject ret = poInternals.getObject();
         ret.validate();
         ((PortObjectOutput)output[1]).setPortObject(ret);
-        m_portObject = null;
     }
 
     /**
@@ -635,5 +619,30 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
             creator.addColumns(spec);
         }
         return creator.createSpec();
+    }
+
+    /** Pair combining a rearranger and PO. */
+    private static final class RearrangerAndPMMLModel {
+        private final ColumnRearranger m_rearranger;
+        private final PMMLPortObject m_pmmlPortObject;
+        /**
+         * @param rearranger
+         * @param pmmlPortObject
+         */
+        RearrangerAndPMMLModel(final ColumnRearranger rearranger, final PMMLPortObject pmmlPortObject) {
+            m_rearranger = CheckUtils.checkArgumentNotNull(rearranger);
+            m_pmmlPortObject = CheckUtils.checkArgumentNotNull(pmmlPortObject);
+        }
+
+        /** @return the pmmlPortObject */
+        PMMLPortObject getPMMLPortObject() {
+            return m_pmmlPortObject;
+        }
+
+        /** @return the rearranger */
+        ColumnRearranger getRearranger() {
+            return m_rearranger;
+        }
+
     }
 }
