@@ -186,13 +186,6 @@ public final class MGradientBoostedTreesLearner extends AbstractGradientBoostedT
         return array[idx[quantileIndex]];
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected LossFunction getLossFunction() {
-        return null;
-    }
 
     /**
      * {@inheritDoc}

@@ -48,11 +48,9 @@
  */
 package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -65,7 +63,6 @@ import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaDa
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
-import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
@@ -85,30 +82,62 @@ public abstract class AbstractGradientBoostingLearner {
 
     private final GradientBoostingLearnerConfiguration m_config;
 
+    /**
+     * @param config the configuration for the learner
+     * @param data the initial data as it is provided by the user
+     */
     public AbstractGradientBoostingLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
         m_data = data;
         m_indexManager = new DataIndexManager(data);
         m_config = config;
     }
 
+    /**
+     * @return the initial data
+     */
     public TreeData getData() {
         return m_data;
     }
 
+    /**
+     * @return the true target column
+     */
     public TreeTargetNumericColumnData getTarget() {
         return (TreeTargetNumericColumnData)m_data.getTargetColumn();
     }
 
+    /**
+     * @return the {@link DataIndexManager} used by the initial {@link TreeData} object
+     */
     public DataIndexManager getIndexManager() {
         return m_indexManager;
     }
 
+    /**
+     * @return the configuration for the learner
+     */
     public GradientBoostingLearnerConfiguration getConfig() {
         return m_config;
     }
 
+    /**
+     * Learns some kind of gradient boosting model
+     *
+     * @param exec should be used to check for cancellation and for progress monitoring
+     * @return a trained {@link AbstractGradientBoostingModel}
+     * @throws CanceledExecutionException
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
     public abstract AbstractGradientBoostingModel learn(final ExecutionMonitor exec) throws CanceledExecutionException, InterruptedException, ExecutionException;
 
+    /**
+     * Adapts the prediction of the previous iterations by adding the predictions of the new model regulated by <b>coefficient</b>
+     *
+     * @param predictionPrev prediction of previous iterations
+     * @param predictionNewModel prediction of the new model
+     * @param coefficient used to regulate the influence of the new prediction
+     */
     protected static void adaptPredictionPrev(final double[] predictionPrev, final double[] predictionNewModel,
         final double coefficient) {
         for (int i = 0; i < predictionPrev.length; i++) {
@@ -116,6 +145,10 @@ public abstract class AbstractGradientBoostingLearner {
         }
     }
 
+    /**
+     * @param target
+     * @return the mean of the <b>target</b> column
+     */
     protected double[] calculateMeanPrediction(final TreeTargetNumericColumnData target) {
         int numRows = target.getNrRows();
         final double[] mean = new double[numRows];
@@ -130,23 +163,14 @@ public abstract class AbstractGradientBoostingLearner {
         return mean;
     }
 
-    protected TreeData calculateResidualData(final double[] previousPrediction, final LossFunction lossFunction) {
-        TreeTargetNumericColumnData actual = (TreeTargetNumericColumnData)getData().getTargetColumn();
-        double[] residualData = new double[actual.getNrRows()];
-        assert residualData.length == previousPrediction.length;
-        RowKey[] rowKeysAsArray = new RowKey[actual.getNrRows()];
-        for (int i = 0; i < residualData.length; i++) {
-            double actualVal = actual.getValueFor(i);
-            residualData[i] = -lossFunction.calculateGradient(actualVal, previousPrediction[i]);
-//            assert roughlyEqual(previousPrediction[i] + residualData[i], actualVal, 0.00001);
-            rowKeysAsArray[i] = actual.getRowKeyFor(i);
-        }
-        TreeTargetNumericColumnMetaData metaData = actual.getMetaData();
-        TreeTargetNumericColumnData residualTarget =
-            new TreeTargetNumericColumnData(metaData, rowKeysAsArray, residualData);
-        return new TreeData(getData().getColumns(), residualTarget, getData().getTreeType());
-    }
 
+    /**
+     * Creates a {@link TreeData} object that uses the values in <b>residualData</b> as target.
+     *
+     * @param residualData array containing the residuals
+     * @param actualData the TreeData as it is provided by the user
+     * @return data using the residuals as targets
+     */
     protected TreeData createResidualDataFromArray(final double[] residualData, final TreeData actualData) {
         TreeTargetNumericColumnData actual = (TreeTargetNumericColumnData)actualData.getTargetColumn();
         RowKey[] rowKeysAsArray = new RowKey[actual.getNrRows()];
@@ -157,10 +181,6 @@ public abstract class AbstractGradientBoostingLearner {
         TreeTargetNumericColumnData residualTarget =
             new TreeTargetNumericColumnData(metaData, rowKeysAsArray, residualData);
         return new TreeData(getData().getColumns(), residualTarget, getData().getTreeType());
-    }
-
-    private boolean roughlyEqual(final double val1, final double val2, final double epsilon) {
-        return val1 - val2 < epsilon;
     }
 
     /**
@@ -182,6 +202,10 @@ public abstract class AbstractGradientBoostingLearner {
     }
 
 
+    /**
+     * @param tree that should be used to predict the data
+     * @return prediction of <b>tree</b>
+     */
     protected double[] predictTreeModel(final TreeModelRegression tree) {
         final double[] prediction = new double[m_data.getNrRows()];
         for (int i = 0; i < prediction.length; i++) {
@@ -190,6 +214,10 @@ public abstract class AbstractGradientBoostingLearner {
         return prediction;
     }
 
+    /**
+     * @param values some double array
+     * @return the median of <b>values</b>
+     */
     protected static double calcMedian(final double[] values) {
         if (values.length == 1) {
             return values[0];
@@ -212,23 +240,4 @@ public abstract class AbstractGradientBoostingLearner {
         return values[idx[medianIndex]];
     }
 
-    // The leafs could be also determined during tree construction with minimal additional effort
-    protected static TreeNodeRegression[] getLeafs(final TreeModelRegression tree) {
-        LinkedList<TreeNodeRegression> toProcess = new LinkedList<TreeNodeRegression>();
-        toProcess.add(tree.getRootNode());
-        ArrayList<TreeNodeRegression> leafs = new ArrayList<TreeNodeRegression>();
-        while (!toProcess.isEmpty()) {
-            TreeNodeRegression node = toProcess.poll();
-            int nrChildren = node.getNrChildren();
-            if (nrChildren == 0) {
-                leafs.add(node);
-            } else {
-                for (int i = 0; i < nrChildren; i++) {
-                    toProcess.add(node.getChild(i));
-                }
-            }
-        }
-        return leafs.toArray(new TreeNodeRegression[leafs.size()]);
-    }
-
-   }
+}

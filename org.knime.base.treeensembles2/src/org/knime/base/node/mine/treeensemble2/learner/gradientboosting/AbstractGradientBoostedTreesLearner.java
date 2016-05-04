@@ -48,85 +48,38 @@
  */
 package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 
-import org.apache.commons.math.random.RandomData;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
-import org.knime.base.node.mine.treeensemble2.learner.TreeLearnerRegression;
-import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
-import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
-import org.knime.base.node.mine.treeensemble2.model.GradientBoostedTreesModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
-import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-
-import com.google.common.math.IntMath;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public abstract class AbstractGradientBoostedTreesLearner extends AbstractGradientBoostingLearner {
 
     /**
-     * @param config
-     * @param data
+     * @param config the configuration for the learner
+     * @param data the data as it is provided by the user
      */
     public AbstractGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
         super(config, data);
     }
 
+
     /**
-     * {@inheritDoc}
+     * Adapts the previous prediction by adding the predictions of the <b>tree</b> regulated by the respective
+     * coefficients in <b>coefficientMap</b>.
+     *
+     * @param previousPrediction Prediction of the previous steps
+     * @param tree the tree of the current iteration
+     * @param coefficientMap contains the coefficients for the leafs of the tree
      */
-    @Override
-    public AbstractGradientBoostingModel learn(final ExecutionMonitor exec) throws CanceledExecutionException {
-        GradientBoostingLearnerConfiguration config = getConfig();
-        int nrModels = config.getNrModels();
-        ArrayList<TreeModelRegression> models = new ArrayList<TreeModelRegression>(nrModels);
-        ArrayList<Map<TreeNodeSignature, Double>> coefficientMaps =
-            new ArrayList<Map<TreeNodeSignature, Double>>(nrModels);
-
-        TreeNodeSignatureFactory signatureFactory = null;
-        int maxLevels = config.getMaxLevels();
-        if (maxLevels < TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {
-            int capacity = IntMath.pow(2, maxLevels - 1);
-            signatureFactory = new TreeNodeSignatureFactory(capacity);
-        } else {
-            signatureFactory = new TreeNodeSignatureFactory();
-        }
-
-        double initialValue = getInitialValue();
-        double[] predictionPrev = new double[getTarget().getNrRows()];
-        Arrays.fill(predictionPrev, initialValue);
-        TreeData residualData;
-        final RandomData rd = config.createRandomData();
-        for (int i = 0; i < nrModels; i++) {
-            residualData = calculateResidualData(predictionPrev, getLossFunction());
-            RandomData rdSingle =
-                TreeEnsembleLearnerConfiguration.createRandomData(rd.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
-            TreeLearnerRegression treeLearner =
-                new TreeLearnerRegression(config, residualData, getIndexManager(), signatureFactory, rdSingle);
-            TreeModelRegression tree = treeLearner.learnSingleTree(exec, rdSingle);
-            Map<TreeNodeSignature, Double> coefficientMap = calculateCoefficientMap(predictionPrev, tree, residualData);
-            adaptPreviousPrediction(predictionPrev, tree, coefficientMap);
-            models.add(tree);
-            coefficientMaps.add(coefficientMap);
-        }
-        return new GradientBoostedTreesModel(getConfig(), getData().getMetaData(),
-            models.toArray(new TreeModelRegression[models.size()]), getData().getTreeType(), initialValue,
-            coefficientMaps);
-    }
-
-    protected abstract LossFunction getLossFunction();
-
     protected void adaptPreviousPrediction(final double[] previousPrediction, final TreeModelRegression tree,
         final Map<TreeNodeSignature, Double> coefficientMap) {
         TreeData data = getData();
@@ -137,10 +90,21 @@ public abstract class AbstractGradientBoostedTreesLearner extends AbstractGradie
         }
     }
 
-    protected abstract Map<TreeNodeSignature, Double> calculateCoefficientMap(double[] previousPrediction,
-        TreeModelRegression tree, TreeData residualData);
+    /**
+     * Calculates the coefficients for all the leafs of the <b>tree</b>
+     *
+     * @param previousPrediction the prediction of the previous iterations
+     * @param tree tree of the current iteration
+     * @param residualData the residual data for the current iteration
+     * @return a map containing the coefficients for all leafs of <b>tree</b>
+     */
+    protected abstract Map<TreeNodeSignature, Double> calculateCoefficientMap(final double[] previousPrediction,
+        final TreeModelRegression tree, final TreeData residualData);
 
 
+    /**
+     * @return the initial value for the first iteration
+     */
     protected abstract double getInitialValue();
 
 }
