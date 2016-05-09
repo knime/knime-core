@@ -75,7 +75,7 @@ public final class TreeNodeClassification extends AbstractTreeNode {
 
     private final int m_majorityIndex;
 
-    private final double[] m_targetDistribution;
+    private final float[] m_targetDistribution;
 
     /**
      * Constructor for a leaf node with no children.
@@ -122,7 +122,12 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         final TreeNodeClassification[] childNodes, final TreeEnsembleLearnerConfiguration configuration) {
         super(signature, targetPriors.getTargetMetaData(), childNodes);
         if (configuration.isSaveTargetDistributionInNodes()) {
-            m_targetDistribution = targetPriors.getDistribution();
+            final double[] doubleDistr = targetPriors.getDistribution();
+            final float[] floatDistr = new float[doubleDistr.length];
+            for (int i = 0; i < doubleDistr.length; i++) {
+                floatDistr[i] = (float)doubleDistr[i];
+            }
+            m_targetDistribution = floatDistr;
         } else {
             m_targetDistribution = null;
         }
@@ -135,16 +140,16 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         TreeTargetNominalColumnMetaData targetMetaData = (TreeTargetNominalColumnMetaData)metaData.getTargetMetaData();
         int targetLength = targetMetaData.getValues().length;
         if (in.isContainsClassDistribution()) {
-            double[] targetDistribution = new double[targetLength];
+            float[] targetDistribution = new float[targetLength];
             int majorityIndex = -1;
-            double max = Double.NEGATIVE_INFINITY;
+            float max = Float.NEGATIVE_INFINITY;
             for (int i = 0; i < targetLength; i++) {
-                final double d = in.readDouble();
-                if (d > max) { // strictly larger, see also PriorDistribution
+                final float f = in.readFloat();
+                if (f > max) { // strictly larger, see also PriorDistribution
                     majorityIndex = i;
-                    max = d;
+                    max = f;
                 }
-                targetDistribution[i] = d;
+                targetDistribution[i] = f;
             }
             m_targetDistribution = targetDistribution;
             m_majorityIndex = majorityIndex;
@@ -183,10 +188,10 @@ public final class TreeNodeClassification extends AbstractTreeNode {
     /**
      * @return the targetDistribution
      */
-    public double[] getTargetDistribution() {
+    public float[] getTargetDistribution() {
         if (m_targetDistribution == null) {
-            double[] result = new double[getTargetMetaData().getValues().length];
-            result[m_majorityIndex] = 1.0;
+            float[] result = new float[getTargetMetaData().getValues().length];
+            result[m_majorityIndex] = 1.0f;
             return result;
         } else {
             return m_targetDistribution;
@@ -214,10 +219,10 @@ public final class TreeNodeClassification extends AbstractTreeNode {
             b.append(indent);
         }
         // e.g. "Iris-Setosa (50/150)"
-        double[] targetDistribution = getTargetDistribution();
-        double majorityWeight = targetDistribution[m_majorityIndex];
-        double weightSum = 0.0;
-        for (double v : targetDistribution) {
+        float[] targetDistribution = getTargetDistribution();
+        float majorityWeight = targetDistribution[m_majorityIndex];
+        float weightSum = 0.0f;
+        for (float v : targetDistribution) {
             weightSum += v;
         }
         b.append("\"").append(getMajorityClassName()).append("\" (");
@@ -238,7 +243,7 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         if (m_targetDistribution != null) {
             // length is equally to target value list length (no need to store)
             for (int i = 0; i < m_targetDistribution.length; i++) {
-                out.writeDouble(m_targetDistribution[i]);
+                out.writeFloat(m_targetDistribution[i]);
             }
         } else {
             out.writeInt(m_majorityIndex);
@@ -275,7 +280,7 @@ public final class TreeNodeClassification extends AbstractTreeNode {
      */
     public DecisionTreeNode createDecisionTreeNode(final MutableInteger idGenerator, final TreeMetaData metaData) {
         DataCell majorityCell = new StringCell(getMajorityClassName());
-        double[] targetDistribution = getTargetDistribution();
+        final float[] targetDistribution = getTargetDistribution();
         int initSize = (int)(targetDistribution.length / 0.75 + 1.0);
         LinkedHashMap<DataCell, Double> scoreDistributionMap = new LinkedHashMap<DataCell, Double>(initSize);
         NominalValueRepresentation[] targets = getTargetMetaData().getValues();
