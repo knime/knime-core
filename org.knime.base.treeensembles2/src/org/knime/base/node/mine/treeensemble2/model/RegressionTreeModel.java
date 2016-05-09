@@ -57,9 +57,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
+import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeBitColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
+import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
@@ -305,7 +307,16 @@ public final class RegressionTreeModel {
             if (cell.isMissing()) {
                 valueMap.put(colName, PredictorRecord.NULL);
             } else if (colType.isCompatible(NominalValue.class)) {
-                valueMap.put(colName, cell.toString());
+                final TreeNominalColumnMetaData meta = (TreeNominalColumnMetaData)m_metaData.getAttributeMetaData(i);
+                final String val = ((StringCell)cell).getStringValue();
+                int nomIdx = -1;
+                for (final NominalValueRepresentation nomVal : meta.getValues()) {
+                    if (val.equals(nomVal.getNominalValue())) {
+                        nomIdx = nomVal.getAssignedInteger();
+                        break;
+                    }
+                }
+                valueMap.put(colName, nomIdx);
             } else if (colType.isCompatible(DoubleValue.class)) {
                 valueMap.put(colName, ((DoubleValue)cell).getDoubleValue());
             } else {
