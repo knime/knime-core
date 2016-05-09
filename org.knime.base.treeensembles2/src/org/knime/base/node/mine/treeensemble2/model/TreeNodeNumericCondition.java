@@ -53,7 +53,6 @@ import java.io.IOException;
 import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
-import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeColumnMetaData;
@@ -191,7 +190,7 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
 
     /** {@inheritDoc} */
     @Override
-    public PMMLPredicate toPMMLPredicate() {
+    public PMMLCompoundPredicate toPMMLPredicate() {
         PMMLCompoundPredicate compound = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
         switch (m_numericOperator) {
             case LargerThanOrMissing:
@@ -213,13 +212,10 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
         }
         final PMMLSimplePredicate simplePredicate =
             new PMMLSimplePredicate(getAttributeName(), pmmlOperator, Double.toString(m_splitValue));
-        if (!acceptsMissings()) {
-            return simplePredicate;
-        }
         // create compound to allow for missing values
         compound.addPredicate(simplePredicate);
-        compound.addPredicate(
-            new PMMLSimplePredicate(getAttributeName(), PMMLOperator.IS_MISSING, Double.toString(m_splitValue)));
+        compound.addPredicate(new PMMLSimplePredicate(getAttributeName(),
+            acceptsMissings() ? PMMLOperator.IS_MISSING : PMMLOperator.IS_NOT_MISSING, Double.toString(m_splitValue)));
         return compound;
     }
 

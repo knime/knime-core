@@ -57,7 +57,6 @@ import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
 import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
-import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSetOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimpleSetPredicate;
@@ -126,8 +125,8 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
 
     /**
      *  */
-    TreeNodeNominalBinaryCondition(final TreeModelDataInputStream input, final TreeMetaData metaData, final TreeBuildingInterner treeBuildingInterner)
-        throws IOException {
+    TreeNodeNominalBinaryCondition(final TreeModelDataInputStream input, final TreeMetaData metaData,
+        final TreeBuildingInterner treeBuildingInterner) throws IOException {
         super(input, metaData);
         TreeColumnMetaData columnMetaData = super.getColumnMetaData();
         checkTypeCorrectness(columnMetaData, TreeNominalColumnMetaData.class);
@@ -196,9 +195,9 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
         Integer assignedInteger = null;
         if (value == null) {
             //            throw new UnsupportedOperationException("Missing values currently not supported");
-//            NominalValueRepresentation[] values = getColumnMetaData().getValues();
-//            int l = values.length;
-//            assignedInteger = values[l - 1].equals(NominalValueRepresentation.MISSING_VALUE) ? l - 1 : l;
+            //            NominalValueRepresentation[] values = getColumnMetaData().getValues();
+            //            int l = values.length;
+            //            assignedInteger = values[l - 1].equals(NominalValueRepresentation.MISSING_VALUE) ? l - 1 : l;
             return acceptsMissings();
         } else if (!(value instanceof Integer)) {
             throw new IllegalArgumentException("Can't test nominal condition (" + toString()
@@ -234,18 +233,16 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
 
     /** {@inheritDoc} */
     @Override
-    public PMMLPredicate toPMMLPredicate() {
+    public PMMLCompoundPredicate toPMMLPredicate() {
         PMMLSimpleSetPredicate setPredicate =
             new PMMLSimpleSetPredicate(getAttributeName(), m_setLogic.getPmmlSetOperator());
         setPredicate.setValues(Arrays.asList(getValues()));
         setPredicate.setArrayType(PMMLArrayType.STRING);
-        if (!acceptsMissings()) {
-            return setPredicate;
-        }
         // create compound condition that allows missing values
         PMMLCompoundPredicate compPredicate = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
         compPredicate.addPredicate(setPredicate);
-        compPredicate.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.IS_MISSING, ""));
+        compPredicate.addPredicate(new PMMLSimplePredicate(getAttributeName(),
+            acceptsMissings() ? PMMLOperator.IS_MISSING : PMMLOperator.IS_NOT_MISSING, ""));
         return compPredicate;
     }
 
