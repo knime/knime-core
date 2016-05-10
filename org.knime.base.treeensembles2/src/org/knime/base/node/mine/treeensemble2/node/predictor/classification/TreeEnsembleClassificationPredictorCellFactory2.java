@@ -186,7 +186,7 @@ public final class TreeEnsembleClassificationPredictorCellFactory2 extends Abstr
                 TreeModelClassification m = ensembleModel.getTreeModelClassification(i);
                 TreeNodeClassification match = m.findMatchingNode(record);
                 String majorityClassName = match.getMajorityClassName();
-                double[] nodeClassProbs = match.getTargetDistribution();
+                final float[] nodeClassProbs = match.getTargetDistribution();
                 double instancesInNode = 0;
                 for (int c = 0; c < nodeClassProbs.length; c++) {
                     instancesInNode += nodeClassProbs[c];
