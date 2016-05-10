@@ -99,7 +99,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             for (int i = 0; i < m_nominalValueCounts.length - 1; i++) {
                 lengthNonMissing += m_nominalValueCounts[i];
             }
-            m_idxOfFirstMissing = lengthNonMissing - 1;
+            m_idxOfFirstMissing = lengthNonMissing;
         } else {
             m_idxOfFirstMissing = -1;
         }
@@ -514,7 +514,8 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         boolean isBestSplitValid = false;
         boolean missingsGoLeft = false;
 
-        for (int i = 0; i < attVals.length; i++) {
+        // no need to iterate over full list because at least one value must remain on the other side of the split
+        for (int i = 0; i < attVals.length - 1; i++) {
             CombinedAttributeValues currAttVal = attVals[i];
             sumCurrPartitionWeight += currAttVal.m_totalWeight;
             sumRemainingWeights -= currAttVal.m_totalWeight;
@@ -782,6 +783,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         double sumWeightsPartitionFirstClass = 0.0;
         boolean missingsGoLeft = false;
 
+        // we don't need to iterate over the full list because we always need some value on the other side
         for (int i = 0; i < nomValProbabilities.size() - 1; i++) {
             NomValProbabilityPair nomVal = nomValProbabilities.get(i);
             sumWeightsPartitionTotal += nomVal.m_sumWeights;
@@ -1186,7 +1188,6 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         final int minChildSize = getConfiguration().getMinChildSize();
         double sumYTotal = targetPriors.getYSum();
         double sumWeightTotal = targetPriors.getNrRecords();
-        final double criterionTotal = sumYTotal * sumYTotal / sumWeightTotal;
         final boolean useXGBoostMissingValueHandling =
             getConfiguration().getMissingValueHandling() == MissingValueHandling.XGBoost;
         boolean branchContainsMissingValues = containsMissingValues();
@@ -1208,12 +1209,18 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             branchContainsMissingValues = missingWeight > 0.0;
             columnMemberships.reset();
         }
+        final double criterionTotal;
+        if (useXGBoostMissingValueHandling) {
+            criterionTotal = (sumYTotal + missingY) * (sumYTotal + missingY) / (sumWeightTotal + missingWeight);
+        } else {
+            criterionTotal = sumYTotal + sumYTotal / sumWeightTotal;
+        }
 
         final ArrayList<AttValTupleRegression> attValList = Lists.newArrayList();
 
         columnMemberships.next();
         int start = 0;
-        final int lengthNonMissing = branchContainsMissingValues ? nomVals.length - 1 : nomVals.length;
+        final int lengthNonMissing = containsMissingValues() ? nomVals.length - 1 : nomVals.length;
         for (int att = 0; att < lengthNonMissing; att++) {
             double sumY = 0.0;
             double sumWeight = 0.0;
@@ -1249,6 +1256,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                 break;
             }
         }
+        assert sumWeights(attValList) == sumWeightTotal : "The weights of the attribute values does not sum up to the total weight";
 
         // sort attribute values according to their mean Y value
         attValList.sort(null);
@@ -1256,7 +1264,7 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         BigInteger bestPartitionMask = null;
         boolean isBestSplitValid = false;
         double bestPartitionGain = Double.NEGATIVE_INFINITY;
-        final int highestBitPosition = branchContainsMissingValues ? nomVals.length - 2 : nomVals.length - 1;
+        final int highestBitPosition = containsMissingValues() ? nomVals.length - 2 : nomVals.length - 1;
 
         double sumYPartition = 0.0;
         double sumWeightPartition = 0.0;
@@ -1265,12 +1273,17 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         double sumWeightRemaining = sumWeightTotal;
         boolean missingsGoLeft = true;
 
+        // no need to iterate over full list because at least one value must remain on the other side of the split
         for (int i = 0; i < attValList.size() - 1; i++) {
             AttValTupleRegression attVal = attValList.get(i);
             sumYPartition += attVal.m_sumY;
             sumWeightPartition += attVal.m_sumWeight;
             sumYRemaining -= attVal.m_sumY;
             sumWeightRemaining -= attVal.m_sumWeight;
+            assert sumYRemaining + sumYPartition == sumYTotal : "The the Ys left and right of the split do not add up to the total sum of Y.";
+            assert sumWeightRemaining + sumWeightPartition == sumWeightTotal : "The weights left and right of the split do not add up to the total weight.";
+            assert sumWeightPartition > 0.0 : "The weight of the partition is zero.";
+            assert sumWeightRemaining > 0.0 : "The weight of the remaining is zero.";
             partitionMask = partitionMask.or(attVal.m_bitMask);
 
             double gain;
@@ -1344,6 +1357,14 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
         }
 
         return null;
+    }
+
+    private static double sumWeights(final ArrayList<AttValTupleRegression> attVals) {
+        double sum = 0.0;
+        for (final AttValTupleRegression attVal : attVals) {
+            sum += attVal.m_sumWeight;
+        }
+        return sum;
     }
 
     private static class AttValTupleRegression implements Comparable<AttValTupleRegression> {

@@ -220,6 +220,7 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
             SurrogateSplit surrogateSplit = Surrogates.calculateSurrogates(dataMemberships, candidates);
             childConditions = surrogateSplit.getChildConditions();
             BitSet[] childMarkers = surrogateSplit.getChildMarkers();
+            assert childMarkers[0].cardinality() + childMarkers[1].cardinality() == dataMemberships.getRowCount(): "Sum of rows in children does not add up to number of rows in parent.";
             childNodes = new TreeNodeRegression[2];
             for (int i = 0; i < 2; i++) {
                 DataMemberships childMemberships = dataMemberships.createChildMemberships(childMarkers[i]);
