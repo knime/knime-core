@@ -276,12 +276,15 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
                 switch (op) {
                     case EQUAL:
                         operator = Operator.EQUAL;
+                        simplePredicate.setValue(knimePredicate.getThreshold());
                         break;
                     case GREATER_OR_EQUAL:
                         operator = Operator.GREATER_OR_EQUAL;
+                        simplePredicate.setValue(knimePredicate.getThreshold());
                         break;
                     case GREATER_THAN:
                         operator = Operator.GREATER_THAN;
+                        simplePredicate.setValue(knimePredicate.getThreshold());
                         break;
                     case IS_MISSING:
                         operator = Operator.IS_MISSING;
@@ -291,18 +294,20 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
                         break;
                     case LESS_OR_EQUAL:
                         operator = Operator.LESS_OR_EQUAL;
+                        simplePredicate.setValue(knimePredicate.getThreshold());
                         break;
                     case LESS_THAN:
                         operator = Operator.LESS_THAN;
+                        simplePredicate.setValue(knimePredicate.getThreshold());
                         break;
                     case NOT_EQUAL:
                         operator = Operator.NOT_EQUAL;
+                        simplePredicate.setValue(knimePredicate.getThreshold());
                         break;
                     default:
                         throw new IllegalStateException("Unknown pmml operator \"" + op + "\".");
                 }
                 simplePredicate.setOperator(operator);
-                simplePredicate.setValue(knimePredicate.getThreshold());
             } else if (predicate instanceof PMMLSimpleSetPredicate) {
                 final PMMLSimpleSetPredicate knimeSetPredicate = (PMMLSimpleSetPredicate)predicate;
                 final SimpleSetPredicate setPredicate = to.addNewSimpleSetPredicate();
