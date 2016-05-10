@@ -13,6 +13,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/io/filereader/CharsetNamePanel.java" type="org.knime.base.node.io.filereader.CharsetNamePanel">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.io.filereader.CharsetNamePanel"/>
+                <message_argument value="overrideSettings(FileReaderSettings)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/mine/cluster/PMMLClusterTranslator.java" type="org.knime.base.node.mine.cluster.PMMLClusterTranslator">
         <filter id="1141899266">
             <message_arguments>

@@ -64,6 +64,7 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 
 import org.knime.base.node.io.filereader.CharsetNamePanel;
+import org.knime.base.node.io.filereader.FileReaderNodeSettings;
 import org.knime.base.node.io.filereader.FileReaderSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -242,7 +243,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         config.setSkipFirstLinesCount(skiptFirstLines);
         int limitRows = (Integer)(m_limitRowsChecker.isSelected() ? m_limitRowsSpinner.getValue() : -1);
         config.setLimitRowsCount(limitRows);
-        FileReaderSettings s = new FileReaderSettings();
+        FileReaderNodeSettings s = new FileReaderNodeSettings();
         m_encodingPanel.overrideSettings(s);
         config.setCharSetName(s.getCharsetName());
 

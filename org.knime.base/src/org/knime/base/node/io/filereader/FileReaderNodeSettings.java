@@ -114,6 +114,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     private boolean m_whiteIsSet;
 
+    private boolean m_charsetIsSet;
+
     private boolean m_analyzedAllRows;
 
     /**
@@ -160,6 +162,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_ignoreEmptyLinesIsSet = true;
         m_ignoreDelimsAtEndOfRowIsSet = true;
         m_decimalSeparatorIsSet = true;
+        m_charsetIsSet = true;
         m_analyzedAllRows = false;
     }
 
@@ -194,6 +197,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_quoteIsSet = clonee.m_quoteIsSet;
         m_delimIsSet = clonee.m_delimIsSet;
         m_whiteIsSet = clonee.m_whiteIsSet;
+        m_charsetIsSet = clonee.m_charsetIsSet;
         m_analyzedAllRows = clonee.m_analyzedAllRows;
     }
 
@@ -215,6 +219,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_quoteIsSet = false;
         m_delimIsSet = false;
         m_whiteIsSet = false;
+        m_charsetIsSet = false;
         m_analyzedAllRows = false;
     }
 
@@ -744,6 +749,26 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      */
     public boolean isWhiteSpaceUserSet() {
         return m_whiteIsSet;
+    }
+
+    /**
+     * Set <code>true</code> to indicate that the flag is actually set and is
+     * not still the default value.
+     *
+     * @param s the new value of the flag
+     * @since 3.2
+     */
+    public void setCharsetUserSet(final boolean s) {
+        m_charsetIsSet = s;
+    }
+
+    /**
+     * @return <code>true</code> is the value was set by the user,
+     *         <code>false</code> if it's still at constructor's default value
+     * @since 3.2
+     */
+    public boolean isCharsetUserSet() {
+        return m_charsetIsSet;
     }
 
     /**

@@ -68,6 +68,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.io.csvwriter.FileWriterNodeSettings.FileOverwritePolicy;
 import org.knime.base.node.io.filereader.CharsetNamePanel;
+import org.knime.base.node.io.filereader.FileReaderNodeSettings;
 import org.knime.base.node.io.filereader.FileReaderSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -373,7 +374,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         if (errMsg != null) {
             throw new InvalidSettingsException(errMsg);
         }
-        FileReaderSettings s = new FileReaderSettings();
+        FileReaderNodeSettings s = new FileReaderNodeSettings();
         m_encodingPanel.overrideSettings(s);
         values.setCharacterEncoding(s.getCharsetName());
 
