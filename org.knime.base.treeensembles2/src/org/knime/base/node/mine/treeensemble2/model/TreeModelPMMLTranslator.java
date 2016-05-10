@@ -235,6 +235,9 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
 //            pmmlSimplePredicate.setField(colName);
 //            pmmlSimplePredicate.setOperator(operator);
 //            pmmlSimplePredicate.setValue(value);
+        } else if (condition instanceof AbstractTreeNodeSurrogateCondition) {
+            final AbstractTreeNodeSurrogateCondition surrogateCond = (AbstractTreeNodeSurrogateCondition)condition;
+            setValuesFromPMMLCompoundPredicate(pmmlNode.addNewCompoundPredicate(), surrogateCond.toPMMLPredicate());
         } else {
             throw new IllegalStateException(
                 "Unsupported condition (not " + "implemented): " + condition.getClass().getSimpleName());
