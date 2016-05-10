@@ -214,8 +214,14 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
             new PMMLSimplePredicate(getAttributeName(), pmmlOperator, Double.toString(m_splitValue));
         // create compound to allow for missing values
         compound.addPredicate(simplePredicate);
-        compound.addPredicate(new PMMLSimplePredicate(getAttributeName(),
-            acceptsMissings() ? PMMLOperator.IS_MISSING : PMMLOperator.IS_NOT_MISSING, Double.toString(m_splitValue)));
+        final PMMLSimplePredicate missing = new PMMLSimplePredicate();
+        missing.setSplitAttribute(getAttributeName());
+        if (acceptsMissings()) {
+            missing.setOperator(PMMLOperator.IS_MISSING);
+        } else {
+            missing.setOperator(PMMLOperator.IS_NOT_MISSING);
+        }
+        compound.addPredicate(missing);
         return compound;
     }
 

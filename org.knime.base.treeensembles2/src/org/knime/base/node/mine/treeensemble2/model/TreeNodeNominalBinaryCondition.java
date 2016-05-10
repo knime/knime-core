@@ -234,15 +234,21 @@ public class TreeNodeNominalBinaryCondition extends TreeNodeColumnCondition {
     /** {@inheritDoc} */
     @Override
     public PMMLCompoundPredicate toPMMLPredicate() {
-        PMMLSimpleSetPredicate setPredicate =
+        final PMMLSimpleSetPredicate setPredicate =
             new PMMLSimpleSetPredicate(getAttributeName(), m_setLogic.getPmmlSetOperator());
         setPredicate.setValues(Arrays.asList(getValues()));
         setPredicate.setArrayType(PMMLArrayType.STRING);
         // create compound condition that allows missing values
-        PMMLCompoundPredicate compPredicate = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
+        final PMMLCompoundPredicate compPredicate = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
         compPredicate.addPredicate(setPredicate);
-        compPredicate.addPredicate(new PMMLSimplePredicate(getAttributeName(),
-            acceptsMissings() ? PMMLOperator.IS_MISSING : PMMLOperator.IS_NOT_MISSING, ""));
+        final PMMLSimplePredicate missing = new PMMLSimplePredicate();
+        missing.setSplitAttribute(getAttributeName());
+        if (acceptsMissings()) {
+            missing.setOperator(PMMLOperator.IS_MISSING);
+        } else {
+            missing.setOperator(PMMLOperator.IS_NOT_MISSING);
+        }
+        compPredicate.addPredicate(missing);
         return compPredicate;
     }
 
