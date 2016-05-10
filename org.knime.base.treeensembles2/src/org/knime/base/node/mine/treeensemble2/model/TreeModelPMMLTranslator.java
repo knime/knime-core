@@ -187,54 +187,6 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
         } else if (condition instanceof TreeNodeColumnCondition) {
             final TreeNodeColumnCondition colCondition = (TreeNodeColumnCondition)condition;
             setValuesFromPMMLCompoundPredicate(pmmlNode.addNewCompoundPredicate(), colCondition.toPMMLPredicate());
-//            final String colName = colCondition.getColumnMetaData().getAttributeName();
-//            final Operator.Enum operator;
-//            final boolean acceptsMissingValues = ((TreeNodeColumnCondition)condition).acceptsMissings();
-//            final String value;
-//            if (condition instanceof TreeNodeNominalCondition) {
-//                final TreeNodeNominalCondition nominalCondition = (TreeNodeNominalCondition)condition;
-//                operator = Operator.EQUAL;
-//                value = nominalCondition.getValue();
-//            } else if (condition instanceof TreeNodeNominalBinaryCondition) {
-//                final TreeNodeNominalBinaryCondition binCondition = (TreeNodeNominalBinaryCondition)condition;
-//                final SetLogic setLogic = binCondition.getSetLogic();
-//                switch (setLogic) {
-//                    case IS_IN:
-//                        break;
-//                    case IS_NOT_IN:
-//                        break;
-//                    default:
-//                        break;
-//                }
-//            } else if (condition instanceof TreeNodeBitCondition) {
-//                final TreeNodeBitCondition bitCondition = (TreeNodeBitCondition)condition;
-//                operator = Operator.EQUAL;
-//                value = bitCondition.getValue() ? "1" : "0";
-//            } else if (condition instanceof TreeNodeNumericCondition) {
-//                final TreeNodeNumericCondition numCondition = (TreeNodeNumericCondition)condition;
-//                NumericOperator numOperator = numCondition.getNumericOperator();
-//                switch (numOperator) {
-//                    case LargerThan:
-//                        operator = Operator.GREATER_THAN;
-//                        break;
-//                    case LessThanOrEqual:
-//                        operator = Operator.LESS_OR_EQUAL;
-//                        break;
-//                    default:
-//                        throw new IllegalStateException("Unsupported operator (not " + "implemented): " + numOperator);
-//                }
-//                value = Double.toString(numCondition.getSplitValue());
-//            } else {
-//                throw new IllegalStateException(
-//                    "Unsupported condition (not " + "implemented): " + condition.getClass().getSimpleName());
-//            }
-//            SimplePredicate pmmlSimplePredicate = pmmlNode.addNewSimplePredicate();
-//            PMMLCompoundPredicate compound = colCondition.toPMMLPredicate();
-//            CompoundPredicate pmmlCompound = pmmlNode.addNewCompoundPredicate();
-//            pmmlCompound.setBooleanOperator(CompoundPredicate.BooleanOperator.AND);
-//            pmmlSimplePredicate.setField(colName);
-//            pmmlSimplePredicate.setOperator(operator);
-//            pmmlSimplePredicate.setValue(value);
         } else if (condition instanceof AbstractTreeNodeSurrogateCondition) {
             final AbstractTreeNodeSurrogateCondition surrogateCond = (AbstractTreeNodeSurrogateCondition)condition;
             setValuesFromPMMLCompoundPredicate(pmmlNode.addNewCompoundPredicate(), surrogateCond.toPMMLPredicate());
