@@ -52,6 +52,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
@@ -59,7 +60,8 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  *
  * @author Gabor Bakos
  */
-public final class RulesToTableSettings {
+public class RulesToTableSettings {
+
     /** By default do not split the rules to two columns. */
     static final boolean DEFAULT_SPLIT_RULES = false;
     /** By default do not provide confidence and weights columns. */
@@ -68,15 +70,28 @@ public final class RulesToTableSettings {
     static final boolean DEFAULT_STATISTICS = true;
     /** By default simplify rules. */
     static final boolean DEFAULT_ADDITIONAL_PARENTHESES = false;
+    /** By default do not generate score distribution record counts for table. */
+    static final boolean DEFAULT_TABLE_SCORE_RECORD_COUNT = false;
+    /** Prefix for score distribution record counts in the table. */
+    static final String DEFAULT_TABLE_SCORE_RECORD_COUNT_PREFIX = "Record count ";
+    /** By default do not generate score distribution probabilities for table. */
+    static final boolean DEFAULT_TABLE_SCORE_PROBABILITY = false;
+    /** Prefix for score distribution probabilities in the table. */
+    static final String DEFAULT_TABLE_SCORE_PROBABILITY_PREFIX = "Probability ";
     private SettingsModelBoolean m_splitRules = new SettingsModelBoolean("split.rules", DEFAULT_SPLIT_RULES);
     private SettingsModelBoolean m_confidenceAndWeight = new SettingsModelBoolean("confidence.and.weight", DEFAULT_CONFIDENCE_AND_WEIGHT);
     private SettingsModelBoolean m_provideStatistics = new SettingsModelBoolean("statistics", DEFAULT_STATISTICS);
     private SettingsModelBoolean m_useAdditionalParentheses = new SettingsModelBoolean("additional.parentheses", DEFAULT_ADDITIONAL_PARENTHESES);
+    private SettingsModelBoolean m_scoreTableRecordCount = new SettingsModelBoolean("table.score.recordCount", DEFAULT_TABLE_SCORE_RECORD_COUNT);
+    private SettingsModelString m_scoreTableRecordCountPrefix = new SettingsModelString("table.score.recordCount.prefix", DEFAULT_TABLE_SCORE_RECORD_COUNT_PREFIX);
+    private SettingsModelBoolean m_scoreTableProbability = new SettingsModelBoolean("table.score.probability", DEFAULT_TABLE_SCORE_PROBABILITY);
+    private SettingsModelString m_scoreTableProbabilityPrefix = new SettingsModelString("table.score.probability.prefix", DEFAULT_TABLE_SCORE_PROBABILITY_PREFIX);
 
     /**
      * Constructs default settings.
      */
     public RulesToTableSettings() {
+        super();
     }
 
     /**
@@ -108,6 +123,34 @@ public final class RulesToTableSettings {
     }
 
     /**
+     * @return the scoreTableRecordCount
+     */
+    public SettingsModelBoolean getScoreTableRecordCount() {
+        return m_scoreTableRecordCount;
+    }
+
+    /**
+     * @return the scoreTableRecordCountPrefix
+     */
+    public SettingsModelString getScoreTableRecordCountPrefix() {
+        return m_scoreTableRecordCountPrefix;
+    }
+
+    /**
+     * @return the scoreTableProbability
+     */
+    public SettingsModelBoolean getScoreTableProbability() {
+        return m_scoreTableProbability;
+    }
+
+    /**
+     * @return the scoreTableProbabilityPrefix
+     */
+    public SettingsModelString getScoreTableProbabilityPrefix() {
+        return m_scoreTableProbabilityPrefix;
+    }
+
+    /**
      * Loads settings for the model, using {@code settings}.
      *
      * @param settings The {@link NodeSettingsRO}.
@@ -118,6 +161,40 @@ public final class RulesToTableSettings {
         m_confidenceAndWeight.loadSettingsFrom(settings);
         m_provideStatistics.loadSettingsFrom(settings);
         m_useAdditionalParentheses.loadSettingsFrom(settings);
+        loadWithDefaults(settings);
+    }
+
+    /**
+     * Loads settings with defaults (those that were introduced later). Assuming the defaults are the same as previous
+     * behaviour.
+     *
+     * @param settings A {@link NodeSettingsRO}.
+     */
+    protected void loadWithDefaults(final NodeSettingsRO settings) {
+        try {
+            //New in 3.2
+            m_scoreTableRecordCount.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_scoreTableRecordCount.setBooleanValue(DEFAULT_TABLE_SCORE_RECORD_COUNT);
+        }
+        try {
+            //New in 3.2
+            m_scoreTableRecordCountPrefix.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_scoreTableRecordCountPrefix.setStringValue(DEFAULT_TABLE_SCORE_RECORD_COUNT_PREFIX);
+        }
+        try {
+            //New in 3.2
+            m_scoreTableProbability.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_scoreTableProbability.setBooleanValue(DEFAULT_TABLE_SCORE_PROBABILITY);
+        }
+        try {
+            //New in 3.2
+            m_scoreTableProbabilityPrefix.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_scoreTableProbabilityPrefix.setStringValue(DEFAULT_TABLE_SCORE_PROBABILITY_PREFIX);
+        }
     }
 
     /**
@@ -147,6 +224,7 @@ public final class RulesToTableSettings {
         } catch(InvalidSettingsException e) {
             m_useAdditionalParentheses.setBooleanValue(DEFAULT_ADDITIONAL_PARENTHESES);
         }
+        loadWithDefaults(settings);
     }
 
     /**
@@ -158,5 +236,10 @@ public final class RulesToTableSettings {
         m_confidenceAndWeight.saveSettingsTo(settings);
         m_provideStatistics.saveSettingsTo(settings);
         m_useAdditionalParentheses.saveSettingsTo(settings);
+        m_scoreTableRecordCount.saveSettingsTo(settings);
+        m_scoreTableRecordCountPrefix.saveSettingsTo(settings);
+        m_scoreTableProbability.saveSettingsTo(settings);
+        m_scoreTableProbabilityPrefix.saveSettingsTo(settings);
     }
+
 }

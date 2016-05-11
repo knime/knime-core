@@ -48,11 +48,14 @@
  */
 package org.knime.base.node.rules.engine.totable;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
@@ -63,6 +66,7 @@ import org.knime.base.node.mine.decisiontree2.PMMLSimpleSetPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
 import org.knime.base.node.rules.engine.pmml.PMMLRuleTranslator;
 import org.knime.base.node.rules.engine.pmml.PMMLRuleTranslator.Rule;
+import org.knime.base.node.rules.engine.pmml.PMMLRuleTranslator.ScoreProbabilityAndRecordCount;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -91,6 +95,7 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.pmml.PMMLModelType;
+import org.knime.core.util.UniqueNameGenerator;
 
 /**
  * A class to convert a RuleSet to a normal {@link DataTable}.
@@ -153,8 +158,23 @@ public class RuleSetToTable {
      */
     public DataTableSpec configure(final PMMLPortObjectSpec spec) {
         List<DataColumnSpec> targetCols = spec.getTargetCols();
-        CheckUtils.checkState(targetCols.size() == 1, "Only a single output column is supported, but got: "
-            + targetCols.size() + "\nThese: " + targetCols);
+        CheckUtils.checkState(targetCols.size() == 1,
+            "Only a single output column is supported, but got: " + targetCols.size() + "\nThese: " + targetCols);
+        if ((m_settings.getScoreTableRecordCount().isEnabled()
+            && m_settings.getScoreTableRecordCount().getBooleanValue())
+            || (m_settings.getScoreTableProbability().isEnabled()
+                && m_settings.getScoreTableProbability().getBooleanValue())) {
+            //We have no information about the score values.
+            return null;
+        }
+        List<DataColumnSpec> specs = baseOutputColumns();
+        return new DataTableSpecCreator().addColumns(specs.toArray(new DataColumnSpec[0])).createSpec();
+    }
+
+    /**
+     * @return The rule output columns.
+     */
+    private List<DataColumnSpec> baseOutputColumns() {
         List<DataColumnSpec> specs = new ArrayList<>();
         if (m_settings.getSplitRules().getBooleanValue()) {
             specs.add(new DataColumnSpecCreator(CONDITION, StringCell.TYPE).createSpec());
@@ -171,7 +191,7 @@ public class RuleSetToTable {
             specs.add(new DataColumnSpecCreator(RECORD_COUNT, DoubleCell.TYPE).createSpec());
             specs.add(new DataColumnSpecCreator(NUMBER_OF_CORRECT, DoubleCell.TYPE).createSpec());
         }
-        return new DataTableSpecCreator().addColumns(specs.toArray(new DataColumnSpec[0])).createSpec();
+        return specs;
     }
 
     /**
@@ -187,16 +207,21 @@ public class RuleSetToTable {
         throws CanceledExecutionException, InvalidSettingsException {
         // TODO should the defaults (confidence) be properties on columns?
         // TODO should the rule selection method be an output flow variable?
-        BufferedDataContainer container = exec.createDataContainer(configure(pmmlPo.getSpec()));
-        PMMLRuleTranslator ruleTranslator = new PMMLRuleTranslator();
         if (pmmlPo.getPMMLValue().getModels(PMMLModelType.RuleSetModel).size() != 1) {
             throw new InvalidSettingsException("Only a single RuleSet model is supported.");
         }
+
+        PMMLRuleTranslator ruleTranslator = new PMMLRuleTranslator();
         pmmlPo.initializeModelTranslator(ruleTranslator);
+        List<Rule> rules = ruleTranslator.getRules();
+
+        final DataTableSpec confSpec = configure(pmmlPo.getSpec());
+        final List<String> scoreValues = new ArrayList<>();
+        final DataTableSpec properSpec = confSpec != null ? confSpec : properSpec(rules, scoreValues);
+        BufferedDataContainer container = exec.createDataContainer(properSpec);
         List<DataColumnSpec> targetCols = pmmlPo.getSpec().getTargetCols();
         DataType outcomeType = targetCols.get(0).getType();
 
-        List<Rule> rules = ruleTranslator.getRules();
         long idx = 0L;
         int rulesSize = rules.size();
         Map<String, DataType> types = new LinkedHashMap<>();
@@ -206,10 +231,54 @@ public class RuleSetToTable {
         for (Rule rule : rules) {
             exec.checkCanceled();
             exec.setProgress(1.0 * idx++ / rulesSize);
-            container.addRowToTable(new DefaultRow(RowKey.createRowKey(idx), createRow(rule, outcomeType, types)));
+            container.addRowToTable(
+                new DefaultRow(RowKey.createRowKey(idx), createRow(rule, outcomeType, types, scoreValues)));
         }
         container.close();
         return container.getTable();
+    }
+
+    /**
+     * @param rules The rules with score distribution.
+     * @param scoreValues The score values.
+     * @return Spec with columns from score distribution.
+     */
+    private DataTableSpec properSpec(final List<Rule> rules, final List<String> scoreValues) {
+        final List<DataColumnSpec> specs = baseOutputColumns();
+        final Set<String> specSet = specs.stream().map(s -> s.getName()).collect(Collectors.toSet());
+        specs.addAll(scoreOutputColumns(rules, scoreValues, new UniqueNameGenerator(specSet)));
+        return new DataTableSpecCreator().addColumns(specs.toArray(new DataColumnSpec[0])).createSpec();
+    }
+
+    /**
+     * @param rules The rules with score distribution.
+     * @param scoreValues The score values.
+     * @param nameGenerator The unique name generator.
+     * @return Spec columns from score distribution.
+     */
+    private Collection<? extends DataColumnSpec> scoreOutputColumns(final List<Rule> rules,
+        final List<String> scoreValues, final UniqueNameGenerator nameGenerator) {
+        List<String> values = rules.stream().flatMap(r -> r.getScoreDistribution().keySet().stream()).distinct()
+            .collect(Collectors.toList());
+        scoreValues.addAll(values);
+        List<DataColumnSpec> newSpecs = new ArrayList<>(values.size());
+        if (m_settings.getScoreTableRecordCount().isEnabled()
+            && m_settings.getScoreTableRecordCount().getBooleanValue()) {
+            for (final String value : values) {
+                newSpecs.add(new DataColumnSpecCreator(
+                    nameGenerator.newName(m_settings.getScoreTableRecordCountPrefix().getStringValue() + value),
+                    DoubleCell.TYPE).createSpec());
+            }
+        }
+        if (m_settings.getScoreTableProbability().isEnabled()
+            && m_settings.getScoreTableProbability().getBooleanValue()) {
+            for (final String value : values) {
+                newSpecs.add(new DataColumnSpecCreator(
+                    nameGenerator.newName(m_settings.getScoreTableProbabilityPrefix().getStringValue() + value),
+                    DoubleCell.TYPE).createSpec());
+            }
+        }
+        return newSpecs;
     }
 
     /**
@@ -220,7 +289,8 @@ public class RuleSetToTable {
      * @param types The types of the input column.
      * @return The cells for the {@code rule}.
      */
-    private DataCell[] createRow(final Rule rule, final DataType outcomeType, final Map<String, DataType> types) {
+    private DataCell[] createRow(final Rule rule, final DataType outcomeType, final Map<String, DataType> types,
+        final List<String> scoreValues) {
         List<DataCell> ret = new ArrayList<>();
         boolean usePrecedence = !m_settings.getAdditionalParentheses().getBooleanValue();
         if (m_settings.getSplitRules().getBooleanValue()) {
@@ -237,6 +307,29 @@ public class RuleSetToTable {
         if (m_settings.getProvideStatistics().getBooleanValue()) {
             ret.add(toCell(rule.getRecordCount()));
             ret.add(toCell(rule.getNbCorrect()));
+        }
+        final Map<String, ScoreProbabilityAndRecordCount> scoreDistribution = rule.getScoreDistribution();
+        if (m_settings.getScoreTableRecordCount().isEnabled()
+            && m_settings.getScoreTableRecordCount().getBooleanValue()) {
+            for (final String value : scoreValues) {
+                if (scoreDistribution.containsKey(value)) {
+                    ret.add(new DoubleCell(scoreDistribution.get(value).getRecordCount()));
+                } else {
+                    ret.add(DataType.getMissingCell());
+                }
+            }
+        }
+        if (m_settings.getScoreTableProbability().isEnabled()
+            && m_settings.getScoreTableProbability().getBooleanValue()) {
+            for (final String value : scoreValues) {
+                if (scoreDistribution.containsKey(value)) {
+                    final BigDecimal probability = scoreDistribution.get(value).getProbability();
+                    ret.add(
+                        probability == null ? DataType.getMissingCell() : new DoubleCell(probability.doubleValue()));
+                } else {
+                    ret.add(DataType.getMissingCell());
+                }
+            }
         }
         return ret.toArray(new DataCell[ret.size()]);
     }
@@ -395,13 +488,13 @@ public class RuleSetToTable {
                 case OR:
                     //if not nothing or OR, we have to use parentheses
                     return parentheses(
-                        !usePrecedence
-                            || (predicates.size() > 1 && parentOperator != null && parentOperator != PMMLBooleanOperator.OR),
+                        !usePrecedence || (predicates.size() > 1 && parentOperator != null
+                            && parentOperator != PMMLBooleanOperator.OR),
                         join(PMMLBooleanOperator.OR, cp, types, usePrecedence));
                 case XOR:
                     //if not nothing or XOR or OR, we have to use parentheses, so when it is an AND
-                    return parentheses(!usePrecedence
-                        || (predicates.size() > 1 && parentOperator == PMMLBooleanOperator.AND),
+                    return parentheses(
+                        !usePrecedence || (predicates.size() > 1 && parentOperator == PMMLBooleanOperator.AND),
                         join(PMMLBooleanOperator.XOR, cp, types, usePrecedence));
                 case SURROGATE: {
                     CheckUtils.checkState(predicates.size() > 1,
@@ -438,27 +531,25 @@ public class RuleSetToTable {
         if (predicates.size() == 1) {
             return convertToStringPrecedence(first, usePrecedence, PMMLBooleanOperator.AND, types);
         }
-        CheckUtils.checkState(first instanceof PMMLTruePredicate || first instanceof PMMLFalsePredicate
-            || first instanceof PMMLSimplePredicate || first instanceof PMMLSimpleSetPredicate,
+        CheckUtils.checkState(
+            first instanceof PMMLTruePredicate || first instanceof PMMLFalsePredicate
+                || first instanceof PMMLSimplePredicate || first instanceof PMMLSimpleSetPredicate,
             "Compound predicates are not supported by the SURROGATE transformation: " + first + " in\n" + cp);
         if (first instanceof PMMLFalsePredicate || first instanceof PMMLTruePredicate) {
             return convertToString(first, usePrecedence, types);
         }
         if (first instanceof PMMLSimplePredicate || first instanceof PMMLSimpleSetPredicate) {
-            return parentheses(
-                !usePrecedence || (parentOperator != null && parentOperator != PMMLBooleanOperator.OR),
-                parentheses(
-                    !usePrecedence/*OR is outside of this AND*/,
+            return parentheses(!usePrecedence || (parentOperator != null && parentOperator != PMMLBooleanOperator.OR),
+                parentheses(!usePrecedence/*OR is outside of this AND*/,
                     "NOT MISSING " + dollars(first.getSplitAttribute()) + " AND "
                         + convertToStringPrecedence(first, usePrecedence, PMMLBooleanOperator.AND, types))
                     + " OR "
-                    + parentheses(
-                        !usePrecedence/*OR is outside of this AND*/,
+                    + parentheses(!usePrecedence/*OR is outside of this AND*/,
                         "MISSING " + dollars(first.getSplitAttribute()) + " AND "
                             + handleSurrogate(cp, rest, usePrecedence, PMMLBooleanOperator.AND, types)));
         }
-        throw new IllegalStateException("Compound predicates are not supported at this position: " + first + " in\n"
-            + cp);
+        throw new IllegalStateException(
+            "Compound predicates are not supported at this position: " + first + " in\n" + cp);
     }
 
     /**
@@ -500,8 +591,8 @@ public class RuleSetToTable {
                     case SURROGATE:
                         throw new IllegalStateException("Cannot have SURROGATE without children!");
                     default:
-                        throw new UnsupportedOperationException("Not supported PMML logical connective: " + op
-                            + " in\n" + cp);
+                        throw new UnsupportedOperationException(
+                            "Not supported PMML logical connective: " + op + " in\n" + cp);
                 }
             case 1:
                 return convertToStringPrecedence(predicates.get(0), usePrecedence, null, types);
@@ -525,8 +616,8 @@ public class RuleSetToTable {
                                 //#handleSurrogate
                                 throw new UnsupportedOperationException("SURROGATEs are not supported: " + cp);
                             default:
-                                throw new UnsupportedOperationException("Unknown operator: " + cp.getBooleanOperator()
-                                    + " in\n" + cp);
+                                throw new UnsupportedOperationException(
+                                    "Unknown operator: " + cp.getBooleanOperator() + " in\n" + cp);
                         }
                     }
                 }
