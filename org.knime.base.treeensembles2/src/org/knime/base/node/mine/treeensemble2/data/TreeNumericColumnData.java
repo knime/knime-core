@@ -121,7 +121,6 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
         final double[] targetCountsRightOfSplit = targetPriors.getDistribution().clone();
         assert targetCountsRightOfSplit.length == targetCounts;
         final double totalSumWeight = targetPriors.getNrRecords();
-        final double priorImpurity = targetPriors.getPriorImpurity();
         final IImpurity impurityCriterion = targetPriors.getImpurityCriterion();
         final boolean useXGBoostMissingValueHandling = config.getMissingValueHandling() == MissingValueHandling.XGBoost;
 
@@ -130,7 +129,7 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
             dataMemberships.getColumnMemberships(getMetaData().getAttributeIndex());
 
         // missing value handling
-        boolean containsMissingValues = containsMissingValues();
+        boolean branchContainsMissingValues = containsMissingValues();
         boolean missingsGoLeft = true;
         final int lengthNonMissing = getLengthNonMissing();
         final double[] missingTargetCounts = new double[targetCounts];
@@ -158,10 +157,18 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
             }
         } while (columnMemberships.previous());
 
+        // it is possible that the column contains missing values but in the current branch there are no missing values
+        branchContainsMissingValues = missingWeight > 0.0;
+
         columnMemberships.reset();
 
         double sumWeightsLeftOfSplit = 0.0;
         double sumWeightsRightOfSplit = totalSumWeight - missingWeight;
+        final double priorImpurity = useXGBoostMissingValueHandling || !branchContainsMissingValues
+            ? targetPriors.getPriorImpurity()
+            : impurityCriterion.getPartitionImpurity(
+                TreeNominalColumnData.subtractMissingClassCounts(targetPriors.getDistribution(), missingTargetCounts),
+                sumWeightsRightOfSplit);
 
         // all values in branch are missing
         if (sumWeightsRightOfSplit == 0) {
@@ -208,7 +215,7 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
                 double postSplitImpurity;
                 boolean tempMissingsGoLeft = false;
                 // missing value handling
-                if (containsMissingValues && useXGBoostMissingValueHandling) {
+                if (branchContainsMissingValues && useXGBoostMissingValueHandling) {
                     final double[] targetCountsLeftPlusMissing = new double[targetCounts];
                     final double[] targetCountsRightPlusMissing = new double[targetCounts];
                     for (int i = 0; i < targetCounts; i++) {
@@ -275,8 +282,8 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
                         bestSplit = useAverageSplitPoints ? getCenter(lastSeenValue, value) : lastSeenValue;
                         // Go with the majority if there are no missing values during training this is because we should
                         // still provide a missing direction for the case that there are missing values during prediction
-                        missingsGoLeft =
-                            containsMissingValues ? tempMissingsGoLeft : sumWeightsLeftOfSplit > sumWeightsRightOfSplit;
+                        missingsGoLeft = branchContainsMissingValues ? tempMissingsGoLeft
+                            : sumWeightsLeftOfSplit > sumWeightsRightOfSplit;
                     }
                 }
                 mustTestOnNextValueChange = false;
@@ -328,32 +335,34 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
         // missing value handling
         final boolean useXGBoostMissingValueHandling = config.getMissingValueHandling() == MissingValueHandling.XGBoost;
         // are there missing values in this column (complete column)
-        boolean containsMissingValues = containsMissingValues();
+        boolean branchContainsMissingValues = containsMissingValues();
         boolean missingsGoLeft = true;
         double missingWeight = 0.0;
+        double missingY = 0.0;
 
         // check if there are missing values in this rowsample
-        if (containsMissingValues) {
+        if (branchContainsMissingValues) {
             columnMemberships.goToLast();
             while (columnMemberships.getIndexInColumn() >= lengthNonMissing) {
                 missingWeight += columnMemberships.getRowWeight();
-
+                missingY += targetColumn.getValueFor(columnMemberships.getOriginalIndex());
                 if (!columnMemberships.previous()) {
                     break;
                 }
             }
             columnMemberships.reset();
+            branchContainsMissingValues = missingWeight > 0.0;
         }
 
-        final double ySumTotal = targetPriors.getYSum();
-        final double nrRecordsTotal = targetPriors.getNrRecords();
-        final double criterionTotal = ySumTotal * ySumTotal / nrRecordsTotal;
+        final double ySumTotal = targetPriors.getYSum() - missingY;
+        final double nrRecordsTotal = targetPriors.getNrRecords() - missingWeight;
+        final double criterionTotal = useXGBoostMissingValueHandling ? (ySumTotal + missingY) * (ySumTotal + missingY) / (nrRecordsTotal + missingWeight) : ySumTotal * ySumTotal / nrRecordsTotal;
 
         double ySumLeft = 0.0;
         double nrRecordsLeft = 0.0;
 
         double ySumRight = ySumTotal;
-        double nrRecordsRight = nrRecordsTotal - missingWeight;
+        double nrRecordsRight = nrRecordsTotal;
 
         // all values in the current branch are missing
         if (nrRecordsRight == 0) {
@@ -392,12 +401,12 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
                 if (nrRecordsLeft >= minChildNodeSize && nrRecordsRight >= minChildNodeSize && lastSeenValue < value) {
                     boolean tempMissingsGoLeft = true;
                     double childrenSquaredSum;
-                    if (containsMissingValues && useXGBoostMissingValueHandling) {
+                    if (branchContainsMissingValues && useXGBoostMissingValueHandling) {
                         final double[] tempChildrenSquaredSum = new double[2];
-                        tempChildrenSquaredSum[0] = (ySumLeft * ySumLeft / (nrRecordsLeft + missingWeight))
+                        tempChildrenSquaredSum[0] = ((ySumLeft + missingY) * (ySumLeft + missingY) / (nrRecordsLeft + missingWeight))
                             + (ySumRight * ySumRight / nrRecordsRight);
                         tempChildrenSquaredSum[1] = (ySumLeft * ySumLeft / nrRecordsLeft)
-                            + (ySumRight * ySumRight / (nrRecordsRight + missingWeight));
+                            + ((ySumRight + missingY) * (ySumRight + missingY) / (nrRecordsRight + missingWeight));
                         if (tempChildrenSquaredSum[0] >= tempChildrenSquaredSum[1]) {
                             childrenSquaredSum = tempChildrenSquaredSum[0];
                             tempMissingsGoLeft = true;
@@ -415,7 +424,7 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
                         bestImprovement = criterion;
                         bestSplit = useAverageSplitPoints ? getCenter(lastSeenValue, value) : lastSeenValue;
                         // if there are no missing values go with majority
-                        missingsGoLeft = containsMissingValues ? tempMissingsGoLeft : nrRecordsLeft >= nrRecordsRight;
+                        missingsGoLeft = branchContainsMissingValues ? tempMissingsGoLeft : nrRecordsLeft >= nrRecordsRight;
                     }
                 }
             }
@@ -434,7 +443,8 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
                 return new NumericSplitCandidate(this, bestSplit, bestImprovement, new BitSet(),
                     missingsGoLeft ? NumericSplitCandidate.MISSINGS_GO_LEFT : NumericSplitCandidate.MISSINGS_GO_RIGHT);
             }
-            return new NumericSplitCandidate(this, bestSplit, bestImprovement, getMissedRows(columnMemberships), NumericSplitCandidate.NO_MISSINGS);
+            return new NumericSplitCandidate(this, bestSplit, bestImprovement, getMissedRows(columnMemberships),
+                NumericSplitCandidate.NO_MISSINGS);
         } else {
             return null;
         }
