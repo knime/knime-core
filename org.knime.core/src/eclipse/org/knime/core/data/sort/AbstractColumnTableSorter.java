@@ -188,7 +188,7 @@ abstract class AbstractColumnTableSorter {
     void sort(final DataTable dataTable, final ExecutionMonitor exec, final SortingConsumer resultListener)
         throws CanceledExecutionException {
 
-        if (m_sortDescriptions.length < 0) {
+        if (m_sortDescriptions.length <= 0) {
             for (DataRow r : dataTable) {
                 resultListener.consume(new DefaultRow(r.getKey(), new DataCell[0]));
             }
