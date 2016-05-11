@@ -251,6 +251,7 @@ public class TreeNominalColumnDataTest {
     @Test
     public void testCalcBestSplitClassificationBinaryTwoClass() throws Exception {
         TreeEnsembleLearnerConfiguration config = createConfig(false);
+        config.setMissingValueHandling(MissingValueHandling.Surrogate);
         Pair<TreeNominalColumnData, TreeTargetNominalColumnData> twoClassTennisData = twoClassTennisData(config);
         TreeNominalColumnData columnData = twoClassTennisData.getFirst();
         TreeTargetNominalColumnData targetData = twoClassTennisData.getSecond();

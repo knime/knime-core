@@ -176,26 +176,38 @@ public class TreeNodeNominalBinaryConditionTest {
         final TreeNominalColumnData col = dataGen.createNominalAttributeColumn("A,A,B,C,C,D", "testcol", 0);
         TreeNodeNominalBinaryCondition cond = new TreeNodeNominalBinaryCondition(col.getMetaData(), BigInteger.valueOf(1), true, false);
         PMMLPredicate predicate = cond.toPMMLPredicate();
-        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), predicate.getSplitAttribute());
-        assertThat(predicate, instanceOf(PMMLSimpleSetPredicate.class));
-        PMMLSimpleSetPredicate setPredicate = (PMMLSimpleSetPredicate)predicate;
-        assertEquals("Wrong set predicate", PMMLSetOperator.IS_IN, setPredicate.getSetOperator());
-        assertArrayEquals("Wrong values",new String[]{"A"}, setPredicate.getValues().toArray(new String[1]));
-
-        cond = new TreeNodeNominalBinaryCondition(col.getMetaData(), BigInteger.valueOf(2), false, true);
-        predicate = cond.toPMMLPredicate();
-        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), predicate.getSplitAttribute());
         assertThat(predicate, instanceOf(PMMLCompoundPredicate.class));
+        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), predicate.getSplitAttribute());
         PMMLCompoundPredicate compoundPredicate = (PMMLCompoundPredicate)predicate;
         assertEquals("Wrong boolean operator", PMMLBooleanOperator.OR, compoundPredicate.getBooleanOperator());
         LinkedList<PMMLPredicate> preds = compoundPredicate.getPredicates();
         assertEquals("Number of predicates did not match.", 2, preds.size());
         assertThat(preds.get(0), instanceOf(PMMLSimpleSetPredicate.class));
         PMMLSimpleSetPredicate ssp = (PMMLSimpleSetPredicate)preds.get(0);
+        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), ssp.getSplitAttribute());
+        assertEquals("Wrong set predicate", PMMLSetOperator.IS_IN, ssp.getSetOperator());
+        assertArrayEquals("Wrong values",new String[]{"A"}, ssp.getValues().toArray(new String[1]));
+        assertThat(preds.get(1), instanceOf(PMMLSimplePredicate.class));
+        PMMLSimplePredicate sp = (PMMLSimplePredicate)preds.get(1);
+        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), sp.getSplitAttribute());
+        assertEquals("Should be IS_MISSING.", PMMLOperator.IS_NOT_MISSING, sp.getOperator());
+
+        cond = new TreeNodeNominalBinaryCondition(col.getMetaData(), BigInteger.valueOf(2), false, true);
+        predicate = cond.toPMMLPredicate();
+        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), predicate.getSplitAttribute());
+        assertThat(predicate, instanceOf(PMMLCompoundPredicate.class));
+        compoundPredicate = (PMMLCompoundPredicate)predicate;
+        assertEquals("Wrong boolean operator", PMMLBooleanOperator.OR, compoundPredicate.getBooleanOperator());
+        preds = compoundPredicate.getPredicates();
+        assertEquals("Number of predicates did not match.", 2, preds.size());
+        assertThat(preds.get(0), instanceOf(PMMLSimpleSetPredicate.class));
+        ssp = (PMMLSimpleSetPredicate)preds.get(0);
+        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), ssp.getSplitAttribute());
         assertEquals("Wrong set predicate", PMMLSetOperator.IS_NOT_IN, ssp.getSetOperator());
         assertArrayEquals("Wrong values", new String[]{"B"}, ssp.getValues().toArray(new String[1]));
         assertThat(preds.get(1), instanceOf(PMMLSimplePredicate.class));
-        PMMLSimplePredicate sp = (PMMLSimplePredicate)preds.get(1);
+        sp = (PMMLSimplePredicate)preds.get(1);
+        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), sp.getSplitAttribute());
         assertEquals("Should be IS_MISSING.", PMMLOperator.IS_MISSING, sp.getOperator());
     }
 }
