@@ -12,6 +12,18 @@
             Its columns are divided into two sets, the "excluded" columns will always be included in any iteration,
             the "included" columns will be visible once in each iteration.
 		</intro>
+        <option name="Column Filter">
+            Choose the columns to iterate over -- each column that matches the include criteria defines 
+            one iteration (so the loop will run as often as there are columns included). Columns excluded are considered
+            static and will always be passed into the loop body.
+        </option>
+        <option name="If include column list is empty">
+            Define the behavior how to treat an empty input list. Two options are available: "Run one iteration" will
+            execute the loop body once with all "excluded" columns passed unmodified into the loop body (so all columns
+            in the input table). "Fail" will cause no loop iteration to be run; instead the loop start node will fail
+            with an appropriate error message. The latter strictly follows the definition above -- so the number of
+            iterations corresponds to the number of columns in the include filter.
+        </option>
     </fullDescription>
 
     <ports>
