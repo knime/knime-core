@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -208,7 +209,11 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
             // Create Design Variables
             m_isNominal.put(m_target, true);
             List<DataCell> valueList = new ArrayList<DataCell>();
-            valueList.addAll(colSpec.getDomain().getValues());
+            final DataColumnDomain domain = colSpec.getDomain();
+            if (domain == null || domain.getValues() == null) {
+                throw new IllegalStateException("Calculate the possible values of " + colSpec.getName());
+            }
+            valueList.addAll(domain.getValues());
             if (sortTargetCategories) {
                 Collections.sort(valueList, colSpec.getType().getComparator());
             }

@@ -164,7 +164,7 @@ final class LinReg2Learner {
             @Override
             public boolean createDomain(final DataColumnSpec colSpec) {
                 return colSpec.getType().isCompatible(NominalValue.class)
-                  && m_pmmlOutSpec.getLearningFields().contains(colSpec.getName());
+                  && (m_pmmlOutSpec.getLearningFields().contains(colSpec.getName()) || m_pmmlOutSpec.getTargetFields().contains(colSpec.getName()));
             }
         }, new DomainCreatorColumnSelection() {
 
