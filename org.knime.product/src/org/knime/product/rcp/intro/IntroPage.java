@@ -57,6 +57,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -98,11 +102,16 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.explorer.ExplorerActivator;
+import org.knime.workbench.explorer.ExplorerMountTable;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
+import org.knime.workbench.explorer.view.AbstractContentProvider;
 import org.knime.workbench.explorer.view.ContentDelegator;
 import org.knime.workbench.explorer.view.ExplorerView;
 import org.knime.workbench.explorer.view.actions.NewWorkflowWizard;
 import org.knime.workbench.explorer.view.actions.NewWorkflowWizardPage;
+import org.knime.workbench.explorer.view.preferences.EditMountPointDialog;
+import org.knime.workbench.explorer.view.preferences.MountSettings;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction;
 import org.knime.workbench.ui.p2.actions.InvokeUpdateAction;
@@ -336,6 +345,9 @@ public class IntroPage implements LocationListener {
             case "setproperty":
                 setIntroProperty(command);
                 break;
+            case "mountserver":
+                mountServer();
+                break;
             default:
                 LOGGER.coding("Unknown intro command: " + command.getHost());
         }
@@ -407,6 +419,42 @@ public class IntroPage implements LocationListener {
             } catch (PartInitException ex) {
                 LOGGER.error("Could not close intro page: " + ex.getMessage(), ex);
             }
+        }
+    }
+
+    private void mountServer() {
+        String s = ExplorerActivator.getDefault().getPreferenceStore()
+                .getString(PreferenceConstants.P_EXPLORER_MOUNT_POINT_XML);
+        List<MountSettings> mountSettingsList = MountSettings.parseSettings(s, true);
+
+        Set<String> idSet = new LinkedHashSet<>();
+        for (MountSettings settings : mountSettingsList) {
+            idSet.add(settings.getFactoryID());
+        }
+        List<String> contentProviderIDs = new ArrayList<String>(idSet);
+
+        List<String> mountIDs = new ArrayList<String>(mountSettingsList.size());
+        for (MountSettings settings : mountSettingsList) {
+            mountIDs.add(settings.getMountID());
+        }
+
+        EditMountPointDialog dlg = new EditMountPointDialog(Display.getDefault().getActiveShell(),
+            ExplorerMountTable.getAddableContentProviders(contentProviderIDs), mountIDs);
+        if (dlg.open() != Window.OK) {
+            return;
+        }
+        AbstractContentProvider newCP = dlg.getContentProvider();
+        if (newCP != null) {
+            MountSettings mountSettings = new MountSettings(newCP);
+            if (mountSettings.getDefaultMountID() == null) {
+                mountSettings.setDefaultMountID(dlg.getDefaultMountID());
+            }
+            mountSettingsList.add(mountSettings);
+
+            //store new mount point settings
+            String settingsString = MountSettings.getSettingsString(mountSettingsList);
+            ExplorerActivator.getDefault().getPreferenceStore().setValue(PreferenceConstants.P_EXPLORER_MOUNT_POINT_XML,
+                settingsString);
         }
     }
 
