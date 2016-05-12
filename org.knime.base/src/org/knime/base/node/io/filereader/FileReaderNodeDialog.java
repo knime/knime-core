@@ -84,6 +84,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -226,6 +227,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private FileReaderPreviewTable m_previewTable;
 
     private JButton m_analyzeCancel;
+
+    private JSpinner m_scanLimitSpinner;
 
     private final JLabel m_analyzeProgressMsg = new JLabel("");
 
@@ -458,19 +461,27 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private JPanel createAnalysisPanel() {
 
+        JLabel scanLimitLabel = new JLabel("scan limit (number of lines): ");
+        m_scanLimitSpinner = new JSpinner();
+        m_scanLimitSpinner.setValue(FileAnalyzer.NUMOFLINES);
         m_analyzeCancel = new JButton("Quick Scan");
-        m_analyzeCancel.setToolTipText("Analyze the first "
-                + FileAnalyzer.NUMOFLINES + " lines only.");
+        m_analyzeCancel.setToolTipText("Analyze the specified number of lines only.");
         m_analyzeCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                m_analyzeCancel.setEnabled(false);
+                if ((int)m_scanLimitSpinner.getValue() < 0) {
+                    m_scanLimitSpinner.setValue(0);
+                }
                 m_analyzeCancel.setText("Scanning quickly");
+                int limit = (int)m_scanLimitSpinner.getValue();
+                m_scanLimitSpinner.setEnabled(false);
+                m_analyzeCancel.setEnabled(false);
+                m_analysisExecMonitor.setShortCutLines(limit);
                 m_analysisExecMonitor.setExecuteCanceled();
             }
         });
         m_analyzeCancel.setEnabled(false);
-
+        m_scanLimitSpinner.setEnabled(false);
         m_analyzeProgressBar = new JProgressBar();
         m_analyzeProgressBar.setIndeterminate(false);
         m_analyzeProgressBar.setStringPainted(false);
@@ -488,6 +499,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         Box buttonBox = Box.createHorizontalBox();
         buttonBox.add(Box.createHorizontalGlue());
+        buttonBox.add(scanLimitLabel);
+        buttonBox.add(m_scanLimitSpinner);
         buttonBox.add(m_analyzeCancel);
         buttonBox.add(Box.createHorizontalGlue());
 
@@ -1431,6 +1444,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 // enable button!!
                 m_analyzeCancel.setText("Quick Scan");
                 m_analyzeCancel.setEnabled(false);
+                m_scanLimitSpinner.setEnabled(false);
                 m_analyzeProgressMsg.setText("");
                 m_analyzeProgressBar.setValue(0);
                 getPanel().revalidate();
@@ -1545,6 +1559,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             m_analysisRunning.setValue(true);
             // allow for quickies from now on
             m_analyzeCancel.setEnabled(true);
+            m_scanLimitSpinner.setEnabled(true);
             setPreviewTable(null);
             setErrorLabelText("");
 
@@ -1650,6 +1665,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
                         // disable quicky
                         m_analyzeCancel.setEnabled(false);
+                        m_scanLimitSpinner.setEnabled(false);
                         m_analyzeProgressMsg.setText("");
                         m_analyzeProgressBar.setValue(0);
 

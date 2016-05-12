@@ -47,6 +47,8 @@
  */
 package org.knime.base.node.io.filereader;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeProgressMonitor;
@@ -70,6 +72,8 @@ public class FileReaderExecutionMonitor extends ExecutionMonitor {
     private boolean m_interrupt = false;
 
     private boolean m_cancel = false;
+
+    private final AtomicInteger m_shortCutLines = new AtomicInteger(FileAnalyzer.NUMOFLINES);
 
     /**
      * Creates a new object with a default progress monitor.
@@ -169,6 +173,24 @@ public class FileReaderExecutionMonitor extends ExecutionMonitor {
             return true;
         }
         return m_interrupt;
+    }
+
+    /**
+     * @since 3.2
+     */
+    public int getShortCutLines() {
+        if (m_parent != null) {
+            return m_parent.getShortCutLines();
+        }
+        return m_shortCutLines.get();
+    }
+
+    /**
+     * @since 3.2
+     */
+    public void setShortCutLines(final int numOfLines) {
+        assert m_parent == null;
+        m_shortCutLines.set(numOfLines);
     }
 
     /**

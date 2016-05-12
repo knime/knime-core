@@ -317,6 +317,21 @@ public final class FileAnalyzer {
     }
 
     /**
+     * If the specified {@link ExecutionMonitor} is a {@link FileReaderExecutionMonitor}, the number of lines that
+     * should be analyzed during a short-cut analysis is returned.
+     *
+     * @param exec the monitor to check for number of short cut lines
+     * @return number of lines to use during short cut - or the default value if not set in this exec monitor
+     */
+    private static int getShortCutLines(final ExecutionMonitor exec) {
+        if (exec instanceof FileReaderExecutionMonitor) {
+            FileReaderExecutionMonitor m = (FileReaderExecutionMonitor)exec;
+            return m.getShortCutLines();
+        }
+        return NUMOFLINES;
+    }
+
+    /**
      * Determines the type and name of each column. It tries to figure out if there are column headers in the file or
      * otherwise generates names for the columns. <br>
      * We read from the first line one token per column (plus one for the row header if we have row headers in the
@@ -564,10 +579,10 @@ public final class FileAnalyzer {
                         firstTokenInRow = true; // the next token is the first
                         linesRead++;
                         if (cutItShort(exec)) {
-                            if (linesRead > NUMOFLINES) {
+                            if (linesRead > getShortCutLines(exec)) {
                                 break;
                             }
-                            exec.setProgress(linesRead / (double)NUMOFLINES);
+                            exec.setProgress(linesRead / (double)getShortCutLines(exec));
                         } else {
                             if (fileSize > 0) {
                                 exec.setProgress(reader.getNumberOfBytesRead() / fileSize);
@@ -801,11 +816,11 @@ public final class FileAnalyzer {
                     }
                     colIdx = -1;
                     if (cutItShort(exec)) {
-                        if (linesRead >= NUMOFLINES) {
+                        if (linesRead >= getShortCutLines(exec)) {
                             result.setAnalyzeUsedAllRows(false);
                             break;
                         }
-                        exec.setProgress(linesRead / (double)NUMOFLINES);
+                        exec.setProgress(linesRead / (double)getShortCutLines(exec));
                     } else {
                         if (fileSize > 0) {
                             exec.setProgress(reader.getNumberOfBytesRead() / (double)fileSize);
@@ -973,7 +988,6 @@ public final class FileAnalyzer {
                 }
                 linesRead++;
 
-                exec.setProgress(linesRead / (double)NUMOFLINES);
 
                 if (line.charAt(0) == '#') {
                     settings.addSingleLineCommentPattern("#", false, false);
@@ -990,8 +1004,13 @@ public final class FileAnalyzer {
                     break;
                 }
                 if (cutItShort(exec)) {
-                    if (linesRead >= NUMOFLINES) {
+                    if (linesRead >= getShortCutLines(exec)) {
                         settings.setAnalyzeUsedAllRows(false);
+                        break;
+                    }
+                    exec.setProgress(linesRead / (double)getShortCutLines(exec));
+                } else {
+                    if (linesRead >= NUMOFLINES) {
                         break;
                     }
                     exec.setProgress(linesRead / (double)NUMOFLINES);
@@ -1051,13 +1070,13 @@ public final class FileAnalyzer {
                 }
                 linesRead++;
                 // cutItShort also checks for interrupt
-                if (cutItShort(exec) && (linesRead > NUMOFLINES)) {
+                if (cutItShort(exec) && (linesRead > getShortCutLines(exec))) {
                     settings.setAnalyzeUsedAllRows(false);
                     break;
                 }
 
                 if (cutItShort(exec)) {
-                    exec.setProgress(linesRead / (double)NUMOFLINES);
+                    exec.setProgress(linesRead / (double)getShortCutLines(exec));
                 } else if (fileSize > 0) {
                     exec.setProgress(reader.getNumberOfBytesRead() / fileSize);
                 }
@@ -1371,7 +1390,7 @@ public final class FileAnalyzer {
 
                     linesRead++;
                     try {
-                        if (cutItShort(exec) && (linesRead > NUMOFLINES)) {
+                        if (cutItShort(exec) && (linesRead > getShortCutLines(exec))) {
                             // cutItShort also checks for interrupts
                             settings.setAnalyzeUsedAllRows(false);
                             break;
@@ -1539,11 +1558,11 @@ public final class FileAnalyzer {
                     }
                     if (cutItShort(exec)) {
                         // cutItShort also checks for interrupts
-                        if (dataLinesRead >= NUMOFLINES) {
+                        if (dataLinesRead >= getShortCutLines(exec)) {
                             settings.setAnalyzeUsedAllRows(false);
                             break;
                         }
-                        exec.setProgress(dataLinesRead / (double)NUMOFLINES);
+                        exec.setProgress(dataLinesRead / (double)getShortCutLines(exec));
                     } else {
                         if (fileSize > 0) {
                             exec.setProgress(reader.getNumberOfBytesRead() / fileSize);
