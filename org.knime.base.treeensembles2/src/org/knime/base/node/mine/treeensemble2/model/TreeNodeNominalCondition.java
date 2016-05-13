@@ -152,7 +152,7 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
         final PMMLSimplePredicate simplePredicate =
             new PMMLSimplePredicate(getAttributeName(), PMMLOperator.EQUAL, getValue());
         // add compound predicate to allow for missing values
-        final PMMLCompoundPredicate compPredicate = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
+        final PMMLCompoundPredicate compPredicate = new PMMLCompoundPredicate(PMMLBooleanOperator.SURROGATE);
         compPredicate.addPredicate(simplePredicate);
 //        final PMMLSimplePredicate missing = new PMMLSimplePredicate();
 //        missing.setSplitAttribute(getAttributeName());
