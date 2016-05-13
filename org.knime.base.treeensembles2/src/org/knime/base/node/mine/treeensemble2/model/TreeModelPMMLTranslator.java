@@ -317,8 +317,10 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
 
     private static String setToWhitspaceSeparatedString(final Set<String> set) {
         final StringBuilder sb = new StringBuilder();
-        for (String string : set) {
+        for (final String string : set) {
+            sb.append("\"");
             sb.append(string);
+            sb.append("\"");
             sb.append(" ");
         }
         return sb.toString();
