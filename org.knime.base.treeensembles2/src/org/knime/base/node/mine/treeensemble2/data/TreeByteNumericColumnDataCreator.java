@@ -172,6 +172,50 @@ public class TreeByteNumericColumnDataCreator implements TreeAttributeColumnData
          * {@inheritDoc}
          */
         @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + m_indexInColumn;
+            result = prime * result + m_value;
+            return result;
+        }
+
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            ByteTuple other = (ByteTuple)obj;
+            if (!getOuterType().equals(other.getOuterType())) {
+                return false;
+            }
+            if (m_indexInColumn != other.m_indexInColumn) {
+                return false;
+            }
+            if (m_value != other.m_value) {
+                return false;
+            }
+            return true;
+        }
+
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public int compareTo(final ByteTuple o) {
             int val1 = m_value & 0xFF;
             int val2 = o.m_value & 0xFF;
@@ -180,6 +224,12 @@ public class TreeByteNumericColumnDataCreator implements TreeAttributeColumnData
                 return m_indexInColumn - o.m_indexInColumn;
             }
             return comp;
+        }
+
+
+
+        private TreeByteNumericColumnDataCreator getOuterType() {
+            return TreeByteNumericColumnDataCreator.this;
         }
 
     }

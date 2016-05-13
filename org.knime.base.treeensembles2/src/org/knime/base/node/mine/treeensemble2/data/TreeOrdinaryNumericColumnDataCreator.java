@@ -128,6 +128,45 @@ public class TreeOrdinaryNumericColumnDataCreator implements TreeAttributeColumn
 
         private int m_indexInColumn;
 
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + m_indexInColumn;
+            result = prime * result + Float.floatToIntBits(m_value);
+            return result;
+        }
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            Tuple other = (Tuple)obj;
+            if (m_indexInColumn != other.m_indexInColumn) {
+                return false;
+            }
+            if (Float.floatToIntBits(m_value) != Float.floatToIntBits(other.m_value)) {
+                return false;
+            }
+            return true;
+        }
+
+
         /** {@inheritDoc} */
         @Override
         public int compareTo(final Tuple o) {

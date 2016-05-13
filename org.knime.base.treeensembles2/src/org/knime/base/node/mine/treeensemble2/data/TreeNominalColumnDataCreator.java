@@ -166,6 +166,42 @@ public class TreeNominalColumnDataCreator implements TreeAttributeColumnDataCrea
 
         private int m_indexInOriginal;
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + m_indexInOriginal;
+            result = prime * result + m_value;
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            NominalTuple other = (NominalTuple)obj;
+            if (m_indexInOriginal != other.m_indexInOriginal) {
+                return false;
+            }
+            if (m_value != other.m_value) {
+                return false;
+            }
+            return true;
+        }
+
         /** {@inheritDoc} */
         @Override
         public int compareTo(final NominalTuple o) {

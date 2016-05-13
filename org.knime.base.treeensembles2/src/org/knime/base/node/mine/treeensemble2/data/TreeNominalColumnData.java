@@ -676,7 +676,13 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
         @Override
         public boolean equals(final Object obj) {
-            if (obj instanceof ClassProbabilityVector) {
+            if (obj == null) {
+                return false;
+            }
+            if (obj == this) {
+                return true;
+            }
+            if (this.getClass() == obj.getClass()) {
                 ClassProbabilityVector that = (ClassProbabilityVector)obj;
                 if (m_data.length == that.m_data.length) {
                     return Arrays.equals(m_data, that.m_data);
@@ -963,6 +969,26 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             m_bitMask = BigInteger.ZERO.setBit(nomValRep.getAssignedInteger());
             m_sumWeights = sumWeights;
             m_firstClassSumWeights = firstClassSumWeights;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (obj == this) {
+                return true;
+            }
+            if (this.getClass() == obj.getClass()) {
+                final NomValProbabilityPair that = (NomValProbabilityPair)obj;
+                if (this.m_bitMask.equals(that.m_bitMask) && this.m_nomValRep.equals(that.m_nomValRep)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /**
@@ -1421,6 +1447,26 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             m_sumWeight = sumWeight;
             m_meanY = meanY;
             m_bitMask = BigInteger.ZERO.setBit(nomVal.getAssignedInteger());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (obj == this) {
+                return true;
+            }
+            if (this.getClass() == obj.getClass()) {
+                final AttValTupleRegression that = (AttValTupleRegression)obj;
+                if (this.m_bitMask.equals(that.m_bitMask)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /**

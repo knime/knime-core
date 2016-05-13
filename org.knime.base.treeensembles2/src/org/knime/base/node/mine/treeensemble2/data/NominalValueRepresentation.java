@@ -109,14 +109,14 @@ public final class NominalValueRepresentation {
     public boolean equals(final Object that) {
         if (this == that) {
             return true;
-        } else if (!(that instanceof NominalValueRepresentation)) {
+        } else if (this.getClass() != that.getClass()) {
             return false;
         }
         final NominalValueRepresentation thatNomVal = (NominalValueRepresentation)that;
         if (m_nominalValue.length() != thatNomVal.m_nominalValue.length()) {
             return false;
         } else {
-            return m_nominalValue.equals(thatNomVal);
+            return m_nominalValue.equals(thatNomVal.m_nominalValue);
         }
     }
 

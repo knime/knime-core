@@ -108,7 +108,7 @@ class BinaryNominalSplitsPCA {
 
         @Override
         public boolean equals(final Object obj) {
-            if (obj instanceof CombinedAttributeValues) {
+            if (this.getClass() == obj.getClass()) {
                 CombinedAttributeValues that = (CombinedAttributeValues)obj;
                 if (m_classFrequencyVector.getDimension() == that.m_classFrequencyVector.getDimension()
                     && m_classProbabilityVector.getDimension() == that.m_classProbabilityVector.getDimension()) {
