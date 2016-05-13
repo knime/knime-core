@@ -60,9 +60,11 @@ import java.util.Map;
 import org.junit.Test;
 import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
+import org.knime.base.node.mine.decisiontree2.PMMLFalsePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
+import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TestDataGenerator;
 import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnData;
@@ -138,26 +140,22 @@ public class TreeNodeNominalConditionTest {
         final TreeNominalColumnData col = dataGen.createNominalAttributeColumn("A,A,B,C,C,D", "testcol", 0);
         TreeNodeNominalCondition cond = new TreeNodeNominalCondition(col.getMetaData(), 3, false);
         PMMLPredicate predicate = cond.toPMMLPredicate();
-        assertEquals("Wrong attribute.", col.getMetaData().getAttributeName(), predicate.getSplitAttribute());
         assertThat(predicate, instanceOf(PMMLCompoundPredicate.class));
         PMMLCompoundPredicate compoundPredicate = (PMMLCompoundPredicate)predicate;
-        assertEquals("Wrong boolean operator in compound predicate", PMMLBooleanOperator.OR, compoundPredicate.getBooleanOperator());
+        assertEquals("Wrong boolean operator in compound predicate", PMMLBooleanOperator.SURROGATE, compoundPredicate.getBooleanOperator());
         List<PMMLPredicate> preds = compoundPredicate.getPredicates();
         assertEquals("Wrong number of predicates in compound predicate.", 2, preds.size());
         assertThat(preds.get(0), instanceOf(PMMLSimplePredicate.class));
         PMMLSimplePredicate simplePredicate = (PMMLSimplePredicate)preds.get(0);
         assertEquals("Wrong operator", PMMLOperator.EQUAL, simplePredicate.getOperator());
         assertEquals("Wrong split value", "D", simplePredicate.getThreshold());
-        assertThat(preds.get(1), instanceOf(PMMLSimplePredicate.class));
-        simplePredicate = (PMMLSimplePredicate)preds.get(1);
-        assertEquals("Wrong operator", PMMLOperator.IS_NOT_MISSING, simplePredicate.getOperator());
-        assertEquals("Wrong attribute.", col.getMetaData().getAttributeName(), simplePredicate.getSplitAttribute());
+        assertThat(preds.get(1), instanceOf(PMMLFalsePredicate.class));
 
         cond = new TreeNodeNominalCondition(col.getMetaData(), 0, true);
         predicate = cond.toPMMLPredicate();
         assertThat(predicate, instanceOf(PMMLCompoundPredicate.class));
         PMMLCompoundPredicate compound = (PMMLCompoundPredicate)predicate;
-        assertEquals("Wrong boolean operator.", PMMLBooleanOperator.OR, compound.getBooleanOperator());
+        assertEquals("Wrong boolean operator.", PMMLBooleanOperator.SURROGATE, compound.getBooleanOperator());
         preds = compound.getPredicates();
         assertEquals("Wrong number of predicates in compound predicate.", 2, preds.size());
         assertThat(preds.get(0), instanceOf(PMMLSimplePredicate.class));
@@ -165,10 +163,7 @@ public class TreeNodeNominalConditionTest {
         assertEquals("Wrong operator", PMMLOperator.EQUAL, simplePredicate.getOperator());
         assertEquals("Wrong split value", "A", simplePredicate.getThreshold());
         assertEquals("Wrong attribute.", col.getMetaData().getAttributeName(), simplePredicate.getSplitAttribute());
-        assertThat(preds.get(1), instanceOf(PMMLSimplePredicate.class));
-        simplePredicate = (PMMLSimplePredicate)preds.get(1);
-        assertEquals("Wrong operator", PMMLOperator.IS_MISSING, simplePredicate.getOperator());
-        assertEquals("Wrong attribute.", col.getMetaData().getAttributeName(), simplePredicate.getSplitAttribute());
+        assertThat(preds.get(1), instanceOf(PMMLTruePredicate.class));
     }
 
 }

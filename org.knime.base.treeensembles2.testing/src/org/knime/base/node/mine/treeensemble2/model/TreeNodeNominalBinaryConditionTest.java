@@ -62,11 +62,11 @@ import java.util.Map;
 import org.junit.Test;
 import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
-import org.knime.base.node.mine.decisiontree2.PMMLOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLFalsePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSetOperator;
-import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimpleSetPredicate;
+import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TestDataGenerator;
 import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnData;
@@ -177,9 +177,8 @@ public class TreeNodeNominalBinaryConditionTest {
         TreeNodeNominalBinaryCondition cond = new TreeNodeNominalBinaryCondition(col.getMetaData(), BigInteger.valueOf(1), true, false);
         PMMLPredicate predicate = cond.toPMMLPredicate();
         assertThat(predicate, instanceOf(PMMLCompoundPredicate.class));
-        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), predicate.getSplitAttribute());
         PMMLCompoundPredicate compoundPredicate = (PMMLCompoundPredicate)predicate;
-        assertEquals("Wrong boolean operator", PMMLBooleanOperator.OR, compoundPredicate.getBooleanOperator());
+        assertEquals("Wrong boolean operator", PMMLBooleanOperator.SURROGATE, compoundPredicate.getBooleanOperator());
         LinkedList<PMMLPredicate> preds = compoundPredicate.getPredicates();
         assertEquals("Number of predicates did not match.", 2, preds.size());
         assertThat(preds.get(0), instanceOf(PMMLSimpleSetPredicate.class));
@@ -187,17 +186,14 @@ public class TreeNodeNominalBinaryConditionTest {
         assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), ssp.getSplitAttribute());
         assertEquals("Wrong set predicate", PMMLSetOperator.IS_IN, ssp.getSetOperator());
         assertArrayEquals("Wrong values",new String[]{"A"}, ssp.getValues().toArray(new String[1]));
-        assertThat(preds.get(1), instanceOf(PMMLSimplePredicate.class));
-        PMMLSimplePredicate sp = (PMMLSimplePredicate)preds.get(1);
-        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), sp.getSplitAttribute());
-        assertEquals("Should be IS_MISSING.", PMMLOperator.IS_NOT_MISSING, sp.getOperator());
+        assertThat(preds.get(1), instanceOf(PMMLFalsePredicate.class));
 
         cond = new TreeNodeNominalBinaryCondition(col.getMetaData(), BigInteger.valueOf(2), false, true);
         predicate = cond.toPMMLPredicate();
         assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), predicate.getSplitAttribute());
         assertThat(predicate, instanceOf(PMMLCompoundPredicate.class));
         compoundPredicate = (PMMLCompoundPredicate)predicate;
-        assertEquals("Wrong boolean operator", PMMLBooleanOperator.OR, compoundPredicate.getBooleanOperator());
+        assertEquals("Wrong boolean operator", PMMLBooleanOperator.SURROGATE, compoundPredicate.getBooleanOperator());
         preds = compoundPredicate.getPredicates();
         assertEquals("Number of predicates did not match.", 2, preds.size());
         assertThat(preds.get(0), instanceOf(PMMLSimpleSetPredicate.class));
@@ -205,9 +201,6 @@ public class TreeNodeNominalBinaryConditionTest {
         assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), ssp.getSplitAttribute());
         assertEquals("Wrong set predicate", PMMLSetOperator.IS_NOT_IN, ssp.getSetOperator());
         assertArrayEquals("Wrong values", new String[]{"B"}, ssp.getValues().toArray(new String[1]));
-        assertThat(preds.get(1), instanceOf(PMMLSimplePredicate.class));
-        sp = (PMMLSimplePredicate)preds.get(1);
-        assertEquals("Wrong attribute", col.getMetaData().getAttributeName(), sp.getSplitAttribute());
-        assertEquals("Should be IS_MISSING.", PMMLOperator.IS_MISSING, sp.getOperator());
+        assertThat(preds.get(1), instanceOf(PMMLTruePredicate.class));
     }
 }
