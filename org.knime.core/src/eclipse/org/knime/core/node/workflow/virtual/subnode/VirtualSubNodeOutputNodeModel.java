@@ -55,6 +55,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.knime.core.data.DataRow;
@@ -200,7 +201,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
                 Node.invokeGetAvailableFlowVariables(this, Type.values()));
         FilterResult result = m_configuration.getFilterConfiguration().applyTo(filter);
         filter.keySet().retainAll(Arrays.asList(result.getIncludes()));
-        return filter.values();
+        return filter.values().stream().filter(e -> !e.isGlobalConstant()).collect(Collectors.toList());
     }
 
     /** @return the configuration - used in test framework, no API.*/
