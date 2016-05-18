@@ -96,4 +96,8 @@ public abstract class TreeColumnData {
         return entropy;
     }
 
+    public static final boolean AbsIsSmallerEpsilon(final double number) {
+        return number < EPSILON && -number < EPSILON;
+    }
+
 }
