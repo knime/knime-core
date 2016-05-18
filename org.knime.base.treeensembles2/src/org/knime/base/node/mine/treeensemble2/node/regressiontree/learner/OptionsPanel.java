@@ -362,14 +362,14 @@ public final class OptionsPanel extends JPanel {
         gbc.gridwidth = 2;
         add(m_useBinaryNominalSplitsCheckBox, gbc);
 
-        gbc.gridwidth = 3;
+        gbc.gridwidth = 2;
         gbc.gridy += 1;
         add(new JLabel("Missing value handling"), gbc);
         gbc.gridx += 1;
         gbc.weightx = 0.0;
         add(m_missingValueHandlingComboBox, gbc);
 
-        gbc.gridwidth = 2;
+        gbc.gridwidth = 1;
         gbc.gridy += 1;
         gbc.gridx = 0;
         gbc.weightx = 0.0;
