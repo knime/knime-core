@@ -50,6 +50,7 @@ package org.knime.core.node.util;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -155,19 +156,31 @@ public final class ConvenienceMethods {
         return size;
     }
 
-    /** Get string summary from argument collection for printing in warning messages.
-     * Here are some examples with maxToPrint = 3: <br>
-     * [foo, bar, foobar, barfoo, barfuss] -&gt; "foo", "bar", "foobar", ... &lt;1 more&gt;
-     * [foo, bar] -&gt; "foo", "bar"
-     *
+    /** Get string summary from argument collection for printing in warning messages,
+     * see {@link #getShortStringFrom(Iterator, int, int)} for details.
      * @param objs The non null array to summarize
      * @param maxToPrint length to print, rest will be cut.
      * @return Such a short string summary.
      * @since 2.7*/
     public static String getShortStringFrom(final Collection<?> objs, final int maxToPrint) {
+        return getShortStringFrom(objs.iterator(), objs.size(), maxToPrint);
+    }
+
+    /** Get string summary from argument iterator for printing in warning messages.
+     * Here are some examples with maxToPrint = 3: <br>
+     * [foo, bar, foobar, barfoo, barfuss] -&gt; "foo", "bar", "foobar", ... &lt;1 more&gt;
+     * [foo, bar] -&gt; "foo", "bar"
+     *
+     * @param it The non null (0-position) iterator
+     * @param length Length of the underlying collection
+     * @param maxToPrint length to print, rest will be cut.
+     * @return Such a short string summary.
+     * @since 3.2 */
+    public static String getShortStringFrom(final Iterator<?> it, final int length, final int maxToPrint) {
         StringBuilder b = new StringBuilder();
         int l = 0;
-        for (Object o : objs) {
+        while (it.hasNext()) {
+            Object o = it.next();
             if (l > 0) {
                 b.append(", ");
             }
@@ -176,13 +189,12 @@ public final class ConvenienceMethods {
                 b.append(o == null ? "<null>" : o);
                 b.append("\"");
             } else {
-                b.append(" ... <").append(objs.size() - maxToPrint).append(" more>");
+                b.append(" ... <").append(length - maxToPrint).append(" more>");
                 break;
             }
             l++;
         }
         return b.toString();
-
     }
 
 
