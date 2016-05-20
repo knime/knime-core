@@ -46,11 +46,9 @@
 package org.knime.core.data.container;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -75,29 +73,29 @@ import java.util.WeakHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Deflater;
-import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
+import org.knime.core.data.container.storage.AbstractTableStoreFormat;
+import org.knime.core.data.container.storage.AbstractTableStoreReader;
+import org.knime.core.data.container.storage.AbstractTableStoreReader.TableStoreCloseableRowIterator;
+import org.knime.core.data.container.storage.AbstractTableStoreWriter;
+import org.knime.core.data.container.storage.TableStoreFormatRegistry;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowFileStoreHandlerRepository;
@@ -115,7 +113,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.ThreadUtils;
 
@@ -124,18 +121,12 @@ import org.knime.core.util.ThreadUtils;
  * {@link DataContainer} and the {@link org.knime.core.data.DataTable} that is returned by the container. It
  * "centralizes" the IO operations.
  *
+ * @noreference This class is not intended to be referenced by clients.
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
  * @author Bernd Wiswedel, University of Konstanz
  */
-class Buffer implements KNIMEStreamConstants {
-
-    /**
-     * Static field to enable/disable the usage of a GZipInput/OutpuStream when writing the binary data. This option
-     * defaults to {@value DataContainer#DEF_GZIP_COMPRESSION}.
-     *
-     * Note: Changing this parameter makes it impossible to read workflows written previously. It's only used for
-     * internal testing purposes.
-     */
-    private static final boolean IS_USE_GZIP;
+public class Buffer implements KNIMEStreamConstants {
 
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Buffer.class);
@@ -184,6 +175,12 @@ class Buffer implements KNIMEStreamConstants {
     /** Config entry whether this buffer resides in memory. */
     private static final String CFG_IS_IN_MEMORY = "container.inmemory";
 
+    /** Config entry: table format - full class name. */
+    private static final String CFG_TABLE_FORMAT = "container.format";
+
+    /** Config entry: table format internals -- implementation specific. */
+    private static final String CFG_TABLE_FORMAT_CONFIG = "container.format.config";
+
     /** Config entry: internal buffer ID. */
     private static final String CFG_BUFFER_ID = "container.id";
 
@@ -201,27 +198,11 @@ class Buffer implements KNIMEStreamConstants {
      */
     private static final String CFG_SIZE_L = "table.size.long";
 
-    /** Config entry for compression format.
-     * @since 2.8
-     */
-    private static final String CFG_COMPRESSION = "container.compression";
-
-    /**
-     * Config entry: Sub element in config that keeps the list of cell class information (used to be a plain array).
-     */
-    private static final String CFG_CELL_CLASSES = "table.datacell.classes";
-
-    /** Config entry: Class name of data cell. */
-    private static final String CFG_CELL_SINGLE_CLASS = "class";
-
-    /** Config entry: element type if a cell represents a collection. */
-    private static final String CFG_CELL_SINGLE_ELEMENT_TYPE = "collection.element.type";
-
     /** Current version string. */
-    private static final String VERSION = "container_8";
+    private static final String VERSION = "container_9";
 
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 8;
+    private static final int IVERSION = 9;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -234,8 +215,8 @@ class Buffer implements KNIMEStreamConstants {
         COMPATIBILITY_MAP.put("container_5", 5); // 2.0 TechPreview Version
         COMPATIBILITY_MAP.put("container_6", 6); // 2.0 Alpha
         COMPATIBILITY_MAP.put("container_7", 7); // 2.0.0 (final)
-        COMPATIBILITY_MAP.put("container_8", 8); // version 2.0.1++
-        COMPATIBILITY_MAP.put(VERSION, IVERSION);
+        COMPATIBILITY_MAP.put("container_8", 8); // version 2.0.1
+        COMPATIBILITY_MAP.put(VERSION, IVERSION); // version 3.2++ (multiple table formats)
         // NOTE consider to also
         // - increment the workflow.knime version number when updating this list
         // - update list in NoKeyBuffer
@@ -285,27 +266,6 @@ class Buffer implements KNIMEStreamConstants {
         } catch (Exception e) {
             LOGGER.warn("Unable to add shutdown hook to delete temp files", e);
         }
-        // prefer this block over Boolean.getBoolean(...) to cover typos
-        // on command line (warn on console)
-        String isUseGzipString = System.getProperty(KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION);
-        boolean debugLog = true;
-        if (isUseGzipString == null) {
-            isUseGzipString = Boolean.toString(DataContainer.DEF_GZIP_COMPRESSION);
-            debugLog = false;
-        }
-        if ("true".equals(isUseGzipString)) {
-            IS_USE_GZIP = true;
-        } else if ("false".equals(isUseGzipString)) {
-            IS_USE_GZIP = false;
-        } else {
-            debugLog = false;
-            LOGGER.warn("Unable to read property " + KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION + " (\""
-                    + isUseGzipString + "\"); defaulting to " + DataContainer.DEF_GZIP_COMPRESSION);
-            IS_USE_GZIP = DataContainer.DEF_GZIP_COMPRESSION;
-        }
-        if (debugLog) {
-            LOGGER.debug("Setting table stream compression to " + IS_USE_GZIP);
-        }
     }
 
     /**
@@ -315,7 +275,7 @@ class Buffer implements KNIMEStreamConstants {
      */
     private final BlobLRUCache m_blobLRUCache = new BlobLRUCache();
 
-    private static boolean isUseCompressionForBlobs(final CellClassInfo cellClassInfo) {
+    static boolean isUseCompressionForBlobs(final CellClassInfo cellClassInfo) {
         @SuppressWarnings("unchecked")
         Class<? extends BlobDataCell> cl = (Class<? extends BlobDataCell>)cellClassInfo.getCellClass();
         Boolean result = BLOB_COMPRESS_MAP.get(cl);
@@ -360,8 +320,6 @@ class Buffer implements KNIMEStreamConstants {
         None;
     }
 
-    private CompressionFormat m_compressionFormat;
-
     /** the file to write to. */
     private File m_binFile;
 
@@ -401,11 +359,9 @@ class Buffer implements KNIMEStreamConstants {
     /** Number of open file input streams on m_binFile. */
     private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
 
-    /**
-     * the stream that writes to the file, it's a special object output stream, in which we can mark the end of an entry
-     * (to figure out when a cell implementation reads too many or too few bytes).
-     */
-    private DCObjectOutputVersion2 m_outStream;
+    private AbstractTableStoreFormat m_outputFormat;
+    private AbstractTableStoreWriter m_outputWriter;
+    private AbstractTableStoreReader m_outputReader;
 
     /** maximum number of rows that are in memory. */
     private int m_maxRowsInMem;
@@ -422,22 +378,10 @@ class Buffer implements KNIMEStreamConstants {
     private DataTableSpec m_spec;
 
     /**
-     * Map for all DataCells' type, which have been added to this buffer, they will be separately written to to the
-     * meta.xml in a zip file.
-     */
-    private HashMap<CellClassInfo, Byte> m_typeShortCuts;
-
-    /**
-     * Inverse map of m_typeShortCuts - it stores to each shortcut (like 'A', 'B', ...) the corresponding type. This
-     * object is null unless close() has been called.
-     */
-    private CellClassInfo[] m_shortCutsLookup;
-
-    /**
      * List of file iterators that look at this buffer. Need to close them when the node is reset and the file shall be
      * deleted.
      */
-    private final WeakHashMap<FromFileIterator, Object> m_openIteratorSet;
+    private final WeakHashMap<TableStoreCloseableRowIterator, Object> m_openIteratorSet;
 
     /**
      * The iterator that is used to read the content back into memory. This instance is used after the workflow is
@@ -470,27 +414,37 @@ class Buffer implements KNIMEStreamConstants {
     /**
      * Creates new buffer for <strong>writing</strong>. It has assigned a given spec, and a max row count that may
      * resize in memory.
-     *
+     * @param spec ... used to define schema (non-KNIME file formats require schema)
      * @param maxRowsInMemory Maximum numbers of rows that are kept in memory until they will be subsequent written to
      *            the temp file. (0 to write immediately to a file)
+     * @param bufferID The id of this buffer used for blob (de)serialization.
      * @param globalRep Table repository for blob (de)serialization (read only).
      * @param localRep Local table repository for blob (de)serialization.
-     * @param bufferID The id of this buffer used for blob (de)serialization.
      * @param fileStoreHandler ...
      */
-    Buffer(final int maxRowsInMemory, final int bufferID, final Map<Integer, ContainerTable> globalRep,
-           final Map<Integer, ContainerTable> localRep, final IWriteFileStoreHandler fileStoreHandler) {
+    Buffer(final DataTableSpec spec, final int maxRowsInMemory, final int bufferID,
+           final Map<Integer, ContainerTable> globalRep, final Map<Integer, ContainerTable> localRep, final IWriteFileStoreHandler fileStoreHandler) {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
         m_list = new ArrayList<BlobSupportDataRow>();
-        m_openIteratorSet = new WeakHashMap<FromFileIterator, Object>();
+        m_openIteratorSet = new WeakHashMap<>();
         m_size = 0;
         m_bufferID = bufferID;
         m_globalRepository = globalRep;
         m_localRepository = localRep;
         m_fileStoreHandler = fileStoreHandler;
         m_fileStoreHandlerRepository = fileStoreHandler.getFileStoreHandlerRepository();
-        m_compressionFormat = IS_USE_GZIP ? CompressionFormat.Gzip : CompressionFormat.None;
+        m_spec = spec;
+        AbstractTableStoreFormat storeFormat = TableStoreFormatRegistry.getInstance().getFormatFor(spec);
+                TableStoreFormatRegistry.getInstance().getPreferredTableStoreFormat();
+        AbstractTableStoreFormat prefFormat = TableStoreFormatRegistry.getInstance().getPreferredTableStoreFormat();
+        if (storeFormat == prefFormat) {
+            LOGGER.debugWithFormat("Using table format %s", storeFormat.getClass().getName());
+        } else {
+            LOGGER.debugWithFormat("Cannot use table format '%s' as it does not support the table schema, "
+                    + "using '%s' instead", prefFormat.getClass().getName(), storeFormat.getClass().getName());
+        }
+        m_outputFormat = storeFormat;
         BufferTracker.getInstance().bufferCreated(this);
     }
 
@@ -528,7 +482,7 @@ class Buffer implements KNIMEStreamConstants {
         } else {
             m_fileStoreHandlerRepository = fileStoreHandlerRepository;
         }
-        m_openIteratorSet = new WeakHashMap<FromFileIterator, Object>();
+        m_openIteratorSet = new WeakHashMap<>();
         if (metaIn == null) {
             throw new IOException("No meta information given (null)");
         }
@@ -565,11 +519,6 @@ class Buffer implements KNIMEStreamConstants {
     /** @return Underlying binary file. */
     final File getBinFile() {
         return m_binFile;
-    }
-
-    /** @return Whether stream is zipped. */
-    final CompressionFormat getBinFileCompressionFormat() {
-        return m_compressionFormat;
     }
 
     /**
@@ -615,7 +564,7 @@ class Buffer implements KNIMEStreamConstants {
                 }
             } else {
                 flushBuffer();
-                writeRow(row, m_outStream);
+                m_outputWriter.writeRow(row);
             }
         } catch (Exception e) {
             if (!(e instanceof IOException)) {
@@ -646,25 +595,41 @@ class Buffer implements KNIMEStreamConstants {
     final int writeAllRowsFromListToFile() throws IOException {
         assert Thread.holdsLock(this);
         ensureTempFileExists();
-        if (m_outStream == null) {
+        if (m_outputWriter == null) {
             if (!m_binFile.getParentFile().isDirectory()) {
                 throw new FileNotFoundException("Directory " + m_binFile.getParentFile() + " for buffer " + m_bufferID
                     + " does not exist");
             }
 
-            m_outStream = initOutFile(new BufferedOutputStream(new FileOutputStream(m_binFile)));
+            initOutputWriter(m_binFile);
             Buffer.onFileCreated(m_binFile);
         }
 
         if (m_list != null) {
             int result = m_list.size();
             for (BlobSupportDataRow rowInList : m_list) {
-                writeRow(rowInList, m_outStream);
+                m_outputWriter.writeRow(rowInList);
             }
             return result;
         } else {
             return 0;
         }
+    }
+
+    /**
+     * @throws IOException
+     */
+    private void initOutputWriter(final OutputStream output) throws IOException, UnsupportedOperationException {
+        m_outputWriter = m_outputFormat.createWriter(output, m_spec, m_bufferID, !shouldSkipRowKey());
+        m_outputWriter.setFileStoreHandler((IWriteFileStoreHandler)m_fileStoreHandler);
+    }
+
+    /**
+     * @throws IOException
+     */
+    private void initOutputWriter(final File binFile) throws IOException {
+        m_outputWriter = m_outputFormat.createWriter(binFile, m_spec, m_bufferID, !shouldSkipRowKey());
+        m_outputWriter.setFileStoreHandler((IWriteFileStoreHandler)m_fileStoreHandler);
     }
 
     private BlobSupportDataRow saveBlobsAndFileStores(final DataRow row, final boolean isCopyOfExisting,
@@ -703,8 +668,10 @@ class Buffer implements KNIMEStreamConstants {
     }
 
     private DataCell handleIncomingBlob(final DataCell cell, final int col, final int totalColCount,
-                                        final boolean copyForVersionHop, final boolean forceCopyOfBlobsArg)
-            throws IOException {
+        final boolean copyForVersionHop, final boolean forceCopyOfBlobsArg) throws IOException {
+        if (!(m_outputFormat instanceof DefaultTableStoreFormat)) {
+            return cell;
+        }
         // whether the content of the argument row needs to be copied
         // into a new BlobSupportDataRow (will do that when either this
         // flag is true or cellCopies != null)
@@ -863,7 +830,11 @@ class Buffer implements KNIMEStreamConstants {
                 // also cause trouble ("no such file"), which is ok as we need
                 // to take an error along
                 if (bc != null) {
-                    writeBlobDataCell(bc, rewrite, getSerializerForDataCell(cl));
+                    if (m_outputWriter == null) {
+                        ensureTempFileExists();
+                        initOutputWriter(m_binFile);
+                    }
+                    ((DefaultTableStoreWriter)m_outputWriter).writeBlobDataCell(bc, rewrite, this);
                     wc = new BlobWrapperDataCell(this, rewrite, cl, bc);
                 } else {
                     wc = new BlobWrapperDataCell(this, rewrite, cl);
@@ -931,7 +902,7 @@ class Buffer implements KNIMEStreamConstants {
     void closeInternal() {
         assert Thread.holdsLock(this);
         // everything is in the list, i.e. in memory
-        if (m_outStream == null) {
+        if (m_outputWriter == null) {
             // disallow modification
             List<BlobSupportDataRow> newList = Collections.unmodifiableList(m_list);
             m_list = newList;
@@ -941,14 +912,18 @@ class Buffer implements KNIMEStreamConstants {
         } else {
             try {
                 flushBuffer();
-                m_shortCutsLookup = closeFile(m_outStream);
-                m_typeShortCuts = null; // garbage
+                m_outputWriter.close();
+                NodeSettings nodeSettings = new NodeSettings("table-format-meta-info");
+                m_outputWriter.writeMetaInfoAfterWrite(nodeSettings);
                 m_list = null;
                 double sizeInMB = m_binFile.length() / (double)(1 << 20);
                 String size = NumberFormat.getInstance().format(sizeInMB);
                 LOGGER.debug("Buffer file (" + m_binFile.getAbsolutePath() + ") is " + size + "MB in size");
+                initOutputReader(nodeSettings, IVERSION);
             } catch (IOException ioe) {
                 throw new RuntimeException("Cannot close stream of file \"" + m_binFile.getName() + "\"", ioe);
+            } catch (InvalidSettingsException ex) {
+                throw new RuntimeException("Cannot init reader after buffer is closed", ex);
             }
         }
         m_localRepository = null;
@@ -975,7 +950,6 @@ class Buffer implements KNIMEStreamConstants {
     }
 
     private synchronized void onMemoryAlert() {
-        assert m_spec != null : "Memory alert only for closed (read-only) buffers";
         if (m_list == null) {
             // concurrent close or addRow() caused this to be flushed (this method may stall long on Buffer.this)
         } else {
@@ -993,29 +967,13 @@ class Buffer implements KNIMEStreamConstants {
         }
     }
 
-
-    /**
-     * Called when the buffer is closed or when the in-memory content (i.e. using m_list) is written to a file.
-     *
-     * @param outStream The output stream to close (to add meta-data, e.g.).
-     * @return The lookup table, will be assigned to m_shortCutsLookup when called from {@link #close(DataTableSpec)}.
-     * @throws IOException If that fails.
-     */
-    private CellClassInfo[] closeFile(final DCObjectOutputVersion2 outStream) throws IOException {
-        CellClassInfo[] shortCutsLookup = createShortCutArray();
-        outStream.close();
-        return shortCutsLookup;
-    }
-
     /**
      * Writes internals to the an output stream (using the xml scheme from NodeSettings).
      *
      * @param out To write to.
-     * @param shortCutsLookup The lookup table of this buffer, generally it's m_shortCutsLookup but it may be different
-     *            when this buffer operates in-memory (i.e. uses m_list) but is written to a destination file.
      * @throws IOException If that fails.
      */
-    private void writeMetaToFile(final OutputStream out, final CellClassInfo[] shortCutsLookup) throws IOException {
+    private void writeMetaToFile(final OutputStream out) throws IOException {
         NodeSettings settings = new NodeSettings("Table Meta Information");
         NodeSettingsWO subSettings = settings.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addString(CFG_VERSION, getVersion());
@@ -1024,7 +982,6 @@ class Buffer implements KNIMEStreamConstants {
         } else {
             subSettings.addLong(CFG_SIZE_L, size());
         }
-        subSettings.addString(CFG_COMPRESSION, m_compressionFormat.name());
         subSettings.addBoolean(CFG_CONTAINS_BLOBS, m_containsBlobs);
         // added between version 8 and 9 - no increment of version number
         String fileStoresUUID = null;
@@ -1038,17 +995,9 @@ class Buffer implements KNIMEStreamConstants {
         subSettings.addString(CFG_FILESTORES_UUID, fileStoresUUID);
         subSettings.addBoolean(CFG_IS_IN_MEMORY, !usesOutFile());
         subSettings.addInt(CFG_BUFFER_ID, m_bufferID);
-        NodeSettingsWO typeSubSettings = subSettings.addNodeSettings(CFG_CELL_CLASSES);
-        for (int i = 0; i < shortCutsLookup.length; i++) {
-            CellClassInfo info = shortCutsLookup[i];
-            NodeSettingsWO single = typeSubSettings.addNodeSettings("element_" + i);
-            single.addString(CFG_CELL_SINGLE_CLASS, info.getCellClass().getName());
-            DataType elementType = info.getCollectionElementType();
-            if (elementType != null) {
-                NodeSettingsWO subTypeConfig = single.addNodeSettings(CFG_CELL_SINGLE_ELEMENT_TYPE);
-                elementType.save(subTypeConfig);
-            }
-        }
+        subSettings.addString(CFG_TABLE_FORMAT, m_outputFormat.getClass().getName());
+        NodeSettingsWO formatSettings = subSettings.addNodeSettings(CFG_TABLE_FORMAT_CONFIG);
+        m_outputWriter.writeMetaInfoAfterWrite(formatSettings);
         settings.saveToXML(out);
     }
 
@@ -1062,8 +1011,7 @@ class Buffer implements KNIMEStreamConstants {
      */
     private void readMetaFromFile(final InputStream metaIn, final File fileStoreDir) throws IOException,
             InvalidSettingsException {
-        InputStream inStream = new BufferedInputStream(metaIn);
-        try {
+        try (InputStream inStream = new BufferedInputStream(metaIn)) {
             NodeSettingsRO settings = NodeSettings.loadFromXML(inStream);
             NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
             String version = subSettings.getString(CFG_VERSION);
@@ -1076,21 +1024,6 @@ class Buffer implements KNIMEStreamConstants {
             if (m_size < 0) {
                 throw new IOException("Table size must not be < 0: " + m_size);
             }
-            final CompressionFormat cF;
-            if (m_version < 3) { // stream was not zipped in KNIME 1.1.x
-                cF = CompressionFormat.None;
-            } else if (m_version >= 8) { // added sometime between format 8 and 9 - no increment of version number
-                String compFormat = subSettings.getString(CFG_COMPRESSION, CompressionFormat.Gzip.name());
-                try {
-                    cF = CompressionFormat.valueOf(compFormat);
-                } catch (Exception e) {
-                    throw new InvalidSettingsException(String.format("Unable to parse \"%s\" property (\"%s\"): %s",
-                            CFG_COMPRESSION, compFormat, e.getMessage()), e);
-                }
-            } else {
-                cF = CompressionFormat.Gzip;
-            }
-            m_compressionFormat = cF;
             // added sometime between format 8 and 9
             m_containsBlobs = false;
             if (m_version >= 4) { // no blobs in version 1.1.x
@@ -1134,83 +1067,29 @@ class Buffer implements KNIMEStreamConstants {
                     restoreIntoMemory();
                 }
             }
-            if (m_version <= 6) {
-                m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion1x(subSettings);
-            } else {
-                m_shortCutsLookup = readCellClassInfoArrayFromMetaVersion2(subSettings);
-            }
-        } finally {
-            inStream.close();
+            String outputFormat = subSettings.getString(CFG_TABLE_FORMAT, DefaultTableStoreFormat.class.getName());
+            m_outputFormat = TableStoreFormatRegistry.getInstance().getTableStoreFormat(outputFormat)
+                    .orElseThrow(() -> new InvalidSettingsException(String.format(
+                        "Invalid table format '%s' - unable to restore table.", outputFormat)));
+            NodeSettingsRO outputFormatSettings =
+                    m_version >= 9 ? subSettings.getNodeSettings(CFG_TABLE_FORMAT_CONFIG) : subSettings;
+            initOutputReader(outputFormatSettings, m_version);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion1x(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        String[] cellClasses = settings.getStringArray(CFG_CELL_CLASSES);
-        CellClassInfo[] shortCutsLookup = new CellClassInfo[cellClasses.length];
-
-
-        for (int i = 0; i < cellClasses.length; i++) {
-            String cellClassName = cellClasses[i];
-
-            Class<?> cl = DataTypeRegistry.getInstance().getCellClass(cellClassName)
-                .orElseThrow(() -> new InvalidSettingsException("Data cell class \"" + cellClassName + "\" is unknown."));
-            try {
-                shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, null);
-            } catch (IllegalArgumentException e) {
-                throw new InvalidSettingsException("Unable to instantiate CellClassInfo for class \"" + cellClasses[i]
-                        + "\"", e);
-            }
-        }
-        return shortCutsLookup;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion2(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        NodeSettingsRO typeSubSettings = settings.getNodeSettings(CFG_CELL_CLASSES);
-        Set<String> keys = typeSubSettings.keySet();
-        CellClassInfo[] shortCutsLookup = new CellClassInfo[keys.size()];
-        int i = 0;
-        for (String s : keys) {
-            NodeSettingsRO single = typeSubSettings.getNodeSettings(s);
-            String className = single.getString(CFG_CELL_SINGLE_CLASS);
-
-            Class<?> cl = DataTypeRegistry.getInstance().getCellClass(className)
-                .orElseThrow(() -> new InvalidSettingsException("Can't load data cell class '" +className + "'"));
-
-            DataType elementType = null;
-            if (single.containsKey(CFG_CELL_SINGLE_ELEMENT_TYPE)) {
-                NodeSettingsRO subTypeConfig = single.getNodeSettings(CFG_CELL_SINGLE_ELEMENT_TYPE);
-                elementType = DataType.load(subTypeConfig);
-            }
-            try {
-                shortCutsLookup[i] = CellClassInfo.get((Class<? extends DataCell>)cl, elementType);
-            } catch (IllegalArgumentException iae) {
-                throw new InvalidSettingsException("Unable to instantiate CellClassInfo for class \"" + className
-                        + "\", element type: " + elementType);
-            }
-            i++;
-        }
-        return shortCutsLookup;
     }
 
     /**
-     * Create the shortcut table, it translates m_typeShortCuts to m_shortCutsLookup.
+     * @param outputFormatSettings
+     * @param version
+     * @throws IOException
+     * @throws InvalidSettingsException
      */
-    private CellClassInfo[] createShortCutArray() {
-        // unreported bug fix: NPE when the table only contains missing values.
-        if (m_typeShortCuts == null) {
-            m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
+    private void initOutputReader(final NodeSettingsRO outputFormatSettings, final int version) throws IOException, InvalidSettingsException {
+        m_outputReader = m_outputFormat.createReader(m_binFile, m_spec, outputFormatSettings, m_bufferID,
+            m_globalRepository, version, !shouldSkipRowKey());
+        m_outputReader.setFileStoreHandlerRepository(m_fileStoreHandlerRepository);
+        if (m_outputReader instanceof DefaultTableStoreReader) {
+            ((DefaultTableStoreReader)m_outputReader).setBufferAfterConstruction(this);
         }
-        m_shortCutsLookup = new CellClassInfo[m_typeShortCuts.size()];
-        for (Map.Entry<CellClassInfo, Byte> e : m_typeShortCuts.entrySet()) {
-            byte shortCut = e.getValue();
-            CellClassInfo type = e.getKey();
-            m_shortCutsLookup[shortCut - BYTE_TYPE_START] = type;
-        }
-        return m_shortCutsLookup;
     }
 
     /**
@@ -1303,177 +1182,6 @@ class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Serializes a row to the output stream. This method is called from <code>addRow(DataRow)</code>.
-     *
-     * @throws IOException If an IO error occurs while writing to the file.
-     */
-    private void writeRow(final BlobSupportDataRow row, final DCObjectOutputVersion2 outStream) throws IOException {
-        RowKey id = row.getKey();
-        writeRowKey(id, outStream);
-        for (int i = 0; i < row.getNumCells(); i++) {
-            DataCell cell = row.getRawCell(i);
-            if (m_indicesOfBlobInColumns == null && cell instanceof BlobDataCell) {
-                m_indicesOfBlobInColumns = new int[row.getNumCells()];
-            }
-            writeDataCell(cell, outStream);
-            outStream.endBlock();
-        }
-        outStream.endRow();
-    }
-
-    /**
-     * Writes the row key to the out stream. This method is overridden in {@link NoKeyBuffer} in order to skip the row
-     * key.
-     *
-     * @param key The key to write.
-     * @param outStream To write to.
-     * @throws IOException If that fails.
-     */
-    void writeRowKey(final RowKey key, final DCObjectOutputVersion2 outStream) throws IOException {
-        if (shouldSkipRowKey()) {
-            return;
-        }
-        outStream.writeRowKey(key);
-        outStream.endBlock();
-    }
-
-    /**
-     * Writes a data cell to the outStream.
-     *
-     * @param cell The cell to write.
-     * @param outStream To write to.
-     * @throws IOException If stream corruption happens.
-     */
-    void writeDataCell(final DataCell cell, final DCObjectOutputVersion2 outStream) throws IOException {
-        if (cell.isMissing()) {
-            outStream.writeControlByte(BYTE_TYPE_MISSING);
-            return;
-        }
-        boolean isBlob = cell instanceof BlobWrapperDataCell;
-        CellClassInfo cellClass = isBlob ? ((BlobWrapperDataCell)cell).getBlobClassInfo() : CellClassInfo.get(cell);
-        DataCellSerializer<DataCell> ser = getSerializerForDataCell(cellClass);
-        Byte identifier = m_typeShortCuts.get(cellClass);
-        FileStoreKey fileStoreKey = null;
-        if (cell instanceof FileStoreCell) {
-            final FileStoreCell fsCell = (FileStoreCell)cell;
-            FileStore fileStore = FileStoreUtil.getFileStore(fsCell);
-            if (m_fileStoreHandler instanceof IWriteFileStoreHandler) {
-                fileStoreKey = ((IWriteFileStoreHandler)m_fileStoreHandler).translateToLocal(fileStore, fsCell);
-            } else {
-                // handler is not an IWriteFileStoreHandler but the buffer still contains file stores:
-                // the flow is part of a workflow and all file stores were already properly handled
-                // (this buffer is restored from disc - and then a memory alert forces the data back onto disc)
-                fileStoreKey = FileStoreUtil.getFileStoreKey(fileStore);
-            }
-            FileStoreUtil.invokeFlush(fsCell);
-        }
-        final boolean isJavaSerializationOrBlob = ser == null && !isBlob;
-        if (isJavaSerializationOrBlob) {
-            outStream.writeControlByte(BYTE_TYPE_SERIALIZATION);
-        }
-        outStream.writeControlByte(identifier);
-        if (fileStoreKey != null) {
-            outStream.writeFileStoreKey(fileStoreKey);
-        }
-        // DataCell is datacell-serializable
-        if (!isJavaSerializationOrBlob) {
-            if (isBlob) {
-                BlobWrapperDataCell bc = (BlobWrapperDataCell)cell;
-                outStream.writeBlobAddress(bc.getAddress());
-            } else {
-                outStream.writeDataCellPerKNIMESerializer(ser, cell);
-            }
-        } else {
-            outStream.writeDataCellPerJavaSerialization(cell);
-        }
-    }
-
-    /**
-     * Get the serializer object to be used for writing the argument cell or <code>null</code> if it needs to be
-     * java-serialized.
-     *
-     * @param cellClass The cell's class to write out.
-     * @return The serializer to use or <code>null</code>.
-     * @throws IOException If there are too many different cell implementations (currently 253 are theoretically
-     *             supported)
-     */
-    private DataCellSerializer<DataCell> getSerializerForDataCell(final CellClassInfo cellClass) throws IOException {
-        if (m_typeShortCuts == null) {
-            m_typeShortCuts = new HashMap<CellClassInfo, Byte>();
-        }
-        @SuppressWarnings("unchecked")
-        DataCellSerializer<DataCell> serializer = (DataCellSerializer<DataCell>)cellClass.getSerializer();
-        if (!m_typeShortCuts.containsKey(cellClass)) {
-            int size = m_typeShortCuts.size();
-            if (size + BYTE_TYPE_START > Byte.MAX_VALUE) {
-                throw new IOException("Too many different cell implementations");
-            }
-            Byte identifier = (byte)(size + BYTE_TYPE_START);
-            m_typeShortCuts.put(cellClass, identifier);
-        }
-        return serializer;
-    }
-
-    private void writeBlobDataCell(final BlobDataCell cell,
-        final BlobAddress a, final DataCellSerializer<DataCell> ser) throws IOException {
-        // addRow will make sure that m_indicesOfBlobInColumns is initialized
-        // when this method is called. If this method is called from a different
-        // buffer object, it means that this buffer has been closed!
-        // (When can this happen? This buffer resides in memory, a successor
-        // node is written to disc; they have different memory policies.)
-        if (m_indicesOfBlobInColumns == null) {
-            assert m_spec != null : "Spec is null, buffer not setup for write";
-            m_indicesOfBlobInColumns = new int[m_spec.getNumColumns()];
-        }
-        int column = a.getColumn();
-        int indexInColumn = m_indicesOfBlobInColumns[column]++;
-        a.setIndexOfBlobInColumn(indexInColumn);
-        boolean isToCompress = isUseCompressionForBlobs(CellClassInfo.get(cell));
-        File outFile = getBlobFile(indexInColumn, column, true, isToCompress);
-        BlobAddress originalBA = cell.getBlobAddress();
-        if (!ConvenienceMethods.areEqual(originalBA, a)) {
-            int originalBufferIndex = originalBA.getBufferID();
-            Buffer originalBuffer = null;
-            ContainerTable t = m_globalRepository.get(originalBufferIndex);
-            if (t != null) {
-                originalBuffer = t.getBuffer();
-            } else if (m_localRepository != null) {
-                t = m_localRepository.get(originalBufferIndex);
-                if (t != null) {
-                    originalBuffer = t.getBuffer();
-                }
-            }
-            if (originalBuffer != null) {
-                int index = originalBA.getIndexOfBlobInColumn();
-                int col = originalBA.getColumn();
-                boolean compress = originalBA.isUseCompression();
-                File source = originalBuffer.getBlobFile(index, col, false, compress);
-                FileUtil.copy(source, outFile);
-                return;
-            }
-        }
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
-        Buffer.onFileCreated(outFile);
-        if (isToCompress) {
-            out = new GZIPOutputStream(out);
-            // buffering the gzip stream brings another performance boost
-            // (in one case from 5mins down to 2 mins)
-            out = new BufferedOutputStream(out);
-        }
-        DCObjectOutputVersion2 outStream = new DCObjectOutputVersion2(out, this);
-        try {
-            if (ser != null) { // DataCell is datacell-serializable
-                outStream.writeDataCellPerKNIMESerializer(ser, cell);
-            } else {
-                outStream.writeDataCellPerJavaSerialization(cell);
-            }
-        } finally {
-            // do the best to minimize the number of open streams.
-            outStream.close();
-        }
-    }
-
-    /**
      * Reads the blob from the given blob address.
      *
      * @param blobAddress The address to read from.
@@ -1499,48 +1207,11 @@ class Buffer implements KNIMEStreamConstants {
         if (getReadVersion() <= 5) { // 2.0 TechPreview and earlier
             result = BufferFromFileIteratorVersion1x.readBlobDataCell(this, blobAddress, cl);
         } else {
-            result = new DataCellStreamReader(this).readBlobDataCell(blobAddress, cl);
+            result = new DataCellStreamReader((DefaultTableStoreReader)m_outputReader)
+                    .readBlobDataCell(blobAddress, cl);
         }
         m_blobLRUCache.put(blobAddress, new SoftReference<BlobDataCell>(result));
         return result;
-    }
-
-    /**
-     * Perform lookup for the DataCell class info given the argument byte.
-     *
-     * @param identifier The byte as read from the stream.
-     * @return the associated cell class info
-     * @throws IOException If the byte is invalid.
-     */
-    CellClassInfo getTypeForChar(final byte identifier) throws IOException {
-        int shortCutIndex = (byte)(identifier - BYTE_TYPE_START);
-        if (shortCutIndex < 0 || shortCutIndex >= m_shortCutsLookup.length) {
-            throw new IOException("Unknown shortcut byte '" + identifier + "'");
-        }
-        return m_shortCutsLookup[shortCutIndex];
-    }
-
-    /**
-     * Creates short cut array and wraps the argument stream in a {@link DCObjectOutputVersion2}.
-     */
-    private DCObjectOutputVersion2 initOutFile(final OutputStream outStream) throws IOException {
-        OutputStream wrap;
-        switch (m_compressionFormat) {
-            case Gzip:
-                wrap = new GZIPOutputStream(outStream);
-                // buffering the input stream is important as the blockable
-                // stream, which will be put on top of it, reads bytes individually
-                // (had a table, on which a single read-scan took ~6min without
-                // and ~30s with buffering)
-                wrap = new BufferedOutputStream(wrap);
-                break;
-            case None:
-                wrap = outStream;
-                break;
-            default:
-                throw new IOException("Unsupported compression format: " + m_compressionFormat);
-        }
-        return new DCObjectOutputVersion2(wrap, this);
     }
 
     private void ensureBlobDirExists() throws IOException {
@@ -1665,26 +1336,22 @@ class Buffer implements KNIMEStreamConstants {
                 m_list = new ArrayList<BlobSupportDataRow>((int) size());
                 return new FromListIterator();
             }
-            FromFileIterator f;
             try {
-                if (getReadVersion() <= 5) { // 2.0 tech preview and before
-                    f = new BufferFromFileIteratorVersion1x(this);
-                } else {
-                    f = new BufferFromFileIteratorVersion20(this);
-                }
+                TableStoreCloseableRowIterator iterator = m_outputReader.iterator();
+                iterator.setBuffer(this);
                 m_nrOpenInputStreams.incrementAndGet();
                 LOGGER.debug("Opening input stream on file \"" + m_binFile.getAbsolutePath() + "\", "
                         + m_nrOpenInputStreams + " open streams");
                 synchronized (m_openIteratorSet) {
-                    m_openIteratorSet.put(f, DUMMY);
+                    m_openIteratorSet.put(iterator, DUMMY);
                 }
+                return iterator;
             } catch (IOException ioe) {
                 StringBuilder b = new StringBuilder("Cannot read file \"");
                 b.append(m_binFile != null ? m_binFile.getName() : "<unknown>");
                 b.append("\"");
                 throw new RuntimeException(b.toString(), ioe);
             }
-            return f;
         } else {
             return new FromListIterator();
         }
@@ -1723,7 +1390,7 @@ class Buffer implements KNIMEStreamConstants {
      */
     @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
-        return new Buffer(0, getBufferID(), getGlobalRepository(), Collections.EMPTY_MAP, castAndGetFileStoreHandler());
+        return new Buffer(m_spec, 0, getBufferID(), getGlobalRepository(), Collections.EMPTY_MAP, castAndGetFileStoreHandler());
     }
 
     /**
@@ -1766,17 +1433,34 @@ class Buffer implements KNIMEStreamConstants {
             // of this buffer, which prevents it from further reading (version
             // conflict) - see bug #1364
             Buffer copy = createLocalCloneForWriting();
-            copy.m_outStream = copy.initOutFile(new NonClosableOutputStream.Zip(zipOut));
+            File tempFile = null;
+            try {
+                copy.initOutputWriter(new NonClosableOutputStream.Zip(zipOut));
+            } catch (UnsupportedOperationException notSupported) {
+                tempFile = DataContainer.createTempFile();
+                copy.initOutputWriter(tempFile);
+            }
             int count = 1;
             for (RowIterator it = iterator(); it.hasNext();) {
-                BlobSupportDataRow row = (BlobSupportDataRow)it.next();
-                exec.setProgress(count / (double)size(), "Writing row " + count + " (\"" + row.getKey() + "\")");
+                final BlobSupportDataRow row = (BlobSupportDataRow)it.next();
+                final int countCurrent = count;
+                exec.setProgress(count / (double)size(),
+                    () -> "Writing row " + countCurrent + " (\"" + row.getKey() + "\")");
                 exec.checkCanceled();
                 // make a deep copy of blobs if we have a version hop
                 copy.addRow(row, m_version < IVERSION, false);
                 count++;
             }
-            shortCutsLookup = copy.closeFile(copy.m_outStream);
+            synchronized (copy) {
+                copy.closeInternal();
+            }
+            if (tempFile != null) {
+                try (InputStream in = new FileInputStream(tempFile)) {
+                    IOUtils.copyLarge(in, new NonClosableOutputStream(zipOut));
+                } finally {
+                    tempFile.delete();
+                }
+            }
             // bug fix #1631 ... the memory policy is not properly preserved
             // in this if-statement
             if (usesOutFile()) {
@@ -1799,12 +1483,11 @@ class Buffer implements KNIMEStreamConstants {
             }
             zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
-            copy.writeMetaToFile(new NonClosableOutputStream.Zip(zipOut), shortCutsLookup);
+            copy.writeMetaToFile(new NonClosableOutputStream.Zip(zipOut));
         } else {
             // no need for BufferedInputStream here as the copy method
             // does the buffering itself
             FileUtil.copy(new FileInputStream(m_binFile), zipOut);
-            shortCutsLookup = m_shortCutsLookup;
             if (m_blobDir != null) {
                 addToZip(ZIP_ENTRY_BLOBS, zipOut, m_blobDir);
             }
@@ -1813,7 +1496,7 @@ class Buffer implements KNIMEStreamConstants {
             }
             zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
-            writeMetaToFile(new NonClosableOutputStream.Zip(zipOut), shortCutsLookup);
+            writeMetaToFile(new NonClosableOutputStream.Zip(zipOut));
         }
     }
 
@@ -1866,7 +1549,7 @@ class Buffer implements KNIMEStreamConstants {
      * @param it The iterator
      * @param removeFromHash Whether to remove from global hash.
      */
-    synchronized void clearIteratorInstance(final FromFileIterator it, final boolean removeFromHash) {
+    public synchronized void clearIteratorInstance(final TableStoreCloseableRowIterator it, final boolean removeFromHash) {
         String closeMes =
                 (m_binFile != null) ? "Closing input stream on \"" + m_binFile.getAbsolutePath() + "\", " : "";
         try {
@@ -1891,11 +1574,8 @@ class Buffer implements KNIMEStreamConstants {
         unregisterMemoryAlertListener();
         if (m_binFile != null) {
             synchronized (m_openIteratorSet) {
-                for (FromFileIterator f : m_openIteratorSet.keySet()) {
-                    if (f != null) {
-                        clearIteratorInstance(f, false);
-                    }
-                }
+                m_openIteratorSet.keySet().stream().filter(f -> f != null)
+                .forEach(f -> clearIteratorInstance(f, false));
                 m_openIteratorSet.clear();
             }
             if (m_blobDir != null) {
@@ -1926,9 +1606,9 @@ class Buffer implements KNIMEStreamConstants {
      * @param file The existing file
      * @throws IOException If there is not enough space left on the partition of the temp folder
      */
-    private static void onFileCreated(final File file) throws IOException {
+    static void onFileCreated(final File file) throws IOException {
         int count = FILES_CREATED_COUNTER.incrementAndGet();
-        long freeSpace = file.getUsableSpace();
+        long freeSpace = file.exists() ? file.getUsableSpace() : Long.MAX_VALUE;
         long minSpace = DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB * (1024L * 1024L);
         if (freeSpace < minSpace) {
             throw new IOException("The partition of the temp file \"" + file.getAbsolutePath()
@@ -1994,21 +1674,6 @@ class Buffer implements KNIMEStreamConstants {
 
     }
 
-    /** Super class of all file iterators. */
-    abstract static class FromFileIterator extends CloseableRowIterator implements KNIMEStreamConstants {
-
-        /**
-         * Called when the stream closing should take place.
-         *
-         * @return Whether the stream close was actually performed (that is false when already closed.)
-         * @throws IOException If closing fails.
-         */
-        abstract boolean performClose() throws IOException;
-
-        /** {@inheritDoc} */
-        @Override
-        public abstract BlobSupportDataRow next();
-    }
 
     /**
      * Iterator to be used when data is contained in m_list. It uses access by index rather than wrapping an

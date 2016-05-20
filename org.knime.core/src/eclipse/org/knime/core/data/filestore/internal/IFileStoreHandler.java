@@ -48,6 +48,7 @@
 package org.knime.core.data.filestore.internal;
 
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreKey;
 
 
 /**

@@ -674,10 +674,10 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
 
         /** {@inheritDoc} */
         @Override
-        Buffer createBuffer(final int rowsInMemory, final int bufferID,
-            final Map<Integer, ContainerTable> globalTableRep, final Map<Integer, ContainerTable> localTableRep,
-            final IWriteFileStoreHandler fileStoreHandler) {
-            return new NoKeyBuffer(rowsInMemory, bufferID, globalTableRep, localTableRep, fileStoreHandler);
+        Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory,
+            final int bufferID, final Map<Integer, ContainerTable> globalTableRep,
+            final Map<Integer, ContainerTable> localTableRep, final IWriteFileStoreHandler fileStoreHandler) {
+            return new NoKeyBuffer(spec, rowsInMemory, bufferID, globalTableRep, localTableRep, fileStoreHandler);
         }
 
         /** {@inheritDoc} */

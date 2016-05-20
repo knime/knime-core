@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,45 +41,62 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Jul 11, 2012 (wiswedel): created
+ *   Mar 14, 2016 (wiswedel): created
  */
-package org.knime.core.data.filestore.internal;
+package org.knime.core.data.container.storage;
 
 import java.io.IOException;
-import java.util.UUID;
 
-import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreKey;
-import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.data.container.Buffer;
+import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author wiswedel
+ * @since 3.2
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public interface IWriteFileStoreHandler extends IFileStoreHandler {
+public abstract class AbstractTableStoreReader {
 
-    public FileStore createFileStore(final String name) throws IOException;
+    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
 
-    public void open(final ExecutionContext exec);
-
-    public void addToRepository(final FileStoreHandlerRepository repository);
-
-    public void close();
-
-    public void ensureOpenAfterLoad() throws IOException;
+    /** @return the fileStoreHandlerRepository */
+    public final FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        return m_fileStoreHandlerRepository;
+    }
 
     /**
-     * @param fs
-     * @param flushCallback TODO
-     * @return */
-    public FileStoreKey translateToLocal(FileStore fs, FlushCallback flushCallback);
+     * @param fileStoreHandlerRepository the fileStoreHandlerRepository to set
+     */
+    public final void setFileStoreHandlerRepository(final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+    }
 
-    public boolean mustBeFlushedPriorSave(final FileStore fs);
+    public abstract TableStoreCloseableRowIterator iterator() throws IOException;
 
-    public UUID getStoreUUID();
+    public static abstract class TableStoreCloseableRowIterator extends CloseableRowIterator {
+
+        private Buffer m_buffer;
+
+        /**
+         * @param buffer the buffer to set
+         */
+        public void setBuffer(final Buffer buffer) {
+            m_buffer = buffer;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public final void close() {
+            m_buffer.clearIteratorInstance(this, true);
+        }
+
+        public abstract boolean performClose() throws IOException;
+    }
 
 }

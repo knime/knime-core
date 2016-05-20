@@ -52,6 +52,7 @@ import javax.swing.Icon;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.StringValueRenderer;

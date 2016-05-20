@@ -103,12 +103,12 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.orc.OrcKNIMEUtil;
-import org.knime.orc.OrcKNIMEUtil.OrcKNIMEWritableRow;
-import org.knime.orc.OrcKNIMEUtil.OrcKNIMEWriter;
-import org.knime.orc.OrcKNIMEUtil.OrcWriterBuilder;
-import org.knime.orc.OrcKNIMEUtil.PrestoDrivenRow;
-import org.knime.orc.OrcKNIMEUtil.PrestoDrivenRowIterator;
+import org.knime.orc.tableformat.OrcKNIMEType;
+import org.knime.orc.tableformat.OrcKNIMEUtil.OrcKNIMEWritableRow;
+import org.knime.orc.tableformat.OrcKNIMEUtil.OrcKNIMEWriter;
+import org.knime.orc.tableformat.OrcKNIMEUtil.OrcWriterBuilder;
+import org.knime.orc.tableformat.OrcKNIMEUtil.PrestoDrivenRow;
+import org.knime.orc.tableformat.OrcKNIMEUtil.PrestoDrivenRowIterator;
 
 /**
  *
@@ -116,8 +116,8 @@ import org.knime.orc.OrcKNIMEUtil.PrestoDrivenRowIterator;
  */
 public class ParquetTest {
 
-    private static final long ROW_COUNT = 1 * 200 * 1000;
-    private static final int COL_COUNT = 500;
+    private static final long ROW_COUNT = 1 * 20 * 1000;
+    private static final int COL_COUNT = 50;
 
     private enum TestRun {
         Dummy,
@@ -472,11 +472,11 @@ public class ParquetTest {
      * @throws Exception
      */
     private OrcWriterBuilder createORCBuilder(final File file) throws Exception {
-        final OrcWriterBuilder builder = new OrcWriterBuilder(file);
+        final OrcWriterBuilder builder = new OrcWriterBuilder(file, false);
         forAllValues(IntStream.range(0, COL_COUNT).boxed().toArray(Integer[]::new),
-            index -> builder.addField("name_" + index, OrcKNIMEUtil.MyType.StringType),
-            index -> builder.addField("size_" + index, OrcKNIMEUtil.MyType.DoubleType),
-            index -> builder.addField("age_" + index, OrcKNIMEUtil.MyType.BigIntType));
+            index -> builder.addField("name_" + index, OrcKNIMEType.STRING),
+            index -> builder.addField("size_" + index, OrcKNIMEType.DOUBLE),
+            index -> builder.addField("age_" + index, OrcKNIMEType.LONG));
         return builder;
     }
 

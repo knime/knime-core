@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.knime.core" id="TableFormat" name="TableFormat"/>
+      </appInfo>
+      <documentation>
+         (Framework private) extension point to register additional table serializer.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="TableFormat"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="TableFormat">
+      <annotation>
+         <documentation>
+            A TableFormat describes the I/O and format of a binary table stream.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="formatDefinition" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The class responsible for the storage format.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.knime.core.data.container.storage.AbstractTableStoreFormat:"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         KNIME 3.2
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiinfo"/>
+      </appInfo>
+      <documentation>
+         No public API
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         (C) KNIME GmbH, Konstanz, Germany.
+      </documentation>
+   </annotation>
+
+</schema>

@@ -49,7 +49,6 @@ package org.knime.core.data.filestore;
 
 import java.io.File;
 
-import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 

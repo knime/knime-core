@@ -1,5 +1,39 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="3.2.0"/>
+                <message_argument value="3.1.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="createFileStore(WriteFileStoreHandler, FileStoreKey)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="getFileStoreKey(FileStore)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="getFileStoreKey(FileStoreCell)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="retrieveFileStoreHandlerFrom(FileStoreCell, FileStoreKey, FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
         <filter comment="non-used methods" id="338792546">
             <message_arguments>

@@ -45,7 +45,7 @@
  * History
  *   Jun 25, 2012 (wiswedel): created
  */
-package org.knime.core.data.filestore.internal;
+package org.knime.core.data.filestore;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -58,6 +58,7 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 
 /** Wraps name and enumerated number to a file store object.
+ * @noreference This class is not intended to be referenced by clients.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
@@ -71,7 +72,7 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
     /**
      * @param index
      * @param name */
-    FileStoreKey(final UUID storeUUID, final int index,
+    public FileStoreKey(final UUID storeUUID, final int index,
             final byte[] nestedLoopPath,
             final int iterationIndex,
             final String name) {

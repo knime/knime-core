@@ -57,7 +57,7 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
-import org.knime.core.data.filestore.internal.FileStoreKey;
+import org.knime.core.data.filestore.FileStoreKey;
 
 
 /**
@@ -78,27 +78,26 @@ import org.knime.core.data.filestore.internal.FileStoreKey;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-class DCObjectOutputVersion2 implements KNIMEStreamConstants {
+class DCObjectOutputVersion2 implements KNIMEStreamConstants, AutoCloseable {
 
     /** Stream that we write to. Used to mark end of cells (or row keys). */
     private final BlockableOutputStream m_out;
 
     /** The Buffer that uses this stream, used to save DataCells contained
      * in (List)DataCell. */
-    private final Buffer m_buffer;
+    private final DefaultTableStoreWriter m_tableStoreWriter;
 
     /** This stream writes to m_out and is passed to the DataCellSerializer. */
     private DCLongUTFDataOutputStream m_dataOut;
 
     /** Setups a new output stream.
      * @param out The stream to write to (the file)
-     * @param ownerBuffer the associated buffer.
+     * @param tableStoreWriter the corresponding writer (callback for long UTF strings)
      */
-    public DCObjectOutputVersion2(final OutputStream out,
-            final Buffer ownerBuffer) {
+    public DCObjectOutputVersion2(final OutputStream out, final DefaultTableStoreWriter tableStoreWriter) {
         m_out = new BlockableOutputStream(out);
         m_dataOut = new DCLongUTFDataOutputStream(new DataOutputStream(m_out));
-        m_buffer = ownerBuffer;
+        m_tableStoreWriter = tableStoreWriter;
     }
 
     /** Writes a data cell using the serializer. No blocking is done (not here).
@@ -170,6 +169,7 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants {
 
     /** Closes the underlying streams.
      * @throws IOException If the stream closing causes IO problems. */
+    @Override
     public void close() throws IOException {
         m_dataOut.close();
     }
@@ -194,9 +194,11 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants {
         /** {@inheritDoc} */
         @Override
         public void writeDataCell(final DataCell cell) throws IOException {
-            m_buffer.writeDataCell(cell, DCObjectOutputVersion2.this);
+            m_tableStoreWriter.writeDataCell(cell, DCObjectOutputVersion2.this);
         }
 
     }
+
+
 
 }

@@ -64,11 +64,11 @@ import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;

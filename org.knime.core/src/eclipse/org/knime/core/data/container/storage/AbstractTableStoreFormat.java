@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,45 +41,43 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Jul 11, 2012 (wiswedel): created
+ *   Mar 14, 2016 (wiswedel): created
  */
-package org.knime.core.data.filestore.internal;
+package org.knime.core.data.container.storage;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
+import java.io.OutputStream;
+import java.util.Map;
 
-import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreKey;
-import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author wiswedel
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public interface IWriteFileStoreHandler extends IFileStoreHandler {
+public abstract class AbstractTableStoreFormat {
 
-    public FileStore createFileStore(final String name) throws IOException;
+    public abstract boolean accept(final DataTableSpec spec);
 
-    public void open(final ExecutionContext exec);
+    public abstract boolean supportsBlobs();
 
-    public void addToRepository(final FileStoreHandlerRepository repository);
+    public abstract AbstractTableStoreWriter createWriter(final File binFile, final DataTableSpec spec,
+        final int bufferID, boolean writeRowKey) throws IOException;
 
-    public void close();
+    public abstract AbstractTableStoreWriter createWriter(final OutputStream output, final DataTableSpec spec,
+        final int bufferID, boolean writeRowKey) throws IOException, UnsupportedOperationException;
 
-    public void ensureOpenAfterLoad() throws IOException;
-
-    /**
-     * @param fs
-     * @param flushCallback TODO
-     * @return */
-    public FileStoreKey translateToLocal(FileStore fs, FlushCallback flushCallback);
-
-    public boolean mustBeFlushedPriorSave(final FileStore fs);
-
-    public UUID getStoreUUID();
+    public abstract AbstractTableStoreReader createReader(final File binFile, final DataTableSpec spec,
+        final NodeSettingsRO settings, final int bufferID, final Map<Integer, ContainerTable> tblRep,
+        int version, boolean isReadRowKey) throws IOException, InvalidSettingsException;
 
 }

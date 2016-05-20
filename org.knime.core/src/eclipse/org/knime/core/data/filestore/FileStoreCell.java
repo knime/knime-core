@@ -51,7 +51,6 @@ import java.io.IOException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 
