@@ -54,6 +54,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.filestore.FileStoreKey;
 
 /**
  * A data cell used internally to save the file store keys generated in a loop to a buffered data table.

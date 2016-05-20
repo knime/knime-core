@@ -36,6 +36,52 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="createFileStore(WriteFileStoreHandler, FileStoreKey)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="getFileStoreKey(FileStore)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="getFileStoreKey(FileStoreCell)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="retrieveFileStoreHandlerFrom(FileStoreCell, FileStoreKey, FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createFileStore(WriteFileStoreHandler, FileStoreKey)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getFileStoreKey(FileStore)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getFileStoreKey(FileStoreCell)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="retrieveFileStoreHandlerFrom(FileStoreCell, FileStoreKey, FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/AbstractNodeView.java" type="org.knime.core.node.AbstractNodeView">
         <filter id="338722907">
             <message_arguments>

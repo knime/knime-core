@@ -608,8 +608,8 @@ public class DataContainer implements RowAppender {
         }
         if (m_buffer == null) {
             m_buffer =
-                m_bufferCreator.createBuffer(m_maxRowsInMemory, createInternalBufferID(), getGlobalTableRepository(),
-                    getLocalTableRepository(), getFileStoreHandler());
+                m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, createInternalBufferID(),
+                    getGlobalTableRepository(), getLocalTableRepository(), getFileStoreHandler());
         }
         if (!m_isSynchronousWrite) {
             try {
@@ -766,7 +766,7 @@ public class DataContainer implements RowAppender {
             Map<Integer, ContainerTable> localTableRep = getLocalTableRepository();
             IWriteFileStoreHandler fileStoreHandler = getFileStoreHandler();
             m_buffer =
-                m_bufferCreator.createBuffer(m_maxRowsInMemory, bufID, globalTableRep, localTableRep, fileStoreHandler);
+                m_bufferCreator.createBuffer(m_spec, m_maxRowsInMemory, bufID, globalTableRep, localTableRep, fileStoreHandler);
             if (m_buffer == null) {
                 throw new NullPointerException("Implementation error, must not return a null buffer.");
             }
@@ -1014,8 +1014,8 @@ public class DataContainer implements RowAppender {
             exec.setMessage("Archiving table");
             e = exec.createSubProgress(0.8);
             buf =
-                new Buffer(0, -1, new HashMap<Integer, ContainerTable>(), new HashMap<Integer, ContainerTable>(),
-                    NotInWorkflowWriteFileStoreHandler.create());
+                new Buffer(table.getDataTableSpec(), 0, -1, new HashMap<Integer, ContainerTable>(),
+                	new HashMap<Integer, ContainerTable>(), NotInWorkflowWriteFileStoreHandler.create());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
@@ -1295,18 +1295,19 @@ public class DataContainer implements RowAppender {
 
         /**
          * Creates buffer for writing (adding of rows).
-         *
+         * @param spec Write spec -- used to initialize output stream for some non-KNIME formats
          * @param rowsInMemory The number of rows being kept in memory.
          * @param bufferID The buffer's id used for blob (de)serialization.
          * @param globalTableRep Table repository for blob (de)serialization.
          * @param localTableRep Table repository for blob (de)serialization.
          * @param fileStoreHandler ...
+         *
          * @return A newly created buffer.
          */
-        Buffer createBuffer(final int rowsInMemory, final int bufferID,
-            final Map<Integer, ContainerTable> globalTableRep, final Map<Integer, ContainerTable> localTableRep,
-            final IWriteFileStoreHandler fileStoreHandler) {
-            return new Buffer(rowsInMemory, bufferID, globalTableRep, localTableRep, fileStoreHandler);
+        Buffer createBuffer(final DataTableSpec spec, final int rowsInMemory,
+            final int bufferID, final Map<Integer, ContainerTable> globalTableRep,
+            final Map<Integer, ContainerTable> localTableRep, final IWriteFileStoreHandler fileStoreHandler) {
+            return new Buffer(spec, rowsInMemory, bufferID, globalTableRep, localTableRep, fileStoreHandler);
         }
 
     }

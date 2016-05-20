@@ -74,10 +74,10 @@ class NoKeyBuffer extends Buffer {
         NodeLogger.getLogger(NoKeyBuffer.class);
 
     /** Current version string. */
-    private static final String VERSION = "noRowKeyContainer_8";
+    private static final String VERSION = "noRowKeyContainer_9";
 
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 8;
+    private static final int IVERSION = 9;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -91,22 +91,24 @@ class NoKeyBuffer extends Buffer {
         COMPATIBILITY_MAP.put("noRowKeyContainer_5", 5);
         COMPATIBILITY_MAP.put("noRowKeyContainer_6", 6);
         COMPATIBILITY_MAP.put("noRowKeyContainer_7", 7);
+        COMPATIBILITY_MAP.put("noRowKeyContainer_8", 8);
         COMPATIBILITY_MAP.put(VERSION, IVERSION);
     }
 
     /** Creates new buffer for writing.
+     * @param spec Passed on to super.
      * @param maxRowsInMemory Passed on to super.
      * @param bufferID Passed on to super.
      * @param tblRep Passed on to super.
      * @param localTblRep Passed on to super.
      * @param fileStoreHandler passed on to super.
      */
-    NoKeyBuffer(final int maxRowsInMemory,
-            final int bufferID, final Map<Integer, ContainerTable> tblRep,
-            final Map<Integer, ContainerTable> localTblRep,
-            final IWriteFileStoreHandler fileStoreHandler) {
-        super(maxRowsInMemory, bufferID, tblRep, localTblRep,
-                fileStoreHandler);
+    NoKeyBuffer(final DataTableSpec spec,
+            final int maxRowsInMemory, final int bufferID,
+            final Map<Integer, ContainerTable> tblRep,
+            final Map<Integer, ContainerTable> localTblRep, final IWriteFileStoreHandler fileStoreHandler) {
+        super(spec, maxRowsInMemory, bufferID, tblRep,
+                localTblRep, fileStoreHandler);
     }
 
     /** Creates new buffer for reading.
@@ -160,8 +162,8 @@ class NoKeyBuffer extends Buffer {
     @Override
     @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
-        return new NoKeyBuffer(0, getBufferID(), getGlobalRepository(),
-                Collections.EMPTY_MAP, castAndGetFileStoreHandler());
+        return new NoKeyBuffer(getTableSpec(), 0, getBufferID(),
+                getGlobalRepository(), Collections.EMPTY_MAP, castAndGetFileStoreHandler());
     }
 
 }

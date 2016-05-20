@@ -1,7 +1,8 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME AG, Zurich, Switzerland
- *  Website: http://www.knime.com; Email: contact@knime.com
+ *
+ *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License, Version 3, as
@@ -21,7 +22,7 @@
  *  Hence, KNIME and ECLIPSE are both independent programs and are not
  *  derived from each other. Should, however, the interpretation of the
  *  GNU GPL Version 3 ("License") under any applicable laws result in
- *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
  *  you the additional permission to use and propagate KNIME together with
  *  ECLIPSE with only the license terms in place for ECLIPSE applying to
  *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
@@ -40,31 +41,62 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Feb 22, 2012 (wiswedel): created
+ *   Mar 14, 2016 (wiswedel): created
  */
-package org.knime.core.data.filestore.internal;
+package org.knime.core.data.container.storage;
 
-import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreKey;
+import java.io.IOException;
 
+import org.knime.core.data.container.Buffer;
+import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
- * @noextend This interface is not intended to be extended by clients.
- * @noimplement This interface is not intended to be implemented by clients.
- * @since 2.6
+ * @author wiswedel
+ * @since 3.2
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noreference This class is not intended to be referenced by clients.
  */
-public interface IFileStoreHandler {
+public abstract class AbstractTableStoreReader {
+
+    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
 
     /** @return the fileStoreHandlerRepository */
-    public FileStoreHandlerRepository getFileStoreHandlerRepository();
+    public final FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        return m_fileStoreHandlerRepository;
+    }
 
-    public void clearAndDispose();
+    /**
+     * @param fileStoreHandlerRepository the fileStoreHandlerRepository to set
+     */
+    public final void setFileStoreHandlerRepository(final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+    }
 
-    public FileStore getFileStore(final FileStoreKey key);
+    public abstract TableStoreCloseableRowIterator iterator() throws IOException;
+
+    public static abstract class TableStoreCloseableRowIterator extends CloseableRowIterator {
+
+        private Buffer m_buffer;
+
+        /**
+         * @param buffer the buffer to set
+         */
+        public void setBuffer(final Buffer buffer) {
+            m_buffer = buffer;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public final void close() {
+            m_buffer.clearIteratorInstance(this, true);
+        }
+
+        public abstract boolean performClose() throws IOException;
+    }
 
 }

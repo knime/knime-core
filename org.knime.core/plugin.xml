@@ -10,6 +10,7 @@
    <extension-point id="DataType" name="DataType" schema="schema/DataType.exsd"/>
    <extension-point id="PortType" name="PortType" schema="schema/PortType.exsd"/>
    <extension-point id="EarlyStartup" name="EarlyStartup" schema="schema/EarlyStartup.exsd"/>
+   <extension-point id="TableFormat" name="TableFormat" schema="schema/TableFormat.exsd"/>
    <extension-point id="JavaToDataCellConverter" name="JavaToDataCellConverter" schema="schema/JavaToDataCellConverter.exsd"/>
    <extension-point id="DataCellToJavaConverter" name="DataCellToJavaConverter" schema="schema/DataCellToJavaConverter.exsd"/>
    <extension-point id="WorkflowSaveHook" name="Extensions that are run after a workflow is saved to disc" schema="schema/WorkflowSaveHook.exsd"/>
@@ -590,6 +591,12 @@
             specClass="org.knime.core.node.port.pmml.PMMLPortObjectSpec"
             specSerializer="org.knime.core.node.port.pmml.PMMLPortObjectSpecSerializer">
       </portType>
+   </extension>
+   <extension
+         point="org.knime.core.TableFormat">
+      <TableFormat
+            formatDefinition="org.knime.core.data.container.DefaultTableStoreFormat">
+      </TableFormat>
    </extension>
    <extension
          point="org.knime.core.DataCellToJavaConverter">
