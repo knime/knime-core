@@ -590,11 +590,6 @@
       <node
             after="org.knime.base.node.io.csvreader.CSVReaderNodeFactory"
             category-path="/io/read"
-            factory-class="org.knime.base.node.io.csvreader.CSVArrayReaderNodeFactory2"
-            id="org.knime.base.node.io.csvreader.CSVArrayReaderNodeFactory"/>
-      <node
-            after="org.knime.base.node.io.csvreader.CSVArrayReaderNodeFactory"
-            category-path="/io/read"
             factory-class="org.knime.base.node.io.linereader.LineReaderNodeFactory"
             id="org.knime.base.node.io.linereader.LineReaderNodeFactory">
       </node>
@@ -1970,24 +1965,6 @@
             deprecated="false"
             factory-class="org.knime.base.node.preproc.rank.RankNodeFactory"
             id="org.knime.base.node.preproc.rank.RankNodeFactory">
-      </node>
-      <node
-            category-path="/manipulation/column/column-convert+replace"
-            deprecated="false"
-            factory-class="org.knime.base.node.preproc.vector.sampleandexpand.SampleAndExpandVectorNodeFactory"
-            id="org.knime.base.node.preproc.vector.sampleandexpand.SampleAndExapndVectorNode">
-      </node>
-      <node
-            category-path="/manipulation/column/column-convert+replace"
-            deprecated="false"
-            factory-class="org.knime.base.node.preproc.vector.expand.ExpandVectorNodeFactory"
-            id="org.knime.base.node.preproc.vector.expand.ExpandVectorNodeFactory">
-      </node>
-      <node
-            category-path="/io/read"
-            deprecated="false"
-            factory-class="org.knime.base.node.preproc.chopper.ChopperNodeFactory"
-            id="org.knime.base.node.preproc.chopper.ChopperNodeFactory">
       </node>
    </extension>
    
