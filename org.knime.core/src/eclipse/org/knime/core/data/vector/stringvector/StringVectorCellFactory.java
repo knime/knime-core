@@ -55,6 +55,7 @@ import org.knime.core.data.def.StringCell;
 /**
  * Creates cell instances implementing the {@link StringVectorValue} interface.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 3.2
  */
 public class StringVectorCellFactory implements DataCellFactory {
 
