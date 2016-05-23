@@ -975,20 +975,44 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
          * {@inheritDoc}
          */
         @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((m_bitMask == null) ? 0 : m_bitMask.hashCode());
+            result = prime * result + ((m_nomValRep == null) ? 0 : m_nomValRep.hashCode());
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
             if (obj == null) {
                 return false;
             }
-            if (obj == this) {
-                return true;
+            if (getClass() != obj.getClass()) {
+                return false;
             }
-            if (this.getClass() == obj.getClass()) {
-                final NomValProbabilityPair that = (NomValProbabilityPair)obj;
-                if (this.m_bitMask.equals(that.m_bitMask) && this.m_nomValRep.equals(that.m_nomValRep)) {
-                    return true;
+            NomValProbabilityPair other = (NomValProbabilityPair)obj;
+            if (m_bitMask == null) {
+                if (other.m_bitMask != null) {
+                    return false;
                 }
+            } else if (!m_bitMask.equals(other.m_bitMask)) {
+                return false;
             }
-            return false;
+            if (m_nomValRep == null) {
+                if (other.m_nomValRep != null) {
+                    return false;
+                }
+            } else if (!m_nomValRep.equals(other.m_nomValRep)) {
+                return false;
+            }
+            return true;
         }
 
         /**

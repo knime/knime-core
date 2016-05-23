@@ -185,6 +185,8 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private Image m_metaNodeLockIcon;
 
+    private Image m_nodeLockIcon;
+
     private boolean m_showFlowVarPorts;
 
     /** dummy font for status figure. Needs a "small" font... */
@@ -340,6 +342,16 @@ public class NodeContainerFigure extends RectangleFigure {
             m_metaNodeLockIcon = icon;
             m_symbolFigure.refreshMetaNodeLockIcon();
         }
+    }
+
+    /**
+     * @param icon the lock icon
+     * @param lockToolTip a tool tip describing the type of node lock, if <code>null</code> or empty, no tool tip will
+     *            be set
+     */
+    public void setNodeLockIcon(final Image icon, final String lockToolTip) {
+            m_nodeLockIcon = icon;
+            m_symbolFigure.refreshNodeLockIcon(lockToolTip);
     }
 
     /**
@@ -807,6 +819,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private Label m_metaNodeLockLabel;
 
+        private Label m_nodeLockLabel;
 
         /**
          * Creates a new figure containing the symbol. That is the background
@@ -896,6 +909,29 @@ public class NodeContainerFigure extends RectangleFigure {
                 repaint();
             }
         }
+
+        /**
+         * @param lockToolTip if <code>null</code> or empty no tool tip will be set
+         */
+        protected void refreshNodeLockIcon(final String lockToolTip) {
+            // do we have to remove it?
+            if (m_nodeLockLabel != null && m_nodeLockIcon == null) {
+                m_backgroundIcon.remove(m_nodeLockLabel);
+                m_nodeLockLabel = null;
+            } else {
+                if (m_nodeLockLabel == null) {
+                    m_nodeLockLabel = new Label();
+                    m_nodeLockLabel.setOpaque(false);
+                    m_backgroundIcon.add(m_nodeLockLabel);
+                    m_backgroundIcon.setConstraint(m_nodeLockLabel, new RelativeLocator(m_backgroundIcon, 0.79, .24));
+                }
+                m_nodeLockLabel.setIcon(m_nodeLockIcon);
+                m_nodeLockLabel.setToolTip(
+                    lockToolTip != null && lockToolTip.length() > 0 ? new NewToolTipFigure(lockToolTip) : null);
+                repaint();
+            }
+        }
+
 
         /**
          * This determines the background image according to the "type" of the

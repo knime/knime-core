@@ -55,6 +55,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
+import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.FileUtil;
@@ -66,6 +67,10 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
     private static final String CFG_STATE = "state";
 
     private static final String CFG_IS_DELETABLE = "isDeletable";
+
+    private static final String CFG_HAS_RESET_LOCK = "hasResetLock";
+
+    private static final String CFG_HAS_CONFIGURE_LOCK = "hasConfigureLock";
 
     private static final String CFG_JOB_MANAGER_CONFIG = "job.manager";
 
@@ -93,7 +98,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
 
     private NodeMessage m_nodeMessage;
 
-    private boolean m_isDeletable = true;
+    private NodeLocks m_nodeLock = new NodeLocks(false, false, false);
 
     private boolean m_isDirtyAfterLoad;
 
@@ -196,8 +201,8 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public boolean isDeletable() {
-        return m_isDeletable;
+    public NodeLocks getNodeLocks() {
+        return m_nodeLock;
     }
 
     /** {@inheritDoc} */
@@ -312,7 +317,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
             loadResult.addError(e);
             getLogger().warn(e, ise);
         }
-        m_isDeletable = loadIsDeletable(settings);
+        m_nodeLock = loadNodeLocks(settings);
         return isResetRequired;
     }
 
@@ -512,16 +517,30 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
     }
 
     /**
-     * Load whether this node is deletable.
      *
-     * @param settings to load from
-     * @return true in this implementation, sub-classes overwrite this behavior
+     * @param settings settings to load from
+     * @return the node locks
      */
-    protected boolean loadIsDeletable(final NodeSettingsRO settings) {
+    protected NodeLocks loadNodeLocks(final NodeSettingsRO settings) {
+        boolean isDeletable;
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            return true;
+            isDeletable = true;
+        } else {
+            isDeletable = settings.getBoolean(CFG_IS_DELETABLE, true);
         }
-        return settings.getBoolean(CFG_IS_DELETABLE, true);
+        boolean hasResetLock;
+        if(getLoadVersion().isOlderThan(LoadVersion.V3010)) {
+            hasResetLock = false;
+        } else {
+            hasResetLock = settings.getBoolean(CFG_HAS_RESET_LOCK, false);
+        }
+        boolean hasConfigureLock;
+        if (getLoadVersion().isOlderThan(LoadVersion.V3010)) {
+            hasConfigureLock = false;
+        } else {
+            hasConfigureLock = settings.getBoolean(CFG_HAS_CONFIGURE_LOCK, false);
+        }
+        return new NodeLocks(!isDeletable, hasResetLock, hasConfigureLock);
     }
 
     public static void save(final NodeSettingsWO settings, final NodeContainer nc, final ReferencedFile targetDir) {
@@ -535,7 +554,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
             }
             saveJobManagerInternalsDirectory(settings, nc, targetDir);
             saveNodeMessage(settings, nc);
-            saveIsDeletable(settings, nc);
+            saveNodeLocks(settings, nc);
         }
     }
 
@@ -619,10 +638,18 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
         settings.addString(KEY_CUSTOM_DESCRIPTION, nc.getCustomDescription());
     }
 
-    protected static void saveIsDeletable(final NodeSettingsWO settings, final NodeContainer nc) {
-        if (!nc.isDeletable()) {
+    protected static void saveNodeLocks(final NodeSettingsWO settings, final NodeContainer nc) {
+        NodeLocks nl = nc.getNodeLocks();
+        if(nl.hasDeleteLock()) {
             settings.addBoolean(CFG_IS_DELETABLE, false);
         }
+        if(nl.hasResetLock()) {
+            settings.addBoolean(CFG_HAS_RESET_LOCK, true);
+        }
+        if(nl.hasConfigureLock()) {
+            settings.addBoolean(CFG_HAS_CONFIGURE_LOCK, true);
+        }
+
     }
 
     protected static void saveNodeMessage(final NodeSettingsWO settings, final NodeContainer nc) {

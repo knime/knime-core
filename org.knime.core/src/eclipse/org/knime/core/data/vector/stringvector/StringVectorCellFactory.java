@@ -40,71 +40,46 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   04.09.2008 (ohl): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.data.vector.stringvector;
 
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.workflow.NodeContainer.NodeLocks;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory;
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.StringCell;
 
-interface NodeContainerMetaPersistor {
-
-    /** Key for this node's custom description. */
-    static final String KEY_CUSTOM_DESCRIPTION = "customDescription";
-
-    /** Key for this node's user name. */
-    static final String KEY_CUSTOM_NAME = "customName";
-
-    /**
-     * @return the load helper as set during load (not part of the workflow being loaded but a setting during load).
-     */
-    WorkflowLoadHelper getLoadHelper();
+/**
+ * Creates cell instances implementing the {@link StringVectorValue} interface.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 3.2
+ */
+public class StringVectorCellFactory implements DataCellFactory {
 
     /**
-     * File reference to the node container directory. Something like &lt;workflow_space&gt;/File Reader (#xy). This
-     * value is non-null when (i) loading from disk or (ii) if pasted into a workflow as part of an undo of a delete
-     * command. It's null if node is copied&amp;pasted. If the value is non-null the referenced file will be removed
-     * from the list of obsolete node directories (must not clear directories as they may contain a "drop" folder).
+     * Convenience access member for <code>DataType.getType(DenseStringVectorCell.class)</code>.
      *
-     * @return The node container dir or <code>null</code>
+     * @see DataType#getType(Class)
      */
-    ReferencedFile getNodeContainerDirectory();
+    public static final DataType TYPE = DataType.getType(DenseStringVectorCell.class, StringCell.TYPE);
 
-    int getNodeIDSuffix();
 
-    void setNodeIDSuffix(final int nodeIDSuffix);
-
-    NodeAnnotationData getNodeAnnotationData();
-
-    String getCustomDescription();
-
-    NodeExecutionJobManager getExecutionJobManager();
-
-    NodeSettingsRO getExecutionJobSettings();
-
-    InternalNodeContainerState getState();
-
-    NodeUIInformation getUIInfo();
-
-    NodeMessage getNodeMessage();
-
-    NodeLocks getNodeLocks();
-
-    boolean isDirtyAfterLoad();
-
-    void setUIInfo(final NodeUIInformation uiInfo);
-
-    /**
-     * Load content, gets both the current settings (first argument) and the "parent settings", which are only used in
-     * 1.3.x flows and will be ignored in any version after that.
-     *
-     * @param settings The settings object that is usually read from
-     * @param parentSettings The parent settings, mostly ignored.
-     * @param loadResult Where to add errors and warnings to.
-     * @return Whether errors occurred that require a reset of the node.
+    /** Create cell wrapping argument array - array reference is used (so do not modify afterwards!)
+     * @param vector The non-null vector - with non-null elements!! - to use.
+     * @return a cell
      */
-    boolean load(final NodeSettingsRO settings, final NodeSettingsRO parentSettings, final LoadResult loadResult);
+    public static <T extends DataCell, StringVectorValue> T createCell(final String[] vector) {
+        return (T)new DenseStringVectorCell(vector);
+    }
+
+
+    /** {@inheritDoc} */
+    @Override
+    public DataType getDataType() {
+        return TYPE;
+    }
 
 }

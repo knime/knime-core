@@ -2156,14 +2156,23 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /** {@inheritDoc} */
     @Override
-    boolean isResetable() {
-        return getWorkflowManager().isResetable();
+    public boolean isResetable() {
+        if (getNodeLocks().hasResetLock()) {
+            return false;
+        } else {
+            return getWorkflowManager().isResetable();
+        }
+
     }
 
     /** {@inheritDoc} */
     @Override
     boolean canPerformReset() {
-        return getWorkflowManager().canPerformReset();
+        if (getNodeLocks().hasResetLock()) {
+            return false;
+        } else {
+            return getWorkflowManager().canPerformReset();
+        }
     }
 
 }

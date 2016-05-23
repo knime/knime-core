@@ -40,71 +40,67 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
+ *
+ * History
+ *   12.08.2005 (bernd): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.data.renderer;
 
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.workflow.NodeContainer.NodeLocks;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 
-interface NodeContainerMetaPersistor {
+/**
+ * Renderer for DataCells that are compatible with {@link DoubleVectorValue} classes.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 3.2
+ */
+public final class DoubleVectorValueRenderer extends DefaultDataValueRenderer {
+    /**
+     * Factory for the {@link DoubleVectorValueRenderer}.
+     * @since 3.2
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
 
-    /** Key for this node's custom description. */
-    static final String KEY_CUSTOM_DESCRIPTION = "customDescription";
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new DoubleVectorValueRenderer();
+        }
+    }
 
-    /** Key for this node's user name. */
-    static final String KEY_CUSTOM_NAME = "customName";
+    private static final String DESCRIPTION = "Double Vector";
 
     /**
-     * @return the load helper as set during load (not part of the workflow being loaded but a setting during load).
+     * Formats the object using the cell's toString method.
      */
-    WorkflowLoadHelper getLoadHelper();
+    @Override
+    protected void setValue(final Object value) {
+        Object newValue;
+        if (value instanceof DoubleVectorValue) {
+            DoubleVectorValue cell = (DoubleVectorValue)value;
+            newValue = cell.toString();
+        } else {
+            // missing data cells will also end up here
+            newValue = value;
+        }
+        super.setValue(newValue);
+    }
 
     /**
-     * File reference to the node container directory. Something like &lt;workflow_space&gt;/File Reader (#xy). This
-     * value is non-null when (i) loading from disk or (ii) if pasted into a workflow as part of an undo of a delete
-     * command. It's null if node is copied&amp;pasted. If the value is non-null the referenced file will be removed
-     * from the list of obsolete node directories (must not clear directories as they may contain a "drop" folder).
-     *
-     * @return The node container dir or <code>null</code>
+     * {@inheritDoc}
      */
-    ReferencedFile getNodeContainerDirectory();
-
-    int getNodeIDSuffix();
-
-    void setNodeIDSuffix(final int nodeIDSuffix);
-
-    NodeAnnotationData getNodeAnnotationData();
-
-    String getCustomDescription();
-
-    NodeExecutionJobManager getExecutionJobManager();
-
-    NodeSettingsRO getExecutionJobSettings();
-
-    InternalNodeContainerState getState();
-
-    NodeUIInformation getUIInfo();
-
-    NodeMessage getNodeMessage();
-
-    NodeLocks getNodeLocks();
-
-    boolean isDirtyAfterLoad();
-
-    void setUIInfo(final NodeUIInformation uiInfo);
-
-    /**
-     * Load content, gets both the current settings (first argument) and the "parent settings", which are only used in
-     * 1.3.x flows and will be ignored in any version after that.
-     *
-     * @param settings The settings object that is usually read from
-     * @param parentSettings The parent settings, mostly ignored.
-     * @param loadResult Where to add errors and warnings to.
-     * @return Whether errors occurred that require a reset of the node.
-     */
-    boolean load(final NodeSettingsRO settings, final NodeSettingsRO parentSettings, final LoadResult loadResult);
-
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
 }

@@ -44,103 +44,85 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   11.12.2015 (Adrian Nembach): created
+ *   Mar 14, 2016 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble2.data.memberships;
+package org.knime.core.data.vector.doublevector;
 
-import java.util.BitSet;
-import java.util.HashMap;
+import javax.swing.Icon;
+
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.ExtensibleUtilityFactory;
 
 /**
- *
- * @author Adrian Nembach
+ * Interface for (dense or sparse) double vector.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 3.2
  */
-public class DescendantDataMemberships implements DataMemberships{
+public interface DoubleVectorValue extends DataValue {
 
-    private final RootDataMemberships m_root;
-    private final int[] m_indicesInRoot;
+    /** Meta information to this value type.
+     * @see DataValue#UTILITY
+     */
+    UtilityFactory UTILITY = new DoubleVectorUtilityFactory();
 
-    private HashMap<Integer, ColumnMemberships> m_locallyCachedColMems;
+    /** The length of the array (&gt;= 0).
+     * @return The length.
+     */
+    public int getLength();
 
-    public DescendantDataMemberships(final RootDataMemberships root, final int[] indicesInRoot) {
-        m_root = root;
-        m_indicesInRoot = indicesInRoot;
-        m_locallyCachedColMems = new HashMap<Integer, ColumnMemberships>();
-    }
+    /** The value at a given index.
+     * @param index The requested index.
+     * @return The value at index
+     * @throws IndexOutOfBoundsException if index is invalid (smaller than 0 or &gt;= {@link #getLength()})
+     */
+    public double getValue(final int index);
 
-    @Override
-    public ColumnMemberships getColumnMemberships(final int index) {
-        ColumnMemberships colMem = m_locallyCachedColMems.get(index);
-        if (colMem == null) {
-            colMem = m_root.descendantGetColumnMemberships(index, m_indicesInRoot);
-            m_locallyCachedColMems.put(index, colMem);
+    /** Implementations of the meta information of this value class. */
+    class DoubleVectorUtilityFactory extends ExtensibleUtilityFactory {
+        /** Singleton icon to be used to display this cell type. */
+        private static final Icon ICON =
+            loadIcon(DoubleVectorValue.class, "/doublevectoricon.png");
+
+        private static final DoubleVectorValueComparator DOUBLE_VECTOR_COMPARATOR =
+            new DoubleVectorValueComparator();
+
+        /** Only subclasses are allowed to instantiate this class. */
+        protected DoubleVectorUtilityFactory() {
+            super(DoubleVectorValue.class);
         }
-        return colMem;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double[] getRowWeights() {
-        final double[] weights = new double[m_indicesInRoot.length];
-        for (int i = 0; i < m_indicesInRoot.length; i++) {
-            weights[i] = m_root.getRowWeight(m_indicesInRoot[i]);
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Icon getIcon() {
+            return ICON;
         }
-        return weights;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int[] getOriginalIndices() {
-        final int[] originalIndices = new int[m_indicesInRoot.length];
-        for (int i = 0; i < m_indicesInRoot.length; i++) {
-            originalIndices[i] = m_root.getOriginalIndex(m_indicesInRoot[i]);
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataValueComparator getComparator() {
+            return DOUBLE_VECTOR_COMPARATOR;
         }
-        return originalIndices;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataMemberships createChildMemberships(final BitSet inChild) {
-        return m_root.createDescendantMemberships(inChild);
-    }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return "Double Vector";
+        }
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double getRowWeight(final int index) {
-        return m_root.getRowWeight(m_indicesInRoot[index]);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getOriginalIndex(final int index) {
-        return m_root.getOriginalIndex(m_indicesInRoot[index]);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getRowCount() {
-        return m_indicesInRoot.length;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getRowCountInRoot() {
-        return m_root.getRowCountInRoot();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getGroupName() {
+            return "Basic";
+        }
     }
 
 }
