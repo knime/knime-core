@@ -66,6 +66,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
@@ -280,10 +281,12 @@ public abstract class NodeDialogPane {
 
     /**
      * Creates and adds the job manager selection tab.
+     *
      * @param splitType indicates how table splitting is supported in this node
      */
     public void addJobMgrTab(final SplitType splitType) {
-        m_jobMgrTab = new NodeExecutorJobManagerDialogTab(splitType);
+        m_jobMgrTab =
+            new NodeExecutorJobManagerDialogTab(splitType, Optional.ofNullable(m_nodeContext.getNodeContainer()));
         addTab(m_jobMgrTab.getTabName(), m_jobMgrTab);
     }
 

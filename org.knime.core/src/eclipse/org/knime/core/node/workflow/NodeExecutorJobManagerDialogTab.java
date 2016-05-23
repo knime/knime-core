@@ -53,7 +53,9 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Optional;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -146,24 +148,45 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
      * @param splitType indicates the level of splitting this node supports
      */
     public NodeExecutorJobManagerDialogTab(final SplitType splitType) {
+        this(splitType, Optional.empty());
+    }
+
+    /**
+     * Creates a new selection tab for {@link NodeExecutionJobManager}s. To be added to dialogs if more than the default
+     * manager is registered. Displays a selection box and swaps the settings panel corresponding to the current
+     * selection.
+     *
+     * @param splitType indicates the level of splitting this node supports
+     * @param nc the node container this dialog belongs to. It helps to filter those job managers only that can handle
+     *            the given node container (e.g. for those job managers that only work with meta nodes, sub nodes or
+     *            native nodes).
+     *
+     * @since 3.2
+     */
+    public NodeExecutorJobManagerDialogTab(final SplitType splitType, final Optional<NodeContainer> nc) {
         super(new BorderLayout());
         m_nodeSplitType = splitType;
         // add the selection combo box at the top of the panel
         Vector<Object> jobManagerChoices = new Vector<Object>();
         jobManagerChoices.add(DEFAULT_ENTRY);
-        LinkedList<String> execs =
-                new LinkedList<String>(NodeExecutionJobManagerPool
-                        .getAllJobManagerFactoryIDs());
+        LinkedList<String> execs;
+        if (nc.isPresent()) {
+            execs =
+                new LinkedList<String>(NodeExecutionJobManagerPool.getAllJobManagerFactoryIDs().stream().filter(s -> {
+                    return NodeExecutionJobManagerPool.getJobManagerFactory(s).getInstance().canExecute(nc.get());
+                }).collect(Collectors.toList()));
+        } else {
+            execs = new LinkedList<String>(NodeExecutionJobManagerPool.getAllJobManagerFactoryIDs());
+        }
         // the default executor is represented by the <<default>> entry
-        execs.remove(NodeExecutionJobManagerPool.getDefaultJobManagerFactory()
-                .getID());
+        execs.remove(NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getID());
         jobManagerChoices.addAll(execs);
         m_jobManagerSelect = new JComboBox(jobManagerChoices);
         m_jobManagerSelect.setRenderer(new ComboRenderer());
         m_jobManagerSelect.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
-                if ((e.getSource() == m_jobManagerSelect)
-                        && (e.getStateChange() == ItemEvent.SELECTED)) {
+                if ((e.getSource() == m_jobManagerSelect) && (e.getStateChange() == ItemEvent.SELECTED)) {
                     jobManagerSelectionChanged();
                 }
             }
@@ -172,8 +195,8 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         selectBox.add(Box.createHorizontalGlue());
         selectBox.add(m_jobManagerSelect, BorderLayout.NORTH);
         selectBox.add(Box.createHorizontalGlue());
-        selectBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Select the job manager for this node"));
+        selectBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+            "Select the job manager for this node"));
 
         add(selectBox, BorderLayout.NORTH);
 
@@ -183,14 +206,13 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
         settingsBox.add(Box.createVerticalGlue());
         settingsBox.add(m_settingsPanel);
         settingsBox.add(Box.createVerticalGlue());
-        settingsBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Settings for selected job manager"));
+        settingsBox.setBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Settings for selected job manager"));
 
         add(settingsBox, BorderLayout.CENTER);
 
         // set the panel of the first selection:
         jobManagerSelectionChanged();
-
     }
 
     /**

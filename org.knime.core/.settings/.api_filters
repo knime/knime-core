@@ -76,6 +76,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeExecutionJobManager.java" type="org.knime.core.node.workflow.NodeExecutionJobManager">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeExecutionJobManager"/>
+                <message_argument value="canExecute(NodeContainer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter id="338792546">
             <message_arguments>
