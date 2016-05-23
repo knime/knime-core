@@ -4262,6 +4262,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     @Override
     boolean isResetable() {
+        if (getNodeLocks().hasResetLock()) {
+            return false;
+        }
+
         // first check if there is a node in execution
         for (NodeContainer nc : m_workflow.getNodeValues()) {
             if (nc.getInternalState().isExecutionInProgress()) {
@@ -4289,6 +4293,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     boolean canPerformReset() {
+        if (getNodeLocks().hasResetLock()) {
+            return false;
+        }
         try (WorkflowLock lock = lock()) {
             final Collection<NodeContainer> nodeValues = m_workflow.getNodeValues();
             // no nodes but executed (through connections and outputs populated - see queueCheckForNodeStateChangeNotification)

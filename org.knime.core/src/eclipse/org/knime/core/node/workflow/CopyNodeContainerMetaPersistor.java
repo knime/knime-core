@@ -53,6 +53,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
@@ -72,7 +73,7 @@ implements NodeContainerMetaPersistor {
     private final InternalNodeContainerState m_state;
     private final NodeMessage m_nodeMessage;
     private NodeUIInformation m_uiInformation;
-    private final boolean m_isDeletable;
+    private final NodeLocks m_nodeLock;
     private final ReferencedFile m_ncDirRef;
 
     /** Create copy persistor.
@@ -113,7 +114,9 @@ implements NodeContainerMetaPersistor {
         } else {
             m_uiInformation = null;
         }
-        m_isDeletable = !preserveDeletableFlag || original.isDeletable();
+        boolean isDeletable = !preserveDeletableFlag || original.isDeletable();
+        //don't copy reset- and configure-locks
+        m_nodeLock = new NodeLocks(!isDeletable, false, false);
         if (isUndoableDeleteCommand) {
             m_ncDirRef = original.getNodeContainerDirectory();
         } else {
@@ -191,10 +194,12 @@ implements NodeContainerMetaPersistor {
         return m_uiInformation;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public boolean isDeletable() {
-        return m_isDeletable;
+    public NodeLocks getNodeLocks() {
+        return m_nodeLock;
     }
 
     /** {@inheritDoc} */
