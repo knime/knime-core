@@ -57,6 +57,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeExecutionJob;
@@ -153,6 +154,14 @@ public class StreamingTestNodeExecutionJobManager extends AbstractNodeExecutionJ
     @Override
     public URL getIcon() {
         return getClass().getResource("icons/streaming_test.png");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canExecute(final NodeContainer nc) {
+        return nc instanceof NativeNodeContainer;
     }
 
 }
