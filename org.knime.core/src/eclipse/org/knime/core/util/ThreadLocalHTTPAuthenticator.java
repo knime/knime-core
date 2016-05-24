@@ -97,19 +97,27 @@ public class ThreadLocalHTTPAuthenticator extends Authenticator {
     }
 
     /**
+     * Extension of {@link Closeable} that doesn't throw any exceptions.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     */
+    public static interface AuthenticationCloseable extends Closeable {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        void close();
+    }
+
+    /**
      * Turns suppression of authentication popups off. Make sure to close the returned closeable after you have
      * performed all HTTP operations (hint: use try-with-resources).
      *
      * @return a closeable that enables popups again (if there were any before)
      */
-    public static Closeable suppressAuthenticationPopups() {
+    public static AuthenticationCloseable suppressAuthenticationPopups() {
         SUPPRESS_POPUP.set(Boolean.TRUE);
-        return new Closeable() {
-            @Override
-            public void close() {
-                SUPPRESS_POPUP.set(Boolean.FALSE);
-            }
-        };
+        return () -> SUPPRESS_POPUP.set(Boolean.FALSE);
     }
 
     private ThreadLocalHTTPAuthenticator(final Authenticator delegate) {
