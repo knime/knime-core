@@ -105,4 +105,7 @@
 		</inPort>
 		<outPort index="0" name="Regression Tree Model">The trained model.</outPort>
 	</ports>
+	<views>
+		<view name="Regression Tree View" index="0">Regression Tree View</view>
+	</views>
 </knimeNode>

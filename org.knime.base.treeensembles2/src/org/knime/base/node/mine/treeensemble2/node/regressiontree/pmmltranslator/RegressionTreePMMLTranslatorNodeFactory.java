@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,12 +41,12 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Dec 25, 2011 (wiswedel): created
+ *   09.05.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.node.regressiontree.learner;
+package org.knime.base.node.mine.treeensemble2.node.regressiontree.pmmltranslator;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -53,42 +54,49 @@ import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME.com
  */
-public final class RegressionTreeLearnerNodeFactory extends NodeFactory<RegressionTreeLearnerNodeModel> {
+public class RegressionTreePMMLTranslatorNodeFactory extends NodeFactory<RegressionTreePMMLTranslatorNodeModel> {
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public RegressionTreeLearnerNodeModel createNodeModel() {
-        return new RegressionTreeLearnerNodeModel();
+    public RegressionTreePMMLTranslatorNodeModel createNodeModel() {
+        return new RegressionTreePMMLTranslatorNodeModel();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected int getNrNodeViews() {
-        return 1;
+        return 0;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public NodeView<RegressionTreeLearnerNodeModel> createNodeView(final int viewIndex,
-        final RegressionTreeLearnerNodeModel nodeModel) {
-        if (viewIndex != 0) {
-            throw new IllegalArgumentException("There exists only one view with index 0.");
-        }
-        return new RegressionTreeLearnerNodeView(nodeModel);
+    public NodeView<RegressionTreePMMLTranslatorNodeModel> createNodeView(final int viewIndex,
+        final RegressionTreePMMLTranslatorNodeModel nodeModel) {
+        return null;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected boolean hasDialog() {
-        return true;
+        return false;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new RegressionTreeLearnerNodeDialogPane();
+        return null;
     }
 
 }

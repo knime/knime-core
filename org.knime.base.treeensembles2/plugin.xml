@@ -102,6 +102,12 @@
             factory-class="org.knime.base.node.mine.treeensemble2.node.statistics.TreeEnsembleStatisticsNodeFactory"
             id="org.knime.base.node.mine.treeensemble2.node.statistics.TreeEnsembleStatisticsNodeFactory">
       </node>
+      <node
+            category-path="/analytics/mining/dtree"
+            deprecated="false"
+            factory-class="org.knime.base.node.mine.treeensemble2.node.regressiontree.pmmltranslator.RegressionTreePMMLTranslatorNodeFactory"
+            id="org.knime.base.node.mine.treeensemble2.node.regressiontree.pmmltranslator.RegressionTreePMMLTranslatorNodeFactory">
+      </node>
 <!--      <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
             category-path="/analytics/mining/treeensemble"
