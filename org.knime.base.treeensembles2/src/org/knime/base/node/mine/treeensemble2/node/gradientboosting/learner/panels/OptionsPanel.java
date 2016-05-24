@@ -86,6 +86,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
+import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
@@ -116,7 +117,7 @@ public class OptionsPanel extends JPanel {
 
     private final ColumnSelectionComboxBox m_fingerprintColumnBox;
 
-//    private final ColumnFilterPanel m_includeColumnsFilterPanel;
+    //    private final ColumnFilterPanel m_includeColumnsFilterPanel;
     private final DataColumnSpecFilterPanel m_includeColumnsFilterPanel2;
 
     // Tree Options
@@ -153,9 +154,9 @@ public class OptionsPanel extends JPanel {
             }
         });
         m_fingerprintColumnBox = new ColumnSelectionComboxBox((Border)null,
-            new DataValueColumnFilter(BitVectorValue.class, ByteVectorValue.class));
+            new DataValueColumnFilter(BitVectorValue.class, ByteVectorValue.class, DoubleVectorValue.class));
         //        m_byteVectorColumnBox = new ColumnSelectionComboxBox((Border)null, ByteVectorValue.class);
-//        m_includeColumnsFilterPanel = new ColumnFilterPanel(true, NominalValue.class, DoubleValue.class);
+        //        m_includeColumnsFilterPanel = new ColumnFilterPanel(true, NominalValue.class, DoubleValue.class);
         m_includeColumnsFilterPanel2 = new DataColumnSpecFilterPanel();
 
         m_useFingerprintColumnRadio = new JRadioButton("Use fingerprint attribute");
@@ -168,7 +169,7 @@ public class OptionsPanel extends JPanel {
             public void actionPerformed(final ActionEvent e) {
                 boolean isFP = bg.getSelection() == m_useFingerprintColumnRadio.getModel();
                 m_fingerprintColumnBox.setEnabled(isFP);
-//                m_includeColumnsFilterPanel.setEnabled(!isFP);
+                //                m_includeColumnsFilterPanel.setEnabled(!isFP);
                 m_includeColumnsFilterPanel2.setEnabled(!isFP);
             }
         };
@@ -187,7 +188,6 @@ public class OptionsPanel extends JPanel {
             }
         });
         m_maxLevelChecker.doClick();
-
 
         // Boosting Options
 
@@ -252,7 +252,7 @@ public class OptionsPanel extends JPanel {
         gbc.weighty = 1.0;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.BOTH;
-//        add(m_includeColumnsFilterPanel, gbc);
+        //        add(m_includeColumnsFilterPanel, gbc);
         add(m_includeColumnsFilterPanel2, gbc);
 
         gbc.gridy += 1;
@@ -353,11 +353,12 @@ public class OptionsPanel extends JPanel {
         }
         boolean hasOrdinaryColumnsInInput = nrNominalCols > 1 || nrNumericCols > 0;
         boolean hasFPColumnInInput =
-            inSpec.containsCompatibleType(BitVectorValue.class) || inSpec.containsCompatibleType(ByteVectorValue.class);
+            inSpec.containsCompatibleType(BitVectorValue.class) || inSpec.containsCompatibleType(ByteVectorValue.class)
+                || inSpec.containsCompatibleType(DoubleVectorValue.class);
         m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
         DataTableSpec attSpec = removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
         String fpColumn = cfg.getFingerprintColumn();
-//        boolean includeAll = cfg.isIncludeAllColumns();
+        //        boolean includeAll = cfg.isIncludeAllColumns();
         String[] includeCols = cfg.getIncludeColumns();
         if (includeCols == null) {
             includeCols = new String[0];
@@ -366,15 +367,15 @@ public class OptionsPanel extends JPanel {
         m_useFingerprintColumnRadio.setEnabled(true);
         //            m_useByteVectorColumnRadio.setEnabled(true);
         m_useOrdinaryColumnsRadio.doClick(); // default, fix later
-//        m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
+        //        m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
         if (hasOrdinaryColumnsInInput) {
-//            m_includeColumnsFilterPanel.update(attSpec, false, includeCols);
+            //            m_includeColumnsFilterPanel.update(attSpec, false, includeCols);
             m_includeColumnsFilterPanel2.loadConfiguration(cfg.getColumnFilterConfig(), attSpec);
-//            m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
+            //            m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
         } else {
             m_useOrdinaryColumnsRadio.setEnabled(false);
             m_useFingerprintColumnRadio.doClick();
-//            m_includeColumnsFilterPanel.update(NO_VALID_INPUT_SPEC, true);
+            //            m_includeColumnsFilterPanel.update(NO_VALID_INPUT_SPEC, true);
             m_includeColumnsFilterPanel2.loadConfiguration(cfg.getColumnFilterConfig(), NO_VALID_INPUT_SPEC);
         }
         if (hasFPColumnInInput) {
@@ -424,23 +425,23 @@ public class OptionsPanel extends JPanel {
         if (m_useFingerprintColumnRadio.isSelected()) {
             String fpColumn = m_fingerprintColumnBox.getSelectedColumn();
             cfg.setFingerprintColumn(fpColumn);
-//            cfg.setIncludeAllColumns(false);
+            //            cfg.setIncludeAllColumns(false);
             cfg.setIncludeColumns(null);
         } else {
             assert m_useOrdinaryColumnsRadio.isSelected();
-//            boolean useAll = m_includeColumnsFilterPanel.isKeepAllSelected();
-//            if (useAll) {
-//                cfg.setIncludeAllColumns(true);
-//            } else {
-//                cfg.setIncludeAllColumns(false);
-//                Set<String> incls = m_includeColumnsFilterPanel.getIncludedColumnSet();
+            //            boolean useAll = m_includeColumnsFilterPanel.isKeepAllSelected();
+            //            if (useAll) {
+            //                cfg.setIncludeAllColumns(true);
+            //            } else {
+            //                cfg.setIncludeAllColumns(false);
+            //                Set<String> incls = m_includeColumnsFilterPanel.getIncludedColumnSet();
             Set<String> incls = m_includeColumnsFilterPanel2.getIncludedNamesAsSet();
-                if (incls.size() == 0) {
-                    throw new InvalidSettingsException("No learn columns selected");
-                }
-                String[] includeCols = incls.toArray(new String[incls.size()]);
-                cfg.setIncludeColumns(includeCols);
-//            }
+            if (incls.size() == 0) {
+                throw new InvalidSettingsException("No learn columns selected");
+            }
+            String[] includeCols = incls.toArray(new String[incls.size()]);
+            cfg.setIncludeColumns(includeCols);
+            //            }
         }
         cfg.setIgnoreColumnsWithoutDomain(true);
         cfg.setSaveTargetDistributionInNodes(false);
@@ -469,7 +470,7 @@ public class OptionsPanel extends JPanel {
      *
      * @return table spec with learn attributes
      */
-        DataTableSpec getCurrentAttributeSpec() {
+    DataTableSpec getCurrentAttributeSpec() {
         if (m_lastTableSpec == null) {
             throw new IllegalStateException("Not to be called during load");
         }
@@ -483,7 +484,8 @@ public class OptionsPanel extends JPanel {
     }
 
     @SuppressWarnings("null")
-    private static String getMissingColSpecName(final DataTableSpec spec, final String[] includedNames, final String[] excludedNames) {
+    private static String getMissingColSpecName(final DataTableSpec spec, final String[] includedNames,
+        final String[] excludedNames) {
         ColumnRearranger r = new ColumnRearranger(spec);
         // remove columns we know from the include list
         for (String colName : includedNames) {
@@ -530,12 +532,12 @@ public class OptionsPanel extends JPanel {
         String[] prevExArray = prevEx.toArray(new String[prevEx.size()]);
         DataColumnSpecFilterConfiguration conf = TreeEnsembleLearnerConfiguration.createColSpecFilterConfig();
         m_includeColumnsFilterPanel2.saveConfiguration(conf);
-        EnforceOption prevEnforceOption = conf.isEnforceInclusion() ? EnforceOption.EnforceInclusion : EnforceOption.EnforceExclusion;
+        EnforceOption prevEnforceOption =
+            conf.isEnforceInclusion() ? EnforceOption.EnforceInclusion : EnforceOption.EnforceExclusion;
         String[] prevExWithFormerTarget = Arrays.copyOf(prevExArray, prevEx.size() + 1);
         prevExWithFormerTarget[prevEx.size()] = getMissingColSpecName(filtered, prevInArray, prevExArray);
         conf.loadDefaults(prevInArray, prevExWithFormerTarget, prevEnforceOption);
         m_includeColumnsFilterPanel2.loadConfiguration(conf, filtered);
-
 
         ChangeEvent e = new ChangeEvent(this);
         for (ChangeListener l : m_changeListenerList) {
@@ -546,7 +548,7 @@ public class OptionsPanel extends JPanel {
     /**
      * @return the isRegression
      */
-        boolean isRegression() {
+    boolean isRegression() {
         return m_isRegression;
     }
 }

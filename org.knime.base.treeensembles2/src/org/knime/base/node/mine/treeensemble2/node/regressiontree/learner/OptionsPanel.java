@@ -86,6 +86,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
+import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
@@ -171,7 +172,7 @@ public final class OptionsPanel extends JPanel {
             }
         });
         m_fingerprintColumnBox = new ColumnSelectionComboxBox((Border)null,
-            new DataValueColumnFilter(BitVectorValue.class, ByteVectorValue.class));
+            new DataValueColumnFilter(BitVectorValue.class, ByteVectorValue.class, DoubleVectorValue.class));
 //        m_includeColumnsFilterPanel = new ColumnFilterPanel(true, NominalValue.class, DoubleValue.class);
         m_includeColumnsFilterPanel2 = new DataColumnSpecFilterPanel();
 
@@ -435,7 +436,9 @@ public final class OptionsPanel extends JPanel {
             }
         }
         boolean hasOrdinaryColumnsInInput = nrNominalCols > 1 || nrNumericCols > 0;
-        boolean hasFPColumnInInput = inSpec.containsCompatibleType(BitVectorValue.class) || inSpec.containsCompatibleType(ByteVectorValue.class);
+        boolean hasFPColumnInInput =
+            inSpec.containsCompatibleType(BitVectorValue.class) || inSpec.containsCompatibleType(ByteVectorValue.class)
+                || inSpec.containsCompatibleType(DoubleVectorValue.class);
         m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
         DataTableSpec attSpec = removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
         String fpColumn = cfg.getFingerprintColumn();
@@ -604,17 +607,14 @@ public final class OptionsPanel extends JPanel {
 
         cfg.setUseAverageSplitPoints(true);
 
-        int maxLevel =
-                m_maxLevelChecker.isSelected() ? (Integer)m_maxLevelSpinner.getValue()
+        int maxLevel = m_maxLevelChecker.isSelected() ? (Integer)m_maxLevelSpinner.getValue()
                     : TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE;
         cfg.setMaxLevels(maxLevel);
 
-        int minNodeSize =
-                m_minNodeSizeChecker.isSelected() ? (Integer)m_minNodeSizeSpinner.getValue()
+        int minNodeSize = m_minNodeSizeChecker.isSelected() ? (Integer)m_minNodeSizeSpinner.getValue()
                     : TreeEnsembleLearnerConfiguration.MIN_NODE_SIZE_UNDEFINED;
 
-        int minChildNodeSize =
-                m_minChildNodeSizeChecker.isSelected() ? (Integer)m_minChildNodeSizeSpinner.getValue()
+        int minChildNodeSize = m_minChildNodeSizeChecker.isSelected() ? (Integer)m_minChildNodeSizeSpinner.getValue()
                     : TreeEnsembleLearnerConfiguration.MIN_CHILD_SIZE_UNDEFINED;
         cfg.setMinSizes(minNodeSize, minChildNodeSize);
 
@@ -654,7 +654,8 @@ public final class OptionsPanel extends JPanel {
     }
 
     @SuppressWarnings("null")
-    private static String getMissingColSpecName(final DataTableSpec spec, final String[] includedNames, final String[] excludedNames) {
+    private static String getMissingColSpecName(final DataTableSpec spec, final String[] includedNames,
+        final String[] excludedNames) {
         ColumnRearranger r = new ColumnRearranger(spec);
         // remove columns we know from the include list
         for (String colName : includedNames) {
@@ -701,7 +702,8 @@ public final class OptionsPanel extends JPanel {
         String[] prevExArray = prevEx.toArray(new String[prevEx.size()]);
         DataColumnSpecFilterConfiguration conf = TreeEnsembleLearnerConfiguration.createColSpecFilterConfig();
         m_includeColumnsFilterPanel2.saveConfiguration(conf);
-        EnforceOption prevEnforceOption = conf.isEnforceInclusion() ? EnforceOption.EnforceInclusion : EnforceOption.EnforceExclusion;
+        EnforceOption prevEnforceOption =
+            conf.isEnforceInclusion() ? EnforceOption.EnforceInclusion : EnforceOption.EnforceExclusion;
         String[] prevExWithFormerTarget = Arrays.copyOf(prevExArray, prevEx.size() + 1);
         prevExWithFormerTarget[prevEx.size()] = getMissingColSpecName(filtered, prevInArray, prevExArray);
         conf.loadDefaults(prevInArray, prevExWithFormerTarget, prevEnforceOption);

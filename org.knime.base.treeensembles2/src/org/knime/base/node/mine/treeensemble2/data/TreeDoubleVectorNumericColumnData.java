@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,67 +41,68 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Jan 21, 2012 (wiswedel): created
+ *   16.03.2016 (adrian): created
  */
 package org.knime.base.node.mine.treeensemble2.data;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.util.Arrays;
+
+import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME.com
  */
-public final class TreeNumericColumnMetaData extends TreeAttributeColumnMetaData {
+public class TreeDoubleVectorNumericColumnData extends TreeNumericColumnData {
 
-    /**
-     * Provides names in the format "Byte i" for artificial columns created from a byte vector column
-     *
-     * @param bytePosition
-     * @return name for artificial byte column
-     */
-    public static final String getAttributeNameByte(final int bytePosition) {
-        return "Byte " + bytePosition;
-    }
+    private final double[] m_data;
 
-    public static final String getAttributeNameDouble(final int doublePosition) {
-        return "Double " + doublePosition;
-    }
+    private final int m_lengthNonMissing;
 
-    /**
-     * @param attrPosition
-     * @param prefix for example Byte or Double
-     * @return name for artificial column created from a numeric vector
-     */
-    public static final String getAttributeName(final int attrPosition, final String prefix) {
-        StringBuilder sb = new StringBuilder(prefix);
-        sb.append(" ").append(attrPosition);
-        return sb.toString();
+    private final boolean m_containsMissings;
+
+    TreeDoubleVectorNumericColumnData(final TreeNumericColumnMetaData metaData,
+        final TreeEnsembleLearnerConfiguration config, final int[] indicesInOriginal, final double[] data,
+        final int lengthNonMissing, final boolean containsMissings) {
+        super(metaData, config, indicesInOriginal);
+        m_data = data;
+        m_lengthNonMissing = lengthNonMissing;
+        m_containsMissings = containsMissings;
     }
 
     /**
-     * @param attributeName
+     * {@inheritDoc}
      */
-    TreeNumericColumnMetaData(final String attributeName) {
-        super(attributeName);
-    }
-
-    /**
-     * @param input
-     * @throws IOException
-     */
-    TreeNumericColumnMetaData(final DataInputStream input) throws IOException {
-        super(input);
-    }
-
-    /** {@inheritDoc} */
     @Override
-        void saveContent(final DataOutputStream output) throws IOException {
-        // no internals
+    public double getSorted(final int index) {
+        return m_data[index];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getLengthNonMissing() {
+        return m_lengthNonMissing;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getFirstIndexWithValue(final double value) {
+        return Arrays.binarySearch(m_data, value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean containsMissingValues() {
+        return m_containsMissings;
     }
 
 }

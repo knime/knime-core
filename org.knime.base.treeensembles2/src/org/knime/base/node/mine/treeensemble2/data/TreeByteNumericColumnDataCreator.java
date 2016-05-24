@@ -60,7 +60,7 @@ import org.knime.core.data.vector.bytevector.ByteVectorValue;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class TreeByteNumericColumnDataCreator implements TreeAttributeColumnDataCreator {
 
@@ -75,7 +75,7 @@ public class TreeByteNumericColumnDataCreator implements TreeAttributeColumnData
      */
     public TreeByteNumericColumnDataCreator(final DataColumnSpec column) {
         if (!column.getType().isCompatible(ByteVectorValue.class)) {
-            throw new IllegalStateException("Can't derive byte vector data " + "from non-bytevector column: " + column);
+            throw new IllegalStateException("Can't derive byte vector data from non-bytevector column: " + column);
         }
     }
 
@@ -146,7 +146,7 @@ public class TreeByteNumericColumnDataCreator implements TreeAttributeColumnData
             sortedData[i] = t.m_value;
             sortIndex[i] = t.m_indexInColumn;
         }
-        final String n = TreeNumericColumnMetaData.getAttributeName(attributeIndex);
+        final String n = TreeNumericColumnMetaData.getAttributeNameByte(attributeIndex);
         TreeNumericColumnMetaData metaData = new TreeNumericColumnMetaData(n);
         return new TreeByteNumericColumnData(metaData, configuration, sortedData, sortIndex);
     }
