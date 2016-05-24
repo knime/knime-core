@@ -101,6 +101,7 @@ public class ThreadLocalHTTPAuthenticator extends Authenticator {
      *
      * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
      */
+    @FunctionalInterface
     public static interface AuthenticationCloseable extends Closeable {
         /**
          * {@inheritDoc}
