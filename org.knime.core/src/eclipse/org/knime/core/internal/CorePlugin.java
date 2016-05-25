@@ -57,6 +57,7 @@ import javax.activation.FileTypeMap;
 import javax.activation.MimetypesFileTypeMap;
 
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.util.ThreadLocalHTTPAuthenticator;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.osgi.framework.Bundle;
@@ -112,6 +113,8 @@ public class CorePlugin implements BundleActivator {
         } catch (ClassNotFoundException e) {
             // this may happen in a non-Eclipse OSGi environment
         }
+
+        ThreadLocalHTTPAuthenticator.installAuthenticator();
 
         readMimeTypes();
     }
