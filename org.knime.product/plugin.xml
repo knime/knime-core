@@ -97,6 +97,18 @@
             label="KNIME">
       </theme>
    </extension>
+   <extension
+         id="KNIME_PROTOCOL_APPLICATION"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="false">
+         <run
+               class="org.knime.product.rcp.KNIMEProtocolApplication">
+         </run>
+      </application>
+   </extension>
 <!--
 -->
 </plugin>

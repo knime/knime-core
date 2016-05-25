@@ -1,5 +1,5 @@
 # The httpcomponents plug-in requires org.apache.commons.codec but does so via a package import. Buckminster
 # is not able to resolved package imports therefore we add an explicit dependency here.
-requires.0.namespace=osgi.bundle
+requires.0.namespace=org.eclipse.equinox.p2.iu
 requires.0.name=org.apache.commons.codec
 requires.0.range=1.6.0

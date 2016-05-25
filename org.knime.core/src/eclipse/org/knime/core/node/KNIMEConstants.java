@@ -449,6 +449,23 @@ public final class KNIMEConstants {
         }
     }
 
+    /**
+     * The standard file extension for KNIME imports/exports
+     * @since 3.2
+     */
+    public static final String KNIME_ARCHIVE_FILE_EXTENSION = "knar";
+    /**
+     * The standard file extension for KNIME workflows
+     * @since 3.2
+     */
+    public static final String KNIME_WORKFLOW_FILE_EXTENSION = "knwf";
+    /**
+     * The standard file extension for the KNIME protocol
+     * @since 3.2
+     */
+    public static final String KNIME_PROTOCOL_FILE_EXTENSION = "knimeURL";
+
+
     /** The global thread pool from which all threads should be taken. */
     public static final ThreadPool GLOBAL_THREAD_POOL;
 

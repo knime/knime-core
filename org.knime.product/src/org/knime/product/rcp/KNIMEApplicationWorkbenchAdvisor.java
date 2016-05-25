@@ -54,11 +54,7 @@ import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.equinox.internal.p2.ui.sdk.scheduler.AutomaticUpdateMessages;
 import org.eclipse.equinox.internal.p2.ui.sdk.scheduler.AutomaticUpdatePlugin;
 import org.eclipse.equinox.internal.p2.ui.sdk.scheduler.AutomaticUpdateScheduler;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.IViewReference;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -66,9 +62,6 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.EclipseUtil;
 import org.knime.product.rcp.intro.IntroPage;
-import org.knime.workbench.explorer.view.ExplorerView;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.service.prefs.Preferences;
 
@@ -79,6 +72,19 @@ import org.osgi.service.prefs.Preferences;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
+
+    private KNIMEOpenDocumentEventProcessor m_openDocProcessor;
+
+    /**
+     * Simple constructor to store the {@code KNIMEOpenDocumentEventProcessor}
+     *
+     * @param openDocProcessor the KNIMEOpenDocumentEventProcessor handling the opening of KNIME files
+     *
+     */
+    public KNIMEApplicationWorkbenchAdvisor(final KNIMEOpenDocumentEventProcessor openDocProcessor) {
+        m_openDocProcessor = openDocProcessor;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -136,6 +142,15 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
             org.eclipse.equinox.internal.p2.ui.sdk.scheduler.PreferenceConstants.PREF_UPDATE_ON_SCHEDULE);
         node.put(AutomaticUpdateScheduler.P_DAY, AutomaticUpdateMessages.SchedulerStartup_day);
         node.put(AutomaticUpdateScheduler.P_HOUR, AutomaticUpdateMessages.SchedulerStartup_11AM);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void eventLoopIdle(final Display display) {
+        m_openDocProcessor.openFiles();
+        super.eventLoopIdle(display);
     }
 
     /**
