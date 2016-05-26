@@ -111,46 +111,49 @@ public class NodeRecommendationManager {
      * @throws Exception if something went wrong while loading the statistics (e.g. a corrupt file)
      */
     public void loadStatistics() throws Exception {
-        synchronized (this) {
-            //read from multiple frequency sources
-            List<NodeTripleProvider> providers = KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders();
-            m_recommendations = new ArrayList<>(providers.size());
-            for (NodeTripleProvider provider : providers) {
-                if (provider.isEnabled() && !updateRequired(provider)) {
-                    Map<String, List<NodeRecommendation>> recommendationMap = new HashMap<>();
-                    m_recommendations.add(recommendationMap);
+        //read from multiple frequency sources
+        List<NodeTripleProvider> providers = KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders();
+        List<Map<String, List<NodeRecommendation>>> recommendations = new ArrayList<>(providers.size());
+        for (NodeTripleProvider provider : providers) {
+            if (provider.isEnabled() && !updateRequired(provider)) {
+                Map<String, List<NodeRecommendation>> recommendationMap = new HashMap<>();
+                recommendations.add(recommendationMap);
 
-                    provider.getNodeTriples().forEach(nf -> {
-                        /* considering the successor only, i.e. for all entries where the predecessor and the node itself is not present */
-                        if (!nf.getNode().isPresent() && !nf.getPredecessor().isPresent()) {
-                            add(recommendationMap, SOURCE_NODES_KEY, nf.getSuccessor(), nf.getCount());
-                        }
+                provider.getNodeTriples().forEach(nf -> fillRecommendationsMap(recommendationMap, nf));
 
-                        /* considering the the node itself as successor,
-                         * but only for those nodes that don't have a predecessor -> source nodes, i.e. nodes without an input port*/
-                        if (!nf.getPredecessor().isPresent() && nf.getNode().isPresent()) {
-                            add(recommendationMap, SOURCE_NODES_KEY, nf.getNode().get(), nf.getCount());
-                        }
+                //aggregate multiple occurring id's
+                recommendationMap.values().stream().forEach(l -> aggregate(l));
+            }
+        } //end for
+        m_recommendations = recommendations;
+    }
 
-                        /* without predecessor but with the node, if given*/
-                        if (nf.getNode().isPresent()) {
-                            add(recommendationMap, getKey(nf.getNode().get()), nf.getSuccessor(), nf.getCount());
-                        }
+    private void fillRecommendationsMap(final Map<String, List<NodeRecommendation>> recommendationMap,
+        final NodeTriple nf) {
+        /* considering the successor only, i.e. for all entries where the predecessor and the node
+         * itself is not present
+         */
+        if (!nf.getNode().isPresent() && !nf.getPredecessor().isPresent()) {
+            add(recommendationMap, SOURCE_NODES_KEY, nf.getSuccessor(), nf.getCount());
+        }
 
-                        /* considering predecessor, if given */
-                        if (nf.getPredecessor().isPresent() && nf.getNode().isPresent()) {
-                            add(recommendationMap,
-                                getKey(nf.getPredecessor().get()) + NODE_NAME_SEP + getKey(nf.getNode().get()),
-                                nf.getSuccessor(), nf.getCount());
-                        }
-                    });
+        /* considering the the node itself as successor, but only for those nodes that don't have a
+         * predecessor -> source nodes, i.e. nodes without an input port
+         */
+        if (!nf.getPredecessor().isPresent() && nf.getNode().isPresent()) {
+            add(recommendationMap, SOURCE_NODES_KEY, nf.getNode().get(), nf.getCount());
+        }
 
-                    //aggregate multiple occurring id's
-                    for (List<NodeRecommendation> l : recommendationMap.values()) {
-                        aggregate(l);
-                    }
-                }
-            } //end for
+        /* without predecessor but with the node, if given*/
+        if (nf.getNode().isPresent()) {
+            add(recommendationMap, getKey(nf.getNode().get()), nf.getSuccessor(), nf.getCount());
+        }
+
+        /* considering predecessor, if given */
+        if (nf.getPredecessor().isPresent() && nf.getNode().isPresent()) {
+            add(recommendationMap,
+                getKey(nf.getPredecessor().get()) + NODE_NAME_SEP + getKey(nf.getNode().get()),
+                nf.getSuccessor(), nf.getCount());
         }
     }
 
@@ -169,11 +172,7 @@ public class NodeRecommendationManager {
      */
     private void add(final Map<String, List<NodeRecommendation>> recommendation, final String key, final NodeInfo ni,
         final int count) {
-        List<NodeRecommendation> p = recommendation.get(key);
-        if (p == null) {
-            p = new ArrayList<NodeRecommendationManager.NodeRecommendation>();
-            recommendation.put(key, p);
-        }
+        List<NodeRecommendation> p = recommendation.computeIfAbsent(key, k -> new ArrayList<>());
         //create the new node recommendation
         NodeTemplate nt = RepositoryManager.INSTANCE.getNodeTemplate(ni.getFactory());
         if (nt == null) {
@@ -241,63 +240,61 @@ public class NodeRecommendationManager {
         if (m_recommendations == null) {
             return null;
         }
-        synchronized (this) {
-            @SuppressWarnings("unchecked")
-            List<NodeRecommendation>[] res = new List[m_recommendations.size()];
-            for (int idx = 0; idx < res.length; idx++) {
-                if (nnc.length == 0) {
-                    //recommendations if no node is given -> source nodes are recommended
-                    res[idx] = m_recommendations.get(idx).get(SOURCE_NODES_KEY);
-                    if (res[idx] == null) {
-                        res[idx] = Collections.emptyList();
-                    }
-                } else if (nnc.length == 1) {
-                    String nodeID = getKey(nnc[0]);
-                    Set<NodeRecommendation> set = new HashSet<NodeRecommendationManager.NodeRecommendation>();
+        @SuppressWarnings("unchecked")
+        List<NodeRecommendation>[] res = new List[m_recommendations.size()];
+        for (int idx = 0; idx < res.length; idx++) {
+            if (nnc.length == 0) {
+                //recommendations if no node is given -> source nodes are recommended
+                res[idx] = m_recommendations.get(idx).get(SOURCE_NODES_KEY);
+                if (res[idx] == null) {
+                    res[idx] = Collections.emptyList();
+                }
+            } else if (nnc.length == 1) {
+                String nodeID = getKey(nnc[0]);
+                Set<NodeRecommendation> set = new HashSet<NodeRecommendationManager.NodeRecommendation>();
 
-                    /* recommendations based on the given node and possible predecessors */
-                    for (int i = 0; i < nnc[0].getNrInPorts(); i++) {
-                        ConnectionContainer cc = nnc[0].getParent().getIncomingConnectionFor(nnc[0].getID(), i);
-                        if (cc != null) {
-                            NodeContainer predecessor = nnc[0].getParent().getNodeContainer(cc.getSource());
-                            if (predecessor instanceof NativeNodeContainer) {
-                                List<NodeRecommendation> l = m_recommendations.get(idx)
-                                    .get(getKey((NativeNodeContainer)predecessor) + NODE_NAME_SEP + getKey(nnc[0]));
-                                if (l != null) {
-                                    set.addAll(l);
-                                }
+                /* recommendations based on the given node and possible predecessors */
+                for (int i = 0; i < nnc[0].getNrInPorts(); i++) {
+                    ConnectionContainer cc = nnc[0].getParent().getIncomingConnectionFor(nnc[0].getID(), i);
+                    if (cc != null) {
+                        NodeContainer predecessor = nnc[0].getParent().getNodeContainer(cc.getSource());
+                        if (predecessor instanceof NativeNodeContainer) {
+                            List<NodeRecommendation> l = m_recommendations.get(idx)
+                                .get(getKey((NativeNodeContainer)predecessor) + NODE_NAME_SEP + getKey(nnc[0]));
+                            if (l != null) {
+                                set.addAll(l);
                             }
                         }
                     }
-
-                    /* recommendation based on the given node only */
-                    List<NodeRecommendation> p1 = m_recommendations.get(idx).get(nodeID);
-                    if (p1 != null) {
-                        set.addAll(p1);
-                    }
-
-                    //add to the result list
-                    res[idx] = new ArrayList<NodeRecommendationManager.NodeRecommendation>(set.size());
-                    res[idx].addAll(set);
-                } else {
-                    throw new UnsupportedOperationException(
-                        "Recommendations for more than one node are not supported, yet.");
                 }
 
-                /* post-process result */
-                Collections.sort(res[idx]);
+                /* recommendation based on the given node only */
+                List<NodeRecommendation> p1 = m_recommendations.get(idx).get(nodeID);
+                if (p1 != null) {
+                    set.addAll(p1);
+                }
 
-                //update the total frequencies
-                int tmpFreqs = 0;
-                for (NodeRecommendation np : res[idx]) {
-                    tmpFreqs += np.getFrequency();
-                }
-                for (NodeRecommendation np : res[idx]) {
-                    np.setTotalFrequency(tmpFreqs);
-                }
+                //add to the result list
+                res[idx] = new ArrayList<NodeRecommendationManager.NodeRecommendation>(set.size());
+                res[idx].addAll(set);
+            } else {
+                throw new UnsupportedOperationException(
+                    "Recommendations for more than one node are not supported, yet.");
             }
-            return res;
+
+            /* post-process result */
+            Collections.sort(res[idx]);
+
+            //update the total frequencies
+            int tmpFreqs = 0;
+            for (NodeRecommendation np : res[idx]) {
+                tmpFreqs += np.getFrequency();
+            }
+            for (NodeRecommendation np : res[idx]) {
+                np.setTotalFrequency(tmpFreqs);
+            }
         }
+        return res;
     }
 
     /**
