@@ -97,8 +97,6 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
 
     private static KNIMEWorkflowCoachPlugin plugin;
 
-    private List<NodeTripleProvider> m_tripleProviders = null;
-
     /**
      * Creates a new activator for the explorer plugin.
      */
@@ -154,37 +152,32 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
      * Gives all available {@link NodeTripleProvider}s. Node triple providers can be added via the respective extension
      * point.
      *
-     * @return an unmodifiable list of node triple providers depending on the preferences stored (see also
-     *         {@link WorkflowCoachPreferencePage}). Only a maximum number of THREE node triple provider is currently
-     *         supported.
+     * @return a list of node triple providers depending on the preferences stored (see also
+     *         {@link WorkflowCoachPreferencePage}).
      */
     public synchronized List<NodeTripleProvider> getNodeTripleProviders() {
-        if (m_tripleProviders == null) {
-            //add community triple provider
-            m_tripleProviders = new ArrayList<NodeTripleProvider>(3);
+        List<NodeTripleProvider> l = new ArrayList<NodeTripleProvider>(3);
 
-            //get node triple providers from extension points
-            IExtensionPoint extPoint =
-                Platform.getExtensionRegistry().getExtensionPoint(TRIPLE_PROVIDER_EXTENSION_POINT_ID);
-            if (extPoint == null) {
-                LOGGER.error("Invalid extension point: " + TRIPLE_PROVIDER_EXTENSION_POINT_ID);
-                return Collections.emptyList();
-            }
+        //get node triple providers from extension points
+        IExtensionPoint extPoint =
+            Platform.getExtensionRegistry().getExtensionPoint(TRIPLE_PROVIDER_EXTENSION_POINT_ID);
+        if (extPoint == null) {
+            LOGGER.error("Invalid extension point: " + TRIPLE_PROVIDER_EXTENSION_POINT_ID);
+            return Collections.emptyList();
+        }
 
-            IExtension[] extensions = extPoint.getExtensions();
-            for (IExtension ext : extensions) {
-                for (IConfigurationElement conf : ext.getConfigurationElements()) {
-                    try {
-                        NodeTripleProviderFactory factory =
-                            (NodeTripleProviderFactory)conf.createExecutableExtension("factory-class");
-                        m_tripleProviders.addAll(factory.createProviders());
-                    } catch (CoreException e) {
-                        LOGGER.warn("Could not create factory from " + conf.getAttribute("factory-class"));
-                    }
+        IExtension[] extensions = extPoint.getExtensions();
+        for (IExtension ext : extensions) {
+            for (IConfigurationElement conf : ext.getConfigurationElements()) {
+                try {
+                    NodeTripleProviderFactory factory =
+                        (NodeTripleProviderFactory)conf.createExecutableExtension("factory-class");
+                    l.addAll(factory.createProviders());
+                } catch (CoreException e) {
+                    LOGGER.warn("Could not create factory from " + conf.getAttribute("factory-class"));
                 }
             }
         }
-
-        return Collections.unmodifiableList(m_tripleProviders);
+        return l;
     }
 }
