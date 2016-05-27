@@ -48,6 +48,9 @@
  */
 package org.knime.workbench.workflowcoach.data;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
 import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
 
@@ -57,6 +60,21 @@ import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
  * @author Martin Horn, University of Konstanz
  */
 public class CommunityTripleProvider extends AbstractFileDownloadTripleProvider {
+    /**
+     * Factory for {@link CommunityTripleProvider}s.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     */
+    public static final class Factory implements NodeTripleProviderFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<NodeTripleProvider> createProviders() {
+            return Collections.singletonList(new CommunityTripleProvider());
+        }
+    }
+
     /**
      * Creates a new provider that fetched recommendation from the KNIME web page.
      */
