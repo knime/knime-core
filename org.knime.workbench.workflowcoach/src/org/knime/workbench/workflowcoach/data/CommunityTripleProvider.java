@@ -57,9 +57,8 @@ import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
  * @author Martin Horn, University of Konstanz
  */
 public class CommunityTripleProvider extends AbstractFileDownloadTripleProvider {
-
     /**
-     *
+     * Creates a new provider that fetched recommendation from the KNIME web page.
      */
     public CommunityTripleProvider() {
         super("http://www.knime.org/files/nodeguide/community_recommendations.json", "community_recommendations.json");
@@ -97,5 +96,4 @@ public class CommunityTripleProvider extends AbstractFileDownloadTripleProvider 
         return KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
             .getBoolean(KNIMEWorkflowCoachPlugin.P_COMMUNITY_NODE_TRIPLE_PROVIDER);
     }
-
 }
