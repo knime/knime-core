@@ -57,7 +57,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -244,7 +243,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
             m_viewer.setInput(SELECTION_HINT_MESSAGE);
             return;
         }
-        if (NodeRecommendationManager.getInstance().getNumNodeTripleProvider() == 0) {
+        if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
             //if there is at least one enabled triple provider than the statistics might need to be download first
             if (KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream()
                 .anyMatch(ntp -> ntp.isEnabled())) {
@@ -252,14 +251,15 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
                 updateInput("Loading statistics...");
 
                 //try updating the triple provider that are enabled and require an update
-                updateTripleProviders(Optional.of(e -> {
+                updateTripleProviders(e -> {
                     m_nodesLoading = false;
                     if (e.isPresent()) {
                         updateInputNoProvider();
                     } else {
+                        KNIMEWorkflowCoachPlugin.getDefault().recommendationsUpdated();
                         try {
                             NodeRecommendationManager.getInstance().loadStatistics();
-                            if (NodeRecommendationManager.getInstance().getNumNodeTripleProvider() == 0) {
+                            if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
                                 //if there are still no triple provider, show link
                                 updateInputNoProvider();
                             } else {
@@ -270,7 +270,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
                             updateInputNoProvider();
                         }
                     }
-                }), true);
+                }, true);
                 return;
             } else {
                 //no triple provider enabled -> needs to be configured
@@ -596,12 +596,14 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         }
 
         //trigger update for all updatable and enabled providers
-        updateTripleProviders(Optional.of(e -> {
+        updateTripleProviders(e -> {
             if (e.isPresent()) {
                 NodeLogger.getLogger(WorkflowCoachView.class).warn("Could not update node recommendations statistics.",
                     e.get());
+            } else {
+                KNIMEWorkflowCoachPlugin.getDefault().recommendationsUpdated();
             }
-        }), false);
+        }, false);
     }
 
     /**
@@ -611,7 +613,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      *            work
      * @param updateListener to get feedback of the updating process
      */
-    private void updateTripleProviders(final Optional<UpdateListener> updateListener, final boolean requiredOnly) {
+    private void updateTripleProviders(final UpdateListener updateListener, final boolean requiredOnly) {
         List<UpdatableNodeTripleProvider> toUpdate =
             KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream().filter(ntp -> {
                 if (!(ntp instanceof UpdatableNodeTripleProvider)) {

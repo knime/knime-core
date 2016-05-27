@@ -48,13 +48,12 @@
  */
 package org.knime.workbench.workflowcoach.data;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -69,6 +68,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.commons.io.IOUtils;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeFrequencies;
 import org.knime.core.node.NodeTriple;
@@ -82,9 +82,9 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
 
     private static final int TIMEOUT = 10000; //10 seconds
 
-    private String m_url;
+    private final String m_url;
 
-    private String m_file;
+    private final Path m_file;
 
     /**
      * Creates a new triple provider.
@@ -95,7 +95,7 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
      */
     protected AbstractFileDownloadTripleProvider(final String url, final String fileName) {
         m_url = url;
-        m_file = KNIMEConstants.getKNIMEHomeDir() + File.separator + fileName;
+        m_file = Paths.get(KNIMEConstants.getKNIMEHomeDir(), fileName);
     }
 
     /**
@@ -103,7 +103,7 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
      */
     @Override
     public Stream<NodeTriple> getNodeTriples() throws IOException {
-        return NodeFrequencies.from(new FileInputStream(m_file)).getFrequencies().stream();
+        return NodeFrequencies.from(Files.newInputStream(m_file)).getFrequencies().stream();
     }
 
     /**
@@ -111,7 +111,7 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
      */
     @Override
     public boolean updateRequired() {
-        return !(new File(m_file).exists());
+        return !Files.exists(m_file);
     }
 
     /**
@@ -123,13 +123,11 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
         client.getHttpConnectionManager().getParams().setConnectionTimeout(TIMEOUT);
         GetMethod method = new GetMethod(m_url);
         method.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler(3, false));
-        File f = new File(m_file);
-        if (f.exists()) {
-            String lastModified =
-                getHttpDateFormat().format(Date.from(Files.getLastModifiedTime(f.toPath()).toInstant()));
+        if (Files.exists(m_file)) {
+            String lastModified = getHttpDateFormat().format(Date.from(Files.getLastModifiedTime(m_file).toInstant()));
             method.setRequestHeader("If-Modified-Since", lastModified);
         }
-        method.setRequestHeader("Accept-Encoding", "gzip,deflate");
+        method.setRequestHeader("Accept-Encoding", "gzip");
         int statusCode = client.executeMethod(method);
         if (statusCode == HttpStatus.SC_NOT_MODIFIED) {
             return;
@@ -139,25 +137,20 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
         }
 
         //download and store the file
+        try (InputStream in = getInputStream(method); OutputStream out = Files.newOutputStream(m_file)) {
+            IOUtils.copy(in, out);
+        } finally {
+            method.releaseConnection();
+        }
+    }
+
+    private static InputStream getInputStream(final GetMethod method) throws IOException {
         InputStream in = method.getResponseBodyAsStream();
         Header encoding = method.getResponseHeader("Content-Encoding");
         if (encoding != null && encoding.getValue().equals("gzip")) {
             in = new GZIPInputStream(in);
         }
-        OutputStream out = new FileOutputStream(f);
-
-        try {
-            byte[] cache = new byte[16384];
-            int read;
-            while ((read = in.read(cache, 0, cache.length)) > 0) {
-                out.write(cache, 0, read);
-            }
-        } finally {
-            out.flush();
-            in.close();
-            out.close();
-            method.releaseConnection();
-        }
+        return in;
     }
 
     private static SimpleDateFormat getHttpDateFormat() {
@@ -166,5 +159,4 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
         dateFormat.setTimeZone(tZone);
         return dateFormat;
     }
-
 }

@@ -60,15 +60,12 @@ import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
  * @author Martin Horn, University of Konstanz
  */
 public class WorkflowCoachPreferenceInitializer extends AbstractPreferenceInitializer {
-
     @Override
     public void initializeDefaultPreferences() {
         IPreferenceStore store = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore();
         store.setDefault(KNIMEWorkflowCoachPlugin.P_COMMUNITY_NODE_TRIPLE_PROVIDER, KNIMECorePlugin.getDefault()
             .getPreferenceStore().getBoolean(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS));
         store.setDefault(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE, "");
-        store.setDefault(KNIMEWorkflowCoachPlugin.P_SERVER_NODE_TRIPLE_PROVIDERS, "");
         store.setDefault(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE, KNIMEWorkflowCoachPlugin.MONTHLY_UPDATE);
     }
-
 }

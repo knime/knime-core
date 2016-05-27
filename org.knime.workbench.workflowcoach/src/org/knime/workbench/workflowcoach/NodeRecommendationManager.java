@@ -301,7 +301,7 @@ public class NodeRecommendationManager {
      * @return the number of registered and enabled {@link NodeTripleProvider}s (e.g. resulting a the according number
      *         of frequencies in node recommendation table of the {@link WorkflowCoachView})
      */
-    public int getNumNodeTripleProvider() {
+    public int getNumLoadedProviders() {
         if (m_recommendations == null) {
             return 0;
         } else {

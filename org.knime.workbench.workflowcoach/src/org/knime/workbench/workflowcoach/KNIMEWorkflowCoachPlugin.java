@@ -44,25 +44,28 @@
  */
 package org.knime.workbench.workflowcoach;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.workflowcoach.data.CommunityTripleProvider;
 import org.knime.workbench.workflowcoach.data.NodeTripleProvider;
-import org.knime.workbench.workflowcoach.data.ServerTripleProvider;
-import org.knime.workbench.workflowcoach.prefs.ServerMountPointTable;
+import org.knime.workbench.workflowcoach.data.NodeTripleProviderFactory;
 import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  *
@@ -79,8 +82,6 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
 
     /** Preference store keys */
     public static final String P_COMMUNITY_NODE_TRIPLE_PROVIDER = "community_node_triple_provider";
-
-    public static final String P_SERVER_NODE_TRIPLE_PROVIDERS = "server_node_triple_providers";
 
     public static final String P_LAST_STATISTICS_UPDATE = "last_community_statistics_update";
 
@@ -139,22 +140,15 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
         return prefStore;
     }
 
-    /**
-     * Updates the list of the available node triple providers. This is especially necessary, if the mounted servers
-     * have changed, because on server mount point can also potentially serve as a node triple provider as well.
-     */
-    public synchronized void updateServerNodeTripleProviders() {
-        //remove all ServerTripleProviders and re-add them
-        if (m_tripleProviders != null) {
-            m_tripleProviders = m_tripleProviders.stream().filter(tp -> {
-                return !(tp instanceof ServerTripleProvider);
-            }).collect(Collectors.toList());
-            List<String> mountIDs = ServerMountPointTable.getServerMountIDs();
-            mountIDs.forEach(s -> {
-                m_tripleProviders.add(new ServerTripleProvider(s));
-            });
-        }
+    public void recommendationsUpdated() {
+        //store the todays date of the update
+        DateTimeFormatter f = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
+        String d = f.format(LocalDateTime.now());
+        IEclipsePreferences prefs =
+                InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
+        prefs.put(P_LAST_STATISTICS_UPDATE, d);
     }
+
 
     /**
      * Gives all available {@link NodeTripleProvider}s. Node triple providers can be added via the respective extension
@@ -168,7 +162,6 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
         if (m_tripleProviders == null) {
             //add community triple provider
             m_tripleProviders = new ArrayList<NodeTripleProvider>(3);
-            m_tripleProviders.add(new CommunityTripleProvider());
 
             //get node triple providers from extension points
             IExtensionPoint extPoint =
@@ -182,16 +175,14 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
             for (IExtension ext : extensions) {
                 for (IConfigurationElement conf : ext.getConfigurationElements()) {
                     try {
-                        NodeTripleProvider provider =
-                            (NodeTripleProvider)conf.createExecutableExtension("provider-class");
-                        m_tripleProviders.add(provider);
+                        NodeTripleProviderFactory factory =
+                            (NodeTripleProviderFactory)conf.createExecutableExtension("factory-class");
+                        m_tripleProviders.addAll(factory.createProviders());
                     } catch (CoreException e) {
-                        LOGGER.warn("Could not create the provider class " + conf.getAttribute("provider-class"));
+                        LOGGER.warn("Could not create factory from " + conf.getAttribute("factory-class"));
                     }
                 }
             }
-
-            updateServerNodeTripleProviders();
         }
 
         return Collections.unmodifiableList(m_tripleProviders);
