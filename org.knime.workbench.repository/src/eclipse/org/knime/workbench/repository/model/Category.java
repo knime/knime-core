@@ -163,19 +163,6 @@ public class Category extends AbstractContainerObject {
      * {@inheritDoc}
      */
     @Override
-    public Object getAdapter(@SuppressWarnings("rawtypes") final Class adapter) {
-        /*
-         * Disabled since it is of no use for the user. Maybe it is useful for
-         * debugging purposes? if (adapter == IPropertySource.class) { return
-         * new CategoryPropertySource(this); }
-         */
-        return super.getAdapter(adapter);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String toString() {
         return "Id: " + getID() + " Name: " + getName() + " After-id: "
                 + getAfterID();

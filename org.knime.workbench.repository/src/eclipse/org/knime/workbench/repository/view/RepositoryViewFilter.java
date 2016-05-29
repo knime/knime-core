@@ -47,7 +47,6 @@
  */
 package org.knime.workbench.repository.view;
 
-import org.eclipse.swt.widgets.Display;
 import org.knime.workbench.repository.model.AbstractNodeTemplate;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
@@ -55,7 +54,7 @@ import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.Root;
 
 /**
- * Viewer Filter for the reprository view.
+ * Viewer Filter for the repository view.
  *
  * @author Florian Georg, University of Konstanz
  */

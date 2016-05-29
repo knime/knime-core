@@ -106,7 +106,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
      * {@inheritDoc}
      */
     @Override
-    public Object getAdapter(@SuppressWarnings("rawtypes") final Class adapter) {
+    public <T> T getAdapter(final Class<T> adapter) {
         return null;
     }
 

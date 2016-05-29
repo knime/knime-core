@@ -130,22 +130,6 @@ public class NodeTemplate extends AbstractNodeTemplate {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object getAdapter(@SuppressWarnings("rawtypes") final Class adapter) {
-        /*
-         * Disabled since it is of no use for the user. Maybe it is useful for
-         * debugging purposes?
-
-        if (adapter == IPropertySource.class) {
-            return new NodePropertySource(this);
-        }
-         */
-        return super.getAdapter(adapter);
-    }
-
-    /**
      * @return Returns the type.
      */
     public NodeType getType() {

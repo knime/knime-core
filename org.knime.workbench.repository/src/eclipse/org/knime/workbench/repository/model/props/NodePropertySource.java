@@ -111,6 +111,7 @@ public class NodePropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getEditableValue() {
         return this;
     }
@@ -118,6 +119,7 @@ public class NodePropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public IPropertyDescriptor[] getPropertyDescriptors() {
         return new IPropertyDescriptor[] {ID_DESC, NAME_DESC, TYPE_DESC,
                 DESC_DESC, FACT_DESC, CAT_DESC, ICON_DESC};
@@ -126,6 +128,7 @@ public class NodePropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getPropertyValue(final Object id) {
         if ("name".equals(id)) {
             return m_node.getName();
@@ -151,6 +154,7 @@ public class NodePropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isPropertySet(final Object id) {
         return false;
     }
@@ -158,6 +162,7 @@ public class NodePropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void resetPropertyValue(final Object id) {
 
     }
@@ -165,6 +170,7 @@ public class NodePropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setPropertyValue(final Object id, final Object value) {
         // TODO Auto-generated method stub
     }

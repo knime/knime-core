@@ -82,7 +82,6 @@ public class DynamicNodeTemplate extends NodeTemplate {
      * @param nodeSetFactory the NodeSetFactory that created this DynamicNodeTemplate, must not be <code>null</code>
      * @param name the name of this repository entry, must not be <code>null</code>
      */
-    @SuppressWarnings("rawtypes")
     public DynamicNodeTemplate(final Class<NodeFactory<? extends NodeModel>> factoryClass, final String factoryId,
         final NodeSetFactory nodeSetFactory, final String name) {
         super(factoryClass.getName() + NODE_NAME_SEP + name, name,

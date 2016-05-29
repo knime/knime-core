@@ -356,6 +356,7 @@ public final class RepositoryFactory {
 
         // for all nodes in the node set
         for (String factoryId : nodeSet.getNodeFactoryIds()) {
+            @SuppressWarnings("unchecked")
             Class<NodeFactory<? extends NodeModel>> factoryClass =
                 (Class<NodeFactory<? extends NodeModel>>)nodeSet.getNodeFactory(factoryId);
 

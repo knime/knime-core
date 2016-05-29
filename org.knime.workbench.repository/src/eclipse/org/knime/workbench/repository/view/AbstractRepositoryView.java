@@ -624,10 +624,11 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public Object getAdapter(@SuppressWarnings("rawtypes") final Class adapter) {
+    public <T> T getAdapter(final Class<T> adapter) {
         if (adapter == IPropertySourceProvider.class) {
-            return m_propertyProvider;
+            return (T)m_propertyProvider;
         }
         return super.getAdapter(adapter);
     }
