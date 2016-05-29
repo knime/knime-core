@@ -199,8 +199,17 @@ public class DatabaseUtility {
         } else {
             df = new PriorityDriverFactory(RegisteredDriversConnectionFactory.getInstance(), driverFactory);
         }
+        m_connFactory = createConnectionFactory(df);
+    }
+
+    /**
+     * @param df {@link DBDriverFactory} to use
+     * @return the {@link DBConnectionFactory} to use
+     * @since 3.2 the
+     */
+    protected DBConnectionFactory createConnectionFactory(final DBDriverFactory df) {
         //currently we only support the old single connection factory
-        m_connFactory = new CachedConnectionFactory(df);
+         return new CachedConnectionFactory(df);
     }
 
     /**

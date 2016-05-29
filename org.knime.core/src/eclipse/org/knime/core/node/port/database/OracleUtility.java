@@ -48,6 +48,8 @@
 package org.knime.core.node.port.database;
 
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
+import org.knime.core.node.port.database.connection.DBConnectionFactory;
+import org.knime.core.node.port.database.connection.DBDriverFactory;
 
 
 /**
@@ -145,6 +147,14 @@ public class OracleUtility extends DatabaseUtility {
      */
     public OracleUtility() {
         super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DBConnectionFactory createConnectionFactory(final DBDriverFactory df) {
+        return new OracleCachedConnectionFactory(df);
     }
 
     @Override

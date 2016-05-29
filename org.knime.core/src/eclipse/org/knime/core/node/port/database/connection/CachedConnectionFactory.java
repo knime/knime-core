@@ -132,7 +132,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
         }
 
     /**
-     * @param driverFactory
+     * @param driverFactory the {@link DBDriverFactory} to get the {@link Driver}
      */
     public CachedConnectionFactory(final DBDriverFactory driverFactory) {
         m_driverFactory = driverFactory;
@@ -202,13 +202,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
                 @Override
                 public Connection call() throws Exception {
                     LOGGER.debug("Opening database connection to \"" + jdbcUrl + "\"...");
-                    final Properties props = new Properties();
-                    if (user != null) {
-                        props.put("user", user);
-                    }
-                    if (pass != null) {
-                        props.put("password", pass);
-                    }
+                    final Properties props = createConnectionProperties(user, pass);
                     final Connection connection = d.connect(jdbcUrl, props);
                     return connection;
                 }
@@ -233,5 +227,21 @@ public class CachedConnectionFactory implements DBConnectionFactory {
                 throw new IOException("Connection to database '" + jdbcUrl + "' timed out");
             }
         }
+    }
+
+    /**
+     * @param user the user name. Might be <code>null</code>.
+     * @param pass the password. Might be <code>null</code>.
+     * @return {@link Properties} to use
+     */
+    protected Properties createConnectionProperties(final String user, final String pass) {
+        final Properties props = new Properties();
+        if (user != null) {
+            props.put("user", user);
+        }
+        if (pass != null) {
+            props.put("password", pass);
+        }
+        return props;
     }
 }
