@@ -60,7 +60,9 @@ import org.knime.core.node.port.database.aggregation.function.sqlite.TotalDBAggr
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
+ * @deprecated moved to the org.knime.database.connectors plugin
  */
+@Deprecated
 public class SQLiteUtility extends DatabaseUtility {
     private static class SQLiteStatementManipulator extends StatementManipulator {
 

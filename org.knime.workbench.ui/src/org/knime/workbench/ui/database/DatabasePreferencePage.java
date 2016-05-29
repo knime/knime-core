@@ -45,22 +45,13 @@
  */
 package org.knime.workbench.ui.database;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.IntegerFieldEditor;
-import org.eclipse.jface.preference.ListEditor;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
-import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 
@@ -86,61 +77,9 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 	 */
 	@Override
 	protected void createFieldEditors() {
-		final Shell shell = Display.getDefault().getActiveShell();
-        addField(new ListEditor(HeadlessPreferencesConstants.P_DATABASE_DRIVERS,
-        		"List of loaded database driver files:",
-        		getFieldEditorParent()) {
- 			@Override
-			protected String[] parseString(final String string) {
- 			    ArrayList<String> result = new ArrayList<String>();
- 			    ArrayList<String> failed = new ArrayList<String>();
-				String[] strings = string.split(";");
-				for (String str : strings) {
-					try {
-					    if (str != null && !str.trim().isEmpty()) {
-    						DatabaseDriverLoader.loadDriver(new File(str));
-    						result.add(str);
-					    }
-					} catch (IOException ioe) {
-					    failed.add(str);
-					}
-				}
-				if (!failed.isEmpty()) {
-                    setErrorMessage("Some driver file(s) are not available anymore: " + failed.toString());
-				}
-				return result.toArray(new String[0]);
-			}
-
-			@Override
-			protected String getNewInputObject() {
-			    FileDialog dialog = new FileDialog(shell);
-			    dialog.setFilterExtensions(new String[]{"*.jar", "*.zip"});
-				String fileName = dialog.open();
-				if (fileName == null) {
-				    return null;
-				}
-				try {
-					DatabaseDriverLoader.loadDriver(new File(fileName));
-					return fileName;
-				} catch (IOException ioe) {
-				    setErrorMessage(ioe.getMessage());
-					return null;
-				}
-			}
-
-			@Override
-			protected String createList(final String[] string) {
-				StringBuilder res = new StringBuilder();
-				for (int i = 0; i < string.length; i++) {
-					if (i > 0) {
-						res.append(';');
-					}
-					res.append(string[i]);
-				}
-				return res.toString();
-			}
-		});
-
+	    addField(new DatabaseDriverListEditor(HeadlessPreferencesConstants.P_DATABASE_DRIVERS,
+            "List of loaded database driver files and directories:",
+            getFieldEditorParent(), this));
         addField(new IntegerFieldEditor(HeadlessPreferencesConstants.P_DATABASE_TIMEOUT,
             "Timeout for database operations (in seconds)", getFieldEditorParent(), 5));
         if (DatabaseConnectionSettings.getSystemPropertyDatabaseTimeout() >= 0) {

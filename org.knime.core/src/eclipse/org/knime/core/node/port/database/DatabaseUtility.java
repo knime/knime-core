@@ -54,16 +54,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
@@ -76,6 +70,10 @@ import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFu
 import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.custom.CustomDBAggregationFunction;
+import org.knime.core.node.port.database.connection.CachedConnectionFactory;
+import org.knime.core.node.port.database.connection.DBConnectionFactory;
+import org.knime.core.node.port.database.connection.DBDriverFactory;
+import org.knime.core.node.port.database.connection.PriorityDriverFactory;
 import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.port.database.reader.DBReaderImpl;
 import org.knime.core.node.port.database.writer.DBWriter;
@@ -94,10 +92,6 @@ public class DatabaseUtility {
      * @since 2.11*/
     public static final String DEFAULT_DATABASE_IDENTIFIER = "default";
 
-    private static final String EXT_POINT_ID = "org.knime.core.DatabaseUtility";
-
-    private static final Map<String, DatabaseUtility> UTILITY_MAP = new HashMap<>();
-
     private static final StatementManipulator DEFAULT_MANIPULATOR = new StatementManipulator();
 
     private static final DBAggregationFunctionFactory[] DEFAULT_AGGREGATION_FUNCTIONS =
@@ -114,6 +108,8 @@ public class DatabaseUtility {
 
     private boolean m_supportsIsValid = true;
 
+    private DBConnectionFactory m_connFactory;
+
     /**
      * Returns a utility implementation for the given database type. If no specific implementation is available, a
      * generic manipulator is returned.
@@ -122,73 +118,24 @@ public class DatabaseUtility {
      * ({@link #getDatabaseIdentifier()}; must not be <code>null</code>
      * @return an SQL manipulator
      */
-    public static synchronized DatabaseUtility getUtility(final String dbIdentifier) {
-        if (DEFAULT_DATABASE_IDENTIFIER.equals(dbIdentifier)) {
-            //this is the default utility identifier
-            return new DatabaseUtility();
-        }
-        DatabaseUtility utility = UTILITY_MAP.get(dbIdentifier);
-        if (utility == null) {
-            final IExtensionRegistry registry = Platform.getExtensionRegistry();
-            final IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
-            assert point != null : "Invalid extension point id: " + EXT_POINT_ID;
-            for (IExtension ext : point.getExtensions()) {
-                final IConfigurationElement[] elements = ext.getConfigurationElements();
-                for (IConfigurationElement utilityElement : elements) {
-                    final String extensionPointDBIdentifier = utilityElement.getAttribute("database");
-                    if (dbIdentifier.equals(extensionPointDBIdentifier)) {
-                        try {
-                            utility = (DatabaseUtility)utilityElement.createExecutableExtension("class");
-                            if (utility.getDatabaseIdentifier().equals(dbIdentifier)) {
-                                break;
-                            } else {
-                                NodeLogger.getLogger(DatabaseUtility.class).error(
-                                    "Extension point database identifier and database identifier of implementing class "
-                                    + "are different extension point identifier: " + extensionPointDBIdentifier
-                                    + " implementing class identifier: " + utility.getDatabaseIdentifier()
-                                    + ". This might result in problems when fetching the DatabaseUtility class.");
-                                utility = null;
-                            }
-                        } catch (CoreException ex) {
-                            NodeLogger.getLogger(DatabaseUtility.class).error(
-                                "Could not create registered database utility "
-                                    + utilityElement.getAttribute("class") + " for " + dbIdentifier
-                                    + " from plug-in " + utilityElement.getNamespaceIdentifier() + ": "
-                                    + ex.getMessage(), ex);
-                        }
-                    }
-                }
-                if (utility != null) {
-                    break;
-                }
-            }
-
-            if (utility == null) {
-                utility = new DatabaseUtility();
-            }
-            UTILITY_MAP.put(dbIdentifier, utility);
-        }
-        return utility;
+    public static DatabaseUtility getUtility(final String dbIdentifier) {
+        return DatabaseUtilityRegistry.getInstance().getUtility(dbIdentifier);
     }
 
     /**
      * @return {@link Collection} of database identifiers of all registered database utility implementations
      * @since 2.11
      */
-    public static synchronized Collection<String> getDatabaseIdentifiers() {
-        final IExtensionRegistry registry = Platform.getExtensionRegistry();
-        final IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
-        assert point != null : "Invalid extension point id: " + EXT_POINT_ID;
-        final Collection<String> databaseIdentifier = new LinkedList<>();
-        databaseIdentifier.add(DEFAULT_DATABASE_IDENTIFIER);
-        for (IExtension ext : point.getExtensions()) {
-            final IConfigurationElement[] elements = ext.getConfigurationElements();
-            for (IConfigurationElement utilityElement : elements) {
-                final String extensionPointDBIdentifier = utilityElement.getAttribute("database");
-                databaseIdentifier.add(extensionPointDBIdentifier);
-            }
-        }
-        return databaseIdentifier;
+    public static Collection<String> getDatabaseIdentifiers() {
+        return DatabaseUtilityRegistry.getInstance().getDBIdentifier();
+    }
+
+    /**
+     * @return {@link Set} with available JDBC drivers
+     * @since 3.2
+     */
+    public static Set<String> getJDBCDriverClasses() {
+        return DatabaseUtilityRegistry.getInstance().getJDBCDriverClasses();
     }
 
     /**
@@ -199,7 +146,6 @@ public class DatabaseUtility {
     public DatabaseUtility() {
         this(null, null, (DBAggregationFunctionFactory[]) null);
     }
-
     /**
      * @param dbIdentifier the unique database identifier or <code>null</code> to use default
      * @param stmtManipulator  the {@link StatementManipulator} or <code>null</code> to use default
@@ -209,6 +155,19 @@ public class DatabaseUtility {
      */
     public DatabaseUtility(final String dbIdentifier, final StatementManipulator stmtManipulator,
         final DBAggregationFunctionFactory... aggregationFunctions) {
+        this(dbIdentifier, stmtManipulator, null, aggregationFunctions);
+    }
+
+    /**
+     * @param dbIdentifier the unique database identifier or <code>null</code> to use default
+     * @param stmtManipulator  the {@link StatementManipulator} or <code>null</code> to use default
+     * @param driverFactory {@link DBDriverFactory}
+     * @param aggregationFunctions array of all {@link DBAggregationFunction}s or <code>null</code>
+     * to use default
+     * @since 3.2
+     */
+    public DatabaseUtility(final String dbIdentifier, final StatementManipulator stmtManipulator,
+        final DBDriverFactory driverFactory, final DBAggregationFunctionFactory... aggregationFunctions) {
         m_dbIdentifier = dbIdentifier != null ? dbIdentifier : DEFAULT_DATABASE_IDENTIFIER;
         m_stmtManipulator = stmtManipulator != null ? stmtManipulator : DEFAULT_MANIPULATOR;
         final DBAggregationFunctionFactory[] f;
@@ -233,6 +192,15 @@ public class DatabaseUtility {
             final DBAggregationFunctionFactory customFunction = new CustomDBAggregationFunction.Factory();
             m_aggregationFunctions.put(customFunction.getId(), customFunction);
         }
+        //ensures that we always consider external drivers first
+        final DBDriverFactory df;
+        if (driverFactory == null || RegisteredDriversConnectionFactory.getInstance().equals(driverFactory)) {
+            df = RegisteredDriversConnectionFactory.getInstance();
+        } else {
+            df = new PriorityDriverFactory(RegisteredDriversConnectionFactory.getInstance(), driverFactory);
+        }
+        //currently we only support the old single connection factory
+        m_connFactory = new CachedConnectionFactory(df);
     }
 
     /**
@@ -405,5 +373,14 @@ public class DatabaseUtility {
      */
     public DBWriter getWriter(final DatabaseConnectionSettings connSettings) {
         return new DBWriterImpl(connSettings);
+    }
+
+    /**
+     * {@link DBConnectionFactory} to use
+     * @return {@link DBConnectionFactory}
+     * @since 3.2
+     */
+    public DBConnectionFactory getConnectionFactory() {
+        return m_connFactory;
     }
 }

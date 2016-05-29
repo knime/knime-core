@@ -57,6 +57,7 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * The <tt>SELECTIVITY</tt> aggregation function. It's defined as <tt>100 * distinctCount / rowCount</tt>.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 3.2
  */
 public class SelectivtyDBAggregationFunction extends SimpleDBAggregationFunction {
     private static final String ID = "SELECTIVITY";

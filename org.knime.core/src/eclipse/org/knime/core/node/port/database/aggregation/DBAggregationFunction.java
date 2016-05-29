@@ -53,7 +53,10 @@ import org.knime.core.node.port.database.StatementManipulator;
 
 
 /**
- *
+ * This interface defines a database specific aggregation function such as count. Before implementing you own
+ * function have a look at the already existing implementations and reuse them. This allows the user to
+ * switch seamlessly between databases that support the same aggregation functions. Otherwise the user needs
+ * to adapt the aggregation function after each db switch.
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */

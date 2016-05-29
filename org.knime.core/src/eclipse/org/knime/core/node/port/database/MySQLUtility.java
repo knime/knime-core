@@ -72,7 +72,9 @@ import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregati
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
+ * @deprecated moved to the org.knime.database.connectors plugin
  */
+@Deprecated
 public class MySQLUtility extends DatabaseUtility {
     private static class MySQLStatementManipulator extends StatementManipulator {
 

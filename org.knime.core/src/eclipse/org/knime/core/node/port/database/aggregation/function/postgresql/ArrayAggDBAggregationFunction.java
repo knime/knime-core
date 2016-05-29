@@ -57,7 +57,7 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
 /**
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
- * @since 2.11
+ * @since 3.2
  */
 public final class ArrayAggDBAggregationFunction extends SimpleDBAggregationFunction {
     private static final String ID = "ARRAY_AGG";

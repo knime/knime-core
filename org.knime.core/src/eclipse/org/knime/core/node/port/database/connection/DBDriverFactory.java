@@ -44,46 +44,50 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   15.03.2016 (thor): created
+ *   14.11.2015 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation.function.h2;
+package org.knime.core.node.port.database.connection;
 
-import org.knime.core.data.BooleanValue;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Driver;
+import java.util.Collection;
+import java.util.Set;
+
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 
 /**
- * The <tt>BOOL_AND</tt> aggregation function.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME.com
  * @since 3.2
  */
-public class BoolAndDBAggregationFunction extends SimpleDBAggregationFunction {
-    private static final String ID = "BOOL_AND";
+public interface DBDriverFactory {
 
-    /**Factory for the parent class.*/
-    public static final class Factory implements DBAggregationFunctionFactory {
-        private static final BoolAndDBAggregationFunction INSTANCE = new BoolAndDBAggregationFunction();
+    /**
+     * @return the names of the driver classes
+     */
+    public Set<String> getDriverNames();
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getId() {
-            return ID;
-        }
+    /**
+     * @param settings {@link DatabaseConnectionSettings}
+     * @return the {@link Driver}
+     * @throws Exception
+     */
+    public Driver getDriver(final DatabaseConnectionSettings settings) throws Exception;
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DBAggregationFunction createInstance() {
-            return INSTANCE;
-        }
-    }
+    /**
+     * @param settings {@link DatabaseConnectionSettings}
+     * @return the {@link Collection} of driver files necessary for this db driver
+     * @throws IOException if the files can not be retrieved
+     */
+    public Collection<File> getDriverFiles(final DatabaseConnectionSettings settings) throws IOException;
 
-    private BoolAndDBAggregationFunction() {
-        super(ID, "The boolean AND of all non-null input values, or null if none.", null, BooleanValue.class);
+    /**
+     * @param settings {@link DatabaseConnectionSettings}
+     * @return <code>true</code> if the driver is compatible with the given settings
+     * @throws Exception
+     */
+    default boolean isCompatible(final DatabaseConnectionSettings settings) throws Exception {
+        return getDriver(settings) != null;
     }
 }

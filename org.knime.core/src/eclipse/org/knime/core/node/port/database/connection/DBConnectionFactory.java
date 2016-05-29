@@ -44,46 +44,39 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   15.03.2016 (thor): created
+ *   14.11.2015 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation.function.h2;
+package org.knime.core.node.port.database.connection;
 
-import org.knime.core.data.BooleanValue;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
- * The <tt>BOOL_AND</tt> aggregation function.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter, KNIME.com
  * @since 3.2
  */
-public class BoolAndDBAggregationFunction extends SimpleDBAggregationFunction {
-    private static final String ID = "BOOL_AND";
+public interface DBConnectionFactory {
 
-    /**Factory for the parent class.*/
-    public static final class Factory implements DBAggregationFunctionFactory {
-        private static final BoolAndDBAggregationFunction INSTANCE = new BoolAndDBAggregationFunction();
+    /**
+     * @param cp {@link CredentialsProvider}
+     * @param settings {@link DatabaseConnectionSettings}
+     * @return the {@link Connection} to use which needs to be closed after usage by calling {@link Connection#close()}
+     * @throws InvalidSettingsException
+     * @throws SQLException
+     * @throws IOException
+     */
+    Connection getConnection(final CredentialsProvider cp,
+        final DatabaseConnectionSettings settings) throws InvalidSettingsException, SQLException, IOException;
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getId() {
-            return ID;
-        }
+    /**
+     * @return the {@link DBDriverFactory} the connection factory uses
+     */
+    DBDriverFactory getDriverFactory();
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DBAggregationFunction createInstance() {
-            return INSTANCE;
-        }
-    }
-
-    private BoolAndDBAggregationFunction() {
-        super(ID, "The boolean AND of all non-null input values, or null if none.", null, BooleanValue.class);
-    }
 }

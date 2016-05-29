@@ -47,24 +47,13 @@ package org.knime.core.node.port.database;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -77,12 +66,10 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.util.KnimeEncryption;
-import org.knime.core.util.ThreadUtils;
 
 /**
  *
@@ -103,9 +90,9 @@ public class DatabaseConnectionSettings {
     /** Keeps the history of all database URLs. */
     public static final StringHistory DATABASE_URLS = StringHistory.getInstance(
             "database_urls");
-
-    private static final ExecutorService CONNECTION_CREATOR_EXECUTOR =
-            ThreadUtils.executorServiceWithContext(Executors.newCachedThreadPool());
+//
+//    private static final ExecutorService CONNECTION_CREATOR_EXECUTOR =
+//            ThreadUtils.executorServiceWithContext(Executors.newCachedThreadPool());
 
     private static int databaseTimeout = Math.max(15, getSystemPropertyDatabaseTimeout());
 
@@ -123,6 +110,7 @@ public class DatabaseConnectionSettings {
      */
     public static int getSystemPropertyDatabaseTimeout() {
         int timeout = -1;
+        @SuppressWarnings("deprecation")
         String sysPropTimeout = System.getProperty(KNIMEConstants.PROPERTY_DATABASE_LOGIN_TIMEOUT);
 
         if (sysPropTimeout != null) {
@@ -348,48 +336,48 @@ public class DatabaseConnectionSettings {
         m_dbIdentifier = conn.getDatabaseIdentifier();
     }
 
-    /** Map the keeps database connection based on the user and URL. */
-    private static final Map<ConnectionKey, Connection> CONNECTION_MAP =
-        Collections.synchronizedMap(new HashMap<ConnectionKey, Connection>());
-    /** Holding the database connection keys used to sync the open connection
-     * process. */
-    private static final Map<ConnectionKey, ConnectionKey>
-        CONNECTION_KEYS = new HashMap<ConnectionKey, ConnectionKey>();
-
-    private static final class ConnectionKey {
-        private final String m_un;
-        private final String m_pw;
-        private final String m_dn;
-        private ConnectionKey(final String userName, final String password,
-                final String databaseName) {
-            m_un = userName;
-            m_pw = password;
-            m_dn = databaseName;
-        }
-        /** {@inheritDoc} */
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == this) {
-                return true;
-            }
-            if (obj == null || !(obj instanceof ConnectionKey)) {
-                return false;
-            }
-            ConnectionKey ck = (ConnectionKey) obj;
-            if (!ConvenienceMethods.areEqual(this.m_un, ck.m_un)
-                  || !ConvenienceMethods.areEqual(this.m_pw, ck.m_pw)
-                  || !ConvenienceMethods.areEqual(this.m_dn, ck.m_dn)) {
-                return false;
-            }
-            return true;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public int hashCode() {
-            return m_un.hashCode() ^ m_dn.hashCode();
-        }
-    }
+//    /** Map the keeps database connection based on the user and URL. */
+//    private static final Map<ConnectionKey, Connection> CONNECTION_MAP =
+//        Collections.synchronizedMap(new HashMap<ConnectionKey, Connection>());
+//    /** Holding the database connection keys used to sync the open connection
+//     * process. */
+//    private static final Map<ConnectionKey, ConnectionKey>
+//        CONNECTION_KEYS = new HashMap<ConnectionKey, ConnectionKey>();
+//
+//    private static final class ConnectionKey {
+//        private final String m_un;
+//        private final String m_pw;
+//        private final String m_dn;
+//        private ConnectionKey(final String userName, final String password,
+//                final String databaseName) {
+//            m_un = userName;
+//            m_pw = password;
+//            m_dn = databaseName;
+//        }
+//        /** {@inheritDoc} */
+//        @Override
+//        public boolean equals(final Object obj) {
+//            if (obj == this) {
+//                return true;
+//            }
+//            if (obj == null || !(obj instanceof ConnectionKey)) {
+//                return false;
+//            }
+//            ConnectionKey ck = (ConnectionKey) obj;
+//            if (!ConvenienceMethods.areEqual(this.m_un, ck.m_un)
+//                  || !ConvenienceMethods.areEqual(this.m_pw, ck.m_pw)
+//                  || !ConvenienceMethods.areEqual(this.m_dn, ck.m_dn)) {
+//                return false;
+//            }
+//            return true;
+//        }
+//
+//        /** {@inheritDoc} */
+//        @Override
+//        public int hashCode() {
+//            return m_un.hashCode() ^ m_dn.hashCode();
+//        }
+//    }
 
     /** Create a database connection based on this settings. Note, don't close
      * the connection since it cached for subsequent calls or later reuse to
@@ -427,91 +415,7 @@ public class DatabaseConnectionSettings {
             throws InvalidSettingsException, SQLException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, IOException {
-        if (m_jdbcUrl == null || m_user == null || m_pass == null || m_driver == null || m_timezone == null) {
-            throw new InvalidSettingsException("No settings available to create database connection.");
-        }
-        final Driver d = DatabaseDriverLoader.registerDriver(m_driver);
-        if (!d.acceptsURL(m_jdbcUrl)) {
-            throw new InvalidSettingsException("Driver \"" + d + "\" does not accept URL: " + m_jdbcUrl);
-        }
-
-        final String jdbcUrl = m_jdbcUrl;
-        final String user;
-        final String pass;
-        if (cp == null || m_credName == null) {
-            user = m_user;
-            pass = m_pass;
-        } else {
-            ICredentials cred = cp.get(m_credName);
-            user = cred.getLogin();
-            pass = cred.getPassword();
-        }
-
-        // database connection key with user, password and database URL
-        ConnectionKey databaseConnKey = new ConnectionKey(user, pass, jdbcUrl);
-
-        // retrieve original key and/or modify connection key map
-        synchronized (CONNECTION_KEYS) {
-            if (CONNECTION_KEYS.containsKey(databaseConnKey)) {
-                databaseConnKey = CONNECTION_KEYS.get(databaseConnKey);
-            } else {
-                CONNECTION_KEYS.put(databaseConnKey, databaseConnKey);
-            }
-        }
-
-        // sync database connection key: unique with database url and user name
-        synchronized (databaseConnKey) {
-            Connection conn = CONNECTION_MAP.get(databaseConnKey);
-            // if connection already exists
-            if (conn != null) {
-                try {
-                    if (conn.isClosed() || !getUtility().isValid(conn)) {
-                        CONNECTION_MAP.remove(databaseConnKey);
-                    } else {
-                        conn.clearWarnings();
-                        return conn;
-                    }
-                } catch (Exception e) { // remove invalid connection
-                    CONNECTION_MAP.remove(databaseConnKey);
-                }
-            }
-            // if a connection is not available
-            Callable<Connection> callable = new Callable<Connection>() {
-                /** {@inheritDoc} */
-                @Override
-                public Connection call() throws Exception {
-                    LOGGER.debug("Opening database connection to \"" + jdbcUrl + "\"...");
-                    Driver driver = DriverManager.getDriver(jdbcUrl);
-                    Properties props = new Properties();
-                    if (user != null) {
-                        props.put("user", user);
-                    }
-                    if (pass != null) {
-                        props.put("password", pass);
-                    }
-                    return driver.connect(jdbcUrl, props);
-                }
-            };
-            //TODO:this has to be more robust e.g. the thread should terminate when KNIME terminates and should be
-            //cancelable if the user presses cancel. If no credentials are present for Phoenix the thread keeps KNIME
-            //alive for ages
-            Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
-            try {
-                conn = task.get(databaseTimeout + 1, TimeUnit.SECONDS);
-                CONNECTION_MAP.put(databaseConnKey, conn);
-                return conn;
-            } catch (ExecutionException ee) {
-                if (ee.getCause() instanceof SQLException) {
-                    throw (SQLException) ee.getCause();
-                } else {
-                    throw new SQLException(ee.getCause());
-                }
-            } catch (InterruptedException ex) {
-                throw new SQLException("Thread was interrupted while waiting for database to respond");
-            } catch (TimeoutException ex) {
-                throw new IOException("Connection to database '" + jdbcUrl + "' timed out");
-            }
-        }
+        return getUtility().getConnectionFactory().getConnection(cp, this);
     }
 
     /**

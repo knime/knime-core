@@ -53,7 +53,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -66,6 +66,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseDriverLoader;
+import org.knime.core.node.port.database.DatabaseUtility;
 
 /**
  * A panel for selecting a JDBC driver and a full JDBC URL to the database. The panel has a {@link GridBagLayout} and
@@ -142,7 +143,7 @@ public class DBGenericConnectionPanel<T extends DatabaseConnectionSettings> exte
 
     private void updateDriver() {
         m_driver.removeAllItems();
-        Set<String> driverNames = new HashSet<String>(DatabaseDriverLoader.getLoadedDriver());
+        Set<String> driverNames = new LinkedHashSet<>(DatabaseUtility.getJDBCDriverClasses());
         for (String driverName : DatabaseConnectionSettings.DRIVER_ORDER.getHistory()) {
             if (driverNames.contains(driverName)) {
                 m_driver.addItem(driverName);

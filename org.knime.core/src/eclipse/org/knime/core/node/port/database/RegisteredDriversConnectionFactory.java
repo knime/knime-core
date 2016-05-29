@@ -44,46 +44,77 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   15.03.2016 (thor): created
+ *   16.11.2015 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation.function.h2;
+package org.knime.core.node.port.database;
 
-import org.knime.core.data.BooleanValue;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
+import java.io.File;
+import java.io.IOException;
+import java.sql.Driver;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Set;
+
+import org.knime.core.node.port.database.connection.DBDriverFactory;
 
 /**
- * The <tt>BOOL_AND</tt> aggregation function.
- *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * {@link DBDriverFactory} implementation for jar drivers registered by the user or via the old jar extension point.
+ * @author Tobias Koetter, KNIME.com
  * @since 3.2
  */
-public class BoolAndDBAggregationFunction extends SimpleDBAggregationFunction {
-    private static final String ID = "BOOL_AND";
+public final class RegisteredDriversConnectionFactory implements DBDriverFactory {
 
-    /**Factory for the parent class.*/
-    public static final class Factory implements DBAggregationFunctionFactory {
-        private static final BoolAndDBAggregationFunction INSTANCE = new BoolAndDBAggregationFunction();
+    private static final RegisteredDriversConnectionFactory INSTANCE = new RegisteredDriversConnectionFactory();
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getId() {
-            return ID;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DBAggregationFunction createInstance() {
-            return INSTANCE;
-        }
+    /**
+     *
+     */
+    private RegisteredDriversConnectionFactory() {
+        //prevent object creation
     }
 
-    private BoolAndDBAggregationFunction() {
-        super(ID, "The boolean AND of all non-null input values, or null if none.", null, BooleanValue.class);
+    /**
+     * @return the instance
+     */
+    public static RegisteredDriversConnectionFactory getInstance() {
+        return INSTANCE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("deprecation")
+    @Override
+    public Set<String> getDriverNames() {
+        return DatabaseDriverLoader.getLoadedDriver();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Driver getDriver(final DatabaseConnectionSettings settings) throws Exception {
+        final Driver d = DatabaseDriverLoader.getDriver(settings.getDriver());
+        return d;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Collection<File> getDriverFiles(final DatabaseConnectionSettings settings) throws IOException {
+      //locate the jdbc jar files
+        try {
+            final Collection<File> jars = new LinkedList<>();
+            @SuppressWarnings("deprecation")
+            final File[] driverFiles = DatabaseDriverLoader.getDriverFilesForDriverClass(settings.getDriver());
+            if (driverFiles != null) {
+                jars.addAll(Arrays.asList(driverFiles));
+            }
+            return jars;
+        } catch (final Exception e) {
+            throw new IOException(e);
+        }
     }
 }

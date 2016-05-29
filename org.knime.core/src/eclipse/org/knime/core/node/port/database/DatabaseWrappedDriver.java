@@ -138,14 +138,23 @@ public final class DatabaseWrappedDriver implements Driver {
         if (m_d == null) {
             return "No driver available";
         }
-        String name = m_d.getClass().getCanonicalName();
+        return getInfo(m_d);
+    }
+
+    /**
+     * @param d {@link Driver} to get the info for
+     * @return the driver info {@link String}
+     * @since 3.2
+     */
+    public static final String getInfo(final Driver d) {
+        String name = d.getClass().getCanonicalName();
         if (name == null) {
-            name = m_d.getClass().getName();
+            name = d.getClass().getName();
         }
-        return "Driver class name: " + name 
-        		+ " major version: " + m_d.getMajorVersion()
-                + " minor version: " + m_d.getMinorVersion() 
-                + " jdbc compliant: " + m_d.jdbcCompliant();
+        return "Driver class name: " + name
+                + " major version: " + d.getMajorVersion()
+                + " minor version: " + d.getMinorVersion()
+                + " jdbc compliant: " + d.jdbcCompliant();
     }
 
     /**

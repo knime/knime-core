@@ -57,6 +57,7 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * The <tt>BOOL_OR</tt> aggregation function.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 3.2
  */
 public class BoolOrDBAggregationFunction extends SimpleDBAggregationFunction {
     private static final String ID = "BOOL_OR";
