@@ -47,11 +47,9 @@
  */
 package org.knime.workbench.repository.model;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeModel;
 
 /**
@@ -67,47 +65,9 @@ import org.knime.core.node.NodeModel;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeTemplate extends AbstractNodeTemplate {
-    /** Type for nodes that read data. */
-    public static final String TYPE_DATA_READER = "data reader";
-
-    /** Type for nodes that transform data. */
-    public static final String TYPE_DATA_TRANSFORMER = "data transformer";
-
-    /** Type for learner nodes. */
-    public static final String TYPE_LEARNER = "learner";
-
-    /** Type for nodes that use a model make predictions. */
-    public static final String TYPE_PREDICTOR = "predictor";
-
-    /** Type for nodes that provide a view on the data/model. */
-    public static final String TYPE_VISUALIZER = "visualizer";
-
-    /** Type for nodes that evaluate some model. */
-    public static final String TYPE_EVALUATOR = "evaluator";
-
-    /** Type for nodes that are in fact meta nodes. */
-    public static final String TYPE_META = "meta";
-
-
-    /** Type for nodes that can't be assigned to one of the other types. */
-    public static final String TYPE_OTHER = "other";
-
-    private static final Set<String> TYPES = new HashSet<String>();
-
-    static {
-        TYPES.add(TYPE_DATA_READER);
-        TYPES.add(TYPE_DATA_TRANSFORMER);
-        TYPES.add(TYPE_LEARNER);
-        TYPES.add(TYPE_PREDICTOR);
-        TYPES.add(TYPE_VISUALIZER);
-        TYPES.add(TYPE_EVALUATOR);
-        TYPES.add(TYPE_META);
-        TYPES.add(TYPE_OTHER);
-    }
-
     private Class<? extends NodeFactory<? extends NodeModel>> m_factory;
 
-    private String m_type;
+    private NodeType m_type;
 
     /**
      * Creates a copy of the given node template.
@@ -188,15 +148,14 @@ public class NodeTemplate extends AbstractNodeTemplate {
     /**
      * @return Returns the type.
      */
-    public String getType() {
+    public NodeType getType() {
         return m_type;
     }
 
     /**
      * @param type The type to set.
      */
-    public void setType(final String type) {
-        assert TYPES.contains(type) : "Illegal node type: " + type;
+    public void setType(final NodeType type) {
         m_type = type;
     }
 

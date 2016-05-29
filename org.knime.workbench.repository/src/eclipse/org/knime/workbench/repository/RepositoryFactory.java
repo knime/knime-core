@@ -132,7 +132,7 @@ public final class RepositoryFactory {
             factory.getNodeName(), pluginID);
         node.setAfterID(str(element.getAttribute("after"), ""));
 
-        node.setType(str(element.getAttribute("type"), NodeTemplate.TYPE_OTHER));
+        node.setType(factory.getType());
 
         if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin

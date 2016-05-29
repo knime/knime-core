@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeInfo;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeTriple;
@@ -133,14 +134,14 @@ public class NodeRecommendationManager {
         /* considering the successor only, i.e. for all entries where the predecessor and the node
          * itself is not present
          */
-        if (!nf.getNode().isPresent() && !nf.getPredecessor().isPresent()) {
+        if (!nf.getNode().isPresent() && !nf.getPredecessor().isPresent() && isSourceNode(nf.getSuccessor())) {
             add(recommendationMap, SOURCE_NODES_KEY, nf.getSuccessor(), nf.getCount());
         }
 
         /* considering the the node itself as successor, but only for those nodes that don't have a
          * predecessor -> source nodes, i.e. nodes without an input port
          */
-        if (!nf.getPredecessor().isPresent() && nf.getNode().isPresent()) {
+        if (!nf.getPredecessor().isPresent() && nf.getNode().isPresent() && isSourceNode(nf.getNode().get())) {
             add(recommendationMap, SOURCE_NODES_KEY, nf.getNode().get(), nf.getCount());
         }
 
@@ -154,6 +155,16 @@ public class NodeRecommendationManager {
             add(recommendationMap,
                 getKey(nf.getPredecessor().get()) + NODE_NAME_SEP + getKey(nf.getNode().get()),
                 nf.getSuccessor(), nf.getCount());
+        }
+    }
+
+    private static boolean isSourceNode(final NodeInfo ni) {
+        NodeTemplate nt = findNodeTemplate(ni);
+        try {
+            return (nt != null) && (nt.getType() == NodeType.Source);
+        } catch (Exception ex) {
+            LOGGER.warn("Could not create factory instance for " + ni.getFactory() + ": " + ex.getMessage(), ex);
+            return false;
         }
     }
 
@@ -174,17 +185,22 @@ public class NodeRecommendationManager {
         final int count) {
         List<NodeRecommendation> p = recommendation.computeIfAbsent(key, k -> new ArrayList<>());
         //create the new node recommendation
+        NodeTemplate nt = findNodeTemplate(ni);
+        if (nt == null) {
+            LOGGER.info("The node " + ni + " listed in the node recommendation statistics is not installed.");
+        } else {
+            p.add(new NodeRecommendation(nt, count));
+        }
+    }
+
+    private static NodeTemplate findNodeTemplate(final NodeInfo ni) {
         NodeTemplate nt = RepositoryManager.INSTANCE.getNodeTemplate(ni.getFactory());
         if (nt == null) {
             //the node to look for might be a dynamically generated node
             //in that case the node template's id is <node factory-class name>#<node name>
             nt = RepositoryManager.INSTANCE.getNodeTemplate(getKey(ni));
         }
-        if (nt == null) {
-            LOGGER.info("The node " + ni + " listed in the node recommendation statistics is not installed.");
-        } else {
-            p.add(new NodeRecommendation(nt, count));
-        }
+        return nt;
     }
 
     /**
