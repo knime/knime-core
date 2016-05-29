@@ -49,20 +49,10 @@
    <element name="node">
       <annotation>
          <appInfo>
-            <meta.element labelAttribute="name" icon="icon-small"/>
+            <meta.element labelAttribute="factory-class" icon="icon-small"/>
          </appInfo>
       </annotation>
       <complexType>
-         <attribute name="id" type="string">
-            <annotation>
-               <documentation>
-                  Not used.
-               </documentation>
-               <appInfo>
-                  <meta.attribute deprecated="true"/>
-               </appInfo>
-            </annotation>
-         </attribute>
          <attribute name="factory-class" type="string" use="required">
             <annotation>
                <documentation>
@@ -94,6 +84,16 @@ If not defined, the nodes are sorted lexicographically.
                   Indicates whether this node is deprecated. Deprecated nodes are not shown in the node repository any more but are still loaded in existing workflows.
 If this flag is set in the extension point, there is not need to specify it also in the node description XML file any more.
                </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  Not used.
+               </documentation>
+               <appInfo>
+                  <meta.attribute deprecated="true"/>
+               </appInfo>
             </annotation>
          </attribute>
       </complexType>
