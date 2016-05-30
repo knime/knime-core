@@ -5,26 +5,20 @@
       <node
             category-path="/scripting/java-snippet"
             factory-class="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"
-            id="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"
-            after="org.knime.base.node.jsnippet.JavaSnippetNodeFactory"/>
+            id="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"/>
       <node
             category-path="/scripting/java-snippet"
             factory-class="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory"
-            id="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory"
-            after="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory" />
+            id="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory"/>
       <node
             category-path="/scripting/java-snippet"
             factory-class="org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory"
-            id="org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory"
-            after="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory" />
+            id="org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory"/>
       <node
             category-path="/flowcontrol/variables"
-            factory-class="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"
-            id="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory" />
+            factory-class="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"/>
       <node
             category-path="/flowcontrol/switches"
-            factory-class="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"
-            id="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory" />
+            factory-class="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"/>
    </extension>
-
 </plugin>

@@ -14,30 +14,29 @@
         <node
               category-path="/analytics/statistics/hypothesis-testing"
               factory-class="org.knime.base.node.stats.testing.ttest.OneSampleTTestNodeFactory"
-              id="org.knime.base.node.stats.testing.ttest.OneSampleTTestNodeFactory">
+              >
         </node>
         <node
               after="org.knime.base.node.stats.testing.ttest.OneSampleTTestNodeFactory"
               category-path="/analytics/statistics/hypothesis-testing"
               factory-class="org.knime.base.node.stats.testing.ttest.TwoSampleTTestNodeFactory"
-              id="org.knime.base.node.stats.testing.ttest.TwoSampleTTestNodeFactory">
+              >
         </node>        
         <node
               after="org.knime.base.node.stats.testing.ttest.TwoSampleTTestNodeFactory"
               category-path="/analytics/statistics/hypothesis-testing"
               factory-class="org.knime.base.node.stats.testing.ttest.PairedTTestNodeFactory"
-              id="org.knime.base.node.stats.testing.ttest.PairedTTestNodeFactory">
+              >
         </node>
         <node
               after="org.knime.base.node.stats.testing.ttest.PairedTTestNodeFactory"
               category-path="/analytics/statistics/hypothesis-testing"
               factory-class="org.knime.base.node.stats.testing.anova.OneWayANOVANodeFactory"
-              id="org.knime.base.node.stats.testing.ttest.OneWayANOVANodeFactory">
+              >
         </node>
         <node
               category-path="/analytics/statistics"
               factory-class="org.knime.base.node.stats.viz.extended.ExtendedStatisticsNodeFactory"
-              id="org.knime.base.node.stats.viz.extended.ExtendedStatisticsNodeFactory"/>
+              />
    </extension>
-
 </plugin>
