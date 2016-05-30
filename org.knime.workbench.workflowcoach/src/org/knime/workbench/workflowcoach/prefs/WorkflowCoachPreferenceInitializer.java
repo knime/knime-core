@@ -49,26 +49,50 @@
 package org.knime.workbench.workflowcoach.prefs;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
-import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
-import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
+import org.osgi.framework.FrameworkUtil;
 
 /**
- *
+ * Intializer for the general workflow coach preferences.
  *
  * @author Martin Horn, University of Konstanz
  */
 public class WorkflowCoachPreferenceInitializer extends AbstractPreferenceInitializer {
+    /**
+     * Constant for monthly updates.
+     */
+    public static final int MONTHLY_UPDATE = 2;
+    /**
+     * Constant for weekly updates.
+     */
+    public static final int WEEKLY_UPDATE = 1;
+    /**
+     * Constant for no updates.
+     */
+    public static final int NO_AUTO_UPDATE = 0;
 
+    /**
+     * Preference key for the automatic update schedule.
+     */
+    public static final String P_AUTO_UPDATE_SCHEDULE = "auto_update_schedule";
+
+    /**
+     * Preference store key for the community recommendations provider.
+     */
+    public static final String P_COMMUNITY_NODE_TRIPLE_PROVIDER = "community_node_triple_provider";
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void initializeDefaultPreferences() {
-        IPreferenceStore store = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore();
-        store.setDefault(KNIMEWorkflowCoachPlugin.P_COMMUNITY_NODE_TRIPLE_PROVIDER, KNIMECorePlugin.getDefault()
-            .getPreferenceStore().getBoolean(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS));
-        store.setDefault(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE, "");
-        store.setDefault(KNIMEWorkflowCoachPlugin.P_SERVER_NODE_TRIPLE_PROVIDERS, "");
-        store.setDefault(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE, KNIMEWorkflowCoachPlugin.MONTHLY_UPDATE);
+        IEclipsePreferences prefs =
+            DefaultScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
+        prefs.putBoolean(P_COMMUNITY_NODE_TRIPLE_PROVIDER, KNIMECorePlugin.getDefault().getPreferenceStore()
+            .getBoolean(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS));
+        prefs.putInt(P_AUTO_UPDATE_SCHEDULE, MONTHLY_UPDATE);
     }
-
 }

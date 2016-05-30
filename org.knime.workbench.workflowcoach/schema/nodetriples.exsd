@@ -2,9 +2,9 @@
 <!-- Schema file written by PDE -->
 <schema targetNamespace="org.knime.workbench.workflowcoach" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
-      <appinfo>
+      <appInfo>
          <meta.schema plugin="org.knime.workbench.workflowcoach" id="nodetriples" name="Node Triples"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          The extension point can be used to plugin new KNIME node triple provider. Node Triples are used to generate node recommendations for the workflow coach.
       </documentation>
@@ -12,15 +12,13 @@
 
    <element name="extension">
       <annotation>
-         <appinfo>
+         <appInfo>
             <meta.element />
-         </appinfo>
+         </appInfo>
       </annotation>
       <complexType>
          <sequence minOccurs="0" maxOccurs="unbounded">
-            <choice>
-               <element ref="tripleprovider"/>
-            </choice>
+            <element ref="tripleprovider" minOccurs="1" maxOccurs="unbounded"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -29,72 +27,55 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="id" type="string">
-            <annotation>
-               <documentation>
-                  
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="name" type="string">
-            <annotation>
-               <documentation>
-                  
-               </documentation>
-               <appinfo>
-                  <meta.attribute translatable="true"/>
-               </appinfo>
-            </annotation>
-         </attribute>
       </complexType>
    </element>
 
    <element name="tripleprovider">
       <complexType>
-         <attribute name="provider-class" type="string">
+         <attribute name="factory-class" type="string" use="required">
             <annotation>
                <documentation>
                   
                </documentation>
-               <appinfo>
-                  <meta.attribute kind="java" basedOn=":org.knime.workbench.workflowcoach.data.NodeTripleProvider"/>
-               </appinfo>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.workbench.workflowcoach.data.NodeTripleProviderFactory"/>
+               </appInfo>
             </annotation>
          </attribute>
       </complexType>
    </element>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="since"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          3.2.0
       </documentation>
    </annotation>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="examples"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          [Enter extension point usage example here.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="apiinfo"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          [Enter API information here.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="implementation"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          [Enter information about supplied implementation of this extension point.]
       </documentation>

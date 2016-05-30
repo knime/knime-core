@@ -49,6 +49,10 @@
 package org.knime.workbench.workflowcoach.data;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.knime.core.node.NodeTriple;
@@ -63,6 +67,11 @@ import org.knime.workbench.workflowcoach.ui.WorkflowCoachView;
  * @author Martin Horn, University of Konstanz
  */
 public interface NodeTripleProvider {
+    /**
+     * A common date format for the last update timestamp.
+     */
+    public static final DateTimeFormatter LAST_UPDATE_FORMAT =
+        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
 
     /**
      * @return a name for the provider (that will, e.g., appear in the header of the frequency column in the node
@@ -98,4 +107,12 @@ public interface NodeTripleProvider {
      *             of the node triples (e.g. a corrupt file)
      */
      Stream<NodeTriple> getNodeTriples() throws IOException;
+
+     /**
+      * Returns the time when this provider was last updated. If the provider hasn't been updated at all (i.e. its
+      * data is missing) then an empty optional is returned.
+      *
+      * @return the last update time or an empty optional
+      */
+     Optional<LocalDateTime> getLastUpdate();
 }

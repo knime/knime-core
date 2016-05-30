@@ -58,6 +58,11 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.knime.core.node.NodeFactory.NodeType;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeInfo;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeTriple;
@@ -67,17 +72,30 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.workflowcoach.data.NodeTripleProvider;
+import org.knime.workbench.workflowcoach.data.NodeTripleProviderFactory;
 import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
-import org.knime.workbench.workflowcoach.ui.WorkflowCoachView;
 
 /**
  * Class that manages the node recommendations. It represents the node recommendations in memory for quick retrieval and
- * provides them accordingly. The {@link #loadStatistics()}-method updates the statistics, the
+ * provides them accordingly. The {@link #loadRecommendations()}-method updates the statistics, the
  * {@link #getNodeRecommendationFor(NativeNodeContainer...)} gives the actual recommendations.
  *
  * @author Martin Horn, University of Konstanz
  */
 public class NodeRecommendationManager {
+    /**
+     * Interface for a listener that gets notified when the recommendations are updated (via
+     * {@link NodeRecommendationManager#loadRecommendations()}.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     */
+    @FunctionalInterface
+    public interface IUpdateListener {
+        /**
+         * Called when the recommendations are updated.
+         */
+        void updated();
+    }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeRecommendationManager.class);
 
@@ -85,14 +103,18 @@ public class NodeRecommendationManager {
 
     private static final String NODE_NAME_SEP = "#";
 
+    private static final String TRIPLE_PROVIDER_EXTENSION_POINT_ID = "org.knime.workbench.workflowcoach.nodetriples";
+
     private static final NodeRecommendationManager INSTANCE = new NodeRecommendationManager();
+
+    private final List<IUpdateListener> m_listeners = new ArrayList<>(1);
 
     private List<Map<String, List<NodeRecommendation>>> m_recommendations;
 
     private NodeRecommendationManager() {
         //try to load statistics if possible
         try {
-            loadStatistics();
+            loadRecommendations();
         } catch (Exception e) {
             m_recommendations = null;
         }
@@ -108,13 +130,34 @@ public class NodeRecommendationManager {
     }
 
     /**
-     * (Re-)Loads the statistics for the node recommendation engine from a given set of {@link NodeTripleProvider}s.
-     * @throws Exception if something went wrong while loading the statistics (e.g. a corrupt file)
+     * Adds a listener that is notified when the recommendations are updated (via {@link #loadRecommendations()}.
+     *
+     * @param listener a listener
      */
-    public void loadStatistics() throws Exception {
+    public void addUpdateListener(final IUpdateListener listener) {
+        m_listeners.add(listener);
+    }
+
+    /**
+     * Removes an update listener.
+     *
+     * @param listener a listener
+     */
+    public void removeUpdateListener(final IUpdateListener listener) {
+        m_listeners.remove(listener);
+    }
+
+    /**
+     * (Re-)Loads the recommendations for the node recommendation engine from the currently active node triple providers.
+     *
+     * @throws Exception if something went wrong while loading the statistics (e.g. a corrupt file)
+     * @see #getNodeTripleProviders()
+     */
+    public void loadRecommendations() throws Exception {
         //read from multiple frequency sources
-        List<NodeTripleProvider> providers = KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders();
+        List<NodeTripleProvider> providers = getNodeTripleProviders();
         List<Map<String, List<NodeRecommendation>>> recommendations = new ArrayList<>(providers.size());
+
         for (NodeTripleProvider provider : providers) {
             if (provider.isEnabled() && !updateRequired(provider)) {
                 Map<String, List<NodeRecommendation>> recommendationMap = new HashMap<>();
@@ -126,7 +169,9 @@ public class NodeRecommendationManager {
                 recommendationMap.values().stream().forEach(l -> aggregate(l));
             }
         } //end for
+
         m_recommendations = recommendations;
+        m_listeners.stream().forEach(l -> l.updated());
     }
 
     private void fillRecommendationsMap(final Map<String, List<NodeRecommendation>> recommendationMap,
@@ -172,17 +217,18 @@ public class NodeRecommendationManager {
      * Checks whether the given {@link NodeTripleProvider} requires an update.
      *
      * @param ntp the {@link NodeTripleProvider}
-     * @return <code>true</code> if an update is required before the ntp can be used
+     *
+     * @return <code>true</code> if an update is required before the ntp can be used, <code>false</code> otherwise
      */
-    private boolean updateRequired(final NodeTripleProvider ntp) {
+    private static boolean updateRequired(final NodeTripleProvider ntp) {
         return (ntp instanceof UpdatableNodeTripleProvider) && ((UpdatableNodeTripleProvider)ntp).updateRequired();
     }
 
     /**
      * Adds a new node recommendation to the map.
      */
-    private void add(final Map<String, List<NodeRecommendation>> recommendation, final String key, final NodeInfo ni,
-        final int count) {
+    private static void add(final Map<String, List<NodeRecommendation>> recommendation, final String key,
+        final NodeInfo ni, final int count) {
         List<NodeRecommendation> p = recommendation.computeIfAbsent(key, k -> new ArrayList<>());
         //create the new node recommendation
         NodeTemplate nt = findNodeTemplate(ni);
@@ -208,10 +254,9 @@ public class NodeRecommendationManager {
      *
      * @param l the list is manipulated directly
      */
-    private void aggregate(final List<NodeRecommendation> l) {
+    private static void aggregate(final List<NodeRecommendation> l) {
+        Map<String, NodeRecommendation> aggregates = new HashMap<>();
 
-        Map<String, NodeRecommendation> aggregates =
-            new HashMap<String, NodeRecommendationManager.NodeRecommendation>();
         for (NodeRecommendation np : l) {
             if (aggregates.containsKey(np.toString())) {
                 //aggregate
@@ -314,10 +359,11 @@ public class NodeRecommendationManager {
     }
 
     /**
-     * @return the number of registered and enabled {@link NodeTripleProvider}s (e.g. resulting a the according number
-     *         of frequencies in node recommendation table of the {@link WorkflowCoachView})
+     * Returns the number of registered and enabled {@link NodeTripleProvider}s.
+     *
+     * @return the number of loaded providers
      */
-    public int getNumNodeTripleProvider() {
+    public int getNumLoadedProviders() {
         if (m_recommendations == null) {
             return 0;
         } else {
@@ -348,36 +394,40 @@ public class NodeRecommendationManager {
      * @author Martin Horn, University of Konstanz
      */
     public static class NodeRecommendation implements Comparable<NodeRecommendation> {
-
         private int m_frequency;
 
-        private NodeTemplate m_node;
+        private final NodeTemplate m_node;
 
         private int m_totalFrequency;
 
         private int m_num = 1;
 
         /**
+         * Creates a new node recommendation for the given node.
+         *
          * @param node the node
          * @param frequency a frequency of usage
-         *
          */
-        public NodeRecommendation(final NodeTemplate node, final int frequency) {
+        NodeRecommendation(final NodeTemplate node, final int frequency) {
             m_node = node;
             m_frequency = frequency;
             m_totalFrequency = frequency;
         }
 
         /**
-         * @return the frequency, i.e. how often this node recommendation appears in a node triple or tuple (given by a
-         *         {@link NodeTripleProvider}
+         * Returns the frequency (in percent), i.e. how often this node recommendation appears in a node triple or pair
+         * (given by a {@link NodeTripleProvider}
+         *
+         * @return the frequency
          */
         public int getFrequency() {
             return (int)Math.round(m_frequency / (double)m_num);
         }
 
         /**
-         * @return the total frequency summed over all node recommendations that have the SAME predecessor
+         * Returns the total frequency summed over all node recommendations that have the SAME predecessor.
+         *
+         * @return the total frequency
          */
         public int getTotalFrequency() {
             return m_totalFrequency;
@@ -397,7 +447,7 @@ public class NodeRecommendationManager {
          * that recommend the same node (e.g. if the selected node only is taken into account and the predecessor
          * ignored). See {@link NodeRecommendationManager#aggregate(List)}.
          *
-         * @param amount
+         * @param amount the increase amount
          */
         private void increaseFrequency(final int amount) {
             m_frequency += amount;
@@ -405,7 +455,7 @@ public class NodeRecommendationManager {
         }
 
         /**
-         * Gives the recommended node as {@link NodeTemplate}.
+         * Returns the recommended node as {@link NodeTemplate}.
          *
          * @return the node template
          */
@@ -457,5 +507,34 @@ public class NodeRecommendationManager {
             NodeRecommendation other = (NodeRecommendation)obj;
             return Objects.equals(this.m_node, other.m_node);
         }
+    }
+
+    /**
+     * Returns all available {@link NodeTripleProvider}s. Node triple providers can be added via the respective
+     * extension point. Note that a provider must be enabled to be used in the workflow coach view.
+     *
+     * @return a list of all available node triple providers
+     */
+    public List<NodeTripleProvider> getNodeTripleProviders() {
+        List<NodeTripleProvider> l = new ArrayList<NodeTripleProvider>(3);
+
+        //get node triple providers from extension points
+        IExtensionPoint extPoint =
+            Platform.getExtensionRegistry().getExtensionPoint(TRIPLE_PROVIDER_EXTENSION_POINT_ID);
+        assert (extPoint != null) : "Invalid extension point: " + TRIPLE_PROVIDER_EXTENSION_POINT_ID;
+
+        IExtension[] extensions = extPoint.getExtensions();
+        for (IExtension ext : extensions) {
+            for (IConfigurationElement conf : ext.getConfigurationElements()) {
+                try {
+                    NodeTripleProviderFactory factory =
+                        (NodeTripleProviderFactory)conf.createExecutableExtension("factory-class");
+                    l.addAll(factory.createProviders());
+                } catch (CoreException e) {
+                    LOGGER.warn("Could not create factory from " + conf.getAttribute("factory-class"));
+                }
+            }
+        }
+        return l;
     }
 }

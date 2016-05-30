@@ -25,6 +25,5 @@ Require-Bundle: org.eclipse.jface;bundle-version="[3.11.0,4.0.0)",
  org.apache.commons.math3;bundle-version="[3.4.1,4.0.0)",
  org.apache.commons.httpclient;bundle-version="[3.1.0,4.0.0)"
 Bundle-ActivationPolicy: lazy
-Bundle-Activator: org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin
 Export-Package: org.knime.workbench.workflowcoach,
  org.knime.workbench.workflowcoach.data

@@ -48,9 +48,6 @@
  */
 package org.knime.workbench.workflowcoach.prefs;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,7 +55,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
 import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
 import org.osgi.framework.FrameworkUtil;
 
@@ -68,8 +64,23 @@ import org.osgi.framework.FrameworkUtil;
  * @author Martin Horn, University of Konstanz
  */
 public class UpdateJob extends Job {
+    /**
+     * Interface for a listenter that is notified one the update has been finished.
+     *
+     * @author Martin Horn, University of Konstanz
+     */
+    public interface UpdateListener {
+        /**
+         * Called when the update process is finished.
+         *
+         * @param e an optional exception if the update process finished without success. If not given, the update was
+         *            successful.
+         *
+         */
+        void updateFinished(Optional<Exception> e);
+    }
 
-    private Optional<UpdateListener> m_listener;
+    private UpdateListener m_listener;
 
     private List<UpdatableNodeTripleProvider> m_providers;
 
@@ -79,7 +90,7 @@ public class UpdateJob extends Job {
      * @param listener listener to be informed about the progress of the job and when it's finished
      * @param providers the node triple providers to be updated
      */
-    public static void schedule(final Optional<UpdateListener> listener,
+    public static void schedule(final UpdateListener listener,
         final List<UpdatableNodeTripleProvider> providers) {
         if(providers.isEmpty()) {
             return;
@@ -94,7 +105,7 @@ public class UpdateJob extends Job {
      *
      * @param listener listener to be informed about the progress of the job and when it's finished
      */
-    private UpdateJob(final Optional<UpdateListener> listener, final List<UpdatableNodeTripleProvider> providers) {
+    private UpdateJob(final UpdateListener listener, final List<UpdatableNodeTripleProvider> providers) {
         super("Downloading statistics for node recommendations.");
         m_providers = providers;
         m_listener = listener;
@@ -117,32 +128,13 @@ public class UpdateJob extends Job {
         }
 
         if (exception == null) {
-            //store the todays date of the update
-            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            String d = dateFormat.format(new Date());
-            KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
-                .setValue(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE, d);
-            m_listener.ifPresent(l -> l.updateFinished(Optional.empty()));
+            m_listener.updateFinished(Optional.empty());
             return Status.OK_STATUS;
         } else {
-            final Exception e = exception;
-            m_listener.ifPresent(l -> l.updateFinished(Optional.of(e)));
+            m_listener.updateFinished(Optional.of(exception));
             //don't return IStatus.ERROR -> otherwise an annoying error message will be opened
             return new Status(IStatus.OK, FrameworkUtil.getBundle(getClass()).getSymbolicName(),
                 "Error while updating the statistics for the node recommendations (Workflow Coach).", exception);
         }
     }
-
-    public interface UpdateListener {
-
-        /**
-         * Called when the update process is finished.
-         *
-         * @param e an optional exception if the update process finished without success. If not given, the update was
-         *            successful.
-         *
-         */
-        void updateFinished(Optional<Exception> e);
-    }
-
 }
