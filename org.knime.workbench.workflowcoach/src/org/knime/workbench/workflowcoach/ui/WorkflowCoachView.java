@@ -337,9 +337,15 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 recommendationsWithoutDups.add(nrs);
             }
         }
+
+        //update viewer
         m_viewer.setInput(recommendationsWithoutDups);
         m_viewer.refresh();
 
+        //scroll to the very top and undo any selection
+        if (!recommendationsWithoutDups.isEmpty()) {
+            m_viewer.reveal(recommendationsWithoutDups.get(0));
+        }
     }
 
     /**
