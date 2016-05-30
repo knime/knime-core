@@ -21,99 +21,99 @@
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.disturber.DisturberNodeFactory"
-            id="org.knime.testing.node.disturber.DisturberNodeFactory"/>
+            />
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.differModelContent.DiffModelContentFactory"
-            id="org.knime.testing.node.differModelContent.DiffModelContentFactory"/>
+            />
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.blocking.BlockingNodeFactory"
-            id="org.knime.testing.node.blocking.BlockingNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.failing.FailingNodeFactory"
-            id="org.knime.testing.node.failing.FailingNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.credentialsvalidate.CredentialsValidateNodeFactory"
-            id="org.knime.testing.node.credentialsvalidate.CredentialsValidateNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.datagenerator.TestDataNodeFactory"
-            id="org.knime.testing.node.datagenerator.TestDataNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.executioncount.ExecutionCountNodeFactory"
-            id="org.knime.testing.node.executioncount.ExecutionCountNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.file.DifferFileNodeFactory"
-            id="org.knime.testing.file.DifferFileNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.imagecomp.ImageCompNodeFactory"
-            id="org.knime.testing.imagecomp.ImageCompNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.internal.nodes.differ.DifferenceCheckerNodeFactory"
-            id="org.knime.testing.node.differ.DifferenceCheckerNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.internal.nodes.image.ImageDifferNodeFactory"
-            id="org.knime.testing.internal.nodes.image.ImageDifferNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.config.TestConfigNodeFactory"
-            id="org.knime.testing.node.config.TestConfigNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.internal.nodes.pmml.PMMLDifferenceCheckerNodeFactory"
-            id="org.knime.testing.internal.nodes.pmml.PMMLDifferenceCheckerNodeFactory">
+            >
       </node>
       <node
             category-path="/testing/filestore"
             factory-class="org.knime.testing.node.filestore.create.FileStoreCreateNodeFactory"
-            id="org.knime.testing.node.filestore.create.FileStoreCreateNodeFactory">
+            >
       </node>
       <node
             after="org.knime.testing.node.filestore.create.FileStoreCreateNodeFactory"
             category-path="/testing/filestore"
             factory-class="org.knime.testing.node.filestore.check.FileStoreTestNodeFactory"
-            id="org.knime.testing.node.filestore.check.FileStoreTestNodeFactory">
+            >
       </node>
       <node
             after="org.knime.testing.node.filestore.check.FileStoreTestNodeFactory"
             category-path="/testing/filestore"
             factory-class="org.knime.testing.node.filestore.createloopend.FileStoreCreateLoopEndNodeFactory"
-            id="org.knime.testing.node.filestore.createloopend.FileStoreCreateLoopEndNodeFactory">
+            >
       </node>     
       <node
             after="org.knime.testing.node.filestore.createloopend.FileStoreCreateLoopEndNodeFactory"
             category-path="/testing/filestore"
             factory-class="org.knime.testing.node.filestore.fsloopend.LoopEndFileStorePortObjectTestNodeFactory"
-            id="org.knime.testing.node.filestore.fsloopend.LoopEndFileStorePortObjectTestNodeFactory">
+            >
       </node>
       <node
             after="org.knime.testing.node.filestore.fsloopend.LoopEndFileStorePortObjectTestNodeFactory"
             category-path="/testing/filestore"
             factory-class="org.knime.testing.node.filestore.fsobject2cell.FileStoreObjectToCellNodeFactory"
-            id="org.knime.testing.node.filestore.fsobject2cell.FileStoreObjectToCellNodeFactory">
+            >
       </node>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.logging.LoggerOptionNodeFactory"
-            id="org.knime.testing.node.logging.LoggerOptionNodeFactory">
+            >
       </node>     
    </extension>
    <extension
