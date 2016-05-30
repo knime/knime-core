@@ -45,8 +45,6 @@
 package org.knime.workbench.workflowcoach.prefs;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -84,8 +82,6 @@ import org.osgi.framework.FrameworkUtil;
  * @author Martin Horn, University of Konstanz
  */
 public class WorkflowCoachPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
-    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
-
     /** The id of this preference page. */
     public static final String ID = "org.knime.workbench.workflowcoach";
 
@@ -223,7 +219,8 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
             .map(p -> p.getLastUpdate()).findFirst();
 
         if (lastUpdate.isPresent() && lastUpdate.get().isPresent()) {
-            m_lastUpdate.setText("Last Update: " + FORMAT.format(lastUpdate.get().get()));
+            m_lastUpdate
+                .setText("Last Update: " + NodeTripleProvider.LAST_UPDATE_FORMAT.format(lastUpdate.get().get()));
         } else {
             m_lastUpdate.setText("Not updated, yet.");
             m_lastUpdate.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));

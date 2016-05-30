@@ -183,7 +183,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         IToolBarManager toolbarMGR = getViewSite().getActionBars().getToolBarManager();
         toolbarMGR.add(new ConfigureAction(m_viewer));
 
-        m_viewer.setInput("Loading recommendations ...");
+        m_viewer.setInput("Waiting for node repository to be loaded ...");
 
         Job nodesLoader = new KNIMEJob("Workflow coach loader", FrameworkUtil.getBundle(getClass())) {
             @Override
@@ -193,18 +193,19 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 if (monitor.isCanceled()) {
                     return Status.CANCEL_STATUS;
                 } else {
-                  //check for update if necessary
+                    // check for update if necessary
+                    Display.getDefault().asyncExec(() -> m_viewer.setInput("Loading recommendations..."));
                     checkForStatisticUpdates();
                     updateFrequencyColumnHeadersAndToolTips();
                     updateInput(SELECTION_HINT_MESSAGE);
                 }
+                NodeRecommendationManager.getInstance().addUpdateListener(WorkflowCoachView.this);
                 m_nodesLoading = false;
                 return Status.OK_STATUS;
             }
         };
         nodesLoader.setSystem(true);
         nodesLoader.schedule();
-        NodeRecommendationManager.getInstance().addUpdateListener(this);
     }
 
     /**
