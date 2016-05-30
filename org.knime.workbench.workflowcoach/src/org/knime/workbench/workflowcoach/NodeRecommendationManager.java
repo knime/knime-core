@@ -57,6 +57,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeInfo;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeTriple;
@@ -66,7 +71,9 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.workflowcoach.data.NodeTripleProvider;
+import org.knime.workbench.workflowcoach.data.NodeTripleProviderFactory;
 import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
+import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
 import org.knime.workbench.workflowcoach.ui.WorkflowCoachView;
 
 /**
@@ -77,12 +84,13 @@ import org.knime.workbench.workflowcoach.ui.WorkflowCoachView;
  * @author Martin Horn, University of Konstanz
  */
 public class NodeRecommendationManager {
-
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeRecommendationManager.class);
 
     private static final String SOURCE_NODES_KEY = "<source_nodes>";
 
     private static final String NODE_NAME_SEP = "#";
+
+    private static final String TRIPLE_PROVIDER_EXTENSION_POINT_ID = "org.knime.workbench.workflowcoach.nodetriples";
 
     private static final NodeRecommendationManager INSTANCE = new NodeRecommendationManager();
 
@@ -112,7 +120,7 @@ public class NodeRecommendationManager {
      */
     public void loadStatistics() throws Exception {
         //read from multiple frequency sources
-        List<NodeTripleProvider> providers = KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders();
+        List<NodeTripleProvider> providers = getNodeTripleProviders();
         List<Map<String, List<NodeRecommendation>>> recommendations = new ArrayList<>(providers.size());
         for (NodeTripleProvider provider : providers) {
             if (provider.isEnabled() && !updateRequired(provider)) {
@@ -441,5 +449,35 @@ public class NodeRecommendationManager {
             NodeRecommendation other = (NodeRecommendation)obj;
             return Objects.equals(this.m_node, other.m_node);
         }
+    }
+
+    /**
+     * Gives all available {@link NodeTripleProvider}s. Node triple providers can be added via the respective extension
+     * point.
+     *
+     * @return a list of node triple providers depending on the preferences stored (see also
+     *         {@link WorkflowCoachPreferencePage}).
+     */
+    public synchronized List<NodeTripleProvider> getNodeTripleProviders() {
+        List<NodeTripleProvider> l = new ArrayList<NodeTripleProvider>(3);
+
+        //get node triple providers from extension points
+        IExtensionPoint extPoint =
+            Platform.getExtensionRegistry().getExtensionPoint(TRIPLE_PROVIDER_EXTENSION_POINT_ID);
+        assert (extPoint != null) : "Invalid extension point: " + TRIPLE_PROVIDER_EXTENSION_POINT_ID;
+
+        IExtension[] extensions = extPoint.getExtensions();
+        for (IExtension ext : extensions) {
+            for (IConfigurationElement conf : ext.getConfigurationElements()) {
+                try {
+                    NodeTripleProviderFactory factory =
+                        (NodeTripleProviderFactory)conf.createExecutableExtension("factory-class");
+                    l.addAll(factory.createProviders());
+                } catch (CoreException e) {
+                    LOGGER.warn("Could not create factory from " + conf.getAttribute("factory-class"));
+                }
+            }
+        }
+        return l;
     }
 }

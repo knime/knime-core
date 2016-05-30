@@ -55,7 +55,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
-import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
+import org.knime.workbench.workflowcoach.NodeRecommendationManager;
 import org.knime.workbench.workflowcoach.data.NodeTripleProvider;
 import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
 
@@ -92,7 +92,7 @@ public class ConfigureAction extends Action {
      */
     @Override
     public void run() {
-        List<NodeTripleProvider> nodeTripleProviders = KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders();
+        List<NodeTripleProvider> nodeTripleProviders = NodeRecommendationManager.getInstance().getNodeTripleProviders();
         String[] prefPageIDs = new String[nodeTripleProviders.size()];
         for (int i = 0; i < prefPageIDs.length; i++) {
             prefPageIDs[i] = nodeTripleProviders.get(i).getPreferencePageID();

@@ -184,7 +184,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
 
         //update the currently enabled providers
         List<UpdatableNodeTripleProvider> toUpdate = new ArrayList<>();
-        for (NodeTripleProvider ntp : KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders()) {
+        for (NodeTripleProvider ntp : NodeRecommendationManager.getInstance().getNodeTripleProviders()) {
             if (m_checkCommunityProvider.getSelection() && (ntp instanceof CommunityTripleProvider)) {
                 toUpdate.add((CommunityTripleProvider)ntp);
             }
@@ -243,7 +243,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
     @Override
     public boolean performOk() {
         IPreferenceStore prefStore = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore();
-        List<NodeTripleProvider> providers = KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders();
+        List<NodeTripleProvider> providers = NodeRecommendationManager.getInstance().getNodeTripleProviders();
 
         //check whether the selected providers need an update
         for (NodeTripleProvider ntp : providers) {

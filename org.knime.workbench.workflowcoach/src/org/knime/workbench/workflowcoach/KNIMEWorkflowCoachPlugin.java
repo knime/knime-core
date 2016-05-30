@@ -47,23 +47,12 @@ package org.knime.workbench.workflowcoach;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.workflowcoach.data.NodeTripleProvider;
-import org.knime.workbench.workflowcoach.data.NodeTripleProviderFactory;
-import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
@@ -84,8 +73,6 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
     public static final String P_COMMUNITY_NODE_TRIPLE_PROVIDER = "community_node_triple_provider";
 
     public static final String P_LAST_STATISTICS_UPDATE = "last_community_statistics_update";
-
-    private static final String TRIPLE_PROVIDER_EXTENSION_POINT_ID = "org.knime.workbench.workflowcoach.nodetriples";
 
     public static final String P_AUTO_UPDATE_SCHEDULE = "auto_update_schedule";
 
@@ -145,39 +132,5 @@ public class KNIMEWorkflowCoachPlugin extends AbstractUIPlugin {
         IEclipsePreferences prefs =
                 InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
         prefs.put(P_LAST_STATISTICS_UPDATE, d);
-    }
-
-
-    /**
-     * Gives all available {@link NodeTripleProvider}s. Node triple providers can be added via the respective extension
-     * point.
-     *
-     * @return a list of node triple providers depending on the preferences stored (see also
-     *         {@link WorkflowCoachPreferencePage}).
-     */
-    public synchronized List<NodeTripleProvider> getNodeTripleProviders() {
-        List<NodeTripleProvider> l = new ArrayList<NodeTripleProvider>(3);
-
-        //get node triple providers from extension points
-        IExtensionPoint extPoint =
-            Platform.getExtensionRegistry().getExtensionPoint(TRIPLE_PROVIDER_EXTENSION_POINT_ID);
-        if (extPoint == null) {
-            LOGGER.error("Invalid extension point: " + TRIPLE_PROVIDER_EXTENSION_POINT_ID);
-            return Collections.emptyList();
-        }
-
-        IExtension[] extensions = extPoint.getExtensions();
-        for (IExtension ext : extensions) {
-            for (IConfigurationElement conf : ext.getConfigurationElements()) {
-                try {
-                    NodeTripleProviderFactory factory =
-                        (NodeTripleProviderFactory)conf.createExecutableExtension("factory-class");
-                    l.addAll(factory.createProviders());
-                } catch (CoreException e) {
-                    LOGGER.warn("Could not create factory from " + conf.getAttribute("factory-class"));
-                }
-            }
-        }
-        return l;
     }
 }

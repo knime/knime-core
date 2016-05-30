@@ -245,7 +245,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         }
         if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
             //if there is at least one enabled triple provider than the statistics might need to be download first
-            if (KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream()
+            if (NodeRecommendationManager.getInstance().getNodeTripleProviders().stream()
                 .anyMatch(ntp -> ntp.isEnabled())) {
                 m_nodesLoading = true;
                 updateInput("Loading statistics...");
@@ -353,9 +353,10 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      * Updates the names and tooltips of the frequency column headers.
      */
     public void updateFrequencyColumnHeadersAndToolTips() {
-        List<Pair<String, String>> namesAndToolTips =
-            KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream().filter(p -> p.isEnabled())
-                .map(p -> new Pair<>(p.getName(), p.getDescription())).collect(Collectors.toList());
+        List<Pair<String, String>> namesAndToolTips = NodeRecommendationManager.getInstance().getNodeTripleProviders()
+                .stream().filter(p -> p.isEnabled())
+                .map(p -> new Pair<>(p.getName(), p.getDescription()))
+                .collect(Collectors.toList());
         if (namesAndToolTips == null || namesAndToolTips.isEmpty()) {
             updateInputNoProvider();
             return;
@@ -615,7 +616,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      */
     private void updateTripleProviders(final UpdateListener updateListener, final boolean requiredOnly) {
         List<UpdatableNodeTripleProvider> toUpdate =
-            KNIMEWorkflowCoachPlugin.getDefault().getNodeTripleProviders().stream().filter(ntp -> {
+            NodeRecommendationManager.getInstance().getNodeTripleProviders().stream().filter(ntp -> {
                 if (!(ntp instanceof UpdatableNodeTripleProvider)) {
                     return false;
                 } else {
