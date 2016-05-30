@@ -152,7 +152,7 @@ public class TestDataNodeModel extends NodeModel {
      * @return the no of all missing rows
      */
     static SettingsModelInteger createNoOfAllMissingRowsModel() {
-        return new SettingsModelIntegerBounded("noOfAllMissingRows", 0, 0, Integer.MAX_VALUE);
+        return new SettingsModelIntegerBounded("noOfAllMissingRows", 1, 0, Integer.MAX_VALUE);
     }
 
     /**
@@ -695,6 +695,7 @@ public class TestDataNodeModel extends NodeModel {
             m_noOfAllMissingRows.loadSettingsFrom(settings);
         } catch (final Exception e) {
             // new introduced in 2.8
+            m_noOfAllMissingRows.setIntValue(0);
         }
     }
 
