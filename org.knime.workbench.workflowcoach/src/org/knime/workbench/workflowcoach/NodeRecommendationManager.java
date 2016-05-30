@@ -458,7 +458,7 @@ public class NodeRecommendationManager {
      * @return a list of node triple providers depending on the preferences stored (see also
      *         {@link WorkflowCoachPreferencePage}).
      */
-    public synchronized List<NodeTripleProvider> getNodeTripleProviders() {
+    public List<NodeTripleProvider> getNodeTripleProviders() {
         List<NodeTripleProvider> l = new ArrayList<NodeTripleProvider>(3);
 
         //get node triple providers from extension points

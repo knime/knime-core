@@ -55,8 +55,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -71,6 +73,7 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.io.IOUtils;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeFrequencies;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeTriple;
 
 /**
@@ -141,6 +144,24 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
             IOUtils.copy(in, out);
         } finally {
             method.releaseConnection();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<LocalDateTime> getLastUpdate() {
+        try {
+            if (Files.exists(m_file)) {
+                return Optional.of(LocalDateTime.from(Files.getLastModifiedTime(m_file).toInstant()));
+            } else {
+                return Optional.empty();
+            }
+        } catch (IOException ex) {
+            NodeLogger.getLogger(getClass())
+                .warn("Could not determine last update of '" + m_file + "': " + ex.getMessage(), ex);
+            return Optional.empty();
         }
     }
 

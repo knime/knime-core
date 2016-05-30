@@ -51,8 +51,11 @@ package org.knime.workbench.workflowcoach.data;
 import java.util.Collections;
 import java.util.List;
 
-import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferenceInitializer;
 import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * Reads the node triples from a json file that was originally generated from the KNIME usage statistics.
@@ -60,6 +63,9 @@ import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
  * @author Martin Horn, University of Konstanz
  */
 public class CommunityTripleProvider extends AbstractFileDownloadTripleProvider {
+    private static final ScopedPreferenceStore PREFS = new ScopedPreferenceStore(InstanceScope.INSTANCE,
+        FrameworkUtil.getBundle(CommunityTripleProvider.class).getSymbolicName());
+
     /**
      * Factory for {@link CommunityTripleProvider}s.
      *
@@ -111,7 +117,6 @@ public class CommunityTripleProvider extends AbstractFileDownloadTripleProvider 
      */
     @Override
     public boolean isEnabled() {
-        return KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
-            .getBoolean(KNIMEWorkflowCoachPlugin.P_COMMUNITY_NODE_TRIPLE_PROVIDER);
+        return PREFS.getBoolean(WorkflowCoachPreferenceInitializer.P_COMMUNITY_NODE_TRIPLE_PROVIDER);
     }
 }

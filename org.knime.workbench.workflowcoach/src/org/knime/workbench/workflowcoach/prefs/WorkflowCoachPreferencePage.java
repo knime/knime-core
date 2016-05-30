@@ -44,10 +44,15 @@
  */
 package org.knime.workbench.workflowcoach.prefs;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
@@ -63,14 +68,15 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
-import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager;
 import org.knime.workbench.workflowcoach.data.CommunityTripleProvider;
 import org.knime.workbench.workflowcoach.data.NodeTripleProvider;
 import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * Preference page to configure the community workflow coach.
@@ -78,6 +84,8 @@ import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
  * @author Martin Horn, University of Konstanz
  */
 public class WorkflowCoachPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
+    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM);
+
     /** The id of this preference page. */
     public static final String ID = "org.knime.workbench.workflowcoach";
 
@@ -109,11 +117,8 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
      */
     @Override
     public void init(final IWorkbench workbench) {
-        IPreferenceStore prefStore = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore();
-        prefStore.setDefault(KNIMEWorkflowCoachPlugin.P_COMMUNITY_NODE_TRIPLE_PROVIDER, KNIMECorePlugin.getDefault()
-            .getPreferenceStore().getBoolean(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS));
-        prefStore.setDefault(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE, "");
-        setPreferenceStore(prefStore);
+        setPreferenceStore(
+            new ScopedPreferenceStore(InstanceScope.INSTANCE, FrameworkUtil.getBundle(getClass()).getSymbolicName()));
     }
 
     /**
@@ -199,7 +204,6 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
                         "Error loading the community node recommendations. Please check your internet connection.");
                 });
             } else {
-                KNIMEWorkflowCoachPlugin.getDefault().recommendationsUpdated();
                 Display.getDefault().syncExec(() -> {
                     m_updateButton.setEnabled(true);
                     m_lastUpdate.setText("Update finished!");
@@ -210,27 +214,30 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
     }
 
     private void initializeValues() {
-        IPreferenceStore prefStore = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore prefStore = getPreferenceStore();
         m_checkCommunityProvider
-            .setSelection(prefStore.getBoolean(KNIMEWorkflowCoachPlugin.P_COMMUNITY_NODE_TRIPLE_PROVIDER));
+            .setSelection(prefStore.getBoolean(WorkflowCoachPreferenceInitializer.P_COMMUNITY_NODE_TRIPLE_PROVIDER));
 
-        String date = prefStore.getString(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE);
-        if (date.length() > 0) {
-            m_lastUpdate.setText("Last Update: " + date);
+        Optional<Optional<LocalDateTime>> lastUpdate = NodeRecommendationManager.getInstance().getNodeTripleProviders()
+            .stream().filter(p -> p instanceof CommunityTripleProvider)
+            .map(p -> p.getLastUpdate()).findFirst();
+
+        if (lastUpdate.isPresent() && lastUpdate.get().isPresent()) {
+            m_lastUpdate.setText("Last Update: " + FORMAT.format(lastUpdate.get().get()));
         } else {
             m_lastUpdate.setText("Not updated, yet.");
             m_lastUpdate.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));
         }
 
-        int updateSchedule = prefStore.getInt(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE);
+        int updateSchedule = prefStore.getInt(WorkflowCoachPreferenceInitializer.P_AUTO_UPDATE_SCHEDULE);
         switch (updateSchedule) {
-            case KNIMEWorkflowCoachPlugin.WEEKLY_UPDATE:
+            case WorkflowCoachPreferenceInitializer.WEEKLY_UPDATE:
                 m_weeklyUpdateButton.setSelection(true);
                 break;
-            case KNIMEWorkflowCoachPlugin.MONTHLY_UPDATE:
+            case WorkflowCoachPreferenceInitializer.MONTHLY_UPDATE:
                 m_monthlyUpdateButton.setSelection(true);
                 break;
-            case KNIMEWorkflowCoachPlugin.NO_AUTO_UPDATE:
+            case WorkflowCoachPreferenceInitializer.NO_AUTO_UPDATE:
             default:
                 m_noAutoUpdateButton.setSelection(true);
         }
@@ -242,7 +249,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
      */
     @Override
     public boolean performOk() {
-        IPreferenceStore prefStore = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore prefStore = getPreferenceStore();
         List<NodeTripleProvider> providers = NodeRecommendationManager.getInstance().getNodeTripleProviders();
 
         //check whether the selected providers need an update
@@ -261,17 +268,17 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
                 .setValue(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, true);
         }
         //store values
-        prefStore.setValue(KNIMEWorkflowCoachPlugin.P_COMMUNITY_NODE_TRIPLE_PROVIDER,
+        prefStore.setValue(WorkflowCoachPreferenceInitializer.P_COMMUNITY_NODE_TRIPLE_PROVIDER,
             m_checkCommunityProvider.getSelection());
 
         if (m_noAutoUpdateButton.getSelection()) {
-            prefStore.setValue(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE,
-                KNIMEWorkflowCoachPlugin.NO_AUTO_UPDATE);
+            prefStore.setValue(WorkflowCoachPreferenceInitializer.P_AUTO_UPDATE_SCHEDULE,
+                WorkflowCoachPreferenceInitializer.NO_AUTO_UPDATE);
         } else if (m_weeklyUpdateButton.getSelection()) {
-            prefStore.setValue(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE, KNIMEWorkflowCoachPlugin.WEEKLY_UPDATE);
+            prefStore.setValue(WorkflowCoachPreferenceInitializer.P_AUTO_UPDATE_SCHEDULE, WorkflowCoachPreferenceInitializer.WEEKLY_UPDATE);
         } else if (m_monthlyUpdateButton.getSelection()) {
-            prefStore.setValue(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE,
-                KNIMEWorkflowCoachPlugin.MONTHLY_UPDATE);
+            prefStore.setValue(WorkflowCoachPreferenceInitializer.P_AUTO_UPDATE_SCHEDULE,
+                WorkflowCoachPreferenceInitializer.MONTHLY_UPDATE);
         }
 
         //try reloading the statistics
@@ -293,18 +300,18 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
     @Override
     protected void performDefaults() {
         //restore default values
-        IPreferenceStore prefStore = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore prefStore = getPreferenceStore();
         m_checkCommunityProvider
-            .setSelection(prefStore.getDefaultBoolean(KNIMEWorkflowCoachPlugin.P_COMMUNITY_NODE_TRIPLE_PROVIDER));
-        int autoUpdate = prefStore.getDefaultInt(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE);
+            .setSelection(prefStore.getDefaultBoolean(WorkflowCoachPreferenceInitializer.P_COMMUNITY_NODE_TRIPLE_PROVIDER));
+        int autoUpdate = prefStore.getDefaultInt(WorkflowCoachPreferenceInitializer.P_AUTO_UPDATE_SCHEDULE);
         switch (autoUpdate) {
-            case KNIMEWorkflowCoachPlugin.NO_AUTO_UPDATE:
+            case WorkflowCoachPreferenceInitializer.NO_AUTO_UPDATE:
                 m_noAutoUpdateButton.setSelection(true);
                 break;
-            case KNIMEWorkflowCoachPlugin.WEEKLY_UPDATE:
+            case WorkflowCoachPreferenceInitializer.WEEKLY_UPDATE:
                 m_weeklyUpdateButton.setSelection(true);
                 break;
-            case KNIMEWorkflowCoachPlugin.MONTHLY_UPDATE:
+            case WorkflowCoachPreferenceInitializer.MONTHLY_UPDATE:
                 m_monthlyUpdateButton.setSelection(true);
                 break;
             default:

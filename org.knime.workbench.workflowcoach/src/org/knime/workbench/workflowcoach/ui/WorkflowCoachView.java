@@ -49,23 +49,25 @@
 package org.knime.workbench.workflowcoach.ui;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelection;
@@ -89,6 +91,7 @@ import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -101,12 +104,13 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.NodeTemplate;
-import org.knime.workbench.workflowcoach.KNIMEWorkflowCoachPlugin;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager.NodeRecommendation;
+import org.knime.workbench.workflowcoach.data.CommunityTripleProvider;
 import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
 import org.knime.workbench.workflowcoach.prefs.UpdateJob;
 import org.knime.workbench.workflowcoach.prefs.UpdateJob.UpdateListener;
+import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferenceInitializer;
 import org.osgi.framework.FrameworkUtil;
 
 /**
@@ -116,6 +120,10 @@ import org.osgi.framework.FrameworkUtil;
  */
 public class WorkflowCoachView extends ViewPart implements ISelectionListener {
     private static final DateTimeFormatter DATE_PARSER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+
+    private static final ScopedPreferenceStore PREFS = new ScopedPreferenceStore(InstanceScope.INSTANCE,
+        FrameworkUtil.getBundle(CommunityTripleProvider.class).getSymbolicName());
+
 
     /**
      * ID for this view.
@@ -256,7 +264,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
                     if (e.isPresent()) {
                         updateInputNoProvider();
                     } else {
-                        KNIMEWorkflowCoachPlugin.getDefault().recommendationsUpdated();
                         try {
                             NodeRecommendationManager.getInstance().loadStatistics();
                             if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
@@ -573,26 +580,24 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
      * performed.
      */
     private void checkForStatisticUpdates() {
-        int updateSchedule = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
-            .getInt(KNIMEWorkflowCoachPlugin.P_AUTO_UPDATE_SCHEDULE);
-        if (updateSchedule == KNIMEWorkflowCoachPlugin.NO_AUTO_UPDATE) {
+        int updateSchedule = PREFS.getInt(WorkflowCoachPreferenceInitializer.P_AUTO_UPDATE_SCHEDULE);
+        if (updateSchedule == WorkflowCoachPreferenceInitializer.NO_AUTO_UPDATE) {
             return;
         }
 
-        String lastUpdate = KNIMEWorkflowCoachPlugin.getDefault().getPreferenceStore()
-            .getString(KNIMEWorkflowCoachPlugin.P_LAST_STATISTICS_UPDATE);
-        if (!StringUtils.isEmpty(lastUpdate)) {
+        Optional<LocalDateTime> oldest = NodeRecommendationManager.getInstance().getNodeTripleProviders().stream()
+            .map(p -> p.getLastUpdate())
+            .filter(o -> o.isPresent())
+            .map(o -> o.get())
+            .min(Comparator.naturalOrder());
+
+        if (oldest.isPresent()) {
             //check whether an automatic update is necessary
-            try {
-                LocalDate t = LocalDate.from(DATE_PARSER.parse(lastUpdate));
-                long weeksDiff = ChronoUnit.WEEKS.between(t, LocalDate.now());
-                if (updateSchedule == KNIMEWorkflowCoachPlugin.WEEKLY_UPDATE && weeksDiff == 0) {
-                    return;
-                } else if (updateSchedule == KNIMEWorkflowCoachPlugin.MONTHLY_UPDATE && weeksDiff < 4) {
-                    return;
-                }
-            } catch (DateTimeParseException e) {
-                //something is wrong with the last update date, so let's update the statistics to be sure
+            long weeksDiff = ChronoUnit.WEEKS.between(oldest.get(), LocalDate.now());
+            if ((updateSchedule == WorkflowCoachPreferenceInitializer.WEEKLY_UPDATE) && (weeksDiff == 0)) {
+                return;
+            } else if ((updateSchedule == WorkflowCoachPreferenceInitializer.MONTHLY_UPDATE) && (weeksDiff < 4)) {
+                return;
             }
         }
 
@@ -601,8 +606,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
             if (e.isPresent()) {
                 NodeLogger.getLogger(WorkflowCoachView.class).warn("Could not update node recommendations statistics.",
                     e.get());
-            } else {
-                KNIMEWorkflowCoachPlugin.getDefault().recommendationsUpdated();
             }
         }, false);
     }

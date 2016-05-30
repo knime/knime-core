@@ -49,6 +49,8 @@
 package org.knime.workbench.workflowcoach.data;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.knime.core.node.NodeTriple;
@@ -98,4 +100,12 @@ public interface NodeTripleProvider {
      *             of the node triples (e.g. a corrupt file)
      */
      Stream<NodeTriple> getNodeTriples() throws IOException;
+
+     /**
+      * Returns the time when this provider was last updated. If the provider hasn't been updated at all (i.e. its
+      * data is missing) then an empty optional is returned.
+      *
+      * @return the last update time or an empty optional
+      */
+     Optional<LocalDateTime> getLastUpdate();
 }
