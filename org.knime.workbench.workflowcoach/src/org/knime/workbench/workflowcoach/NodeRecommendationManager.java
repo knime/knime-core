@@ -84,6 +84,10 @@ import org.knime.workbench.workflowcoach.ui.WorkflowCoachView;
  * @author Martin Horn, University of Konstanz
  */
 public class NodeRecommendationManager {
+    public interface IUpdateListener {
+        void updated();
+    }
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeRecommendationManager.class);
 
     private static final String SOURCE_NODES_KEY = "<source_nodes>";
@@ -93,6 +97,8 @@ public class NodeRecommendationManager {
     private static final String TRIPLE_PROVIDER_EXTENSION_POINT_ID = "org.knime.workbench.workflowcoach.nodetriples";
 
     private static final NodeRecommendationManager INSTANCE = new NodeRecommendationManager();
+
+    private final List<IUpdateListener> m_listeners = new ArrayList<>(1);
 
     private List<Map<String, List<NodeRecommendation>>> m_recommendations;
 
@@ -112,6 +118,14 @@ public class NodeRecommendationManager {
      */
     public static NodeRecommendationManager getInstance() {
         return INSTANCE;
+    }
+
+    public void addUpdateListener(final IUpdateListener listener) {
+        m_listeners.add(listener);
+    }
+
+    public void removeUpdateListener(final IUpdateListener listener) {
+        m_listeners.remove(listener);
     }
 
     /**
@@ -134,6 +148,7 @@ public class NodeRecommendationManager {
             }
         } //end for
         m_recommendations = recommendations;
+        m_listeners.stream().forEach(l -> l.updated());
     }
 
     private void fillRecommendationsMap(final Map<String, List<NodeRecommendation>> recommendationMap,

@@ -56,6 +56,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Optional;
@@ -154,7 +155,8 @@ public abstract class AbstractFileDownloadTripleProvider implements UpdatableNod
     public Optional<LocalDateTime> getLastUpdate() {
         try {
             if (Files.exists(m_file)) {
-                return Optional.of(LocalDateTime.from(Files.getLastModifiedTime(m_file).toInstant()));
+                return Optional
+                    .of(LocalDateTime.ofInstant(Files.getLastModifiedTime(m_file).toInstant(), ZoneId.systemDefault()));
             } else {
                 return Optional.empty();
             }

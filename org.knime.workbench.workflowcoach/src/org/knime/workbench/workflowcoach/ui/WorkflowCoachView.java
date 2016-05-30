@@ -48,9 +48,7 @@
  */
 package org.knime.workbench.workflowcoach.ui;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,6 +103,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager;
+import org.knime.workbench.workflowcoach.NodeRecommendationManager.IUpdateListener;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager.NodeRecommendation;
 import org.knime.workbench.workflowcoach.data.CommunityTripleProvider;
 import org.knime.workbench.workflowcoach.data.UpdatableNodeTripleProvider;
@@ -118,17 +117,9 @@ import org.osgi.framework.FrameworkUtil;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class WorkflowCoachView extends ViewPart implements ISelectionListener {
-    private static final DateTimeFormatter DATE_PARSER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
-
+public class WorkflowCoachView extends ViewPart implements ISelectionListener, IUpdateListener {
     private static final ScopedPreferenceStore PREFS = new ScopedPreferenceStore(InstanceScope.INSTANCE,
         FrameworkUtil.getBundle(CommunityTripleProvider.class).getSymbolicName());
-
-
-    /**
-     * ID for this view.
-     */
-    public static final String ID = "org.knime.workbench.workflowcoach.view";
 
     private static final String SELECTION_HINT_MESSAGE = "No selection.";
 
@@ -192,9 +183,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         IToolBarManager toolbarMGR = getViewSite().getActionBars().getToolBarManager();
         toolbarMGR.add(new ConfigureAction(m_viewer));
 
-        m_viewer.setInput("Loading nodes ...");
+        m_viewer.setInput("Loading recommendations ...");
 
-        Job nodesLoader = new KNIMEJob("Nodes Loader", FrameworkUtil.getBundle(getClass())) {
+        Job nodesLoader = new KNIMEJob("Workflow coach loader", FrameworkUtil.getBundle(getClass())) {
             @Override
             protected IStatus run(final IProgressMonitor monitor) {
                 RepositoryManager.INSTANCE.getRoot(); // wait until the repository is fully loaded
@@ -213,6 +204,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         };
         nodesLoader.setSystem(true);
         nodesLoader.schedule();
+        NodeRecommendationManager.getInstance().addUpdateListener(this);
     }
 
     /**
@@ -229,6 +221,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
     @Override
     public void dispose() {
         //unregister selection listener, dispose objects etc.
+        NodeRecommendationManager.getInstance().removeUpdateListener(this);
         this.getSite().setSelectionProvider(null);
         getViewSite().getPage().removeSelectionListener(this);
         m_viewer.getTable().dispose();
@@ -243,20 +236,21 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
     @Override
     public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
         if (part instanceof WorkflowCoachView || m_nodesLoading) {
-            //if source of the selection is this view itself, or the nodes or statistics are still loading, do nothing
+            // If source of the selection is this view itself, or the nodes or statistics are still loading, do nothing
             return;
         }
         if (!(selection instanceof IStructuredSelection) || !(part instanceof WorkflowEditor)) {
-            //if no node is selected, the selection event comes another view than the workbench, do nothing but set the 'no selection' method
+            // If no node is selected, the selection event comes another view than the workbench, do nothing but set
+            // the 'no selection' method.
             m_viewer.setInput(SELECTION_HINT_MESSAGE);
             return;
         }
         if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
-            //if there is at least one enabled triple provider than the statistics might need to be download first
+            //if there is at least one enabled triple provider then the statistics might need to be download first
             if (NodeRecommendationManager.getInstance().getNodeTripleProviders().stream()
                 .anyMatch(ntp -> ntp.isEnabled())) {
                 m_nodesLoading = true;
-                updateInput("Loading statistics...");
+                updateInput("Loading recommendations ...");
 
                 //try updating the triple provider that are enabled and require an update
                 updateTripleProviders(e -> {
@@ -295,8 +289,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
         // retrieve first (and only!) selection:
         Iterator<?> selIt = structSel.iterator();
 
-        boolean nodeSelected = true;
-        nodeSelected &= selIt.hasNext();
+        boolean nodeSelected = selIt.hasNext();
         NodeContainer nc = null;
         if (nodeSelected) {
             Object sel = selIt.next();
@@ -359,7 +352,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
     /**
      * Updates the names and tooltips of the frequency column headers.
      */
-    public void updateFrequencyColumnHeadersAndToolTips() {
+    private void updateFrequencyColumnHeadersAndToolTips() {
         List<Pair<String, String>> namesAndToolTips = NodeRecommendationManager.getInstance().getNodeTripleProviders()
                 .stream().filter(p -> p.isEnabled())
                 .map(p -> new Pair<>(p.getName(), p.getDescription()))
@@ -593,7 +586,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
 
         if (oldest.isPresent()) {
             //check whether an automatic update is necessary
-            long weeksDiff = ChronoUnit.WEEKS.between(oldest.get(), LocalDate.now());
+            long weeksDiff = ChronoUnit.WEEKS.between(oldest.get(), LocalDateTime.now());
             if ((updateSchedule == WorkflowCoachPreferenceInitializer.WEEKLY_UPDATE) && (weeksDiff == 0)) {
                 return;
             } else if ((updateSchedule == WorkflowCoachPreferenceInitializer.MONTHLY_UPDATE) && (weeksDiff < 4)) {
@@ -628,5 +621,13 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener {
                 }
             }).map(ntp -> (UpdatableNodeTripleProvider)ntp).collect(Collectors.toList());
         UpdateJob.schedule(updateListener, toUpdate);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updated() {
+        updateFrequencyColumnHeadersAndToolTips();
     }
 }
