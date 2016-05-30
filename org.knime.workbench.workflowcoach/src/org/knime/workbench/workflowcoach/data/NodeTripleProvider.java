@@ -88,13 +88,6 @@ public interface NodeTripleProvider {
     String getDescription();
 
     /**
-     * The ID of the preference page used to configure the particular node provide. If null, no preference page exists.
-     *
-     * @return the preference page id
-     */
-    String getPreferencePageID();
-
-    /**
      * @return whether the triple provider is enabled. This is usually configured by the user via the provider's preference page
      */
     boolean isEnabled();

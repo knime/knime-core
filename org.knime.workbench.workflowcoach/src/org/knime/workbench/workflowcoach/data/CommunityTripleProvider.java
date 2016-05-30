@@ -79,6 +79,15 @@ public class CommunityTripleProvider extends AbstractFileDownloadTripleProvider 
         public List<NodeTripleProvider> createProviders() {
             return Collections.singletonList(new CommunityTripleProvider());
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getPreferencePageID() {
+            return WorkflowCoachPreferencePage.ID;
+        }
+
     }
 
     /**
@@ -102,14 +111,6 @@ public class CommunityTripleProvider extends AbstractFileDownloadTripleProvider 
     @Override
     public String getDescription() {
         return "Frequency of how often the KNIME community used this node.";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getPreferencePageID() {
-        return WorkflowCoachPreferencePage.ID;
     }
 
     /**

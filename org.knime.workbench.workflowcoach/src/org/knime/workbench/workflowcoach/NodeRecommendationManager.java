@@ -56,13 +56,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.knime.core.node.NodeFactory.NodeType;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeInfo;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeTriple;
@@ -510,13 +511,13 @@ public class NodeRecommendationManager {
     }
 
     /**
-     * Returns all available {@link NodeTripleProvider}s. Node triple providers can be added via the respective
-     * extension point. Note that a provider must be enabled to be used in the workflow coach view.
+     * Returns all available {@link NodeTripleProviderFactory}s. Node triple provider factories can be added via the
+     * respective extension point.
      *
-     * @return a list of all available node triple providers
+     * @return a list of available node triple provider factories
      */
-    public List<NodeTripleProvider> getNodeTripleProviders() {
-        List<NodeTripleProvider> l = new ArrayList<NodeTripleProvider>(3);
+    public List<NodeTripleProviderFactory> getNodeTripleProviderFactories() {
+        List<NodeTripleProviderFactory> l = new ArrayList<NodeTripleProviderFactory>(3);
 
         //get node triple providers from extension points
         IExtensionPoint extPoint =
@@ -529,12 +530,25 @@ public class NodeRecommendationManager {
                 try {
                     NodeTripleProviderFactory factory =
                         (NodeTripleProviderFactory)conf.createExecutableExtension("factory-class");
-                    l.addAll(factory.createProviders());
+                    l.add(factory);
                 } catch (CoreException e) {
                     LOGGER.warn("Could not create factory from " + conf.getAttribute("factory-class"));
                 }
             }
         }
         return l;
+    }
+
+    /**
+     * Returns all available {@link NodeTripleProvider}s. Node triple providers are created from their respective
+     * {@link NodeTripleProviderFactory} that can be added via the respective extension point. Note that a provider must
+     * be enabled to be used in the workflow coach view.
+     *
+     * @return a list of all available node triple providers
+     */
+    public List<NodeTripleProvider> getNodeTripleProviders() {
+        return getNodeTripleProviderFactories().stream().flatMap(f -> {
+            return f.createProviders().stream();
+        }).collect(Collectors.toList());
     }
 }

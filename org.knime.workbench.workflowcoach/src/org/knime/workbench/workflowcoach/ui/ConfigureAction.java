@@ -54,7 +54,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.workflowcoach.NodeRecommendationManager;
-import org.knime.workbench.workflowcoach.data.NodeTripleProvider;
+import org.knime.workbench.workflowcoach.data.NodeTripleProviderFactory;
 import org.knime.workbench.workflowcoach.prefs.WorkflowCoachPreferencePage;
 
 /**
@@ -90,10 +90,11 @@ public class ConfigureAction extends Action {
      */
     @Override
     public void run() {
-        List<NodeTripleProvider> nodeTripleProviders = NodeRecommendationManager.getInstance().getNodeTripleProviders();
-        String[] prefPageIDs = new String[nodeTripleProviders.size()];
+        List<NodeTripleProviderFactory> nodeTripleProviderFactories =
+            NodeRecommendationManager.getInstance().getNodeTripleProviderFactories();
+        String[] prefPageIDs = new String[nodeTripleProviderFactories.size()];
         for (int i = 0; i < prefPageIDs.length; i++) {
-            prefPageIDs[i] = nodeTripleProviders.get(i).getPreferencePageID();
+            prefPageIDs[i] = nodeTripleProviderFactories.get(i).getPreferencePageID();
         }
         PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(m_viewer.getControl().getShell(),
             WorkflowCoachPreferencePage.ID, prefPageIDs, null);
