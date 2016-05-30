@@ -68,6 +68,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.RWAdapterValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -195,7 +196,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
                         + colSpec.getName() + "'");
             } else if (!refCell.isMissing() && !testCell.isMissing()) {
                 if (colSpec.getType().isCollectionType() && !(checker instanceof EqualityChecker)) {
-                    compareCollection(colSpec, checker, testCell, refCell);
+                    compareCollection(colSpec, checker, testCell, refCell, refRow.getKey());
                 } else {
                     Result res = checker.check(refCell, testCell);
                     if (!res.ok()) {
@@ -213,29 +214,44 @@ class DifferenceCheckerNodeModel extends NodeModel {
     /**
      * @param colSpec
      * @param checker
-     * @param testCell
-     * @param refCell
+     * @param testCollCell
+     * @param refCollCell
      */
     private void compareCollection(final DataColumnSpec colSpec, final DifferenceChecker<DataValue> checker,
-                                   final DataCell testCell, final DataCell refCell) {
-        CollectionDataValue testCollection = (CollectionDataValue)testCell;
-        CollectionDataValue refCollection = (CollectionDataValue)refCell;
+                                   final DataCell testCollCell, final DataCell refCollCell, final RowKey rowKey) {
+        CollectionDataValue testCollection = (CollectionDataValue)testCollCell;
+        CollectionDataValue refCollection = (CollectionDataValue)refCollCell;
 
         if (refCollection.size() != testCollection.size()) {
-            throw new IllegalStateException("Wrong number of elements in collection of column '" + colSpec.getName()
+            throw new IllegalStateException(
+                "Wrong number of elements in collection of row '" + rowKey + "' and column '" + colSpec.getName()
                     + "': expected " + refCollection.size() + ", got " + testCollection.size());
         }
 
         int index = 0;
         Iterator<DataCell> testCollIt = testCollection.iterator();
-        for (DataCell refCollCell : refCollection) {
-            DataCell testCollCell = testCollIt.next();
+        for (DataCell refCell : refCollection) {
+            DataCell testCell = testCollIt.next();
 
-            Result res = checker.check(refCollCell, testCollCell);
-            if (!res.ok()) {
-                throw new IllegalStateException("Wrong value at position " + index + " in collection of column '"
-                        + colSpec.getName() + "': " + res.getMessage() + " (using checker '" + checker.getDescription()
-                        + "')");
+            if (refCell.isMissing() && !testCell.isMissing()) {
+                throw new IllegalStateException("Expected missing cell in collection of row '" + rowKey
+                    + "' and column '" + colSpec.getName() + "' but got '" + testCell + "'");
+            } else if (!refCell.isMissing() && testCell.isMissing()) {
+                throw new IllegalStateException("Unexpected missing cell in collection of row '" + rowKey
+                    + "' and column '" + colSpec.getName() + "'");
+            } else if (!refCell.isMissing() && !testCell.isMissing()) {
+                if ((refCell instanceof CollectionDataValue) && !(checker instanceof EqualityChecker)) {
+                    compareCollection(colSpec, checker, testCell, refCell, rowKey);
+                } else {
+                    Result res = checker.check(refCell, testCell);
+                    if (!res.ok()) {
+                        throw new IllegalStateException("Wrong value at position " + index + " in collection of row '"
+                            + rowKey + "' and column '" + colSpec.getName() + "': " + res.getMessage()
+                            + " (using checker '" + checker.getDescription() + "')");
+                    }
+                }
+            } else {
+                // both cells are missing => OK
             }
             index++;
         }
