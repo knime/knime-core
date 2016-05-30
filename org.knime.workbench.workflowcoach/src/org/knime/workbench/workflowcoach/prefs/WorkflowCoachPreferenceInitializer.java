@@ -56,18 +56,37 @@ import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.osgi.framework.FrameworkUtil;
 
 /**
- *
+ * Intializer for the general workflow coach preferences.
  *
  * @author Martin Horn, University of Konstanz
  */
 public class WorkflowCoachPreferenceInitializer extends AbstractPreferenceInitializer {
+    /**
+     * Constant for monthly updates.
+     */
     public static final int MONTHLY_UPDATE = 2;
+    /**
+     * Constant for weekly updates.
+     */
     public static final int WEEKLY_UPDATE = 1;
+    /**
+     * Constant for no updates.
+     */
     public static final int NO_AUTO_UPDATE = 0;
+
+    /**
+     * Preference key for the automatic update schedule.
+     */
     public static final String P_AUTO_UPDATE_SCHEDULE = "auto_update_schedule";
-    /** Preference store keys */
+
+    /**
+     * Preference store key for the community recommendations provider.
+     */
     public static final String P_COMMUNITY_NODE_TRIPLE_PROVIDER = "community_node_triple_provider";
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void initializeDefaultPreferences() {
         IEclipsePreferences prefs =

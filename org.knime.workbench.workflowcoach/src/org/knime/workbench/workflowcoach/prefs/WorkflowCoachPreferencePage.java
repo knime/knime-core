@@ -280,7 +280,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
 
         //try reloading the statistics
         try {
-            NodeRecommendationManager.getInstance().loadStatistics();
+            NodeRecommendationManager.getInstance().loadRecommendations();
         } catch (Exception e) {
             setErrorMessage("Can't load the requested node recommendations: " + e.getMessage()
                 + ". Please see log for further detail.");

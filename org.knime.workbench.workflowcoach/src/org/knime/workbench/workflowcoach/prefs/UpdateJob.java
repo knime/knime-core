@@ -64,6 +64,22 @@ import org.osgi.framework.FrameworkUtil;
  * @author Martin Horn, University of Konstanz
  */
 public class UpdateJob extends Job {
+    /**
+     * Interface for a listenter that is notified one the update has been finished.
+     *
+     * @author Martin Horn, University of Konstanz
+     */
+    public interface UpdateListener {
+        /**
+         * Called when the update process is finished.
+         *
+         * @param e an optional exception if the update process finished without success. If not given, the update was
+         *            successful.
+         *
+         */
+        void updateFinished(Optional<Exception> e);
+    }
+
     private UpdateListener m_listener;
 
     private List<UpdatableNodeTripleProvider> m_providers;
@@ -120,16 +136,5 @@ public class UpdateJob extends Job {
             return new Status(IStatus.OK, FrameworkUtil.getBundle(getClass()).getSymbolicName(),
                 "Error while updating the statistics for the node recommendations (Workflow Coach).", exception);
         }
-    }
-
-    public interface UpdateListener {
-        /**
-         * Called when the update process is finished.
-         *
-         * @param e an optional exception if the update process finished without success. If not given, the update was
-         *            successful.
-         *
-         */
-        void updateFinished(Optional<Exception> e);
     }
 }

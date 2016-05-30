@@ -260,7 +260,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                         updateInputNoProvider();
                     } else {
                         try {
-                            NodeRecommendationManager.getInstance().loadStatistics();
+                            NodeRecommendationManager.getInstance().loadRecommendations();
                             if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
                                 //if there are still no triple provider, show link
                                 updateInputNoProvider();
