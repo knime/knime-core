@@ -51,6 +51,7 @@ package org.knime.testing.core;
 import java.lang.reflect.Field;
 import java.security.SecureRandom;
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -61,11 +62,13 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
-import org.knime.core.node.port.database.DatabaseDriverLoader;
+import org.knime.core.node.port.database.connection.CachedConnectionFactory;
+import org.knime.core.node.port.database.connection.DBDriverFactory;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -161,7 +164,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      */
     @Override
     public void before() throws Exception {
-        DatabaseDriverLoader.registerDriver(m_driverName);
+//        DatabaseDriverLoader.registerDriver(m_driverName);
         createDatabase(m_initialDatabase, m_username, m_password, m_dbName);
         m_databaseCreated = true;
     }
@@ -175,7 +178,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
             m_databaseCreated = false;
 
             // close the connection first in order to avoid open transactions that prevent dropping the database
-            Class<DatabaseConnectionSettings> clazz = DatabaseConnectionSettings.class;
+            Class<CachedConnectionFactory> clazz = CachedConnectionFactory.class;
             Field mapField = clazz.getDeclaredField("CONNECTION_MAP");
             mapField.setAccessible(true);
             @SuppressWarnings("unchecked")
@@ -210,17 +213,48 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      * @param username the username
      * @param password the password
      * @param dbName name of the new database
-     * @throws SQLException if a database error occurs
+     * @throws Exception
      */
     protected void createDatabase(final String initialDatabase, final String username, final String password,
-        final String dbName) throws SQLException {
-        try (Connection conn = DriverManager.getConnection(getJDBCUrl(initialDatabase), username, password)) {
+        final String dbName) throws Exception {
+        Driver driver = getDriver(initialDatabase, username, password);
+        final Properties props = getProperties(username, password);
+        try (Connection conn = driver.connect(getJDBCUrl(initialDatabase), props)) {
             String sql = "CREATE DATABASE " + dbName;
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute(sql);
                 NodeLogger.getLogger(getClass()).info("Created temporary testing database " + dbName);
             }
         }
+    }
+
+    /**
+     * @param username
+     * @param password
+     * @return
+     */
+    protected Properties getProperties(final String username, final String password) {
+        final Properties props = new Properties();
+        props.put("user", username);
+        props.put("password", password);
+        return props;
+    }
+
+    /**
+     * @param initialDatabase
+     * @param username
+     * @param password
+     * @return
+     * @throws Exception
+     */
+    protected Driver getDriver(final String initialDatabase, final String username, final String password)
+        throws Exception {
+        @SuppressWarnings("deprecation")
+        final DatabaseConnectionSettings settings =
+                new DatabaseConnectionSettings(m_driverName, getJDBCUrl(initialDatabase), username, password, null);
+        final DBDriverFactory driverFactory = settings.getUtility().getConnectionFactory().getDriverFactory();
+        Driver driver = driverFactory.getDriver(settings);
+        return driver;
     }
 
     /**
