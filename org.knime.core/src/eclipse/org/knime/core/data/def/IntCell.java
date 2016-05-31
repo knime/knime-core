@@ -66,6 +66,7 @@ import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 
 /**
  * A data cell implementation holding an integer value by storing this value in
@@ -309,6 +310,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
          * @param i any int value
          * @return a new data cell
          */
+        @DataCellFactoryMethod
         public static DataCell create(final int i) {
             return new IntCell(i);
         }

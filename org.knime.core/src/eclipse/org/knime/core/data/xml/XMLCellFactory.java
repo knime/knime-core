@@ -58,6 +58,7 @@ import org.knime.core.data.DataCellFactory.FromComplexString;
 import org.knime.core.data.DataCellFactory.FromInputStream;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.BlobDataCell;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -127,6 +128,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @throws XMLStreamException
      * @throws NullPointerException if argument is null
      */
+    @DataCellFactoryMethod
     public static DataCell create(final String xml) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
         if (xml == null) {
@@ -151,6 +153,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @return DataCell representing the XML document
      * @throws NullPointerException if argument is null
      */
+    @DataCellFactoryMethod
     public static DataCell create(final Document dom) {
         if (dom == null) {
             throw new NullPointerException("dom must not be null");
@@ -179,6 +182,7 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
      * @throws XMLStreamException
      * @throws NullPointerException if argument is null
      */
+    @DataCellFactoryMethod
     public static DataCell create(final InputStream is) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
         if (is == null) {

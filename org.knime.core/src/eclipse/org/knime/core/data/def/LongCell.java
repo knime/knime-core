@@ -63,6 +63,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 
 /**
  *
@@ -264,10 +265,23 @@ public class LongCell extends DataCell implements LongValue, DoubleValue,
         /**
          * Creates a new long cell with the given value.
          *
-         * @param l any long value
+         * @param l any integer value
          * @return a new data cell
          */
+        @DataCellFactoryMethod
         public static DataCell create(final int l) {
+            return new LongCell(l);
+        }
+
+        /**
+         * Creates a new long cell with the given value.
+         *
+         * @param l any long value
+         * @return a new data cell
+         * @since 3.2
+         */
+        @DataCellFactoryMethod
+        public static DataCell create(final long l) {
             return new LongCell(l);
         }
     }

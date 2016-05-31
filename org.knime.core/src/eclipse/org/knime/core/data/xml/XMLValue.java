@@ -51,6 +51,7 @@ import javax.swing.Icon;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.data.convert.DataValueAccessMethod;
 import org.knime.core.data.xml.util.XmlDomComparer;
 import org.w3c.dom.Document;
 
@@ -66,6 +67,7 @@ public interface XMLValue extends DataValue {
      * the returned document must not be modified by clients as data cells are read-only.
      * @return the DOM
      */
+    @DataValueAccessMethod
     Document getDocument();
 
     /**

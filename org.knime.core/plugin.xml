@@ -10,6 +10,8 @@
    <extension-point id="DataType" name="DataType" schema="schema/DataType.exsd"/>
    <extension-point id="PortType" name="PortType" schema="schema/PortType.exsd"/>
    <extension-point id="EarlyStartup" name="EarlyStartup" schema="schema/EarlyStartup.exsd"/>
+   <extension-point id="JavaToDataCellConverter" name="JavaToDataCellConverter" schema="schema/JavaToDataCellConverter.exsd"/>
+   <extension-point id="DataCellToJavaConverter" name="DataCellToJavaConverter" schema="schema/DataCellToJavaConverter.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory

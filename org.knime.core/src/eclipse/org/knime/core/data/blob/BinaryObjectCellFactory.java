@@ -61,6 +61,7 @@ import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellFactory.FromInputStream;
 import org.knime.core.data.DataType;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.ExecutionContext;
@@ -138,6 +139,7 @@ public final class BinaryObjectCellFactory implements FromInputStream {
      * @throws IOException In case of IO problems when large byte arrays are written to a file store.
      * @throws NullPointerException If argument is null
      */
+    @DataCellFactoryMethod
     public DataCell create(final byte[] bytes) throws IOException {
         if (bytes.length < MEMORY_LIMIT) {
             byte[] md5sum = newMD5Digest().digest(bytes);
@@ -152,6 +154,7 @@ public final class BinaryObjectCellFactory implements FromInputStream {
      * @throws IOException If that fails (stream not readable, file store not writable, close problems, ...)
      * @throws NullPointerException If argument is null.
      */
+    @DataCellFactoryMethod
     public DataCell create(final InputStream input) throws IOException {
         String uniqueFileName = "knime-binary-copy-";
         String suffix = ".bin";
