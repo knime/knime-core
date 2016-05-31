@@ -52,8 +52,6 @@ import java.lang.reflect.Field;
 import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -264,11 +262,13 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      * @param username the username
      * @param password the password
      * @param dbName name of the database to drop
-     * @throws SQLException if a database error occurs
+     * @throws Exception
      */
     protected void dropDatabase(final String initialDatabase, final String username, final String password,
-        final String dbName) throws SQLException {
-        try (Connection conn = DriverManager.getConnection(getJDBCUrl(initialDatabase), username, password)) {
+        final String dbName) throws Exception {
+        Driver driver = getDriver(initialDatabase, username, password);
+        Properties properties = getProperties(username, password);
+        try (Connection conn = driver.connect(getJDBCUrl(initialDatabase), properties)) {
             String sql = "DROP DATABASE " + dbName;
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute(sql);
