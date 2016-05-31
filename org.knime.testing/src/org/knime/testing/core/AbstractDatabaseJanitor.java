@@ -229,7 +229,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
     /**
      * @param username
      * @param password
-     * @return
+     * @return the {@link Properties} to use when creating a connection to the db
      */
     protected Properties getProperties(final String username, final String password) {
         final Properties props = new Properties();
@@ -242,7 +242,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      * @param initialDatabase
      * @param username
      * @param password
-     * @return
+     * @return the {@link Driver} to use
      * @throws Exception
      */
     protected Driver getDriver(final String initialDatabase, final String username, final String password)
@@ -266,10 +266,10 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      */
     protected void dropDatabase(final String initialDatabase, final String username, final String password,
         final String dbName) throws Exception {
-        Driver driver = getDriver(initialDatabase, username, password);
-        Properties properties = getProperties(username, password);
+        final Driver driver = getDriver(initialDatabase, username, password);
+        final Properties properties = getProperties(username, password);
         try (Connection conn = driver.connect(getJDBCUrl(initialDatabase), properties)) {
-            String sql = "DROP DATABASE " + dbName;
+            final String sql = "DROP DATABASE " + dbName;
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute(sql);
                 NodeLogger.getLogger(getClass()).info("Deleted temporary testing database " + dbName);
