@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.CoreException;
@@ -167,7 +168,20 @@ public class NodeRecommendationManager {
                 provider.getNodeTriples().forEach(nf -> fillRecommendationsMap(recommendationMap, nf));
 
                 //aggregate multiple occurring id's
-                recommendationMap.values().stream().forEach(l -> aggregate(l));
+                //but apply a different aggregation method to source nodes
+                BiConsumer<NodeRecommendation, NodeRecommendation> avgAggr = (np1, np2) -> {
+                    np1.increaseFrequency(np2.getFrequency(), 1);
+                };
+                BiConsumer<NodeRecommendation, NodeRecommendation> sumAggr = (np1, np2) -> {
+                    np1.increaseFrequency(np2.getFrequency(), 0);
+                };
+                recommendationMap.keySet().stream().forEach(s -> {
+                    if (s.equals(SOURCE_NODES_KEY)) {
+                        aggregate(recommendationMap.get(s), sumAggr);
+                    } else {
+                        aggregate(recommendationMap.get(s), avgAggr);
+                    }
+                });
             }
         } //end for
 
@@ -254,15 +268,18 @@ public class NodeRecommendationManager {
      * Aggregates multiple occurring id's and takes the mean of the frequencies
      *
      * @param l the list is manipulated directly
+     * @param aggregationOperation the operation that aggregates the frequency of two node recommendations - important:
+     *            only the first node recommendation-object must be manipulated
      */
-    private static void aggregate(final List<NodeRecommendation> l) {
+    private static void aggregate(final List<NodeRecommendation> l,
+        final BiConsumer<NodeRecommendation, NodeRecommendation> aggregationOperation) {
         Map<String, NodeRecommendation> aggregates = new HashMap<>();
 
         for (NodeRecommendation np : l) {
             if (aggregates.containsKey(np.toString())) {
                 //aggregate
                 NodeRecommendation np2 = aggregates.get(np.toString());
-                np2.increaseFrequency(np.getFrequency());
+                aggregationOperation.accept(np2, np);
             } else {
                 aggregates.put(np.toString(), np);
             }
@@ -448,11 +465,15 @@ public class NodeRecommendationManager {
          * that recommend the same node (e.g. if the selected node only is taken into account and the predecessor
          * ignored). See {@link NodeRecommendationManager#aggregate(List)}.
          *
-         * @param amount the increase amount
+         * @param freqIncrease the amount of how much to increase the frequency
+         * @param countIncrease the amount the count should be increased by which the frequency is in the end divided by
+         *            when calling the {@link #getFrequency()}-method. If 1 is passed with every frequency increase, the
+         *            mean is essentially taken when finally calling {@link #getFrequency()}. If 0 is passed every time,
+         *            {@link #getFrequency()} will return sum of all frequencies provided here.
          */
-        private void increaseFrequency(final int amount) {
-            m_frequency += amount;
-            m_num += 1;
+        private void increaseFrequency(final int freqIncrease, final int countIncrease) {
+            m_frequency += freqIncrease;
+            m_num += countIncrease;
         }
 
         /**
