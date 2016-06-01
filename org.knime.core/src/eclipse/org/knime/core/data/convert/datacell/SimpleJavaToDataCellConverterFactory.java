@@ -70,5 +70,4 @@ public class SimpleJavaToDataCellConverterFactory<T> implements JavaToDataCellCo
         return getClass().getName() + "(" + m_sourceType.getSimpleName() + "," + m_dataType.toString() + "," + m_name
             + ")";
     }
-
 }

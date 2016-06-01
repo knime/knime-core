@@ -5,7 +5,8 @@ import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 
 /**
  * Class which contains all necessary information to reference a {@link DataCellToJavaConverterFactory} or
- * {@link JavaToDataCellConverterFactory}.
+ * {@link JavaToDataCellConverterFactory}. This class is for internal usage only and should not be used by other
+ * plug-ins.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @since 3.2
@@ -22,7 +23,7 @@ public final class ConversionKey {
     private final Object m_destType;
 
     /**
-     * Create from source type, dest type and factory name.
+     * Create from source and destination type.
      *
      * @param sourceType Source type the referenced factory should be able to handle
      * @param destType Destination type the referenced factory should be able to handle

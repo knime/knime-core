@@ -286,30 +286,22 @@ public final class JavaToDataCellConverterRegistry {
 
     /* --- Singleton methods --- */
 
-    private static JavaToDataCellConverterRegistry instance;
+    private static final JavaToDataCellConverterRegistry INSTANCE = new JavaToDataCellConverterRegistry();
 
     /**
      * @return Singleton instance of this Service.
      */
-    public static synchronized JavaToDataCellConverterRegistry getInstance() {
-        if (instance == null) {
-            instance = new JavaToDataCellConverterRegistry();
-        }
-        return instance;
+    public static JavaToDataCellConverterRegistry getInstance() {
+        return INSTANCE;
     }
 
     /* --- Annotation parsing and extension point --- */
 
     /**
-     * The extension point ID
+     * The extension point ID.
      */
-    public static final String EXTENSION_POINT_ID = "org.knime.core.JavaToDataCellConverter";
+    private static final String EXTENSION_POINT_ID = "org.knime.core.JavaToDataCellConverter";
 
-    /**
-     * Called in {@link #getInstance()}.
-     *
-     * @see #getInstance()
-     */
     private JavaToDataCellConverterRegistry() {
         /* parse all annotations of DataCellFactories */
         parseAnnotations();
@@ -363,17 +355,4 @@ public final class JavaToDataCellConverterRegistry {
             }
         }
     }
-
-    /*
-     * <S> List<JavaToDataCellConverterFactory<S>>
-     * getToDataCellConverterFactoriesForSource(Class<S>) <S>
-     *
-     * Optional<JavaToDataCellConverterFactory<S>> getConverterFactory(Class<S>,
-     * DataType, String) List<DataType> getAllDestinationTypes() <S>
-     *
-     * void register(JavaToDataCellConverterFactory<S>)
-     *
-     * (getToDataCellConverterFactoriesForDestination(DataType))
-     */
-
 }

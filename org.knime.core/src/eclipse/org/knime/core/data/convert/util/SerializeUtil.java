@@ -104,7 +104,7 @@ public final class SerializeUtil {
 
     /**
      * Object which can be queried instead of an actual ConverterFactory, for example to be still able to display a
-     * previously existing setting in a node dialog which has become invalid through removal of a required plugin.
+     * previously existing setting in a node dialog which has become invalid through removal of a required plug-in.
      *
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      */

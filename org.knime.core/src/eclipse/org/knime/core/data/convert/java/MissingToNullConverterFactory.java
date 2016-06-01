@@ -10,9 +10,8 @@ import org.knime.core.data.MissingValue;
  * @noreference This class is not intended to be referenced by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public final class MissingToNullConverterFactory implements DataCellToJavaConverterFactory<MissingValue, Object> {
-
-    private static final MissingToNullConverterFactory m_instance = new MissingToNullConverterFactory();
+final class MissingToNullConverterFactory implements DataCellToJavaConverterFactory<MissingValue, Object> {
+    private static final MissingToNullConverterFactory INSTANCE = new MissingToNullConverterFactory();
 
     private MissingToNullConverterFactory() {
     }
@@ -36,12 +35,11 @@ public final class MissingToNullConverterFactory implements DataCellToJavaConver
      * @return instance of this singleton
      */
     public static MissingToNullConverterFactory getInstance() {
-        return m_instance;
+        return INSTANCE;
     }
 
     @Override
     public String getIdentifier() {
         return "missing";
     }
-
 }

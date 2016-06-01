@@ -23,7 +23,7 @@ import org.knime.core.data.collection.CollectionDataValue;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-public class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverterFactory<S, D> {
+class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverterFactory<S, D> {
 
     private final Class<S> m_sourceType;
 
@@ -39,7 +39,7 @@ public class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaC
      * @param elementConverter Implementation (possibly a Lambda expression) of the {@link DataCellToJavaConverter}
      *            defining the single instance returned by {@link #create()}.
      */
-    public CollectionConverterFactory(final Class<S> sourceType, final Class<D> destType,
+    CollectionConverterFactory(final Class<S> sourceType, final Class<D> destType,
         final DataCellToJavaConverter<SE, DE> elementConverter) {
         assert CollectionDataValue.class.isAssignableFrom(sourceType);
         assert destType.isArray();

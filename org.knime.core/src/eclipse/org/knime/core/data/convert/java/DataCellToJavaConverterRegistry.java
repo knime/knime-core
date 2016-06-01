@@ -331,18 +331,13 @@ public final class DataCellToJavaConverterRegistry {
 
     private final static NodeLogger LOGGER = NodeLogger.getLogger(JavaToDataCellConverterRegistry.class);
 
-    private static DataCellToJavaConverterRegistry instance;
+    private static final DataCellToJavaConverterRegistry INSTANCE = new DataCellToJavaConverterRegistry();
 
     /**
      * The extension point ID
      */
-    public static final String EXTENSION_POINT_ID = "org.knime.core.DataCellToJavaConverter";
+    private static final String EXTENSION_POINT_ID = "org.knime.core.DataCellToJavaConverter";
 
-    /**
-     * Called in {@link #getInstance()}.
-     *
-     * @see #getInstance()
-     */
     private DataCellToJavaConverterRegistry() {
         /* parse all annotations of DataCellFactories */
         parseAnnotations();
@@ -409,17 +404,14 @@ public final class DataCellToJavaConverterRegistry {
 
         register(
             new SimpleDataCellToJavaConverterFactory<>(valueClass, javaType, (value) -> (T)method.invoke(value), name));
-        LOGGER.debug("Registered DataCellToJavaConverterFactory from DataValueAccessMethod annotation for:");
-        LOGGER.debug(javaType.getName() + " to " + valueClass.getName());
+        LOGGER.debug("Registered DataCellToJavaConverterFactory from DataValueAccessMethod annotation for "
+            + javaType.getName() + " to " + valueClass.getName());
     }
 
     /**
      * @return the instance of this singleton {@link DataCellToJavaConverterRegistry}.
      */
-    public static synchronized DataCellToJavaConverterRegistry getInstance() {
-        if (instance == null) {
-            instance = new DataCellToJavaConverterRegistry();
-        }
-        return instance;
+    public static DataCellToJavaConverterRegistry getInstance() {
+        return INSTANCE;
     }
 }
