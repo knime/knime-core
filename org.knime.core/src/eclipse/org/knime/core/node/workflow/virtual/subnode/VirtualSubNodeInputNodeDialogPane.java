@@ -70,6 +70,8 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
+import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
 import org.knime.core.node.util.filter.variable.FlowVariableFilterPanel;
 import org.knime.core.node.workflow.FlowVariable;
@@ -94,7 +96,13 @@ final class VirtualSubNodeInputNodeDialogPane extends NodeDialogPane {
     /** Default const.
      * @param numberOfPorts The number of out ports of this virtual in node */
     VirtualSubNodeInputNodeDialogPane(final int numberOfPorts) {
-        m_variableFilterPanel = new FlowVariableFilterPanel();
+        m_variableFilterPanel = new FlowVariableFilterPanel(new InputFilter<FlowVariableCell>() {
+            @Override
+            public boolean include(final FlowVariableCell name) {
+                FlowVariable flowVariable = name.getFlowVariable();
+                return !flowVariable.isGlobalConstant();
+            }
+        });
         m_variablePrefixTextField = new JTextField(8);
         m_variablePrefixChecker = new JCheckBox("Add prefix to all variables: ");
         m_variablePrefixChecker.addItemListener(new ItemListener() {

@@ -56,6 +56,7 @@ import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.ConvertSubNodeToMetaNodeCommand;
+import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /** Convert metanode to a sub node.
@@ -143,9 +144,9 @@ public class ConvertSubNodeToMetaNodeAction extends AbstractNodeAction {
         try {
             WorkflowManager manager = getManager();
             SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getNodeContainer();
-//            if (!subNode.unlock(new GUIWorkflowCipherPrompt())) {
-//                return;
-//            }
+            if (!subNode.getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
+                return;
+            }
             // before we do anything, let's see if the convert will reset the metanode
             if (manager.canResetNode(subNode.getID())) {
                 // yes: ask if we can reset, otherwise bail
