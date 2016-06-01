@@ -153,9 +153,8 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 return sel;
             }
         };
-        this.getSite().setSelectionProvider(m_viewer);
-        m_viewer.setComparator(null);
-
+        getSite().setSelectionProvider(m_viewer);
+        m_viewer.setComparator(new TableColumnSorter(m_viewer));
         Table table = m_viewer.getTable();
 
         //drag & drop
@@ -389,6 +388,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 column.setText(namesAndToolTips.get(i).getFirst());
                 column.setToolTipText(namesAndToolTips.get(i).getSecond());
                 column.setWidth(100);
+                column.addSelectionListener((TableColumnSorter) m_viewer.getComparator());
             }
             m_viewer.getTable().setRedraw(true);
             m_viewer.setInput(SELECTION_HINT_MESSAGE);
