@@ -241,11 +241,10 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             return;
         }
         if (!(selection instanceof IStructuredSelection) || !(part instanceof WorkflowEditor)) {
-            // If no node is selected, the selection event comes another view than the workbench, do nothing but set
-            // the 'no selection' method.
-            m_viewer.setInput(SELECTION_HINT_MESSAGE);
+            // If the selection event comes from another view than the workbench, do nothing
             return;
         }
+
         if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
             //if there is at least one enabled triple provider then the statistics might need to be download first
             if (NodeRecommendationManager.getInstance().getNodeTripleProviders().stream()
