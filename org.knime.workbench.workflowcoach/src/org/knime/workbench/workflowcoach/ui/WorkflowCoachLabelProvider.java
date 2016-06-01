@@ -86,11 +86,11 @@ public class WorkflowCoachLabelProvider extends LabelProvider implements ITableL
             } else {
                 int idx = columnIndex - 1;
                 if (nrs[idx] != null) {
-                    int perc = (int)Math.round((nrs[idx].getFrequency() / (double)nrs[idx].getTotalFrequency() * 100));
-                    if (perc == 0) {
-                        return "";
+                    double perc = (nrs[idx].getFrequency() / (double)nrs[idx].getTotalFrequency() * 100);
+                    if (perc < 1.0) {
+                        return "<1%";
                     } else {
-                        return perc + "%";
+                        return ((int)Math.round(perc)) + "%";
                     }
                 } else {
                     return "";
