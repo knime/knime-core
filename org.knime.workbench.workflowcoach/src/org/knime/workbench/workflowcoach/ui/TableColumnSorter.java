@@ -86,18 +86,17 @@ class TableColumnSorter extends ViewerComparator implements SelectionListener {
         if (m_selectedColumn == selectedColumn) {
             switch (m_direction) {
                 case ASC:
-                    m_direction = DESC;
+                    m_direction = NONE;
                     break;
                 case DESC:
                     m_direction = ASC;
                     break;
                 default:
-                    m_direction = ASC;
-                    break;
+                    m_direction = DESC;
             }
         } else {
             m_selectedColumn = selectedColumn;
-            m_direction = ASC;
+            m_direction = DESC;
         }
 
         Table table = m_viewer.getTable();

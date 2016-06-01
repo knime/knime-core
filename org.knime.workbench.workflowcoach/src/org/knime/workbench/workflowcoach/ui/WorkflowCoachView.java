@@ -340,9 +340,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         m_viewer.setInput(recommendationsWithoutDups);
         m_viewer.refresh();
 
-        //scroll to the very top and undo any selection
+        //scroll to the very top
         if (!recommendationsWithoutDups.isEmpty()) {
-            m_viewer.reveal(recommendationsWithoutDups.get(0));
+            m_viewer.getTable().setTopIndex(0);
         }
     }
 
