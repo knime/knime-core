@@ -121,8 +121,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     private static final ScopedPreferenceStore PREFS = new ScopedPreferenceStore(InstanceScope.INSTANCE,
         FrameworkUtil.getBundle(CommunityTripleProvider.class).getSymbolicName());
 
-    private static final String SELECTION_HINT_MESSAGE = "No selection.";
-
     /**
      * If <code>true</code>, nodes are sill loading.
      */
@@ -184,7 +182,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
 
         m_viewer.setInput("Waiting for node repository to be loaded ...");
 
-        Job nodesLoader = new KNIMEJob("Workflow coach loader", FrameworkUtil.getBundle(getClass())) {
+        Job nodesLoader = new KNIMEJob("Workflow Coach loader", FrameworkUtil.getBundle(getClass())) {
             @Override
             protected IStatus run(final IProgressMonitor monitor) {
                 RepositoryManager.INSTANCE.getRoot(); // wait until the repository is fully loaded
@@ -196,7 +194,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                     Display.getDefault().asyncExec(() -> m_viewer.setInput("Loading recommendations..."));
                     checkForStatisticUpdates();
                     updateFrequencyColumnHeadersAndToolTips();
-                    updateInput(SELECTION_HINT_MESSAGE);
                 }
                 NodeRecommendationManager.getInstance().addUpdateListener(WorkflowCoachView.this);
                 m_nodesLoading = false;
@@ -239,11 +236,15 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             // If source of the selection is this view itself, or the nodes or statistics are still loading, do nothing
             return;
         }
-        if (!(selection instanceof IStructuredSelection) || !(part instanceof WorkflowEditor)) {
+        if (!(selection instanceof IStructuredSelection) || ((part != null) && !(part instanceof WorkflowEditor))) {
             // If the selection event comes from another view than the workbench, do nothing
             return;
         }
 
+        updateInput(selection);
+    }
+
+    private void updateInput(final ISelection selection) {
         if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
             //if there is at least one enabled triple provider then the statistics might need to be download first
             if (NodeRecommendationManager.getInstance().getNodeTripleProviders().stream()
@@ -271,7 +272,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                         }
                     }
                 }, true);
-                return;
             } else {
                 //no triple provider enabled -> needs to be configured
                 updateInputNoProvider();
@@ -281,7 +281,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         IStructuredSelection structSel = (IStructuredSelection)selection;
 
         if (structSel.size() > 1) {
-            m_viewer.setInput(SELECTION_HINT_MESSAGE);
+            m_viewer.setInput("No recommendation for multiple selected nodes.");
             return;
         }
 
@@ -391,7 +391,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 column.addSelectionListener((TableColumnSorter) m_viewer.getComparator());
             }
             m_viewer.getTable().setRedraw(true);
-            m_viewer.setInput(SELECTION_HINT_MESSAGE);
+            if (!(m_viewer.getInput() instanceof List)) {
+                updateInput(StructuredSelection.EMPTY);
+            }
         });
     }
 
@@ -500,7 +502,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      *
      * @param o
      */
-    private void updateInput(final Object o) {
+    private void updateInput(final String message) {
         Display.getDefault().syncExec(() -> {
             if (m_editor != null) {
                 Control oldEditor = m_editor.getEditor();
@@ -510,7 +512,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 m_editor.dispose();
                 m_editor = null;
             }
-            m_viewer.setInput(o);
+            m_viewer.setInput(message);
         });
     }
 
