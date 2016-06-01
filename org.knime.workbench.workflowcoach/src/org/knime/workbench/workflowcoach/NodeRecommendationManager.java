@@ -247,9 +247,7 @@ public class NodeRecommendationManager {
         List<NodeRecommendation> p = recommendation.computeIfAbsent(key, k -> new ArrayList<>());
         //create the new node recommendation
         NodeTemplate nt = findNodeTemplate(ni);
-        if (nt == null) {
-            LOGGER.info("The node " + ni + " listed in the node recommendation statistics is not installed.");
-        } else {
+        if (nt != null) {
             p.add(new NodeRecommendation(nt, count));
         }
     }
