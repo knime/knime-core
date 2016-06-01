@@ -365,8 +365,13 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
             DataCell[] row = new DataCell[m_indices.length];
             for (int i = 0; i < row.length; i++) {
                 List<Double> list = colList.get(i);
-                final Double v = list.get(r[i]);
-                row[i] = v == null ? DataType.getMissingCell() : new DoubleCell(v.doubleValue());
+                if (r[i] >= list.size()) {
+                    // in case this column has less values than the requested rank
+                    row[i] = DataType.getMissingCell();
+                } else {
+                    final Double v = list.get(r[i]);
+                    row[i] = v == null ? DataType.getMissingCell() : new DoubleCell(v.doubleValue());
+                }
             }
             dc.addRowToTable(new DefaultRow(String.valueOf(r), row));
             progress++;
