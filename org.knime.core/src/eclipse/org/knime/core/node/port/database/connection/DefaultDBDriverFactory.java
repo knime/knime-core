@@ -68,6 +68,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * Default {@link DBDriverFactory} implementation that uses the old
@@ -85,6 +86,22 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
     private final ClassLoader m_classLoader;
     private final Set<String> m_driverNames = new HashSet<>();
 
+
+    /**
+     * @param driverName the name of the driver class
+     * @param bundle the bundle that is/contains the JDBC driver
+     * @throws IOException if the bundle file cannot be resolved
+     */
+    public DefaultDBDriverFactory(final String driverName, final Bundle bundle) throws IOException {
+        if (StringUtils.isEmpty(driverName)) {
+            throw new IllegalArgumentException("driverName must not be empty");
+        }
+        m_driverFiles = Collections.singleton(FileLocator.getBundleFile(bundle));
+        m_driverNames.add(driverName);
+        m_classLoader = bundle.adapt(BundleWiring.class).getClassLoader();
+    }
+
+
     /**
      * @param driverName the name of the driver class
      * @param withinBundlePaths the paths of all JDBC driver files within the bundle
@@ -94,7 +111,8 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
         if (StringUtils.isEmpty(driverName)) {
             throw new IllegalArgumentException("driverName must not be empty");
         }
-        m_driverFiles = getBundleFiles(FrameworkUtil.getBundle(getClass()), withinBundlePaths);
+        m_driverFiles =
+            Collections.unmodifiableCollection(getBundleFiles(FrameworkUtil.getBundle(getClass()), withinBundlePaths));
         m_driverNames.add(driverName);
         URL[] urls = m_driverFiles.stream().map(f -> toURL(f)).toArray(URL[]::new);
         m_classLoader = new URLClassLoader(urls, getClass().getClassLoader());
@@ -128,7 +146,7 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
         if (driverFiles.isEmpty()) {
             throw new IllegalArgumentException("driverFiles must not be empty");
         }
-        m_driverFiles = new ArrayList<>(driverFiles);
+        m_driverFiles = Collections.unmodifiableCollection(new ArrayList<>(driverFiles));
         m_driverNames.add(driverName);
         URL[] urls = m_driverFiles.stream().map(f -> toURL(f)).toArray(URL[]::new);
         m_classLoader = new URLClassLoader(urls, getClass().getClassLoader());
@@ -160,7 +178,7 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
      */
     @Override
     public Collection<File> getDriverFiles(final DatabaseConnectionSettings settings) throws IOException {
-        return Collections.unmodifiableCollection(m_driverFiles);
+        return m_driverFiles;
     }
 
     /**
