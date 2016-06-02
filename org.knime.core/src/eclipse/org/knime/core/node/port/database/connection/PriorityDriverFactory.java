@@ -132,7 +132,7 @@ public class PriorityDriverFactory implements DBDriverFactory {
         for (final DBDriverFactory factory : m_factories) {
             try {
                 final Collection<File> files = factory.getDriverFiles(settings);
-                if (files != null && !files.isEmpty()) {
+                if (!files.isEmpty()) {
                     return files;
                 }
             } catch (IOException e) {

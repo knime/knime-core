@@ -77,7 +77,7 @@ public interface DBDriverFactory {
 
     /**
      * @param settings {@link DatabaseConnectionSettings}
-     * @return the {@link Collection} of driver files necessary for this db driver
+     * @return the {@link Collection} of driver files necessary for this db driver; never <code>null</code>
      * @throws IOException if the files can not be retrieved
      */
     public Collection<File> getDriverFiles(final DatabaseConnectionSettings settings) throws IOException;

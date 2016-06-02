@@ -50,20 +50,24 @@ package org.knime.core.node.port.database.connection;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * Default {@link DBDriverFactory} implementation that uses the old
@@ -77,17 +81,32 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DefaultDBDriverFactory.class);
 
-    private Collection<File> m_driverFiles;
-    private Set<String> m_driverNames;
+    private final Collection<File> m_driverFiles;
+    private final ClassLoader m_classLoader;
+    private final Set<String> m_driverNames = new HashSet<>();
 
     /**
      * @param driverName the name of the driver class
-     * @param bundleId the id of the eclipse bundle that contains the file
      * @param withinBundlePaths the paths of all JDBC driver files within the bundle
      * @throws IllegalStateException if an {@link IOException} occurs
      */
-    public DefaultDBDriverFactory(final String driverName, final String bundleId, final String... withinBundlePaths) {
-        this(driverName, getBundleFiles(bundleId, withinBundlePaths));
+    public DefaultDBDriverFactory(final String driverName, final String... withinBundlePaths) {
+        if (StringUtils.isEmpty(driverName)) {
+            throw new IllegalArgumentException("driverName must not be empty");
+        }
+        m_driverFiles = getBundleFiles(FrameworkUtil.getBundle(getClass()), withinBundlePaths);
+        m_driverNames.add(driverName);
+        URL[] urls = m_driverFiles.stream().map(f -> toURL(f)).toArray(URL[]::new);
+        m_classLoader = new URLClassLoader(urls, getClass().getClassLoader());
+    }
+
+    private static URL toURL(final File f) {
+        try {
+            return f.getAbsoluteFile().toURI().toURL();
+        } catch (MalformedURLException ex) {
+            // doesn't happen!
+            throw new RuntimeException(ex);
+        }
     }
 
     /**
@@ -103,15 +122,16 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
      * @param driverFiles the files that are required by the driver e.g. the jar with the jdbc driver
      */
     public DefaultDBDriverFactory(final String driverName, final Collection<File> driverFiles) {
-        if (driverName == null || driverName.isEmpty()) {
+        if (StringUtils.isEmpty(driverName)) {
             throw new IllegalArgumentException("driverName must not be empty");
         }
-        if (driverFiles == null || driverFiles.isEmpty()) {
+        if (driverFiles.isEmpty()) {
             throw new IllegalArgumentException("driverFiles must not be empty");
         }
-        m_driverFiles = driverFiles;
-        m_driverNames = new HashSet<>();
+        m_driverFiles = new ArrayList<>(driverFiles);
         m_driverNames.add(driverName);
+        URL[] urls = m_driverFiles.stream().map(f -> toURL(f)).toArray(URL[]::new);
+        m_classLoader = new URLClassLoader(urls, getClass().getClassLoader());
     }
 
     /**
@@ -119,7 +139,7 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
      */
     @Override
     public Set<String> getDriverNames() {
-        return m_driverNames;
+        return Collections.unmodifiableSet(m_driverNames);
     }
 
     /**
@@ -127,12 +147,11 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
      */
     @Override
     public Driver getDriver(final DatabaseConnectionSettings settings) throws Exception {
-//        final Class<?> c =  Class.forName(settings.getDriver(), true, getClass().getClassLoader());
-        final String driverName = settings.getDriver();
-        LOGGER.debug("Loading driver from DB factory: " + driverName);
-        final Class<?> c =  Class.forName(driverName);
+        final String driverClassName = settings.getDriver();
+        LOGGER.debug("Loading driver from DB factory: " + driverClassName);
+        final Class<?> c =  m_classLoader.loadClass(driverClassName);
         final Driver d = (Driver)c.newInstance();
-        LOGGER.debug("Driver loaded from DB factory: " + driverName);
+        LOGGER.debug("Driver loaded from DB factory: " + driverClassName);
         return d;
     }
 
@@ -141,25 +160,20 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
      */
     @Override
     public Collection<File> getDriverFiles(final DatabaseConnectionSettings settings) throws IOException {
-        return m_driverFiles;
+        return Collections.unmodifiableCollection(m_driverFiles);
     }
 
     /**
-     * @param bundleId the id of the eclipse bundle that contains the file
+     * Resolves a list of relative paths inside a bundle to the corresponding files.
+     *
+     * @param bundle the bundle that contains the files
      * @param withinBundlePaths the paths of all JDBC driver files within the bundle
      * @return the {@link File}
      * @throws IllegalStateException if an {@link IOException} occurs
      */
-    public static Collection<File> getBundleFiles(final String bundleId, final String... withinBundlePaths)
+    protected static Collection<File> getBundleFiles(final Bundle bundle, final String... withinBundlePaths)
             throws IllegalStateException {
-        if (withinBundlePaths == null) {
-            throw new NullPointerException("withinBundlePaths must not be null");
-        }
-        if (bundleId == null || bundleId.isEmpty()) {
-            throw new IllegalArgumentException("bundleId must not be empty");
-        }
         try {
-            final Bundle bundle = Platform.getBundle(bundleId);
             final Collection<File> files = new ArrayList<>(withinBundlePaths.length);
             for (String withinBundlePath : withinBundlePaths) {
                 final URL jdbcUrl = FileLocator.find(bundle, new Path(withinBundlePath), null);
@@ -170,5 +184,4 @@ public class DefaultDBDriverFactory implements DBDriverFactory {
             throw new IllegalStateException(e);
         }
     }
-
 }
