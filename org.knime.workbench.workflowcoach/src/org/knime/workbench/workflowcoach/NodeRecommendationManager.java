@@ -361,6 +361,12 @@ public class NodeRecommendationManager {
 
             /* post-process result */
             Collections.sort(res[idx]);
+            if (nnc.length == 1) {
+                //remove the node, the recommendations have bee requested for, from the list
+                //in order to match the nodes [NodeFactory]#[NodeName] needs to be compared, otherwise it won't work with dynamically generated nodes
+                res[idx] = res[idx].stream().filter(nr -> !getKey(nr.getNodeTemplate()).equals(getKey(nnc[0])))
+                    .collect(Collectors.toList());
+            }
 
             //update the total frequencies
             int tmpFreqs = 0;
@@ -401,6 +407,15 @@ public class NodeRecommendationManager {
      */
     private static String getKey(final NodeInfo ni) {
         return ni.getFactory() + NODE_NAME_SEP + ni.getName();
+    }
+
+    /**
+     * @param nt the node template to create the key for
+     * @return the key to be used to look up the node recommendations and to filter the recommendations for the same
+     *         node they were requested for
+     */
+    private static String getKey(final NodeTemplate nt) {
+        return nt.getFactory().getName() + NODE_NAME_SEP + nt.getName();
     }
 
     /**
