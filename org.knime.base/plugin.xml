@@ -1265,8 +1265,8 @@
       <node
             after="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"
             category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.double2int.DoubleToIntNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.base.node.preproc.double2int.DoubleToIntNodeFactory">
       </node>
       <node
             category-path="/manipulation/column"
@@ -1846,6 +1846,12 @@
             deprecated="false"
             factory-class="org.knime.base.node.preproc.rank.RankNodeFactory"
             >
+      </node>
+      <node
+            after="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"
+            category-path="/manipulation/column/column-convert+replace"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.double2int2.DoubleToIntNodeFactory">
       </node>
    </extension>
    
