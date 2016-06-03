@@ -58,8 +58,9 @@ import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
  * Default configuration object for the normalizer node.
  *
  * @author Marcel Hanser
+ * @since 3.2
  */
-final class Normalizer3Config {
+public final class NormalizerConfig {
     /** Key to store the new minimum value (in min/max mode). */
     private static final String NEWMIN_KEY = "new-min";
 
@@ -86,13 +87,16 @@ final class Normalizer3Config {
         COLUMNS_KEY, new DataTypeColumnFilter(DoubleValue.class));
 
     /**
+     * Get the minimum.
      * @return the min
      */
-    double getMin() {
+    public double getMin() {
         return m_min;
     }
 
     /**
+     * Set the minimum.
+     * 
      * @param min the min to set
      */
     void setMin(final double min) {
@@ -100,13 +104,17 @@ final class Normalizer3Config {
     }
 
     /**
+     * Get the maximum.
+     * 
      * @return the max
      */
-    double getMax() {
+    public double getMax() {
         return m_max;
     }
 
     /**
+     * Set the max.
+     * 
      * @param max the max to set
      */
     void setMax(final double max) {
@@ -114,13 +122,17 @@ final class Normalizer3Config {
     }
 
     /**
+     * Get the mode.
+     * 
      * @return the mode
      */
-    NormalizerMode getMode() {
+    public NormalizerMode getMode() {
         return m_mode;
     }
 
     /**
+     * Set the mode.
+     * 
      * @param mode the mode to set
      */
     void setMode(final NormalizerMode mode) {
@@ -128,9 +140,11 @@ final class Normalizer3Config {
     }
 
     /**
+     * Get the {@link DataColumnSpecFilterConfiguration}.
+     *
      * @return the dataColumnFilterConfig
      */
-    DataColumnSpecFilterConfiguration getDataColumnFilterConfig() {
+    public DataColumnSpecFilterConfiguration getDataColumnFilterConfig() {
         return m_dataColumnFilterConfig;
     }
 
@@ -153,7 +167,7 @@ final class Normalizer3Config {
      * @param settings the settings to load
      * @throws InvalidSettingsException if the settings are invalid
      */
-    void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
+    public void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_mode = NormalizerMode.valueOf(settings.getString(MODE_KEY));
 
         if (NormalizerMode.MINMAX.equals(m_mode)) {
@@ -167,9 +181,11 @@ final class Normalizer3Config {
     }
 
     /**
+     * Sets the {@link DataColumnSpecFilterConfiguration} and the normalization mode to MINMAX.
+     * 
      * @param spec the table spec
      */
-    void guessDefaults(final DataTableSpec spec) {
+    public void guessDefaults(final DataTableSpec spec) {
         m_dataColumnFilterConfig.loadDefaults(spec, true);
         m_mode = NormalizerMode.MINMAX;
     }
@@ -179,7 +195,7 @@ final class Normalizer3Config {
      *
      * @param settings Arg settings.
      */
-    void saveSettings(final NodeSettingsWO settings) {
+    public void saveSettings(final NodeSettingsWO settings) {
         settings.addString(MODE_KEY, m_mode.toString());
         settings.addDouble(NEWMIN_KEY, m_min);
         settings.addDouble(NEWMAX_KEY, m_max);
@@ -206,7 +222,7 @@ final class Normalizer3Config {
      *
      * @author Marcel Hanser
      */
-    enum NormalizerMode {
+    public enum NormalizerMode {
         /**
          * Z-Score.
          */

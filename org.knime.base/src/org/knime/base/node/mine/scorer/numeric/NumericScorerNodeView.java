@@ -47,78 +47,20 @@
  */
 package org.knime.base.node.mine.scorer.numeric;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.text.NumberFormat;
-
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
-import org.knime.core.node.NodeView;
-
 /**
  * <code>NodeView</code> for the "NumericScorer" Node.
  * Computes the distance between the a numeric column's values and predicted values.
  *
- * @author Gabor Bakos
+ * @author Ole Ostergaard
  */
-class NumericScorerNodeView extends NodeView<NumericScorerNodeModel> {
-
-    private JLabel m_rSquared;
-    private JLabel m_meanAbsError;
-    private JLabel m_meanSquaredError;
-    private JLabel m_rootMeanSquaredError;
-    private JLabel m_meanSignedDifference;
+class NumericScorerNodeView extends AbstractNumericScorerNodeView<NumericScorerNodeModel> {
 
     /**
-     * Creates a new view.
-     *
-     * @param nodeModel The model (class: {@link NumericScorerNodeModel})
+     * Delegates to super class.
+     * @param nodeModel the nodeModel to view
      */
     protected NumericScorerNodeView(final NumericScorerNodeModel nodeModel) {
         super(nodeModel);
-        JPanel summary = new JPanel(new GridBagLayout());
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(3, 3, 3, 5);
-        c.anchor = GridBagConstraints.WEST;
-
-        summary.add(new JLabel("R\u00b2: "), c);
-        m_rSquared = new JLabel("n/a");
-        c.gridx = 1;
-        summary.add(m_rSquared, c);
-
-        c.gridx = 0;
-        c.gridy++;
-        summary.add(new JLabel("Mean absolute error: "), c);
-        m_meanAbsError = new JLabel("n/a");
-        c.gridx = 1;
-        summary.add(m_meanAbsError, c);
-
-        c.gridx = 0;
-        c.gridy++;
-        summary.add(new JLabel("Mean squared error: "), c);
-        m_meanSquaredError = new JLabel("n/a");
-        c.gridx = 1;
-        summary.add(m_meanSquaredError, c);
-
-        c.gridx = 0;
-        c.gridy++;
-        summary.add(new JLabel("Root mean squared error: "), c);
-        m_rootMeanSquaredError = new JLabel("n/a");
-        c.gridx = 1;
-        summary.add(m_rootMeanSquaredError, c);
-
-        c.gridx = 0;
-        c.gridy++;
-        summary.add(new JLabel("Mean signed difference: "), c);
-        m_meanSignedDifference = new JLabel("n/a");
-        c.gridx = 1;
-        summary.add(m_meanSignedDifference, c);
-        setComponent(summary);
     }
 
     /**
@@ -127,26 +69,7 @@ class NumericScorerNodeView extends NodeView<NumericScorerNodeModel> {
     @Override
     protected void modelChanged() {
         NumericScorerNodeModel model = getNodeModel();
-        NumberFormat nf = NumberFormat.getNumberInstance();
-        m_rSquared.setText(nf.format(model.getRSquare()));
-        m_meanAbsError.setText(nf.format(model.getMeanAbsError()));
-        m_meanSquaredError.setText(nf.format(model.getMeanSquaredError()));
-        m_rootMeanSquaredError.setText(nf.format(model.getRmsd()));
-        m_meanSignedDifference.setText(nf.format(model.getMeanSignedDifference()));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onClose() {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onOpen() {
+        setLabels(model.getRSquare(), model.getMeanAbsError(), model.getMeanSquaredError(), model.getRmsd(), model.getMeanSignedDifference());
     }
 }
 

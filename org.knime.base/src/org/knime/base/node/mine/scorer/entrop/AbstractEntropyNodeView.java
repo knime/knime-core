@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,65 +41,60 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   23.10.2013 (gabor): created
+ *   May 27, 2016 (oole): created
  */
-package org.knime.base.node.mine.scorer.numeric;
+package org.knime.base.node.mine.scorer.entrop;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * <code>NodeFactory</code> for the "NumericScorer" Node.
- * Computes the distance between the a numeric column's values and predicted values.
- *
- * @author Gabor Bakos
+ * Constructs the {@link NodeView} from an entropy node model
+ * 
+ * @author Bernd Wiswedel, University of Konstanz
+ * @author Ole Ostergaard
+ * @param <M> The Entropy's extended node model
  * @since 3.2
  */
-public class NumericScorerNodeFactory extends NodeFactory<NumericScorerNodeModel> {
+public abstract class AbstractEntropyNodeView<M extends NodeModel> extends NodeView<M>{
+
+    private final EntropyView m_view;
+
+    /** 
+     * Delegates to super class.
+     * 
+     * @param nodeModel the extended entropy node model
+     */
+    protected AbstractEntropyNodeView(final M nodeModel) {
+        super(nodeModel);
+        m_view = new EntropyView();
+        setComponent(m_view);
+    }
+
+    /**
+     * Get the nodeModel's {@link EntropyView}.
+     * 
+     * @return the nodeModels {@link EntropyView}, may be null
+     */
+    protected EntropyView getEntropyView() {
+        return m_view;
+    }
+
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public NumericScorerNodeModel createNodeModel() {
-        return new NumericScorerNodeModel();
+    protected void onClose() {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
-        return 1;
+    protected void onOpen() {
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<NumericScorerNodeModel> createNodeView(final int viewIndex,
-            final NumericScorerNodeModel nodeModel) {
-        return new NumericScorerNodeView(nodeModel);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new NumericScorerNodeDialog();
-    }
-
 }
-

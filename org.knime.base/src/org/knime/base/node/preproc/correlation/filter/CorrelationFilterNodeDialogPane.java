@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.02.2007 (wiswedel): created
  */
@@ -84,8 +84,8 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -93,13 +93,14 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 3.2
  */
 public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
-    
+
     private static final NumberFormat FORMAT = new DecimalFormat("#.#######");
-    
+
     private final JList m_list;
     private final JSlider m_slider;
     private final JFormattedTextField m_textField;
@@ -108,9 +109,9 @@ public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
     private final JLabel m_totalLabel;
     private final JButton m_calcButton;
     private final JLabel m_errorLabel;
-    
+
     private double m_lastCommittedValue;
-    
+
     private PMCCPortObjectAndSpec m_model;
 
     /** Creates GUI. */
@@ -131,9 +132,10 @@ public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
         m_lastCommittedValue = -1.0;
         m_calcButton = new JButton("Calculate");
         m_calcButton.addActionListener(new ActionListener() {
-           public void actionPerformed(final ActionEvent e) {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
                 onCalculate();
-           } 
+            }
         });
         m_textField = new JFormattedTextField(formatter);
         m_textField.setValue(m_slider.getValue() / 1000.0);
@@ -141,6 +143,7 @@ public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
         m_textField.getInputMap().put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "check");
         m_textField.getActionMap().put("check", new AbstractAction() {
+           @Override
            public void actionPerformed(final ActionEvent e) {
                if (!m_textField.isEditValid()) { //The text is invalid.
                    Toolkit.getDefaultToolkit().beep();
@@ -152,40 +155,42 @@ public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
                        // text not ok, reverting it.
                    }
                }
-           } 
+           }
         });
-        m_textField.addPropertyChangeListener("value", 
-                new PropertyChangeListener() {
+        m_textField.addPropertyChangeListener("value", new PropertyChangeListener() {
+            @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 Number value = (Number)evt.getNewValue();
                 if (value != null) {
                     m_slider.setValue((int)(1000 * value.doubleValue()));
-                    m_calcButton.setEnabled(m_model.hasData() 
+                    m_calcButton.setEnabled(m_model.hasData()
                             && value.doubleValue() != m_lastCommittedValue);
                 }
             }
         });
         m_slider.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 JSlider source = (JSlider)e.getSource();
                 int val = source.getValue();
                 double valDbl = val / 1000.0;
                 if (!source.getValueIsAdjusting()) {
                     m_textField.setValue(valDbl); //update field
-                    m_calcButton.setEnabled(m_model.hasData() 
+                    m_calcButton.setEnabled(m_model.hasData()
                             && valDbl != m_lastCommittedValue);
                 } else { //value is adjusting; just set the text
                     String valString = FORMAT.format(valDbl);
                     m_textField.setText(valString);
                 }
-            } 
+            }
         });
         m_slider.getInputMap().put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "calculate");
         m_slider.getActionMap().put("calculate", new AbstractAction() {
-           public void actionPerformed(final ActionEvent e) {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
                 onCalculate();
-           } 
+            }
         });
         m_includeLabel = new JLabel("########################");
         m_excludeLabel = new JLabel("########################");
@@ -195,17 +200,17 @@ public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
-        
+
         gbc.gridx = 0;
         gbc.gridy = 0;
         p.add(new JLabel("Columns from Model"), gbc);
-        
+
         gbc.gridy++;
         gbc.gridheight = GridBagConstraints.REMAINDER;
         gbc.weighty = 1.0;
         gbc.weightx = 1.0;
         p.add(new JScrollPane(m_list), gbc);
-        
+
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.gridheight = 1;
@@ -213,13 +218,13 @@ public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
         gbc.weighty = 0.0;
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         p.add(new JLabel("Correlation Threshold"), gbc);
-        
+
         gbc.gridy++;
         gbc.weightx = 1.0;
         gbc.weighty = 0.0;
         gbc.gridwidth = 2;
         p.add(m_slider, gbc);
-        
+
         gbc.gridx = 3;
         gbc.gridwidth = GridBagConstraints.REMAINDER;
         gbc.weightx = 0.0;
@@ -230,49 +235,49 @@ public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
         gbc.gridy++;
         gbc.anchor = GridBagConstraints.WEST;
         p.add(new JLabel("Include columns: "), gbc);
-        
+
         gbc.gridx = 2;
         p.add(m_includeLabel, gbc);
-        
+
         gbc.gridy++;
         gbc.gridx = 1;
         p.add(new JLabel("Exclude columns: "), gbc);
 
         gbc.gridx = 2;
         p.add(m_excludeLabel, gbc);
-        
+
         gbc.gridy++;
         gbc.gridx = 1;
         p.add(new JLabel("Total columns: "), gbc);
-        
+
         gbc.gridx = 2;
         p.add(m_totalLabel, gbc);
-        
+
         gbc.gridy++;
         gbc.anchor = GridBagConstraints.EAST;
         p.add(m_calcButton, gbc);
-        
+
         gbc.gridx = 0;
         gbc.gridwidth = 3;
         gbc.gridy++;
         p.add(m_errorLabel, gbc);
-        
+
         addTab("Settings", p);
     }
-    
+
     private void onCalculate() {
         if (!m_model.hasData()) {
             // can enter here from an event fired by the slider, silently ignore
             assert !m_calcButton.isEnabled() : "No data for preview";
-            m_calcButton.setEnabled(false);  
+            m_calcButton.setEnabled(false);
             return;
         }
-        double val = ((Number)m_textField.getValue()).doubleValue(); 
+        double val = ((Number)m_textField.getValue()).doubleValue();
         if (val == m_lastCommittedValue) {
             return;
         }
         String[] includes = m_model.getReducedSet(val);
-        HashSet<String> hash = new HashSet<String>(Arrays.asList(includes));
+        HashSet<String> hash = new HashSet<>(Arrays.asList(includes));
         int[] indices = new int[includes.length];
         DefaultListModel model = (DefaultListModel)m_list.getModel();
         int index = 0;
@@ -299,13 +304,12 @@ public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         m_model = (PMCCPortObjectAndSpec)specs[0];
-        DataTableSpec spec = (DataTableSpec)specs[1];
+        DataTableSpec spec = getTableSpec(specs);
         if (m_model == null || spec == null) {
             throw new NotConfigurableException("No input available");
         }
         // check if all columns in the model are also present in the spec
-        HashSet<String> allColsInModel = new HashSet<String>(
-                Arrays.asList(m_model.getColNames()));
+        HashSet<String> allColsInModel = new HashSet<>(Arrays.asList(m_model.getColNames()));
         double d = settings.getDouble(CorrelationFilterNodeModel.CFG_THRESHOLD, 1.0);
         m_textField.setValue(d);
         DefaultListModel m = (DefaultListModel)m_list.getModel();
@@ -335,11 +339,22 @@ public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
         }
         setLabels(-1, totalCount);
     }
-    
+
+    /**
+     * Get the {@link DataTableSpec} from the {@link PortObjectSpec}s.
+     *
+     * @param specs the node's {@link PortObjectSpec}
+     * @return the corresponding {@link DataTableSpec} for the {@link PortObjectSpec}
+     * @throws NotConfigurableException if the specs are not valid
+     */
+    protected DataTableSpec getTableSpec(final PortObjectSpec[] specs) throws NotConfigurableException {
+        return (DataTableSpec)specs[1];
+    }
+
     private void setLabels(final int include, final int total) {
         m_totalLabel.setText(Integer.toString(total));
         m_includeLabel.setText(include >= 0 ? Integer.toString(include) : "??");
-        m_excludeLabel.setText(include >= 0 
+        m_excludeLabel.setText(include >= 0
                 ? Integer.toString(total - include) : "??");
         m_totalLabel.setSize(m_totalLabel.getPreferredSize());
         m_includeLabel.setSize(m_totalLabel.getPreferredSize());

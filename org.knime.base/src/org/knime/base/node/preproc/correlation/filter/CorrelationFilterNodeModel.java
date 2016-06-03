@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.02.2007 (wiswedel): created
  */
@@ -63,8 +63,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
@@ -72,19 +72,19 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-public class CorrelationFilterNodeModel extends NodeModel {
-    
+class CorrelationFilterNodeModel extends NodeModel {
+
     /** Config key for threshold. */
     static final String CFG_THRESHOLD = "correlation_threshold";
-    
+
     private double m_threshold = 1.0;
-    
+
     /** Empty constructor, 2 ins, 1 out. */
     public CorrelationFilterNodeModel() {
-        super(new PortType[]{PMCCPortObjectAndSpec.TYPE, 
+        super(new PortType[]{PMCCPortObjectAndSpec.TYPE,
                 BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
     }
@@ -117,29 +117,29 @@ public class CorrelationFilterNodeModel extends NodeModel {
         }
         return new DataTableSpec[]{arranger.createSpec()};
     }
-    
+
     private ColumnRearranger createColumnRearranger(
-            final DataTableSpec spec, final PMCCPortObjectAndSpec pmccModel) 
+            final DataTableSpec spec, final PMCCPortObjectAndSpec pmccModel)
         throws InvalidSettingsException {
         for (String c : pmccModel.getColNames()) {
             if (!spec.containsName(c)) {
-                throw new InvalidSettingsException("No such column in input " 
+                throw new InvalidSettingsException("No such column in input "
                         + "table: " + c);
             }
         }
-        if (!pmccModel.hasData()) { // settings ok but can't determine output 
+        if (!pmccModel.hasData()) { // settings ok but can't determine output
             return null;
         }
         String[] includes = pmccModel.getReducedSet(m_threshold);
         HashSet<String> hash = new HashSet<String>(Arrays.asList(includes));
         ArrayList<String> includeList = new ArrayList<String>();
         HashSet<String> allColsInModel = new HashSet<String>(
-                Arrays.asList(pmccModel.getColNames())); 
+                Arrays.asList(pmccModel.getColNames()));
         ArrayList<String> allColsInSpec = new ArrayList<String>();
         for (DataColumnSpec s : spec) {
             String name = s.getName();
             // must not exclude columns which are not covered by the model
-            if (!(s.getType().isCompatible(DoubleValue.class) 
+            if (!(s.getType().isCompatible(DoubleValue.class)
                     || s.getType().isCompatible(NominalValue.class))
                     || !allColsInModel.contains(name)) {
                 includeList.add(name);
@@ -168,7 +168,7 @@ public class CorrelationFilterNodeModel extends NodeModel {
     @Override
     protected void reset() {
     }
-    
+
     /**
      * {@inheritDoc}
      */

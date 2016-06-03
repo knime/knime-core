@@ -55,6 +55,7 @@ import org.knime.core.node.NodeView;
  * Factory class for the Normalize Node.
  *
  * @author Nicolas Cebron, University of Konstanz
+ * @since 3.2
  */
 public class Normalizer3NodeFactory extends NodeFactory<Normalizer3NodeModel> {
     /**

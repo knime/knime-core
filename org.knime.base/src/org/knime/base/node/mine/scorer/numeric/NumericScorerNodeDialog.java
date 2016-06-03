@@ -47,17 +47,7 @@
  */
 package org.knime.base.node.mine.scorer.numeric;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * <code>NodeDialog</code> for the "NumericScorer" Node. Computes the distance between the a numeric column's values and
@@ -67,58 +57,26 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * components. If you need a more complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
  *
  * @author Gabor Bakos
+ * @since 3.2
  */
 public class NumericScorerNodeDialog extends DefaultNodeSettingsPane {
 
-    private SettingsModelBoolean m_overrideOutput;
-    private SettingsModelBoolean m_useNamePrefix;
-    private SettingsModelColumnName m_predicted;
+    private final NumericScorerSettings m_numericScorerSettings = new NumericScorerSettings();
 
     /**
      * New pane for configuring the NumericScorer node.
      */
     protected NumericScorerNodeDialog() {
-        @SuppressWarnings("unchecked")
-        DialogComponentColumnNameSelection reference =
-            new DialogComponentColumnNameSelection(NumericScorerNodeModel.createReference(), "Reference column", 0,
-                DoubleValue.class);
-        addDialogComponent(reference);
-        m_predicted = NumericScorerNodeModel.createPredicted();
-        @SuppressWarnings("unchecked")
-        final DialogComponentColumnNameSelection prediction =
-            new DialogComponentColumnNameSelection(m_predicted, "Predicted column", 0,
-                DoubleValue.class);
-        addDialogComponent(prediction);
+        addDialogComponent(m_numericScorerSettings.getReferenceComponent());
+        addDialogComponent(m_numericScorerSettings.getPredictionComponent());
         createNewGroup("Output column");
-        m_overrideOutput = NumericScorerNodeModel.createOverrideOutput();
-        addDialogComponent(new DialogComponentBoolean(m_overrideOutput, "Change column name"));
-        final SettingsModelString outputModel = NumericScorerNodeModel.createOutput();
-        m_overrideOutput.addChangeListener(new ChangeListener() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                outputModel.setEnabled(m_overrideOutput.getBooleanValue());
-            }
-        });
-        final DialogComponentString output = new DialogComponentString(outputModel, "Output column name");
-        addDialogComponent(output);
-        prediction.getModel().addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (!m_overrideOutput.getBooleanValue()) {
-                    outputModel.setStringValue(m_predicted.getColumnName());
-                }
-            }
-        });
+        addDialogComponent(m_numericScorerSettings.getOverrideComponent());
+        addDialogComponent(m_numericScorerSettings.getOutputComponent());
 
 
         createNewGroup("Provide scores as flow variables");
-        m_useNamePrefix = NumericScorerNodeModel.createFlowVarModel();
-        addDialogComponent(new DialogComponentBoolean(m_useNamePrefix, "Output scores as flow variables"));
-        final SettingsModelString namePrefixModel = NumericScorerNodeModel.createNamePrefix(m_useNamePrefix);
-        addDialogComponent(new DialogComponentString(namePrefixModel, "Prefix of flow variables"));
+        addDialogComponent(m_numericScorerSettings.getUseNamePrefixComponent());
+        addDialogComponent(m_numericScorerSettings.getFlowVarComponent());
     }
 
     /**
@@ -127,12 +85,6 @@ public class NumericScorerNodeDialog extends DefaultNodeSettingsPane {
     @Override
     public void onOpen() {
         super.onOpen();
-        //force update of the visual state (view model)
-        String columnName = m_predicted.getColumnName();
-        m_predicted.setSelection(null, false);
-        m_predicted.setSelection(columnName, false);
-        boolean b = m_overrideOutput.getBooleanValue();
-        m_overrideOutput.setBooleanValue(!b);
-        m_overrideOutput.setBooleanValue(b);
+        m_numericScorerSettings.onOpen();
     }
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.02.2007 (wiswedel): created
  */
@@ -52,11 +52,11 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
+ * @since 3.2
  */
-public class CorrelationFilterNodeFactory 
-extends NodeFactory<CorrelationFilterNodeModel> {
+public class CorrelationFilterNodeFactory extends NodeFactory<CorrelationFilterNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -80,7 +80,7 @@ extends NodeFactory<CorrelationFilterNodeModel> {
     @Override
     public NodeView<CorrelationFilterNodeModel> createNodeView(
             final int viewIndex, final CorrelationFilterNodeModel nodeModel) {
-        throw new IndexOutOfBoundsException("no views available."); 
+        throw new IndexOutOfBoundsException("no views available.");
     }
 
     /**
