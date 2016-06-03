@@ -165,8 +165,8 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
     /**
      * @return
      */
-    protected DataTypeColumnFilter getColumnFilter() {
-        return (DataTypeColumnFilter)m_filterConfiguration.getFilter();
+    protected InputFilter<DataColumnSpec> getColumnFilter() {
+        return m_filterConfiguration.getFilter();
     }
 
     /**
