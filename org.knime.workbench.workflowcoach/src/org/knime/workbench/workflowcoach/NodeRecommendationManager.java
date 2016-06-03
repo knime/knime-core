@@ -69,6 +69,7 @@ import org.knime.core.node.NodeInfo;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeTriple;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.repository.RepositoryManager;
@@ -334,12 +335,15 @@ public class NodeRecommendationManager {
                 for (int i = 0; i < nnc[0].getNrInPorts(); i++) {
                     ConnectionContainer cc = nnc[0].getParent().getIncomingConnectionFor(nnc[0].getID(), i);
                     if (cc != null) {
-                        NodeContainer predecessor = nnc[0].getParent().getNodeContainer(cc.getSource());
-                        if (predecessor instanceof NativeNodeContainer) {
-                            List<NodeRecommendation> l = m_recommendations.get(idx)
-                                .get(getKey((NativeNodeContainer)predecessor) + NODE_NAME_SEP + getKey(nnc[0]));
-                            if (l != null) {
-                                set.addAll(l);
+                        //only take the predecessor if its not leaving the workflow (e.g. the actual predecessor is outside of a metanode)
+                        if (cc.getType() != ConnectionType.WFMIN) {
+                            NodeContainer predecessor = nnc[0].getParent().getNodeContainer(cc.getSource());
+                            if (predecessor instanceof NativeNodeContainer) {
+                                List<NodeRecommendation> l = m_recommendations.get(idx)
+                                    .get(getKey((NativeNodeContainer)predecessor) + NODE_NAME_SEP + getKey(nnc[0]));
+                                if (l != null) {
+                                    set.addAll(l);
+                                }
                             }
                         }
                     }
