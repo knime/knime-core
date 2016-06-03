@@ -66,6 +66,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -6590,11 +6591,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         MetaNodeLinkUpdateResult loadResultChild;
         NodeContext.pushContext((NodeContainer)meta);
         try {
+            if (m_workflowContext.getMountpointURI().isPresent() && sourceURI.getHost().startsWith("knime.")
+                && (ResolverUtil.resolveURItoLocalFile(m_workflowContext.getMountpointURI().get()) == null)) {
+                // a workflow relative template URI but the workflow itself is not local
+                // => the template is also not local and must be resolved using the workflow's original location
+                URI origWfUri = m_workflowContext.getMountpointURI().get();
+                String combinedPath = origWfUri.getPath() + sourceURI.getPath();
+                sourceURI = new URI(origWfUri.getScheme(), origWfUri.getUserInfo(), origWfUri.getHost(),
+                    origWfUri.getPort(), combinedPath, origWfUri.getQuery(), origWfUri.getFragment()).normalize();
+            }
             File localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
             TemplateNodeContainerPersistor loadPersistor = loadHelper.createTemplateLoadPersistor(localDir, sourceURI);
             loadResultChild = new MetaNodeLinkUpdateResult("Template from " + sourceURI.toString());
             tempParent.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
-        } catch (InvalidSettingsException e) {
+        } catch (InvalidSettingsException | URISyntaxException e) {
             throw new IOException("Unable to read template metanode: " + e.getMessage(), e);
         } finally {
             NodeContext.removeLastContext();
