@@ -46,6 +46,7 @@
 package org.knime.workbench.editor2;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,12 +68,14 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
     private final Display m_display;
     private final String m_workflowName;
 
-    private static WorkflowContext createWorkflowContext(final File workflowDirectory, final File mountpointRoot) {
+    private static WorkflowContext createWorkflowContext(final URI uri, final File workflowDirectory,
+        final File mountpointRoot) {
         if (workflowDirectory == null) {
-          return null;
+            return null;
         } else {
             WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowDirectory);
             fac.setMountpointRoot(mountpointRoot);
+            fac.setMountpointURI(uri);
             return fac.createContext();
         }
     }
@@ -80,25 +83,28 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
     /**
      * @param display Display host.
      * @param workflowName Name of the workflow (dialog title)
+     * @param uri the workflow's URI from the explorer
      * @param workflowDirectory directory of the workflow that should be loaded; maybe <code>null</code> if not known
      * @param mountpointRoot root directory of the mount point in which the workflow to the loaded is contained; maybe
      *            <code>null</code> if not known
      */
-    GUIWorkflowLoadHelper(final Display display, final String workflowName, final File workflowFile, final File mountpointRoot) {
-        this(display, workflowName, workflowFile, mountpointRoot, false);
+    GUIWorkflowLoadHelper(final Display display, final String workflowName, final URI uri, final File workflowFile,
+        final File mountpointRoot) {
+        this(display, workflowName, uri, workflowFile, mountpointRoot, false);
     }
 
     /**
      * @param display Display host.
      * @param workflowName Name of the workflow (dialog title)
+     * @param uri the workflow's URI from the explorer
      * @param workflowDirectory directory of the workflow that should be loaded; maybe <code>null</code> if not known
      * @param mountpointRoot root directory of the mount point in which the workflow to the loaded is contained; maybe
      *            <code>null</code> if not known
      * @param isTemplate Whether the loaded workflow is a reference to a template (don't load data)
      */
-    GUIWorkflowLoadHelper(final Display display, final String workflowName, final File workflowDirectory, final File mountpointRoot,
-            final boolean isTemplate) {
-        super(isTemplate, createWorkflowContext(workflowDirectory, mountpointRoot));
+    GUIWorkflowLoadHelper(final Display display, final String workflowName, final URI uri, final File workflowDirectory,
+        final File mountpointRoot, final boolean isTemplate) {
+        super(isTemplate, createWorkflowContext(uri, workflowDirectory, mountpointRoot));
         m_display = display;
         m_workflowName = workflowName;
     }

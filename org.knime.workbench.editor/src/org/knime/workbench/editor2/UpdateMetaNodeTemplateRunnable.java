@@ -57,8 +57,8 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeContainerTemplate;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -119,7 +119,7 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
                 exec.createSubProgress(1.0 / m_ids.length);
             String progMsg = "Node Link \"" + tnc.getNameWithID() + "\"";
             exec.setMessage(progMsg);
-            GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(d, progMsg, null, null, true);
+            GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(d, progMsg, null, null, null, true);
             NodeContainerTemplateLinkUpdateResult updateMetaNodeLinkResult;
             try {
                 updateMetaNodeLinkResult =

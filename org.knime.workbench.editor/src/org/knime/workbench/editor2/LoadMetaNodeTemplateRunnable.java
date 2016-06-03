@@ -113,7 +113,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
 
             Display d = Display.getDefault();
             GUIWorkflowLoadHelper loadHelper =
-                    new GUIWorkflowLoadHelper(d, parentFile.getName(), parentFile, null, true);
+                    new GUIWorkflowLoadHelper(d, parentFile.getName(), sourceURI, parentFile, null, true);
             TemplateNodeContainerPersistor loadPersistor =
                     loadHelper.createTemplateLoadPersistor(parentFile, sourceURI);
             MetaNodeLinkUpdateResult loadResult =

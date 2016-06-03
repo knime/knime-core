@@ -50,6 +50,7 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -102,6 +103,8 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
     private File m_mountpointRoot;
 
+    private URI m_mountpointURI;
+
     private Throwable m_throwable = null;
 
     /** Message, which is non-null if the user canceled to the load. */
@@ -111,11 +114,14 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
      * Creates a new runnable that load a workflow.
      *
      * @param editor the {@link WorkflowEditor} for which the workflow should be loaded
+     * @param uri the URI from the explorer
      * @param workflowFile the workflow file from which the workflow should be loaded (or created = empty workflow file)
      * @param mountpointRoot the root directory of the mountpoint in which the workflow is contained
      */
-    public LoadWorkflowRunnable(final WorkflowEditor editor, final File workflowFile, final File mountpointRoot) {
+    public LoadWorkflowRunnable(final WorkflowEditor editor, final URI uri, final File workflowFile,
+        final File mountpointRoot) {
         m_editor = editor;
+        m_mountpointURI = uri;
         m_workflowFile = workflowFile;
         m_mountpointRoot = mountpointRoot;
     }
@@ -151,8 +157,8 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
             File workflowDirectory = m_workflowFile.getParentFile();
             Display d = Display.getDefault();
-            GUIWorkflowLoadHelper loadHelper =
-                new GUIWorkflowLoadHelper(d, workflowDirectory.getName(), workflowDirectory, m_mountpointRoot);
+            GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(d, workflowDirectory.getName(),
+                m_mountpointURI, workflowDirectory, m_mountpointRoot);
             final WorkflowLoadResult result =
                 WorkflowManager.loadProject(workflowDirectory, new ExecutionMonitor(progressMonitor), loadHelper);
             final WorkflowManager wm = result.getWorkflowManager();
@@ -241,6 +247,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
                 WorkflowContext.Factory fac = new WorkflowContext.Factory(m_workflowFile.getParentFile());
                 fac.setMountpointRoot(m_mountpointRoot);
+                fac.setMountpointURI(m_mountpointURI);
                 creationHelper.setWorkflowContext(fac.createContext());
 
                 m_editor.setWorkflowManager(WorkflowManager.ROOT.createAndAddProject(name, creationHelper));

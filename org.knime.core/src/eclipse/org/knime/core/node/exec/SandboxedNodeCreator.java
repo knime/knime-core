@@ -226,6 +226,8 @@ public final class SandboxedNodeCreator {
         } else {
             ctxFactory = new WorkflowContext.Factory(FileUtil.createTempDir("sandbox-" + m_nc.getNameWithID()));
         }
+        origContext.getMountpointURI().ifPresent(u -> ctxFactory.setMountpointURI(u));
+
         WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
         creationHelper.setWorkflowContext(ctxFactory.createContext());
         if (!m_copyDataIntoNewContext) {
