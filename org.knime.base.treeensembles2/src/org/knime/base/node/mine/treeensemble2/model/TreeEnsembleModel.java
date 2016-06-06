@@ -162,6 +162,14 @@ public class TreeEnsembleModel {
     }
 
     /**
+     *
+     * @return true if the trees in the forest contain class distributions
+     */
+    public boolean containsClassDistribution() {
+        return m_containsClassDistribution;
+    }
+
+    /**
      * @return the models
      */
     public AbstractTreeModel<?> getTreeModel(final int index) {

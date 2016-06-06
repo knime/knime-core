@@ -12,3 +12,5 @@ Require-Bundle: org.knime.base;bundle-version="[3.0.0,4.0.0)",
  org.knime.distmatrix
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Export-Package: org.knime.base.node.mine.treeensemble2.data,
+ org.knime.base.node.mine.treeensemble2.model
