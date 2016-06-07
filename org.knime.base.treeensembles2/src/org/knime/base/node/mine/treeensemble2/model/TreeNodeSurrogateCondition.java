@@ -56,7 +56,7 @@ import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
 /**
  * This class handles the standard (but not most frequent) case that there are multiple surrogates for the best split.
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class TreeNodeSurrogateCondition extends AbstractTreeNodeSurrogateCondition {
 

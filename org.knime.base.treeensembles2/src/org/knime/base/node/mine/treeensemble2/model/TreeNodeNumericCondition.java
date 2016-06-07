@@ -52,11 +52,9 @@ import java.io.IOException;
 
 import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
-import org.knime.base.node.mine.decisiontree2.PMMLFalsePredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
-import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
@@ -193,8 +191,8 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
 
     /** {@inheritDoc} */
     @Override
-    public PMMLCompoundPredicate toPMMLPredicate() {
-        PMMLCompoundPredicate compound = new PMMLCompoundPredicate(PMMLBooleanOperator.SURROGATE);
+    public PMMLPredicate toPMMLPredicate() {
+        PMMLCompoundPredicate compound = new PMMLCompoundPredicate(PMMLBooleanOperator.OR);
         switch (m_numericOperator) {
             case LargerThanOrMissing:
                 compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.GREATER_THAN,
@@ -215,16 +213,15 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
         }
         final PMMLSimplePredicate simplePredicate =
             new PMMLSimplePredicate(getAttributeName(), pmmlOperator, Double.toString(m_splitValue));
+        if (!acceptsMissings()) {
+            // return simple predicate that rejects missing values
+            return simplePredicate;
+        }
         // create compound to allow for missing values
         compound.addPredicate(simplePredicate);
-//        final PMMLSimplePredicate missing = new PMMLSimplePredicate();
-//        missing.setSplitAttribute(getAttributeName());
-//        if (acceptsMissings()) {
-//            missing.setOperator(PMMLOperator.IS_MISSING);
-//        } else {
-//            missing.setOperator(PMMLOperator.IS_NOT_MISSING);
-//        }
-        final PMMLPredicate missing = acceptsMissings() ? new PMMLTruePredicate() : new PMMLFalsePredicate();
+        final PMMLSimplePredicate missing = new PMMLSimplePredicate();
+        missing.setSplitAttribute(getAttributeName());
+        missing.setOperator(PMMLOperator.IS_MISSING);
         compound.addPredicate(missing);
         return compound;
     }

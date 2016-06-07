@@ -186,7 +186,7 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
             pmmlNode.addNewTrue();
         } else if (condition instanceof TreeNodeColumnCondition) {
             final TreeNodeColumnCondition colCondition = (TreeNodeColumnCondition)condition;
-            setValuesFromPMMLCompoundPredicate(pmmlNode.addNewCompoundPredicate(), colCondition.toPMMLPredicate());
+            handleColumnCondition(colCondition, pmmlNode);
         } else if (condition instanceof AbstractTreeNodeSurrogateCondition) {
             final AbstractTreeNodeSurrogateCondition surrogateCond = (AbstractTreeNodeSurrogateCondition)condition;
             setValuesFromPMMLCompoundPredicate(pmmlNode.addNewCompoundPredicate(), surrogateCond.toPMMLPredicate());
@@ -200,6 +200,98 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
         for (int i = 0; i < node.getNrChildren(); i++) {
             addTreeNode(pmmlNode.addNewNode(), node.getChild(i));
         }
+    }
+
+    private static void handleColumnCondition(final TreeNodeColumnCondition condition, final Node pmmlNode) {
+        final PMMLPredicate knimePredicate = condition.toPMMLPredicate();
+        if (knimePredicate instanceof PMMLCompoundPredicate) {
+            setValuesFromPMMLCompoundPredicate(pmmlNode.addNewCompoundPredicate(), (PMMLCompoundPredicate)knimePredicate);
+        } else if (knimePredicate instanceof PMMLSimplePredicate) {
+            setValuesFromPMMLSimplePredicate(pmmlNode.addNewSimplePredicate(), (PMMLSimplePredicate)knimePredicate);
+        } else if (knimePredicate instanceof PMMLSimpleSetPredicate) {
+            setValuesFromPMMLSimpleSetPredicate(pmmlNode.addNewSimpleSetPredicate(), (PMMLSimpleSetPredicate)knimePredicate);
+        } else {
+            throw new IllegalArgumentException("A column condition can only contain compound, simple or simple set predicates.");
+        }
+    }
+
+    private static void setValuesFromPMMLSimplePredicate(final SimplePredicate to, final PMMLSimplePredicate from) {
+        to.setField(from.getSplitAttribute());
+        Operator.Enum operator;
+        final PMMLOperator op = from.getOperator();
+        switch (op) {
+            case EQUAL:
+                operator = Operator.EQUAL;
+                to.setValue(from.getThreshold());
+                break;
+            case GREATER_OR_EQUAL:
+                operator = Operator.GREATER_OR_EQUAL;
+                to.setValue(from.getThreshold());
+                break;
+            case GREATER_THAN:
+                operator = Operator.GREATER_THAN;
+                to.setValue(from.getThreshold());
+                break;
+            case IS_MISSING:
+                operator = Operator.IS_MISSING;
+                break;
+            case IS_NOT_MISSING:
+                operator = Operator.IS_NOT_MISSING;
+                break;
+            case LESS_OR_EQUAL:
+                operator = Operator.LESS_OR_EQUAL;
+                to.setValue(from.getThreshold());
+                break;
+            case LESS_THAN:
+                operator = Operator.LESS_THAN;
+                to.setValue(from.getThreshold());
+                break;
+            case NOT_EQUAL:
+                operator = Operator.NOT_EQUAL;
+                to.setValue(from.getThreshold());
+                break;
+            default:
+                throw new IllegalStateException("Unknown pmml operator \"" + op + "\".");
+        }
+        to.setOperator(operator);
+    }
+
+    private static void setValuesFromPMMLSimpleSetPredicate(final SimpleSetPredicate to, final PMMLSimpleSetPredicate from) {
+        to.setField(from.getSplitAttribute());
+        final Enum operator;
+        final PMMLSetOperator setOp = from.getSetOperator();
+        switch (setOp) {
+            case IS_IN:
+                operator = SimpleSetPredicate.BooleanOperator.IS_IN;
+                break;
+            case IS_NOT_IN:
+                operator = SimpleSetPredicate.BooleanOperator.IS_NOT_IN;
+                break;
+            default:
+                throw new IllegalStateException("Unknown set operator \"" + setOp + "\".");
+        }
+        to.setBooleanOperator(operator);
+        final Set<String> values = from.getValues();
+        ArrayType array = to.addNewArray();
+        array.setN(BigInteger.valueOf(values.size()));
+        org.w3c.dom.Node arrayNode = array.getDomNode();
+        arrayNode.appendChild(arrayNode.getOwnerDocument().createTextNode(setToWhitspaceSeparatedString(values)));
+        final org.dmg.pmml.ArrayType.Type.Enum type;
+        final PMMLArrayType arrayType = from.getArrayType();
+        switch (arrayType) {
+            case INT:
+                type = ArrayType.Type.INT;
+                break;
+            case REAL:
+                type = ArrayType.Type.REAL;
+                break;
+            case STRING:
+                type = ArrayType.Type.STRING;
+                break;
+            default:
+                throw new IllegalStateException("Unknown array type \"" + arrayType + "\".");
+        }
+        array.setType(type);
     }
 
     private static void setValuesFromPMMLCompoundPredicate(final CompoundPredicate to, final PMMLCompoundPredicate from) {
@@ -223,84 +315,9 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
         final List<PMMLPredicate> predicates = from.getPredicates();
         for (final PMMLPredicate predicate : predicates) {
             if (predicate instanceof PMMLSimplePredicate) {
-                final PMMLSimplePredicate knimePredicate = (PMMLSimplePredicate)predicate;
-                final SimplePredicate simplePredicate = to.addNewSimplePredicate();
-                simplePredicate.setField(knimePredicate.getSplitAttribute());
-                Operator.Enum operator;
-                final PMMLOperator op = knimePredicate.getOperator();
-                switch (op) {
-                    case EQUAL:
-                        operator = Operator.EQUAL;
-                        simplePredicate.setValue(knimePredicate.getThreshold());
-                        break;
-                    case GREATER_OR_EQUAL:
-                        operator = Operator.GREATER_OR_EQUAL;
-                        simplePredicate.setValue(knimePredicate.getThreshold());
-                        break;
-                    case GREATER_THAN:
-                        operator = Operator.GREATER_THAN;
-                        simplePredicate.setValue(knimePredicate.getThreshold());
-                        break;
-                    case IS_MISSING:
-                        operator = Operator.IS_MISSING;
-                        break;
-                    case IS_NOT_MISSING:
-                        operator = Operator.IS_NOT_MISSING;
-                        break;
-                    case LESS_OR_EQUAL:
-                        operator = Operator.LESS_OR_EQUAL;
-                        simplePredicate.setValue(knimePredicate.getThreshold());
-                        break;
-                    case LESS_THAN:
-                        operator = Operator.LESS_THAN;
-                        simplePredicate.setValue(knimePredicate.getThreshold());
-                        break;
-                    case NOT_EQUAL:
-                        operator = Operator.NOT_EQUAL;
-                        simplePredicate.setValue(knimePredicate.getThreshold());
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown pmml operator \"" + op + "\".");
-                }
-                simplePredicate.setOperator(operator);
+                setValuesFromPMMLSimplePredicate(to.addNewSimplePredicate(), (PMMLSimplePredicate)predicate);
             } else if (predicate instanceof PMMLSimpleSetPredicate) {
-                final PMMLSimpleSetPredicate knimeSetPredicate = (PMMLSimpleSetPredicate)predicate;
-                final SimpleSetPredicate setPredicate = to.addNewSimpleSetPredicate();
-                setPredicate.setField(knimeSetPredicate.getSplitAttribute());
-                final Enum operator;
-                final PMMLSetOperator setOp = knimeSetPredicate.getSetOperator();
-                switch (setOp) {
-                    case IS_IN:
-                        operator = SimpleSetPredicate.BooleanOperator.IS_IN;
-                        break;
-                    case IS_NOT_IN:
-                        operator = SimpleSetPredicate.BooleanOperator.IS_NOT_IN;
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown set operator \"" + setOp + "\".");
-                }
-                setPredicate.setBooleanOperator(operator);
-                final Set<String> values = knimeSetPredicate.getValues();
-                ArrayType array = setPredicate.addNewArray();
-                array.setN(BigInteger.valueOf(values.size()));
-                org.w3c.dom.Node arrayNode = array.getDomNode();
-                arrayNode.appendChild(arrayNode.getOwnerDocument().createTextNode(setToWhitspaceSeparatedString(values)));
-                final org.dmg.pmml.ArrayType.Type.Enum type;
-                final PMMLArrayType arrayType = knimeSetPredicate.getArrayType();
-                switch (arrayType) {
-                    case INT:
-                        type = ArrayType.Type.INT;
-                        break;
-                    case REAL:
-                        type = ArrayType.Type.REAL;
-                        break;
-                    case STRING:
-                        type = ArrayType.Type.STRING;
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown array type \"" + arrayType + "\".");
-                }
-                array.setType(type);
+                setValuesFromPMMLSimpleSetPredicate(to.addNewSimpleSetPredicate(), (PMMLSimpleSetPredicate)predicate);
             } else if (predicate instanceof PMMLTruePredicate) {
                 to.addNewTrue();
             } else if (predicate instanceof PMMLFalsePredicate) {

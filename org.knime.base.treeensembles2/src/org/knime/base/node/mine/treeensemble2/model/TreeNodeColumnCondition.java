@@ -50,7 +50,6 @@ package org.knime.base.node.mine.treeensemble2.model;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeMetaData;
@@ -118,10 +117,10 @@ public abstract class TreeNodeColumnCondition extends TreeNodeCondition {
 
     protected abstract void saveContent(final DataOutputStream model) throws IOException;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public abstract PMMLCompoundPredicate toPMMLPredicate();
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public abstract PMMLCompoundPredicate toPMMLPredicate();
 
 }

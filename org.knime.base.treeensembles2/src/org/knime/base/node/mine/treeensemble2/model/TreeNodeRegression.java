@@ -224,8 +224,17 @@ public final class TreeNodeRegression extends AbstractTreeNode {
                 if (splitAttributeIndex == -1) {
                     splitAttributeIndex = s;
                 } else if (splitAttributeIndex != s) {
-                    assert false : "Confusing split column in node's childrin: " + "\"" + splitAttributeIndex
+                    assert false : "Confusing split column in node's children: " + "\"" + splitAttributeIndex
                         + "\" vs. \"" + s + "\"";
+                }
+            } else if (cond instanceof AbstractTreeNodeSurrogateCondition) {
+                TreeNodeColumnCondition colCond = ((AbstractTreeNodeSurrogateCondition)cond).getFirstCondition();
+                int s = colCond.getColumnMetaData().getAttributeIndex();
+                if (splitAttributeIndex == -1) {
+                    splitAttributeIndex = s;
+                } else if (splitAttributeIndex != s) {
+                    assert false : "Confusing split column in node's children: " + "\"" + splitAttributeIndex
+                    + "\" vs. \"" + s + "\"";
                 }
             }
         }

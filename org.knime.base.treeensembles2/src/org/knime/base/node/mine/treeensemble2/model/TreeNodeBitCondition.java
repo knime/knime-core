@@ -50,8 +50,8 @@ package org.knime.base.node.mine.treeensemble2.model;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeBitColumnMetaData;
@@ -110,10 +110,8 @@ public final class TreeNodeBitCondition extends TreeNodeColumnCondition {
 
     /** {@inheritDoc} */
     @Override
-    public PMMLCompoundPredicate toPMMLPredicate() {
-        final PMMLCompoundPredicate compound = new PMMLCompoundPredicate();
-        compound.addPredicate(new PMMLSimplePredicate(getAttributeName(), PMMLOperator.EQUAL, getValue() ? "1" : "0"));
-        return compound;
+    public PMMLPredicate toPMMLPredicate() {
+        return new PMMLSimplePredicate(getAttributeName(), PMMLOperator.EQUAL, getValue() ? "1" : "0");
     }
 
     /** {@inheritDoc} */
