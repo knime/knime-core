@@ -166,6 +166,7 @@ final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
     @Override
     protected void reset() {
         // no internals
+        m_configuration = null;
     }
 
     /** {@inheritDoc} */

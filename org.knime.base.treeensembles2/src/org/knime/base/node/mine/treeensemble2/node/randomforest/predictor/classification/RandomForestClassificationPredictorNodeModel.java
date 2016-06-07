@@ -117,7 +117,7 @@ final class RandomForestClassificationPredictorNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void reset() {
-        // no internals
+        m_configuration = null;
     }
 
     /** {@inheritDoc} */
