@@ -101,7 +101,9 @@ import org.osgi.framework.Version;
 import org.osgi.service.prefs.Preferences;
 
 /**
- * Holds execution timing information about a specific node.
+ * Holds execution timing information about a specific node. It also defines a static global
+ * member that is used to collect node stats for this KNIME instance.
+ *
  * @noreference This class is not intended to be referenced by clients.
  * @author Michael Berthold
  * @since 2.12
@@ -109,7 +111,8 @@ import org.osgi.service.prefs.Preferences;
 public final class NodeTimer {
 
     /* For now we use the default store address always. */
-    private static final String SERVER_ADDRESS = "http://www.knime.org/store/rest" /*"http://localhost:8080/com.knime.store.server/rest"*/;
+    private static final String SERVER_ADDRESS = "http://www.knime.org/store/rest";
+            /*"http://localhost:8080/com.knime.store.server/rest"*/
 
     private final NodeContainer m_parent;
     private long m_startTime;
@@ -119,6 +122,9 @@ public final class NodeTimer {
     private int m_numberOfExecutionsSinceReset;
     private int m_numberOfExecutionsOverall;
 
+    /**
+     * Container holding stats for the entire instance and all nodes that have been used/timed.
+     */
     public static final class GlobalNodeStats {
 
         private static final String N_A = "n/a";
@@ -138,6 +144,8 @@ public final class NodeTimer {
         private String m_created = DATE_FORMAT.format(new Date());
         private long m_avgUpTime = 0;
         private long m_currentInstanceLaunchTime = System.currentTimeMillis();
+        private int m_workflowsOpened = 0;
+        private int m_remoteWorkflowsOpened = 0;
         private int m_launches = 0;
         private int m_crashes = 0;
         private long m_timeOfLastSave = System.currentTimeMillis() - SAVEINTERVAL + 1000*60;
@@ -206,6 +214,24 @@ public final class NodeTimer {
                 }
                 processStatChanges();
             }
+        }
+
+        /** Called when a workflow is opened.
+         * @since 3.2 */
+        public void incWorkflowOpening() {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_workflowsOpened++;
+        }
+
+        /** Called when a remote workflow is opened.
+         * @since 3.2 */
+        public void incRemoteWorkflowOpening() {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_remoteWorkflowsOpened++;
         }
 
         private void processStatChanges() {
@@ -336,6 +362,8 @@ public final class NodeTimer {
             }
             job.add("nodestats", job2);
             job.add("uptime", getAvgUpTime());
+            job.add("workflowsOpened", m_workflowsOpened);
+            job.add("remoteWorkflowsOpened", m_remoteWorkflowsOpened);
             job.add("launches", getNrLaunches());
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
             job.add("crashes", getNrCrashes());
@@ -540,6 +568,12 @@ public final class NodeTimer {
                                 m_globalNodeStats.put(SubNodeContainer.class.getName(), ns);
                             }
 
+                            break;
+                        case "workflowsOpened":
+                            m_workflowsOpened = jo.getInt(key);
+                            break;
+                        case "remoteWorkflowsOpened":
+                            m_remoteWorkflowsOpened = jo.getInt(key);
                             break;
                         case "uptime":
                             m_avgUpTime = jo.getJsonNumber(key).longValue();
