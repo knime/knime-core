@@ -238,7 +238,7 @@ public final class FilesHistoryPanel extends JPanel {
                     setText("Info: remote output file will be overwritten if it exists");
                     setForeground(INFO);
                 }
-            } catch (IOException | URISyntaxException | InvalidPathException ex) {
+            } catch (IOException | URISyntaxException | IllegalArgumentException ex) {
                 // ignore it
             }
         }
