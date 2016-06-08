@@ -66,7 +66,6 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 import org.osgi.framework.Bundle;
@@ -325,13 +324,23 @@ public final class KNIMEConstants {
     static {
         BUILD_DATE = "March 31, 2016";
         String versionString;
-        Bundle coreBundle = OSGIHelper.getBundle(KNIMEConstants.class);
-        if (coreBundle != null) {
-            versionString = coreBundle.getHeaders().get("Bundle-Version")
-                .toString();
-        } else {
-            System.err.println("Can't locate CorePlugin, not an OSGi framework?");
+        if (Platform.getProduct() == null) {
+            System.err.println("Can't locate product, not an OSGi framework?");
             versionString = "1.0.0.000000";
+        } else {
+            /*
+             * Changed this from OSGIHelper.getBundle(KNIMEConstants.class);
+             * The version appearing in created_by is now the version of org.knime.product.
+             * We need this for creating docker images from workflows.
+             */
+            Bundle productBundle = Platform.getProduct().getDefiningBundle();
+            if (productBundle != null) {
+                versionString = productBundle.getHeaders().get("Bundle-Version")
+                    .toString();
+            } else {
+                System.err.println("Can't locate product bundle, not an OSGi framework?");
+                versionString = "1.0.0.000000";
+            }
         }
         VERSION = versionString;
         String[] parts = VERSION.split("\\.");
