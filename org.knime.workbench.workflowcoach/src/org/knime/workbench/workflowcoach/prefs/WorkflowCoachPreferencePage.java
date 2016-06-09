@@ -219,6 +219,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
                     m_updateButton.setEnabled(true);
                     m_lastUpdate.setText("Update finished!");
                     setValid(true);
+                    setErrorMessage(null);
                 });
             }
         }, toUpdate);
