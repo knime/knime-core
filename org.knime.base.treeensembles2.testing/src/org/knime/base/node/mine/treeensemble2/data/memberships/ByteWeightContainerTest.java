@@ -54,11 +54,12 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 
 import org.junit.Test;
-import org.knime.base.node.mine.treeensemble2.data.memberships.ByteWeightContainer;
+
+import com.google.common.collect.Lists;
 
 /**
  *
- * @author Adrian Nembach
+ * @author Adrian Nembach, KNIME.com
  */
 public class ByteWeightContainerTest {
     private static ByteWeightContainer initializeContainer() {
@@ -82,5 +83,15 @@ public class ByteWeightContainerTest {
         ByteWeightContainer bwc = initializeContainer();
         double[] expected = new double[]{1.0, 3.0, 2.0};
         assertArrayEquals(expected, bwc.getAllWeights(), 1e-8);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testTooLargeCounts() throws Exception {
+        new ByteWeightContainer(Lists.newArrayList(1, 256));
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void testCountSmallerZero() throws Exception {
+        new ByteWeightContainer(Lists.newArrayList(1, 3, -1));
     }
 }

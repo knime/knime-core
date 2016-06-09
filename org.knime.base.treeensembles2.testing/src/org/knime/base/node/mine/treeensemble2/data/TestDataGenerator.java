@@ -106,7 +106,7 @@ public class TestDataGenerator {
         DataColumnSpec targetSpec = new DataColumnSpecCreator("test-target", StringCell.TYPE).createSpec();
         TreeTargetColumnDataCreator targetCreator = new TreeTargetNominalColumnDataCreator(targetSpec);
         for (int i = 0; i < values.length; i++) {
-            RowKey rowKey = RowKey.createRowKey(i);
+            RowKey rowKey = RowKey.createRowKey((long)i);
             targetCreator.add(rowKey, new StringCell(values[i]));
         }
         return (TreeTargetNominalColumnData)targetCreator.createColumnData();
@@ -118,7 +118,7 @@ public class TestDataGenerator {
         DataColumnSpec colSpec = new DataColumnSpecCreator(name, DoubleCell.TYPE).createSpec();
         TreeOrdinaryNumericColumnDataCreator colCreator = new TreeOrdinaryNumericColumnDataCreator(colSpec);
         for (int i = 0; i < data.length; i++) {
-            final RowKey key = RowKey.createRowKey(i);
+            final RowKey key = RowKey.createRowKey((long)i);
             if (Double.isNaN(data[i])) {
                 colCreator.add(key, new MissingCell(null));
             } else {
@@ -145,7 +145,7 @@ public class TestDataGenerator {
         DataColumnSpec colSpec = new DataColumnSpecCreator(name, StringCell.TYPE).createSpec();
         TreeNominalColumnDataCreator colCreator = new TreeNominalColumnDataCreator(colSpec);
         for (int i = 0; i < values.length; i++) {
-            RowKey rowKey = RowKey.createRowKey(i);
+            RowKey rowKey = RowKey.createRowKey((long)i);
             if (values[i].equals("?")) {
                 colCreator.add(rowKey, new MissingCell(null));
             } else {
@@ -153,7 +153,7 @@ public class TestDataGenerator {
             }
         }
         TreeNominalColumnData col = colCreator.createColumnData(0, m_config);
-        col.getMetaData().setAttributeIndex(0);
+        col.getMetaData().setAttributeIndex(attributeIndex);
         return col;
     }
 
@@ -162,7 +162,7 @@ public class TestDataGenerator {
         DataColumnSpec targetSpec = new DataColumnSpecCreator("test-target", DoubleCell.TYPE).createSpec();
         TreeTargetNumericColumnDataCreator targetCreator = new TreeTargetNumericColumnDataCreator(targetSpec);
         for (int i = 0; i < values.length; i++) {
-            RowKey rowKey = RowKey.createRowKey(i);
+            RowKey rowKey = RowKey.createRowKey((long)i);
             targetCreator.add(rowKey, new DoubleCell(values[i]));
         }
         return targetCreator.createColumnData();

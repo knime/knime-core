@@ -49,6 +49,7 @@
 package org.knime.base.node.mine.treeensemble2.data.memberships;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.BitSet;
 
@@ -204,6 +205,8 @@ public class DescendantColumnMembershipsTest {
         colMem.nextIndexFrom(COLUMN_INDEX[COLUMN_INDEX.length / 2] + 1);
         assertEquals("nextIndexFrom did not work.", COLUMN_INDEX[COLUMN_INDEX.length / 2 + 1],
             colMem.getIndexInColumn());
+
+        assertFalse(colMem.nextIndexFrom(100));
     }
 
     /**
