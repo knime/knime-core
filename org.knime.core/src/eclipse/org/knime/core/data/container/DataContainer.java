@@ -58,7 +58,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.ExecutionException;
@@ -877,7 +876,7 @@ public class DataContainer implements RowAppender {
      */
     protected IWriteFileStoreHandler getFileStoreHandler() {
         if (m_fileStoreHandler == null) {
-            m_fileStoreHandler = createNotInWorkflowFileStoreHandler();
+            m_fileStoreHandler = NotInWorkflowWriteFileStoreHandler.create();
         }
         return m_fileStoreHandler;
     }
@@ -895,13 +894,6 @@ public class DataContainer implements RowAppender {
             throw new NullPointerException("Argument must not be null.");
         }
         m_fileStoreHandler = handler;
-    }
-
-    /**
-     * @return
-     */
-    private static NotInWorkflowWriteFileStoreHandler createNotInWorkflowFileStoreHandler() {
-        return new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID());
     }
 
     /**
@@ -1023,7 +1015,7 @@ public class DataContainer implements RowAppender {
             e = exec.createSubProgress(0.8);
             buf =
                 new Buffer(0, -1, new HashMap<Integer, ContainerTable>(), new HashMap<Integer, ContainerTable>(),
-                    createNotInWorkflowFileStoreHandler());
+                    NotInWorkflowWriteFileStoreHandler.create());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;

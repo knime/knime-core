@@ -423,6 +423,23 @@ public final class FileUtil {
         }
     }
 
+    /** Similar to {@link #zipDir(ZipOutputStream, Collection, String, ZipFileFilter, ExecutionMonitor)}, whereby
+     * all elements are directly put into the zip root.
+     * @param zout See delegating method
+     * @param includeList See delegating method
+     * @param filter See delegating method
+     * @param exec See delegating method
+     * @return See delegating method
+     * @throws IOException See delegating method
+     * @throws CanceledExecutionException See delegating method
+     *
+     */
+    public static boolean zipDir(final ZipOutputStream zout,
+        final Collection<File> includeList, final ZipFileFilter filter,
+        final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        return zipDir(zout, includeList, "", filter, exec);
+    }
+
     /**
      * Packs all files and directories passed in the includeList into a zip
      * stream. Recursively adds all files contained in directories. Files in the
@@ -438,6 +455,12 @@ public final class FileUtil {
      *            archive. Directories will be added with their content
      *            (recursively). Files are placed in the root of the archive
      *            (i.e. their path is not preserved).
+     * @param zipEntryPrefix an optional parameter to specify the parent entry of
+     *            the added directory content. In most cases this parameter is
+     *            "" or null but can also be, e.g. "subfolder1/subfolder2/" as
+     *            parent hierarchy. Callers should then create the respective
+     *            (empty) zip entries up-front and should include the '/'
+     *            at the end of this string
      * @param filter each file (and directory) contained is only included in the
      *            zip archive if it is accepted by the filter. If a directory is
      *            not accepted, it entire content is excluded from the zip. Must
@@ -454,9 +477,10 @@ public final class FileUtil {
      *             if two files or directories in the include list have the same
      *             (simple) name, or an element in the include list doesn't
      *             exist.
+     * @since 3.2
      */
     public static boolean zipDir(final ZipOutputStream zout,
-            final Collection<File> includeList, final ZipFileFilter filter,
+            final Collection<File> includeList, final String zipEntryPrefix, final ZipFileFilter filter,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
 
@@ -473,7 +497,7 @@ public final class FileUtil {
         } else {
             size = Long.MAX_VALUE;
         }
-        ZipWrapper zipper = new ZipWrapper(zout);
+        ZipWrapper zipper = new ZipWrapper(zout, zipEntryPrefix);
 
         // the read buffer, re-used for each file
         final byte[] buff = new byte[BUFF_SIZE];
@@ -1272,14 +1296,17 @@ public final class FileUtil {
     private static final class ZipWrapper extends ZipOutputStream {
         private long m_written = 0;
         private ZipOutputStream m_zipper;
+        private String m_zipEntryPrefix;
 
         /**
          * Wraps a zip stream and counts the bytes written.
          * @param zipStream stream to wrap
+         * @param zipEntryPrefix a possibly null prefix to prepend to all zip entry names
          */
-        public ZipWrapper(final ZipOutputStream zipStream) {
+        ZipWrapper(final ZipOutputStream zipStream, final String zipEntryPrefix) {
             super(new NullOutputStream());
             m_zipper = zipStream;
+            m_zipEntryPrefix = StringUtils.defaultIfBlank(zipEntryPrefix, null);
         }
         /**
          * @return the number of original (uncompressed) bytes written to the stream.
@@ -1354,7 +1381,11 @@ public final class FileUtil {
          */
         @Override
         public void putNextEntry(final ZipEntry e) throws IOException {
-            m_zipper.putNextEntry(e);
+            ZipEntry entry = e;
+            if (m_zipEntryPrefix != null) {
+                entry = new ZipEntry(m_zipEntryPrefix + e.getName());
+            }
+            m_zipper.putNextEntry(entry);
         }
         /**
          * @param b

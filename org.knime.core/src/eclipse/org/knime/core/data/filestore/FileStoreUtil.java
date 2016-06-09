@@ -50,6 +50,8 @@ package org.knime.core.data.filestore;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
@@ -84,6 +86,11 @@ public final class FileStoreUtil {
     /** @noreference This method is not intended to be referenced by clients. */
     public static FileStore getFileStore(final FileStoreCell cell) {
         return cell.getFileStore();
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static List<FileStore> getFileStores(final FileStorePortObject po) {
+        return IntStream.range(0, po.getFileStoreCount()).mapToObj(i -> po.getFileStore(i)).collect(Collectors.toList());
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
