@@ -48,6 +48,7 @@ package org.knime.testing.node.filestore.fsobject2cell;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -65,6 +66,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.util.UniqueNameGenerator;
 import org.knime.testing.data.filestore.LargeFileStoreCell;
 import org.knime.testing.data.filestore.LargeFileStorePortObject;
 import org.knime.testing.data.filestore.LargeFileStorePortObject.LargeFileElement;
@@ -87,8 +89,10 @@ final class FileStoreObjectToCellNodeModel extends NodeModel {
         LargeFileStorePortObject in = (LargeFileStorePortObject) inObjects[0];
         DataTableSpec spec = createOutputSpec();
         BufferedDataContainer cont = exec.createDataContainer(spec);
+        UniqueNameGenerator nameGen = new UniqueNameGenerator(Collections.emptySet());
         for (LargeFileElement e : in) {
-            cont.addRowToTable(new DefaultRow(e.getKey(), new LargeFileStoreCell(e.getLargeFile(), e.getSeed())));
+            cont.addRowToTable(new DefaultRow(nameGen.newName(e.getKey()),
+                new LargeFileStoreCell(e.getLargeFile(), e.getSeed())));
         }
         cont.close();
         return new BufferedDataTable[] {cont.getTable()};
