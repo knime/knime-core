@@ -158,7 +158,9 @@ public final class PortUtil {
     public static void writeObjectToFile(final PortObject po, final File file,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        writeObjectToStream(po, new FileOutputStream(file), exec);
+        try (FileOutputStream f = new FileOutputStream(file)) {
+            writeObjectToStream(po, f, exec);
+        }
     }
 
     /**
