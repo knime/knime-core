@@ -2894,8 +2894,13 @@ public class WorkflowEditor extends GraphicalEditor implements
                 case NODE_REMOVED:
                     Object oldValue = event.getOldValue();
                     // close sub-editors if a child metanode is deleted
+                    WorkflowManager wm = null;
                     if (oldValue instanceof WorkflowManager) {
-                        WorkflowManager wm = (WorkflowManager)oldValue;
+                        wm = (WorkflowManager)oldValue;
+                    } else if (oldValue instanceof SubNodeContainer) {
+                        wm = ((SubNodeContainer)oldValue).getWorkflowManager();
+                    }
+                    if (wm != null) {
                         // since the equals method of the WorkflowManagerInput
                         // only looks for the WorkflowManager, we can pass
                         // null as the editor argument
