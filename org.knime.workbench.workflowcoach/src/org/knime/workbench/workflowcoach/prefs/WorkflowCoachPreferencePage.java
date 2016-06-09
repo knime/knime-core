@@ -132,6 +132,18 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
         m_checkCommunityProvider = new Button(composite, SWT.CHECK);
         m_checkCommunityProvider.setText("Node Recommendations by the Community");
         m_checkCommunityProvider.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        m_checkCommunityProvider.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                if (getLastUpdate().isPresent() || !m_checkCommunityProvider.getSelection()) {
+                    setValid(true);
+                    setErrorMessage(null);
+                } else {
+                    setValid(false);
+                    setErrorMessage("No community node recommendations available. Please update.");
+                }
+            }
+        });
 
         if (!KNIMECorePlugin.getDefault().getPreferenceStore()
             .getBoolean(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS)) {
@@ -198,6 +210,9 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
                     m_lastUpdate.setText("Update failed.");
                     setErrorMessage(
                         "Error loading the community node recommendations. Please check your internet connection.");
+                    if(!m_checkCommunityProvider.getSelection()) {
+                        setValid(true);
+                    }
                 });
             } else {
                 Display.getDefault().syncExec(() -> {
@@ -214,13 +229,10 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
         m_checkCommunityProvider
             .setSelection(prefStore.getBoolean(WorkflowCoachPreferenceInitializer.P_COMMUNITY_NODE_TRIPLE_PROVIDER));
 
-        Optional<Optional<LocalDateTime>> lastUpdate = NodeRecommendationManager.getInstance().getNodeTripleProviders()
-            .stream().filter(p -> p instanceof CommunityTripleProvider)
-            .map(p -> p.getLastUpdate()).findFirst();
-
-        if (lastUpdate.isPresent() && lastUpdate.get().isPresent()) {
+        Optional<LocalDateTime> lastUpdate = getLastUpdate();
+        if (lastUpdate.isPresent()) {
             m_lastUpdate
-                .setText("Last Update: " + NodeTripleProvider.LAST_UPDATE_FORMAT.format(lastUpdate.get().get()));
+                .setText("Last Update: " + NodeTripleProvider.LAST_UPDATE_FORMAT.format(lastUpdate.get()));
         } else {
             m_lastUpdate.setText("Not updated, yet.");
             m_lastUpdate.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_RED));
@@ -238,7 +250,20 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
             default:
                 m_noAutoUpdateButton.setSelection(true);
         }
+    }
 
+    /**
+     * @return the last update date or an empty {@link Optional} if there wasn't an update so far (i.e. the community
+     *         statistic file doesn't exist)
+     */
+    private Optional<LocalDateTime> getLastUpdate() {
+        Optional<Optional<LocalDateTime>> lastUpdate = NodeRecommendationManager.getInstance().getNodeTripleProviders()
+            .stream().filter(p -> p instanceof CommunityTripleProvider).map(p -> p.getLastUpdate()).findFirst();
+        if (lastUpdate.isPresent()) {
+            return lastUpdate.get();
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
