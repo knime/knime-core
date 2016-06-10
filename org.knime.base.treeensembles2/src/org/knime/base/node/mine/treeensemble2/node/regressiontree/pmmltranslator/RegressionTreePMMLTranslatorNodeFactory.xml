@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="RegressionTreeToPMML" type="Other">
+<knimeNode icon="RegressionTreeToPMML.png" type="Other">
 	<name>Simple Regression Tree to PMML</name>
 
 	<shortDescription>
