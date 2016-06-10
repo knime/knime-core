@@ -105,7 +105,7 @@ public final class DatabaseDriverLoader {
      */
     public static final String[] EXTENSIONS = {".jar", ".zip"};
 
-    private static final Map<String, DatabaseWrappedDriver> DRIVER_MAP = new LinkedHashMap<>();
+    private static final Map<String, DatabaseWrappedDriver> EXTENSION_POINT_DRIVER_MAP = new LinkedHashMap<>();
     private static final Map<String, DatabaseWrappedDriver> USER_DEFINED_DRIVER_MAP = new LinkedHashMap<>();
 
     /**
@@ -162,7 +162,7 @@ public final class DatabaseDriverLoader {
             String driverName = d.toString();
             LOGGER.debug("Database driver " + driverName + " loaded successfully. Driver info: " + d.getInfo());
             // DriverManager.registerDriver(d);
-            DRIVER_MAP.put(driverName, d);
+            EXTENSION_POINT_DRIVER_MAP.put(driverName, d);
             return true;
         } catch (Throwable t) {
             LOGGER.debug("Could not load JDBC ODBC driver class '" + JDBC_ODBC_DRIVER + "'. Class has been removed in Java 8.");
@@ -296,7 +296,7 @@ public final class DatabaseDriverLoader {
                                     duplicate = USER_DEFINED_DRIVER_MAP.put(driverName, d);
                                 } else {
                                     LOGGER.debug("Adding driver to buildin map: " + driverName);
-                                    duplicate = DRIVER_MAP.put(driverName, d);
+                                    duplicate = EXTENSION_POINT_DRIVER_MAP.put(driverName, d);
                                 }
                                 if (duplicate != null) {
                                     throw new IllegalStateException("Duplicate driver found for name:" + duplicate);
@@ -330,7 +330,7 @@ public final class DatabaseDriverLoader {
      * @since 3.2
      */
     public static Set<String> getExtensionPointDriver(){
-        return DRIVER_MAP.keySet();
+        return EXTENSION_POINT_DRIVER_MAP.keySet();
     }
 
     /**
@@ -363,7 +363,7 @@ public final class DatabaseDriverLoader {
             return wdriver;
         }
 
-        wdriver = DRIVER_MAP.get(driverName);
+        wdriver = EXTENSION_POINT_DRIVER_MAP.get(driverName);
         if (wdriver != null) {
             LOGGER.debug("Database driver retrieved from buildin drivers: " + driverName
                 +  "Driver info: " + wdriver.getInfo());
@@ -375,7 +375,7 @@ public final class DatabaseDriverLoader {
         DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver) c.newInstance());
         LOGGER.debug("Database driver retireved from classpath " + driverName
             +  "Driver info: " + d.getInfo());
-        DRIVER_MAP.put(driverName, d);
+        EXTENSION_POINT_DRIVER_MAP.put(driverName, d);
         return d;
     }
 
