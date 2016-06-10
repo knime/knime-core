@@ -58,6 +58,7 @@ import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.node.NodeLogger;
 
@@ -131,12 +132,19 @@ public final class FileStoreUtil {
 
     /** @noreference This method is not intended to be referenced by clients. */
     public static void retrieveFileStoreHandlers(
-        final FileStorePortObject sourceFSObj, final FileStorePortObject resultFSObj) throws IOException {
+        final FileStorePortObject sourceFSObj, final FileStorePortObject resultFSObj,
+        final IWriteFileStoreHandler newHandler) throws IOException {
         List<FileStoreProxy> sourceFSProxies = sourceFSObj.getFileStoreProxies();
         List<FileStoreKey> sourceFSKeys = new ArrayList<FileStoreKey>(sourceFSProxies.size());
         FileStoreHandlerRepository commonFSHandlerRepo = null;
         for (FileStoreProxy proxy : sourceFSProxies) {
-            sourceFSKeys.add(proxy.getFileStoreKey());
+            FileStoreKey newKey;
+            if (newHandler != null) {
+                newKey = newHandler.translateToLocal(proxy.getFileStore(), resultFSObj);
+            } else {
+                newKey = proxy.getFileStoreKey();
+            }
+            sourceFSKeys.add(newKey);
             FileStoreHandlerRepository fsHandlerRepo = proxy.getFileStoreHandler().getFileStoreHandlerRepository();
             if (commonFSHandlerRepo == null) {
                 commonFSHandlerRepo = fsHandlerRepo;
@@ -145,18 +153,9 @@ public final class FileStoreUtil {
                         + "store handler repositories: " + commonFSHandlerRepo + " vs. " + fsHandlerRepo;
             }
         }
-        resultFSObj.retrieveFileStoreHandlerFrom(sourceFSKeys, commonFSHandlerRepo);
-    }
-
-
-    /** @noreference This method is not intended to be referenced by clients. */
-    public static List<FileStoreKey> translateToLocal(final FileStorePortObject object) {
-        List<FileStoreProxy> fileStoreProxy = object.getFileStoreProxies();
-        List<FileStoreKey> fileStoreKeys = new ArrayList<FileStoreKey>(fileStoreProxy.size());
-        for (FileStoreProxy proxy : fileStoreProxy) {
-            fileStoreKeys.add(proxy.translateToLocal(object));
-        }
-        return fileStoreKeys;
+        FileStoreHandlerRepository resultRepos = newHandler != null
+                ? newHandler.getFileStoreHandlerRepository() : commonFSHandlerRepo;
+        resultFSObj.retrieveFileStoreHandlerFrom(sourceFSKeys, resultRepos);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */

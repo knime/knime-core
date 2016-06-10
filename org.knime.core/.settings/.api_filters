@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="retrieveFileStoreHandlers(FileStorePortObject, FileStorePortObject)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="translateToLocal(FileStorePortObject)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
         <filter comment="non-used methods" id="338792546">
             <message_arguments>
@@ -13,6 +27,19 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.FileNodePersistor"/>
                 <message_argument value="getModelSettingsFailPolicy()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="copyPortObject(PortObject, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="execMon -&gt; execContext (needed for TreeEnsembleModel and bug AP-5959" id="1143996420">
+            <message_arguments>
+                <message_argument value="copyPortObject(PortObject, ExecutionContext)"/>
             </message_arguments>
         </filter>
     </resource>
