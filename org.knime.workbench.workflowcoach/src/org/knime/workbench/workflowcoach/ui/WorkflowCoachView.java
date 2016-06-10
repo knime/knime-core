@@ -391,7 +391,13 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 column.addSelectionListener((TableColumnSorter) m_viewer.getComparator());
             }
             m_viewer.getTable().setRedraw(true);
-            if (!(m_viewer.getInput() instanceof List)) {
+
+            //get current selection from the workbench and update the recommendation list
+            ISelection selection =
+                getViewSite().getPage().getActiveEditor().getSite().getSelectionProvider().getSelection();
+            if (selection != null && selection instanceof IStructuredSelection) {
+                updateInput(selection);
+            } else {
                 updateInput(StructuredSelection.EMPTY);
             }
         });
