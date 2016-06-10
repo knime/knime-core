@@ -57,6 +57,7 @@ import java.util.LinkedList;
 import java.util.Set;
 
 import org.knime.core.node.port.database.connection.DBDriverFactory;
+import org.knime.core.node.port.database.connection.PriorityDriverFactory;
 
 /**
  * {@link DBDriverFactory} implementation for jar drivers registered by the user or via the old jar extension point.
@@ -95,8 +96,16 @@ public final class RegisteredDriversConnectionFactory implements DBDriverFactory
      */
     @Override
     public Driver getDriver(final DatabaseConnectionSettings settings) throws Exception {
-        final Driver d = DatabaseDriverLoader.getDriver(settings.getDriver());
-        return d;
+        try {
+            final Driver d = DatabaseDriverLoader.getDriver(settings.getDriver());
+            return d;
+        } catch (Exception ex) {
+            final DBDriverFactory factory = getLegacyFactory(settings);
+            if (factory != null) {
+                return factory.getDriver(settings);
+            }
+            throw ex;
+        }
     }
 
     /**
@@ -111,10 +120,49 @@ public final class RegisteredDriversConnectionFactory implements DBDriverFactory
             final File[] driverFiles = DatabaseDriverLoader.getDriverFilesForDriverClass(settings.getDriver());
             if (driverFiles != null) {
                 jars.addAll(Arrays.asList(driverFiles));
+            } else {
+                //the method returns null if no driver files where found try the legacy way
+                final DBDriverFactory factory = getLegacyFactory(settings);
+                if (factory != null) {
+                    return factory.getDriverFiles(settings);
+                }
             }
             return jars;
         } catch (final Exception e) {
             throw new IOException(e);
         }
+    }
+
+    /**
+     * @param settings
+     * @return
+     */
+    private DBDriverFactory getLegacyFactory(final DatabaseConnectionSettings settings) {
+        //this is necessary when the user has set the database identifier to default and the driver
+        //is provided by a specific DatabaseUtility e.g. SQLiteUtility instead of as before via the jdbc extension point.
+        //The "default" DatabaseUtility class only searches for the driver in the RegisteredDriversConnectionFactory
+        //which no longer contains the driver since the extension point based driver registration has been replaced
+        //by the DatabaseUtility specific DriverFactories this is why we compare the jdbc based db identifier with
+        //the given identifier and if they are different we also ask the DatabaseUtility for the jdbc based
+        //database identifier for the connection
+        if (DatabaseUtility.DEFAULT_DATABASE_IDENTIFIER.equals(settings.getDatabaseIdentifier())) {
+            final String dbIDFromJDBCUrl =
+                    DatabaseConnectionSettings.getDatabaseIdentifierFromJDBCUrl(settings.getJDBCUrl());
+            //try to find the driver based on the id from the jdbc url
+            final DatabaseUtility utility = DatabaseUtility.getUtility(dbIDFromJDBCUrl);
+            final DBDriverFactory driverFactory = utility.getConnectionFactory().getDriverFactory();
+            if (driverFactory instanceof PriorityDriverFactory) {
+                final DBDriverFactory[] factories = ((PriorityDriverFactory)driverFactory).getFactories();
+                for (DBDriverFactory factory : factories) {
+                    //we can use object equality since this is a singleton
+                    if (factory != this) {
+                        return factory;
+                    }
+                }
+            } else if (driverFactory != this) {
+                return driverFactory;
+            }
+        }
+        return null;
     }
 }
