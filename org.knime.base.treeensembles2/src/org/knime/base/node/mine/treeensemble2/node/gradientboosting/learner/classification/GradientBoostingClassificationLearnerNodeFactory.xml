@@ -115,11 +115,6 @@
 					NOTE: This method can only be used with binary nominal splits.</li>
 				</ul>
 			</option>
-			<option name="Alpha">
-				Alpha controls what percentage of the data will be considered as outliers. The higher Alpha the smaller the fraction of outliers.
-				If Alpha is set to 1.0, the algorithm will consider no point to be an outlier. This is discouraged however because outliers can have
-				fatal effects on regression.
-			</option>
 			<option name="Data Sampling (Rows)">
 				The sampling of the data rows for each individual
 				tree: If disabled

@@ -283,7 +283,7 @@ public class AdvancedOptionsPanel extends JPanel {
             gbc.gridwidth = 1;
 
             gbc.gridy += 1;
-            add(new JLabel("Alpha"), gbc);
+            add(new JLabel("Alpha (percentage of the data that are not treated as outlier)"), gbc);
             gbc.gridx = 1;
             gbc.weightx = 1.0;
             add(m_alphaFractionSpinner, gbc);
