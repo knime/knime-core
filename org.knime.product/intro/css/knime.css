@@ -152,11 +152,6 @@ ul#mruList li {
     margin-bottom: 5px;
 }
 
-ul#mruList li a {
-    text-decoration: none;
-}
-
-
 div#news h2 {
     border-bottom: 1px solid #ccc;
 }
@@ -173,12 +168,11 @@ span.field-content {
 
 div.floating-link {
     width: 100%;
-    margin-bottom: 9px;
 }
 
 .floating-link  a {
     font-weight: bold;
-    color: #3E3A39;
+    color: #ff9000;
     display:block;
     vertical-align: middle;
     padding-top: 9px;
@@ -186,15 +180,16 @@ div.floating-link {
 }
 
 .floating-link > a:link {
-	color: #3E3A39;
+	color: #ff9000;
 }
 
 .floating-link > a:visited {
-	color: #3E3A39;
+	color: #ff9000;
 }
 
 .floating-link > a:hover {
     color: #ff9000;
+    text-decoration: underline;
 }
 
 
