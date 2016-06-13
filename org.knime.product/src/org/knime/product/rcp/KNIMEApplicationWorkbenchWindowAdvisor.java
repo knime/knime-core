@@ -225,7 +225,7 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         boolean alreadyAsked = pStore.getBoolean(HeadlessPreferencesConstants.P_ASKED_ABOUT_STATISTICS);
         //pStore.setDefault(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, false);
         if (alreadyAsked) {
-            // return;
+            return;
         }
         String message = "Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data. "
                 + "The data collected is used for recommendations of the new built-in Workflow Coach. "
