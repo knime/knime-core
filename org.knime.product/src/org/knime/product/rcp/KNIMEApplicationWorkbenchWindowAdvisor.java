@@ -201,7 +201,7 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
 
         showIntroPage();
         showStartupMessages();
-        checkAnonymousUsageStatistcs(workbenchWindow.getShell());
+        checkAnonymousUsageStatistics(workbenchWindow.getShell());
         addGlobalNodeTimerShutdownHook();
     }
 
@@ -220,17 +220,19 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
     /**
      * Asks the user to send anonymous usage statistics to KNIME on a new workspace instance.
      */
-    private void checkAnonymousUsageStatistcs(final Shell shell) {
+    private void checkAnonymousUsageStatistics(final Shell shell) {
         IPreferenceStore pStore = KNIMECorePlugin.getDefault().getPreferenceStore();
         boolean alreadyAsked = pStore.getBoolean(HeadlessPreferencesConstants.P_ASKED_ABOUT_STATISTICS);
         //pStore.setDefault(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, false);
         if (alreadyAsked) {
-            return;
+            // return;
         }
         String message = "Help us to further improve the KNIME Analytics Platform by sending us anonymous usage data. "
+                + "The data collected is used for recommendations of the new built-in Workflow Coach. "
                 + "Click <a href=\"https://tech.knime.org/faq#usage_data\">here</a> to find out what is being transmitted. "
                 + "You can also change this setting in the KNIME preferences later.\n\n"
-                + "Do you allow KNIME to collect and send anonymous usage data?";
+                + "Do you allow KNIME to collect and send anonymous usage data? "
+                + "This will also enable the Workflow Coach.";
         boolean allow = LinkMessageDialog.openQuestion(shell, "Help improve KNIME", message);
         pStore.setValue(HeadlessPreferencesConstants.P_ASKED_ABOUT_STATISTICS, true);
         pStore.setValue(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS, allow);
