@@ -50,6 +50,7 @@ package org.knime.base.node.preproc.stringmanipulation;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.base.node.jsnippet.AbstractConditionalStreamingNodeModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
@@ -58,11 +59,12 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
 import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
+import org.knime.ext.sun.nodes.script.expression.Expression;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 
 /**
@@ -70,8 +72,11 @@ import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
  *
  * @author Heiko Hofer
  */
-public class StringManipulationNodeModel extends NodeModel
+public class StringManipulationNodeModel extends AbstractConditionalStreamingNodeModel
     implements FlowVariableProvider {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            "String Manipulation");
 
     private StringManipulationSettings m_settings;
 
@@ -82,7 +87,6 @@ public class StringManipulationNodeModel extends NodeModel
      * One input, one output.
      */
     public StringManipulationNodeModel() {
-        super(1, 1);
         m_settings = new StringManipulationSettings();
     }
 
@@ -144,8 +148,47 @@ public class StringManipulationNodeModel extends NodeModel
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @since 3.2
+     */
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec, final long rowCount)
+        throws InvalidSettingsException {
+        m_rowCount = rowCount;
+        return createColumnRearranger(spec);
+    }
 
 
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.2
+     */
+    @Override
+    protected boolean usesRowCount() {
+        boolean uses = m_settings != null && m_settings.getExpression().contains(Expression.ROWCOUNT);
+        if (uses) {
+            LOGGER
+                .warn("The ROWCOUNT field is used in the expression. Manipulations cannot be done in streamed manner!");
+        }
+        return uses;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 3.2
+     */
+    @Override
+    protected boolean usesRowIndex() {
+        boolean uses = m_settings != null && m_settings.getExpression().contains(Expression.ROWINDEX);
+        if (uses) {
+            LOGGER
+                .warn("The ROWINDEX field is used in the expression. Manipulations cannot be done in distributed manner!");
+        }
+        return uses;
+    }
 
     /** {@inheritDoc} */
     @Override

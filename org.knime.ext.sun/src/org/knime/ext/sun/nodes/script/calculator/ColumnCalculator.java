@@ -142,8 +142,6 @@ public class ColumnCalculator implements CellFactory {
     @Override
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
-        m_lastProcessedRow = curRowNr;
-
         exec.setProgress(curRowNr / (double)rowCount, "Calculated row "
                 + curRowNr + " (\"" + lastKey + "\")");
     }
@@ -174,7 +172,7 @@ public class ColumnCalculator implements CellFactory {
         Map<InputField, Object> nameValueMap =
             new HashMap<InputField, Object>();
         nameValueMap.put(new InputField(Expression.ROWINDEX,
-                FieldType.TableConstant), m_lastProcessedRow);
+                FieldType.TableConstant), m_lastProcessedRow++);
         nameValueMap.put(new InputField(Expression.ROWID,
                 FieldType.TableConstant), row.getKey().getString());
         nameValueMap.put(new InputField(Expression.ROWCOUNT,
