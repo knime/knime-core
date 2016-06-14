@@ -408,10 +408,12 @@ public final class CredentialsStore implements Observer {
         /** Called when node is loaded from disc. Implementations will prompt the password by means of the workflow
          * load helper and then {@link #pushCredentialsFlowVariable(String, String, String)} it.
          * @param loadHelper Non-null helper.
+         * @param credProvider The credentials provider set on the corresponding node, not null. Read-only!!
          * @param isExecuted Whether node is executed - executed nodes do not prompt for password via the callback
          * @param isInactive TODO
          */
-        public void doAfterLoadFromDisc(final WorkflowLoadHelper loadHelper, boolean isExecuted, boolean isInactive);
+        public void doAfterLoadFromDisc(final WorkflowLoadHelper loadHelper,
+            final CredentialsProvider credProvider, boolean isExecuted, boolean isInactive);
 
     }
 

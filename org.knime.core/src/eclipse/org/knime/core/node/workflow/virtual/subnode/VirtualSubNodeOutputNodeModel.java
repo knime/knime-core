@@ -85,6 +85,7 @@ import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowVariable;
@@ -313,10 +314,10 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     }
 
     /** {@inheritDoc}
-     * @since 3.1*/
+     * @since 3.2*/
     @Override
     public void doAfterLoadFromDisc(final WorkflowLoadHelper loadHelper,
-        final boolean isExecuted, final boolean isInactive) {
+        final CredentialsProvider credProvider, final boolean isExecuted, final boolean isInactive) {
         // before 3.1 it didn't implement POHolder so node output exchange set although executed
         // otherwise we could assert isExecute --> m_outputExchange != null
         if (isExecuted && m_outputExchange != null) {

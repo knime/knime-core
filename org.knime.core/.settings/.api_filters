@@ -65,6 +65,25 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/CredentialsStore.java" type="org.knime.core.node.workflow.CredentialsStore$CredentialsNode">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.CredentialsStore.CredentialsNode"/>
+                <message_argument value="doAfterLoadFromDisc(WorkflowLoadHelper, CredentialsProvider, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.CredentialsStore.CredentialsNode"/>
+                <message_argument value="doAfterLoadFromDisc(WorkflowLoadHelper, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="doAfterLoadFromDisc(WorkflowLoadHelper, CredentialsProvider, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileSingleNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSingleNodeContainerPersistor">
         <filter comment="internal &quot;api&quot;" id="338792546">
             <message_arguments>
@@ -121,6 +140,14 @@
         <filter id="1143996420">
             <message_arguments>
                 <message_argument value="collapseIntoMetaNode(NodeID[], WorkflowAnnotation[], String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/virtual/subnode/VirtualSubNodeOutputNodeModel.java" type="org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel"/>
+                <message_argument value="doAfterLoadFromDisc(WorkflowLoadHelper, boolean, boolean)"/>
             </message_arguments>
         </filter>
     </resource>

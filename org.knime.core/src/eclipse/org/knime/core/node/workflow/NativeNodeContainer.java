@@ -812,7 +812,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 && nodePersistor instanceof FileSingleNodeContainerPersistor) {
             CredentialsNode credNode = (CredentialsNode)m_node.getNodeModel();
             credNode.doAfterLoadFromDisc(((FileSingleNodeContainerPersistor)nodePersistor).getLoadHelper(),
-                isExecuted, isInactive());
+                getCredentialsProvider(), isExecuted, isInactive());
             saveNodeSettingsToDefault();
         }
         return null;
