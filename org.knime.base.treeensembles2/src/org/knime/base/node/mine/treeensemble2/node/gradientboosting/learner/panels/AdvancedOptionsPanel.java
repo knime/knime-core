@@ -218,7 +218,7 @@ public class AdvancedOptionsPanel extends JPanel {
         m_seedChecker.doClick();
 
         m_useAverageSplitPointsChecker = new JCheckBox("Use mid point splits (only for numeric attributes)");
-        m_useBinaryNominalSplitsChecker = new JCheckBox("Use binary splits for nominal columns.");
+        m_useBinaryNominalSplitsChecker = new JCheckBox("Use binary splits for nominal columns");
         m_missingValueHandlingComboBox = new JComboBox<MissingValueHandling>(MissingValueHandling.values());
 
         initPanel();
