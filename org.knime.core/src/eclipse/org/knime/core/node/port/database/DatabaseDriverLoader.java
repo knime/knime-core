@@ -129,6 +129,7 @@ public final class DatabaseDriverLoader {
         DRIVER_TO_URL.put("net.sourceforge.jtds.jdbc.Driver", "jdbc:jtds:sybase://");
         DRIVER_TO_URL.put("com.sybase.jdbc3.jdbc.SybDriver", "jdbc:sybase:Tds://");
         DRIVER_TO_URL.put("org.sqlite.JDBC", "jdbc:sqlite://");
+        DRIVER_TO_URL.put("com.exasol.jdbc.EXADriver", "jdbc:exa:");
     }
 
     private static final boolean ODBC_AVAILABLE;
