@@ -135,6 +135,7 @@ public final class NodeTimer {
         private class NodeStats {
             long executionTime = 0;
             int executionCount = 0;
+            int failureCount = 0;
             int creationCount = 0;
             String likelySuccessor = N_A;
         }
@@ -165,7 +166,7 @@ public final class NodeTimer {
             readFromFile();
         }
 
-        void addExecutionTime(final String cname, final long exectime) {
+        void addExecutionTime(final String cname, final boolean success, final long exectime) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
@@ -177,7 +178,11 @@ public final class NodeTimer {
                     m_globalNodeStats.put(cname, ns);
                 }
                 ns.executionTime += exectime;
-                ns.executionCount++;
+                if (success) {
+                    ns.executionCount++;
+                } else {
+                    ns.failureCount++;
+                }
                 processStatChanges();
             }
         }
@@ -332,6 +337,7 @@ public final class NodeTimer {
                         if (ns != null) {
                             job3.add("id", cname);
                             job3.add("nrexecs", ns.executionCount);
+                            job3.add("nrfails", ns.failureCount);
                             job3.add("exectime", ns.executionTime);
                             job3.add("nrcreated", ns.creationCount);
                             job3.add("successor", ns.likelySuccessor);
@@ -345,6 +351,7 @@ public final class NodeTimer {
                     NodeStats ns = m_globalNodeStats.get("NodeContainer");
                     if (ns != null) {
                         jobMeta.add("nrexecs", ns.executionCount);
+                        jobMeta.add("nrfails", ns.failureCount);
                         jobMeta.add("exectime", ns.executionTime);
                         jobMeta.add("nrcreated", ns.creationCount);
                     }
@@ -355,6 +362,7 @@ public final class NodeTimer {
                     ns = m_globalNodeStats.get(SubNodeContainer.class.getName());
                     if (ns != null) {
                         jobSub.add("nrexecs", ns.executionCount);
+                        jobSub.add("nrfails", ns.failureCount);
                         jobSub.add("exectime", ns.executionTime);
                         jobSub.add("nrcreated", ns.creationCount);
                     }
@@ -529,12 +537,14 @@ public final class NodeTimer {
                                 JsonObject job3 = jab.getJsonObject(curNode);
                                 String nodeID = job3.getString("id");
                                 int execCount = job3.getInt("nrexecs", 0);
+                                int failCount = job3.getInt("nrfails", 0);
                                 JsonNumber num = job3.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = job3.getInt("nrcreated", 0);
                                 String successor = job3.getString("successor", "");
                                 NodeStats ns = new NodeStats();
                                 ns.executionCount = execCount;
+                                ns.failureCount = failCount;
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
                                 ns.likelySuccessor = successor;
@@ -545,11 +555,13 @@ public final class NodeTimer {
                             JsonObject jobMeta = jo2.getJsonObject("metaNodes");
                             if (!jobMeta.isEmpty()) {
                                 int execCount = jobMeta.getInt("nrexecs", 0);
+                                int failCount = jobMeta.getInt("nrfails", 0);
                                 JsonNumber num = jobMeta.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = jobMeta.getInt("nrcreated", 0);
                                 NodeStats ns = new NodeStats();
                                 ns.executionCount = execCount;
+                                ns.failureCount = failCount;
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
                                 m_globalNodeStats.put("NodeContainer", ns);
@@ -558,11 +570,13 @@ public final class NodeTimer {
                             JsonObject jubSub = jo2.getJsonObject("wrappedNodes");
                             if (!jubSub.isEmpty()) {
                                 int execCount = jubSub.getInt("nrexecs", 0);
+                                int failCount = jubSub.getInt("nrfails", 0);
                                 JsonNumber num = jubSub.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = jubSub.getInt("nrcreated", 0);
                                 NodeStats ns = new NodeStats();
                                 ns.executionCount = execCount;
+                                ns.failureCount = failCount;
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
                                 m_globalNodeStats.put(SubNodeContainer.class.getName(), ns);
@@ -685,7 +699,7 @@ public final class NodeTimer {
             m_numberOfExecutionsOverall++;
             m_numberOfExecutionsSinceReset++;
             String cname = getCanonicalName(m_parent);
-            GLOBAL_TIMER.addExecutionTime(cname, m_lastExecutionDuration);
+            GLOBAL_TIMER.addExecutionTime(cname, success, m_lastExecutionDuration);
         }
         m_startTime = -1;
     }
