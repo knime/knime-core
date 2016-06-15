@@ -137,7 +137,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
 
     private TableViewer m_viewer;
 
-    private TableEditor m_editor = null;
+    private TableEditor m_editor;
 
     /**
      * {@inheritDoc}
@@ -539,7 +539,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 m_editor.dispose();
                 m_editor = null;
             }
-            m_viewer.setInput(message);
+            if (m_viewer != null) {
+                m_viewer.setInput(message);
+            }
         });
     }
 
