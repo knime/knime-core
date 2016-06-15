@@ -170,7 +170,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
         manualUpdateComp.setLayoutData(gd);
 
         m_updateButton = new Button(manualUpdateComp, SWT.PUSH);
-        m_updateButton.setText("  Manual Update  ");
+        m_updateButton.setText("  Update Now  ");
         m_updateButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
