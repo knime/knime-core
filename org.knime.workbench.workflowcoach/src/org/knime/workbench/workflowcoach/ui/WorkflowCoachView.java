@@ -83,8 +83,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.Hyperlink;
@@ -121,10 +123,17 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     private static final ScopedPreferenceStore PREFS = new ScopedPreferenceStore(InstanceScope.INSTANCE,
         FrameworkUtil.getBundle(CommunityTripleProvider.class).getSymbolicName());
 
+    private static final String NO_WORKFLOW_OPENED_MESSAGE = "No workflow opened.";
+
     /**
      * If <code>true</code>, nodes are sill loading.
      */
-    private boolean m_nodesLoading = true;
+    private boolean m_nodesLoading = false;
+
+    /**
+     * Indicates whether recommendations are available (i.e. properly configured etc.).
+     */
+    private boolean m_recommendationsAvailable = false;
 
     private TableViewer m_viewer;
 
@@ -181,7 +190,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         toolbarMGR.add(new ConfigureAction(m_viewer));
 
         m_viewer.setInput("Waiting for node repository to be loaded ...");
-
+        m_nodesLoading = true;
         Job nodesLoader = new KNIMEJob("Workflow Coach loader", FrameworkUtil.getBundle(getClass())) {
             @Override
             protected IStatus run(final IProgressMonitor monitor) {
@@ -232,6 +241,11 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      */
     @Override
     public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
+        if (m_recommendationsAvailable
+            && PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getEditorReferences().length == 0) {
+            //if no workflow is opened and the workflow coach is configured properly, show according message
+            updateInput(NO_WORKFLOW_OPENED_MESSAGE);
+        }
         if (part instanceof WorkflowCoachView || m_nodesLoading) {
             // If source of the selection is this view itself, or the nodes or statistics are still loading, do nothing
             return;
@@ -339,6 +353,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         //update viewer
         m_viewer.setInput(recommendationsWithoutDups);
         m_viewer.refresh();
+        m_recommendationsAvailable = true;
 
         //scroll to the very top
         if (!recommendationsWithoutDups.isEmpty()) {
@@ -393,12 +408,17 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             m_viewer.getTable().setRedraw(true);
 
             //get current selection from the workbench and update the recommendation list
-            ISelection selection =
-                getViewSite().getPage().getActiveEditor().getSite().getSelectionProvider().getSelection();
-            if (selection != null && selection instanceof IStructuredSelection) {
-                updateInput(selection);
+            IEditorPart activeEditor = getViewSite().getPage().getActiveEditor();
+            if (activeEditor == null) {
+                //if no workflow is opened
+                updateInput(NO_WORKFLOW_OPENED_MESSAGE);
             } else {
-                updateInput(StructuredSelection.EMPTY);
+                ISelection selection = activeEditor.getSite().getSelectionProvider().getSelection();
+                if (selection != null && selection instanceof IStructuredSelection) {
+                    updateInput(selection);
+                } else {
+                    updateInput(StructuredSelection.EMPTY);
+                }
             }
         });
     }
@@ -509,6 +529,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      * @param o
      */
     private void updateInput(final String message) {
+        m_recommendationsAvailable = true;
         Display.getDefault().syncExec(() -> {
             if (m_editor != null) {
                 Control oldEditor = m_editor.getEditor();
@@ -527,6 +548,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      */
     private void updateInputNoProvider() {
         updateInput("");
+        m_recommendationsAvailable = false;
 
         Display.getDefault().syncExec(() -> {
             //add configure hyperlink
