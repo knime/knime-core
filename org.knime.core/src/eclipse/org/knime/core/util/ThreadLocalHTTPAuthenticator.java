@@ -75,24 +75,37 @@ public class ThreadLocalHTTPAuthenticator extends Authenticator {
 
     private static final ThreadLocal<Boolean> SUPPRESS_POPUP = new ThreadLocal<>();
 
+    private static final Field DEFAULT_AUTHENTICATOR_FIELD;
+
+    static {
+        Field authField = null;
+        try {
+            for (Field f : Authenticator.class.getDeclaredFields()) {
+                if (f.getType().equals(Authenticator.class)) {
+                    f.setAccessible(true);
+                    authField = f;
+                }
+            }
+        } catch (SecurityException ex) {
+            NodeLogger.getLogger(ThreadLocalHTTPAuthenticator.class)
+                .error("Could not install HTTP authenticator: " + ex.getMessage(), ex);
+        }
+        DEFAULT_AUTHENTICATOR_FIELD = authField;
+    }
+
     /**
      * Install a thread local authenticator as the default authenticator. Calls will be delegated to any existing
      * authenticator.
      */
-    public static void installAuthenticator() {
-        for (final Field f : Authenticator.class.getDeclaredFields()) {
-            if (f.getType().equals(Authenticator.class)) {
-                f.setAccessible(true);
-                try {
-                    Authenticator delegate = (Authenticator)f.get(null);
-                    if ((delegate != null) && !(delegate instanceof ThreadLocalHTTPAuthenticator)) {
-                        Authenticator.setDefault(new ThreadLocalHTTPAuthenticator(delegate));
-                    }
-                } catch (Exception ex) {
-                    NodeLogger.getLogger(ThreadLocalHTTPAuthenticator.class)
-                        .warn("Could not install HTTP authenticator: " + ex.getMessage(), ex);
-                }
+    private static synchronized void installAuthenticator() {
+        try {
+            Authenticator delegate = (Authenticator)DEFAULT_AUTHENTICATOR_FIELD.get(null);
+            if ((delegate != null) && !(delegate instanceof ThreadLocalHTTPAuthenticator)) {
+                Authenticator.setDefault(new ThreadLocalHTTPAuthenticator(delegate));
             }
+        } catch (Exception ex) {
+            NodeLogger.getLogger(ThreadLocalHTTPAuthenticator.class)
+                .warn("Could not install HTTP authenticator: " + ex.getMessage(), ex);
         }
     }
 
@@ -117,6 +130,7 @@ public class ThreadLocalHTTPAuthenticator extends Authenticator {
      * @return a closeable that enables popups again (if there were any before)
      */
     public static AuthenticationCloseable suppressAuthenticationPopups() {
+        installAuthenticator();
         SUPPRESS_POPUP.set(Boolean.TRUE);
         return () -> SUPPRESS_POPUP.set(Boolean.FALSE);
     }
