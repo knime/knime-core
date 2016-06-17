@@ -81,12 +81,12 @@ public class SortItem extends JPanel {
     /*
      * Values for the JComboBox
      */
-    private final Vector<?> m_combovalues;
+    private final Vector<DataColumnSpec> m_combovalues;
 
     /*
      * The JComboBox
      */
-    private final JComboBox m_combo;
+    private final JComboBox<DataColumnSpec> m_combo;
 
     /*
      * Ascending
@@ -145,7 +145,7 @@ public class SortItem extends JPanel {
 
 
         super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        m_combo = new JComboBox(m_combovalues);
+        m_combo = new JComboBox<>(m_combovalues);
         ColumnComboBoxRenderer renderer =
             new ColumnComboBoxRenderer();
         renderer.attachTo(m_combo);
@@ -154,9 +154,7 @@ public class SortItem extends JPanel {
         m_combo.setMaximumSize(new Dimension(800, 30));
 
         JPanel comboPanel = new JPanel();
-        comboPanel.setLayout(new BoxLayout(comboPanel, BoxLayout.Y_AXIS));
         comboPanel.add(m_combo);
-        comboPanel.add(Box.createVerticalGlue());
 
 
         JPanel buttonPanel = new JPanel();
