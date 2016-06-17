@@ -61,22 +61,23 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
  */
 public class NumericScorerNodeDialog extends DefaultNodeSettingsPane {
 
-    private final NumericScorerSettings m_numericScorerSettings = new NumericScorerSettings();
+    private final NumericScorerSettings m_settings = new NumericScorerSettings();
+    private final NumericScorerDialogComponents m_components = new NumericScorerDialogComponents(m_settings);
 
     /**
      * New pane for configuring the NumericScorer node.
      */
     protected NumericScorerNodeDialog() {
-        addDialogComponent(m_numericScorerSettings.getReferenceComponent());
-        addDialogComponent(m_numericScorerSettings.getPredictionComponent());
+        addDialogComponent(m_components.getReferenceComponent());
+        addDialogComponent(m_components.getPredictionComponent());
         createNewGroup("Output column");
-        addDialogComponent(m_numericScorerSettings.getOverrideComponent());
-        addDialogComponent(m_numericScorerSettings.getOutputComponent());
+        addDialogComponent(m_components.getOverrideComponent());
+        addDialogComponent(m_components.getOutputComponent());
 
 
         createNewGroup("Provide scores as flow variables");
-        addDialogComponent(m_numericScorerSettings.getUseNamePrefixComponent());
-        addDialogComponent(m_numericScorerSettings.getFlowVarComponent());
+        addDialogComponent(m_components.getUseNamePrefixComponent());
+        addDialogComponent(m_components.getFlowVarComponent());
     }
 
     /**
@@ -85,6 +86,6 @@ public class NumericScorerNodeDialog extends DefaultNodeSettingsPane {
     @Override
     public void onOpen() {
         super.onOpen();
-        m_numericScorerSettings.onOpen();
+        m_settings.onOpen();
     }
 }

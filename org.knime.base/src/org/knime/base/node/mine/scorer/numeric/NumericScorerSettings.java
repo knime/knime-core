@@ -51,24 +51,17 @@ package org.knime.base.node.mine.scorer.numeric;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * This class holds the settings for numeric scorers like NumericScorerNodeModel.
  *
- * @author Ole Ostergaard
+ * @author Ole Ostergaard, KNIME.com
  * @since 3.2
  */
 public class NumericScorerSettings {
@@ -91,7 +84,7 @@ public class NumericScorerSettings {
      * The default string for the predicted
      */
     public static final String DEFAULT_PREDICTED = "";
-    
+
     /**
      * The default string for the reference
      */
@@ -104,15 +97,7 @@ public class NumericScorerSettings {
     private final SettingsModelBoolean m_flowVarModel = new SettingsModelBoolean("generate flow variables", false);
     private final SettingsModelString m_useNamePrefixModel = createFlowPrefixModel(m_flowVarModel);
 
-    private final DialogComponentColumnNameSelection m_referenceComponent = new DialogComponentColumnNameSelection(m_referenceModel, "Reference column",  0, DoubleValue.class);
-    private final DialogComponentColumnNameSelection m_predictionComponent = new DialogComponentColumnNameSelection(m_predictedModel, "Predicted column", 0, DoubleValue.class);
-    private final DialogComponentBoolean m_overrideComponent = new DialogComponentBoolean(m_overrideModel, "Change column name");
-    private final DialogComponentString m_outputComponent = new DialogComponentString(m_outputModel, "Output column name");
-    private final DialogComponentBoolean m_flowVarComponent = new DialogComponentBoolean(m_flowVarModel, "Output scores as flow variables");
-    private final DialogComponentString m_useNamePrefixComponent = new DialogComponentString(m_useNamePrefixModel, "Prefix of flow variables");
 
-    private final DialogComponent[] m_components = new DialogComponent[] {m_referenceComponent,
-        m_predictionComponent, m_overrideComponent, m_outputComponent, m_flowVarComponent, m_useNamePrefixComponent};
 
     /**
      * Constructor.
@@ -125,15 +110,6 @@ public class NumericScorerSettings {
             @Override
             public void stateChanged(final ChangeEvent e) {
                 m_outputModel.setEnabled(m_overrideModel.getBooleanValue());
-            }
-        });
-
-        m_predictionComponent.getModel().addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (!m_overrideModel.getBooleanValue()) {
-                    m_outputModel.setStringValue(m_predictedModel.getColumnName());
-                }
             }
         });
     }
@@ -160,7 +136,7 @@ public class NumericScorerSettings {
 
     /**
      * Returns whether flow variables should be pushed.
-     * 
+     *
      * @return whether the variables should be pushed as flow variables
      */
     public boolean doFlowVariables() {
@@ -169,7 +145,7 @@ public class NumericScorerSettings {
 
     /**
      * Get the flow variable prefix.
-     * 
+     *
      * @return the flow variable prefix
      */
     public String getFlowVariablePrefix() {
@@ -177,7 +153,7 @@ public class NumericScorerSettings {
     }
 
     /**
-     * 
+     *
      * @return whether the column name should be replaced.
      */
     public boolean doOverride() {
@@ -186,16 +162,25 @@ public class NumericScorerSettings {
 
     /**
      * Get the output column name.
-     * 
+     *
      * @return the output column name
      */
     public String getOutputColumnName() {
         return m_outputModel.getStringValue();
     }
-    
+
+    /**
+     * Set the output column name
+     *
+     * @param columnName the output column name to be set
+     */
+    public void setOutputColumnName(final String columnName) {
+        m_outputModel.setStringValue(columnName);
+    }
+
     /**
      * Get the prediction column name.
-     * 
+     *
      * @return the prediction column name
      */
     public String getPredictionColumnName() {
@@ -204,12 +189,13 @@ public class NumericScorerSettings {
 
     /**
      * Get the reference column name.
-     * 
+     *
      * @return the reference column name
      */
     public String getReferenceColumnName() {
         return m_referenceModel.getColumnName();
     }
+
 
     /**
      *  Perform on open action for the components
@@ -226,7 +212,7 @@ public class NumericScorerSettings {
 
     /**
      * Saves all the setting models to the given {@link NodeSettingsWO}.
-     * 
+     *
      * @param settings the {@link NodeSettingsWO} to write to
      */
     public void saveSettingsTo(final NodeSettingsWO settings){
@@ -239,24 +225,11 @@ public class NumericScorerSettings {
         m_flowVarModel.saveSettingsTo(settings);
     }
 
-    /**
-     * Loads all the dialog component settings from the given {@link NodeSettingsRO} and {@link PortObjectSpec}s.
-     * 
-     * @param settings the {@link NodeSettingsRO} to read from
-     * @param specs input {@link PortObjectSpec}
-     * @throws NotConfigurableException if the settings are invalid
-     *
-     */
-    public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-        throws NotConfigurableException {
-        for (DialogComponent c : m_components) {
-            c.loadSettingsFrom(settings, specs);
-        }
-    }
+
 
     /**
      * Loads all the setting models from from the given {@link NodeSettingsRO}.
-     * 
+     *
      * @param settings the {@link NodeSettingsRO} to read from
      * @throws InvalidSettingsException if the settings are invalid
      */
@@ -278,7 +251,7 @@ public class NumericScorerSettings {
 
     /**
      * Validates all the setting models from the given {@link NodeSettingsRO}.
-     * 
+     *
      * @param settings the {@link NodeSettingsRO} to read from
      * @throws InvalidSettingsException if the settings are invalid
      */
@@ -301,7 +274,7 @@ public class NumericScorerSettings {
 
     /**
      * Get the reference settings model.
-     * 
+     *
      * @return the referenceModel
      */
     public SettingsModelColumnName getReferenceModel() {
@@ -310,7 +283,7 @@ public class NumericScorerSettings {
 
     /**
      * Get the predicted settings model.
-     * 
+     *
      * @return the predictedModel
      */
     public SettingsModelColumnName getPredictedModel() {
@@ -319,7 +292,7 @@ public class NumericScorerSettings {
 
     /**
      * Get the override settings model.
-     * 
+     *
      * @return the overrideModel
      */
     public SettingsModelBoolean getOverrideModel() {
@@ -328,7 +301,7 @@ public class NumericScorerSettings {
 
     /**
      * Get the output settings model.
-     * 
+     *
      * @return the outputModel
      */
     public SettingsModelString getOutputModel() {
@@ -337,7 +310,7 @@ public class NumericScorerSettings {
 
     /**
      * Get the flow variable settings model.
-     * 
+     *
      * @return the flowVarModel
      */
     public SettingsModelBoolean getFlowVarModel() {
@@ -346,64 +319,11 @@ public class NumericScorerSettings {
 
     /**
      * get the name prefix settings model.
-     * 
+     *
      * @return the useNamePrefixModel
      */
     public SettingsModelString getUseNamePrefixModel() {
         return m_useNamePrefixModel;
     }
 
-    /**
-     * Get the reference dialog component.
-     * 
-     * @return the referenceComponent
-     */
-    public DialogComponentColumnNameSelection getReferenceComponent() {
-        return m_referenceComponent;
-    }
-
-    /**
-     * Get the prediction dialog component.
-     * 
-     * @return the predictionComponent
-     */
-    public DialogComponentColumnNameSelection getPredictionComponent() {
-        return m_predictionComponent;
-    }
-
-    /**
-     * Get the override dialog component.
-     * 
-     * @return the overrideComponent
-     */
-    public DialogComponentBoolean getOverrideComponent() {
-        return m_overrideComponent;
-    }
-
-    /**
-     * Get the output dialog component.
-     * 
-     * @return the outputComponent
-     */
-    public DialogComponentString getOutputComponent() {
-        return m_outputComponent;
-    }
-
-    /**
-     * Get the flow variable dialog component.
-     * 
-     * @return the flowVarComponent
-     */
-    public DialogComponentBoolean getFlowVarComponent() {
-        return m_flowVarComponent;
-    }
-
-    /**
-     * Get the name prefix dialog component.
-     * 
-     * @return the useNamePrefixComponent
-     */
-    public DialogComponentString getUseNamePrefixComponent() {
-        return m_useNamePrefixComponent;
-    }
 }
