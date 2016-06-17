@@ -84,32 +84,39 @@ public final class StringHistory {
     private static final Hashtable<String, StringHistory> INSTANCES =
         new Hashtable<String, StringHistory>();
 
-    /** Get a history for an ID. If that ID doesn't yet exist, a new
-     * object is created.
+    /** Get a history for an ID. If that ID doesn't yet exist, a new (empty) history is created.
+     *
      * @param id The ID of interest
-     * @return The History for this id. If this id has been used in a
-     *         previous run, the history is loaded from file
+     * @return The history for this id. If this id has been used previously, the history is loaded from file.
      */
     public static synchronized StringHistory getInstance(final String id) {
-        StringHistory value = INSTANCES.get(id);
-        if (value == null) {
-            value = new StringHistory(8, id);
-            INSTANCES.put(id, value);
-        }
-        return value;
+        return getInstance(id, 8);
     }
 
-    private final int m_maxLength;
+    /**
+     * Get a history for an ID. If that ID doesn't yet exist, a new (empty) history is created.
+     *
+     * @param id The ID of interest
+     * @param maxEntries maximal number of entries in the history
+     * @return The history for this id. If this id has been used previously, the history is loaded from file.
+     * @since 3.2
+     */
+    public static synchronized StringHistory getInstance(final String id, final int maxEntries) {
+        return INSTANCES.computeIfAbsent(id, k -> new StringHistory(maxEntries, id));
+    }
+
+    private final int m_maxEntries;
     private final File m_historyFile;
     private final LinkedList<String> m_list;
 
     /**
-     * private constructor.
-     * @param maxLength The length of the history
-     * @param id The id
+     * Creates a new string history.
+     *
+     * @param maxEntries The maxium number of entries in the history
+     * @param id The history's id
      */
-    private StringHistory(final int maxLength, final String id) {
-        m_maxLength = maxLength;
+    private StringHistory(final int maxEntries, final String id) {
+        m_maxEntries = maxEntries;
         String file = KNIMEConstants.getKNIMEHomeDir() + File.separator
             + "history_" + id + ".txt";
         m_historyFile = new File(file);
@@ -131,7 +138,7 @@ public final class StringHistory {
         if (index >= 0) {
             m_list.remove(index);
         } else {
-            if (m_list.size() >= m_maxLength) {
+            if (m_list.size() >= m_maxEntries) {
                 m_list.removeLast();
             }
         }
@@ -165,7 +172,7 @@ public final class StringHistory {
                 new BufferedReader(new FileReader(m_historyFile));
             String hist = null;
             while ((hist = reader.readLine()) != null
-                    && m_list.size() < m_maxLength) {
+                    && m_list.size() < m_maxEntries) {
                 m_list.add(hist);
             }
             reader.close();
