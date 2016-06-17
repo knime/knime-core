@@ -6,6 +6,33 @@
         <string>Knime</string>
     <key>CFBundleDisplayName</key>
         <string>KNIME</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>Knime.icns</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSIsAppleDefaultForType</key>
+			<string>Yes</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.knime.knar</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeIconFile</key>
+			<string>Knime.icns</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSIsAppleDefaultForType</key>
+			<string>Yes</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>org.knime.knwf</string>
+			</array>
+		</dict>
+	</array>
     <key>CFBundleGetInfoString</key>
         <string>KNIME 3.2.0</string>
     <key>CFBundleIconFile</key>
@@ -30,6 +57,43 @@
         <string>en</string>
     <key>NSHumanReadableCopyright</key>
         <string>Copyright by KNIME GmbH, Konstanz, Germany. All rights reserved.</string>       
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>KNIME Archive File</string>
+			<key>UTTypeIdentifier</key>
+			<string>org.knime.knar</string>
+			<key>UTTypeIconFile</key>
+			<string>Knime.icns</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<string>knar</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>KNIME Workflow File</string>
+			<key>UTTypeIdentifier</key>
+			<string>org.knime.knwf</string>
+			<key>UTTypeIconFile</key>
+			<string>Knime.icns</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<string>knwf</string>
+			</dict>
+		</dict>
+	</array>
     <key>Eclipse</key>
         <array>
             <string>-keyring</string>
