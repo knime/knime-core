@@ -301,6 +301,13 @@
             path="/">
       </category>
       <category
+            description="PMML Processing Nodes (Labs)"
+            icon="icons/missing.gif"
+            level-id="labspmml"
+            name="PMML"
+            path="/labs">
+      </category>
+      <category
             after="toolintegration"
             description="Nodes provided by the KNIME community"
             icon="icons/16x16/category_community_nodes.png"
