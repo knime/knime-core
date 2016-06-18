@@ -90,6 +90,17 @@
       </action>
    </extension>
    <extension
+         point="org.eclipse.equinox.p2.engine.actions">
+      <action
+            class="org.knime.product.p2.actions.ExtractTarGz"
+            description="Extracts a tar.gz/tar.bzip2/tar archive into a given folder"
+            name="untar"
+            touchpointType="org.eclipse.equinox.p2.osgi"
+            touchpointVersion="1.0.0"
+            version="1.0.0">
+      </action>
+   </extension>
+   <extension
          point="org.eclipse.e4.ui.css.swt.theme">
       <theme
             basestylesheeturi="css/knime.css"
