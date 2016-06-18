@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
@@ -61,6 +62,7 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -88,26 +90,17 @@ public class ExtractTarGz extends ProvisioningAction {
     @Override
     public IStatus execute(final Map<String, Object> parameters) {
         try {
-            String source = (String)parameters.get(SOURCE_ARCHIVE);
-            if (source == null) {
-                return new Status(IStatus.ERROR, bundle.getSymbolicName(),
-                    String.format("No '%s' attribute specified", SOURCE_ARCHIVE));
-            }
-            logger.log(new Status(IStatus.INFO, bundle.getSymbolicName(), "Source file: " + source));
+            String source = readParameter(parameters, SOURCE_ARCHIVE);
+            String targetDir = readParameter(parameters, TARGET_DIR);
 
-            String targetDir = (String)parameters.get(TARGET_DIR);
-            if (targetDir == null) {
-                return new Status(IStatus.ERROR, bundle.getSymbolicName(),
-                    String.format("No '%s' attribute specified", TARGET_DIR));
-            }
-            logger.log(new Status(IStatus.INFO, bundle.getSymbolicName(), "Target directory: " + targetDir));
-
-            IProfile profile = (IProfile) parameters.get("profile");
-            File installFolder = new File(profile.getProperty(IProfile.PROP_INSTALL_FOLDER));
-            File destDir = new File(installFolder, targetDir);
-            if (destDir.exists()) {
-                return new Status(IStatus.ERROR, bundle.getSymbolicName(),
-                    String.format("Target directory '%s' already exists", targetDir));
+            File destDir;
+            Path targetDirPath = Paths.get(targetDir);
+            if (targetDirPath.isAbsolute()) { // targetDir is absolute path or contains @artifact
+                destDir = targetDirPath.toFile();
+            } else { // targetDir is something like '.'
+                IProfile profile = (IProfile) parameters.get("profile");
+                File installFolder = new File(profile.getProperty(IProfile.PROP_INSTALL_FOLDER));
+                destDir = new File(installFolder, targetDir);
             }
 
             URL url = new URL(source);
@@ -131,7 +124,40 @@ public class ExtractTarGz extends ProvisioningAction {
         }
     }
 
-    private static void untar(final InputStream in, final File destDir) throws IOException {
+    /**
+     * @param parameters
+     * @param s
+     * @return
+     * @throws CoreException
+     */
+    private static String readParameter(final Map<String, Object> parameters, final String s) throws CoreException {
+        String result = (String)parameters.get(s);
+        if (result == null) {
+            throw new CoreException(new Status(IStatus.ERROR, bundle.getSymbolicName(),
+                String.format("No '%s' attribute specified", s)));
+        }
+        logger.log(new Status(IStatus.INFO, bundle.getSymbolicName(), "s: " + result));
+        return resolveArtifactParam(result, parameters);
+    }
+
+    /** Resolves artifact key in argument. Inspired by org.eclipse.equinox.internal.p2.touchpoint.eclipse.Util.
+     * @param argument The string to 'fix'.
+     * @param parameters parameter map.
+     * @return the fixed argument string (unmodified if it does not contain the artifact keyword). */
+    private static String resolveArtifactParam(final String argument,
+        final Map<String, Object> parameters) throws CoreException {
+        if (StringUtils.contains(argument, "@artifact")) {
+            String artifactLocation = (String) parameters.get("artifact.location");
+            if (artifactLocation != null) {
+                return StringUtils.replace(argument, "@artifact", artifactLocation);
+            }
+            throw new CoreException(new Status(
+                IStatus.ERROR, bundle.getSymbolicName(), "Unable to resolve @artifact location"));
+        }
+        return argument;
+    }
+
+        private static void untar(final InputStream in, final File destDir) throws IOException {
         try (TarArchiveInputStream tarInS = new TarArchiveInputStream(in)) {
             TarArchiveEntry entry;
             while ((entry = tarInS.getNextTarEntry()) != null) {
@@ -150,7 +176,7 @@ public class ExtractTarGz extends ProvisioningAction {
         }
     }
 
-    private static void chmod(final File file, final int mode) {
+        private static void chmod(final File file, final int mode) {
         file.setExecutable((mode & 0111) != 0, (mode & 0110) == 0);
         file.setWritable((mode & 0222) != 0, (mode & 0220) == 0);
         file.setReadable((mode & 0444) != 0, (mode & 0440) == 0);
