@@ -44,12 +44,10 @@
  */
 package org.knime.product.p2.actions;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,6 +67,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.equinox.p2.engine.IProfile;
 import org.eclipse.equinox.p2.engine.spi.ProvisioningAction;
+import org.knime.core.util.FileUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -103,9 +102,8 @@ public class ExtractTarGz extends ProvisioningAction {
                 destDir = new File(installFolder, targetDir);
             }
 
-            URL url = new URL(source);
-            InputStream in;
-            try (InputStream fileInputStream = new BufferedInputStream(url.openStream())) {
+            try (InputStream fileInputStream = FileUtil.openInputStream(source)) {
+                InputStream in;
                 if (StringUtils.endsWithIgnoreCase(source, ".tar.gz")
                         || StringUtils.endsWithIgnoreCase(source, ".tgz")) {
                     in = new GzipCompressorInputStream(fileInputStream);
