@@ -155,14 +155,14 @@ public class ExtractTarGz extends ProvisioningAction {
         return argument;
     }
 
-        private static void untar(final InputStream in, final File destDir) throws IOException {
+    private static void untar(final InputStream in, final File destDir) throws IOException {
         try (TarArchiveInputStream tarInS = new TarArchiveInputStream(in)) {
             TarArchiveEntry entry;
             while ((entry = tarInS.getNextTarEntry()) != null) {
                 String name = entry.getName();
                 File destFile = new File(destDir, name);
                 if (entry.isSymbolicLink()) {
-                    Files.createSymbolicLink(destFile.toPath(), Paths.get(name));
+                    Files.createSymbolicLink(destFile.toPath(), Paths.get(entry.getLinkName()));
                 } else if (entry.isDirectory()) {
                     destFile.mkdirs();
                     chmod(destFile, entry.getMode());
@@ -177,14 +177,22 @@ public class ExtractTarGz extends ProvisioningAction {
         }
     }
 
-        private static void chmod(final File file, final int mode) {
-        file.setExecutable((mode & 0111) != 0, (mode & 0110) == 0);
-        file.setWritable((mode & 0222) != 0, (mode & 0220) == 0);
-        file.setReadable((mode & 0444) != 0, (mode & 0440) == 0);
+    /** Set permission oa file according to unix file permission flags:
+     * http://www.unix.com/tips-and-tutorials/19060-unix-file-permissions.html
+     * @param file the file to change
+     * @param mode the mode as per tar entry
+     */
+    private static void chmod(final File file, final int mode) {
+        // java doesn't give us full control over permissions (e.g. no group)
+        // the below will fail also for, e.g. -rw-???r-x ... but that seems artificial anyway
+        file.setExecutable((mode & 0100) != 0, (mode & 0001) == 0);
+        file.setWritable((mode & 0200) != 0, (mode & 0002) == 0);
+        file.setReadable((mode & 0400) != 0, (mode & 0004) == 0);
     }
 
     @Override
     public IStatus undo(final Map<String, Object> parameters) {
         return Status.OK_STATUS;
     }
+
 }
