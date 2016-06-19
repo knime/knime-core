@@ -163,6 +163,9 @@ public class ExtractTarGz extends ProvisioningAction {
                 File destFile = new File(destDir, name);
                 if (entry.isSymbolicLink()) {
                     Files.createSymbolicLink(destFile.toPath(), Paths.get(name));
+                } else if (entry.isDirectory()) {
+                    destFile.mkdirs();
+                    chmod(destFile, entry.getMode());
                 } else {
                     try (FileOutputStream out = new FileOutputStream(destFile)) {
                         long size = entry.getSize();
