@@ -386,9 +386,8 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
      */
     private JavaFileObject createJSnippetFile() throws IOException {
         m_snippetFile = new File(m_tempClassPathDir, "JSnippet.java");
-        FileOutputStream fos = new FileOutputStream(m_snippetFile);
-        OutputStreamWriter out = new OutputStreamWriter(fos, Charset.forName("UTF-8"));
-        try {
+        final Charset utf8Charset = Charset.forName("UTF-8");
+        try (OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(m_snippetFile), utf8Charset);) {
             try {
                 Document doc = getDocument();
                 out.write(doc.getText(0, doc.getLength()));
@@ -396,12 +395,9 @@ public final class JavaSnippet implements JSnippet<JavaSnippetTemplate> {
                 // this should never happen.
                 throw new IllegalStateException(e);
             }
-        } finally {
-            out.close();
         }
 
-        return new EclipseFileObject("JSnippet", m_snippetFile.toURI(),
-                Kind.SOURCE, Charset.defaultCharset());
+        return new EclipseFileObject("JSnippet", m_snippetFile.toURI(), Kind.SOURCE, utf8Charset);
     }
 
 
