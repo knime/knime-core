@@ -62,7 +62,6 @@ import org.knime.base.node.rules.engine.RuleNodeSettings;
 import org.knime.base.node.rules.engine.RuleSupport;
 import org.knime.base.node.rules.engine.Util;
 import org.knime.base.node.rules.engine.VariableProvider;
-import org.knime.base.node.rules.engine.totable.RuleSetToTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -188,7 +187,7 @@ class RuleEngineVariable2PortsNodeModel extends NodeModel implements FlowVariabl
             if (outcomeIdx >= 0) {
                 String outcomeString;
                 try {
-                    outcomeString = RuleSetToTable.toStringFailForMissing(ruleRow.getCell(outcomeIdx));
+                    outcomeString = settings.asStringFailForMissing(ruleRow.getCell(outcomeIdx));
                 } catch (InvalidSettingsException e) {
                     if (RuleSupport.isComment(rule)) {
                         outcomeString = "?";

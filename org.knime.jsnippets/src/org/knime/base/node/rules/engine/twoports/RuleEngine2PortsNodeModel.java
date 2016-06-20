@@ -37,7 +37,6 @@ import org.knime.base.node.rules.engine.VariableProvider;
 import org.knime.base.node.rules.engine.pmml.PMMLRuleParser;
 import org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeModel;
 import org.knime.base.node.rules.engine.pmml.PMMLRuleTranslator;
-import org.knime.base.node.rules.engine.totable.RuleSetToTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -291,7 +290,7 @@ public class RuleEngine2PortsNodeModel extends NodeModel implements FlowVariable
                 String ruleText = sv.getStringValue();
                 if (outcomeIdx >= 0) {
                     try {
-                        ruleText += " => " + RuleSetToTable.toStringFailForMissing(ruleRow.getCell(outcomeIdx));
+                        ruleText += " => " + m_settings.asStringFailForMissing(ruleRow.getCell(outcomeIdx));
                     } catch (InvalidSettingsException e) {
                         if (RuleSupport.isComment(ruleText)) {
                             ruleText += " => ?";
@@ -396,7 +395,7 @@ public class RuleEngine2PortsNodeModel extends NodeModel implements FlowVariable
                     continue;
                 }
                 if (outcomeIdx >= 0) {
-                    r += " => " + RuleSetToTable.toStringFailForMissing(ruleRow.getCell(outcomeIdx));
+                    r += " => " + m_settings.asStringFailForMissing(ruleRow.getCell(outcomeIdx));
                 }
                 ParseState state = new ParseState(r);
                 try {
@@ -963,5 +962,4 @@ public class RuleEngine2PortsNodeModel extends NodeModel implements FlowVariable
             }
         }
     }
-
 }

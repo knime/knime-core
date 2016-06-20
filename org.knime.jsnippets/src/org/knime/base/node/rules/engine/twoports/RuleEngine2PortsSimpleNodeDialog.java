@@ -53,12 +53,12 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -77,7 +77,6 @@ import org.knime.base.node.rules.engine.Rule;
 import org.knime.base.node.rules.engine.RuleEngineNodeModel;
 import org.knime.base.node.rules.engine.RuleFactory;
 import org.knime.base.node.rules.engine.RuleNodeSettings;
-import org.knime.base.node.rules.engine.totable.RuleSetToTable;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -112,6 +111,8 @@ abstract class RuleEngine2PortsSimpleNodeDialog extends DataAwareNodeDialogPane 
 
     /** The optional outcome column selector. */
     protected final ColumnSelectionPanel m_outcomeColumn;
+
+    protected final JCheckBox m_treatOutcomesWithDollarAsReferences = new JCheckBox("Treat values starting with $ as references");
 
     /** The computed outcome type label. */
     protected final JLabel m_outcomeType = new JLabel(DataType.getMissingCell().getType().getIcon());
@@ -174,14 +175,10 @@ abstract class RuleEngine2PortsSimpleNodeDialog extends DataAwareNodeDialogPane 
         }
         m_outcomeColumn = new ColumnSelectionPanel((Border)null, new DataValueColumnFilter(types), true);
         addTab("Settings", createSettingsPanel(ruleType));
-        m_updateErrorsAndWarnings = new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                updateErrorsAndWarnings();
-            }
-        };
+        m_updateErrorsAndWarnings = e -> updateErrorsAndWarnings();
         m_ruleColumn.addActionListener(m_updateErrorsAndWarnings);
         m_outcomeColumn.addActionListener(m_updateErrorsAndWarnings);
+        m_outcomeColumn.addActionListener(e -> m_treatOutcomesWithDollarAsReferences.setEnabled(m_outcomeColumn.getSelectedColumn() != null));
     }
 
     /**
@@ -228,6 +225,9 @@ abstract class RuleEngine2PortsSimpleNodeDialog extends DataAwareNodeDialogPane 
         gbc.weightx = 0;
         gbc.gridx++;
         panel.add(m_outcomeType, gbc);
+        gbc.gridy++;
+        gbc.gridx--;
+        panel.add(m_treatOutcomesWithDollarAsReferences, gbc);
         gbc.gridx = 0;
         gbc.gridy++;
         gbc.gridwidth = 1;
@@ -288,6 +288,7 @@ abstract class RuleEngine2PortsSimpleNodeDialog extends DataAwareNodeDialogPane 
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         getSettings().setRuleColumn(m_ruleColumn.getSelectedColumn());
         getSettings().setOutcomeColumn(m_outcomeColumn.getSelectedColumn());
+        getSettings().setTreatOutcomesAsReferences(m_treatOutcomesWithDollarAsReferences.isSelected());
         getSettings().saveSettings(settings);
     }
 
@@ -303,6 +304,7 @@ abstract class RuleEngine2PortsSimpleNodeDialog extends DataAwareNodeDialogPane 
         getSettings().loadSettingsDialog(settings, inSpec, secondSpec);
         m_ruleColumn.update(secondSpec, getSettings().getRuleColumn());
         m_outcomeColumn.update(secondSpec, getSettings().getOutcomeColumn());
+        m_treatOutcomesWithDollarAsReferences.setSelected(getSettings().isTreatOutcomesAsReferences());
         m_errorsModel.setRowCount(0);
         m_warnings.setText("");
         setEnabled();
@@ -367,7 +369,7 @@ abstract class RuleEngine2PortsSimpleNodeDialog extends DataAwareNodeDialogPane 
                         DataCell outcome = dataRow.getCell(outcomeIdx);
                         String outcomeString;
                         try {
-                            outcomeString = RuleSetToTable.toStringFailForMissing(outcome);
+                            outcomeString = m_settings.asStringFailForMissing(outcome);
                         } catch (InvalidSettingsException e) {
                             outcomeString = "?";
                         }

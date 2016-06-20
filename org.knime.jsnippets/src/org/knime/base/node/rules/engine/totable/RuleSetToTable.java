@@ -340,7 +340,11 @@ public class RuleSetToTable {
      * @param cell A {@link DataCell}.
      * @return The value of {@code cell} as a {@link String}, properly escaped.
      * @throws InvalidSettingsException Missing cells are not supported.
+     * @deprecated No longer used.
+     * @see org.knime.base.node.rules.engine.twoports.RuleEngine2PortsSimpleSettings#asStringFailForMissing(DataCell)
      */
+    @SuppressWarnings("javadoc")
+    @Deprecated
     public static String toStringFailForMissing(final DataCell cell) throws InvalidSettingsException {
         if (cell.isMissing()) {
             throw new InvalidSettingsException("Missing cell");
