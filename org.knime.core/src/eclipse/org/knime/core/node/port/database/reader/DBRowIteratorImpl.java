@@ -134,6 +134,19 @@ public class DBRowIteratorImpl extends RowIterator {
      */
     protected DBRowIteratorImpl(final DataTableSpec spec, final DatabaseConnectionSettings conn,
         final BinaryObjectCellFactory blobFactory, final ResultSet result, final boolean useDbRowId) {
+        this(spec, conn, blobFactory, result, useDbRowId, 0);
+    }
+
+    /**
+     * @param spec {@link DataTableSpec}
+     * @param conn {@link DatabaseConnectionSettings}
+     * @param blobFactory {@link BinaryObjectCellFactory}
+     * @param result {@link ResultSet}
+     * @param useDbRowId <code>true</code> if the db row id should be used
+     * @since 3.2
+     */
+    protected DBRowIteratorImpl(final DataTableSpec spec, final DatabaseConnectionSettings conn,
+        final BinaryObjectCellFactory blobFactory, final ResultSet result, final boolean useDbRowId, final long startRowId) {
         m_spec = spec;
         m_conn = conn;
         m_blobFactory = blobFactory;
@@ -141,6 +154,7 @@ public class DBRowIteratorImpl extends RowIterator {
         m_streamException = new boolean[m_spec.getNumColumns()];
         m_rowIdsStartWithZero = m_conn.getRowIdsStartWithZero();
         m_useDbRowId = useDbRowId;
+        m_rowCounter = startRowId;
     }
 
     /**

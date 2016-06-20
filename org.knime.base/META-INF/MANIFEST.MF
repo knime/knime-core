@@ -278,6 +278,7 @@ Require-Bundle: org.knime.core;bundle-version="[3.2.0,4.0.0)";visibility:=reexpo
  org.apache.commons.lang;bundle-version="[2.6.0,2.7.0)",
  org.apache.commons.math3;bundle-version="[3.2.0,4.0.0)",
  javax.mail.glassfish;bundle-version="[1.4.1,2.0.0)",
- org.knime.workbench.repository
+ org.knime.workbench.repository,
+ com.fifesoft.rsyntaxtextarea;bundle-version="2.5.8"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-BuddyPolicy: dependent

@@ -48,31 +48,32 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
+import java.util.Arrays;
+import java.util.TimeZone;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.blob.BinaryObjectCellFactory;
-import org.knime.core.data.blob.BinaryObjectDataCell;
-import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.date.DateAndTimeCell;
-import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
-import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.JoinedRow;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -80,9 +81,12 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.DatabaseHelper;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
-import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.util.UniqueNameGenerator;
 
 /**
  * Creates a connection to read from database.
@@ -90,24 +94,21 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * @author Tobias Koetter, KNIME.com
  * @since 3.1
  */
-public class DBReaderImpl implements DBReader {
+public class DBReaderImpl extends DatabaseHelper implements DBReader {
 
     static final NodeLogger LOGGER =
             NodeLogger.getLogger(DBReaderImpl.class);
 
     DataTableSpec m_spec;
 
-    DatabaseQueryConnectionSettings m_conn;
+    private BufferedDataContainer m_errorContainer;
 
     /**
      * Creates a empty handle for a new connection.
      * @param conn a database connection object
      */
     public DBReaderImpl(final DatabaseQueryConnectionSettings conn) {
-        if (conn == null) {
-            throw new NullPointerException("conn must not be null");
-        }
-        m_conn = conn;
+        super(conn);
         m_spec = null;
     }
 
@@ -116,7 +117,7 @@ public class DBReaderImpl implements DBReader {
      */
     @Override
     public DatabaseQueryConnectionSettings getQueryConnection() {
-        return m_conn;
+        return (DatabaseQueryConnectionSettings) getDatabaseConnectionSettings();
     }
 
     /**
@@ -124,7 +125,7 @@ public class DBReaderImpl implements DBReader {
      */
     @Override
     public void updateQuery(final String query) {
-        m_conn.setQuery(query);
+        getQueryConnection().setQuery(query);
     }
 
     /**
@@ -138,8 +139,9 @@ public class DBReaderImpl implements DBReader {
     public final DatabaseMetaData getDatabaseMetaData(
             final CredentialsProvider cp) throws SQLException {
         try {
-            final Connection conn = m_conn.createConnection(cp);
-            synchronized (m_conn.syncConnection(conn)) {
+            final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
+            final Connection conn = dbConn.createConnection(cp);
+            synchronized (dbConn.syncConnection(conn)) {
                 return conn.getMetaData();
             }
         } catch (SQLException sql) {
@@ -155,14 +157,14 @@ public class DBReaderImpl implements DBReader {
      * @throws SQLException if the connection to the database or the statement could not be created
      */
     private Statement initStatement(final CredentialsProvider cp, final Connection conn) throws SQLException {
-        synchronized (m_conn.syncConnection(conn)) {
+        synchronized (getQueryConnection().syncConnection(conn)) {
             return conn.createStatement();
         }
     }
 
     private Connection initConnection(final CredentialsProvider cp) throws SQLException {
         try {
-            return m_conn.createConnection(cp);
+            return getQueryConnection().createConnection(cp);
         } catch (Exception e) {
             throw new SQLException(e);
         }
@@ -184,8 +186,9 @@ public class DBReaderImpl implements DBReader {
         }
         // retrieve connection
         final Connection conn = initConnection(cp);
-        synchronized (m_conn.syncConnection(conn)) {
-            final String[] oQueries =  m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
+        final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
+        synchronized (dbConn.syncConnection(conn)) {
+            final String[] oQueries =  dbConn.getQuery().split(SQL_QUERY_SEPARATOR);
             final int selectIndex = oQueries.length - 1;
             if (oQueries[selectIndex].trim().endsWith(";")) {
                 oQueries[selectIndex] = oQueries[selectIndex].trim();
@@ -193,7 +196,7 @@ public class DBReaderImpl implements DBReader {
             }
 
             oQueries[selectIndex] =
-                m_conn.getUtility().getStatementManipulator().forMetadataOnly(oQueries[selectIndex]);
+                dbConn.getUtility().getStatementManipulator().forMetadataOnly(oQueries[selectIndex]);
             ResultSet result = null;
             final Statement stmt = initStatement(cp, conn);
             try {
@@ -240,7 +243,7 @@ public class DBReaderImpl implements DBReader {
     public BufferedDataTable createTable(final ExecutionContext exec, final CredentialsProvider cp,
         final boolean useDbRowId) throws CanceledExecutionException, SQLException {
         final Connection conn = initConnection(cp);
-        synchronized (m_conn.syncConnection(conn)) {
+        synchronized (getQueryConnection().syncConnection(conn)) {
             try (DBRowIterator ric = createRowIteratorConnection(conn, exec, cp, useDbRowId)) {
                 return exec.createBufferedDataTable(new DataTable() {
                     /** {@inheritDoc} */
@@ -292,8 +295,9 @@ public class DBReaderImpl implements DBReader {
         final Statement stmt = initStatement(cp, conn);
         int fetchsize =
             (DatabaseConnectionSettings.FETCH_SIZE != null) ? DatabaseConnectionSettings.FETCH_SIZE : -1;
-        m_conn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
-        final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
+        final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
+        dbConn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
+        final String[] oQueries = dbConn.getQuery().split(SQL_QUERY_SEPARATOR);
         // execute all except the last query
         for (int i = 0; i < oQueries.length - 1; i++) {
             LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
@@ -305,7 +309,7 @@ public class DBReaderImpl implements DBReader {
         LOGGER.debug("Reading meta data from database ResultSet...");
         m_spec = createTableSpec(result.getMetaData());
         LOGGER.debug("Parsing database ResultSet...");
-        final RowIterator iterator = createDBRowIterator(m_spec, m_conn, m_blobFactory, useDbRowId, result);
+        final RowIterator iterator = createDBRowIterator(m_spec, dbConn, m_blobFactory, useDbRowId, result);
         return new RowIteratorConnection(conn, stmt, m_spec, iterator);
     }
 
@@ -324,16 +328,17 @@ public class DBReaderImpl implements DBReader {
         }
         // retrieve connection
         final Connection conn = initConnection(cp);
-        synchronized (m_conn.syncConnection(conn)) {
+        final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
+        synchronized (dbConn.syncConnection(conn)) {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             final Statement stmt = initStatement(cp, conn);
             try {
-                final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
+                final String[] oQueries = dbConn.getQuery().split(SQL_QUERY_SEPARATOR);
                 if (cachedNoRows < 0) {
                     int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null)
                         ? DatabaseConnectionSettings.FETCH_SIZE : -1;
-                    m_conn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
+                    dbConn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
                 } else {
                     final int hashAlias = System.identityHashCode(this);
                     final int selectIdx = oQueries.length - 1;
@@ -363,7 +368,7 @@ public class DBReaderImpl implements DBReader {
                 m_spec = createTableSpec(result.getMetaData());
                 LOGGER.debug("Parsing database ResultSet...");
 //                final DBRowIterator dbIt = createRowIterator(useDbRowId, result);
-                final RowIterator it = createDBRowIterator(m_spec, m_conn, m_blobFactory, useDbRowId, result);
+                final RowIterator it = createDBRowIterator(m_spec, dbConn, m_blobFactory, useDbRowId, result);
                 DataContainer buf = new DataContainer(m_spec);
                 while (it.hasNext()) {
                     buf.addRowToTable(it.next());
@@ -385,89 +390,202 @@ public class DBReaderImpl implements DBReader {
     @SuppressWarnings("javadoc")
     protected RowIterator createDBRowIterator(final DataTableSpec spec, final DatabaseQueryConnectionSettings conn,
         final BinaryObjectCellFactory blobFactory, final boolean useDbRowId, final ResultSet result) throws SQLException {
-        return new DBRowIteratorImpl(spec, conn, blobFactory, result, useDbRowId);
-    }
-
-    protected DataTableSpec createTableSpec(final ResultSetMetaData meta)
-            throws SQLException {
-        int cols = meta.getColumnCount();
-        if (cols == 0) {
-            return new DataTableSpec("database");
-        }
-        StatementManipulator manipulator = m_conn.getUtility().getStatementManipulator();
-        DataTableSpec spec = null;
-        for (int i = 0; i < cols; i++) {
-            int dbIdx = i + 1;
-            String name =  manipulator.unquoteColumn(meta.getColumnLabel(dbIdx));
-            int type = meta.getColumnType(dbIdx);
-            DataType newType = getKNIMEType(type, meta, dbIdx);
-            if (spec == null) {
-                spec = new DataTableSpec("database",
-                        new DataColumnSpecCreator(name, newType).createSpec());
-            } else {
-                name = DataTableSpec.getUniqueColumnName(spec, name);
-                spec = new DataTableSpec("database", spec,
-                       new DataTableSpec(new DataColumnSpecCreator(
-                               name, newType).createSpec()));
-            }
-        }
-        return spec;
+        return createDBRowIterator(spec, conn, blobFactory, useDbRowId, result, 0);
     }
 
     /**
-     * @param type
-     * @param dbIdx
-     * @param meta
-     * @return the KNIME {@link DataType}
-     * @throws SQLException
+     * @since 3.2
      */
-    protected DataType getKNIMEType(final int type, final ResultSetMetaData meta, final int dbIdx) throws SQLException {
-        DataType newType;
-        switch (type) {
-            // all types that can be interpreted as integer
-            case Types.BIT:
-            case Types.BOOLEAN:
-                newType = BooleanCell.TYPE;
-                break;
-            // all types that can be interpreted as integer
-            case Types.TINYINT:
-            case Types.SMALLINT:
-            case Types.INTEGER:
-                newType = IntCell.TYPE;
-                break;
-             // all types that can be interpreted as long
-            case Types.BIGINT:
-                newType = LongCell.TYPE;
-                break;
-            // all types that can be interpreted as double
-            case Types.FLOAT:
-            case Types.DOUBLE:
-            case Types.NUMERIC:
-            case Types.DECIMAL:
-            case Types.REAL:
-                newType = DoubleCell.TYPE;
-                break;
-            // all types that can be interpreted as data-and-time
-            case Types.TIME:
-            case Types.DATE:
-            case Types.TIMESTAMP:
-                newType = DateAndTimeCell.TYPE;
-                break;
-            // all types that can be interpreted as binary object
-            case Types.BLOB:
-            case Types.LONGVARBINARY:
-            case Types.BINARY:
-                newType = BinaryObjectDataCell.TYPE;
-                break;
-            case Types.ARRAY:
-                //by default we convert the array elements to string and return a list cell with string cells
-                newType = ListCell.getCollectionType(StringCell.TYPE);
-                break;
-            // fallback string
-            default:
-                newType = StringCell.TYPE;
-        }
-        return newType;
+    @SuppressWarnings("javadoc")
+    protected RowIterator createDBRowIterator(final DataTableSpec spec, final DatabaseConnectionSettings conn,
+        final BinaryObjectCellFactory blobFactory, final boolean useDbRowId, final ResultSet result,
+        final long startCounter) throws SQLException {
+        return new DBRowIteratorImpl(spec, conn, blobFactory, result, useDbRowId, startCounter);
     }
 
+    /**
+     * @since 3.2
+     */
+    @SuppressWarnings("resource")
+    @Override
+    public BufferedDataTableRowOutput loopTable(final ExecutionContext exec, final CredentialsProvider cp,
+        final RowInput data, final long rowCount, final boolean failIfException, final boolean appendInputColumns,
+        final boolean includeEmptyResults, final boolean retainAllColumns, final String... columns) throws Exception {
+
+        if (m_blobFactory == null) {
+            m_blobFactory = new BinaryObjectCellFactory();
+        }
+
+        final DatabaseQueryConnectionSettings dbConn = getQueryConnection();
+        final Connection conn = getQueryConnection().createConnection(cp);
+        exec.setMessage("Waiting for free database connection...");
+        synchronized (dbConn.syncConnection(conn)) {
+
+            /* Get the selected timezone */
+            final TimeZone timezone = dbConn.getTimeZone();
+
+            /* Get the input table spec */
+            final DataTableSpec inSpec = data.getDataTableSpec();
+
+            /* Create PreparedStatement */
+            final String query = dbConn.getQuery();
+            LOGGER.debug("Executing SQL preparedStatement as execute: "
+                    + query);
+
+            /* Initialize the error table */
+            final UniqueNameGenerator errorGenerator = new UniqueNameGenerator(inSpec);
+            final DataColumnSpec errorColSpec = errorGenerator.newColumn(DEF_ERROR_COL_NAME, StringCell.TYPE);
+            final DataTableSpec errorSpec = new DataTableSpec(inSpec, new DataTableSpec(errorColSpec));
+            m_errorContainer = exec.createDataContainer(errorSpec);
+
+            DataTableSpec dbSpec = new DataTableSpec();
+            BufferedDataTableRowOutput output = null;
+
+            exec.setMessage("Start reading rows from database...");
+            try (final PreparedStatement stmt = conn.prepareStatement(query);) {
+
+                long inDataCounter = 1;
+                long rowIdCounter = 0;
+                DataRow row;
+                while((row = data.poll()) != null) {
+                    exec.checkCanceled();
+                    if(rowCount > 0) {
+                        exec.setProgress(1.0 * inDataCounter / rowCount,
+                            "Row " + "#" + inDataCounter + " of " + rowCount);
+                    }else {
+                        exec.setProgress("Writing Row " + "#" + inDataCounter);
+                    }
+
+                    final DataCell[] inCells = new DataCell[columns.length];
+                    for(int i = 0; i < columns.length; i++) {
+                        final int dbIdx = i + 1;
+                        final int colIdx = inSpec.findColumnIndex(columns[i]);
+                        final DataColumnSpec colSpec = inSpec.getColumnSpec(colIdx);
+                        inCells[i] = row.getCell(colIdx);
+                        fillStatement(stmt, dbIdx, colSpec, inCells[i], timezone, null);
+                    }
+                    try (final ResultSet result = stmt.executeQuery();) {
+
+                        /* In the first iteration, create the out DataTableSpec and BufferedDataTableRowOutput */
+                        if(output == null) {
+                            dbSpec = createTableSpec(result.getMetaData());
+                            if(appendInputColumns) {
+                                // Create out DataTableSpec for input table
+                                final DataTableSpec newInSpec;
+                                if(retainAllColumns) {
+                                    newInSpec = inSpec;
+                                } else {
+                                    final DataColumnSpec[] inColSpecs = new DataColumnSpec[columns.length];
+                                    for(int i = 0; i < inColSpecs.length; i++) {
+                                        inColSpecs[i] = inSpec.getColumnSpec(columns[i]);
+                                    }
+
+                                    newInSpec = new DataTableSpec(inColSpecs);
+                                }
+
+                                // Create DataTableSpec for database columns, rename if necessary
+                                final UniqueNameGenerator generator = new UniqueNameGenerator(newInSpec);
+                                final DataColumnSpec[] dbColSpecs = new DataColumnSpec[dbSpec.getNumColumns()];
+                                for(int i = 0; i < dbColSpecs.length; i++) {
+                                    final DataColumnSpec colSpec = dbSpec.getColumnSpec(i);
+                                    dbColSpecs[i] = generator.newColumn(colSpec.getName(), colSpec.getType());
+                                }
+
+                                dbSpec = new DataTableSpec(dbColSpecs);
+                                m_spec = new DataTableSpec(newInSpec, dbSpec);
+
+                            } else {
+                                m_spec = dbSpec;
+                            }
+
+                            output = new BufferedDataTableRowOutput(
+                                exec.createDataContainer(m_spec));
+                        }
+
+                        /* Iterate over the result of the database query and put it into the output table*/
+                        final RowIterator dbRowIterator = createDBRowIterator(
+                            dbSpec, dbConn, m_blobFactory, false, result, rowIdCounter);
+                        boolean hasDbRow = false;
+                        while (dbRowIterator.hasNext()) {
+                            hasDbRow = true;
+                            final DataRow dbRow = dbRowIterator.next();
+
+                            if(appendInputColumns) {
+                                final DataRow inRow;
+                                if(retainAllColumns) {
+                                    inRow = new DefaultRow(dbRow.getKey(), row);
+                                } else {
+                                    inRow = new DefaultRow(dbRow.getKey(), inCells);
+                                }
+                                final JoinedRow joinedRow = new JoinedRow(inRow, dbRow);
+                                output.push(joinedRow);
+                            } else {
+                                output.push(dbRow);
+                            }
+
+                            rowIdCounter++;
+                        }
+
+                        /* Append columns using MissingCell if no result is returned */
+                        if(!hasDbRow && appendInputColumns && includeEmptyResults) {
+                            final DataCell[] cells = new DataCell[dbSpec.getNumColumns()];
+                            Arrays.fill(cells, DataType.getMissingCell());
+                            final RowKey rowKey = RowKey.createRowKey(rowIdCounter);
+                            final DataRow emptyDbRows = new DefaultRow(rowKey, cells);
+                            final DataRow inRow;
+                            if(retainAllColumns) {
+                                inRow = new DefaultRow(rowKey, row);
+                            } else {
+                                inRow = new DefaultRow(rowKey, inCells);
+                            }
+
+                            final JoinedRow joinedRow = new JoinedRow(inRow, emptyDbRows);
+                            output.push(joinedRow);
+                            rowIdCounter++;
+                        }
+
+                        inDataCounter++;
+
+                    } catch(SQLException ex) {
+                        LOGGER.debug("SQLException: " + ex.getMessage());
+                        if(!failIfException) {
+                            if(output == null) {
+                                throw new SQLException(ex);
+                            }
+                            final AppendedColumnRow appendedRow = new AppendedColumnRow(row, new StringCell(ex.getMessage()));
+                            m_errorContainer.addRowToTable(appendedRow);
+                        } else {
+                            throw new SQLException(ex);
+                        }
+                    }
+                }
+
+            } finally {
+                data.close();
+                if(output == null) {
+                    output = new BufferedDataTableRowOutput(
+                        exec.createDataContainer(inSpec));
+                }
+                output.close();
+                if(m_errorContainer != null) {
+                    m_errorContainer.close();
+                }
+            }
+            return output;
+        }
+    }
+
+    /**
+     * @return {@link BufferedDataTable} containing error message.
+     * The method {@link #loopTable(ExecutionContext, CredentialsProvider, RowInput, long, boolean, boolean, boolean, boolean, String...) loopTable}
+     * must be called before using this method, otherwise it will throw {@link IllegalStateException}.
+     * @since 3.2
+     */
+    @Override
+    public BufferedDataTable getErrorDataTable(){
+        if(m_errorContainer != null) {
+            return m_errorContainer.getTable();
+        }
+        throw new IllegalStateException("The method \"loopTable\" must be called before using this method.");
+    }
 }

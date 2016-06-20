@@ -65,6 +65,26 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/reader/DBReader.java" type="org.knime.core.node.port.database.reader.DBReader">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.reader.DBReader"/>
+                <message_argument value="DEF_ERROR_COL_NAME"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Default implementation available in DBReaderImpl" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.reader.DBReader"/>
+                <message_argument value="getErrorDataTable()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Default implementation available in DBReaderImpl" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.reader.DBReader"/>
+                <message_argument value="loopTable(ExecutionContext, CredentialsProvider, RowInput, long, boolean, boolean, boolean, boolean, String[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/CredentialsStore.java" type="org.knime.core.node.workflow.CredentialsStore$CredentialsNode">
         <filter id="403804204">
             <message_arguments>

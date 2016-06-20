@@ -968,6 +968,12 @@
             after="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DatabaseLoopingNodeFactory"
+             >
+      </node>
+   	  <node
+            after="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
+            category-path="/database/database-io"
+            factory-class="org.knime.base.node.io.database.parameterizedquery.ParameterizedDBQueryNodeFactory">
             >
       </node>
       <node
@@ -1004,7 +1010,13 @@
             after="org.knime.base.node.io.database.groupby.DBGroupByNodeFactory2"
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBJoinerNodeFactory"
-            />
+            /> 
+<!--      <node
+            after="org.knime.base.node.io.database.DBJoinerNodeFactory"
+            category-path="/database/database-manipulation"
+            factory-class="org.knime.base.node.io.database.tablecreator.DBTableCreatorNodeFactory"
+            id="org.knime.base.node.io.database.tablecreator.DBTableCreatorNodeFactory"/>  
+            />-->
       <node
             after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             category-path="/database/database-io"
