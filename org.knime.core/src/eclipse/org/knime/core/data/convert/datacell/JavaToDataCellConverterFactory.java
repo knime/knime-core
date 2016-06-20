@@ -64,7 +64,7 @@ import org.knime.core.node.ExecutionContext;
  *
  * @param <S> Java type which can be converted by the {@link JavaToDataCellConverter}s created by this factory
  * @since 3.2
- *
+ * @see org.knime.core.data.convert
  * @see JavaToDataCellConverter
  * @see JavaToDataCellConverterRegistry
  */

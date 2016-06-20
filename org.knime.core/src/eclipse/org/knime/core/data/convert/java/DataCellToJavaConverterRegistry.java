@@ -135,6 +135,8 @@ import org.knime.core.util.Pair;
  *
  * @author Jonathan Hale
  * @since 3.2
+ * @see org.knime.core.data.convert
+ * @see JavaToDataCellConverterRegistry
  */
 public final class DataCellToJavaConverterRegistry {
 

@@ -68,6 +68,7 @@ import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.convert.ConversionKey;
 import org.knime.core.data.convert.DataCellFactoryMethod;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
+import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 import org.knime.core.data.convert.util.ClassUtil;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
@@ -133,6 +134,8 @@ import org.knime.core.util.Pair;
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @since 3.2
+ * @see org.knime.core.data.convert
+ * @see DataCellToJavaConverterRegistry
  */
 public final class JavaToDataCellConverterRegistry {
 
@@ -401,5 +404,12 @@ public final class JavaToDataCellConverterRegistry {
                 }
             }
         }
+    }
+
+    /**
+     * @return All registered converter factories
+     */
+    public Collection<JavaToDataCellConverterFactory<?>> getAllFactories() {
+        return m_converterFactories.values();
     }
 }

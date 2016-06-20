@@ -56,6 +56,7 @@ import org.knime.core.data.DataCell;
  *
  * @param <S> source type of this converter
  * @since 3.2
+ * @see org.knime.core.data.convert
  */
 @FunctionalInterface
 public interface JavaToDataCellConverter<S> {

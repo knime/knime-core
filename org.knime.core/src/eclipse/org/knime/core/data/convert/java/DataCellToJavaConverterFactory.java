@@ -59,7 +59,7 @@ package org.knime.core.data.convert.java;
  * @param <S> type which the created {@link DataCellToJavaConverter}s can convert
  * @param <D> type which the created {@link DataCellToJavaConverter}s convert to
  * @since 3.2
- *
+ * @see org.knime.core.data.convert
  * @see DataCellToJavaConverter
  * @see DataCellToJavaConverterRegistry
  */
