@@ -287,7 +287,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                     MessageDialog dialog = new MessageDialog(shell, "Workflow contains missing nodes", null,
                         message + " due to missing nodes (" + missing
                             + "). Do you want to search and install the required extensions?",
-                        MessageDialog.ERROR, dialogButtonLabels, 0);
+                        MessageDialog.WARNING, dialogButtonLabels, 0);
                     if (dialog.open() == 0) {
                         Job j = new InstallMissingNodesJob(result.getMissingNodes());
                         j.setUser(true);
