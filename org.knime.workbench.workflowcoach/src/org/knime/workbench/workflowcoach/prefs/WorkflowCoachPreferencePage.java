@@ -102,11 +102,15 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
      */
     public WorkflowCoachPreferencePage() {
         super("KNIME Workflow Coach Settings");
-        setDescription("The Workflow Coach helps you build your workflows more efficiently."
-            + " It recommends the next most likely node to follow the selected node. "
-            + "Here, you can configure your Workflow Coach and also activate node "
-            + "recommendations based on community usage statistics.");
+        setDescription("The Workflow Coach helps you build your workflows more efficiently by "
+            + "suggesting the next most likely node for your workflow.\n\n"
+            + "Activate the checkbox 'Node Recommendations by the Community' "
+            + "if you would like to receive these tips. Note – you might need "
+            + "to download the statistics first: Update Now.\n\nNext, select how "
+            + "often you want the statistics to be updated.\n");
     }
+
+
 
     /**
      * {@inheritDoc}
@@ -125,10 +129,6 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
         Composite composite = createComposite(parent, 1, "");
 
         /* from community */
-        Label help = new Label(composite, SWT.NONE);
-        help.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        help.setText("Activate the checkbox to get nodes recommended based on the community's usage statistics.\n"
-            + "In order to activate it might be necessary to download the statistics first (update).");
         m_checkCommunityProvider = new Button(composite, SWT.CHECK);
         m_checkCommunityProvider.setText("Node Recommendations by the Community");
         m_checkCommunityProvider.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
