@@ -432,8 +432,8 @@ public abstract class TreeNumericColumnData extends TreeAttributeColumnData {
             lastSeenValue = value;
             lastSeenWeight = weight;
         }
-        assert areApproximatelyEqual(lastSeenWeight, nrRecordsRight) : "Expected left weight of " + nrRecordsRight
-            + ", was " + lastSeenWeight;
+//        assert areApproximatelyEqual(lastSeenWeight, nrRecordsRight) : "Expected left weight of " + nrRecordsRight
+//            + ", was " + lastSeenWeight;
 
         //        assert areApproximatelyEqual(lastSeenWeight * lastSeenY, ySumRight) : "Expected y sum of " + ySumRight
         //            + " but was " + lastSeenY * lastSeenWeight;

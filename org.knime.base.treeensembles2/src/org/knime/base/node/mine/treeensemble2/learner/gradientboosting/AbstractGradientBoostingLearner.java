@@ -196,9 +196,19 @@ public abstract class AbstractGradientBoostingLearner {
         Map<String, Object> valMap = new HashMap<String, Object>();
         for (TreeAttributeColumnData column : data.getColumns()) {
             TreeAttributeColumnMetaData meta = column.getMetaData();
-            valMap.put(meta.getAttributeName(), column.getValueAt(indexManager.getIndicesInColumn(meta.getAttributeIndex())[rowIdx]));
+            valMap.put(meta.getAttributeName(), handleMissingValues(column.getValueAt(indexManager.getIndicesInColumn(meta.getAttributeIndex())[rowIdx])));
         }
         return new PredictorRecord(valMap);
+    }
+
+    private static Object handleMissingValues(final Object value) {
+        if (value instanceof Double) {
+            if (((Double)value).isNaN()) {
+                return PredictorRecord.NULL;
+            }
+        }
+
+        return value;
     }
 
 
