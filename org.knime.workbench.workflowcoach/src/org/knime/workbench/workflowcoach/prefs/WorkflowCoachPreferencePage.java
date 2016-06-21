@@ -222,7 +222,7 @@ public class WorkflowCoachPreferencePage extends PreferencePage implements IWork
                     setErrorMessage(null);
                 });
             }
-        }, toUpdate);
+        }, toUpdate, false);
     }
 
     private void initializeValues() {

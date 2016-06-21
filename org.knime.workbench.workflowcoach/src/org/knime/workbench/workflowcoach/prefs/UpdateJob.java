@@ -89,15 +89,25 @@ public class UpdateJob extends Job {
      *
      * @param listener listener to be informed about the progress of the job and when it's finished
      * @param providers the node triple providers to be updated
+     * @param block if <code>true</code> this method will block until the update job is finished or the job is interrupted
      */
     public static void schedule(final UpdateListener listener,
-        final List<UpdatableNodeTripleProvider> providers) {
+        final List<UpdatableNodeTripleProvider> providers, final boolean block) {
         if(providers.isEmpty()) {
+            listener.updateFinished(Optional.empty());
             return;
         }
         UpdateJob j = new UpdateJob(listener, providers);
         j.setUser(false);
         j.schedule();
+        if (block) {
+            try {
+                j.join();
+            } catch (InterruptedException e) {
+                //job interrupted
+                listener.updateFinished(Optional.of(e));
+            }
+        }
     }
 
     /**

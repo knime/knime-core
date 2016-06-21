@@ -58,6 +58,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
@@ -128,7 +129,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     /**
      * If <code>true</code>, nodes are sill loading.
      */
-    private boolean m_nodesLoading = false;
+    private AtomicBoolean m_nodesLoading = new AtomicBoolean(false);
 
     /**
      * Indicates whether recommendations are available (i.e. properly configured etc.).
@@ -190,22 +191,23 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         toolbarMGR.add(new ConfigureAction(m_viewer));
 
         m_viewer.setInput("Waiting for node repository to be loaded ...");
-        m_nodesLoading = true;
+        m_nodesLoading.set(true);
         Job nodesLoader = new KNIMEJob("Workflow Coach loader", FrameworkUtil.getBundle(getClass())) {
             @Override
             protected IStatus run(final IProgressMonitor monitor) {
                 RepositoryManager.INSTANCE.getRoot(); // wait until the repository is fully loaded
 
                 if (monitor.isCanceled()) {
+                    m_nodesLoading.set(false);
                     return Status.CANCEL_STATUS;
                 } else {
                     // check for update if necessary
                     Display.getDefault().asyncExec(() -> m_viewer.setInput("Loading recommendations..."));
                     checkForStatisticUpdates();
-                    updateFrequencyColumnHeadersAndToolTips();
                 }
                 NodeRecommendationManager.getInstance().addUpdateListener(WorkflowCoachView.this);
-                m_nodesLoading = false;
+                m_nodesLoading.set(false);
+                Display.getDefault().asyncExec(() -> updateInput(StructuredSelection.EMPTY));
                 return Status.OK_STATUS;
             }
         };
@@ -246,7 +248,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             //if no workflow is opened and the workflow coach is configured properly, show according message
             updateInput(NO_WORKFLOW_OPENED_MESSAGE);
         }
-        if (part instanceof WorkflowCoachView || m_nodesLoading) {
+        if (part instanceof WorkflowCoachView || m_nodesLoading.get()) {
             // If source of the selection is this view itself, or the nodes or statistics are still loading, do nothing
             return;
         }
@@ -263,12 +265,12 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             //if there is at least one enabled triple provider then the statistics might need to be download first
             if (NodeRecommendationManager.getInstance().getNodeTripleProviders().stream()
                 .anyMatch(ntp -> ntp.isEnabled())) {
-                m_nodesLoading = true;
+                m_nodesLoading.set(true);
                 updateInput("Loading recommendations ...");
 
                 //try updating the triple provider that are enabled and require an update
                 updateTripleProviders(e -> {
-                    m_nodesLoading = false;
+                    m_nodesLoading.set(false);
                     if (e.isPresent()) {
                         updateInputNoProvider();
                     } else {
@@ -285,7 +287,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                             updateInputNoProvider();
                         }
                     }
-                }, true);
+                }, true, false);
             } else {
                 //no triple provider enabled -> needs to be configured
                 updateInputNoProvider();
@@ -638,7 +640,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 NodeLogger.getLogger(WorkflowCoachView.class).warn("Could not update node recommendations statistics.",
                     e.get());
             }
-        }, false);
+        }, false, true);
     }
 
     /**
@@ -647,8 +649,10 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      * @param requiredOnly if only the enabled triple providers should be updated that require an update in order to
      *            work
      * @param updateListener to get feedback of the updating process
+     * @param block if <code>true</code> the method will block till the update is finished, otherwise it will return
+     *            immediately after triggering the update job
      */
-    private void updateTripleProviders(final UpdateListener updateListener, final boolean requiredOnly) {
+    private void updateTripleProviders(final UpdateListener updateListener, final boolean requiredOnly, final boolean block) {
         List<UpdatableNodeTripleProvider> toUpdate =
             NodeRecommendationManager.getInstance().getNodeTripleProviders().stream().filter(ntp -> {
                 if (!(ntp instanceof UpdatableNodeTripleProvider)) {
@@ -658,7 +662,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                     return ntp.isEnabled() && (!requiredOnly || untp.updateRequired());
                 }
             }).map(ntp -> (UpdatableNodeTripleProvider)ntp).collect(Collectors.toList());
-        UpdateJob.schedule(updateListener, toUpdate);
+        UpdateJob.schedule(updateListener, toUpdate, block);
     }
 
     /**
@@ -667,5 +671,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     @Override
     public void updated() {
         updateFrequencyColumnHeadersAndToolTips();
+        m_nodesLoading.set(false);
     }
 }
