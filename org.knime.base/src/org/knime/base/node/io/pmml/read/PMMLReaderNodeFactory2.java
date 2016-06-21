@@ -52,6 +52,7 @@ import org.knime.core.node.NodeView;
 /**
  *
  * @author Fabian Dill, University of Konstanz
+ * @since 3.2
  */
 public class PMMLReaderNodeFactory2
     extends ContextAwareNodeFactory<PMMLReaderNodeModel> {
