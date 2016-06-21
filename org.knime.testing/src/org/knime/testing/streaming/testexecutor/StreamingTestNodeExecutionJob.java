@@ -528,6 +528,11 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         final int numChunks, final ExecutionContext exec) {
         PortInput[][] portInputs = new PortInput[numChunks][inputPortRoles.length];
         for (int i = 0; i < inputPortRoles.length; i++) {
+            if (inPortObjects[i + 1] == null) {
+                //usually happens in case of unconnected optional inports
+                //nothing to do here
+                continue;
+            }
             // if distributed: create chunks of the input table(s)
             if (numChunks > 1) {
                 if (inputPortRoles[i].isDistributable()) {
