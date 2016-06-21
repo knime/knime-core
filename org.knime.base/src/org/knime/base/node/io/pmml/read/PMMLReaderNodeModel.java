@@ -82,10 +82,20 @@ public class PMMLReaderNodeModel extends NodeModel {
     private boolean m_hasPMMLIn;
 
     /**
+     * Default constructor for a PMML Reader with optional input port.
+     */
+    public PMMLReaderNodeModel() {
+        this(true);
+    }
+
+    /**
      * Create a new PMML reader node model with optional PMML in port.
+     * @param hasPMMLIn if true, the node has an optional PMML input
+     * @since 3.2
      */
     public PMMLReaderNodeModel(final boolean hasPMMLIn) {
-        super(hasPMMLIn ? new PortType[]{PMMLPortObject.TYPE_OPTIONAL} : new PortType[0], new PortType[]{PMMLPortObject.TYPE});
+        super(hasPMMLIn ? new PortType[]{PMMLPortObject.TYPE_OPTIONAL}
+            : new PortType[0], new PortType[]{PMMLPortObject.TYPE});
         m_hasPMMLIn = hasPMMLIn;
     }
 
