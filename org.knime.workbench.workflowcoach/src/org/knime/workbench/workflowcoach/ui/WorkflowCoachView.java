@@ -52,6 +52,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -74,23 +75,21 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.forms.events.HyperlinkAdapter;
-import org.eclipse.ui.forms.events.HyperlinkEvent;
-import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.knime.core.node.NodeFactory;
@@ -100,7 +99,9 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.util.KNIMEJob;
 import org.knime.core.util.Pair;
+import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
+import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.repository.RepositoryManager;
@@ -136,9 +137,39 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      */
     private boolean m_recommendationsAvailable = false;
 
+    /**
+     * The table with the recommendation or a message.
+     */
     private TableViewer m_viewer;
 
-    private TableEditor m_editor;
+    /**
+     * Current state of the viewer.
+     */
+    private ViewerState m_viewerState = null;
+
+    /**
+     * Possible states of the table viewer.
+     */
+    private enum ViewerState {
+        /** normal text, one column, no headers */
+        MESSAGE,
+        /** normal text, n columns, with headers */
+        RECOMMENDATIONS,
+        /** text as link, one column, no headers, hand mouse cursor, mouse listener */
+        LINK;
+    }
+
+    private MouseListener m_openPrefPageMouseListener = new MouseAdapter() {
+        @Override
+        public void mouseUp(final MouseEvent e) {
+            new ConfigureAction(m_viewer).run();
+        }
+    };
+
+    /**
+     * Names and tool tips of the column headers of the recommendation table.
+     */
+    private List<Pair<String, String>> m_namesAndToolTips = Collections.emptyList();
 
     /**
      * {@inheritDoc}
@@ -190,7 +221,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         IToolBarManager toolbarMGR = getViewSite().getActionBars().getToolBarManager();
         toolbarMGR.add(new ConfigureAction(m_viewer));
 
-        m_viewer.setInput("Waiting for node repository to be loaded ...");
+        updateInput("Waiting for node repository to be loaded ...");
         m_nodesLoading.set(true);
         Job nodesLoader = new KNIMEJob("Workflow Coach loader", FrameworkUtil.getBundle(getClass())) {
             @Override
@@ -202,12 +233,13 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                     return Status.CANCEL_STATUS;
                 } else {
                     // check for update if necessary
-                    Display.getDefault().asyncExec(() -> m_viewer.setInput("Loading recommendations..."));
+                    updateInput("Loading recommendations...");
                     checkForStatisticUpdates();
                 }
                 NodeRecommendationManager.getInstance().addUpdateListener(WorkflowCoachView.this);
                 m_nodesLoading.set(false);
-                Display.getDefault().asyncExec(() -> updateInput(StructuredSelection.EMPTY));
+                updateFrequencyColumnHeadersAndToolTips();
+                updateInput(StructuredSelection.EMPTY);
                 return Status.OK_STATUS;
             }
         };
@@ -234,7 +266,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         getViewSite().getPage().removeSelectionListener(this);
         m_viewer.getTable().dispose();
         m_viewer = null;
-        m_editor = null;
         super.dispose();
     }
 
@@ -261,6 +292,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     }
 
     private void updateInput(final ISelection selection) {
+        changeViewerStateTo(ViewerState.RECOMMENDATIONS);
         if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
             //if there is at least one enabled triple provider then the statistics might need to be download first
             if (NodeRecommendationManager.getInstance().getNodeTripleProviders().stream()
@@ -280,7 +312,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                                 //if there are still no triple provider, show link
                                 updateInputNoProvider();
                             } else {
-                                updateFrequencyColumnHeadersAndToolTips();
                                 updateInput("Statistics successfully loaded. Select a node...");
                             }
                         } catch (Exception e1) {
@@ -297,7 +328,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         IStructuredSelection structSel = (IStructuredSelection)selection;
 
         if (structSel.size() > 1) {
-            m_viewer.setInput("No recommendation for multiple selected nodes.");
+            updateInput("No recommendation for multiple selected nodes.");
             return;
         }
 
@@ -323,8 +354,10 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             //retrieve node recommendations if no node is selected (most likely the source nodes etc.)
             recommendations = NodeRecommendationManager.getInstance().getNodeRecommendationFor();
         } else {
-            m_viewer.setInput("");
-            m_viewer.refresh();
+            Display.getDefault().syncExec(() -> {
+                m_viewer.setInput("");
+                m_viewer.refresh();
+            });
             return;
         }
 
@@ -353,14 +386,16 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         }
 
         //update viewer
-        m_viewer.setInput(recommendationsWithoutDups);
-        m_viewer.refresh();
-        m_recommendationsAvailable = true;
+        Display.getDefault().syncExec(() -> {
+            m_viewer.setInput(recommendationsWithoutDups);
+            m_viewer.refresh();
+            m_recommendationsAvailable = true;
 
-        //scroll to the very top
-        if (!recommendationsWithoutDups.isEmpty()) {
-            m_viewer.getTable().setTopIndex(0);
-        }
+            //scroll to the very top
+            if (!recommendationsWithoutDups.isEmpty()) {
+                m_viewer.getTable().setTopIndex(0);
+            }
+        });
     }
 
     /**
@@ -375,54 +410,31 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      * Updates the names and tooltips of the frequency column headers.
      */
     private void updateFrequencyColumnHeadersAndToolTips() {
-        List<Pair<String, String>> namesAndToolTips = NodeRecommendationManager.getInstance().getNodeTripleProviders()
-                .stream().filter(p -> p.isEnabled())
-                .map(p -> new Pair<>(p.getName(), p.getDescription()))
-                .collect(Collectors.toList());
-        if (namesAndToolTips == null || namesAndToolTips.isEmpty()) {
+        m_namesAndToolTips  =
+            NodeRecommendationManager.getInstance().getNodeTripleProviders().stream().filter(p -> p.isEnabled())
+                .map(p -> new Pair<>(p.getName(), p.getDescription())).collect(Collectors.toList());
+        if (m_namesAndToolTips == null || m_namesAndToolTips.isEmpty()) {
             updateInputNoProvider();
             return;
         }
 
-        Display.getDefault().syncExec(() -> {
-            if (m_editor != null) {
-                Control oldEditor = m_editor.getEditor();
-                if (oldEditor != null) {
-                    oldEditor.dispose();
-                }
-                m_editor.dispose();
-                m_editor = null;
-            }
-            m_viewer.getTable().setHeaderVisible(true);
+        //enforce to change the viewer state to update the headers
+        m_viewerState = null;
+        changeViewerStateTo(ViewerState.RECOMMENDATIONS);
 
-            m_viewer.getTable().setRedraw(false);
-            while (m_viewer.getTable().getColumnCount() > 1) {
-                m_viewer.getTable().getColumns()[1].dispose();
-            }
-
-            for (int i = 0; i < namesAndToolTips.size(); i++) {
-                TableColumn column = new TableColumn(m_viewer.getTable(), SWT.LEFT, i + 1);
-                column.setText(namesAndToolTips.get(i).getFirst());
-                column.setToolTipText(namesAndToolTips.get(i).getSecond());
-                column.setWidth(100);
-                column.addSelectionListener((TableColumnSorter) m_viewer.getComparator());
-            }
-            m_viewer.getTable().setRedraw(true);
-
-            //get current selection from the workbench and update the recommendation list
-            IEditorPart activeEditor = getViewSite().getPage().getActiveEditor();
-            if (activeEditor == null) {
-                //if no workflow is opened
-                updateInput(NO_WORKFLOW_OPENED_MESSAGE);
+        //get current selection from the workbench and update the recommendation list
+        IEditorPart activeEditor = getViewSite().getPage().getActiveEditor();
+        if (activeEditor == null) {
+            //if no workflow is opened
+            updateInput(NO_WORKFLOW_OPENED_MESSAGE);
+        } else {
+            ISelection selection = activeEditor.getSite().getSelectionProvider().getSelection();
+            if (selection != null && selection instanceof IStructuredSelection) {
+                updateInput(selection);
             } else {
-                ISelection selection = activeEditor.getSite().getSelectionProvider().getSelection();
-                if (selection != null && selection instanceof IStructuredSelection) {
-                    updateInput(selection);
-                } else {
-                    updateInput(StructuredSelection.EMPTY);
-                }
+                updateInput(StructuredSelection.EMPTY);
             }
-        });
+        }
     }
 
     /**
@@ -531,16 +543,9 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      * @param o
      */
     private void updateInput(final String message) {
+        changeViewerStateTo(ViewerState.MESSAGE);
         m_recommendationsAvailable = true;
         Display.getDefault().syncExec(() -> {
-            if (m_editor != null) {
-                Control oldEditor = m_editor.getEditor();
-                if (oldEditor != null) {
-                    oldEditor.dispose();
-                }
-                m_editor.dispose();
-                m_editor = null;
-            }
             if (m_viewer != null) {
                 m_viewer.setInput(message);
             }
@@ -551,35 +556,71 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      * Updates the table viewer to complain about missing node triple providers or corrupt node statistics.
      */
     private void updateInputNoProvider() {
-        updateInput("");
+        changeViewerStateTo(ViewerState.LINK);
         m_recommendationsAvailable = false;
-
         Display.getDefault().syncExec(() -> {
-            //add configure hyperlink
-            Table table = m_viewer.getTable();
-            table.setHeaderVisible(false);
-            TableItem[] items = table.getItems();
-            if (m_editor == null) {
-                m_editor = new TableEditor(table);
-                Hyperlink link = new Hyperlink(table, SWT.WRAP);
-                link.setUnderlined(true);
-                link.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_BLUE));
-                link.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_WHITE));
-                link.setText("No node recommendations available. Click here to configure ...");
-                link.pack();
-                link.addHyperlinkListener(new HyperlinkAdapter() {
-                    @Override
-                    public void linkActivated(final HyperlinkEvent e) {
-                        new ConfigureAction(m_viewer).run();
-                    }
-                });
-                link.setToolTipText("Workflow Coach is not configured properly. Click here to configure it...");
-                m_editor.minimumWidth = link.getSize().x + 10;
-                m_editor.minimumHeight = link.getSize().y - 2;
-                m_editor.horizontalAlignment = SWT.LEFT;
-                m_editor.setEditor(link, items[0], 0);
+            if (KNIMECorePlugin.getDefault().getPreferenceStore()
+                .getBoolean(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS)) {
+                m_viewer.setInput("No node recommendations available.\nClick here to configure ...");
+            } else {
+                m_viewer.setInput(
+                    "Node recommendations only available with usage data reporting.\nClick here to configure ...");
             }
         });
+    }
+
+    /**
+     * Changes the state of the table viewer or leaves it unchanged (if the provided one is the same as the current one).
+     *
+     * @param state the state to change to
+     */
+    private void changeViewerStateTo(final ViewerState state) {
+        if (state != null && state == m_viewerState) {
+            //nothing to change
+            return;
+        } else {
+            m_viewerState = state;
+            Display.getDefault().syncExec(() -> {
+                Table table = m_viewer.getTable();
+                table.setRedraw(false);
+                switch (state) {
+                    case MESSAGE:
+                        table.removeMouseListener(m_openPrefPageMouseListener);
+                        table.setHeaderVisible(false);
+                        while (table.getColumnCount() > 1) {
+                            table.getColumns()[1].dispose();
+                        }
+                        m_viewer.setLabelProvider(new WorkflowCoachLabelProvider());
+                        table.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_ARROW));
+                        break;
+                    case RECOMMENDATIONS:
+                        table.removeMouseListener(m_openPrefPageMouseListener);
+                        table.setHeaderVisible(true);
+                        while (table.getColumnCount() > 1) {
+                            table.getColumns()[1].dispose();
+                        }
+                        for (int i = 0; i < m_namesAndToolTips.size(); i++) {
+                            TableColumn column = new TableColumn(table, SWT.LEFT, i + 1);
+                            column.setText(m_namesAndToolTips.get(i).getFirst());
+                            column.setToolTipText(m_namesAndToolTips.get(i).getSecond());
+                            column.setWidth(100);
+                            column.addSelectionListener((TableColumnSorter) m_viewer.getComparator());
+                        }
+                        m_viewer.setLabelProvider(new WorkflowCoachLabelProvider());
+                        table.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_ARROW));
+                        break;
+                    case LINK:
+                        table.addMouseListener(m_openPrefPageMouseListener);
+                        table.setHeaderVisible(false);
+                        while (table.getColumnCount() > 1) {
+                            table.getColumns()[1].dispose();
+                        }
+                        m_viewer.setLabelProvider(new LinkStyleLabelProvider());
+                        table.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_HAND));
+                }
+                table.setRedraw(true);
+            });
+        }
     }
 
     /**
