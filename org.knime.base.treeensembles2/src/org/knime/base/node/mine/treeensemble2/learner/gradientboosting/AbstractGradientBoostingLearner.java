@@ -58,6 +58,8 @@ import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
+import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnData;
+import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
@@ -196,15 +198,23 @@ public abstract class AbstractGradientBoostingLearner {
         Map<String, Object> valMap = new HashMap<String, Object>();
         for (TreeAttributeColumnData column : data.getColumns()) {
             TreeAttributeColumnMetaData meta = column.getMetaData();
-            valMap.put(meta.getAttributeName(), handleMissingValues(column.getValueAt(indexManager.getIndicesInColumn(meta.getAttributeIndex())[rowIdx])));
+            valMap.put(meta.getAttributeName(), handleMissingValues(column.getValueAt(indexManager.getIndicesInColumn(meta.getAttributeIndex())[rowIdx]), column));
         }
         return new PredictorRecord(valMap);
     }
 
-    private static Object handleMissingValues(final Object value) {
-        if (value instanceof Double) {
-            if (((Double)value).isNaN()) {
-                return PredictorRecord.NULL;
+    private static Object handleMissingValues(final Object value, final TreeAttributeColumnData column) {
+        if (column.containsMissingValues()) {
+            if (column instanceof TreeNumericColumnData) {
+                if (((Double)value).isNaN()) {
+                    return PredictorRecord.NULL;
+                }
+            } else if (column instanceof TreeNominalColumnData) {
+                int missingValue = ((TreeNominalColumnData)column).getMetaData().getValues().length - 1;
+                int assignedInt = (Integer)value;
+                if (missingValue == assignedInt) {
+                    return PredictorRecord.NULL;
+                }
             }
         }
 
