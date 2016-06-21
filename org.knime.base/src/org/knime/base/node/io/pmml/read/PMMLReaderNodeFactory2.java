@@ -53,7 +53,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class PMMLReaderNodeFactory
+public class PMMLReaderNodeFactory2
     extends ContextAwareNodeFactory<PMMLReaderNodeModel> {
 
     /**
@@ -69,7 +69,7 @@ public class PMMLReaderNodeFactory
      */
     @Override
     public PMMLReaderNodeModel createNodeModel() {
-        return new PMMLReaderNodeModel(true);
+        return new PMMLReaderNodeModel(false);
     }
 
     /**

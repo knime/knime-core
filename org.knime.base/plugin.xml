@@ -664,7 +664,7 @@
             category-path="/analytics/mining/nn/mlp"
             factory-class="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"/>
       <node
-            after="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
+            after="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory2"
             category-path="/io/read"
             factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
       <node
@@ -1078,8 +1078,8 @@
       <node
             after="org.knime.base.node.io.table.read.ReadTableNodeFactory"
             category-path="/io/read"
-            factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
@@ -1871,6 +1871,12 @@
             category-path="/manipulation/column/column-convert+replace"
             deprecated="false"
             factory-class="org.knime.base.node.preproc.double2int2.DoubleToIntNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.io.table.read.ReadTableNodeFactory"
+            category-path="/io/read"
+            deprecated="false"
+            factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory2">
       </node>
    </extension>
    
