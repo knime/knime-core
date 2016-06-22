@@ -74,6 +74,10 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.node.streamable.BufferedDataTableRowOutput;
+import org.knime.core.node.streamable.DataTableRowInput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
 
 /**
  * This class performs the ungroup operation.
@@ -114,6 +118,8 @@ public class UngroupOperation {
     }
 
     /**
+     * Only needs to be set if {@link #compute(ExecutionContext)} is called subsequently.
+     *
      * @param table to perform the ungroup
      */
     public void setTable(final BufferedDataTable table) {
@@ -129,6 +135,8 @@ public class UngroupOperation {
     }
 
     /**
+     * Only needs to be set if {@link #compute(ExecutionContext)} is called subsequently.
+     *
      * @param newSpec the new spec created with
      *            {@link UngroupOperation#createTableSpec(DataTableSpec, boolean, String...)}
      */
@@ -143,21 +151,43 @@ public class UngroupOperation {
      */
     public BufferedDataTable compute(final ExecutionContext exec) throws Exception {
         final BufferedDataContainer dc = exec.createDataContainer(m_newSpec);
-        final Map<RowKey, Set<RowKey>> hiliteMapping = new HashMap<RowKey, Set<RowKey>>();
         if (m_table.size() == 0) {
             dc.close();
             return dc.getTable();
         }
+        DataTableRowInput in = new DataTableRowInput(m_table);
+        BufferedDataTableRowOutput out = new BufferedDataTableRowOutput(dc);
+        compute(in, out, exec, m_table.size());
+        in.close();
+        out.close();
+        return out.getDataTable();
+    }
+
+    /**
+     * Performs the ungroup operation on the given row input and pushes the result to the row output.
+     * 
+     * @param in the row input, will NOT be closed when finished
+     * @param out the row input, will NOT be closed when finished
+     * @param exec the execution context to check cancellation and (optional) progress logging
+     * @param rowCount row count to track the progress or <code>-1</code> without progress tracking
+     * @throws Exception the thrown exception
+     * @since 3.2
+     */
+    public void compute(final RowInput in, final RowOutput out, final ExecutionContext exec, final long rowCount) throws Exception {
+        final Map<RowKey, Set<RowKey>> hiliteMapping = new HashMap<RowKey, Set<RowKey>>();
         @SuppressWarnings("unchecked")
         Iterator<DataCell>[] iterators = new Iterator[m_colIndices.length];
         final DataCell[] missingCells = new DataCell[m_colIndices.length];
         Arrays.fill(missingCells, DataType.getMissingCell());
-        final long totalRowCount = m_table.size();
         long rowCounter = 0;
-        for (final DataRow row : m_table) {
+        DataRow row = null;
+        while ((row = in.poll()) != null) {
             rowCounter++;
             exec.checkCanceled();
-            exec.setProgress(rowCounter / (double) totalRowCount, "Processing row " + rowCounter + " of " + totalRowCount);
+            if (rowCount > 0) {
+                exec.setProgress(rowCounter / (double)rowCount,
+                    "Processing row " + rowCounter + " of " + rowCount);
+            }
             boolean allMissing = true;
             for (int i = 0, length = m_colIndices.length; i < length; i++) {
                 final DataCell cell = row.getCell(m_colIndices[i]);
@@ -184,7 +214,7 @@ public class UngroupOperation {
                         keys.add(row.getKey());
                         hiliteMapping.put(row.getKey(), keys);
                     }
-                    dc.addRowToTable(newRow);
+                    out.push(row);
                 }
                 continue;
             }
@@ -229,7 +259,7 @@ public class UngroupOperation {
                 final RowKey oldKey = row.getKey();
                 final RowKey newKey = new RowKey(oldKey.getString() + "_" + counter++);
                 final DefaultRow newRow = createClone(newKey, row, m_colIndices, m_removeCollectionCol, newCells);
-                dc.addRowToTable(newRow);
+                out.push(newRow);
                 if (keys != null) {
                     keys.add(newKey);
                 }
@@ -238,11 +268,9 @@ public class UngroupOperation {
                 hiliteMapping.put(row.getKey(), keys);
             }
         }
-        dc.close();
         if (m_enableHilite) {
             m_trans.setMapper(new DefaultHiLiteMapper(hiliteMapping));
         }
-        return dc.getTable();
     }
 
     private DefaultRow createClone(final RowKey newKey, final DataRow row, final int[] colIdxs,
