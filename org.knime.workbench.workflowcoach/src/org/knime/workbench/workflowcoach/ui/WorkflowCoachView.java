@@ -71,6 +71,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -89,6 +90,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
@@ -428,12 +430,18 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
             //if no workflow is opened
             updateInput(NO_WORKFLOW_OPENED_MESSAGE);
         } else {
-            ISelection selection = activeEditor.getSite().getSelectionProvider().getSelection();
-            if (selection != null && selection instanceof IStructuredSelection) {
-                updateInput(selection);
-            } else {
-                updateInput(StructuredSelection.EMPTY);
+            IWorkbenchPartSite site = activeEditor.getSite();
+            if (site != null) {
+                ISelectionProvider selectionProvider = site.getSelectionProvider();
+                if (selectionProvider != null) {
+                    ISelection selection = selectionProvider.getSelection();
+                    if (selection != null && selection instanceof IStructuredSelection) {
+                        updateInput(selection);
+                        return;
+                    }
+                }
             }
+            updateInput(StructuredSelection.EMPTY);
         }
     }
 
