@@ -575,7 +575,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
      * @param state the state to change to
      */
     private void changeViewerStateTo(final ViewerState state) {
-        if (state != null && state == m_viewerState) {
+        if (m_viewerState != null && state == m_viewerState) {
             //nothing to change
             return;
         } else {
