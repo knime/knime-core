@@ -35,8 +35,22 @@
               >
         </node>
         <node
+              after="org.knime.base.node.stats.correlation.rank.RankCorrelationComputeNodeFactory"
               category-path="/analytics/statistics"
-              factory-class="org.knime.base.node.stats.viz.extended.ExtendedStatisticsNodeFactory"
-              />
+              factory-class="org.knime.base.node.stats.viz.extended.ExtendedStatisticsNodeFactory"/>
+        <node
+              category-path="/analytics/statistics"
+              factory-class="org.knime.base.node.stats.correlation.cronbach.CronbachNodeFactory">
+        </node>
+        <node
+              after="org.knime.base.node.stats.correlation.cronbach.CronbachNodeFactory"
+              category-path="/analytics/statistics"
+              factory-class="org.knime.base.node.stats.correlation.standcronbach.StandCronbachNodeFactory">
+        </node>
+        <node
+              after="org.knime.base.node.stats.correlation.standcronbach.StandCronbachNodeFactory"
+              category-path="/analytics/statistics"
+              factory-class="org.knime.base.node.stats.correlation.rank.RankCorrelationComputeNodeFactory">
+        </node>
    </extension>
 </plugin>
