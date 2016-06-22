@@ -67,6 +67,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 
 /**
  * Helper class translate between the internal used naive Bayes model and the PMML standard.
@@ -117,10 +118,11 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
         if (m_model == null) {
             throw new NullPointerException("No model found to serialize");
         }
+        DerivedFieldMapper mapper = new DerivedFieldMapper(pmmlDoc);
         final PMML pmml = pmmlDoc.getPMML();
         final org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel = pmml.addNewNaiveBayesModel();
         PMMLMiningSchemaTranslator.writeMiningSchema(spec, bayesModel);
-        m_model.exportToPMML(bayesModel);
+        m_model.exportToPMML(bayesModel, mapper);
         return org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel.type;
     }
 
