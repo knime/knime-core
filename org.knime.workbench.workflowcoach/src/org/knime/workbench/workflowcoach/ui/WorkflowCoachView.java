@@ -595,15 +595,16 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                     case MESSAGE:
                         table.removeMouseListener(m_openPrefPageMouseListener);
                         table.setHeaderVisible(false);
+                        m_viewer.setLabelProvider(new WorkflowCoachLabelProvider());
                         while (table.getColumnCount() > 1) {
                             table.getColumns()[1].dispose();
                         }
-                        m_viewer.setLabelProvider(new WorkflowCoachLabelProvider());
                         table.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_ARROW));
                         break;
                     case RECOMMENDATIONS:
                         table.removeMouseListener(m_openPrefPageMouseListener);
                         table.setHeaderVisible(true);
+                        m_viewer.setLabelProvider(new WorkflowCoachLabelProvider());
                         while (table.getColumnCount() > 1) {
                             table.getColumns()[1].dispose();
                         }
@@ -614,7 +615,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                             column.setWidth(100);
                             column.addSelectionListener((TableColumnSorter) m_viewer.getComparator());
                         }
-                        m_viewer.setLabelProvider(new WorkflowCoachLabelProvider());
                         table.setCursor(new Cursor(Display.getCurrent(), SWT.CURSOR_ARROW));
                         break;
                     case LINK:
