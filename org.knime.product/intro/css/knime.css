@@ -490,6 +490,18 @@ body > h2 {
 	width:100%;
 }
 
+div#intro-text {
+    float: left;
+    overflow: hidden;
+}
+
+div#news-graphic {
+    float: left;
+    width: 400px;
+    overflow: hidden;
+    padding-left: 20px;
+}
+
 #update-inner {
 	width: 100%;
 	box-sizing: border-box;
