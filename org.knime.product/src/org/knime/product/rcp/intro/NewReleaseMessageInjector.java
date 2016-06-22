@@ -125,7 +125,7 @@ class NewReleaseMessageInjector extends AbstractInjector {
         IOException, XPathExpressionException, TransformerException {
         XPath xpath = m_xpathFactory.newXPath();
         Element updateNode =
-            (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
+            (Element)xpath.evaluate("//div[@id='update-inner']", doc.getDocumentElement(), XPathConstants.NODE);
 
         Element minorUpdatesAvailableSpan =
             (Element)xpath.evaluate("//span[@id='release-available']", updateNode, XPathConstants.NODE);
