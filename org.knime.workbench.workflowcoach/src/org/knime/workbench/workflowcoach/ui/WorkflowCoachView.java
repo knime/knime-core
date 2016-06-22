@@ -294,7 +294,6 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     }
 
     private void updateInput(final ISelection selection) {
-        changeViewerStateTo(ViewerState.RECOMMENDATIONS);
         if (NodeRecommendationManager.getInstance().getNumLoadedProviders() == 0) {
             //if there is at least one enabled triple provider then the statistics might need to be download first
             if (NodeRecommendationManager.getInstance().getNodeTripleProviders().stream()
@@ -388,6 +387,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         }
 
         //update viewer
+        changeViewerStateTo(ViewerState.RECOMMENDATIONS);
         Display.getDefault().syncExec(() -> {
             m_viewer.setInput(recommendationsWithoutDups);
             m_viewer.refresh();
