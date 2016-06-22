@@ -49,6 +49,7 @@ All other trademarks are the property of their respective owners.
       </vmArgsMac>
       <vmArgsWin>-Dorg.eclipse.swt.browser.IEVersion=10001
 -Dsun.awt.noerasebackground=true
+-Dequinox.statechange.timeout=30000
       </vmArgsWin>
    </launcherArgs>
 
