@@ -8,8 +8,8 @@
 
 	<fullDescription>
 		<intro>
-			This node calculates some simple statistics concerning the
-			depth of trees and the number of nodes of trees.
+			Provides basic statistics on the tree ensemble and its
+            trees such as depths of trees and the number of nodes of trees.
 		</intro>
 	</fullDescription>
 
@@ -19,12 +19,10 @@
 			on
 		</inPort>
 		<outPort name="Tree Ensemble Statistic" index="0">
-			Statistics of
-			the whole ensemble
+			Statistics of the whole ensemble
 		</outPort>
 		<outPort name="Tree Statistics" index="1">
-			Statistics of the
-			individual trees
+			Statistics of the individual trees
 		</outPort>
 	</ports>
 </knimeNode>
