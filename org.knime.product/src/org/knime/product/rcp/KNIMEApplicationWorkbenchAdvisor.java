@@ -44,6 +44,7 @@
  */
 package org.knime.product.rcp;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.net.proxy.IProxyService;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -54,13 +55,27 @@ import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.equinox.internal.p2.ui.sdk.scheduler.AutomaticUpdateMessages;
 import org.eclipse.equinox.internal.p2.ui.sdk.scheduler.AutomaticUpdatePlugin;
 import org.eclipse.equinox.internal.p2.ui.sdk.scheduler.AutomaticUpdateScheduler;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.program.Program;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EclipseUtil;
+import org.knime.core.util.Version;
 import org.knime.product.rcp.intro.IntroPage;
 import org.osgi.framework.Bundle;
 import org.osgi.service.prefs.Preferences;
@@ -163,7 +178,61 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         // for the Update Manager is set and it asks the user for a password
         // if the Update Site is password protected
         IProxyService.class.getName();
+        checkUbuntuGTK3Problem();
         // showIntroPage();
+    }
+
+    /** On Linux systems checks if we are on Ubuntu v16.0x and show a warning message if this is running GTK3.
+     * See AP-6007. */
+    private static void checkUbuntuGTK3Problem() {
+        if (Platform.OS_LINUX.equals(Platform.getOS()) && !Boolean.getBoolean("knime.linux.gtk3.check.disable")) {
+            final NodeLogger logger = NodeLogger.getLogger(KNIMEApplication.class);
+            String sysPropKey = "org.eclipse.swt.internal.gtk.version";
+            final String gtkVersion = System.getProperty(sysPropKey);
+            logger.debugWithFormat("Running GTK version %s=%s", sysPropKey, gtkVersion);
+            boolean isTooModernGtk = false;
+            if (StringUtils.isNotEmpty(gtkVersion) && gtkVersion.matches("^\\d\\.\\d+\\.\\d+")) {
+                isTooModernGtk = new Version(gtkVersion).isSameOrNewer(new Version("3.18"));
+            }
+            if (isTooModernGtk) {
+                final String msg = String.format("Detected GTK version %s, which is known to cause screen artifacts.\n"
+                    + "Read the <a href=\"#\">F.A.Q</a> for more information (and how to suppress this warning.)",
+                        gtkVersion);
+                final String url = "https://tech.knime.org/faq#q32";
+                logger.warn(msg);
+                // message dialog that also include a hyperlink...
+                new MessageDialog(Display.getCurrent().getActiveShell(), "GTK Version Incompatibility", null, msg,
+                    MessageDialog.WARNING, new String[] {"OK"}, 0) {
+                    @Override
+                    protected Control createMessageArea( final Composite composite ) {
+                      Image image = getImage();
+                      if( image != null ) {
+                        imageLabel = new Label( composite, SWT.NULL );
+                        image.setBackground( imageLabel.getBackground() );
+                        imageLabel.setImage( image );
+                        GridDataFactory.fillDefaults().align( SWT.CENTER, SWT.BEGINNING ).applyTo( imageLabel );
+                      }
+                      if( message != null ) {
+                        Link link = new Link( composite, getMessageLabelStyle() );
+                        link.setText( msg );
+                        link.addSelectionListener(new SelectionAdapter() {
+                            @Override
+                            public void widgetSelected(final SelectionEvent e) {
+                                Program.launch(url);
+                            }
+                        });
+                        link.setToolTipText("https://tech.knime.org/faq#q32");
+                        GridDataFactory.fillDefaults()
+                          .align( SWT.FILL, SWT.BEGINNING )
+                          .grab( true, false )
+                          .hint( convertHorizontalDLUsToPixels( IDialogConstants.MINIMUM_MESSAGE_AREA_WIDTH ), SWT.DEFAULT )
+                          .applyTo( link );
+                      }
+                      return composite;
+                    }
+                }.open();
+            }
+        }
     }
 
 
