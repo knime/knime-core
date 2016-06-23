@@ -70,6 +70,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -418,6 +419,12 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         if (m_namesAndToolTips == null || m_namesAndToolTips.isEmpty()) {
             updateInputNoProvider();
             return;
+        }
+
+        //reset table sorter
+        IElementComparer sorter = m_viewer.getComparer();
+        if (sorter != null && sorter instanceof TableColumnSorter) {
+            ((TableColumnSorter)sorter).setColumn(null);
         }
 
         //enforce to change the viewer state to update the headers

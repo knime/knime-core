@@ -83,6 +83,11 @@ class TableColumnSorter extends ViewerComparator implements SelectionListener {
     }
 
     public void setColumn(final TableColumn selectedColumn) {
+        if (selectedColumn == null) {
+            m_columnIndex = 0;
+            m_direction = 0;
+            return;
+        }
         if (m_selectedColumn == selectedColumn) {
             switch (m_direction) {
                 case ASC:
