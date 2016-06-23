@@ -264,14 +264,6 @@ final class LinReg2Learner {
         }
 
         FilterResult colFilter = m_settings.getFilterConfiguration().applyTo(inSpec);
-        if (colFilter.getRemovedFromIncludes().length > 0) {
-            String warning =
-                "Input does not contain all learning columns ("
-                    + ConvenienceMethods.getShortStringFrom(Arrays.asList(colFilter.getRemovedFromIncludes()), 3)
-                    + "). " + "Proceeding with the remaining learning columns.";
-            m_warningMessage = (m_warningMessage == null ? "" : m_warningMessage + "\n") + warning;
-            LOGGER.warn(warning);
-        }
 
         List<String> inputCols = new ArrayList<String>();
         inputCols.addAll(Arrays.asList(colFilter.getIncludes()));
