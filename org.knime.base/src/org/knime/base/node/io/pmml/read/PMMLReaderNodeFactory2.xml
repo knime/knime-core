@@ -21,8 +21,6 @@
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="PMML Preprocessing">Optional PMML port object 
-                containing preprocessing operations.</inPort>
         <outPort index="0" name="Model">The model just read.</outPort>
     </ports>    
 </knimeNode>
