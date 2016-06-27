@@ -51,6 +51,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -67,7 +68,7 @@ public final class SettingsModelAuthentication extends SettingsModel {
 
     private String m_credentials;
 
-    private Type m_type;
+    private AuthenticationType m_type;
 
     private final String m_configName;
 
@@ -82,21 +83,86 @@ public final class SettingsModelAuthentication extends SettingsModel {
     private final static String SELECTED_TYPE = "selectedType";
 
     /** Whether to use a credentials identifier or plain username/password. */
-    public enum Type {
+    public enum AuthenticationType  implements ButtonGroupEnumInterface {
+        /** No authentication required. */
+        NONE("None", "No authentication is required."),
+        /** Authentication with username. */
+        USER("Username", "Username based authentication. No password required."),
         /** Authentication with username and password. */
-        USER_PWD,
+        USER_PWD("Username & password", "Username and password based authentication"),
         /** Authentication with workflow credentials. */
-        CREDENTIALS;
+        CREDENTIALS("Credentials", "Workflow credentials"),
+        /** Authentication with workflow credentials. */
+        KERBEROS("Kerberos", "Kerberos ticket based authentication");
+
+        private String m_toolTip;
+        private String m_text;
+
+        private AuthenticationType(final String text, final String toolTip) {
+            m_text = text;
+            m_toolTip = toolTip;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getText() {
+            return m_text;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getActionCommand() {
+            return name();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getToolTip() {
+            return m_toolTip;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isDefault() {
+            //user name and password is the default
+            return this.equals(USER_PWD);
+        }
+
+        /**
+         * @param actionCommand the action command
+         * @return the {@link AuthenticationType} for the action command
+         */
+        public static AuthenticationType get(final String actionCommand) {
+            return valueOf(actionCommand);
+        }
+    }
+
+    /**
+     * Constructor with no preset user and credential.
+     * @param configName The identifier the values are stored with in the {@link org.knime.core.node.NodeSettings} object.
+     * @param defaultType the initial authentication type
+     */
+    public SettingsModelAuthentication(final String configName, final AuthenticationType defaultType) {
+        this(configName, defaultType, null, null, null);
     }
 
     /**
      * @param configName The identifier the values are stored with in the {@link org.knime.core.node.NodeSettings} object.
+     * @param defaultType the initial authentication type
      * @param defaultUsername Initial username.
      * @param defaultPassword Initial password.
      * @param defaultCredential Initial credential name.
      */
-    public SettingsModelAuthentication(final String configName, final String defaultUsername,
-        final String defaultPassword, final String defaultCredential) {
+    public SettingsModelAuthentication(final String configName, final AuthenticationType defaultType,
+        final String defaultUsername, final String defaultPassword, final String defaultCredential) {
         CheckUtils.checkArgument(StringUtils.isNotEmpty(configName), "The configName must be a non-empty string");
 
         m_username = defaultUsername == null ? "" : defaultUsername;
@@ -105,7 +171,7 @@ public final class SettingsModelAuthentication extends SettingsModel {
         m_credentials = defaultCredential;
         m_configName = configName;
 
-        m_type = Type.USER_PWD;
+        m_type = defaultType;
     }
 
     /**
@@ -114,7 +180,7 @@ public final class SettingsModelAuthentication extends SettingsModel {
     @SuppressWarnings("unchecked")
     @Override
     protected SettingsModelAuthentication createClone() {
-        return new SettingsModelAuthentication(m_configName, m_username, m_password, m_credentials);
+        return new SettingsModelAuthentication(m_configName, m_type, m_username, m_password, m_credentials);
     }
 
     /**
@@ -146,11 +212,38 @@ public final class SettingsModelAuthentication extends SettingsModel {
      */
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        Config config = settings.getConfig(m_configName);
-        config.getString(CREDENTIAL);
-        config.getString(USERNAME);
-        config.getPassword(PASSWORD, secretKey);
-        config.getString(SELECTED_TYPE);
+        final Config config = settings.getConfig(m_configName);
+        final String type = config.getString(SELECTED_TYPE);
+        final String credential = config.getString(CREDENTIAL);
+        final String userName = config.getString(USERNAME);
+        final String pwd = config.getPassword(PASSWORD, secretKey);
+        final AuthenticationType authType = AuthenticationType.get(type);
+        switch (authType) {
+            case CREDENTIALS:
+                if (credential == null || credential.isEmpty()) {
+                    throw new InvalidSettingsException("Please select a valid credential");
+                }
+                break;
+            case KERBEROS:
+                break;
+            case NONE:
+                break;
+            case USER:
+                if (userName == null || userName.isEmpty()) {
+                    throw new InvalidSettingsException("Please enter a valid user name");
+                }
+                break;
+            case USER_PWD:
+                if (userName == null || userName.isEmpty()) {
+                    throw new InvalidSettingsException("Please enter a valid user name");
+                }
+                if (pwd == null || pwd.isEmpty()) {
+                    throw new InvalidSettingsException("Please enter a valid password");
+                }
+                break;
+            default:
+                break;
+        }
     }
 
     /**
@@ -160,7 +253,7 @@ public final class SettingsModelAuthentication extends SettingsModel {
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         // no default value, throw an exception instead
         Config config = settings.getConfig(m_configName);
-        setValues(config.getString(CREDENTIAL), Type.valueOf(config.getString(SELECTED_TYPE)),
+        setValues(AuthenticationType.valueOf(config.getString(SELECTED_TYPE)), config.getString(CREDENTIAL),
             config.getString(USERNAME), config.getPassword(PASSWORD, secretKey));
     }
 
@@ -174,8 +267,8 @@ public final class SettingsModelAuthentication extends SettingsModel {
         final Config config;
         try {
             config = settings.getConfig(m_configName);
-            setValues(config.getString(CREDENTIAL, m_credentials),
-                Type.valueOf(config.getString(SELECTED_TYPE, m_type.name())), config.getString(USERNAME, m_username),
+            setValues(AuthenticationType.valueOf(config.getString(SELECTED_TYPE, m_type.name())),
+                config.getString(CREDENTIAL, m_credentials), config.getString(USERNAME, m_username),
                 config.getPassword(PASSWORD, secretKey, m_password));
         } catch (InvalidSettingsException ex) {
             throw new NotConfigurableException(ex.getMessage());
@@ -204,12 +297,13 @@ public final class SettingsModelAuthentication extends SettingsModel {
     }
 
     /**
-     * @param selectedCredentials Credentials that is selected.
      * @param type Type of authentication that is selected.
+     * @param selectedCredentials Credentials that is selected.
      * @param userName Given username.
      * @param pwd Given password.
      */
-    public void setValues(final String selectedCredentials, final Type type, final String userName, final String pwd) {
+    public void setValues(final AuthenticationType type, final String selectedCredentials, final String userName,
+        final String pwd) {
         boolean changed = false;
         changed = setType(type) || changed;
         changed = setCredential(selectedCredentials) || changed;
@@ -220,7 +314,7 @@ public final class SettingsModelAuthentication extends SettingsModel {
         }
     }
 
-    private boolean setType(final Type type) {
+    private boolean setType(final AuthenticationType type) {
         boolean sameValue = type.name().equals(m_type.name());
         m_type = type;
         return !sameValue;
@@ -284,8 +378,22 @@ public final class SettingsModelAuthentication extends SettingsModel {
     /**
      * @return selected type.
      */
-    public Type getSelectedType() {
+    public AuthenticationType getAuthenticationType() {
         return m_type;
     }
 
+
+    /**
+     * @return <code>true</code> if {@link AuthenticationType} {@link AuthenticationType#KERBEROS} is selected
+     */
+    public boolean useKerberos() {
+        return AuthenticationType.KERBEROS == getAuthenticationType();
+    }
+
+    /**
+     * @return <code>true</code> if {@link AuthenticationType} {@link AuthenticationType#CREDENTIALS} is selected
+     */
+    public boolean useCredential() {
+        return AuthenticationType.CREDENTIALS == getAuthenticationType();
+    }
 }
