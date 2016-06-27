@@ -502,6 +502,10 @@ div#news-graphic {
     padding-left: 20px;
 }
 
+#update {
+	clear: both;
+}
+
 #update-inner {
 	width: 100%;
 	box-sizing: border-box;
@@ -519,7 +523,7 @@ div#news-graphic {
 div#links-and-mru {
 	max-width: 1000px;
 	margin: 10px auto 20px auto;
-	
+	clear: both;
 }
 
 
@@ -620,6 +624,7 @@ div.floating-link {
 	padding: 5px 5px;
 	background: #f0f0f0;
 	border-radius: 5px;
+	clear: both;
 }
 
 #news > h2 {
