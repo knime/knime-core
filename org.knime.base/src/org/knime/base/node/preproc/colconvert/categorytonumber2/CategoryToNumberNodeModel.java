@@ -190,8 +190,10 @@ public class CategoryToNumberNodeModel extends NodeModel {
                 cr.createStreamableFunction(0, 0).runFinal(inputs, outputs, exec);
 
                 // the optional PMML in port (can be null)
-                PMMLPortObject inPMMLPort =
-                    m_pmmlInEnabled ? (PMMLPortObject)((PortObjectInput)inputs[1]).getPortObject() : null;
+                PMMLPortObject inPMMLPort = null;
+                if(m_pmmlInEnabled && inputs[1] != null) {
+                    inPMMLPort = (PMMLPortObject)((PortObjectInput)inputs[1]).getPortObject();
+                }
 
                 PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
                         inPMMLPort, cr.createSpec());
