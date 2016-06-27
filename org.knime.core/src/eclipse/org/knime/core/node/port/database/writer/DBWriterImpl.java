@@ -251,8 +251,12 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
                             "CREATE TABLE " + table + " "
                                     + createTableStmt(spec, sqlTypes, columnNamesForInsertStatement);
                     LOGGER.debug("Executing SQL statement as execute: " + query);
-                    Statement statement = conn.createStatement();
-                    statement.execute(query);
+                    try (Statement statement = conn.createStatement()) {
+                        statement.execute(query);
+                    }
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
                     mapping = new int[spec.getNumColumns()];
                     for (int k = 0; k < mapping.length; k++) {
                         mapping[k] = k;
@@ -289,6 +293,9 @@ public class DBWriterImpl extends DatabaseHelper implements DBWriter {
                 LOGGER.debug("Executing SQL statement as execute: " + query);
                 statement.execute(query);
                 statement.close();
+                if (!conn.getAutoCommit()) {
+                    conn.commit();
+                }
             }
 
             // this is a (temporary) workaround for bug #5802: if there is a DataValue column in the input table
