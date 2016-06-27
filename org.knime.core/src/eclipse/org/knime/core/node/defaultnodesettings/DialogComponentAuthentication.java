@@ -422,43 +422,46 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
             }
         }
 
-        //update the credential information
-        if (m_credentialField.getSelectedItem() != null
-            && !((String)m_credentialField.getSelectedItem()).equals(model.getCredential())) {
-            ItemListener[] itemListeners = m_credentialField.getItemListeners();
-            for (ItemListener listener : itemListeners) {
-                m_credentialField.removeItemListener(listener);
+        if (model.getAuthenticationType().equals(AuthenticationType.CREDENTIALS)) {
+            //update the credential information
+            if (m_credentialField.getSelectedItem() != null
+                && !((String)m_credentialField.getSelectedItem()).equals(model.getCredential())) {
+                ItemListener[] itemListeners = m_credentialField.getItemListeners();
+                for (ItemListener listener : itemListeners) {
+                    m_credentialField.removeItemListener(listener);
+                }
+                m_credentialField.setSelectedItem(model.getCredential());
+                for (ItemListener listener : itemListeners) {
+                    m_credentialField.addItemListener(listener);
+                }
             }
-            m_credentialField.setSelectedItem(model.getCredential());
-            for (ItemListener listener : itemListeners) {
-                m_credentialField.addItemListener(listener);
-            }
-        }
 
-        if (model.getAuthenticationType().equals(AuthenticationType.USER)) {
-          //update the user name field
+        } else if (model.getAuthenticationType().equals(AuthenticationType.USER)) {
+          //update the user name only field
             if (!m_usernameOnlyField.getText().equals(model.getUsername())) {
                 updateNoListener(m_usernameOnlyField, model.getUsername());
             }
-        } else {
+
+        } else if (model.getAuthenticationType().equals(AuthenticationType.USER_PWD)) {
             //update the user name field
             if (!m_usernameField.getText().equals(model.getUsername())) {
                 updateNoListener(m_usernameField, model.getUsername());
             }
+
+            //update the password field
+            if (model.getPassword() != null) {
+                String modelPwd = model.getPassword();
+                char[] password = m_passwordField.getPassword();
+                String componentPwd = null;
+                if (password != null && password.length > 1) {
+                    componentPwd = new String(password);
+                }
+                if (!Objects.equals(componentPwd, modelPwd)) {
+                    updateNoListener(m_passwordField, modelPwd);
+                }
+            }
         }
 
-        //update the password field
-        if (model.getPassword() != null) {
-            String modelPwd = model.getPassword();
-            char[] password = m_passwordField.getPassword();
-            String componentPwd = null;
-            if (password != null && password.length > 1) {
-                componentPwd = new String(password);
-            }
-            if (!Objects.equals(componentPwd, modelPwd)) {
-                updateNoListener(m_passwordField, modelPwd);
-            }
-        }
         updatePanel();
     }
 
@@ -534,10 +537,19 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         final CredentialsProvider cp) throws NotConfigurableException {
         super.loadSettingsFrom(settings, specs);
         ItemListener[] itemListeners = m_credentialField.getItemListeners();
-        final SettingsModelAuthentication model = (SettingsModelAuthentication)getModel();
         for (ItemListener listener : itemListeners) {
             m_credentialField.removeItemListener(listener);
         }
+        loadCredentials(cp);
+        for (ItemListener listener : itemListeners) {
+            m_credentialField.addItemListener(listener);
+        }
+        updateComponent();
+    }
+
+    /** Loads items in credentials select box. */
+    public void loadCredentials(final CredentialsProvider cp) {
+        final SettingsModelAuthentication model = (SettingsModelAuthentication)getModel();
         m_credentialField.removeAllItems();
         final Collection<String> names = cp.listNames();
         if (names != null) {
@@ -546,10 +558,6 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
             }
         }
         m_credentialField.setSelectedItem(model.getCredential());
-        for (ItemListener listener : itemListeners) {
-            m_credentialField.addItemListener(listener);
-        }
-        updateComponent();
     }
 
     /**
