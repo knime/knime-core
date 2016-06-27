@@ -287,8 +287,15 @@ public class DialogComponentAggregationMethod extends DialogComponent
         // we transfer the value from the field into the model
         final SettingsModelAggregationMethod model = getMethodModel();
         model.removeChangeListener(this);
-        model.setValues(getSelectedAggregationMethod(), getValueDelimiter(), getMaxUniqueValues());
+        model.setValues(getSelectedAggregationMethod(), getValueDelimiter(), getMaxUniqueValues(), getIncludeMissing());
         model.prependChangeListener(this);
+    }
+
+    /**
+     * @return <code>true</code> if missing values should be included
+     */
+    private boolean getIncludeMissing() {
+        return m_inclMissing.isEnabled() && m_inclMissing.isSelected();
     }
 
     /**
