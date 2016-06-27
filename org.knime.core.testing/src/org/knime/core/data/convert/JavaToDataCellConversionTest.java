@@ -47,8 +47,12 @@
 
 package org.knime.core.data.convert;
 
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
@@ -374,8 +378,9 @@ public class JavaToDataCellConversionTest {
     public void testAllSourceTypes() {
         final Collection<Class<?>> set = JavaToDataCellConverterRegistry.getInstance().getAllSourceTypes();
 
-        assertTrue(10 >= set.size()); // extensions may increase this number
-        assertTrue(set.contains(Double.class));
+        // extensions may increase this number
+        assertThat("Unexpected number of supported source types", set.size(), is(greaterThan(9)));
+        assertThat("Double not found in support source types", set, hasItem(Double.class));
     }
 
     /**
@@ -385,7 +390,8 @@ public class JavaToDataCellConversionTest {
     public void testAllDestinationTypes() {
         final Collection<DataType> set = JavaToDataCellConverterRegistry.getInstance().getAllDestinationTypes();
 
-        assertTrue(7 >= set.size()); // extensions may increase this number
-        assertTrue(set.contains(DoubleCell.TYPE));
+        // extensions may increase this number
+        assertThat("Unexpected number of supported destination types", set.size(), is(greaterThan(6)));
+        assertThat("Double not found in support destination types", set, hasItem(DoubleCell.TYPE));
     }
 }
