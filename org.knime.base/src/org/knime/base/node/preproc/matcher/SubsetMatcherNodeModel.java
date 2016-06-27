@@ -375,8 +375,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
                     //matcher until all items or all matchers are processed
                     int matcherStartIdx = 0;
                     int itemIdx = 0;
-                    final Collection<SetMissmatches> matchingSets =
-                        new LinkedList<SetMissmatches>();
+                    final Collection<SetMissmatches> matchingSets = new LinkedList<>();
                     while (itemIdx < sortedItems.length
                             && matcherStartIdx < sortedMatcher.length) {
                         final DataCell subItem = sortedItems[itemIdx];
@@ -385,10 +384,11 @@ public class SubsetMatcherNodeModel extends NodeModel {
                         i < sortedMatcher.length; i++) {
                             final SubsetMatcher matcher = sortedMatcher[i];
                             final int result = matcher.compare(subItem);
-                            if (result > 0) {
+                            if (result > 0 && maxMismatches == 0) {
                                 //the smallest matcher is bigger then this item
+                                //and we do not have any mismatches
                                 //exit the matcher loop and continue with
-                                //the next item even if mismatches are allowed
+                                //the next item
                                 break;
                             }
                             //this matcher matches the item (result == 0)
@@ -414,7 +414,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
                     for (final SetMissmatches matchingSet : matchingSets) {
                         exec.checkCanceled();
                         //create for each matching subset a result row
-                        final List<DataCell> cells = new LinkedList<DataCell>();
+                        final List<DataCell> cells = new LinkedList<>();
                         cells.add(setIDCell);
                         if (appendSetCol) {
                             cells.add((DataCell)setCell);
@@ -449,8 +449,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             final ExecutionMonitor exec, final BufferedDataTable table,
             final int colIdx, final Comparator<DataCell> comparator)
     throws CanceledExecutionException {
-        final Map<DataCell, SubsetMatcher> map =
-            new HashMap<DataCell, SubsetMatcher>();
+        final Map<DataCell, SubsetMatcher> map = new HashMap<>();
         final long rowCount = table.size();
         if (rowCount < 1) {
             return new SubsetMatcher[0];
@@ -483,8 +482,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             matcher.appendChildMatcher(itemSet, 1);
             counter++;
         }
-        final ArrayList<SubsetMatcher> matchers =
-            new ArrayList<SubsetMatcher>(map.values());
+        final ArrayList<SubsetMatcher> matchers = new ArrayList<>(map.values());
         Collections.sort(matchers);
         return matchers.toArray(new SubsetMatcher[0]);
     }
@@ -514,7 +512,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             throw new IllegalArgumentException(
                     "set column must not be null");
         }
-        final List<DataColumnSpec> specs = new LinkedList<DataColumnSpec>();
+        final List<DataColumnSpec> specs = new LinkedList<>();
         if (setIDCol != null) {
             specs.add(setIDCol);
         } else {
