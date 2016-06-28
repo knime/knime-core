@@ -51,7 +51,6 @@ package org.knime.core.node.port.database;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.ConnectionPendingException;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -60,9 +59,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Spliterator;
 import java.util.TimeZone;
-import java.util.function.Consumer;
 
 import org.apache.commons.io.IOUtils;
 import org.knime.core.data.BooleanValue;
@@ -176,31 +173,31 @@ public class DatabaseHelper {
      * @return a {@link DataTableSpec} created from the given {@link ResultSetMetaData}
      * @throws SQLException
      */
-   public DataTableSpec createTableSpec(final ResultSetMetaData meta)
-           throws SQLException {
-       int cols = meta.getColumnCount();
-       if (cols == 0) {
-           return new DataTableSpec("database");
-       }
-       StatementManipulator manipulator = m_conn.getUtility().getStatementManipulator();
-       DataTableSpec spec = null;
-       for (int i = 0; i < cols; i++) {
-           int dbIdx = i + 1;
-           String name =  manipulator.unquoteColumn(meta.getColumnLabel(dbIdx));
-           int type = meta.getColumnType(dbIdx);
-           DataType newType = getKNIMEType(type, meta, dbIdx);
-           if (spec == null) {
-               spec = new DataTableSpec("database",
-                       new DataColumnSpecCreator(name, newType).createSpec());
-           } else {
-               name = DataTableSpec.getUniqueColumnName(spec, name);
-               spec = new DataTableSpec("database", spec,
-                      new DataTableSpec(new DataColumnSpecCreator(
-                              name, newType).createSpec()));
-           }
-       }
-       return spec;
-   }
+    protected DataTableSpec createTableSpec(final ResultSetMetaData meta)
+            throws SQLException {
+        int cols = meta.getColumnCount();
+        if (cols == 0) {
+            return new DataTableSpec("database");
+        }
+        StatementManipulator manipulator = m_conn.getUtility().getStatementManipulator();
+        DataTableSpec spec = null;
+        for (int i = 0; i < cols; i++) {
+            int dbIdx = i + 1;
+            String name =  manipulator.unquoteColumn(meta.getColumnLabel(dbIdx));
+            int type = meta.getColumnType(dbIdx);
+            DataType newType = getKNIMEType(type, meta, dbIdx);
+            if (spec == null) {
+                spec = new DataTableSpec("database",
+                        new DataColumnSpecCreator(name, newType).createSpec());
+            } else {
+                name = DataTableSpec.getUniqueColumnName(spec, name);
+                spec = new DataTableSpec("database", spec,
+                       new DataTableSpec(new DataColumnSpecCreator(
+                               name, newType).createSpec()));
+            }
+        }
+        return spec;
+    }
 
     /**
      * @param conn {@link ConnectionPendingException}
@@ -247,7 +244,7 @@ public class DatabaseHelper {
      * @param columnTypes
      * @throws SQLException if the value can't be set
      */
-    public void fillStatement(final PreparedStatement stmt, final int dbIdx, final DataColumnSpec cspec,
+    protected void fillStatement(final PreparedStatement stmt, final int dbIdx, final DataColumnSpec cspec,
         final DataCell cell, final TimeZone tz, final Map<Integer, Integer> columnTypes)
             throws SQLException {
         if (cspec.getType().isCompatible(BooleanValue.class)) {
@@ -291,7 +288,7 @@ public class DatabaseHelper {
                 if (!dateCell.hasTime() && !dateCell.hasMillis()) {
                     java.sql.Date date = new java.sql.Date(corrDate);
                     stmt.setDate(dbIdx, date);
-                } else if (!dateCell.hasMillis()) {
+                } else if (!dateCell.hasDate()) {
                     java.sql.Time time = new java.sql.Time(corrDate);
                     stmt.setTime(dbIdx, time);
                 } else {
@@ -354,70 +351,9 @@ public class DatabaseHelper {
     protected void fillArray(final PreparedStatement stmt, final int dbIdx, final DataCell cell, final TimeZone tz)
         throws SQLException {
         if (cell.isMissing()) {
-            stmt.setNull(dbIdx, Types.ARRAY);
+            stmt.setNull(dbIdx, Types.VARCHAR);
         } else {
-            final CollectionDataValue collection = (CollectionDataValue)cell;
-            final Spliterator<DataCell> spliterator = collection.spliterator();
-            final DataType baseType = cell.getType().getCollectionElementType();
-            final Object[] vals = new Object[collection.size()];
-            final String type;
-            if (baseType.isCompatible(BooleanValue.class)) {
-                type = "boolean";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : ((BooleanValue)t).getBooleanValue();
-                    }
-                });
-            } else if (baseType.isCompatible(IntValue.class)) {
-                type = "integer";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : ((IntValue)t).getIntValue();
-                    }
-                });
-            } else if (baseType.isCompatible(LongValue.class)) {
-                type = "bigint";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : ((LongValue)t).getLongValue();
-                    }
-                });
-            } else if (baseType.isCompatible(DoubleValue.class)) {
-                type = "double";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        if (t.isMissing()) {
-                            vals[idx++] = null;
-                        } else {
-                            final double value = ((DoubleValue)t).getDoubleValue();
-                            vals[idx++] = Double.isNaN(value) ? null : value;
-                        }
-                    }
-                });
-            } else if (baseType.isCompatible(DateAndTimeValue.class)) {
-                type = "timestamp";
-            } else {
-                type = "varchar";
-                spliterator.forEachRemaining(new Consumer<DataCell>() {
-                    int idx = 0;
-                    @Override
-                    public void accept(final DataCell t) {
-                        vals[idx++] = t.isMissing() ? null : t.toString();
-                    }
-                });
-            }
-            @SuppressWarnings("resource") //will be closed by the framework
-            final Connection conn = stmt.getConnection();
-            final Array array = conn.createArrayOf(type, vals);
-            stmt.setArray(dbIdx, array);
+            stmt.setString(dbIdx, cell.toString());
         }
     }
 
