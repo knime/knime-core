@@ -67,7 +67,7 @@ public interface DoubleValue extends DataValue {
     /**
      * @return A generic <code>double</code> value.
      */
-    @DataValueAccessMethod
+    @DataValueAccessMethod(name = "Double")
     double getDoubleValue();
 
     /** Implementations of the meta information of this value class. */

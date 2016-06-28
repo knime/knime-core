@@ -56,14 +56,20 @@ import java.lang.annotation.Target;
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @since 3.2
+ * @see DataValueAccessMethod
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({java.lang.annotation.ElementType.METHOD})
 public @interface DataCellFactoryMethod {
 
     /**
-     * @return descriptive name for the factory method, usually used to differentiate factory methods with the same
-     *         parameter type.
+     * Name of the DataCellFactoryMethod shown to the user (in the JavaSnippet node dialog for example). Should contain
+     * at least the simple type name.
+     * <p>
+     * <b> Examples: </b> "InputStream", "Integer", "XML String", "JSON String"
+     * </p>
+     *
+     * @return Descriptive name of the method
      */
-    String name() default "";
+    String name();
 }

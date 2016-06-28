@@ -77,7 +77,7 @@ public interface BinaryObjectDataValue extends DataValue {
      * @return A new input stream on the byte content, not null.
      * @throws IOException If that fails for whatever I/O problems.
      */
-    @DataValueAccessMethod
+    @DataValueAccessMethod(name = "InputStream")
     InputStream openInputStream() throws IOException;
 
     /** Implementations of the meta information of this value class. */

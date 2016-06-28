@@ -51,6 +51,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 
 /**
@@ -58,14 +59,20 @@ import org.knime.core.data.DataValue;
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @since 3.2
+ * @see DataCellFactoryMethod
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({java.lang.annotation.ElementType.METHOD})
 public @interface DataValueAccessMethod {
 
     /**
-     * @return descriptive name for the factory method, usually used to differentiate factory methods with the same
-     *         parameter type.
+     * Name of the DataValueAccessMethod shown to the user (in the JavaSnippet node dialog for example). Should contain
+     * at least the data type name (see {@link DataType#getName()}).
+     * <p>
+     * <b> Examples: </b> "Number (double)", "String", "XML", "List of Number (double)"
+     * </p>
+     *
+     * @return Descriptive name of the method
      */
-    String name() default "";
+    String name();
 }

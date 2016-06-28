@@ -66,7 +66,7 @@ public interface IntValue extends DataValue {
     /**
      * @return A generic <code>int</code> value.
      */
-    @DataValueAccessMethod
+    @DataValueAccessMethod(name = "Integer")
     int getIntValue();
 
     /** Implementations of the meta information of this value class. */

@@ -192,7 +192,7 @@ implements StringValue, NominalValue {
          *
          * Uses {@link Integer#parseInt(String)} to convert the string into an int.
          */
-        @DataCellFactoryMethod
+        @DataCellFactoryMethod(name = "String")
         @Override
         public DataCell createCell(final String s) {
             return create(s);
@@ -209,7 +209,7 @@ implements StringValue, NominalValue {
         /**
          * {@inheritDoc}
          */
-        @DataCellFactoryMethod
+        @DataCellFactoryMethod(name = "String")
         @Override
         public DataCell createCell(final InputStream input) throws IOException {
             return createCell(new InputStreamReader(input, "UTF-8"));
@@ -218,7 +218,7 @@ implements StringValue, NominalValue {
         /**
          * {@inheritDoc}
          */
-        @DataCellFactoryMethod
+        @DataCellFactoryMethod(name = "String")
         @Override
         public DataCell createCell(final Reader input) throws IOException {
             StringBuilder buf = new StringBuilder(1024);

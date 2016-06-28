@@ -310,7 +310,7 @@ public class IntCell extends DataCell implements IntValue, LongValue,
          * @param i any int value
          * @return a new data cell
          */
-        @DataCellFactoryMethod
+        @DataCellFactoryMethod(name = "Number (integer)")
         public static DataCell create(final int i) {
             return new IntCell(i);
         }

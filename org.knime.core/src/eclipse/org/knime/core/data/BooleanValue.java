@@ -64,7 +64,7 @@ public interface BooleanValue extends DataValue {
     /**
      * @return A generic <code>boolean</code> value.
      */
-    @DataValueAccessMethod
+    @DataValueAccessMethod(name = "Boolean")
     boolean getBooleanValue();
 
     /** Implementations of the meta information of this value class. */

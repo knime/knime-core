@@ -61,30 +61,34 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 
-
 /**
- * A Panel with a table in the center and buttons at the right to add and
- * remove rows.
+ * A Panel with a table in the center and buttons at the right to add and remove rows.
  *
  * @author Heiko Hofer
  * @since 2.6
  */
-@SuppressWarnings("serial")
 public class ConfigTablePanel extends JPanel {
+    /** Generated serial version UID */
+    private static final long serialVersionUID = 5749285378570735334L;
+
     private final ConfigTableModel m_model;
+
     private final JTable m_table;
-    private JButton m_addButton;
-    private JButton m_removeButton;
+
+    private final JButton m_addButton = new JButton("Add");
+
+    private final JButton m_removeButton = new JButton("Remove");
 
     /**
      * Create a new component.
+     *
      * @param model the model used to initialize the table
      */
     public ConfigTablePanel(final ConfigTableModel model) {
         super(new GridBagLayout());
         m_model = model;
 
-        GridBagConstraints c = new GridBagConstraints();
+        final GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
         c.anchor = GridBagConstraints.NORTHWEST;
         c.insets = new Insets(0, 0, 0, 5);
@@ -95,21 +99,18 @@ public class ConfigTablePanel extends JPanel {
         c.weighty = 1;
 
         m_table = new JTable(m_model);
-        m_table.setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         // Increase row height
         m_table.setRowHeight(m_table.getRowHeight() + 3);
-        m_table.getTableHeader().setPreferredSize(new Dimension(
-                m_table.getTableHeader().getPreferredSize().width,
-                m_table.getRowHeight()));
+        m_table.getTableHeader()
+            .setPreferredSize(new Dimension(m_table.getTableHeader().getPreferredSize().width, m_table.getRowHeight()));
 
-        Color gridColor = m_table.getGridColor();
+        final Color gridColor = m_table.getGridColor();
         // brighten the grid color
-        m_table.setGridColor(new Color((gridColor.getRed() + 255) / 2
-            , (gridColor.getGreen() + 255) / 2
-            , (gridColor.getBlue() + 255) / 2));
+        m_table.setGridColor(new Color((gridColor.getRed() + 255) / 2, (gridColor.getGreen() + 255) / 2,
+            (gridColor.getBlue() + 255) / 2));
 
-        JScrollPane scroll = new JScrollPane(m_table);
+        final JScrollPane scroll = new JScrollPane(m_table);
         add(scroll, c);
 
         c.gridx++;
@@ -118,11 +119,10 @@ public class ConfigTablePanel extends JPanel {
         add(createButtonPanel(), c);
     }
 
-
     /** The button panel at the right. */
     private JPanel createButtonPanel() {
-        JPanel p = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
+        final JPanel p = new JPanel(new GridBagLayout());
+        final GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
         c.anchor = GridBagConstraints.NORTHWEST;
         c.insets = new Insets(0, 0, 5, 0);
@@ -132,13 +132,11 @@ public class ConfigTablePanel extends JPanel {
         c.weightx = 1;
         c.weighty = 0;
 
-        m_addButton = new JButton("Add");
         m_addButton.addActionListener(createAddButtonListener());
         p.add(m_addButton, c);
 
         c.gridy++;
         c.insets = new Insets(0, 0, 0, 0);
-        m_removeButton = new JButton("Remove");
         m_removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent arg0) {
@@ -158,8 +156,8 @@ public class ConfigTablePanel extends JPanel {
     }
 
     /**
-     * Create action listener reaction on the Add-Button. Default is to add an
-     * empty row.
+     * Create action listener reaction on the Add-Button. Default is to add an empty row.
+     *
      * @return the action listener for the Add-Button
      */
     protected ActionListener createAddButtonListener() {
@@ -171,9 +169,9 @@ public class ConfigTablePanel extends JPanel {
         };
     }
 
-
     /**
      * Access to underlying table.
+     *
      * @return the underlying table
      */
     public JTable getTable() {
@@ -182,6 +180,7 @@ public class ConfigTablePanel extends JPanel {
 
     /**
      * Access to the model.
+     *
      * @return the table model.
      */
     protected ConfigTableModel getModel() {
@@ -197,9 +196,6 @@ public class ConfigTablePanel extends JPanel {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
@@ -207,5 +203,4 @@ public class ConfigTablePanel extends JPanel {
         m_addButton.setEnabled(enabled);
         m_removeButton.setEnabled(enabled);
     }
-
 }

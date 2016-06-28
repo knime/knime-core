@@ -68,7 +68,7 @@ public interface StringValue extends DataValue {
     /**
      * @return A String value.
      */
-    @DataValueAccessMethod
+    @DataValueAccessMethod(name = "String")
     String getStringValue();
 
     /** Implementations of the meta information of this value class. */

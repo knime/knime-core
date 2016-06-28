@@ -65,7 +65,7 @@ public interface LongValue extends DataValue {
     /**
      * @return A generic <code>long</code> value.
      */
-    @DataValueAccessMethod
+    @DataValueAccessMethod(name = "Long")
     long getLongValue();
 
     /** Implementations of the meta information of this value class. */
