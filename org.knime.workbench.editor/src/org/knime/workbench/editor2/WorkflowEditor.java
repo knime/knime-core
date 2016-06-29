@@ -1855,7 +1855,11 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         ContentObject preSel = ContentObject.forFile(currentParent);
         if (isTempRemoteWorkflowEditor()) {
-            AbstractExplorerFileStore remoteStore = ExplorerFileSystem.INSTANCE.getStore(m_origRemoteLocation);
+            AbstractExplorerFileStore remoteStore = null;
+            try{
+                remoteStore = ExplorerFileSystem.INSTANCE.getStore(m_origRemoteLocation);
+            } catch (IllegalArgumentException e) { /* don't preselect on unknown original location */ }
+
             if (remoteStore != null) {
                 preSel = ContentObject.forFile(remoteStore);
             } else {
