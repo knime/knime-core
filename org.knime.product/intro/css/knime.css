@@ -447,26 +447,6 @@ h2 {
 h3 {
 	font-size: 16px;
 	font-size: 1.6rem;
-	
-}
-
-#intro p {
-
-	text-align: justify;
-	line-height: 1.6em;
-	margin: 8px;
-}
-
-#welcome-knime {
-	background-color: #EEEEEE;
-	padding: 0.5em;
-}
-
-.sub-heading {
-	margin-top: 0;
-	text-align: center;
-	background-color: #EEEEEE;
-	padding: 0.3em;
 }
 
 a {
@@ -474,32 +454,59 @@ a {
     text-decoration: none;
 }
 
-a:HOVER {
+a:hover {
     text-decoration: underline;;
 }
 
+#welcome-page-wrapper {
+	max-width: 1000px;
+    margin: 10px auto;
+    padding: 0 10px;
+}
 
-body > h2 {
-    margin: 30px auto 20px;
-    max-width: 1000px;
+#welcome-page-header {
+	padding: 0.6em;
+    box-sizing: border-box;
 }
 
 #intro {
-	margin: 0 auto 10px auto;
-	padding-top: 13px;
-	width:100%;
+	margin-bottom: 10px;
+	width: 100%;
+}
+
+#welcome-knime {
+	background-color: #EEEEEE;
+	padding: 0.6em;
+	border-radius: 5px;
+	margin: 0;
 }
 
 div#intro-text {
+	width: 49%;
+    float: left;
+    margin: 10px 1% 10px 0;
+    padding: 0.6em;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#intro p {
+	text-align: justify;
+}
+
+div#news-graphic {
+	width: 49%;
+	margin: 10px 0 10px 1%;
+    box-sizing: border-box;
+    padding: 0.6em;
     float: left;
     overflow: hidden;
 }
 
-div#news-graphic {
-    float: left;
-    width: 400px;
-    overflow: hidden;
-    padding-left: 20px;
+div#news-graphic img {
+	display: block;
+    margin: 0 auto;
+    max-width: 100%;
 }
 
 #update {
@@ -521,75 +528,33 @@ div#news-graphic {
 }
 
 div#links-and-mru {
-	max-width: 1000px;
-	margin: 10px auto 20px auto;
+	margin: 0;
 	clear: both;
 }
 
-
 div#links {
     float: left;
-    width: 45%;
+	width: 49%;
+    margin: 0 1% 0 0;
+    box-sizing: border-box;
     height: 180px;
 	overflow: hidden;
-	margin: 0 1.5%;
 	border: solid 2px #ffd600;
 	border-radius: 5px;
-	padding-bottom: 5px;
 }
 
-
-
-a .link-label {
-	padding-left: 5px;
-	vertical-align: middle;
-}
-
-a .text {
-	padding-left: 75px;
-}
-
-div#mru {
-    width: 50%;
-    height: 180px;
-    overflow-y: auto;
-    border: solid 2px #ffd600;
-    float: left;
-	border-radius: 5px;
-	padding-bottom: 5px;
-}
-
-div#mruScrollBox {
-    height: 132px;
-    width: auto;
-    overflow: auto;
-}
-
-ul#mruList {
-	padding-left: 22px;
+.sub-heading {
 	margin-top: 0;
-}
-
-ul#mruList li {
-    margin-bottom: 5px;
-}
-
-div#news h2 {
-    border-bottom: 1px solid #ccc;
-}
-
-
-div#tips h2 {
-	border-bottom: 1px solid #ccc;
-}
-
-span.field-content {
-	font-size: 120%;
-	font-weight: bold;
+	margin-bottom: 5px;
+	text-align: center;
+	background-color: #EEEEEE;
+	padding: 0.3em;
 }
 
 div.floating-link {
     width: 100%;
+    box-sizing: border-box;
+    padding-left: 0.6em;
 }
 
 .floating-link  a {
@@ -615,7 +580,76 @@ div.floating-link {
     text-decoration: underline;
 }
 
+div#mru {
+    float: left;
+    width: 49%;
+    height: 180px;
+	margin: 0 0 0 1%;
+    border: solid 2px #ffd600;
+	border-radius: 5px;
+	padding-bottom: 5px;
+	box-sizing: border-box;
+}
 
+div#mruScrollBox {
+    height: 135px;
+    width: auto;
+    overflow: auto;
+}
+
+ul#mruList {
+	padding-left: 22px;
+	margin-top: 0;
+}
+
+ul#mruList li {
+    margin: 0;
+}
+
+#mruList a {
+    display: block;
+	padding: 4px 0;
+}
+
+#tips {
+	width: 100%;
+    box-sizing: border-box;
+	color: #444;
+    margin: 1em auto;
+    padding: 0.6em;
+    background: #f0f0f0;
+    border-radius: 5px;
+}
+
+
+body > h2 {
+    margin: 30px auto 20px;
+    max-width: 1000px;
+}
+
+a .link-label {
+	padding-left: 5px;
+	vertical-align: middle;
+}
+
+a .text {
+	padding-left: 75px;
+}
+
+div#news h2 {
+    border-bottom: 1px solid #ccc;
+}
+
+#tips > h2 {
+    margin-top: 5px;
+    border-bottom: 1px solid #ccc;
+}
+
+.views-field-title {
+	font-size: 14px;
+	font-size: 1.4rem;
+	font-weight: bold;
+}
 
 #news {
 	color: #444;
@@ -631,18 +665,9 @@ div.floating-link {
 	margin-top: 5px;
 }
 
-#tips {
-	color: #444;
-    max-width: 1000px;
-    margin: 20px auto;
-    padding: 5px 5px;
-    background: #f0f0f0;
-    border-radius: 5px;
-}
 
-#tips > h2 {
-    margin-top: 5px;
-}
+
+
 
 
 #properties {
@@ -702,6 +727,21 @@ div.floating-link {
 }
 
 /* Media Queries */
+
+@media only screen and (max-width: 576px) {
+	div#intro-text,
+	div#news-graphic,
+	div#links,
+	div#mru
+	{
+		float: none;
+		width: 100%;
+		display: block;
+		margin: 10px 0;
+		
+	}
+	
+}
 
 @media all and (max-width: 180px) {
   #links, #mru {

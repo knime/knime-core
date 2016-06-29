@@ -18,8 +18,10 @@ See below for examples.
 <!--<link type="text/css" rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:400,400italic,500,500italic,700,900,900italic,700italic&amp;subset=latin,latin-ext" />-->
 <link rel="stylesheet" href="animation.css" type="text/css" />
 <link rel="stylesheet" href="knime-fontello-code.css" type="text/css" />
-<link rel="stylesheet" href="knime-fontello-embedded.css" type="text/css" />
-<link rel="stylesheet" href="knime-fontello-ie7-codes.css" type="text/css" />
+<link rel="stylesheet" href="knime-fontello-embedded.css"
+	type="text/css" />
+<link rel="stylesheet" href="knime-fontello-ie7-codes.css"
+	type="text/css" />
 <link rel="stylesheet" href="knime-fontello-ie7.css" type="text/css" />
 <link rel="stylesheet" href="knime-fontello.css" type="text/css" />
 <link rel="stylesheet" href="knime.css" type="text/css" />
@@ -49,131 +51,161 @@ function showUpdate(show) {
 </head>
 <!-- This page is shown upon each startup. -->
 <body>
-    <img src="img/KNIME_logo.png" />
 
-    <div id="intro">
-        <div class="hide-button">
-            <img src="img/close-button.png" onclick="showIntro(false);" title="Hide intro text" />
-        </div>
-        <h1 id="welcome-knime">Welcome to KNIME Analytics Platform!</h1>
-        <div id="intro-text">
-		<p>New to KNIME? Looking for resources to get started?
-		<ul>
-		  <li>Register for emails with introductory tips <a href="http://www.knime.org/registerwithemil?src=knimeapp">here</a>.</li>
-		  <li>Explore our <a class="quickstart-guide" href="will-be-replaced-with-correct-link-during-startup" target="_blank">Quickstart Guide</a>.</li>
-		  <li>Check out <a href="https://www.knime.org/blog/seven-things-to-do-after-installing-knime-analytics-platform?src=knimeapp">7 things to do after installing KNIME Analytics Platform</a></li>
-		  <li>Find more hints and how-tos in the <a href="http://www.knime.org/learning-hub?src=knimeapp">Learning Hub</a>.</li>
-		  <li>And register for our release and event emails right <a href="http://www.knime.org/newsletter-registration?src=knimeapp">here</a>.</li>
-		</ul>
-        </p>
-        <p>This page will be displayed upon startup but you can customize the content using the checkboxes at the bottom.</p>
-        </div>
-        <div id="news-graphic">
-            <img src="http://www.knime.org/news-graphic.png" onerror="this.style.display = 'none'" />
-        </div>
-    </div>
+	<div id="welcome-page-wrapper">
+		<div id="welcome-page-header">
+			<img src="img/KNIME_logo.png" />
+		</div>
+		<div id="intro">
+			<div class="hide-button">
+				<img src="img/close-button.png" onclick="showIntro(false);"
+					title="Hide intro text" />
+			</div>
+			<h1 id="welcome-knime">Welcome to KNIME Analytics Platform!</h1>
+			<div id="intro-text">
+				<p>New to KNIME? Looking for resources to get started?</p>
+				<ul>
+					<li>Register for emails with introductory tips 
+						<a href="http://www.knime.org/registerwithemil?src=knimeapp">here</a>.
+					</li>
+					<li>Explore our <a class="quickstart-guide" href="will-be-replaced-with-correct-link-during-startup"
+						target="_blank">Quickstart Guide</a>.
+					</li>
+					<li>Check out 
+						<a href="https://www.knime.org/blog/seven-things-to-do-after-installing-knime-analytics-platform?src=knimeapp">
+							7 things to do after installing KNIME Analytics Platform</a>
+					</li>
+					<li>Find more hints and how-tos in the <a href="http://www.knime.org/learning-hub?src=knimeapp">
+						Learning Hub</a>.
+					</li>
+					<li>And register for our release and event emails right 
+						<a href="http://www.knime.org/newsletter-registration?src=knimeapp">here</a>.
+					</li>
+				</ul>
+				<p>This page will be displayed upon startup but you can
+					customize the content using the checkboxes at the bottom.</p>
+			</div>
+			<div id="news-graphic">
+				<img src="http://www.knime.org/news-graphic.png"
+					onerror="this.style.display = 'none'" />
+			</div>
+		</div>
 
-    <div id="update" style="display: none;">
-    <div id="update-inner" style="display: none;">
-        <div class="hide-button">
-            <img src="img/close-button.png" title="Hide update notifications" onclick="showUpdate(false);" />
-        </div>
-        <span id="release-available" style="display: none;">New releases of the following components are available:</span>
-        
-        <ul id="release-list" style="display: none;">
-        </ul>
-        <span style="display: none;"
-            id="update-not-possible">Unfortunately an update is not possible, but you can download the new
-            version from <a href="http://www.knime.org/downloads?src=knimeapp">http://www.knime.org/downloads</a>
-        </span>
-        <span style="display: none;" id="update-possible"> Click <a href="intro://invokeUpdate/">here</a>
-            in order to upgrade to the new version.
-        </span>
-        
-        <span id="bugfixes-available" style="display: none;">Updates for the following components are available:</span>
-        
-        <ul id="bugfixes-list" style="display: none;">
-        </ul>
-        
-        <span style="display: none;" id="install-bugfixes"> Click <a href="intro://invokeUpdate/">here</a>
-            in order to install updates.
-        </span>
-    </div>
-    </div>
+		<div id="update" style="display: none;">
+			<div id="update-inner" style="display: none;">
+				<div class="hide-button">
+					<img src="img/close-button.png" title="Hide update notifications"
+						onclick="showUpdate(false);" />
+				</div>
+				<span id="release-available" style="display: none;">New
+					releases of the following components are available:</span>
 
+				<ul id="release-list" style="display: none;">
+				</ul>
+				<span style="display: none;" id="update-not-possible">Unfortunately
+					an update is not possible, but you can download the new version
+					from <a href="http://www.knime.org/downloads?src=knimeapp">http://www.knime.org/downloads</a>
+				</span> <span style="display: none;" id="update-possible"> Click <a
+					href="intro://invokeUpdate/">here</a> in order to upgrade to the
+					new version.
+				</span> <span id="bugfixes-available" style="display: none;">Updates
+					for the following components are available:</span>
 
-    <div id="links-and-mru">
-        <div class="hide-button">
-            <img src="img/close-button.png" title="Hide links and most recently used workflows"
-                onclick="showLinksAndMru(false);" />
-        </div>
-        <div id="links">
-            <h2 class="sub-heading">Where to go from here</h2>
-            <div class="floating-link">
-                <a href="intro://newWorkflow/" id="new-workflow"
-                   title="Create a new KNIME workflow." class="useful-links">
-                    <span class="icon-wrench"></span>Create new workflow
-                </a>
-            </div>
+				<ul id="bugfixes-list" style="display: none;">
+				</ul>
 
-            <div class="floating-link">
-                <a href="http://www.knime.org/learning-hub?src=knimeapp" id="learning-hub" class="useful-links"
-                   title="Takes you to the KNIME Learning Hub with all kinds of introductory material.">
-                    <span class="icon-book-open"></span>Learning Hub
-                </a>
-            </div>
-    
-            <div class="floating-link">
-                <a href="intro://browseExamples/" id="examples" class="useful-links"
-                   title="Open the KNIME Public Server (see the KNIME Explorer at the top-left) and browse through numerous examples.">
-                    <span class="icon-chart-line"></span>Browse example workflows
-                </a>
-            </div>
-    
-    
-            <div class="floating-link">
-                <a href="intro://installExtensions/" id="install" class="useful-links"
-                   title="Launch the install wizard to get additional KNIME features (e.g. Weka, R, Chemistry...).">
-                    <span class="icon-download"></span>Get additional nodes
-                </a>
-            </div>
-    
-            <div class="floating-link">
-                <a href="intro://closeIntro/" id="close" class="useful-links" title="Closes this intro page and takes you to your workflows.">
-                    <span class="icon-angle-circled-right"></span>Go to my workflows
-                </a>
-            </div>
-            
-            <div class="floating-link">
-                <a href="intro://mountServer/" id="mount-server"
-                   title="Opens the KNIME Explorer mount editor to define new server connections" class="useful-links">
-                    <span class="icon-flow-tree"></span>Mount KNIME Cloud Server
-                </a>
-            </div>
-        </div>
-        
-        <div id="mru">
-            <h2 class="sub-heading">Most recently used workflows</h2>
-            <div id="mruScrollBox">
-                <ul id="mruList" />
-            </div>
-        </div>
-        <div style="clear: both;"> </div>
-    </div>    
+				<span style="display: none;" id="install-bugfixes"> Click <a
+					href="intro://invokeUpdate/">here</a> in order to install updates.
+				</span>
+			</div>
+		</div>
 
 
-    <div id="news" style="display: none;">
-        <h2>News</h2>
-    </div>
+		<div id="links-and-mru">
+			<div class="hide-button">
+				<img src="img/close-button.png"
+					title="Hide links and most recently used workflows"
+					onclick="showLinksAndMru(false);" />
+			</div>
+			<div id="links">
+				<h2 class="sub-heading">Where to go from here</h2>
+				<div class="floating-link">
+					<a href="intro://newWorkflow/" id="new-workflow"
+						title="Create a new KNIME workflow." class="useful-links"> <span
+						class="icon-wrench"></span>Create new workflow
+					</a>
+				</div>
 
-    <div id="tips" style="display: none;">
-        <h2>Tips &amp; Tricks</h2>
-    </div>
-    
-    <div id="properties">
-        <input type="checkbox" name="intro" id="show-intro" onclick="showIntro(document.getElementById('show-intro').checked);"/>Show intro text at next start<br />
-        <input type="checkbox" name="update" id="show-update" onclick="showUpdate(document.getElementById('show-update').checked);"/>Show update notifications at next start<br />
-        <input type="checkbox" name="links-and-mru" id="show-links-and-mru" onclick="showLinksAndMru(document.getElementById('show-links-and-mru').checked);"/>Show links and most recently used workflows at next start<br />
-    </div>
+				<div class="floating-link">
+					<a href="http://www.knime.org/learning-hub?src=knimeapp"
+						id="learning-hub" class="useful-links"
+						title="Takes you to the KNIME Learning Hub with all kinds of introductory material.">
+						<span class="icon-book-open"></span>Learning Hub
+					</a>
+				</div>
+
+				<div class="floating-link">
+					<a href="intro://browseExamples/" id="examples"
+						class="useful-links"
+						title="Open the KNIME Public Server (see the KNIME Explorer at the top-left) and browse through numerous examples.">
+						<span class="icon-chart-line"></span>Browse example workflows
+					</a>
+				</div>
+
+
+				<div class="floating-link">
+					<a href="intro://installExtensions/" id="install"
+						class="useful-links"
+						title="Launch the install wizard to get additional KNIME features (e.g. Weka, R, Chemistry...).">
+						<span class="icon-download"></span>Get additional nodes
+					</a>
+				</div>
+
+				<div class="floating-link">
+					<a href="intro://closeIntro/" id="close" class="useful-links"
+						title="Closes this intro page and takes you to your workflows.">
+						<span class="icon-angle-circled-right"></span>Go to my workflows
+					</a>
+				</div>
+
+				<div class="floating-link">
+					<a href="intro://mountServer/" id="mount-server"
+						title="Opens the KNIME Explorer mount editor to define new server connections"
+						class="useful-links"> <span class="icon-flow-tree"></span>Mount
+						KNIME Cloud Server
+					</a>
+				</div>
+			</div>
+
+			<div id="mru">
+				<h2 class="sub-heading">Most recently used workflows</h2>
+				<div id="mruScrollBox">
+					<ul id="mruList" />
+				</div>
+			</div>
+			<div style="clear: both;"></div>
+		</div>
+
+
+		<div id="news" style="display: none;">
+			<h2>News</h2>
+		</div>
+
+		<div id="tips" style="display: none;">
+			<h2>Tips &amp; Tricks</h2>
+		</div>
+
+		<div id="properties">
+			<input type="checkbox" name="intro" id="show-intro"
+				onclick="showIntro(document.getElementById('show-intro').checked);" />Show
+			intro text at next start<br /> <input type="checkbox" name="update"
+				id="show-update"
+				onclick="showUpdate(document.getElementById('show-update').checked);" />Show
+			update notifications at next start<br /> <input type="checkbox"
+				name="links-and-mru" id="show-links-and-mru"
+				onclick="showLinksAndMru(document.getElementById('show-links-and-mru').checked);" />Show
+			links and most recently used workflows at next start<br />
+		</div>
+	</div>
 </body>
 </html>
