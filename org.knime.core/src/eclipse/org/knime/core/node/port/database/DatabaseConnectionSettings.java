@@ -66,6 +66,7 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.ICredentials;
@@ -219,6 +220,8 @@ public class DatabaseConnectionSettings {
     private String m_user = null;
     private String m_pass = null;
 
+    private boolean m_kerberos = false;
+
     private String m_timezone = "current"; // use current as of KNIME 2.8, none before 2.8
 
     private boolean m_validateConnection;
@@ -334,6 +337,7 @@ public class DatabaseConnectionSettings {
         m_rowIdsStartWithZero = conn.m_rowIdsStartWithZero;
         m_retrieveMetadataInConfigure = conn.m_retrieveMetadataInConfigure;
         m_dbIdentifier = conn.getDatabaseIdentifier();
+        m_kerberos = conn.useKerberos();
     }
 
 //    /** Map the keeps database connection based on the user and URL. */
@@ -415,6 +419,8 @@ public class DatabaseConnectionSettings {
             throws InvalidSettingsException, SQLException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, IOException {
+        CheckUtils.checkSettingNotNull(m_driver, "No settings available to create database connection.");
+        CheckUtils.checkSettingNotNull(m_jdbcUrl, "No JDBC URL set.");
         return getUtility().getConnectionFactory().getConnection(cp, this);
     }
 
@@ -463,6 +469,7 @@ public class DatabaseConnectionSettings {
         settings.addBoolean("allowSpacesInColumnNames", m_allowSpacesInColumnNames);
         settings.addBoolean("rowIdsStartWithZero", m_rowIdsStartWithZero);
         settings.addString("databaseIdentifier", m_dbIdentifier);
+        settings.addBoolean("kerberos", m_kerberos);
     }
 
     /**
@@ -510,7 +517,7 @@ public class DatabaseConnectionSettings {
         boolean retrieveMetadataInConfigure = settings.getBoolean("retrieveMetadataInConfigure", true);
         boolean allowSpacesInColumnNames = settings.getBoolean("allowSpacesInColumnNames", false);
         boolean rowIdsStartWithZero = settings.getBoolean("rowIdsStartWithZero", false);
-
+        boolean kerberos = settings.getBoolean("kerberos", false);
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
             credName = settings.getString("credential_name");
@@ -566,6 +573,7 @@ public class DatabaseConnectionSettings {
             m_allowSpacesInColumnNames = allowSpacesInColumnNames;
             m_rowIdsStartWithZero = rowIdsStartWithZero;
             m_dbIdentifier = dbIdentifier;
+            m_kerberos = kerberos;
             DATABASE_URLS.add(m_jdbcUrl);
             return changed;
         }
@@ -709,7 +717,7 @@ public class DatabaseConnectionSettings {
      * @param cp {@link CredentialsProvider}
      * @return user name used to login to the database
      */
-    public final String getUserName(final CredentialsProvider cp) {
+    public String getUserName(final CredentialsProvider cp) {
         if (cp == null || m_credName == null) {
             return m_user;
         } else {
@@ -722,7 +730,7 @@ public class DatabaseConnectionSettings {
      * @param cp {@link CredentialsProvider}
      * @return password (decrypted) used to login to the database
      */
-    public final String getPassword(final CredentialsProvider cp) {
+    public String getPassword(final CredentialsProvider cp) {
         if (cp == null || m_credName == null) {
             return m_pass;
         } else {
@@ -753,11 +761,27 @@ public class DatabaseConnectionSettings {
     }
 
     /**
+     * @param useKerberos <code>true</code> if Kerberos should be used
+     * @since 3.2
+     */
+    public void setKerberos(final boolean useKerberos) {
+        m_kerberos = useKerberos;
+    }
+
+    /**
+     * @return <code>true</code> if Kerberos should be used
+     * @since 3.2
+     */
+    public boolean useKerberos() {
+        return m_kerberos;
+    }
+
+    /**
      * @return user name used to login to the database
      * @deprecated use {@link #getUserName(CredentialsProvider)}
      */
     @Deprecated
-    public final String getUserName() {
+    public String getUserName() {
         return getUserName(null);
     }
 
@@ -766,7 +790,7 @@ public class DatabaseConnectionSettings {
      * @deprecated use {@link #getPassword(CredentialsProvider)}
      */
     @Deprecated
-    public final String getPassword() {
+    public String getPassword() {
         return getPassword(null);
     }
 
@@ -823,7 +847,7 @@ public class DatabaseConnectionSettings {
      * @return a credential identifier or <code>null</code>
      * @since 2.10
      */
-    public final String getCredentialName() {
+    public String getCredentialName() {
         return m_credName;
     }
 

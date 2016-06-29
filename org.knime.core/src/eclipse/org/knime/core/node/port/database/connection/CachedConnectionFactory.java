@@ -92,11 +92,13 @@ public class CachedConnectionFactory implements DBConnectionFactory {
             private final String m_un;
             private final String m_pw;
             private final String m_dn;
+            private boolean m_kerberos;
             private ConnectionKey(final String userName, final String password,
-                    final String databaseName) {
+                    final String databaseName, final boolean kerberos) {
                 m_un = userName;
                 m_pw = password;
                 m_dn = databaseName;
+                m_kerberos = kerberos;
             }
             /** {@inheritDoc} */
             @Override
@@ -110,7 +112,8 @@ public class CachedConnectionFactory implements DBConnectionFactory {
                 ConnectionKey ck = (ConnectionKey) obj;
                 if (!ConvenienceMethods.areEqual(this.m_un, ck.m_un)
                       || !ConvenienceMethods.areEqual(this.m_pw, ck.m_pw)
-                      || !ConvenienceMethods.areEqual(this.m_dn, ck.m_dn)) {
+                      || !ConvenienceMethods.areEqual(this.m_dn, ck.m_dn)
+                      || this.m_kerberos != ck.m_kerberos) {
                     return false;
                 }
                 return true;
@@ -155,9 +158,10 @@ public class CachedConnectionFactory implements DBConnectionFactory {
         final String jdbcUrl = settings.getJDBCUrl();
         final String user = settings.getUserName(cp);
         final String pass = settings.getPassword(cp);
+        final boolean kerberos = settings.useKerberos();
 
         // database connection key with user, password and database URL
-        ConnectionKey databaseConnKey = new ConnectionKey(user, pass, jdbcUrl);
+        ConnectionKey databaseConnKey = new ConnectionKey(user, pass, jdbcUrl, kerberos);
 
         // retrieve original key and/or modify connection key map
         synchronized (CONNECTION_KEYS) {
@@ -202,9 +206,7 @@ public class CachedConnectionFactory implements DBConnectionFactory {
                 @Override
                 public Connection call() throws Exception {
                     LOGGER.debug("Opening database connection to \"" + jdbcUrl + "\"...");
-                    final Properties props = createConnectionProperties(user, pass);
-                    final Connection connection = d.connect(jdbcUrl, props);
-                    return connection;
+                    return createConnection(jdbcUrl, user, pass, kerberos, d);
                 }
             };
             //TODO:this has to be more robust e.g. the thread should terminate when KNIME terminates and should be
@@ -243,5 +245,25 @@ public class CachedConnectionFactory implements DBConnectionFactory {
             props.put("password", pass);
         }
         return props;
+    }
+
+    /**
+     * @param jdbcUrl jdbc url
+     * @param user user name
+     * @param pass optional password
+     * @param useKerberos <code>true</code> if Kerberos should be used
+     * @param d the {@link Driver}
+     * @return the {@link Connection}
+     * @throws SQLException
+     */
+    protected Connection createConnection(final String jdbcUrl, final String user, final String pass,
+        final boolean useKerberos, final Driver d)
+        throws SQLException {
+    	if (useKerberos){
+    		throw new SQLException("Kerberos not supported");
+    	}
+        final Properties props = createConnectionProperties(user, pass);
+        final Connection connection = d.connect(jdbcUrl, props);
+        return connection;
     }
 }
