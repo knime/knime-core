@@ -455,13 +455,15 @@ a {
 }
 
 a:hover {
-    text-decoration: underline;;
+    text-decoration: underline;
 }
 
 #welcome-page-wrapper {
 	max-width: 1000px;
+	min-width: 280px;
     margin: 10px auto;
     padding: 0 10px;
+    overflow: auto;
 }
 
 #welcome-page-header {
@@ -470,8 +472,10 @@ a:hover {
 }
 
 #intro {
-	margin-bottom: 10px;
+	position: relative;
 	width: 100%;
+	margin-bottom: 10px;
+	overflow: hidden;
 }
 
 #welcome-knime {
@@ -484,21 +488,22 @@ a:hover {
 div#intro-text {
 	width: 49%;
     float: left;
-    margin: 10px 1% 10px 0;
-    padding: 0.6em;
+    margin: 10px 1% 0 0;
+    padding: 0 0.6em;
     box-sizing: border-box;
     overflow: hidden;
 }
 
 #intro p {
 	text-align: justify;
+	margin-bottom: 0;
 }
 
 div#news-graphic {
 	width: 49%;
-	margin: 10px 0 10px 1%;
+	margin: 10px 0 0 1%;
     box-sizing: border-box;
-    padding: 0.6em;
+    padding: 0 0.6em;
     float: left;
     overflow: hidden;
 }
@@ -514,6 +519,7 @@ div#news-graphic img {
 }
 
 #update-inner {
+	position: relative;
 	width: 100%;
 	box-sizing: border-box;
 	font-weight: bold;
@@ -528,8 +534,10 @@ div#news-graphic img {
 }
 
 div#links-and-mru {
+	position: relative;
 	margin: 0;
 	clear: both;
+	overflow: hidden;
 }
 
 div#links {
@@ -541,6 +549,7 @@ div#links {
 	overflow: hidden;
 	border: solid 2px #ffd600;
 	border-radius: 5px;
+	min-width: 280px;
 }
 
 .sub-heading {
@@ -589,6 +598,7 @@ div#mru {
 	border-radius: 5px;
 	padding-bottom: 5px;
 	box-sizing: border-box;
+	min-width: 280px;
 }
 
 div#mruScrollBox {
@@ -680,14 +690,20 @@ div#news h2 {
 /* Checkbox style */
 
 
-#properties > input[type=checkbox] {
+#properties input[type=checkbox] {
 	border-radius: 3px;
+}
+
+#properties label {
+    cursor: pointer;
 }
 
 /* end */
 .hide-button {
-    float: right;
     display: none;
+    position: absolute;
+    top: 5px;
+    right: 5px;
 }
 
 .hide-button:hover {
@@ -695,26 +711,18 @@ div#news h2 {
 }
 
 
-#intro .hide-button {
-    margin-top: -10px;
-}
 #intro:hover .hide-button {
 	display: block;
 }
 
-#update .hide-button {
-    margin-top: -9px;
-    margin-right: -6px;
-}
 #update:hover .hide-button {
 	display: block;
 }
 
 #links-and-mru .hide-button {
- 	margin-right: -6px;
+ 	/*right: 10px;*/
 }
 #links-and-mru:hover .hide-button {
- 	margin-right: -6px;
 	display: block;
 }
 
@@ -728,24 +736,24 @@ div#news h2 {
 
 /* Media Queries */
 
-@media only screen and (max-width: 576px) {
+@media only screen and (max-width: 650px) {
 	div#intro-text,
 	div#news-graphic,
 	div#links,
-	div#mru
-	{
+	div#mru {
 		float: none;
 		width: 100%;
 		display: block;
 		margin: 10px 0;
-		
 	}
 	
-}
-
-@media all and (max-width: 180px) {
-  #links, #mru {
-    float: none !important;
-    width: 100% !important;
-  }
+	div#intro,
+	div#news-graphic {
+		margin-bottom: 0;
+	}
+	
+	#links-and-mru .hide-button {
+    	right: 5px;
+    	top: 15px;
+	}
 }

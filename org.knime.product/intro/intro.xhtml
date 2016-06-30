@@ -57,10 +57,6 @@ function showUpdate(show) {
 			<img src="img/KNIME_logo.png" />
 		</div>
 		<div id="intro">
-			<div class="hide-button">
-				<img src="img/close-button.png" onclick="showIntro(false);"
-					title="Hide intro text" />
-			</div>
 			<h1 id="welcome-knime">Welcome to KNIME Analytics Platform!</h1>
 			<div id="intro-text">
 				<p>New to KNIME? Looking for resources to get started?</p>
@@ -86,17 +82,15 @@ function showUpdate(show) {
 					customize the content using the checkboxes at the bottom.</p>
 			</div>
 			<div id="news-graphic">
-				<img src="http://www.knime.org/news-graphic.png"
-					onerror="this.style.display = 'none'" />
+				<img src="http://www.knime.org/news-graphic.png" onerror="this.style.display = 'none';" />
+			</div>
+			<div class="hide-button">
+				<img src="img/close-button.png" onclick="showIntro(false);" title="Hide intro text" />
 			</div>
 		</div>
 
 		<div id="update" style="display: none;">
 			<div id="update-inner" style="display: none;">
-				<div class="hide-button">
-					<img src="img/close-button.png" title="Hide update notifications"
-						onclick="showUpdate(false);" />
-				</div>
 				<span id="release-available" style="display: none;">New
 					releases of the following components are available:</span>
 
@@ -117,62 +111,51 @@ function showUpdate(show) {
 				<span style="display: none;" id="install-bugfixes"> Click <a
 					href="intro://invokeUpdate/">here</a> in order to install updates.
 				</span>
+				<div class="hide-button">
+					<img src="img/close-button.png" title="Hide update notifications" onclick="showUpdate(false);" />
+				</div>
 			</div>
 		</div>
 
 
 		<div id="links-and-mru">
-			<div class="hide-button">
-				<img src="img/close-button.png"
-					title="Hide links and most recently used workflows"
-					onclick="showLinksAndMru(false);" />
-			</div>
 			<div id="links">
 				<h2 class="sub-heading">Where to go from here</h2>
 				<div class="floating-link">
-					<a href="intro://newWorkflow/" id="new-workflow"
-						title="Create a new KNIME workflow." class="useful-links"> <span
-						class="icon-wrench"></span>Create new workflow
+					<a href="intro://newWorkflow/" id="new-workflow" title="Create a new KNIME workflow." class="useful-links">
+						<span class="icon-wrench"></span>
+						<span>Create new workflow</span>
+					</a>
+				</div>
+				<div class="floating-link">
+					<a href="http://www.knime.org/learning-hub?src=knimeapp" id="learning-hub" class="useful-links" title="Takes you to the KNIME Learning Hub with all kinds of introductory material.">
+						<span class="icon-book-open"></span>
+						<span>Learning Hub</span>
+					</a>
+				</div>
+				<div class="floating-link">
+					<a href="intro://browseExamples/" id="examples"	class="useful-links" title="Open the KNIME Public Server (see the KNIME Explorer at the top-left) and browse through numerous examples.">
+						<span class="icon-chart-line"></span>
+						<span>Browse example workflows</span>
+					</a>
+				</div>
+				<div class="floating-link">
+					<a href="intro://installExtensions/" id="install" class="useful-links" title="Launch the install wizard to get additional KNIME features (e.g. Weka, R, Chemistry...).">
+						<span class="icon-download"></span>
+						<span>Get additional nodes</span>
+					</a>
+				</div>
+				<div class="floating-link">
+					<a href="intro://closeIntro/" id="close" class="useful-links" title="Closes this intro page and takes you to your workflows.">
+						<span class="icon-angle-circled-right"></span>
+						<span>Go to my workflows</span>
 					</a>
 				</div>
 
 				<div class="floating-link">
-					<a href="http://www.knime.org/learning-hub?src=knimeapp"
-						id="learning-hub" class="useful-links"
-						title="Takes you to the KNIME Learning Hub with all kinds of introductory material.">
-						<span class="icon-book-open"></span>Learning Hub
-					</a>
-				</div>
-
-				<div class="floating-link">
-					<a href="intro://browseExamples/" id="examples"
-						class="useful-links"
-						title="Open the KNIME Public Server (see the KNIME Explorer at the top-left) and browse through numerous examples.">
-						<span class="icon-chart-line"></span>Browse example workflows
-					</a>
-				</div>
-
-
-				<div class="floating-link">
-					<a href="intro://installExtensions/" id="install"
-						class="useful-links"
-						title="Launch the install wizard to get additional KNIME features (e.g. Weka, R, Chemistry...).">
-						<span class="icon-download"></span>Get additional nodes
-					</a>
-				</div>
-
-				<div class="floating-link">
-					<a href="intro://closeIntro/" id="close" class="useful-links"
-						title="Closes this intro page and takes you to your workflows.">
-						<span class="icon-angle-circled-right"></span>Go to my workflows
-					</a>
-				</div>
-
-				<div class="floating-link">
-					<a href="intro://mountServer/" id="mount-server"
-						title="Opens the KNIME Explorer mount editor to define new server connections"
-						class="useful-links"> <span class="icon-flow-tree"></span>Mount
-						KNIME Cloud Server
+					<a href="intro://mountServer/" id="mount-server" title="Opens the KNIME Explorer mount editor to define new server connections" class="useful-links">
+						<span class="icon-flow-tree"></span>
+						<span>Mount	KNIME Cloud Server</span>
 					</a>
 				</div>
 			</div>
@@ -183,7 +166,9 @@ function showUpdate(show) {
 					<ul id="mruList" />
 				</div>
 			</div>
-			<div style="clear: both;"></div>
+			<div class="hide-button">
+				<img src="img/close-button.png" title="Hide links and most recently used workflows" onclick="showLinksAndMru(false);" />
+			</div>
 		</div>
 
 
@@ -196,15 +181,12 @@ function showUpdate(show) {
 		</div>
 
 		<div id="properties">
-			<input type="checkbox" name="intro" id="show-intro"
-				onclick="showIntro(document.getElementById('show-intro').checked);" />Show
-			intro text at next start<br /> <input type="checkbox" name="update"
-				id="show-update"
-				onclick="showUpdate(document.getElementById('show-update').checked);" />Show
-			update notifications at next start<br /> <input type="checkbox"
-				name="links-and-mru" id="show-links-and-mru"
-				onclick="showLinksAndMru(document.getElementById('show-links-and-mru').checked);" />Show
-			links and most recently used workflows at next start<br />
+			<input type="checkbox" name="intro" id="show-intro" onclick="showIntro(document.getElementById('show-intro').checked);" />
+			<label for="show-intro">Show intro text at next start</label><br />
+			<input type="checkbox" name="update" id="show-update" onclick="showUpdate(document.getElementById('show-update').checked);" />
+			<label for="show-update">Show update notifications at next start</label><br />
+			<input type="checkbox" name="links-and-mru" id="show-links-and-mru" onclick="showLinksAndMru(document.getElementById('show-links-and-mru').checked);" />
+			<label for="show-links-and-mru">Show links and most recently used workflows at next start</label><br />
 		</div>
 	</div>
 </body>
