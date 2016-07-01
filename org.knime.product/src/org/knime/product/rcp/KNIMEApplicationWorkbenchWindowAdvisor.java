@@ -57,10 +57,8 @@ import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchListener;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -78,7 +76,6 @@ import org.knime.product.rcp.intro.IntroPage;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.knime.workbench.core.util.LinkMessageDialog;
-import org.knime.workbench.explorer.view.ExplorerView;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.knime.workbench.ui.startup.StartupMessage;
@@ -147,24 +144,6 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
             }
         }
 
-        if (!EclipseUtil.isRunFromSDK() && IntroPage.INSTANCE.isFreshWorkspace()) {
-            for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
-                for (IWorkbenchPage page : window.getPages()) {
-                    for (IViewReference ref : page.getViewReferences()) {
-                        if (ExplorerView.ID.equals(ref.getId())) {
-                            final ExplorerView explorer = (ExplorerView)ref.getView(true);
-                            explorer.getViewer().getControl().getDisplay().asyncExec(new Runnable() {
-                                @Override
-                                public void run() {
-                                    explorer.getViewer().refresh();
-                                    explorer.getViewer().expandAll();
-                                }
-                            });
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**
