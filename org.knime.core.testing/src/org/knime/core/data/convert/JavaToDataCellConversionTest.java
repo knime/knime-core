@@ -166,7 +166,7 @@ public class JavaToDataCellConversionTest {
     @Test
     public void testToIntCell() throws Exception {
         final IntCell cell = testSimpleConversion(Integer.class, IntCell.TYPE, IntCell.class, new Integer(42));
-        assertEquals(cell.getIntValue(), 42);
+        assertEquals(42, cell.getIntValue());
     }
 
     /**
@@ -177,10 +177,10 @@ public class JavaToDataCellConversionTest {
     @Test
     public void testToLongCell() throws Exception {
         final LongCell cell = testSimpleConversion(Long.class, LongCell.TYPE, LongCell.class, new Long(42L));
-        assertEquals(cell.getLongValue(), 42L);
+        assertEquals(42L, cell.getLongValue());
 
         final LongCell cell1 = testSimpleConversion(Integer.class, LongCell.TYPE, LongCell.class, new Integer(412));
-        assertEquals(cell1.getLongValue(), 412L);
+        assertEquals(412L, cell1.getLongValue());
     }
 
     /**
@@ -192,7 +192,7 @@ public class JavaToDataCellConversionTest {
     public void testToDoubleCell() throws Exception {
         final DoubleCell cell =
             testSimpleConversion(Double.class, DoubleCell.TYPE, DoubleCell.class, new Double(Math.PI));
-        assertEquals(cell.getDoubleValue(), Math.PI, FUZZY_DOUBLE_TOLERANCE);
+        assertEquals(Math.PI, cell.getDoubleValue(), FUZZY_DOUBLE_TOLERANCE);
     }
 
     /**
@@ -204,11 +204,11 @@ public class JavaToDataCellConversionTest {
     public void testToStringCell() throws Exception {
         final StringCell cell =
             testSimpleConversion(String.class, StringCell.TYPE, StringCell.class, new String("KNIME"));
-        assertEquals(cell.getStringValue(), "KNIME");
+        assertEquals("KNIME", cell.getStringValue());
 
         /* .toString() converter */
         final StringCell cell1 = testSimpleConversion(MyClass.class, StringCell.TYPE, StringCell.class, new MyClass());
-        assertEquals(cell1.getStringValue(), new MyClass().toString());
+        assertEquals(new MyClass().toString(), cell1.getStringValue());
     }
 
     /**
@@ -224,7 +224,7 @@ public class JavaToDataCellConversionTest {
         {
             final XMLCell xmlCell =
                 testSimpleConversion(String.class, XMLCell.TYPE, XMLCell.class, new String("<KNIME />"));
-            assertEquals(xmlCell.getStringValue(), xmlString);
+            assertEquals(xmlString, xmlCell.getStringValue().replace('\'', '"'));
         }
 
         /* from Document */
@@ -234,7 +234,7 @@ public class JavaToDataCellConversionTest {
             final DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
             final XMLCell xmlCell = testSimpleConversion(Document.class, XMLCell.TYPE, XMLCell.class,
                 builder.parse(new InputSource(new StringReader(xmlString))));
-            assertEquals(xmlCell.getStringValue(), xmlString);
+            assertEquals(xmlString, xmlCell.getStringValue().replace('\'', '"'));
         }
 
         /* from InputStream */
@@ -242,7 +242,7 @@ public class JavaToDataCellConversionTest {
             final InputStream stream = getClass().getResourceAsStream("test.xml");
             assertTrue(stream.available() > 0);
             final XMLCell xmlCell = testSimpleConversion(InputStream.class, XMLCell.TYPE, XMLCell.class, stream);
-            assertEquals(xmlCell.getStringValue(), xmlString);
+            assertEquals(xmlString, xmlCell.getStringValue().replace('\'', '"'));
         }
     }
 
@@ -288,7 +288,7 @@ public class JavaToDataCellConversionTest {
 
         final ListCell listCell = (ListCell)converter.convert(coll);
         for (int i = 0; i < 6; ++i) {
-            assertEquals(((IntCell)listCell.get(i)).getIntValue(), i * i);
+            assertEquals(i * i, ((IntCell)listCell.get(i)).getIntValue());
         }
     }
 
