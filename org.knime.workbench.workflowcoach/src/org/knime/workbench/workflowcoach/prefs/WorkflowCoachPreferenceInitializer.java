@@ -51,8 +51,6 @@ package org.knime.workbench.workflowcoach.prefs;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.knime.workbench.core.KNIMECorePlugin;
-import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.osgi.framework.FrameworkUtil;
 
 /**
@@ -91,8 +89,8 @@ public class WorkflowCoachPreferenceInitializer extends AbstractPreferenceInitia
     public void initializeDefaultPreferences() {
         IEclipsePreferences prefs =
             DefaultScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
-        prefs.putBoolean(P_COMMUNITY_NODE_TRIPLE_PROVIDER, KNIMECorePlugin.getDefault().getPreferenceStore()
-            .getBoolean(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS));
+        //disable the community recommendations by default (because the 'send_statistics'-property is disabled by default, too)
+        prefs.putBoolean(P_COMMUNITY_NODE_TRIPLE_PROVIDER, false);
         prefs.putInt(P_AUTO_UPDATE_SCHEDULE, MONTHLY_UPDATE);
     }
 }

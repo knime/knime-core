@@ -248,6 +248,22 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         };
         nodesLoader.setSystem(true);
         nodesLoader.schedule();
+
+        //if the 'send anonymous statistics'-property has been changed, try updating the workflow coach
+        KNIMECorePlugin.getDefault().getPreferenceStore().addPropertyChangeListener(e -> {
+            if(e.getProperty().equals(HeadlessPreferencesConstants.P_SEND_ANONYMOUS_STATISTICS)) {
+                if(e.getNewValue().equals(Boolean.TRUE)) {
+                    //enable the community recommendations
+                    PREFS.setValue(WorkflowCoachPreferenceInitializer.P_COMMUNITY_NODE_TRIPLE_PROVIDER, true);
+                    try {
+                        PREFS.save();
+                    } catch (Exception e1) {
+                        throw new RuntimeException(e1);
+                    }
+                    updateInput(StructuredSelection.EMPTY);
+                }
+            }
+        });
     }
 
     /**
