@@ -50,6 +50,8 @@ package org.knime.base.node.io.database.connection.util;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -59,8 +61,6 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
@@ -180,19 +180,27 @@ public class DBAuthenticationPanel<T extends DatabaseConnectionSettings> extends
             add(m_useKerberos, m_c);
         }
 
-        ButtonGroup bg = new ButtonGroup();
+        final ButtonGroup bg = new ButtonGroup();
         bg.add(m_useCredentials);
         bg.add(m_usePassword);
         bg.add(m_useKerberos);
 
-        m_useCredentials.addChangeListener(new ChangeListener() {
+        m_useCredentials.addActionListener(new ActionListener() {
             @Override
-            public void stateChanged(final ChangeEvent e) {
-                m_credentials.setEnabled(m_useCredentials.isSelected());
-                usernameLabel.setEnabled(!m_useCredentials.isSelected());
-                m_username.setEnabled(!m_useCredentials.isSelected());
-                passwordLabel.setEnabled(!m_useCredentials.isSelected());
-                m_password.setEnabled(!m_useCredentials.isSelected());
+            public void actionPerformed(final ActionEvent e) {
+                authMethodChanged(usernameLabel, passwordLabel);
+            }
+        });
+        m_usePassword.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                authMethodChanged(usernameLabel, passwordLabel);
+            }
+        });
+        m_useKerberos.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                authMethodChanged(usernameLabel, passwordLabel);
             }
         });
 
@@ -243,5 +251,14 @@ public class DBAuthenticationPanel<T extends DatabaseConnectionSettings> extends
             m_settings.setPassword(new String(m_password.getPassword()));
         }
         m_settings.setKerberos(m_useKerberos.isSelected());
+    }
+
+    private void authMethodChanged(final JLabel usernameLabel, final JLabel passwordLabel) {
+        m_credentials.setEnabled(m_useCredentials.isSelected());
+        final boolean useUserNamePassword = m_usePassword.isSelected();
+        usernameLabel.setEnabled(useUserNamePassword);
+        m_username.setEnabled(useUserNamePassword);
+        passwordLabel.setEnabled(useUserNamePassword);
+        m_password.setEnabled(useUserNamePassword);
     }
 }
