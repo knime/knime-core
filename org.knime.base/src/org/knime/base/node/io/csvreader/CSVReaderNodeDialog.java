@@ -78,9 +78,13 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Dialog to CSV Reader node.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class CSVReaderNodeDialog extends NodeDialogPane {
+// this class is also used in the wide data extension. Once it's moved to the base bundle the scope if this class
+// should be limited again.
+public final class CSVReaderNodeDialog extends NodeDialogPane {
 
     private final FilesHistoryPanel m_filePanel;
     private final JTextField m_colDelimiterField;
@@ -97,8 +101,8 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
     private final CharsetNamePanel m_encodingPanel;
 
 
-    /** Create new dialog, init layout. */
-    CSVReaderNodeDialog() {
+    /** Create new dialog, init layout.*/
+    public CSVReaderNodeDialog() {
         JPanel panel = new JPanel(new BorderLayout());
         m_filePanel =
             new FilesHistoryPanel(createFlowVariableModel(CSVReaderConfig.CFG_URL, FlowVariable.Type.STRING),
