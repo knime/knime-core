@@ -107,7 +107,8 @@ public class DataCellToJavaConversionTest {
                 .findFirst();
         assertTrue(factory.isPresent());
 
-        final DataCellToJavaConverter<D> converter = factory.get().create();
+        final DataCellToJavaConverter<DataCell, D> converter =
+            (DataCellToJavaConverter<DataCell, D>)factory.get().create();
         assertNotNull(converter);
 
         if (destType == Double.class) {
@@ -181,7 +182,8 @@ public class DataCellToJavaConversionTest {
                 .getConverterFactories(BinaryObjectDataCell.TYPE, InputStream.class).stream().findFirst();
         assertTrue(factory.isPresent());
 
-        final DataCellToJavaConverter<InputStream> converter = factory.get().create();
+        final DataCellToJavaConverter<DataCell, InputStream> converter =
+            (DataCellToJavaConverter<DataCell, InputStream>)factory.get().create();
         assertNotNull(converter);
 
         final BinaryObjectCellFactory cellFactory = new BinaryObjectCellFactory();
@@ -207,7 +209,8 @@ public class DataCellToJavaConversionTest {
                 .findFirst();
         assertTrue(factory.isPresent());
 
-        final DataCellToJavaConverter<Document> converter = factory.get().create();
+        final DataCellToJavaConverter<DataCell, Document> converter =
+            (DataCellToJavaConverter<DataCell, Document>)factory.get().create();
         assertNotNull(converter);
 
         final NodeList children = converter.convert(XMLCellFactory.create("<tag/>")).getChildNodes();
@@ -234,7 +237,8 @@ public class DataCellToJavaConversionTest {
                 .stream().findFirst();
         assertTrue(factory.isPresent());
 
-        final DataCellToJavaConverter<Integer[]> converter = factory.get().create();
+        final DataCellToJavaConverter<DataCell, Integer[]> converter =
+            (DataCellToJavaConverter<DataCell, Integer[]>)factory.get().create();
         assertNotNull(converter);
 
         final Integer[] array = converter.convert(listCell);

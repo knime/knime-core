@@ -56,6 +56,7 @@ import java.util.Optional;
 
 import org.junit.Test;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverter;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
@@ -81,8 +82,8 @@ public class ExtensionPointTest {
      */
     @Test
     public void testJavaToDataCell() throws Exception {
-        final Optional<JavaToDataCellConverterFactory<String>> factory =
-            JavaToDataCellConverterRegistry.getInstance().getConverterFactories(String.class, IntCell.TYPE).stream().findFirst();
+        final Optional<JavaToDataCellConverterFactory<String>> factory = JavaToDataCellConverterRegistry.getInstance()
+            .getConverterFactories(String.class, IntCell.TYPE).stream().findFirst();
         assertTrue(factory.isPresent());
 
         final JavaToDataCellConverter<String> converter = factory.get().create(null);
@@ -106,7 +107,8 @@ public class ExtensionPointTest {
 
         assertTrue(factory.isPresent());
 
-        final DataCellToJavaConverter<Integer> converter = factory.get().create();
+        final DataCellToJavaConverter<StringValue, Integer> converter =
+            (DataCellToJavaConverter<StringValue, Integer>)factory.get().create();
         assertNotNull(converter);
 
         final Integer convert = converter.convert(new StringCell("Answer to Life, the Universe, and Everything"));
