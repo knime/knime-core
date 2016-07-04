@@ -14,11 +14,13 @@ http://update.knime.org/server/4.1,remove
 http://update.knime.org/teamspace/3.6,remove
 http://update.knime.org/analytics-platform/3.1,remove
 http://update.knime.org/store/3.1,remove
+http://update.knime.org/partner/3.1,remove
 http://update.knime.org/community-contributions/trusted/3.1,remove
 http://update.knime.org/community-contributions/3.1,remove
 http://tech.knime.org/update/community-contributions/trusted/3.1,remove
 http://tech.knime.org/update/community-contributions/3.1,remove
 http://update.knime.org/analytics-platform/3.2,add,enabled,KNIME Analytics Platform Update Site
 http://update.knime.org/store/3.2,add,enabled,KNIME Store Update Site
+http://update.knime.org/partner/3.2,add,disabled,KNIME Partner Update Site
 http://update.knime.org/community-contributions/trusted/3.2,add,enabled,Trusted Community Contributions
 http://update.knime.org/community-contributions/3.2,add,disabled,Stable Community Contributions
