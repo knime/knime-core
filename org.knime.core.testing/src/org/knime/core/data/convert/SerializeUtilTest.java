@@ -56,7 +56,7 @@ import static org.junit.Assume.assumeTrue;
 import java.util.Optional;
 
 import org.junit.Test;
-import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.MissingValue;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
@@ -86,8 +86,9 @@ public class SerializeUtilTest {
 
     @Test
     public void testStoreAndLoadDataCellToJava() throws InvalidSettingsException {
-        final Optional<DataCellToJavaConverterFactory<DataCell, Integer>> factory =
-            DataCellToJavaConverterRegistry.getInstance().getConverterFactory(IntCell.TYPE, Integer.class);
+        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, Integer>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getConverterFactories(IntCell.TYPE, Integer.class).stream()
+                .findFirst();
         assumeTrue(factory.isPresent());
 
         final NodeSettings testSettings = new NodeSettings(getClass().getName());
@@ -101,8 +102,8 @@ public class SerializeUtilTest {
 
     @Test
     public void testStoreAndLoadJavaToDataCell() throws InvalidSettingsException {
-        final Optional<JavaToDataCellConverterFactory<Integer>> factory =
-            JavaToDataCellConverterRegistry.getInstance().getConverterFactory(Integer.class, IntCell.TYPE);
+        Optional<JavaToDataCellConverterFactory<Integer>> factory =
+            JavaToDataCellConverterRegistry.getInstance().getConverterFactories(Integer.class, IntCell.TYPE).stream().findFirst();
         assumeTrue(factory.isPresent());
 
         final NodeSettings testSettings = new NodeSettings(getClass().getName());

@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.MissingValue;
 import org.knime.core.data.blob.BinaryObjectCellFactory;
@@ -76,7 +77,6 @@ import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.xml.XMLCell;
 import org.knime.core.data.xml.XMLCellFactory;
-import org.knime.core.data.xml.XMLValue;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -100,13 +100,14 @@ public class DataCellToJavaConversionTest {
      * @param dest output to expect from the converter when converting <code>source</code>
      * @throws Exception When something went wrong
      */
-    protected <S, D> void testSimpleConverter(final DataType sourceType, final Class<D> destType, final S source,
+    protected <D> void testSimpleConverter(final DataType sourceType, final Class<D> destType, final DataCell source,
         final D dest) throws Exception {
-        final Optional<DataCellToJavaConverterFactory<S, D>> factory =
-            DataCellToJavaConverterRegistry.getInstance().getConverterFactory(sourceType, destType);
+        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, D>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getConverterFactories(sourceType, destType).stream()
+                .findFirst();
         assertTrue(factory.isPresent());
 
-        final DataCellToJavaConverter<S, D> converter = factory.get().create();
+        final DataCellToJavaConverter<D> converter = factory.get().create();
         assertNotNull(converter);
 
         if (destType == Double.class) {
@@ -175,20 +176,19 @@ public class DataCellToJavaConversionTest {
     @Test
     public void testBinaryObject() throws Exception {
         /* retrieve converter from DataCellToJavaConverterRegistry */
-        final Optional<DataCellToJavaConverterFactory<BinaryObjectDataCell, InputStream>> factory =
-            DataCellToJavaConverterRegistry.getInstance().getConverterFactory(BinaryObjectDataCell.TYPE,
-                InputStream.class);
+        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, InputStream>> factory =
+            DataCellToJavaConverterRegistry.getInstance()
+                .getConverterFactories(BinaryObjectDataCell.TYPE, InputStream.class).stream().findFirst();
         assertTrue(factory.isPresent());
 
-        final DataCellToJavaConverter<BinaryObjectDataCell, InputStream> converter = factory.get().create();
+        final DataCellToJavaConverter<InputStream> converter = factory.get().create();
         assertNotNull(converter);
 
         final BinaryObjectCellFactory cellFactory = new BinaryObjectCellFactory();
 
-        assertTrue(
-            converter.convert((BinaryObjectDataCell)cellFactory.create(new byte[]{4, 2})) instanceof InputStream);
+        assertTrue(converter.convert(cellFactory.create(new byte[]{4, 2})) instanceof InputStream);
         /* convert a BinaryObjectDataCell */
-        InputStream stream = converter.convert((BinaryObjectDataCell)cellFactory.create(new byte[]{4, 2}));
+        InputStream stream = converter.convert(cellFactory.create(new byte[]{4, 2}));
         assertEquals(stream.read(), 4);
         assertEquals(stream.read(), 2);
 
@@ -202,14 +202,15 @@ public class DataCellToJavaConversionTest {
      */
     @Test
     public void testXML() throws Exception {
-        final Optional<DataCellToJavaConverterFactory<XMLValue, Document>> factory =
-            DataCellToJavaConverterRegistry.getInstance().getConverterFactory(XMLCell.TYPE, Document.class);
+        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, Document>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getConverterFactories(XMLCell.TYPE, Document.class).stream()
+                .findFirst();
         assertTrue(factory.isPresent());
 
-        final DataCellToJavaConverter<XMLValue, Document> converter = factory.get().create();
+        final DataCellToJavaConverter<Document> converter = factory.get().create();
         assertNotNull(converter);
 
-        final NodeList children = converter.convert((XMLCell)XMLCellFactory.create("<tag/>")).getChildNodes();
+        final NodeList children = converter.convert(XMLCellFactory.create("<tag/>")).getChildNodes();
         assertEquals(children.getLength(), 1);
         assertEquals(children.item(0).getNodeName(), "tag");
     }
@@ -228,11 +229,12 @@ public class DataCellToJavaConversionTest {
 
         final ListCell listCell = CollectionCellFactory.createListCell(coll);
 
-        final Optional<DataCellToJavaConverterFactory<DataCell, Integer[]>> factory =
-            DataCellToJavaConverterRegistry.getInstance().getConverterFactory(listCell.getType(), Integer[].class);
+        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, Integer[]>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getConverterFactories(listCell.getType(), Integer[].class)
+                .stream().findFirst();
         assertTrue(factory.isPresent());
 
-        final DataCellToJavaConverter<DataCell, Integer[]> converter = factory.get().create();
+        final DataCellToJavaConverter<Integer[]> converter = factory.get().create();
         assertNotNull(converter);
 
         final Integer[] array = converter.convert(listCell);

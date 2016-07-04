@@ -132,7 +132,7 @@ public class JavaToDataCellConversionTest {
     protected <S, D> D testSimpleConversion(final Class<S> sourceType, final DataType dataType, final Class<D> destType,
         final S sourceValue) throws Exception {
         final Optional<JavaToDataCellConverterFactory<S>> factory =
-            JavaToDataCellConverterRegistry.getInstance().getConverterFactory(sourceType, dataType);
+            JavaToDataCellConverterRegistry.getInstance().getConverterFactories(sourceType, dataType).stream().findFirst();
         assertTrue(factory.isPresent());
 
         final JavaToDataCellConverter<S> converter = factory.get().create(null);
@@ -277,7 +277,7 @@ public class JavaToDataCellConversionTest {
         final Integer[] coll = {0, 1, 4, 9, 16, 25};
 
         final Optional<JavaToDataCellConverterFactory<Integer[]>> factory = JavaToDataCellConverterRegistry
-            .getInstance().getConverterFactory(Integer[].class, ListCell.getCollectionType(IntCell.TYPE));
+            .getInstance().getConverterFactories(Integer[].class, ListCell.getCollectionType(IntCell.TYPE)).stream().findFirst();
         assertTrue(factory.isPresent());
 
         final JavaToDataCellConverter<Integer[]> converter = factory.get().create(null);
