@@ -48,25 +48,27 @@
 package org.knime.core.data.convert.java;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 
 /**
  * Interface for converters from {@link DataCell} to java types.
  *
  * @author Jonathan Hale
  *
+ * @param <S> Type which can be converted
  * @param <D> Type which can be converted to
  * @since 3.2
  * @see org.knime.core.data.convert
  */
 @FunctionalInterface
-public interface DataCellToJavaConverter<D> {
+public interface DataCellToJavaConverter<S extends DataValue, D> {
 
     /**
      * Convert <code>source</code> into an instance of type <D>.
      *
-     * @param source DataCell to convert
+     * @param source data value to convert
      * @return the converted object.
      * @throws Exception When something went wrong during conversion
      */
-    public D convert(DataCell source) throws Exception;
+    public D convert(S source) throws Exception;
 }

@@ -330,7 +330,7 @@ public final class DataCellToJavaConverterRegistry {
      * @param sourceType Type the created converters convert to
      * @return the {@link DataCellToJavaConverterFactory} or <code>null</code> if none matched the given types
      */
-    private <S, D, SE, DE> Collection<DataCellToJavaConverterFactory<S, D>>
+    private <S extends DataValue, D, SE extends DataValue, DE> Collection<DataCellToJavaConverterFactory<S, D>>
         getCollectionConverterFactory(final DataType sourceType, final Class<D> destType) {
 
         final ArrayList<DataCellToJavaConverterFactory<S, D>> allFactories = new ArrayList<>();
@@ -426,7 +426,7 @@ public final class DataCellToJavaConverterRegistry {
 
         // register "Object -> String" and "MissingValue -> null" converters
         // with lowest priority
-        register(new SimpleDataCellToJavaConverterFactory<>(Object.class, String.class, (val) -> val.toString()));
+        register(new SimpleDataCellToJavaConverterFactory<>(DataValue.class, String.class, (val) -> val.toString()));
         register(new SimpleDataCellToJavaConverterFactory<>(MissingValue.class, Object.class, (val) -> null));
     }
 

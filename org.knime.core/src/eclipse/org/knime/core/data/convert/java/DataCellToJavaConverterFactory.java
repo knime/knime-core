@@ -47,6 +47,8 @@
 
 package org.knime.core.data.convert.java;
 
+import org.knime.core.data.DataValue;
+
 /**
  * Interface for all factory classes which create {@link DataCellToJavaConverter DataCellToJavaConverters}.
  *
@@ -63,13 +65,13 @@ package org.knime.core.data.convert.java;
  * @see DataCellToJavaConverter
  * @see DataCellToJavaConverterRegistry
  */
-public interface DataCellToJavaConverterFactory<S, D> {
+public interface DataCellToJavaConverterFactory<S extends DataValue, D> {
 
     /**
      * @return a {@link DataCellToJavaConverter} which converts an instance of the type returned by
      *         {@link #getSourceType()} into an instance of the type returned by {@link #getDestinationType()}
      */
-    public DataCellToJavaConverter<D> create();
+    public DataCellToJavaConverter<S, D> create();
 
     /**
      * @return type which the created {@link DataCellToJavaConverter}s can convert

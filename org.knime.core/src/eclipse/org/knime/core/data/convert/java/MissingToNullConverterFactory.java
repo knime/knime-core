@@ -65,7 +65,7 @@ final class MissingToNullConverterFactory<D> implements DataCellToJavaConverterF
     }
 
     @Override
-    public DataCellToJavaConverter<D> create() {
+    public DataCellToJavaConverter<MissingValue, D> create() {
         return (v) -> null;
     }
 

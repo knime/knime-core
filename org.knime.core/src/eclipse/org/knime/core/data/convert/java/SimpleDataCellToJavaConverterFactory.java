@@ -47,6 +47,8 @@
 
 package org.knime.core.data.convert.java;
 
+import org.knime.core.data.DataValue;
+
 /**
  * Easy to use implementation of {@link DataCellToJavaConverterFactory} for simple Converters. All conversion processes
  * which do not require a state (execution context and/or DataCellFactory instance) should be considerable as simple,
@@ -75,13 +77,13 @@ package org.knime.core.data.convert.java;
  * @param <D> Destination type which can be converted by converters created by this factory
  * @since 3.2
  */
-public class SimpleDataCellToJavaConverterFactory<S, D> implements DataCellToJavaConverterFactory<S, D> {
+public class SimpleDataCellToJavaConverterFactory<S extends DataValue, D> implements DataCellToJavaConverterFactory<S, D> {
 
     private final Class<S> m_sourceType;
 
     private final Class<D> m_destType;
 
-    private final DataCellToJavaConverter<D> m_converter;
+    private final DataCellToJavaConverter<S, D> m_converter;
 
     private final String m_name;
 
@@ -92,7 +94,7 @@ public class SimpleDataCellToJavaConverterFactory<S, D> implements DataCellToJav
      *            the single instance returned by {@link #create()}.
      */
     public SimpleDataCellToJavaConverterFactory(final Class<S> sourceType, final Class<D> destType,
-        final DataCellToJavaConverter<D> converter) {
+        final DataCellToJavaConverter<S, D> converter) {
         this(sourceType, destType, converter, "");
     }
 
@@ -104,7 +106,7 @@ public class SimpleDataCellToJavaConverterFactory<S, D> implements DataCellToJav
      * @param name Name for this factory
      */
     public SimpleDataCellToJavaConverterFactory(final Class<S> sourceType, final Class<D> destType,
-        final DataCellToJavaConverter<D> converter, final String name) {
+        final DataCellToJavaConverter<S, D> converter, final String name) {
         m_sourceType = sourceType;
         m_destType = destType;
         m_converter = converter;
@@ -112,7 +114,7 @@ public class SimpleDataCellToJavaConverterFactory<S, D> implements DataCellToJav
     }
 
     @Override
-    public DataCellToJavaConverter<D> create() {
+    public DataCellToJavaConverter<S, D> create() {
         return m_converter;
     }
 

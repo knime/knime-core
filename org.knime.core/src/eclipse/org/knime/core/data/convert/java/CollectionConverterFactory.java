@@ -51,6 +51,7 @@ import java.lang.reflect.Array;
 import java.util.Iterator;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.collection.CollectionDataValue;
 
 /**
@@ -70,13 +71,14 @@ import org.knime.core.data.collection.CollectionDataValue;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverterFactory<S, D> {
+class CollectionConverterFactory<S extends DataValue, D, SE extends DataValue, DE>
+    implements DataCellToJavaConverterFactory<S, D> {
 
     private final Class<S> m_sourceType;
 
     private final Class<D> m_destType;
 
-    private final DataCellToJavaConverter<DE> m_elementConverter;
+    private final DataCellToJavaConverter<SE, DE> m_elementConverter;
 
     /**
      * Constructor
@@ -87,7 +89,7 @@ class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverte
      *            defining the single instance returned by {@link #create()}.
      */
     CollectionConverterFactory(final Class<S> sourceType, final Class<D> destType,
-        final DataCellToJavaConverter<DE> elementConverter) {
+        final DataCellToJavaConverter<SE, DE> elementConverter) {
         assert CollectionDataValue.class.isAssignableFrom(sourceType);
         assert destType.isArray();
 
@@ -97,8 +99,8 @@ class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverte
     }
 
     @Override
-    public DataCellToJavaConverter<D> create() {
-        return (final DataCell source) -> {
+    public DataCellToJavaConverter<S, D> create() {
+        return (final S source) -> {
             final CollectionDataValue val = (CollectionDataValue)source;
             final Object outputArray = Array.newInstance(m_destType.getComponentType(), val.size());
 
@@ -106,7 +108,7 @@ class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverte
 
             int i = 0;
             while (itor.hasNext()) {
-                Array.set(outputArray, i, m_elementConverter.convert(itor.next()));
+                Array.set(outputArray, i, m_elementConverter.convert((SE)itor.next()));
                 i++;
             }
 
