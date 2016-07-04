@@ -189,11 +189,11 @@ public final class SerializeUtil {
     }
 
     /**
-     * Load a {@link DataCellToJavaConverterFactory} from given config.
+     * Load a {@link DataCellToJavaConverterFactorz} from given config.
      *
      * @param config config to load from
      * @param key setting key
-     * @return an optional {@link DataCellToJavaConverterFactory}, present if the identifier was found in the
+     * @return an optional {@link DataCellToJavaConverterFactorz}, present if the identifier was found in the
      *         {@link DataCellToJavaConverterRegistry}.
      * @throws InvalidSettingsException
      */
@@ -201,7 +201,7 @@ public final class SerializeUtil {
         final ConfigBaseRO config, final String key) throws InvalidSettingsException {
         final String id = config.getString(key);
 
-        return DataCellToJavaConverterRegistry.getInstance().getConverterFactory(id);
+        return DataCellToJavaConverterRegistry.getInstance().getConverterFactories(id);
     }
 
     /**
@@ -217,7 +217,7 @@ public final class SerializeUtil {
         final ConfigBaseRO config, final String key) throws InvalidSettingsException {
         final String id = config.getString(key);
 
-        return JavaToDataCellConverterRegistry.getInstance().getConverterFactory(id);
+        return JavaToDataCellConverterRegistry.getInstance().getConverterFactories(id);
     }
 
     /**

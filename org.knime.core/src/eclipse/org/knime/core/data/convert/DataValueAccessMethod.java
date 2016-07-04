@@ -55,7 +55,8 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 
 /**
- * Annotation to mark a {@link DataValue} method as able to get the value of a DataValue as a certain Java type.
+ * Annotation to mark a method in a {@link DataValue} derivative as able to get the value of the {@link DataValue} as a
+ * certain Java type.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @since 3.2

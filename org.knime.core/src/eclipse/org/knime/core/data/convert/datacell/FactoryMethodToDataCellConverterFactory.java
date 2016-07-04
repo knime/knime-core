@@ -55,12 +55,14 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellFactory;
 import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
 /**
  * Implementation of {@link JavaToDataCellConverterFactory} using a {@link DataCellFactory} and one of its methods which
- * creates a {@link DataCell} from a Java {@link Object}.
+ * creates a {@link DataCell} from a Java {@link Object}. Used by {@link JavaToDataCellConverterRegistry} to create
+ * converters from methods annotated with {@link DataCellFactoryMethod} in {@link DataCellFactory} implementations.
  *
  * @author Jonathan Hale
  *

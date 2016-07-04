@@ -57,8 +57,8 @@ import org.knime.core.data.convert.java.DataCellToJavaConverter;
 import org.knime.core.node.ExecutionContext;
 
 /**
- * Default implementation of {@link JavaToDataCellConverterFactory}. Supports conversions from byte[], InputStream and
- * Byte to {@link BinaryObjectDataCell} .
+ * {@link JavaToDataCellConverterFactory} for converting {@link Byte}, <code>byte[]</code> or {@link InputStream} to
+ * {@link BinaryObjectCellFactory}.
  *
  * @author Jonathan Hale
  *

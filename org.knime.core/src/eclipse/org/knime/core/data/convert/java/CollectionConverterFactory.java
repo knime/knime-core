@@ -76,7 +76,7 @@ class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverte
 
     private final Class<D> m_destType;
 
-    private final DataCellToJavaConverter<SE, DE> m_elementConverter;
+    private final DataCellToJavaConverter<DE> m_elementConverter;
 
     /**
      * Constructor
@@ -87,7 +87,7 @@ class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverte
      *            defining the single instance returned by {@link #create()}.
      */
     CollectionConverterFactory(final Class<S> sourceType, final Class<D> destType,
-        final DataCellToJavaConverter<SE, DE> elementConverter) {
+        final DataCellToJavaConverter<DE> elementConverter) {
         assert CollectionDataValue.class.isAssignableFrom(sourceType);
         assert destType.isArray();
 
@@ -97,8 +97,8 @@ class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverte
     }
 
     @Override
-    public DataCellToJavaConverter<S, D> create() {
-        return (final S source) -> {
+    public DataCellToJavaConverter<D> create() {
+        return (final DataCell source) -> {
             final CollectionDataValue val = (CollectionDataValue)source;
             final Object outputArray = Array.newInstance(m_destType.getComponentType(), val.size());
 
@@ -106,7 +106,7 @@ class CollectionConverterFactory<S, D, SE, DE> implements DataCellToJavaConverte
 
             int i = 0;
             while (itor.hasNext()) {
-                Array.set(outputArray, i, m_elementConverter.convert((SE)itor.next()));
+                Array.set(outputArray, i, m_elementConverter.convert(itor.next()));
                 i++;
             }
 

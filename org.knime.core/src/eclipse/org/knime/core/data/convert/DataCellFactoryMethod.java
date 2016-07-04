@@ -51,8 +51,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellFactory;
+
 /**
- * Annotation to mark a method as able to create a DataCell from a Java object.
+ * Annotation to mark a method in a {@link DataCellFactory} derivative as able to create a {@link DataCell} from a Java
+ * object.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
  * @since 3.2

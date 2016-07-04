@@ -50,21 +50,22 @@ package org.knime.core.data.convert.java;
 import org.knime.core.data.MissingValue;
 
 /**
- * Collection converter factories may need to convert a MissingValue into some java object.
+ * ConverterFactory for converting {@link MissingValue} into <code>null</code>. Collection converter factories may need
+ * to convert a MissingValue into some java object.
  *
  * @author Jonathan Hale
  * @since 3.2
  * @noreference This class is not intended to be referenced by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-final class MissingToNullConverterFactory implements DataCellToJavaConverterFactory<MissingValue, Object> {
-    private static final MissingToNullConverterFactory INSTANCE = new MissingToNullConverterFactory();
+final class MissingToNullConverterFactory<D> implements DataCellToJavaConverterFactory<MissingValue, D> {
+    private static final MissingToNullConverterFactory<Object> INSTANCE = new MissingToNullConverterFactory<Object>();
 
     private MissingToNullConverterFactory() {
     }
 
     @Override
-    public DataCellToJavaConverter<MissingValue, Object> create() {
+    public DataCellToJavaConverter<D> create() {
         return (v) -> null;
     }
 
@@ -74,15 +75,15 @@ final class MissingToNullConverterFactory implements DataCellToJavaConverterFact
     }
 
     @Override
-    public Class<Object> getDestinationType() {
-        return Object.class;
+    public Class<D> getDestinationType() {
+        return (Class<D>)Object.class;
     }
 
     /**
      * @return instance of this singleton
      */
-    public static MissingToNullConverterFactory getInstance() {
-        return INSTANCE;
+    public static <D> MissingToNullConverterFactory<D> getInstance() {
+        return (MissingToNullConverterFactory<D>)INSTANCE;
     }
 
     @Override

@@ -50,8 +50,8 @@ package org.knime.core.data.convert.java;
 /**
  * Interface for all factory classes which create {@link DataCellToJavaConverter DataCellToJavaConverters}.
  *
- * You may extend this class and register the derived class under the extension point
- * "org.knime.core.DataCellToJavaConverter". It is recommended that you extend
+ * You may derive this class and register your derived class under the extension point
+ * {@link DataCellToJavaConverterRegistry#EXTENSION_POINT_ID}. It is recommended that you extend
  * {@link SimpleDataCellToJavaConverterFactory} if possible.
  *
  * @author Jonathan Hale, KNIME, Konstanz, Germany
@@ -69,7 +69,7 @@ public interface DataCellToJavaConverterFactory<S, D> {
      * @return a {@link DataCellToJavaConverter} which converts an instance of the type returned by
      *         {@link #getSourceType()} into an instance of the type returned by {@link #getDestinationType()}
      */
-    public DataCellToJavaConverter<S, D> create();
+    public DataCellToJavaConverter<D> create();
 
     /**
      * @return type which the created {@link DataCellToJavaConverter}s can convert

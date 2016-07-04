@@ -57,7 +57,8 @@ import org.knime.core.data.collection.ListCell;
 import org.knime.core.node.ExecutionContext;
 
 /**
- * Default implementation of {@link JavaToDataCellConverterFactory}.
+ * {@link JavaToDataCellConverterFactory} for converting arrays of a type to a collection of a data cell type by
+ * converting each element using a given converter.
  *
  * @author Jonathan Hale
  *
