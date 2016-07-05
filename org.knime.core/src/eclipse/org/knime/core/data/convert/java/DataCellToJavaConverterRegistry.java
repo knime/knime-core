@@ -92,9 +92,9 @@ import org.knime.core.util.Pair;
  * DataType mySourceType = ...;
  * Class&lt;?> myDestType = ...;
  *
- * boolean canConvert = DataCellToJavaConverterRegistry.getInstance()
+ * boolean canConvert = !DataCellToJavaConverterRegistry.getInstance()
  *                      .getConverterFactories(mySourceType, myDestType)
- *                      .findAny().isPresent();
+ *                      .isEmpty();
  * </pre>
  * </p>
  * <p>
@@ -119,15 +119,15 @@ import org.knime.core.util.Pair;
  * Class&lt;?> myDestType = Integer.class;
  * String factoryName = ""; // "" is default
  *
- * Optional&lt;DataCellToJavaConverterFactory&lt;DataCell, T>> factory =
+ * Optional&lt;DataCellToJavaConverterFactory&lt;DataValue, T>> factory =
  *                      DataCellToJavaConverterRegistry.getInstance()
- *                      .getConverterFactories(myCell.getType(), myDestType).findFirst();
+ *                      .getPreferredConverterFactory(myCell.getType(), myDestType);
  * if (!factory.isPresent()) {
  *      // error!
  * }
  *
  * // Instantiate the converter
- * DataCellToJavaConverter&ltDataCell, T> converter = factory.get().create();
+ * DataCellToJavaConverter&ltDataValue, T> converter = factory.get().create();
  * // Convert the value
  * T convertedValue = converter.convert(myCell);
  *
@@ -325,10 +325,11 @@ public final class DataCellToJavaConverterRegistry {
 
     /**
      * Convenience method to get the first {@link DataCellToJavaConverterFactory} returned by
-     * {@link #getConverterFactories(DataType, Class)}, which should convert into the value preferred by the DataType.
+     * {@link #getConverterFactories(DataType, Class)}, which should create a converter that converts the preferred data
+     * value of the given sourceType.
      *
-     * @param sourceType
-     * @param destType
+     * @param sourceType type which should be convertible
+     * @param destType type to which should be converted
      * @return the preferred {@link DataCellToJavaConverterFactory} for given <code>sourceType</code> and
      *         <code>destType</code>.
      */
@@ -491,7 +492,9 @@ public final class DataCellToJavaConverterRegistry {
             LOGGER.debug("Registered DataCellToJavaConverterFactory from DataValueAccessMethod annotation for "
                 + javaType.getName() + " to " + valueClass.getName());
         } catch (IncompleteAnnotationException e) {
-            LOGGER.coding("Incomplete Annotation for " + valueClass.getName() + "." + method.getName() + ". Will not register.", e);
+            LOGGER.coding(
+                "Incomplete Annotation for " + valueClass.getName() + "." + method.getName() + ". Will not register.",
+                e);
         }
     }
 

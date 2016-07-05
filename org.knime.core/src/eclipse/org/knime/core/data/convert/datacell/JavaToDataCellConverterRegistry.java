@@ -90,10 +90,9 @@ import org.knime.core.util.Pair;
  * Class&lt;?>  mySourceType = ...;
  * DataType myDestType = ...;
  *
- * boolean canConvert = JavaToDataCellConverterRegistry.getInstance()
+ * boolean canConvert = !JavaToDataCellConverterRegistry.getInstance()
  *                      .getConverterFactories(mySourceType, myDestType)
- *                      .findAny()
- *                      .isPresent();
+ *                      .isEmpty();
  * </pre>
  * </p>
  * <p>
@@ -121,8 +120,7 @@ import org.knime.core.util.Pair;
  *
  * Optional&lt;JavaToDataCellConverterFactory&lt;T>> factory =
  *                      JavaToDataCellConverterRegistry.getInstance()
- *                      .getConverterFactories(myObject.getClass(), myDestType)
- *                      .findFirst();
+ *                      .getPreferredConverterFactory(myObject.getClass(), myDestType);
  * if (!factory.isPresent()) {
  *      // error!
  * }
@@ -294,6 +292,20 @@ public final class JavaToDataCellConverterRegistry {
         return factories;
     }
 
+    /**
+     * Convenience method to get the first {@link JavaToDataCellConverterFactory} returned by
+     * {@link #getConverterFactories(Class, DataType)}.
+     *
+     * @param source type which should be convertible
+     * @param dest type to which should be converted
+     * @return the preferred {@link JavaToDataCellConverterFactory} for given <code>sourceType</code> and
+     *         <code>destType</code>.
+     */
+    public <S> Optional<JavaToDataCellConverterFactory<S>> getPreferredConverterFactory(final Class<S> source,
+        final DataType dest) {
+        return getConverterFactories(source, dest).stream().findFirst();
+    }
+
     /*
      * Create a ArrayToCollectionConverterFactory. Separate function to mangle
      * generics.
@@ -414,7 +426,8 @@ public final class JavaToDataCellConverterRegistry {
                             "Registered DataCellToJavaConverterFactorz from DataValueAccessMethod annotation for: "
                                 + method.getParameterTypes()[0].getName() + " to " + dataType.getName());
                     } catch (IncompleteAnnotationException e) {
-                        LOGGER.coding("Incomplete DataCellFactoryMethod annotation for " + cellFactoryClass.getName() + "." + method.getName() + ". Will not register.", e);
+                        LOGGER.coding("Incomplete DataCellFactoryMethod annotation for " + cellFactoryClass.getName()
+                            + "." + method.getName() + ". Will not register.", e);
                     }
                 }
             }
