@@ -47,8 +47,12 @@
 
 package org.knime.core.data.convert;
 
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.number.OrderingComparison.greaterThan;
+import static org.hamcrest.number.OrderingComparison.greaterThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
@@ -258,7 +262,7 @@ public class DataCellToJavaConversionTest {
             DataCellToJavaConverterRegistry.getInstance().getFactoriesForSourceType(IntCell.TYPE).stream()
                 .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
-        assertEquals(3, destTypes.size());
+        assertThat("Not enough supported destination types for IntCell", destTypes.size(), is(greaterThan(3)));
         assertTrue(destTypes.contains(Integer.class));
         assertTrue(destTypes.contains(Long.class));
         assertTrue(destTypes.contains(Double.class));
@@ -275,7 +279,8 @@ public class DataCellToJavaConversionTest {
             .getFactoriesForSourceType(ListCell.getCollectionType(IntCell.TYPE)).stream()
             .map((factory) -> factory.getDestinationType()).collect(Collectors.toSet());
 
-        assertEquals(3, destTypes.size());
+        assertThat("Not enough supported destination types for ListCell of IntCell", destTypes.size(),
+            is(greaterThan(3)));
         assertTrue(destTypes.contains(Integer[].class));
         assertTrue(destTypes.contains(Long[].class));
         assertTrue(destTypes.contains(Double[].class));
@@ -292,7 +297,7 @@ public class DataCellToJavaConversionTest {
             DataCellToJavaConverterRegistry.getInstance().getFactoriesForDestinationType(Integer.class).stream()
                 .map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
 
-        assertEquals(3, sourceTypes.size());
+        assertThat("Not enough converters for conversion to Integer", sourceTypes.size(), is(greaterThanOrEqualTo(3)));
         assertTrue(sourceTypes.contains(IntValue.class));
         assertTrue(sourceTypes.contains(MissingValue.class));
         assertTrue(sourceTypes.contains(StringCell.class)); // Test extension point
