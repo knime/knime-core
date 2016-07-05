@@ -47,6 +47,7 @@
 
 package org.knime.core.data.convert.java;
 
+import java.lang.annotation.IncompleteAnnotationException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -480,13 +481,18 @@ public final class DataCellToJavaConverterRegistry {
 
     private <T> void parseAnnotation(final Class<? extends DataValue> valueClass, final Method method,
         final DataValueAccessMethod annotation) {
-        final Class<T> javaType = (Class<T>)ClassUtil.ensureObjectType(method.getReturnType());
-        final String name = annotation.name();
 
-        register(
-            new SimpleDataCellToJavaConverterFactory<>(valueClass, javaType, (value) -> (T)method.invoke(value), name));
-        LOGGER.debug("Registered DataCellToJavaConverterFactory from DataValueAccessMethod annotation for "
-            + javaType.getName() + " to " + valueClass.getName());
+        try {
+            final Class<T> javaType = (Class<T>)ClassUtil.ensureObjectType(method.getReturnType());
+            final String name = annotation.name();
+
+            register(new SimpleDataCellToJavaConverterFactory<>(valueClass, javaType,
+                (value) -> (T)method.invoke(value), name));
+            LOGGER.debug("Registered DataCellToJavaConverterFactory from DataValueAccessMethod annotation for "
+                + javaType.getName() + " to " + valueClass.getName());
+        } catch (IncompleteAnnotationException e) {
+            LOGGER.coding("Incomplete Annotation for " + valueClass.getName() + "." + method.getName() + ". Will not register.", e);
+        }
     }
 
     /**

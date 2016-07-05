@@ -47,6 +47,7 @@
 
 package org.knime.core.data.convert.datacell;
 
+import java.lang.annotation.IncompleteAnnotationException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -405,10 +406,16 @@ public final class JavaToDataCellConverterRegistry {
                 for (final Pair<Method, DataCellFactoryMethod> pair : ClassUtil
                     .getMethodsWithAnnotation(cellFactoryClass, DataCellFactoryMethod.class)) {
                     final Method method = pair.getFirst();
-                    register(new FactoryMethodToDataCellConverterFactory<>(cellFactoryClass, method,
-                        ClassUtil.ensureObjectType(method.getParameterTypes()[0]), dataType, pair.getSecond().name()));
-                    LOGGER.debug("Registered DataCellToJavaConverterFactorz from DataValueAccessMethod annotation for: "
-                        + method.getParameterTypes()[0].getName() + " to " + dataType.getName());
+                    try {
+                        register(new FactoryMethodToDataCellConverterFactory<>(cellFactoryClass, method,
+                            ClassUtil.ensureObjectType(method.getParameterTypes()[0]), dataType,
+                            pair.getSecond().name()));
+                        LOGGER.debug(
+                            "Registered DataCellToJavaConverterFactorz from DataValueAccessMethod annotation for: "
+                                + method.getParameterTypes()[0].getName() + " to " + dataType.getName());
+                    } catch (IncompleteAnnotationException e) {
+                        LOGGER.coding("Incomplete DataCellFactoryMethod annotation for " + cellFactoryClass.getName() + "." + method.getName() + ". Will not register.", e);
+                    }
                 }
             }
         }
