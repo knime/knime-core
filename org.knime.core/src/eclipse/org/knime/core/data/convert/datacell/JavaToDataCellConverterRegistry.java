@@ -237,7 +237,7 @@ public final class JavaToDataCellConverterRegistry {
      * @param id unique identifier for the factory
      * @return an optional converter factory
      */
-    public Optional<JavaToDataCellConverterFactory<?>> getConverterFactories(final String id) {
+    public Optional<JavaToDataCellConverterFactory<?>> getConverterFactory(final String id) {
         final JavaToDataCellConverterFactory<?> factory = m_byIdentifier.get(id);
 
         if (factory == null) {

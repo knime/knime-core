@@ -217,7 +217,7 @@ public final class SerializeUtil {
         final ConfigBaseRO config, final String key) throws InvalidSettingsException {
         final String id = config.getString(key);
 
-        return JavaToDataCellConverterRegistry.getInstance().getConverterFactories(id);
+        return JavaToDataCellConverterRegistry.getInstance().getConverterFactory(id);
     }
 
     /**
