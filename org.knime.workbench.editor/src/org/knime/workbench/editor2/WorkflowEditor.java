@@ -1885,6 +1885,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             } else {
                 defName = currentName;
+                if (defName.endsWith("." + KNIMEConstants.KNIME_WORKFLOW_FILE_EXTENSION)) {
+                    defName = defName.substring(0, defName.length() - KNIMEConstants.KNIME_WORKFLOW_FILE_EXTENSION.length() - 1);
+                }
             }
             dialog.setTitle("Save to new Location");
             dialog.setDescription("Select the new destination workflow group for the workflow.");
