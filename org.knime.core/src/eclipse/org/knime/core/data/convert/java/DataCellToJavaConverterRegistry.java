@@ -499,7 +499,9 @@ public final class DataCellToJavaConverterRegistry {
     }
 
     /**
-     * @return the instance of this singleton {@link DataCellToJavaConverterRegistry}.
+     * Returns the singleton instance.
+     *
+     * @return the singleton instance
      */
     public static DataCellToJavaConverterRegistry getInstance() {
         return INSTANCE;

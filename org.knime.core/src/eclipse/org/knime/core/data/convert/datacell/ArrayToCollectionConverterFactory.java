@@ -66,7 +66,7 @@ import org.knime.core.node.ExecutionContext;
  * @param <F> Element factory type
  * @since 3.2
  */
-public class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellConverterFactory<T> {
+class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellConverterFactory<T> {
 
     private final JavaToDataCellConverterFactory<F> m_elementFactory;
 
@@ -94,7 +94,7 @@ public class ArrayToCollectionConverterFactory<T, F> implements JavaToDataCellCo
     /**
      * @param elementFactory Factory to convert the components of the input array into components of the output array
      */
-    public ArrayToCollectionConverterFactory(final JavaToDataCellConverterFactory<F> elementFactory) {
+    ArrayToCollectionConverterFactory(final JavaToDataCellConverterFactory<F> elementFactory) {
         m_elementFactory = elementFactory;
     }
 

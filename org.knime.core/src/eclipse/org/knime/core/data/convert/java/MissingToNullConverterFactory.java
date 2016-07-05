@@ -80,6 +80,8 @@ final class MissingToNullConverterFactory<D> implements DataCellToJavaConverterF
     }
 
     /**
+     * Returns the singleton instance for this class.
+     *
      * @return instance of this singleton
      */
     public static <D> MissingToNullConverterFactory<D> getInstance() {

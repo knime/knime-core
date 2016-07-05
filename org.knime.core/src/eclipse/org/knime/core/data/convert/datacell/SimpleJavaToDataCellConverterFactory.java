@@ -69,6 +69,8 @@ public class SimpleJavaToDataCellConverterFactory<T> implements JavaToDataCellCo
     private final String m_name;
 
     /**
+     * Creates a new converter factory.
+     *
      * @param sourceType source type to be converted
      * @param dataType destination type to be converted into
      * @param converter lambda or converter used to convert an object of sourceType to dataType
@@ -79,6 +81,8 @@ public class SimpleJavaToDataCellConverterFactory<T> implements JavaToDataCellCo
     }
 
     /**
+     * Creates a new converter factory.
+     *
      * @param sourceType source type to be converted
      * @param dataType destination type to be converted into
      * @param converter lambda or converter used to convert an object of sourceType to dataType

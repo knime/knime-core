@@ -88,6 +88,8 @@ public class SimpleDataCellToJavaConverterFactory<S extends DataValue, D> implem
     private final String m_name;
 
     /**
+     * Creates a new converter factory.
+     *
      * @param sourceType Type the created {@link DataCellToJavaConverter}s convert from
      * @param destType Type the created {@link DataCellToJavaConverter}s convert to
      * @param converter Implementation (possibly a Lambda expression) of the {@link DataCellToJavaConverter} defining
@@ -99,6 +101,8 @@ public class SimpleDataCellToJavaConverterFactory<S extends DataValue, D> implem
     }
 
     /**
+     * Creates a new converter factory.
+     *
      * @param sourceType Type the created {@link DataCellToJavaConverter}s convert from
      * @param destType Type the created {@link DataCellToJavaConverter}s convert to
      * @param converter Implementation (possibly a Lambda expression) of the {@link DataCellToJavaConverter} defining
