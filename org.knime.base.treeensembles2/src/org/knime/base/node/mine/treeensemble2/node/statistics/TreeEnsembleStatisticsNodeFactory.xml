@@ -9,7 +9,7 @@
 	<fullDescription>
 		<intro>
 			Provides basic statistics on the tree ensemble and its
-            trees such as depths of trees and the number of nodes of trees.
+            trees such as depths of trees and the number of nodes in the trees.
 		</intro>
 	</fullDescription>
 
@@ -19,10 +19,10 @@
 			on
 		</inPort>
 		<outPort name="Tree Ensemble Statistic" index="0">
-			Statistics of the whole ensemble
+			Statistics of the whole ensemble. Including number of trees, minimum, maximum and average on number of levels and number of nodes in the individual trees.
 		</outPort>
 		<outPort name="Tree Statistics" index="1">
-			Statistics of the individual trees
+			Statistics of the individual trees. Including number of levels (maximal depth) and number of nodes in a tree.
 		</outPort>
 	</ports>
 </knimeNode>
