@@ -266,7 +266,7 @@ public final class DataCellToJavaConverterRegistry {
      * @param id unique identifier for the factory
      * @return an optional converter factory
      */
-    public Optional<DataCellToJavaConverterFactory<?, ?>> getConverterFactories(final String id) {
+    public Optional<DataCellToJavaConverterFactory<?, ?>> getConverterFactory(final String id) {
         final DataCellToJavaConverterFactory<?, ?> factory = m_byIdentifier.get(id);
 
         if (factory == null) {
@@ -284,7 +284,7 @@ public final class DataCellToJavaConverterRegistry {
      * @param destType Type the created {@link DataCellToJavaConverter}s convert to
      * @return an optional converter factory
      */
-    public <D> Collection<? extends DataCellToJavaConverterFactory<? extends DataValue, D>>
+    public <D> Collection<DataCellToJavaConverterFactory<? extends DataValue, D>>
         getConverterFactories(final DataType sourceType, final Class<D> destType) {
         if (sourceType.equals(DataType.getMissingCell().getType())) {
             return Arrays.asList(MissingToNullConverterFactory.getInstance());
@@ -295,7 +295,7 @@ public final class DataCellToJavaConverterRegistry {
         classes.addAll(sourceType.getValueClasses());
         classes.add(sourceType.getCellClass());
 
-        final ArrayList<DataCellToJavaConverterFactory<DataCell, D>> allFactories = new ArrayList<>();
+        final Collection<DataCellToJavaConverterFactory<? extends DataValue, D>> allFactories = new ArrayList<>();
 
         while (!classes.isEmpty()) {
             final Class<?> curClass = classes.poll();
@@ -320,6 +320,29 @@ public final class DataCellToJavaConverterRegistry {
         }
 
         return allFactories;
+    }
+
+    /**
+     * Convenience method to get the first {@link DataCellToJavaConverterFactory} returned by
+     * {@link #getConverterFactories(DataType, Class)}, which should convert into the value preferred by the DataType.
+     *
+     * @param sourceType
+     * @param destType
+     * @return the preferred {@link DataCellToJavaConverterFactory} for given <code>sourceType</code> and
+     *         <code>destType</code>.
+     */
+    public <D> Optional<DataCellToJavaConverterFactory<DataValue, D>>
+        getPreferredConverterFactory(final DataType sourceType, final Class<D> destType) {
+
+        // get the optional, we need to cast its contents rather than the Optional directly.
+        final Optional<DataCellToJavaConverterFactory<? extends DataValue, D>> first =
+            getConverterFactories(sourceType, destType).stream().findFirst();
+
+        if (first.isPresent()) {
+            return Optional.of((DataCellToJavaConverterFactory<DataValue, D>)first.get());
+        }
+
+        return Optional.empty();
     }
 
     /**
