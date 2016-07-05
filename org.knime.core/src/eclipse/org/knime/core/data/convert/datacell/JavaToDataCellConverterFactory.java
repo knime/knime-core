@@ -69,9 +69,8 @@ import org.knime.core.node.ExecutionContext;
  * @see JavaToDataCellConverterRegistry
  */
 public interface JavaToDataCellConverterFactory<S> {
-
     /**
-     * Create a {@link JavaToDataCellConverter}
+     * Create a {@link JavaToDataCellConverter}.
      *
      * @param context {@link ExecutionContext} which may be used for creating {@link CellFactory}s.
      * @return a {@link JavaToDataCellConverter} instances

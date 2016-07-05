@@ -55,7 +55,7 @@ import org.knime.core.data.DataValue;
  * all other should implement the extension point described in {@link org.knime.core.data.convert}.
  *
  * <p>
- * <b>Example:</b></br>
+ * <b>Example:</b><br>
  *
  * <pre>
  * public class FooConverterFactory

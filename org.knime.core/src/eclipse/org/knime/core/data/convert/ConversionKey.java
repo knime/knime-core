@@ -47,6 +47,8 @@
 
 package org.knime.core.data.convert;
 
+import java.util.Objects;
+
 import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 
@@ -72,8 +74,8 @@ public final class ConversionKey {
     /**
      * Create from source and destination type.
      *
-     * @param sourceType Source type the referenced factory should be able to handle
-     * @param destType Destination type the referenced factory should be able to handle
+     * @param sourceType Source type the referenced factory should be able to handle; must not be <code>null</code>
+     * @param destType Destination type the referenced factory should be able to handle; must not be <code>null</code>
      */
     public ConversionKey(final Class<?> sourceType, final Object destType) {
         m_sourceType = sourceType;
@@ -127,11 +129,17 @@ public final class ConversionKey {
 
     @Override
     public boolean equals(final Object obj) {
-        if (obj instanceof DataCellToJavaConverterFactory) {
-            return this.equals(new ConversionKey((DataCellToJavaConverterFactory<?, ?>)obj));
-        } else if (obj instanceof ConversionKey) {
-            return m_hashCode == ((ConversionKey)obj).m_hashCode;
+        if (this == obj) {
+            return true;
         }
-        return false;
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ConversionKey other = (ConversionKey)obj;
+        return Objects.equals(this.m_destType, other.m_destType)
+                && Objects.equals(this.m_sourceType, other.m_sourceType);
     }
 }

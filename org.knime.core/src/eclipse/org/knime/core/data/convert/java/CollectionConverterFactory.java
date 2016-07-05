@@ -81,7 +81,7 @@ class CollectionConverterFactory<S extends DataValue, D, SE extends DataValue, D
     private final DataCellToJavaConverter<SE, DE> m_elementConverter;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param sourceType Type the created {@link DataCellToJavaConverter}s convert from
      * @param destType Type the created {@link DataCellToJavaConverter}s convert to

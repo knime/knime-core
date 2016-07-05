@@ -70,7 +70,7 @@ import org.knime.core.node.NodeLogger;
  * @param <S> Source type
  * @since 3.2
  */
-public class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, S>
+class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, S>
     implements JavaToDataCellConverterFactory<S> {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(FactoryMethodToDataCellConverterFactory.class);
@@ -88,7 +88,7 @@ public class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, 
     private static final MissingCell MISSING = new MissingCell("Value was null.");
 
     /**
-     * Constructor
+     * Creates a new converter from an annotated factory method to a data cell converter factory.
      *
      * @param factoryClass Class of the {@link DataCellFactory} used to create {@link DataCell DataCells}
      * @param method Method of <code>factoryClass</code> which will be called. Its return type must be assignable to
@@ -96,9 +96,11 @@ public class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, 
      * @param sourceType type which can be converted by the converters produced by this factory.
      * @param destDataType destination DataType
      * @param type metatype of the sourceType
+     * @throws NoSuchMethodException if an expected constructor of the factory class does not exist
+     * @throws SecurityException if the constructor of the factory class cannot be accessed
      */
-    public FactoryMethodToDataCellConverterFactory(final Class<F> factoryClass, final Method method,
-        final Class<S> sourceType, final DataType destDataType, final String type) {
+    FactoryMethodToDataCellConverterFactory(final Class<F> factoryClass, final Method method, final Class<S> sourceType,
+        final DataType destDataType, final String type) throws NoSuchMethodException, SecurityException {
         // there should be exactly one parameter to FactoryMethods
         assert method.getParameterTypes().length == 1;
         // the sourceType has to match the parameter type
@@ -113,25 +115,17 @@ public class FactoryMethodToDataCellConverterFactory<F extends DataCellFactory, 
 
         Constructor<F> factoryContructor = null;
         try {
-            try {
-                /*
-                 * try getting a constructor with ExecutionContext parameter
-                 * first
-                 */
-                factoryContructor = factoryClass.getConstructor(ExecutionContext.class);
-            } catch (NoSuchMethodException e) {
-                /* some DataCellFactories may only have default constructor */
-                factoryContructor = factoryClass.getConstructor();
-                /* if neither, another NoSuchMethodException will be thrown */
-            }
-            factoryContructor.setAccessible(true);
-        } catch (NoSuchMethodException | SecurityException e) {
-            LOGGER.error(
-                "Could not access default constructor or constructor with parameter 'ExecutionContext' of class '"
-                    + factoryClass.getName() + "'",
-                e);
-            throw new RuntimeException(e);
+            /*
+             * try getting a constructor with ExecutionContext parameter
+             * first
+             */
+            factoryContructor = factoryClass.getConstructor(ExecutionContext.class);
+        } catch (NoSuchMethodException e) {
+            /* some DataCellFactories may only have default constructor */
+            factoryContructor = factoryClass.getConstructor();
+            /* if neither, another NoSuchMethodException will be thrown */
         }
+        factoryContructor.setAccessible(true);
         m_factoryConstructor = factoryContructor;
     }
 

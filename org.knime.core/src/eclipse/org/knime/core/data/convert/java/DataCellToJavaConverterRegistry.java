@@ -371,13 +371,13 @@ public final class DataCellToJavaConverterRegistry {
     }
 
     /**
-     * Register a DataCellToJavaConverterFactory
+     * Register a DataCellToJavaConverterFactory.
      *
      * @param factory the factory to register
      */
     public void register(final DataCellToJavaConverterFactory<?, ?> factory) {
         if (factory == null) {
-            throw new NullPointerException("'factory' cannot be null");
+            throw new IllegalArgumentException("factory must not be null");
         }
 
         final ConversionKey key = new ConversionKey(factory);
@@ -417,7 +417,7 @@ public final class DataCellToJavaConverterRegistry {
     private static final DataCellToJavaConverterRegistry INSTANCE = new DataCellToJavaConverterRegistry();
 
     /**
-     * The extension point ID
+     * The extension point ID.
      */
     public static final String EXTENSION_POINT_ID = "org.knime.core.DataCellToJavaConverter";
 

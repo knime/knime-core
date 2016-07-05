@@ -70,6 +70,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.convert.ConversionKey;
 import org.knime.core.data.convert.DataCellFactoryMethod;
+import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 import org.knime.core.data.convert.util.ClassUtil;
 import org.knime.core.data.def.StringCell;
@@ -139,8 +140,7 @@ import org.knime.core.util.Pair;
  * @see DataCellToJavaConverterRegistry
  */
 public final class JavaToDataCellConverterRegistry {
-
-    private final static NodeLogger LOGGER = NodeLogger.getLogger(JavaToDataCellConverterRegistry.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(JavaToDataCellConverterRegistry.class);
 
     /* factories stored by their key */
     private final HashMap<ConversionKey, ArrayList<JavaToDataCellConverterFactory<?>>> m_converterFactories =
@@ -230,7 +230,7 @@ public final class JavaToDataCellConverterRegistry {
     }
 
     /**
-     * Get the {@link DataCellToJavaConverterFactorz} with the given identifier.
+     * Get the {@link DataCellToJavaConverterFactory} with the given identifier.
      *
      * @param id unique identifier for the factory
      * @return an optional converter factory
@@ -246,7 +246,7 @@ public final class JavaToDataCellConverterRegistry {
     }
 
     /**
-     * Get a converterFactory which converts from <code>source</code> to <code>dest</code>
+     * Get a converterFactory which converts from <code>source</code> to <code>dest</code>.
      *
      * @param source Source type to convert
      * @param dest {@link DataType} to convert to
@@ -316,13 +316,13 @@ public final class JavaToDataCellConverterRegistry {
     }
 
     /**
-     * Register a DataCellToJavaConverterFactorz
+     * Register a DataCellToJavaConverterFactory.
      *
      * @param factory The factory to register
      */
     public synchronized void register(final JavaToDataCellConverterFactory<?> factory) {
         if (factory == null) {
-            throw new NullPointerException("'factory' cannot be null");
+            throw new IllegalArgumentException("factory must not be null");
         }
 
         final ConversionKey key = new ConversionKey(factory);
@@ -428,6 +428,11 @@ public final class JavaToDataCellConverterRegistry {
                     } catch (IncompleteAnnotationException e) {
                         LOGGER.coding("Incomplete DataCellFactoryMethod annotation for " + cellFactoryClass.getName()
                             + "." + method.getName() + ". Will not register.", e);
+                    } catch (NoSuchMethodException | SecurityException ex) {
+                        LOGGER.error(
+                            "Could not access default constructor or constructor with parameter 'ExecutionContext' of "
+                                + "class '" + cellFactoryClass.getName() + "'. Converter will not be registered.",
+                            ex);
                     }
                 }
             }

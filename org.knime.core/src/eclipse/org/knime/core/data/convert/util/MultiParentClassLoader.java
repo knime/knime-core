@@ -50,6 +50,7 @@ package org.knime.core.data.convert.util;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * ClassLoader which searches through multiple ClassLoaders. Important for dynamic uses of the converter framework.
@@ -72,11 +73,10 @@ import java.util.Arrays;
  * @since 3.2
  */
 public class MultiParentClassLoader extends ClassLoader {
-
     /*
      * List of class loaders which will be searched
      */
-    private final ArrayList<ClassLoader> m_classLoaders;
+    private final List<ClassLoader> m_classLoaders;
 
     /**
      * @param classLoaders ClassLoaders to search in the given order when trying to find a class
@@ -101,8 +101,7 @@ public class MultiParentClassLoader extends ClassLoader {
     protected Class<?> findClass(final String name) throws ClassNotFoundException {
         for (final ClassLoader loader : m_classLoaders) {
             try {
-                final Class<?> clazz = loader.loadClass(name);
-                return clazz;
+                return loader.loadClass(name);
             } catch (final ClassNotFoundException e) {
                 // thrown when loader cannot find the class.
             }

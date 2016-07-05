@@ -62,11 +62,16 @@ import org.knime.core.data.DataType;
 import org.knime.core.util.Pair;
 
 /**
+ * Various utility methods for finding classes.
  *
  * @author Jonathan Hale
  * @since 3.2
  */
 public class ClassUtil {
+    private ClassUtil() {
+        // no instantiation
+    }
+
 
     /**
      * Execute a consumer for a class, every interface and its superclass recursively.
