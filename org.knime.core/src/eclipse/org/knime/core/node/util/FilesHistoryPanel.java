@@ -92,6 +92,7 @@ import javax.swing.text.JTextComponent;
 
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.NodeLogger;
@@ -396,6 +397,8 @@ public final class FilesHistoryPanel extends JPanel {
 
     private int m_dialogType = JFileChooser.OPEN_DIALOG;
 
+    private String m_forcedFileExtensionOnSave = null;
+
     /**
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
@@ -669,12 +672,18 @@ public final class FilesHistoryPanel extends JPanel {
         }
         if (r == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-            if (file.exists() && (m_selectMode == JFileChooser.FILES_ONLY)
-                    && file.isDirectory()) {
-                JOptionPane.showMessageDialog(this, "Error: Please select "
-                        + "a file, not a directory.");
-                return null;
+            if (m_dialogType == JFileChooser.SAVE_DIALOG) {
+                String forceFileExtension = StringUtils.defaultString(m_forcedFileExtensionOnSave);
+                final String fileName = file.getName();
+                if (!(StringUtils.endsWithAny(fileName, m_suffixes)
+                        || StringUtils.endsWithIgnoreCase(fileName, m_forcedFileExtensionOnSave))) {
+                    file = new File(file.getParentFile(), fileName.concat(forceFileExtension));
+                }
             }
+            if (file.exists() && (m_selectMode == JFileChooser.FILES_ONLY) && file.isDirectory()) {
+                    JOptionPane.showMessageDialog(this, "Error: Please select a file, not a directory.");
+                    return null;
+                }
             return file.getAbsolutePath();
         }
         return null;
@@ -793,6 +802,21 @@ public final class FilesHistoryPanel extends JPanel {
      */
     public void setDialogType(final int type) {
         m_dialogType = type;
+        m_forcedFileExtensionOnSave = null;
+    }
+
+    /** Sets the dialog type to SAVE {@link JFileChooser#SAVE_DIALOG}, whereby it also forces the given file extension
+     * when the user enters a path in the text field that does not end with either the argument extension or any
+     * extension specified in {@link #setSuffixes(String...)} (ignoring case).
+     * Calling this method will overwrite the parameter set in {@link #setDialogType(int)}.
+     * @param forcedExtension optional parameter to force a file extension to be appended to the selected
+     *        file name, e.g. ".txt" (null and blanks not force any extension).
+     * @since 3.2
+     * @see #setDialogType
+     */
+    public void setDialogTypeSaveWithExtension(final String forcedExtension) {
+        setDialogType(JFileChooser.SAVE_DIALOG);
+        m_forcedFileExtensionOnSave = StringUtils.defaultIfBlank(forcedExtension, null);
     }
 
     /**
