@@ -9,6 +9,7 @@ Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Bundle-Localization: plugin
 Export-Package: org.knime.product,
+ org.knime.product.branding,
  org.knime.product.headless,
  org.knime.product.rcp
 Require-Bundle: org.apache.xerces;bundle-version="[2.9.0,2.10.0)",

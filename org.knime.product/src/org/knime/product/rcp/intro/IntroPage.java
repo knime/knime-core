@@ -58,8 +58,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -101,6 +103,7 @@ import org.eclipse.ui.internal.browser.SystemBrowserInstance;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
+import org.knime.product.branding.IBrandingService;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.explorer.ExplorerActivator;
 import org.knime.workbench.explorer.ExplorerMountTable;
@@ -117,7 +120,9 @@ import org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction;
 import org.knime.workbench.ui.p2.actions.InvokeUpdateAction;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 import org.xml.sax.SAXException;
 
 /**
@@ -147,8 +152,8 @@ public class IntroPage implements LocationListener {
 
     private File m_introFile;
 
-    private final IEclipsePreferences m_prefs = InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass())
-        .getSymbolicName());
+    private final IEclipsePreferences m_prefs =
+        InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
 
     static Path getWorkbenchStateFile() {
         Bundle myself = FrameworkUtil.getBundle(IntroPage.class);
@@ -181,8 +186,15 @@ public class IntroPage implements LocationListener {
                 m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory));
             KNIMEConstants.GLOBAL_THREAD_POOL.submit(new NewReleaseMessageInjector(m_introFile, introFileLock, m_prefs,
                 m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory));
+
+            Map<String, String> brandingInfo = getBrandingInfo();
             KNIMEConstants.GLOBAL_THREAD_POOL.submit(new TipsAndNewsInjector(m_introFile, introFileLock, m_prefs,
-                m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory));
+                m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory, brandingInfo));
+
+            if (!brandingInfo.isEmpty()) {
+                KNIMEConstants.GLOBAL_THREAD_POOL.submit(new BrandingInjector(m_introFile, introFileLock, m_prefs,
+                    m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory, brandingInfo));
+            }
         } catch (IOException | ParserConfigurationException | SAXException | XPathExpressionException
                 | TransformerFactoryConfigurationError | TransformerException ex) {
             LOGGER.error("Could not copy intro pages: " + ex.getMessage(), ex);
@@ -192,14 +204,36 @@ public class IntroPage implements LocationListener {
         }
     }
 
+    private Map<String, String> getBrandingInfo() {
+        //retrieve the branding information from the service
+        BundleContext context = FrameworkUtil.getBundle(IntroPage.class).getBundleContext();
+        ServiceReference<?> serviceReference = context.getServiceReference(IBrandingService.class.getName());
+        if (serviceReference == null) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            IBrandingService service = (IBrandingService)context.getService(serviceReference);
+            if (service == null) {
+                return Collections.emptyMap();
+            } else if ("com.knime.branding.BrandingService".equals(service.getClass().getName())) {
+                return service.getBrandingInfo();
+            } else {
+                return Collections.emptyMap();
+            }
+        } finally {
+            context.ungetService(serviceReference);
+        }
+    }
+
     /**
      * Copies one of the template files into a temporary directory.
      *
      * @param templateFile the template file that should be copied
      * @return the modified temporary file
      */
-    private File copyTemplate(final String templateFile) throws IOException, ParserConfigurationException,
-        SAXException, XPathExpressionException, TransformerFactoryConfigurationError, TransformerException {
+    private File copyTemplate(final String templateFile) throws IOException, ParserConfigurationException, SAXException,
+        XPathExpressionException, TransformerFactoryConfigurationError, TransformerException {
         File tempTemplate = FileUtil.createTempFile("intro", ".html", true);
         Bundle myBundle = FrameworkUtil.getBundle(getClass());
         URL introUrl = myBundle.getEntry(templateFile);
@@ -236,13 +270,12 @@ public class IntroPage implements LocationListener {
             (IPersistentPreferenceStore)KNIMEUIPlugin.getDefault().getPreferenceStore();
         boolean omitWarnings = prefStore.getBoolean(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
         if (!omitWarnings) {
-            MessageDialogWithToggle dialog =
-                MessageDialogWithToggle.openWarning(Display.getDefault().getActiveShell(),
-                    "Missing browser integration",
-                    "KNIME is unable to display web pages in an internal browser. This may be caused by missing "
-                        + "system libraries. Please visit http://tech.knime.org/faq#q6 for details.\n"
-                        + "Some web pages may open in an external browser.", "Do not show again", false, prefStore,
-                    PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
+            MessageDialogWithToggle dialog = MessageDialogWithToggle.openWarning(Display.getDefault().getActiveShell(),
+                "Missing browser integration",
+                "KNIME is unable to display web pages in an internal browser. This may be caused by missing "
+                    + "system libraries. Please visit http://tech.knime.org/faq#q6 for details.\n"
+                    + "Some web pages may open in an external browser.",
+                "Do not show again", false, prefStore, PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
             if (dialog.getToggleState()) {
                 prefStore.setValue(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING, true);
                 try {
@@ -364,7 +397,8 @@ public class IntroPage implements LocationListener {
         if (serverBundle != null) {
             Class<Action> clazz;
             try {
-                clazz = (Class<Action>)serverBundle.loadClass("com.knime.explorer.server.internal.ExampleServerLoginAction");
+                clazz = (Class<Action>)serverBundle
+                    .loadClass("com.knime.explorer.server.internal.ExampleServerLoginAction");
                 Action action = clazz.newInstance();
                 action.run();
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException ex) {
@@ -424,7 +458,7 @@ public class IntroPage implements LocationListener {
 
     private void mountServer() {
         String s = ExplorerActivator.getDefault().getPreferenceStore()
-                .getString(PreferenceConstants.P_EXPLORER_MOUNT_POINT_XML);
+            .getString(PreferenceConstants.P_EXPLORER_MOUNT_POINT_XML);
         List<MountSettings> mountSettingsList = MountSettings.parseSettings(s, true);
 
         Set<String> idSet = new LinkedHashSet<>();
