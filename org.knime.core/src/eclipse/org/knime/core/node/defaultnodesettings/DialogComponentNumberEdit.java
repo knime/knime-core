@@ -236,7 +236,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
         // update component only if its out of sync with model
         final SettingsModelNumber model = (SettingsModelNumber)getModel();
         final String compString = m_valueField.getText();
-        if (!model.getNumberValueStr().startsWith(compString)) {
+        if (!model.getNumberValueStr().equals(compString)) {
             m_valueField.setText(model.getNumberValueStr());
         }
 
