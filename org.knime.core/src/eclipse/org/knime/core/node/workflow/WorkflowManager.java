@@ -6591,7 +6591,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         MetaNodeLinkUpdateResult loadResultChild;
         NodeContext.pushContext((NodeContainer)meta);
         try {
-            if (m_workflowContext.getMountpointURI().isPresent() && sourceURI.getHost().startsWith("knime.")
+            if (m_workflowContext != null && m_workflowContext.getMountpointURI().isPresent()
+                    && sourceURI.getHost().startsWith("knime.")
                 && (ResolverUtil.resolveURItoLocalFile(m_workflowContext.getMountpointURI().get()) == null)) {
                 // a workflow relative template URI but the workflow itself is not local
                 // => the template is also not local and must be resolved using the workflow's original location
