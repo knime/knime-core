@@ -70,6 +70,7 @@ import org.knime.core.data.MissingValue;
 import org.knime.core.data.blob.BinaryObjectCellFactory;
 import org.knime.core.data.blob.BinaryObjectDataCell;
 import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.convert.java.DataCellToJavaConverter;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
@@ -315,7 +316,7 @@ public class DataCellToJavaConversionTest {
                 .map((factory) -> factory.getSourceType()).collect(Collectors.toSet());
 
         assertEquals(2, sourceTypes.size());
-        assertTrue(sourceTypes.contains(ListCell.class));
+        assertTrue(sourceTypes.contains(CollectionDataValue.class));
         assertTrue(sourceTypes.contains(MissingValue.class));
     }
 }
