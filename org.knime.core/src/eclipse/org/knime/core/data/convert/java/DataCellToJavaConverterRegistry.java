@@ -68,6 +68,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.MissingValue;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.convert.ConversionKey;
 import org.knime.core.data.convert.DataValueAccessMethod;
@@ -270,6 +271,17 @@ public final class DataCellToJavaConverterRegistry {
      * @return an optional of a converter factory or empty if no converter factory with given id could be found
      */
     public Optional<DataCellToJavaConverterFactory<?, ?>> getConverterFactory(final String id) {
+        if (id.startsWith(CollectionConverterFactory.class.getName())) {
+            // get the element converter factory id:
+            final String elemConvFactoryId = id.substring(CollectionConverterFactory.class.getName().length() + 1,
+                id.length() - 1);
+            Optional<DataCellToJavaConverterFactory<?, ?>> factory = getConverterFactory(elemConvFactoryId);
+            if (factory.isPresent()) {
+                return Optional.of(new CollectionConverterFactory<>(factory.get()));
+            } else {
+                return Optional.empty();
+            }
+        }
         final DataCellToJavaConverterFactory<?, ?> factory = m_byIdentifier.get(id);
 
         if (factory == null) {
@@ -361,16 +373,15 @@ public final class DataCellToJavaConverterRegistry {
      * @param sourceType Type the created converters convert to
      * @return the {@link DataCellToJavaConverterFactory} or <code>null</code> if none matched the given types
      */
-    private <S extends DataValue, D, SE extends DataValue, DE> Collection<DataCellToJavaConverterFactory<S, D>>
+    private <D, SE extends DataValue, DE> Collection<DataCellToJavaConverterFactory<CollectionDataValue, D>>
         getCollectionConverterFactory(final DataType sourceType, final Class<D> destType) {
 
-        final ArrayList<DataCellToJavaConverterFactory<S, D>> allFactories = new ArrayList<>();
+        final ArrayList<DataCellToJavaConverterFactory<CollectionDataValue, D>> allFactories = new ArrayList<>();
 
         // try creating a dynamic CollectionConverterFactory
         for (final DataCellToJavaConverterFactory<? extends DataValue, ?> factory : getConverterFactories(
             sourceType.getCollectionElementType(), destType.getComponentType())) {
-            allFactories.add(new CollectionConverterFactory<S, D, SE, DE>((Class<S>)sourceType.getCellClass(), destType,
-                ((DataCellToJavaConverterFactory<SE, DE>)factory)));
+            allFactories.add(new CollectionConverterFactory<D, SE, DE>((DataCellToJavaConverterFactory<SE, DE>)factory));
         }
 
         return allFactories;

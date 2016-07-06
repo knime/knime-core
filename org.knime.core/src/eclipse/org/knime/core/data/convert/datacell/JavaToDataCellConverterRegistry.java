@@ -236,6 +236,17 @@ public final class JavaToDataCellConverterRegistry {
      * @return an optional converter factory
      */
     public Optional<JavaToDataCellConverterFactory<?>> getConverterFactory(final String id) {
+        if (id.startsWith(ArrayToCollectionConverterFactory.class.getName())) {
+            // get the element converter factory id:
+            final String elemConvFactoryId = id.substring(ArrayToCollectionConverterFactory.class.getName().length() + 1,
+                id.length()-1);
+            Optional<JavaToDataCellConverterFactory<?>> factory = getConverterFactory(elemConvFactoryId);
+            if (factory.isPresent()) {
+                return Optional.of(new ArrayToCollectionConverterFactory<>(factory.get()));
+            } else {
+                return Optional.empty();
+            }
+        }
         final JavaToDataCellConverterFactory<?> factory = m_byIdentifier.get(id);
 
         if (factory == null) {
@@ -432,10 +443,11 @@ public final class JavaToDataCellConverterRegistry {
                         LOGGER.coding("Incomplete DataCellFactoryMethod annotation for " + cellFactoryClass.getName()
                             + "." + method.getName() + ". Will not register.", e);
                     } catch (NoSuchMethodException | SecurityException ex) {
-                        LOGGER.error(
-                            "Could not access default constructor or constructor with parameter 'ExecutionContext' of "
-                                + "class '" + cellFactoryClass.getName() + "'. Converter will not be registered.",
-                            ex);
+                        LOGGER
+                            .error(
+                                "Could not access default constructor or constructor with parameter 'ExecutionContext' of "
+                                    + "class '" + cellFactoryClass.getName() + "'. Converter will not be registered.",
+                                ex);
                     }
                 }
             }

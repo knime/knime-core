@@ -53,6 +53,7 @@ import java.util.Iterator;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.convert.util.ClassUtil;
 
 /**
  * A {@link DataCellToJavaConverterFactory} which creates converters for converting {@link CollectionDataValue} subtypes
@@ -71,10 +72,8 @@ import org.knime.core.data.collection.CollectionDataValue;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noreference This class is not intended to be referenced by clients.
  */
-class CollectionConverterFactory<S extends DataValue, D, SE extends DataValue, DE>
-    implements DataCellToJavaConverterFactory<S, D> {
-
-    private final Class<S> m_sourceType;
+class CollectionConverterFactory<D, SE extends DataValue, DE>
+    implements DataCellToJavaConverterFactory<CollectionDataValue, D> {
 
     private final Class<D> m_destType;
 
@@ -83,26 +82,20 @@ class CollectionConverterFactory<S extends DataValue, D, SE extends DataValue, D
     /**
      * Constructor.
      *
-     * @param sourceType Type the created {@link DataCellToJavaConverter}s convert from
-     * @param destType Type the created {@link DataCellToJavaConverter}s convert to
      * @param elementConverter Implementation (possibly a Lambda expression) of the {@link DataCellToJavaConverter}
      *            defining the single instance returned by {@link #create()}.
      */
-    CollectionConverterFactory(final Class<S> sourceType, final Class<D> destType,
-        final DataCellToJavaConverterFactory<SE, DE> elementConverterFactory) {
-        assert CollectionDataValue.class.isAssignableFrom(sourceType);
-        assert destType.isArray();
+    CollectionConverterFactory(final DataCellToJavaConverterFactory<SE, DE> elementConverterFactory) {
 
-        m_sourceType = sourceType;
-        m_destType = destType;
+        m_destType = ClassUtil.getArrayType(elementConverterFactory.getDestinationType());
         m_elementConverterFactory = elementConverterFactory;
     }
 
     @Override
-    public DataCellToJavaConverter<S, D> create() {
-        return (final S source) -> {
+    public DataCellToJavaConverter<CollectionDataValue, D> create() {
+        return (final CollectionDataValue source) -> {
             final DataCellToJavaConverter<SE, DE> elementConverter = m_elementConverterFactory.create();
-            final CollectionDataValue val = (CollectionDataValue)source;
+            final CollectionDataValue val = source;
             final Object outputArray = Array.newInstance(m_destType.getComponentType(), val.size());
 
             final Iterator<DataCell> itor = val.iterator();
@@ -118,8 +111,8 @@ class CollectionConverterFactory<S extends DataValue, D, SE extends DataValue, D
     }
 
     @Override
-    public Class<S> getSourceType() {
-        return m_sourceType;
+    public Class<CollectionDataValue> getSourceType() {
+        return CollectionDataValue.class;
     }
 
     @Override
