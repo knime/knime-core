@@ -68,31 +68,55 @@ import org.knime.core.data.DataValue;
 public interface DataCellToJavaConverterFactory<S extends DataValue, D> {
 
     /**
+     * Create an instance of a {@link DataCellToJavaConverter} which is able to convert <code>S</code> into
+     * <code>D</code>.
+     *
      * @return a {@link DataCellToJavaConverter} which converts an instance of the type returned by
      *         {@link #getSourceType()} into an instance of the type returned by {@link #getDestinationType()}
      */
     public DataCellToJavaConverter<S, D> create();
 
     /**
+     * Get the {@link Class} of the type (a subclass of {@link DataValue}, see type parameter {@code <S>}) which
+     * converters created by this factory are able to convert.
+     *
      * @return type which the created {@link DataCellToJavaConverter}s can convert
      */
     public Class<S> getSourceType();
 
     /**
+     * Get the {@link Class} of the type which converters created by this factory are able to convert into.
+     *
      * @return type which the created {@link DataCellToJavaConverter}s convert to
      */
     public Class<D> getDestinationType();
 
     /**
-     * @return the name of this converter factory or <code>""</code> if this is the default for the source and
-     *         destination types
+     * A human readable name for this converter factory to be displayed in user interfaces for example. Should contain
+     * at least the simple name of the java type which is retrieved from the data value using this method.
+     * <p>
+     * <b> Examples: </b> "Double", "String", "JsonValue", "SDF String"
+     * </p>
+     *
+     * @return the name of this converter factory
      */
     default String getName() {
-        return "";
+        return getSourceType().getSimpleName();
     }
 
     /**
-     * @return a ideally unique identifier for this factory
+     * Get the identifier for this factory. The identifier is a unique string used to unambiguously reference this
+     * converter factory. Since this identifier is used for persistence, it is required that the identifier is the same
+     * every runtime. If the identifier is not unique, the factory may not be loaded from the extension point.
+     *
+     * <p>
+     * <b>Examples:</b>
+     * </p>
+     * <p>
+     * "org.mypackage.MyConverterFactory&lt;MySourceDataValue,MyType>"
+     * </p>
+     *
+     * @return a unique identifier for this factory
      */
     public String getIdentifier();
 }

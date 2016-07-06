@@ -158,7 +158,7 @@ public final class DataCellToJavaConverterRegistry {
     private final HashMap<Class<? extends DataValue>, DataType> m_prefferedTypes = new HashMap<>();
 
     /**
-     * Query which {@link Class Classes} can be converted.
+     * Query which {@link DataValue} {@link Class Classes} can be converted.
      *
      * @return a {@link Collection} of all possible source types
      */
@@ -178,9 +178,10 @@ public final class DataCellToJavaConverterRegistry {
     }
 
     /**
-     * Query which {@link Class Classes} can be converted into a specific {@link Class destType}.
+     * Get all {@link DataCellToJavaConverterFactory converter factories} which create Converters which convert into a
+     * specific {@link Class destType}.
      *
-     * @param destType DataType to query possible source types for
+     * @param destType DataType to query converter factories for
      * @return a {@link Collection} of all possible source types which can be converted into the given
      *         <code>destType</code>. The first is always the preferred type.
      */
@@ -229,9 +230,10 @@ public final class DataCellToJavaConverterRegistry {
     }
 
     /**
-     * Query which {@link Class Classes} can be converted into a specific {@link Class destType}.
+     * Get all {@link DataCellToJavaConverterFactory converter factories} which create converter which convert into a
+     * specific {@link Class destType}.
      *
-     * @param sourceType DataType to query possible destination types for
+     * @param sourceType DataType to query converter factories for
      * @return a {@link Collection} of all possible source types which can be converted into the given
      *         <code>destType</code>. The first is always the preferred type.
      */
@@ -265,7 +267,7 @@ public final class DataCellToJavaConverterRegistry {
      * Get the {@link DataCellToJavaConverterFactory} with the given identifier.
      *
      * @param id unique identifier for the factory
-     * @return an optional converter factory
+     * @return an optional of a converter factory or empty if no converter factory with given id could be found
      */
     public Optional<DataCellToJavaConverterFactory<?, ?>> getConverterFactory(final String id) {
         final DataCellToJavaConverterFactory<?, ?> factory = m_byIdentifier.get(id);
@@ -278,12 +280,14 @@ public final class DataCellToJavaConverterRegistry {
     }
 
     /**
-     * Get a {@link DataCellToJavaConverterFactory} which creates {@link DataCellToJavaConverter}s which convert
-     * <code>sourceType</code> into <code>destType</code>.
+     * Get all {@link DataCellToJavaConverterFactory} which create {@link DataCellToJavaConverter}s that convert
+     * <code>sourceType</code> into <code>destType</code>. If you do not require more than one converter factory, you
+     * should consider using {@link #getPreferredConverterFactory(DataType, Class)} instead.
      *
      * @param sourceType Type the created {@link DataCellToJavaConverter}s convert from
      * @param destType Type the created {@link DataCellToJavaConverter}s convert to
-     * @return an optional converter factory
+     * @return collection of {@link DataCellToJavaConverterFactory converter factories} which create converters which
+     *         convert from <code>sourceType</code> into <code>destType</code>.
      */
     public <D> Collection<DataCellToJavaConverterFactory<? extends DataValue, D>>
         getConverterFactories(final DataType sourceType, final Class<D> destType) {
@@ -325,8 +329,10 @@ public final class DataCellToJavaConverterRegistry {
 
     /**
      * Convenience method to get the first {@link DataCellToJavaConverterFactory} returned by
-     * {@link #getConverterFactories(DataType, Class)}, which should create a converter that converts the preferred data
-     * value of the given sourceType.
+     * {@link #getConverterFactories(DataType, Class)}, which creates a converter that is able to convert the preferred
+     * data value of the given sourceType into the given destType. Since {@link DataCell DataCells} of a certain
+     * {@link DataType} are required to implement the preferred {@link DataValue} interface, the resulting converter is
+     * therefore guaranteed to be able to convert {@link DataCell DataCells} of the requested type.
      *
      * @param sourceType type which should be convertible
      * @param destType type to which should be converted
@@ -364,7 +370,7 @@ public final class DataCellToJavaConverterRegistry {
         for (final DataCellToJavaConverterFactory<? extends DataValue, ?> factory : getConverterFactories(
             sourceType.getCollectionElementType(), destType.getComponentType())) {
             allFactories.add(new CollectionConverterFactory<S, D, SE, DE>((Class<S>)sourceType.getCellClass(), destType,
-                ((DataCellToJavaConverterFactory<SE, DE>)factory).create()));
+                ((DataCellToJavaConverterFactory<SE, DE>)factory)));
         }
 
         return allFactories;

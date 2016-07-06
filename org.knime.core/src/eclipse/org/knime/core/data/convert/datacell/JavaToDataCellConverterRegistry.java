@@ -246,26 +246,29 @@ public final class JavaToDataCellConverterRegistry {
     }
 
     /**
-     * Get a converterFactory which converts from <code>source</code> to <code>dest</code>.
+     * Get all {@link JavaToDataCellConverterFactory converter factories} which create {@link JavaToDataCellConverter}s
+     * that convert <code>sourceType</code> into <code>destType</code>. If you do not require more than one converter
+     * factory, you should consider using {@link #getPreferredConverterFactory(Class, DataType)} instead.
      *
-     * @param source Source type to convert
-     * @param dest {@link DataType} to convert to
-     * @return {@link JavaToDataCellConverterFactory} which converts from <code>source</code> to <code>dest</code>
+     * @param sourceType Source type to convert
+     * @param destType {@link DataType} to convert to
+     * @return collection of {@link JavaToDataCellConverterFactory converter factories} which create converters which
+     *         convert from <code>sourceType</code> to <code>destType</code>
      * @param <S> A JavaToDataCellConverter type (letting java infer the type is highly recommended)
      */
     // we only put JavaToDataCellConverter<T> into the map for Class<T>
-    public <S> Collection<JavaToDataCellConverterFactory<S>> getConverterFactories(final Class<S> source,
-        final DataType dest) {
+    public <S> Collection<JavaToDataCellConverterFactory<S>> getConverterFactories(final Class<S> sourceType,
+        final DataType destType) {
 
         final LinkedBlockingQueue<Class<?>> classes = new LinkedBlockingQueue<>();
-        classes.add(source);
+        classes.add(sourceType);
 
         Class<?> curClass = null;
         final ArrayList<JavaToDataCellConverterFactory<S>> factories = new ArrayList<>();
 
         while ((curClass = classes.poll()) != null) {
             final ArrayList<JavaToDataCellConverterFactory<?>> newFactories =
-                m_converterFactories.get(new ConversionKey(curClass, dest));
+                m_converterFactories.get(new ConversionKey(curClass, destType));
 
             if (newFactories != null) {
                 factories.addAll((Collection<? extends JavaToDataCellConverterFactory<S>>)newFactories);
@@ -278,10 +281,10 @@ public final class JavaToDataCellConverterRegistry {
             }
         }
 
-        if (dest.isCollectionType() && source.isArray()) {
+        if (destType.isCollectionType() && sourceType.isArray()) {
             final Collection<? extends JavaToDataCellConverterFactory<S>> elementFactories =
                 (Collection<? extends JavaToDataCellConverterFactory<S>>)getConverterFactories(
-                    source.getComponentType(), dest.getCollectionElementType());
+                    sourceType.getComponentType(), destType.getCollectionElementType());
 
             final List<?> arrayFactories =
                 elementFactories.stream().map((elementFactory) -> createToCollectionConverterFactory(

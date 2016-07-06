@@ -48,14 +48,34 @@
 package org.knime.core.data.convert.datacell;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.node.ExecutionContext;
 
 /**
- * Default implementation of {@link JavaToDataCellConverterFactory}.
+ * Easy to use implementation of {@link DataCellToJavaConverterFactory} for simple Converters. All conversion processes
+ * which do not require a state (execution context and/or DataCellFactory instance) should be considerable as simple,
+ * all other should implement the extension point described in {@link org.knime.core.data.convert}.
+ *
+ * <p>
+ * <b>Example:</b></br>
+ *
+ * <pre>
+ * public class FooConverterFactory
+ *          extends SimpleJavaToDataCellConverterFactory&lt;Foo> {
+ *
+ *      // Constructor
+ *      public FooConverterFactory() {
+ *          super(Foo.class,             // class of source type
+ *                FooCell.TYPE,          // data type of destination type
+ *                (fooVal) -> FooCellFactory.create(fooVal) // conversion function
+ *          );
+ *      )
+ * }
+ * </pre>
+ * </p>
  *
  * @author Jonathan Hale
- *
- * @param <T> {@link JavaToDataCellConverter} subclass which can be created by this factory.
+ * @param <T> type which is convertible by the created {@link JavaToDataCellConverterFactory}.
  * @since 3.2
  */
 public class SimpleJavaToDataCellConverterFactory<T> implements JavaToDataCellConverterFactory<T> {

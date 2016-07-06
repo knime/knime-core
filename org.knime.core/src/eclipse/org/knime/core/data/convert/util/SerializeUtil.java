@@ -103,8 +103,9 @@ public final class SerializeUtil {
     }
 
     /**
-     * Object which can be queried instead of an actual ConverterFactory, for example to be still able to display a
-     * previously existing setting in a node dialog which has become invalid through removal of a required plug-in.
+     * Object which can be loaded instead of an actual ConverterFactory, for example to be able to still display a
+     * previously existing setting which has become invalid through removal of a required plug-in, in a node dialog for
+     * example.
      *
      * @author Jonathan Hale, KNIME, Konstanz, Germany
      */
@@ -118,6 +119,12 @@ public final class SerializeUtil {
 
         private final String m_id;
 
+        /**
+         * @param src name of the source type
+         * @param dst name of the destination type
+         * @param name name of the converter factory
+         * @param id id of the converter factory
+         */
         private FactoryPlaceholder(final String src, final String dst, final String name, final String id) {
             m_sourceType = src;
             m_destType = dst;
@@ -126,6 +133,8 @@ public final class SerializeUtil {
         }
 
         /**
+         * Get the name of the source type of the factory
+         *
          * @return the name of the source type of the factory
          */
         public String getSourceTypeName() {
@@ -133,6 +142,8 @@ public final class SerializeUtil {
         }
 
         /**
+         * Get the name of the destination type of the factory
+         *
          * @return the name of the destination type of the factory
          */
         public String getDestinationTypeName() {
@@ -140,6 +151,8 @@ public final class SerializeUtil {
         }
 
         /**
+         * Get the name of the factory
+         *
          * @return the name of the factory
          */
         public String getName() {
@@ -147,6 +160,8 @@ public final class SerializeUtil {
         }
 
         /**
+         * Get the identifier for the factory
+         *
          * @return the identifier of the factory
          */
         public String getIdentifier() {

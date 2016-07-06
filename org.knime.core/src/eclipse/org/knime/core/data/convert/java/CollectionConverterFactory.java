@@ -78,7 +78,7 @@ class CollectionConverterFactory<S extends DataValue, D, SE extends DataValue, D
 
     private final Class<D> m_destType;
 
-    private final DataCellToJavaConverter<SE, DE> m_elementConverter;
+    private final DataCellToJavaConverterFactory<SE, DE> m_elementConverterFactory;
 
     /**
      * Constructor.
@@ -89,18 +89,19 @@ class CollectionConverterFactory<S extends DataValue, D, SE extends DataValue, D
      *            defining the single instance returned by {@link #create()}.
      */
     CollectionConverterFactory(final Class<S> sourceType, final Class<D> destType,
-        final DataCellToJavaConverter<SE, DE> elementConverter) {
+        final DataCellToJavaConverterFactory<SE, DE> elementConverterFactory) {
         assert CollectionDataValue.class.isAssignableFrom(sourceType);
         assert destType.isArray();
 
         m_sourceType = sourceType;
         m_destType = destType;
-        m_elementConverter = elementConverter;
+        m_elementConverterFactory = elementConverterFactory;
     }
 
     @Override
     public DataCellToJavaConverter<S, D> create() {
         return (final S source) -> {
+            final DataCellToJavaConverter<SE, DE> elementConverter = m_elementConverterFactory.create();
             final CollectionDataValue val = (CollectionDataValue)source;
             final Object outputArray = Array.newInstance(m_destType.getComponentType(), val.size());
 
@@ -108,7 +109,7 @@ class CollectionConverterFactory<S extends DataValue, D, SE extends DataValue, D
 
             int i = 0;
             while (itor.hasNext()) {
-                Array.set(outputArray, i, m_elementConverter.convert((SE)itor.next()));
+                Array.set(outputArray, i, elementConverter.convert((SE)itor.next()));
                 i++;
             }
 
@@ -128,6 +129,6 @@ class CollectionConverterFactory<S extends DataValue, D, SE extends DataValue, D
 
     @Override
     public String getIdentifier() {
-        return getClass().getName() + "(" + m_sourceType + "," + m_destType + ")";
+        return getClass().getName() + "(" + m_elementConverterFactory.getIdentifier() + ")";
     }
 }

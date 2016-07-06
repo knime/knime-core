@@ -68,9 +68,9 @@ public @interface DataCellFactoryMethod {
 
     /**
      * Name of the DataCellFactoryMethod shown to the user (in the JavaSnippet node dialog for example). Should contain
-     * at least the simple type name.
+     * at least the simple type name of the java type from which the data cell is created.
      * <p>
-     * <b> Examples: </b> "InputStream", "Integer", "XML String", "JSON String"
+     * <b> Examples: </b> "InputStream", "Integer", "XML String", "SDF String"
      * </p>
      *
      * @return Descriptive name of the method

@@ -51,7 +51,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 
 /**
@@ -68,9 +67,9 @@ public @interface DataValueAccessMethod {
 
     /**
      * Name of the DataValueAccessMethod shown to the user (in the JavaSnippet node dialog for example). Should contain
-     * at least the data type name (see {@link DataType#getName()}).
+     * at least the simple name of the java type which is retrieved from the data value using this method.
      * <p>
-     * <b> Examples: </b> "Number (double)", "String", "XML", "List of Number (double)"
+     * <b> Examples: </b> "Double", "String", "JsonValue", "SDF String"
      * </p>
      *
      * @return Descriptive name of the method
