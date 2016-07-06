@@ -264,6 +264,10 @@ public class CachedConnectionFactory implements DBConnectionFactory {
     	}
         final Properties props = createConnectionProperties(user, pass);
         final Connection connection = d.connect(jdbcUrl, props);
+        if (connection == null) {
+            LOGGER.warnWithFormat("Driver \"%s\" return 'null' connection for DB URL \"%s\"",
+                d.getClass().getName(), jdbcUrl);
+        }
         return connection;
     }
 }
