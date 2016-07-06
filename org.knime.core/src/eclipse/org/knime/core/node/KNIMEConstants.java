@@ -322,7 +322,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "March 31, 2016";
+        BUILD_DATE = "July 08, 2016";
         String versionString;
         if (Platform.getProduct() == null) {
             System.err.println("Can't locate product, not an OSGi framework?");
