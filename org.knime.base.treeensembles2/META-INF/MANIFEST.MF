@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Decisions Tree Ensembles for KNIME
 Bundle-SymbolicName: org.knime.base.treeensembles2;singleton:=true
-Bundle-Version: 3.1.0.qualifier
+Bundle-Version: 3.2.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.knime.base;bundle-version="[3.0.0,4.0.0)",
  org.knime.ensembles;bundle-version="[3.0.0,4.0.0)",
@@ -11,6 +11,6 @@ Require-Bundle: org.knime.base;bundle-version="[3.0.0,4.0.0)",
  com.google.guava;bundle-version="16.0.1",
  org.knime.distmatrix
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.knime.base.node.mine.treeensemble2.data,
  org.knime.base.node.mine.treeensemble2.model
