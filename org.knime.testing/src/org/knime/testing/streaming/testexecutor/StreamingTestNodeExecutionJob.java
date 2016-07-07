@@ -550,7 +550,16 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
                 } else {
                     // TODO: copy port object for each chunk to be executed
                     for (int j = 0; j < numChunks; j++) {
-                        portInputs[j][i] = new PortObjectInput(inPortObjects[i + 1]);
+                        if (inPortObjects[i + 1] instanceof BufferedDataTable) {
+                            BufferedDataTable table = (BufferedDataTable)inPortObjects[i + 1];
+                            try {
+                                portInputs[j][i] = new DataTableRowInput(exec.createBufferedDataTable(table, exec));
+                            } catch (CanceledExecutionException e) {
+                                throw new RuntimeException(e);
+                            }
+                        } else {
+                            portInputs[j][i] = new PortObjectInput(inPortObjects[i + 1]);
+                        }
                     }
                 }
             } else {
