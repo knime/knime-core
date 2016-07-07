@@ -612,6 +612,10 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         } else {
             m_viewerState = state;
             Display.getDefault().syncExec(() -> {
+                if (m_viewer == null) {
+                    return; // already disposed
+                }
+
                 Table table = m_viewer.getTable();
                 table.setRedraw(false);
                 switch (state) {
