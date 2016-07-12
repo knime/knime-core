@@ -250,6 +250,9 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
             //processing of the search query a bit further
             m_continueDelay.set(true);
         }
+
+        //undo the selection of a node in the list since the search query probably has been changed
+        m_viewer.setSelection(StructuredSelection.EMPTY);
     }
 
     private void delayQueryProcessing() {
@@ -339,11 +342,14 @@ class SearchQueryContributionItem extends ControlContribution implements KeyList
         } else {
             searchString = m_text.getText();
         }
+
+        //update the filter and inform the callback object
         m_filter.setQueryString(searchString);
         if (m_callback != null) {
             m_callback.run();
         }
 
+        //update the tree view itself
         TreeViewerUpdater.collapseAndUpdate(m_viewer, update || searchString.isEmpty(), searchString.isEmpty(),
             !searchString.isEmpty());
     }
