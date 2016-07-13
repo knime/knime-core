@@ -86,6 +86,7 @@ import org.knime.core.data.vector.doublevector.DoubleVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 import org.knime.core.node.util.DataValueColumnFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
@@ -301,24 +302,14 @@ public final class AttributeSelectionPanel extends JPanel {
         m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
         DataTableSpec attSpec = removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
         String fpColumn = cfg.getFingerprintColumn();
-        //        boolean includeAll = cfg.isIncludeAllColumns();
-        String[] includeCols = cfg.getIncludeColumns();
-        if (includeCols == null) {
-            includeCols = new String[0];
-        }
-        //        m_includeColumnsFilterPanelConfig = cfg.getColumnFilterConfig();
         m_useOrdinaryColumnsRadio.setEnabled(true);
         m_useFingerprintColumnRadio.setEnabled(true);
         m_useOrdinaryColumnsRadio.doClick(); // default, fix later
-        //        m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
         if (hasOrdinaryColumnsInInput) {
-            //            m_includeColumnsFilterPanel.update(attSpec, false, includeCols);
-            //            m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
             m_includeColumnsFilterPanel2.loadConfiguration(cfg.getColumnFilterConfig(), attSpec);
         } else {
             m_useOrdinaryColumnsRadio.setEnabled(false);
             m_useFingerprintColumnRadio.doClick();
-            //            m_includeColumnsFilterPanel.update(NO_VALID_INPUT_SPEC, true);
             m_includeColumnsFilterPanel2.loadConfiguration(cfg.getColumnFilterConfig(), NO_VALID_INPUT_SPEC);
         }
         if (hasFPColumnInInput) {
@@ -361,29 +352,15 @@ public final class AttributeSelectionPanel extends JPanel {
         if (m_useFingerprintColumnRadio.isSelected()) {
             String fpColumn = m_fingerprintColumnBox.getSelectedColumn();
             cfg.setFingerprintColumn(fpColumn);
-            //            cfg.setIncludeAllColumns(false);
-            cfg.setIncludeColumns(null);
         } else {
             assert m_useOrdinaryColumnsRadio.isSelected();
-            //            boolean useAll = m_includeColumnsFilterPanel.isKeepAllSelected();
-            //            if (useAll) {
-            //                cfg.setIncludeAllColumns(true);
-            //            } else {
-            //                cfg.setIncludeAllColumns(false);
-            //                Set<String> incls = m_includeColumnsFilterPanel.getIncludedColumnSet();
             Set<String> incls = m_includeColumnsFilterPanel2.getIncludedNamesAsSet();
-            if (incls.size() == 0) {
-                throw new InvalidSettingsException("No learn columns selected");
-            }
-            String[] includeCols = incls.toArray(new String[incls.size()]);
-            cfg.setIncludeColumns(includeCols);
-            //            }
+            CheckUtils.checkSetting(incls.size() > 0, "No learn columns selected");
         }
         int hiliteCount = m_enableHiliteChecker.isSelected() ? (Integer)m_hiliteCountSpinner.getValue() : -1;
         cfg.setNrHilitePatterns(hiliteCount);
         cfg.setIgnoreColumnsWithoutDomain(m_ignoreColumnsWithoutDomainChecker.isSelected());
         cfg.setSaveTargetDistributionInNodes(m_saveTargetDistributionInNodesChecker.isSelected());
-        //        cfg.setColumnFilterConfig(m_includeColumnsFilterPanelConfig);
         m_includeColumnsFilterPanel2.saveConfiguration(cfg.getColumnFilterConfig());
     }
 
@@ -393,9 +370,7 @@ public final class AttributeSelectionPanel extends JPanel {
      * @return table spec with learn attributes
      */
     DataTableSpec getCurrentAttributeSpec() {
-        if (m_lastTableSpec == null) {
-            throw new IllegalStateException("Not to be called during load");
-        }
+        CheckUtils.checkState(m_lastTableSpec != null, "Not to be called during load");
         return removeColumn(m_lastTableSpec, m_targetColumnBox.getSelectedColumn());
     }
 

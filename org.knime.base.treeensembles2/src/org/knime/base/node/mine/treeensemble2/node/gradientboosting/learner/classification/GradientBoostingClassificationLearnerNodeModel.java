@@ -104,6 +104,7 @@ public class GradientBoostingClassificationLearnerNodeModel extends NodeModel {
 //        if (warn != null) {
 //            setWarningMessage(warn);
 //        }
+        m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
         ensembleSpec.assertTargetTypeMatches(false);
