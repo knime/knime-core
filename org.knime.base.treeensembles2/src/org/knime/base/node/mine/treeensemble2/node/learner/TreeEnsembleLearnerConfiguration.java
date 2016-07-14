@@ -85,6 +85,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
@@ -144,6 +145,7 @@ public class TreeEnsembleLearnerConfiguration {
     private static final String KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES = "saveTargetDistributionInNodes";
 
     public static final String KEY_COLUMN_FILTER_CONFIG = "columnFilterConfig";
+
 
     public enum MissingValueHandling {
             /**
@@ -317,10 +319,6 @@ public class TreeEnsembleLearnerConfiguration {
     private MissingValueHandling m_missingValueHandling = DEF_MISSING_VALUE_HANDLING;
 
     private String m_fingerprintColumn;
-
-    private String[] m_includeColumns;
-    //
-    //    private boolean m_includeAllColumns;
 
     private String m_hardCodedRootColumn;
 
@@ -701,20 +699,7 @@ public class TreeEnsembleLearnerConfiguration {
         m_fingerprintColumn = fingerprintColumn;
     }
 
-    /**
-     * @return The names of the columns in the input table to use as attributes, null when learning from fingerprint
-     *         data. It might contain the target column, which will be ignored as learning column.
-     */
-    public String[] getIncludeColumns() {
-        return m_includeColumns;
-    }
 
-    /**
-     * @param includeColumns the includeColumns to set, see {@link #isIncludeAllColumns()}.
-     */
-    public void setIncludeColumns(final String[] includeColumns) {
-        m_includeColumns = includeColumns;
-    }
 
     public DataColumnSpecFilterConfiguration getColumnFilterConfig() {
         return m_columnFilterConfig;
@@ -814,7 +799,6 @@ public class TreeEnsembleLearnerConfiguration {
         settings.addBoolean(KEY_USE_AVERAGE_SPLIT_POINTS, m_useAverageSplitPoints);
         settings.addBoolean(KEY_USE_BINARY_NOMINAL_SPLITS, m_useBinaryNominalSplits);
         settings.addString(KEY_FINGERPRINT_COLUMN, m_fingerprintColumn);
-        settings.addStringArray(KEY_INCLUDE_COLUMNS, m_includeColumns);
         //        m_columnFilterConfig = new DataColumnSpecFilterConfiguration(KEY_COLUMN_FILTER_CONFIG);
         m_columnFilterConfig.saveConfiguration(settings);
         //        settings.addBoolean(KEY_INCLUDE_ALL_COLUMNS, m_includeAllColumns);
@@ -889,18 +873,17 @@ public class TreeEnsembleLearnerConfiguration {
         setUseAverageSplitPoints(settings.getBoolean(KEY_USE_AVERAGE_SPLIT_POINTS));
         setUseBinaryNominalSplits(settings.getBoolean(KEY_USE_BINARY_NOMINAL_SPLITS, false));
         setFingerprintColumn(settings.getString(KEY_FINGERPRINT_COLUMN));
-        setIncludeColumns(settings.getStringArray(KEY_INCLUDE_COLUMNS));
         m_columnFilterConfig.loadConfigurationInModel(settings);
         //        setIncludeAllColumns(settings.getBoolean(KEY_INCLUDE_ALL_COLUMNS));
-        if (m_fingerprintColumn != null) {
-            // use fingerprint data, OK
-        } else if (m_includeColumns != null && m_includeColumns.length > 0) {
-            // some attributes set, OK
-            //        } else if (m_includeAllColumns) {
-            //            // use all appropriate columns, OK
-        } else {
-            throw new InvalidSettingsException("No attribute columns selected");
-        }
+//        if (m_fingerprintColumn != null) {
+//            // use fingerprint data, OK
+//        } else if (m_includeColumns != null && m_includeColumns.length > 0 || m_columnFilterConfig.) {
+//            // some attributes set, OK
+//            //        } else if (m_includeAllColumns) {
+//            //            // use all appropriate columns, OK
+//        } else {
+//            throw new InvalidSettingsException("No attribute columns selected");
+//        }
         // added after first preview, be backward compatible (true as default)
         setIgnoreColumnsWithoutDomain(settings.getBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true));
         // added after first preview, be backward compatible (none as default)
@@ -979,7 +962,7 @@ public class TreeEnsembleLearnerConfiguration {
             }
         }
 
-        m_includeColumns = settings.getStringArray(KEY_INCLUDE_COLUMNS, (String[])null);
+//        m_includeColumns = settings.getStringArray(KEY_INCLUDE_COLUMNS, (String[])null);
         //        m_includeAllColumns = settings.getBoolean(KEY_INCLUDE_ALL_COLUMNS, true);
         m_columnFilterConfig.loadConfigurationInDialog(settings, inSpec);
 
@@ -1085,9 +1068,10 @@ public class TreeEnsembleLearnerConfiguration {
         }
         m_missingValueHandling = missingValueHandling;
 
+        FilterResult filterResult = m_columnFilterConfig.applyTo(inSpec);
         if (m_fingerprintColumn != null) {
             // use fingerprint data, OK
-        } else if (m_includeColumns != null && m_includeColumns.length > 0) {
+        } else if (filterResult.getIncludes().length > 0) {
             // some attributes set, OK
             //        } else if (m_includeAllColumns) {
             // use all appropriate columns, OK
@@ -1101,6 +1085,36 @@ public class TreeEnsembleLearnerConfiguration {
         m_nrHilitePatterns = settings.getInt(KEY_NR_HILITE_PATTERNS, -1);
         m_saveTargetDistributionInNodes =
             settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES);
+    }
+
+    /**
+     * To be used in the configure of the learner nodes.
+     * Checks if the column selection makes sense and throws an InvalidSettingsException
+     * otherwise. The sanity checks include: <br>
+     * Existence and type check of fingerprint columns if specified. <br>
+     * Check if any attributes are selected if no fingerprint column is used for learning.
+     *
+     * @param inSpec Spec of the incoming table
+     * @throws InvalidSettingsException thrown if the column selection makes no sense
+     */
+    public void checkColumnSelection(final DataTableSpec inSpec) throws InvalidSettingsException {
+        FilterResult filterResult = m_columnFilterConfig.applyTo(inSpec);
+        if (m_fingerprintColumn != null) {
+            DataColumnSpec colSpec = inSpec.getColumnSpec(m_fingerprintColumn);
+            if (colSpec == null) {
+                throw new InvalidSettingsException("The fingerprint column is not contained in the incoming table.");
+            }
+            DataType colType = colSpec.getType();
+            if (!(colType.isCompatible(BitVectorValue.class)
+                    || colType.isCompatible(ByteVectorValue.class)
+                    || colType.isCompatible(DoubleVectorValue.class))) {
+                throw new InvalidSettingsException("The specified fingerprint column is not of a compatible vector type.");
+            }
+        } else if (filterResult.getIncludes().length > 0) {
+            // ok, there are some features selected
+        } else {
+            throw new InvalidSettingsException("No attributes are selected.");
+        }
     }
 
     /**
@@ -1119,10 +1133,14 @@ public class TreeEnsembleLearnerConfiguration {
             throw new InvalidSettingsException(
                 "Target column \"" + m_targetColumn + "\" does not exist or is not of the " + "correct type");
         }
+        FilterResult filterResult = m_columnFilterConfig.applyTo(spec);
         List<String> noDomainColumns = new ArrayList<String>();
         FilterLearnColumnRearranger rearranger = new FilterLearnColumnRearranger(spec);
         if (m_fingerprintColumn == null) { // use ordinary data
-            Set<String> incl = new HashSet<String>(Arrays.asList(m_includeColumns));
+            Set<String> incl = new HashSet<String>(Arrays.asList(filterResult.getIncludes()));
+            // the target column can possibly show up in the include list of the filter result
+            // therefore we have to remove it
+            incl.remove(targetCol.getName());
             for (DataColumnSpec col : spec) {
                 String colName = col.getName();
                 if (colName.equals(m_targetColumn)) {
@@ -1132,18 +1150,6 @@ public class TreeEnsembleLearnerConfiguration {
                 boolean ignoreColumn = false;
                 boolean isAppropriateType =
                     type.isCompatible(DoubleValue.class) || type.isCompatible(NominalValue.class);
-                //                if (m_includeAllColumns) {
-                //                    if (isAppropriateType) {
-                //                        if (shouldIgnoreLearnColumn(col)) {
-                //                            ignoreColumn = true;
-                //                            noDomainColumns.add(colName);
-                //                        } else {
-                //                            // accept column
-                //                        }
-                //                    } else {
-                //                        ignoreColumn = true;
-                //                    }
-                //                } else {
                 if (incl.remove(colName)) { // is attribute in selection set
                     // accept unless type mismatch
                     if (!isAppropriateType) {
@@ -1156,7 +1162,7 @@ public class TreeEnsembleLearnerConfiguration {
                         // accept
                     }
                 } else {
-                    ignoreColumn = true;
+                        ignoreColumn = true;
                 }
                 //                }
                 if (ignoreColumn) {

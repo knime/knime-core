@@ -359,10 +359,6 @@ public class OptionsPanel extends JPanel {
         DataTableSpec attSpec = removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
         String fpColumn = cfg.getFingerprintColumn();
         //        boolean includeAll = cfg.isIncludeAllColumns();
-        String[] includeCols = cfg.getIncludeColumns();
-        if (includeCols == null) {
-            includeCols = new String[0];
-        }
         m_useOrdinaryColumnsRadio.setEnabled(true);
         m_useFingerprintColumnRadio.setEnabled(true);
         //            m_useByteVectorColumnRadio.setEnabled(true);
@@ -426,7 +422,6 @@ public class OptionsPanel extends JPanel {
             String fpColumn = m_fingerprintColumnBox.getSelectedColumn();
             cfg.setFingerprintColumn(fpColumn);
             //            cfg.setIncludeAllColumns(false);
-            cfg.setIncludeColumns(null);
         } else {
             assert m_useOrdinaryColumnsRadio.isSelected();
             //            boolean useAll = m_includeColumnsFilterPanel.isKeepAllSelected();
@@ -439,10 +434,9 @@ public class OptionsPanel extends JPanel {
             if (incls.size() == 0) {
                 throw new InvalidSettingsException("No learn columns selected");
             }
-            String[] includeCols = incls.toArray(new String[incls.size()]);
-            cfg.setIncludeColumns(includeCols);
             //            }
         }
+        m_includeColumnsFilterPanel2.saveConfiguration(cfg.getColumnFilterConfig());
         cfg.setIgnoreColumnsWithoutDomain(true);
         cfg.setSaveTargetDistributionInNodes(false);
 
@@ -461,7 +455,6 @@ public class OptionsPanel extends JPanel {
 
         // will not be used in model but causes nullpointer exception if not set.
         cfg.setSplitCriterion(SplitCriterion.Gini);
-        m_includeColumnsFilterPanel2.saveConfiguration(cfg.getColumnFilterConfig());
 
     }
 

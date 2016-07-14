@@ -442,24 +442,14 @@ public final class OptionsPanel extends JPanel {
         m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
         DataTableSpec attSpec = removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
         String fpColumn = cfg.getFingerprintColumn();
-//        boolean includeAll = cfg.isIncludeAllColumns();
-        String[] includeCols = cfg.getIncludeColumns();
-        if (includeCols == null) {
-            includeCols = new String[0];
-        }
         m_useOrdinaryColumnsRadio.setEnabled(true);
         m_useFingerprintColumnRadio.setEnabled(true);
-//        m_useByteVectorColumnRadio.setEnabled(true);
         m_useOrdinaryColumnsRadio.doClick(); // default, fix later
-//        m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
         if (hasOrdinaryColumnsInInput) {
-//            m_includeColumnsFilterPanel.update(attSpec, false, includeCols);
             m_includeColumnsFilterPanel2.loadConfiguration(cfg.getColumnFilterConfig(), attSpec);
-//            m_includeColumnsFilterPanel.setKeepAllSelected(includeAll);
         } else {
             m_useOrdinaryColumnsRadio.setEnabled(false);
             m_useFingerprintColumnRadio.doClick();
-//            m_includeColumnsFilterPanel.update(NO_VALID_INPUT_SPEC, true);
             m_includeColumnsFilterPanel2.loadConfiguration(cfg.getColumnFilterConfig(), NO_VALID_INPUT_SPEC);
         }
         if (hasFPColumnInInput) {
@@ -477,8 +467,6 @@ public final class OptionsPanel extends JPanel {
             m_useOrdinaryColumnsRadio.doClick();
         }
 
-//        boolean ignoreColsNoDomain = cfg.isIgnoreColumnsWithoutDomain();
-//        m_ignoreColumnsWithoutDomainChecker.setSelected(ignoreColsNoDomain);
         int hiliteCount = cfg.getNrHilitePatterns();
         if (hiliteCount > 0) {
             m_enableHiliteChecker.setSelected(true);
@@ -569,7 +557,6 @@ public final class OptionsPanel extends JPanel {
             String fpColumn = m_fingerprintColumnBox.getSelectedColumn();
             cfg.setFingerprintColumn(fpColumn);
 //            cfg.setIncludeAllColumns(false);
-            cfg.setIncludeColumns(null);
         } else {
             assert m_useOrdinaryColumnsRadio.isSelected();
 //            boolean useAll = m_includeColumnsFilterPanel.isKeepAllSelected();
@@ -582,10 +569,9 @@ public final class OptionsPanel extends JPanel {
                 if (incls.size() == 0) {
                     throw new InvalidSettingsException("No learn columns selected");
                 }
-                String[] includeCols = incls.toArray(new String[incls.size()]);
-                cfg.setIncludeColumns(includeCols);
 //            }
         }
+        m_includeColumnsFilterPanel2.saveConfiguration(cfg.getColumnFilterConfig());
         int hiliteCount = m_enableHiliteChecker.isSelected() ? (Integer)m_hiliteCountSpinner.getValue() : -1;
         cfg.setNrHilitePatterns(hiliteCount);
         cfg.setIgnoreColumnsWithoutDomain(m_ignoreColumnsWithoutDomainChecker.isSelected());

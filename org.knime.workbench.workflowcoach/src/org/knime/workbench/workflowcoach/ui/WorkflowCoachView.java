@@ -151,6 +151,12 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
     private ViewerState m_viewerState = null;
 
     /**
+     * A string describing the last selection (e.g. a node or no selection), in order to not unneccessarily retrieve and
+     * repaint the node recommendations.
+     */
+    private String m_lastSelection = "";
+
+    /**
      * Possible states of the table viewer.
      */
     private enum ViewerState {
@@ -363,6 +369,23 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
                 nodeSelected &= (nc instanceof NativeNodeContainer);
             }
         }
+
+        //check whether it's just the same selection as the previous one (e.g. when a node has been reseted etc.)
+        //-> in that case no redraw is required
+        if (nodeSelected) {
+            if (m_lastSelection.equals(nc.getNameWithID())) {
+                return;
+            } else {
+                m_lastSelection = nc.getNameWithID();
+            }
+        } else {
+            if (m_lastSelection.equals("no node selected")) {
+                return;
+            } else {
+                m_lastSelection = "no node selected";
+            }
+        }
+
 
         List<NodeRecommendation>[] recommendations;
         if (nodeSelected) {

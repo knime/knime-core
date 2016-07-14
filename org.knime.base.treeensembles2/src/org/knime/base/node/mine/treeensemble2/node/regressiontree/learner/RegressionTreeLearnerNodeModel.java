@@ -122,6 +122,7 @@ final class RegressionTreeLearnerNodeModel extends NodeModel implements PortObje
         if (warn != null) {
             setWarningMessage(warn);
         }
+        m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         RegressionTreeModelPortObjectSpec treeSpec = new RegressionTreeModelPortObjectSpec(learnSpec);
 

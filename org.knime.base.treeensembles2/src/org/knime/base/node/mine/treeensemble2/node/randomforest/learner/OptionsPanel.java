@@ -472,10 +472,6 @@ public final class OptionsPanel extends JPanel {
         DataTableSpec attSpec = removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
         String fpColumn = cfg.getFingerprintColumn();
         //        boolean includeAll = cfg.isIncludeAllColumns();
-        String[] includeCols = cfg.getIncludeColumns();
-        if (includeCols == null) {
-            includeCols = new String[0];
-        }
         m_useOrdinaryColumnsRadio.setEnabled(true);
         m_useFingerprintColumnRadio.setEnabled(true);
         //        m_useByteVectorColumnRadio.setEnabled(true);
@@ -572,29 +568,18 @@ public final class OptionsPanel extends JPanel {
             String fpColumn = m_fingerprintColumnBox.getSelectedColumn();
             cfg.setFingerprintColumn(fpColumn);
             //            cfg.setIncludeAllColumns(false);
-            cfg.setIncludeColumns(null);
         } else {
             assert m_useOrdinaryColumnsRadio.isSelected();
-            //            boolean useAll = m_includeColumnsFilterPanel.isKeepAllSelected();
-            //            if (useAll) {
-            //                cfg.setIncludeAllColumns(true);
-            //            } else {
-            //                cfg.setIncludeAllColumns(false);
-            //                Set<String> incls = m_includeColumnsFilterPanel.getIncludedColumnSet();
             Set<String> incls = m_includeColumnsFilterPanel2.getIncludedNamesAsSet();
             if (incls.size() == 0) {
                 throw new InvalidSettingsException("No learn columns selected");
             }
-            String[] includeCols = incls.toArray(new String[incls.size()]);
-            cfg.setIncludeColumns(includeCols);
-            //            }
         }
         m_includeColumnsFilterPanel2.saveConfiguration(cfg.getColumnFilterConfig());
         int hiliteCount = m_enableHiliteChecker.isSelected() ? (Integer)m_hiliteCountSpinner.getValue() : -1;
         cfg.setNrHilitePatterns(hiliteCount);
         cfg.setIgnoreColumnsWithoutDomain(true);
         cfg.setSaveTargetDistributionInNodes(false);
-        //        cfg.setIgnoreColumnsWithoutDomain(m_ignoreColumnsWithoutDomainChecker.isSelected());
         cfg.setSaveTargetDistributionInNodes(m_saveTargetDistributionInNodesChecker.isSelected());
 
         // Tree Options

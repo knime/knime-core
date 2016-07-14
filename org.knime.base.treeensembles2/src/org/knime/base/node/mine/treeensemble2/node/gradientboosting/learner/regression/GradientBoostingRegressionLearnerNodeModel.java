@@ -104,6 +104,7 @@ public class GradientBoostingRegressionLearnerNodeModel extends NodeModel {
         if (warn != null) {
             setWarningMessage(warn);
         }
+        m_configuration.checkColumnSelection(inSpec);
         DataTableSpec learnSpec = learnRearranger.createSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
         // the following call may return null, which is OK during configure

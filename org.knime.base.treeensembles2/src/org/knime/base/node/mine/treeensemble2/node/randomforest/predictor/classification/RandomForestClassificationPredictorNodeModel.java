@@ -90,6 +90,8 @@ final class RandomForestClassificationPredictorNodeModel extends NodeModel {
         String targetColName = modelSpec.getTargetColumn().getName();
         if (m_configuration == null) {
             m_configuration = TreeEnsemblePredictorConfiguration.createDefault(false, targetColName);
+        } else if (!m_configuration.isChangePredictionColumnName()) {
+            m_configuration.setPredictionColumnName(TreeEnsemblePredictorConfiguration.getPredictColumnName(targetColName));
         }
         modelSpec.assertTargetTypeMatches(false);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
@@ -117,7 +119,6 @@ final class RandomForestClassificationPredictorNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void reset() {
-        m_configuration = null;
     }
 
     /** {@inheritDoc} */
