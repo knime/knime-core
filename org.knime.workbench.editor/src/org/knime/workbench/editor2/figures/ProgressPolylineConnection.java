@@ -66,7 +66,7 @@ import org.knime.core.node.workflow.ConnectionProgress;
  * PolylineConnection that can optionally show a label and provides animation to
  * produce a flowing effect.
  */
-public final class ProgressPolylineConnection extends PolylineConnection {
+public class ProgressPolylineConnection extends PolylineConnection {
 
     /** Service to make the marching ants go slow ... not updating with each event. */
     private static ScheduledExecutorService UI_PROGESS_UPDATE_SERVICE = Executors.newSingleThreadScheduledExecutor(
@@ -84,11 +84,11 @@ public final class ProgressPolylineConnection extends PolylineConnection {
     /** current state of animation--a value of -1 means we should go solid,
      *  otherwise; otherwise range is 0-2,
      * in which case the value is the offset in the dashes array. */
-    private int m_state = -1;
+    protected int m_state = -1;
 
     /** line dash style that we cycle through to create a flow animation--need 3
      * patterns to create a smooth animation. */
-    private static final int[][] DASHES = {
+    protected static final int[][] DASHES = {
         {0x4, 0x4, 0x1},
         {0x4, 0x1, 0x4},
         {0x1, 0x4, 0x4}
@@ -113,6 +113,7 @@ public final class ProgressPolylineConnection extends PolylineConnection {
     protected void outlineShape(final Graphics g) {
         if (m_state < 0) {
             setLineStyle(SWT.LINE_SOLID);
+            setLineWidth(1);
         } else {
             g.setLineDash(DASHES[m_state]);
         }
