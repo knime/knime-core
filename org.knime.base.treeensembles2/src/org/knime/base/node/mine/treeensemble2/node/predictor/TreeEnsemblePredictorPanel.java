@@ -85,14 +85,20 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
 
     private final JCheckBox m_changePredictionColNameChecker;
 
+    private final JCheckBox m_useSoftVotingChecker;
+
     private final boolean m_isRegression;
+
+    private final boolean m_isRandomForest;
 
     /**
      * @param isRegression panel for regression or classification.
+     * @param isRandomForest for random forest type algorithms show the soft voting option
      * */
-    public TreeEnsemblePredictorPanel(final boolean isRegression) {
+    public TreeEnsemblePredictorPanel(final boolean isRegression, final boolean isRandomForest) {
         super(new GridBagLayout());
         m_isRegression = isRegression;
+        m_isRandomForest = isRandomForest;
         m_predictionColNameField = new JTextField(20);
         final String defColName = TreeEnsemblePredictorConfiguration.getDefPredictColumnName();
         m_predictionColNameField.setText(defColName);
@@ -132,6 +138,7 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
 
         });
         m_appendOverallConfidenceColChecker = new JCheckBox("Append overall prediction confidence");
+        m_useSoftVotingChecker = new JCheckBox("Use soft voting");
         initLayout();
     }
 
@@ -167,6 +174,13 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
             add(m_suffixLabel, gbc);
             gbc.gridx += 1;
             add(m_suffixForClassProbabilitiesTextField, gbc);
+
+            if (m_isRandomForest) {
+                gbc.gridy += 1;
+                gbc.gridx = 0;
+                gbc.gridwidth = 2;
+                add(m_useSoftVotingChecker, gbc);
+            }
         }
     }
 
@@ -196,6 +210,7 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
         if (config.isChangePredictionColumnName() != m_changePredictionColNameChecker.isSelected()) {
             m_changePredictionColNameChecker.doClick();
         }
+        m_useSoftVotingChecker.setSelected(config.isUseSoftVoting());
     }
 
     /**
@@ -211,6 +226,7 @@ public final class TreeEnsemblePredictorPanel extends JPanel {
         config.setPredictionColumnName(m_predictionColNameField.getText());
         config.setChangePredictionColumnName(m_changePredictionColNameChecker.isSelected());
         config.setSuffixForClassConfidences(m_suffixForClassProbabilitiesTextField.getText());
+        config.setUseSoftVoting(m_useSoftVotingChecker.isSelected());
         config.save(settings);
     }
 

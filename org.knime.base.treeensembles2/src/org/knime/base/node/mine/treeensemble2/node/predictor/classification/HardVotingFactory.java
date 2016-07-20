@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,47 +41,32 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Jan 10, 2012 (wiswedel): created
+ *   14.07.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification;
-
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorPanel;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.port.PortObjectSpec;
+package org.knime.base.node.mine.treeensemble2.node.predictor.classification;
 
 /**
+ * Factory for {@link HardVoting} objects.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME.com
  */
-public final class GradientBoostingClassificationPredictorNodeDialogPane extends NodeDialogPane {
+final class HardVotingFactory implements VotingFactory {
 
-    private final TreeEnsemblePredictorPanel m_predictorPanel;
+    private final int m_nrClasses;
+
+    public HardVotingFactory(final int nrClasses) {
+        m_nrClasses = nrClasses;
+    }
 
     /**
-     *  */
-    public GradientBoostingClassificationPredictorNodeDialogPane() {
-        m_predictorPanel = new TreeEnsemblePredictorPanel(false, false);
-        addTab(TreeEnsemblePredictorPanel.PANEL_NAME, m_predictorPanel);
-    }
-
-    /** {@inheritDoc} */
+     * {@inheritDoc}
+     */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-        throws NotConfigurableException {
-        m_predictorPanel.loadSettingsFrom(settings, specs);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_predictorPanel.saveSettingsTo(settings);
+    public Voting createVoting() {
+        return new HardVoting(m_nrClasses);
     }
 
 }

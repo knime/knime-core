@@ -49,12 +49,13 @@ package org.knime.base.node.mine.treeensemble2.node.predictor.classification;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.knime.base.data.filter.column.FilterColumnRow;
+import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnMetaData;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModelPortObjectSpec;
@@ -71,7 +72,6 @@ import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.util.MutableInteger;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
@@ -88,15 +88,18 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
 
     private final Map<String, DataCell> m_targetValueMap;
 
+    private final VotingFactory m_votingFactory;
+
     private TreeEnsembleClassificationPredictorCellFactory(final TreeEnsemblePredictor predictor,
         final Map<String, DataCell> targetValueMap, final DataColumnSpec[] appendSpecs,
-        final int[] learnColumnInRealDataIndices) {
+        final int[] learnColumnInRealDataIndices, final VotingFactory votingFactory) {
         super(appendSpecs);
         setParallelProcessing(true);
         m_targetValueMap = targetValueMap;
         m_predictor = predictor;
         m_learnSpec = predictor.getModelSpec().getLearnTableSpec();
         m_learnColumnInRealDataIndices = learnColumnInRealDataIndices;
+        m_votingFactory = votingFactory;
     }
 
     /**
@@ -142,8 +145,14 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
         assert modelObject == null || targetValueMap != null : "Target values must be known during execution";
         DataColumnSpec[] newCols = newColsList.toArray(new DataColumnSpec[newColsList.size()]);
         int[] learnColumnInRealDataIndices = modelSpec.calculateFilterIndices(testDataSpec);
+        final VotingFactory votingFactory;
+        if (configuration.isUseSoftVoting()) {
+            votingFactory = new SoftVotingFactory(targetValueMap.size());
+        } else {
+            votingFactory = new HardVotingFactory(targetValueMap.size());
+        }
         return new TreeEnsembleClassificationPredictorCellFactory(predictor, targetValueMap, newCols,
-            learnColumnInRealDataIndices);
+            learnColumnInRealDataIndices, votingFactory);
     }
 
     /** {@inheritDoc} */
@@ -173,7 +182,7 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
             Arrays.fill(result, DataType.getMissingCell());
             return result;
         }
-        OccurrenceCounter<String> counter = new OccurrenceCounter<String>();
+        final Voting voting = m_votingFactory.createVoting();
         final int nrModels = ensembleModel.getNrModels();
         int nrValidModels = 0;
         for (int i = 0; i < nrModels; i++) {
@@ -182,13 +191,13 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
             } else {
                 TreeModelClassification m = ensembleModel.getTreeModelClassification(i);
                 TreeNodeClassification match = m.findMatchingNode(record);
-                String majorityClassName = match.getMajorityClassName();
-
-                counter.add(majorityClassName);
+                voting.addVote(match);
                 nrValidModels += 1;
             }
         }
-        String bestValue = counter.getMostFrequent();
+        final NominalValueRepresentation[] targetVals = ((TreeTargetNominalColumnMetaData)ensembleModel.getMetaData().getTargetMetaData()).getValues();
+        final int bestIdx = voting.getMajorityClassIdx();
+        String bestValue = targetVals[bestIdx].getNominalValue();
         int index = 0;
         if (bestValue == null) {
             assert nrValidModels == 0;
@@ -196,55 +205,20 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
             index = size - 1;
         } else {
             result[index++] = m_targetValueMap.get(bestValue);
+            final float[] distribution = voting.getClassProbabilities();
             if (appendConfidence) {
-                final int freqValue = counter.getFrequency(bestValue);
-                result[index++] = new DoubleCell(freqValue / (double)nrValidModels);
+                result[index++] = new DoubleCell(distribution[bestIdx]);
             }
             if (appendClassConfidences) {
-                for (String key : m_targetValueMap.keySet()) {
-                    int frequency = counter.getFrequency(key);
-                    double ratio = frequency / (double)nrValidModels;
-                    result[index++] = new DoubleCell(ratio);
+                for (final NominalValueRepresentation nomVal : targetVals) {
+                    result[index++] = new DoubleCell(distribution[nomVal.getAssignedInteger()]);
                 }
             }
         }
         if (appendModelCount) {
-            result[index++] = new IntCell(nrValidModels);
+            result[index++] = new IntCell(voting.getNrVotes());
         }
         return result;
-    }
-
-    @SuppressWarnings("serial")
-    private static final class OccurrenceCounter<T> extends HashMap<T, MutableInteger> {
-
-        public int add(final T object) {
-            MutableInteger count = get(object);
-            if (count == null) {
-                count = new MutableInteger(1);
-                put(object, count);
-            } else {
-                count.inc();
-            }
-            return count.intValue();
-        }
-
-        public T getMostFrequent() {
-            int max = 0;
-            T maxValue = null;
-            for (Map.Entry<T, MutableInteger> e : entrySet()) {
-                final int intValue = e.getValue().intValue();
-                if (intValue > max) {
-                    max = intValue;
-                    maxValue = e.getKey();
-                }
-            }
-            return maxValue;
-        }
-
-        public int getFrequency(final T object) {
-            MutableInteger count = get(object);
-            return count == null ? 0 : count.intValue();
-        }
     }
 
 }
