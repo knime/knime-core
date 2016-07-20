@@ -173,7 +173,13 @@ final class CSVReaderNodeModel extends NodeModel {
 
         exec.setMessage("Buffering file");
         FileTable fTable = new FileTable(settings.createDataTableSpec(), settings, readExec);
-        BufferedDataTable table = exec.createBufferedDataTable(fTable, exec.createSubExecutionContext(0.0));
+        BufferedDataTable table;
+        try {
+            table = exec.createBufferedDataTable(fTable, exec.createSubExecutionContext(0.0));
+        } finally {
+            // fix AP-6127
+            fTable.dispose();
+        }
 
         return new BufferedDataTable[] {table};
     }
