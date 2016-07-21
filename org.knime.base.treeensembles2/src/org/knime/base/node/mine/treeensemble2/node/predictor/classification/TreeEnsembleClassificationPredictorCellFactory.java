@@ -196,8 +196,12 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
             }
         }
         final NominalValueRepresentation[] targetVals = ((TreeTargetNominalColumnMetaData)ensembleModel.getMetaData().getTargetMetaData()).getValues();
-        final int bestIdx = voting.getMajorityClassIdx();
-        String bestValue = targetVals[bestIdx].getNominalValue();
+        String bestValue = null;
+        int bestIdx = -1;
+        if (voting.getNrVotes() > 0) {
+            bestIdx = voting.getMajorityClassIdx();
+            bestValue = targetVals[bestIdx].getNominalValue();
+        }
         int index = 0;
         if (bestValue == null) {
             assert nrValidModels == 0;
