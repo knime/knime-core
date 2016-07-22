@@ -70,6 +70,8 @@ public class EditorUIInformation implements UIInformation {
 
     private static final String KEY_ZOOM = "workflow.editor.zoomLevel";
 
+    private static final String KEY_CURVED_CONNECTIONS = "workflow.editor.curvedConnections";
+
     private boolean m_snapToGrid;
 
     private boolean m_showGrid;
@@ -80,6 +82,8 @@ public class EditorUIInformation implements UIInformation {
 
     private double m_zoomLevel;
 
+    private boolean m_hasCurvedConnections;
+
     /**
      * Constructor with defaults.
      */
@@ -89,6 +93,7 @@ public class EditorUIInformation implements UIInformation {
         m_gridX = -1;
         m_gridY = -1;
         m_zoomLevel = 1.0;
+        m_hasCurvedConnections = false;
     }
 
     /**
@@ -102,6 +107,7 @@ public class EditorUIInformation implements UIInformation {
         clone.m_gridX = m_gridX;
         clone.m_gridY = m_gridY;
         clone.m_zoomLevel = m_zoomLevel;
+        clone.m_hasCurvedConnections = m_hasCurvedConnections;
         return clone;
     }
 
@@ -115,6 +121,7 @@ public class EditorUIInformation implements UIInformation {
         config.addInt(KEY_X_GRID, m_gridX);
         config.addInt(KEY_Y_GRID, m_gridY);
         config.addDouble(KEY_ZOOM, m_zoomLevel);
+        config.addBoolean(KEY_CURVED_CONNECTIONS, m_hasCurvedConnections);
     }
 
     /**
@@ -134,6 +141,9 @@ public class EditorUIInformation implements UIInformation {
             m_gridX = config.getInt(KEY_X_GRID);
             m_gridY = config.getInt(KEY_Y_GRID);
             m_zoomLevel = config.getDouble(KEY_ZOOM);
+        }
+        if(config.containsKey(KEY_CURVED_CONNECTIONS)) {
+            m_hasCurvedConnections = config.getBoolean(KEY_CURVED_CONNECTIONS);
         }
     }
 
@@ -208,12 +218,28 @@ public class EditorUIInformation implements UIInformation {
     }
 
     /**
+     * @return whether connections are rendered as curves
+     * @since 3.2
+     */
+    public boolean getHasCurvedConnections() {
+        return m_hasCurvedConnections;
+    }
+
+    /**
+     * @param curved if <code>true</code> connections are rendered as curves, otherwise as straight lines
+     * @since 3.2
+     */
+    public void setHasCurvedConnections(final boolean curved) {
+        m_hasCurvedConnections = curved;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public String toString() {
         return "Grid: " + (m_snapToGrid?"on/":"off/") + (m_showGrid?"show":"hide") + "(" + m_gridX + "/" + m_gridY
-        + "), Zoom: " + m_zoomLevel;
+        + "), Zoom: " + m_zoomLevel +  ", Curved Connections: " + m_hasCurvedConnections;
     }
 
     /** {@inheritDoc} */
@@ -229,6 +255,7 @@ public class EditorUIInformation implements UIInformation {
         long temp;
         temp = Double.doubleToLongBits(m_zoomLevel);
         result = prime * result + (int)(temp ^ (temp >>> 32));
+        result = prime * result + Boolean.hashCode(m_hasCurvedConnections);
         return result;
     }
 
@@ -259,6 +286,9 @@ public class EditorUIInformation implements UIInformation {
             return false;
         }
         if (Double.doubleToLongBits(m_zoomLevel) != Double.doubleToLongBits(other.m_zoomLevel)) {
+            return false;
+        }
+        if (m_hasCurvedConnections != other.m_hasCurvedConnections) {
             return false;
         }
         return true;
