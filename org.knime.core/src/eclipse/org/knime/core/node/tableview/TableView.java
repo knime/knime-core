@@ -1175,8 +1175,8 @@ public class TableView extends JScrollPane {
                     boolean isSearchColumnName = searchOptions.isSearchColumnName();
                     boolean isSearchData = searchOptions.isSearchData();
 
-                    JCheckBox rowKeyBox = new JCheckBox("Search Header Column (RowID)", isSearchRowID);
-                    JCheckBox colNameBox = new JCheckBox("Search Header Row (Column Name)", isSearchColumnName);
+                    JCheckBox rowKeyBox = new JCheckBox("Search RowID Column", isSearchRowID);
+                    JCheckBox colNameBox = new JCheckBox("Search Column Names", isSearchColumnName);
                     JCheckBox dataBox = new JCheckBox("Search Data", isSearchData);
                     JCheckBox[] asArray = new JCheckBox[] {rowKeyBox, colNameBox, dataBox};
                     rowKeyBox.addItemListener(new AtLeastOnButtonSelectedItemListener(dataBox, asArray));
