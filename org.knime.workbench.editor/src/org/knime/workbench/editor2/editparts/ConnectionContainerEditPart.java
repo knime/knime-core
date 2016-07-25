@@ -78,6 +78,7 @@ import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRouter;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
+import org.knime.workbench.editor2.figures.CurvedPolylineConnection;
 import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
 
 /**
@@ -206,8 +207,8 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      */
     @Override
     protected IFigure createFigure() {
-
-        ProgressPolylineConnection conn = new ProgressPolylineConnection();
+    	
+        ProgressPolylineConnection conn = new CurvedPolylineConnection(false);
         // Bendpoints
         SnapOffBendPointConnectionRouter router =
                 new SnapOffBendPointConnectionRouter();
@@ -287,10 +288,16 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         LOGGER.debug("modelling info: " + ei);
 
         // make flow variable port connections look red.
-        PolylineConnection fig = (PolylineConnection)getFigure();
+        CurvedPolylineConnection fig = (CurvedPolylineConnection)getFigure();
         if (isFlowVariablePortConnection()) {
             fig.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
         }
+
+        //update 'curved' settings
+        if(getWorkflowManager() != null) {
+            fig.setCurved(getWorkflowManager().getEditorUIInformation().getHasCurvedConnections());
+        }
+
 
         // recreate list of bendpoints
         ArrayList<AbsoluteBendpoint> constraint =
