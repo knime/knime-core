@@ -122,8 +122,13 @@ public class CSVReaderNodeModel extends NodeModel {
         final ExecutionContext exec) throws Exception {
 
         FileTable fTable = createFileTable(exec);
-        BufferedDataTable table = exec.createBufferedDataTable(fTable, exec.createSubExecutionContext(0.0));
-        return new BufferedDataTable[] {table};
+        try {
+            BufferedDataTable table = exec.createBufferedDataTable(fTable, exec.createSubExecutionContext(0.0));
+            return new BufferedDataTable[] {table};
+        } finally {
+            // fix AP-6127
+            fTable.dispose();
+        }
     }
 
     protected FileTable createFileTable(final ExecutionContext exec) throws Exception {
