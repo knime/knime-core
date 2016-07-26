@@ -184,7 +184,18 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         gridSizeYEditor.setTextLimit(3);
         gridSizeYEditor.load();
         addField(gridSizeYEditor);
-        addField(new LabelField(parent, "To change the grid settings of a workflow, use the 'Editor Grid Settings' "
+        addField(new LabelField(parent, "To change the grid settings of a workflow, use the 'Workflow Editor Settings' "
+                + "toolbar button."));
+
+        addField(new HorizontalLineField(parent));
+        addField(new LabelField(parent, "These node connection settings apply to new workflows only."));
+        addField(new BooleanFieldEditor(PreferenceConstants.P_CURVED_CONNECTIONS,
+                "Curved connections", parent));
+        ComboFieldEditor lineWidthEditor = new ComboFieldEditor(PreferenceConstants.P_CONNECTIONS_LINE_WIDTH,
+            "Node connections line width", new String[][]{{"1", "1"}, {"2", "2"}, {"3", "3"}}, parent);
+        lineWidthEditor.load();
+        addField(lineWidthEditor);
+        addField(new LabelField(parent, "To change the node connection settings of a workflow, use the 'Workflow Editor Settings' "
                 + "toolbar button."));
 
         addField(new HorizontalLineField(parent));

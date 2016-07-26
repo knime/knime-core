@@ -207,7 +207,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      */
     @Override
     protected IFigure createFigure() {
-    	
+
         ProgressPolylineConnection conn = new CurvedPolylineConnection(false);
         // Bendpoints
         SnapOffBendPointConnectionRouter router =
@@ -293,9 +293,10 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
             fig.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
         }
 
-        //update 'curved' settings
+        //update 'curved' settings and line width
         if(getWorkflowManager() != null) {
             fig.setCurved(getWorkflowManager().getEditorUIInformation().getHasCurvedConnections());
+            fig.setLineWidth(getWorkflowManager().getEditorUIInformation().getConnectionLineWidth());
         }
 
 

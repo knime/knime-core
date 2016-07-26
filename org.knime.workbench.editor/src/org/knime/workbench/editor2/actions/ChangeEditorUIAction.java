@@ -50,27 +50,26 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
-import org.knime.workbench.editor2.EditorGridSettingsDialog;
+import org.knime.workbench.editor2.EditorUISettingsDialog;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to open the dialog "Grid Settings".
+ * Action to open the dialog "Workflow Editor Settings".
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
- * @deprecated Replaced by {@link ChangeEditorUIAction}
+ * @author Martin Horn
  */
-@Deprecated
-public class ChangeGridAction extends AbstractNodeAction {
+public class ChangeEditorUIAction extends AbstractNodeAction {
 
     /** unique ID for this action. * */
-    public static final String ID = "knime.action.editor.gridSettings";
+    public static final String ID = "knime.action.editor.editorUISettings";
 
     /**
      *
      * @param editor The workflow editor
      */
-    public ChangeGridAction(final WorkflowEditor editor) {
+    public ChangeEditorUIAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -87,7 +86,7 @@ public class ChangeGridAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Grid Settings...";
+        return "Workflow Editor UI Settings...";
     }
 
     /**
@@ -103,7 +102,7 @@ public class ChangeGridAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Open the dialog to change grid settings for this editor";
+        return "Open the dialog to UI settings for this editor (e.g. the grid, appearance of node connections etc.)";
     }
 
     /**
@@ -123,13 +122,24 @@ public class ChangeGridAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        EditorGridSettingsDialog dlg =
-                new EditorGridSettingsDialog(Display.getCurrent().getActiveShell(), getEditor()
-                        .getCurrentEditorSettings());
+        EditorUISettingsDialog dlg =
+            new EditorUISettingsDialog(Display.getCurrent().getActiveShell(), getEditor().getCurrentEditorSettings());
         if (dlg.open() == Window.OK) {
+
+            //store settings with the workflow (workflow is marked dirty)
             getEditor().markDirty();
             getEditor().applyEditorSettings(dlg.getSettings());
             getEditor().getWorkflowManager().setEditorUIInformation(dlg.getSettings());
+
+            //refresh workflow editor
+
+            //TODO this doesn't work - it doesn't refresh the ConnectionContainerEditParts
+            //WorkflowRootEditPart editorPart = (WorkflowRootEditPart)
+            //            provider.getRootEditPart().getChildren().get(0);
+            //editorPart.refresh();
+
+            //workaround to refresh all connection container edit parts
+            getEditor().getWorkflowManager().getConnectionContainers().forEach(cc -> cc.setUIInfo(cc.getUIInfo()));
         }
     }
 }

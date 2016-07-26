@@ -106,6 +106,7 @@ public class ProgressPolylineConnection extends PolylineConnection {
         this.m_label = new Label("");
         add(m_label, locator);
         setForegroundColor(DEFAULT_COLOR);
+        setLineWidth(1);
     }
 
     /** {@inheritDoc} */
@@ -113,7 +114,6 @@ public class ProgressPolylineConnection extends PolylineConnection {
     protected void outlineShape(final Graphics g) {
         if (m_state < 0) {
             setLineStyle(SWT.LINE_SOLID);
-            setLineWidth(1);
         } else {
             g.setLineDash(DASHES[m_state]);
         }

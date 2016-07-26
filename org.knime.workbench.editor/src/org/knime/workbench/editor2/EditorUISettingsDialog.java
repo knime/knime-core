@@ -57,6 +57,7 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -71,13 +72,13 @@ import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.workbench.KNIMEEditorPlugin;
 
 /**
+ * Dialog that allows the user to manipulate the workflow editor's ui (e.g. grid settings, connection width, connection style etc.)
  *
  * @author Peter Ohl, KNIME.com, Zurich, Switzerland
- * @since 2.6
- * @deprecated replaced by {@link EditorUISettingsDialog}
+ * @author Martin Horn
+ * @since 3.3
  */
-@Deprecated
-public class EditorGridSettingsDialog extends Dialog {
+public class EditorUISettingsDialog extends Dialog {
 
     private static final ImageDescriptor IMG_PERMS = AbstractUIPlugin.imageDescriptorFromPlugin(
             KNIMEEditorPlugin.PLUGIN_ID, "icons/grid2_55.png");
@@ -90,9 +91,13 @@ public class EditorGridSettingsDialog extends Dialog {
 
     private Text m_yGrid;
 
-    private Button m_snap;
+    private Combo m_connectionWidth;
 
-    private Button m_show;
+    private Button m_snapToGrid;
+
+    private Button m_showGrid;
+
+    private Button m_curvedConnections;
 
     private boolean m_enableComponents = false;
 
@@ -102,7 +107,7 @@ public class EditorGridSettingsDialog extends Dialog {
      * @param parentShell
      * @param currentSettings
      */
-    public EditorGridSettingsDialog(final Shell parentShell, final EditorUIInformation currentSettings) {
+    public EditorUISettingsDialog(final Shell parentShell, final EditorUIInformation currentSettings) {
         super(parentShell);
         m_settings = currentSettings;
     }
@@ -124,10 +129,12 @@ public class EditorGridSettingsDialog extends Dialog {
     }
 
     private void setValues() {
-        m_snap.setSelection(m_settings.getSnapToGrid());
-        m_show.setSelection(m_settings.getShowGrid());
+        m_snapToGrid.setSelection(m_settings.getSnapToGrid());
+        m_showGrid.setSelection(m_settings.getShowGrid());
+        m_curvedConnections.setSelection(m_settings.getHasCurvedConnections());
         m_xGrid.setText("" + m_settings.getGridX());
         m_yGrid.setText("" + m_settings.getGridY());
+        m_connectionWidth.setText("" + m_settings.getConnectionLineWidth());
         settingsChanged();
     }
 
@@ -144,7 +151,7 @@ public class EditorGridSettingsDialog extends Dialog {
     @Override
     protected void configureShell(final Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Workflow Editor Grid Settings");
+        newShell.setText("Workflow Editor Settings");
     }
 
     private void createHeader(final Composite parent) {
@@ -157,7 +164,7 @@ public class EditorGridSettingsDialog extends Dialog {
         // 1st row
         Label exec = new Label(header, SWT.NONE);
         exec.setBackground(white);
-        exec.setText("Workflow Editor Grid Settings");
+        exec.setText("Workflow Editor Settings");
         FontData[] fd = parent.getFont().getFontData();
         for (FontData f : fd) {
             f.setStyle(SWT.BOLD);
@@ -172,9 +179,9 @@ public class EditorGridSettingsDialog extends Dialog {
         // 2nd row
         Label txt = new Label(header, SWT.NONE);
         txt.setBackground(white);
-        txt.setText("Modify the settings for the grid in the active workflow editor \n"
-                + "(To change default settings for new workflow editors go to the preference page.\n"
-                + "Snap to grid behavior can be toggled by pressing 'Ctrl-Shift-X')");
+        txt.setText("Modify the settings for the active workflow editor. \n"
+                + "To change default settings for new workflow editors go to the preference page.\n"
+                + "Snap to grid behavior can be toggled by pressing 'Ctrl-Shift-X'.");
         txt.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
         new Label(header, SWT.NONE);
         // 3rd row
@@ -188,26 +195,27 @@ public class EditorGridSettingsDialog extends Dialog {
     private void createSettingsPanel(final Composite parent) {
         createEnablePanel(parent);
         createGridPanel(parent);
+        createNodeConnectionsPanel(parent);
     }
 
     private void createEnablePanel(final Composite parent) {
         Group border = new Group(parent, SWT.SHADOW_IN);
         border.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
         border.setLayout(new GridLayout(1, true));
-        border.setText("Enable Grid:");
-        m_snap = new Button(border, SWT.CHECK);
-        m_snap.setText("Snap to grid (Alt-key disables snapping temporarily while moving nodes)");
-        m_snap.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
-        m_snap.addListener(SWT.Selection, new Listener() {
+        border.setText(" Enable Grid ");
+        m_snapToGrid = new Button(border, SWT.CHECK);
+        m_snapToGrid.setText("Snap to grid (Alt-key disables snapping temporarily while moving nodes)");
+        m_snapToGrid.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+        m_snapToGrid.addListener(SWT.Selection, new Listener() {
             @Override
             public void handleEvent(final Event arg0) {
                 settingsChanged();
             }
         });
-        m_show = new Button(border, SWT.CHECK);
-        m_show.setText("Show grid lines");
-        m_show.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
-        m_show.addListener(SWT.Selection, new Listener() {
+        m_showGrid = new Button(border, SWT.CHECK);
+        m_showGrid.setText("Show grid lines");
+        m_showGrid.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+        m_showGrid.addListener(SWT.Selection, new Listener() {
             @Override
             public void handleEvent(final Event arg0) {
                 settingsChanged();
@@ -219,7 +227,7 @@ public class EditorGridSettingsDialog extends Dialog {
         Group border = new Group(parent, SWT.SHADOW_IN);
         border.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
         border.setLayout(new GridLayout(2, true));
-        border.setText("Grid Size:");
+        border.setText(" Grid Size ");
 
         Composite horiz = new Composite(border, SWT.BORDER_SOLID);
         horiz.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -263,6 +271,43 @@ public class EditorGridSettingsDialog extends Dialog {
 
     }
 
+    private void createNodeConnectionsPanel(final Composite parent) {
+        Group border = new Group(parent, SWT.SHADOW_IN);
+        border.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        border.setLayout(new GridLayout(1, true));
+        border.setText(" Node Connections ");
+        m_curvedConnections = new Button(border, SWT.CHECK);
+        m_curvedConnections.setText("Curved Connections");
+        m_curvedConnections.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+        m_curvedConnections.addListener(SWT.Selection, new Listener() {
+            @Override
+            public void handleEvent(final Event arg0) {
+                settingsChanged();
+            }
+        });
+
+        Composite conn = new Composite(border, SWT.NONE);
+        conn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        conn.setLayout(new GridLayout(2, true));
+        Label v = new Label(conn, SWT.NONE);
+        v.setText("Connection Line Width:");
+        v.setToolTipText("Preference page default value is " + WorkflowEditor.getPrefConnectionLineWidth());
+        v.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        m_connectionWidth = new Combo(conn, SWT.READ_ONLY);
+        m_connectionWidth.setBounds(50, 50, 150, 65);
+        m_connectionWidth.setItems(new String[] {"1", "2", "3"});
+        m_connectionWidth.setToolTipText("Preference page default value is " + WorkflowEditor.getPrefConnectionLineWidth());
+        m_connectionWidth.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+        m_connectionWidth.getFont();
+        m_connectionWidth.addListener(SWT.Modify, new Listener() {
+            @Override
+            public void handleEvent(final Event event) {
+                settingsChanged();
+            }
+        });
+    }
+
     /** Add listener to argument text object to do a select-all when focus is gained. */
     private static void addSelectOnFocusToText(final Text text) {
         Listener listener = new Listener() {
@@ -289,8 +334,13 @@ public class EditorGridSettingsDialog extends Dialog {
 
     private void settingsChanged() {
 
-        m_settings.setSnapToGrid(m_snap.getSelection());
-        m_settings.setShowGrid(m_show.getSelection());
+        m_settings.setSnapToGrid(m_snapToGrid.getSelection());
+        m_settings.setShowGrid(m_showGrid.getSelection());
+        m_settings.setHasCurvedConnections(m_curvedConnections.getSelection());
+
+        if (m_connectionWidth.getSelectionIndex() > -1) {
+            m_settings.setConnectionLineWidth(m_connectionWidth.getSelectionIndex() + 1);
+        }
 
         String x = m_xGrid.getText().trim();
         if (x.isEmpty()) {

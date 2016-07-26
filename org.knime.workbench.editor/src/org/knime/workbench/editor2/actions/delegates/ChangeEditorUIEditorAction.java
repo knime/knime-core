@@ -49,21 +49,19 @@ package org.knime.workbench.editor2.actions.delegates;
 
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
-import org.knime.workbench.editor2.actions.ChangeGridAction;
+import org.knime.workbench.editor2.actions.ChangeEditorUIAction;
 
 /**
- * Editor action for opening the Grid Settings dialog.
+ * Editor action for opening the Workflow Editor Settings dialog.
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland.
- * @deprecated replaced by {@link ChangeEditorUIEditorAction}
  */
-@Deprecated
-public class ChangeGridEditorAction extends AbstractEditorAction {
+public class ChangeEditorUIEditorAction extends AbstractEditorAction {
     /**
      * {@inheritDoc}
      */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {
-        return new ChangeGridAction(editor);
+        return new ChangeEditorUIAction(editor);
     }
 }

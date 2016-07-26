@@ -10,9 +10,9 @@
             id="knime.command.category"/>
       <command
             categoryId="knime.command.category"
-            description="Opens the settings dialog for the grid of the workflow editor"
-            id="knime.commands.editor.gridSettings"
-            name="Grid Settings..."/>
+            description="Opens the settings dialog for the workflow editor"
+            id="knime.commands.editor.workflowEditorSettings"
+            name="Workflow Editor Settings..."/>
       <command
             categoryId="knime.command.category"
             description="Toggles the snap to grid behavior of the workflow editor"
@@ -398,16 +398,16 @@
          
          
          <action
-               class="org.knime.workbench.editor2.actions.delegates.ChangeGridEditorAction"
-               definitionId="knime.commands.editor.gridSettings"
+               class="org.knime.workbench.editor2.actions.delegates.ChangeEditorUIEditorAction"
+               definitionId="knime.commands.editor.workflowEditorSettings"
                disabledIcon="icons/grid_16_bw.png"
                icon="icons/grid_16.png"
                id="org.knime.workbench.editor.actions.gridSettings"
-               label="Grid Settings..."
+               label="Workflow Editor Settings..."
                menubarPath="org.knime.workbench.editor.menu/group2"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group2"
-               tooltip="Change workflow editor grid settings"/>
+               tooltip="Change workflow editor settings"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.ToggleGridEditorAction"
                definitionId="knime.commands.editor.toggleGrid"
