@@ -274,7 +274,7 @@ public class EditorUISettingsDialog extends Dialog {
     private void createNodeConnectionsPanel(final Composite parent) {
         Group border = new Group(parent, SWT.SHADOW_IN);
         border.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-        border.setLayout(new GridLayout(1, true));
+        border.setLayout(new GridLayout(2, true));
         border.setText(" Node Connections ");
         m_curvedConnections = new Button(border, SWT.CHECK);
         m_curvedConnections.setText("Curved Connections");
