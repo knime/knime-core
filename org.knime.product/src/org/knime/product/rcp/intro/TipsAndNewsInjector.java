@@ -96,6 +96,8 @@ class TipsAndNewsInjector extends AbstractInjector {
 
     private Node m_tips;
 
+    private Node m_newsGraphic;
+
     TipsAndNewsInjector(final File templateFile, final ReentrantLock introFileLock,
         final IEclipsePreferences preferences, final boolean isFreshWorkspace,
         final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
@@ -192,6 +194,14 @@ class TipsAndNewsInjector extends AbstractInjector {
             tipsNode.removeAttribute("style");
             tipsNode.appendChild(doc.adoptNode(m_tips));
         }
+
+        if (m_newsGraphic != null) {
+            Element newsGraphicNode =
+                (Element)xpath.evaluate("//div[@id='news-graphic']", doc.getDocumentElement(), XPathConstants.NODE);
+
+            newsGraphicNode.removeAttribute("style");
+            newsGraphicNode.appendChild(doc.adoptNode(m_newsGraphic));
+        }
     }
 
     /**
@@ -230,6 +240,11 @@ class TipsAndNewsInjector extends AbstractInjector {
         m_tips = (Node)xpath.evaluate("//div[@class='contentWrapper']", res.getNode(), XPathConstants.NODE);
         if (m_tips != null) {
             fixRelativeURLs(m_tips, xpath);
+        }
+
+        m_newsGraphic = (Node)xpath.evaluate("//div[@class='news-graphic']", res.getNode(), XPathConstants.NODE);
+        if (m_newsGraphic != null) {
+            fixRelativeURLs(m_newsGraphic, xpath);
         }
     }
 
