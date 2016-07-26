@@ -74,6 +74,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
@@ -476,6 +477,8 @@ public class TableContentView extends JTable {
         return m_isShowIconInColumnHeader;
     }
 
+    private ListSelectionListener m_repaintTableHeaderListSelectionListener;
+
     /**
      * Overridden so that we can attach a mouse listener to it and set
      * the proper renderer. The mouse listener is used to display a popup menu.
@@ -483,6 +486,9 @@ public class TableContentView extends JTable {
      */
     @Override
     public void setTableHeader(final JTableHeader newTableHeader) {
+        if (m_repaintTableHeaderListSelectionListener != null) {
+            getColumnModel().getSelectionModel().removeListSelectionListener(m_repaintTableHeaderListSelectionListener);
+        }
         if (newTableHeader != null) {
             ColumnHeaderRenderer renderer = getNewColumnHeaderRenderer();
             newTableHeader.setDefaultRenderer(renderer);
@@ -497,6 +503,10 @@ public class TableContentView extends JTable {
                     }
                 }
             });
+            m_repaintTableHeaderListSelectionListener = e -> newTableHeader.repaint();
+            getColumnModel().getSelectionModel().addListSelectionListener(m_repaintTableHeaderListSelectionListener);
+        } else {
+            m_repaintTableHeaderListSelectionListener = null;
         }
         super.setTableHeader(newTableHeader);
     }

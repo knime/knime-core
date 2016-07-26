@@ -46,6 +46,7 @@
  */
 package org.knime.core.node.tableview;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 
@@ -154,6 +155,13 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
                 setForeground(header.getForeground());
                 setBackground(header.getBackground());
                 setFont(header.getFont());
+            }
+            if (table.isColumnSelected(column)) {
+                Color bg = table.getSelectionBackground();
+                setBackground(bg);
+                setOpaque(true);
+            } else {
+                setOpaque(false);
             }
         }
         setBorder(UIManager.getBorder("TableHeader.cellBorder"));

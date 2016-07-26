@@ -47,10 +47,12 @@ package org.knime.core.node.workflow;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.workflow.WizardExecutionController.WizardPageContent;
 
@@ -136,6 +138,11 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         waitWhile(wfm, new WizardHold(wfm));
         assertFalse("should have no more pages", wizardController.hasCurrentWizardPage());
         checkState(wfm, InternalNodeContainerState.EXECUTED);
+
+        NodeSettings settings = new NodeSettings("test");
+        wizardController.save(settings);
+        int[] prompted = settings.getIntArray("promptedSubnodeIDs");
+        assertTrue("should have saved prompted node ids (15) to settings", Arrays.equals(new int[]{15}, prompted));
     }
 
     @Test

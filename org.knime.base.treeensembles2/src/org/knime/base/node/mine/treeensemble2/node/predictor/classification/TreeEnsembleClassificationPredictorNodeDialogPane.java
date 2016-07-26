@@ -56,7 +56,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleClassificationPredictorNodeDialogPane extends NodeDialogPane {
@@ -66,7 +66,7 @@ public final class TreeEnsembleClassificationPredictorNodeDialogPane extends Nod
     /**
      *  */
     public TreeEnsembleClassificationPredictorNodeDialogPane() {
-        m_predictorPanel = new TreeEnsemblePredictorPanel(false);
+        m_predictorPanel = new TreeEnsemblePredictorPanel(false, true);
         addTab(TreeEnsemblePredictorPanel.PANEL_NAME, m_predictorPanel);
     }
 

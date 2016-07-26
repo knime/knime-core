@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,80 +42,31 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
+ * History
+ *   14.07.2016 (Adrian Nembach): created
  */
-package org.knime.core.node.tableview;
+package org.knime.base.node.mine.treeensemble2.node.predictor.classification;
 
 /**
- * Postion information when searching occurrences in the entire table.
- * @author Bernd Wiswedel, University of Konstanz
+ * Factory for {@link HardVoting} objects.
+ *
+ * @author Adrian Nembach, KNIME.com
  */
-class FindPositionAll extends FindPositionRowKey {
-    
-    private int m_searchColumnInclRowIDCol;
+final class HardVotingFactory implements VotingFactory {
 
-    private int m_searchColumnInclRowIDColMark;
+    private final int m_nrClasses;
 
-    private final int m_columnCountInclRowIDCol;
+    public HardVotingFactory(final int nrClasses) {
+        m_nrClasses = nrClasses;
+    }
 
-    /** Create new postion object.
-     * @param rowCount The total number of rows in the table
-     * @param columnCount The total number of columns in the table.
+    /**
+     * {@inheritDoc}
      */
-    FindPositionAll(final int rowCount, final int columnCount) {
-        super(rowCount);
-        if (columnCount < 0) {
-            throw new IllegalArgumentException("Column Count < 0: "
-                    + columnCount);
-        }
-        m_columnCountInclRowIDCol = columnCount + 1;
-        m_searchColumnInclRowIDCol = 0;
-        m_searchColumnInclRowIDColMark = 0;
-    }
-
-    /** {@inheritDoc} */
     @Override
-    int getSearchColumn() {
-        return m_searchColumnInclRowIDCol - 1;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    boolean next() {
-        int oldSearchCol = m_searchColumnInclRowIDCol;
-        m_searchColumnInclRowIDCol =
-                (m_searchColumnInclRowIDCol + 1) % m_columnCountInclRowIDCol;
-        if (m_searchColumnInclRowIDCol < oldSearchCol) {
-            return super.next();
-        }
-        return false;
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    void reset() {
-        super.reset();
-        m_searchColumnInclRowIDCol = 0;
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    boolean isIDOnly() {
-        return false;
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    void mark() {
-        super.mark();
-        m_searchColumnInclRowIDColMark = m_searchColumnInclRowIDCol;
-    }
-    
-    /** {@inheritDoc} */
-    @Override
-    boolean reachedMark() {
-        return super.reachedMark() 
-            && m_searchColumnInclRowIDColMark == m_searchColumnInclRowIDCol;
+    public Voting createVoting() {
+        return new HardVoting(m_nrClasses);
     }
 
 }

@@ -327,7 +327,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** The root of everything, a workflow with no in- or outputs.
      * This workflow holds the top level projects. */
     public static final WorkflowManager ROOT = new WorkflowManager(null, null, NodeID.ROOTID, new PortType[0],
-        new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty());
+        new PortType[0], true, null, "ROOT", Optional.empty(), Optional.empty(), Optional.empty());
 
     /** The root of all metanodes that are part of the node repository, for instance x-val metanode.
      * @noreference This field is not intended to be referenced by clients.
@@ -389,12 +389,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param name Name of this workflow manager
      * @param globalTableRepositoryOptional TODO
      * @param fsHandlerRepositoryOptional TODO
+     * @param nodeAnno object to copy the node annotation from
      */
     WorkflowManager(final NodeContainerParent directNCParent, final WorkflowManager parent, final NodeID id,
         final PortType[] inTypes, final PortType[] outTypes, final boolean isProject, final WorkflowContext context,
         final String name, final Optional<HashMap<Integer,ContainerTable>> globalTableRepositoryOptional,
-        final Optional<WorkflowFileStoreHandlerRepository> fsHandlerRepositoryOptional) {
-        super(parent, id);
+        final Optional<WorkflowFileStoreHandlerRepository> fsHandlerRepositoryOptional, final Optional<NodeAnnotation> nodeAnno) {
+        super(parent, id, nodeAnno.orElse(null));
         m_directNCParent = assertParentAssignments(directNCParent, parent);
         m_workflow = new Workflow(this, id);
         m_inPorts = new WorkflowInPort[inTypes.length];
@@ -638,7 +639,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public WorkflowManager createAndAddProject(final String name, final WorkflowCreationHelper creationHelper) {
         WorkflowManager wfm = createAndAddSubWorkflow(
             new PortType[0], new PortType[0], name, true, creationHelper.getWorkflowContext(),
-            creationHelper.getGlobalTableRepository(), creationHelper.getFileStoreHandlerRepository(), null);
+            creationHelper.getGlobalTableRepository(), creationHelper.getFileStoreHandlerRepository(), null, null);
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -801,7 +802,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
             final PortType[] outPorts, final String name) {
-        return createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null, null, null);
+        return createAndAddSubWorkflow(inPorts, outPorts, name, false, null, null, null, null, null);
     }
 
     /** Adds new empty metanode to this WFM.
@@ -810,7 +811,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts, final PortType[] outPorts,
         final String name, final boolean isNewProject, final WorkflowContext context,
         final HashMap<Integer, ContainerTable> globalTableRepository,
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final NodeID idOrNull) {
+        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final NodeID idOrNull, final NodeAnnotation nodeAnno) {
         final boolean hasPorts = inPorts.length != 0 || outPorts.length != 0;
         if (this == ROOT) {
             CheckUtils.checkState(!hasPorts,
@@ -841,7 +842,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 fileStoreRepositoryOptional = Optional.of(m_fileStoreHandlerRepository);
             }
             wfm = new WorkflowManager(null, this, newID, inPorts, outPorts, isNewProject, context, name,
-                globalTableRepositoryOptional, fileStoreRepositoryOptional);
+                globalTableRepositoryOptional, fileStoreRepositoryOptional, Optional.ofNullable(nodeAnno));
             addNodeContainer(wfm, true);
             LOGGER.debug("Added new subworkflow " + newID);
         }
@@ -3885,7 +3886,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             removeNode(subnodeID);
 
             WorkflowManager metaNode = createAndAddSubWorkflow(
-                inPorts, outPorts, name, false, null, null, null, subnodeID);
+                inPorts, outPorts, name, false, null, null, null, subnodeID, subnode.getNodeAnnotation());
             metaNode.setUIInformation(uiInformation);
             metaNode.paste(fromSubnodePersistor);
 

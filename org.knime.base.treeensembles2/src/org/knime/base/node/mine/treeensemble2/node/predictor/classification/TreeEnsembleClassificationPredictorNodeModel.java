@@ -118,6 +118,7 @@ final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
         TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
+        m_configuration.checkSoftVotingSettingForModel(model).ifPresent(s -> setWarningMessage(s));
         final TreeEnsemblePredictor pred = new TreeEnsemblePredictor(modelSpec, model, dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
         BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);

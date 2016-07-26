@@ -1439,6 +1439,11 @@ public class WorkflowEditor extends GraphicalEditor implements
     private boolean m_isClosing;
 
     /**
+     * Whether node connections should be drawn curved or straight.
+     */
+    private boolean m_hasCurvedConnections;
+
+    /**
      * Brings up the Save-Dialog and sets the m_isClosing flag.
      * {@inheritDoc}
      */
@@ -2071,7 +2076,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * @return the current values of the settings (grid and zoomlevel) of this editor
+     * @return the current values of the settings (grid and zoomlevel) of this editor (but not the ones stored with the
+     *         workflow manager!)
      */
     public EditorUIInformation getCurrentEditorSettings() {
         EditorUIInformation editorInfo = new EditorUIInformation();
@@ -2080,6 +2086,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         editorInfo.setShowGrid(getEditorIsGridVisible());
         editorInfo.setGridX(getEditorGridX());
         editorInfo.setGridY(getEditorGridY());
+        editorInfo.setHasCurvedConnections(m_hasCurvedConnections);
         return editorInfo;
     }
 
@@ -2095,6 +2102,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         getViewer().setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
                 new Dimension(settings.getGridX(), settings.getGridY()));
         setZoomfactor(settings.getZoomLevel());
+        m_hasCurvedConnections = settings.getHasCurvedConnections();
     }
 
     private void applyEditorSettingsFromWorkflowManager() {
@@ -2124,6 +2132,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         result.setGridX(getPrefGridXSize());
         result.setGridY(getPrefGridYSize());
         result.setZoomLevel(1.0);
+        result.setHasCurvedConnections(false);
         return result;
     }
 

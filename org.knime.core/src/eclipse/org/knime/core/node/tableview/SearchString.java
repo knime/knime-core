@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,91 +42,98 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
- *   Jan 31, 2009 (wiswedel): created
+ *   Jul 15, 2016 (wiswedel): created
  */
 package org.knime.core.node.tableview;
 
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 /**
- * Position information that is used when searching row keys. It is used to mark
- * and traverse the table.
- * @author Bernd Wiswedel, University of Konstanz
+ * The search string as entered by the user (Ctrl-F) with some more search options.
+ * @author wiswedel
  */
-class FindPositionRowKey {
-    
-    private int m_position;
-    
-    private int m_markedPosition;
-    
-    private final int m_rowCount;
-    
-    /** Creates new  position information.
-     * @param rowCount The total number of rows in the table to search.
+final class SearchString {
+
+    private final String m_searchString;
+    private final boolean m_ignoreCase;
+    private final boolean m_isRegex;
+    private final Pattern m_pattern;
+
+    /**
+     * @param searchString
+     * @param ignoreCase
+     * @param isRegex
+     * @throws PatternSyntaxException
      */
-    FindPositionRowKey(final int rowCount) {
-        if (rowCount < 0) {
-            throw new IllegalArgumentException("Row Count < 0: " + rowCount);
+    SearchString(final String searchString, final boolean ignoreCase, final boolean isRegex) {
+        m_searchString = searchString;
+        m_ignoreCase = ignoreCase;
+        m_isRegex = isRegex;
+        if (isRegex) {
+            int flags = m_ignoreCase ? Pattern.CASE_INSENSITIVE : 0;
+            m_pattern = Pattern.compile(searchString, flags);
+        } else {
+            m_pattern = null;
         }
-        m_rowCount = rowCount;
-        m_position = 0;
-        m_markedPosition = m_position;
     }
 
-    /** Pushes the search position to its next location.
-     * @return true if it advanced to the next position, false if it starts
-     * from top.
+    /** Matches the string according to the settings.
+     * @param str ...
+     * @return ...
      */
-    boolean next() {
-        int oldSearchRow = m_position;
-        m_position = (m_position + 1) % (m_rowCount + 1);
-        return m_position < oldSearchRow;
-    }
-    
-    /** Reset position to row 0. */
-    void reset() {
-        m_position = 0;
-    }
-    
-    /** Set a mark (memorize last search hit location). */
-    void mark() {
-        m_markedPosition = m_position;
-    }
-    
-    /** @return true if we reached the mark (again). */
-    boolean reachedMark() {
-        return m_markedPosition == m_position;
-        
+    boolean matches(final String str) {
+        if (str == null) {
+            return false;
+        }
+        if (m_isRegex) {
+            return m_pattern.matcher(str).matches();
+        }
+        if (m_ignoreCase) {
+            return StringUtils.containsIgnoreCase(str, m_searchString);
+        }
+        return StringUtils.contains(str, m_searchString);
     }
 
-    /** @return Current location row. */
-    int getSearchRow() {
-        return m_position - 1;
+    /** @return the searchString */
+    String getSearchString() {
+        return m_searchString;
     }
 
-    /** @return Current location column (in this class -1). */
-    int getSearchColumn() {
-        return -1;
+    /** @return the ignoreCase */
+    boolean isIgnoreCase() {
+        return m_ignoreCase;
     }
-    
-    /** If to look for IDs only.
-     * @return true
-     */
-    boolean isIDOnly() {
-        return true;
+
+    /** @return the isRegex */
+    boolean isRegex() {
+        return m_isRegex;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder("Current Row: ");
-        b.append(getSearchRow()).append(", Current Col: ");
-        int col = getSearchColumn();
-        if (col < 0) {
-            b.append("<row ID column>");
-        } else {
-            b.append(col);
-        }
-        return b.toString();
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.MULTI_LINE_STYLE);
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        return EqualsBuilder.reflectionEquals(this, obj, true);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return HashCodeBuilder.reflectionHashCode(this, true);
+    }
+
 }

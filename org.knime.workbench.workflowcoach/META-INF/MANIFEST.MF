@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench Workflow Coach
 Bundle-SymbolicName: org.knime.workbench.workflowcoach;singleton:=true
-Bundle-Version: 3.2.0.qualifier
+Bundle-Version: 3.3.0.qualifier
 Bundle-ClassPath: .
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Eclipse-RegisterBuddy: org.knime.base
+Export-Package: org.knime.workbench.workflowcoach,
+ org.knime.workbench.workflowcoach.data
 Require-Bundle: org.eclipse.jface;bundle-version="[3.11.0,4.0.0)",
  org.knime.core;bundle-version="[3.2.0,4.0.0)",
  org.knime.workbench.editor;bundle-version="[3.2.0,4.0.0)",
@@ -24,6 +24,6 @@ Require-Bundle: org.eclipse.jface;bundle-version="[3.11.0,4.0.0)",
  org.knime.workbench.explorer.view;bundle-version="[7.2.0,8.0.0)",
  org.apache.commons.math3;bundle-version="[3.4.1,4.0.0)",
  org.apache.commons.httpclient;bundle-version="[3.1.0,4.0.0)"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Eclipse-RegisterBuddy: org.knime.base
 Bundle-ActivationPolicy: lazy
-Export-Package: org.knime.workbench.workflowcoach,
- org.knime.workbench.workflowcoach.data

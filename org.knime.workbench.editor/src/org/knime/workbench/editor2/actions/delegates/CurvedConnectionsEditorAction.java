@@ -40,47 +40,27 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * History
- *   Jan 10, 2012 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble2.node.gradientboosting.predictor.classification;
+package org.knime.workbench.editor2.actions.delegates;
 
-import org.knime.base.node.mine.treeensemble2.node.predictor.TreeEnsemblePredictorPanel;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.port.PortObjectSpec;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.CurvedConnectionsAction;
 
 /**
+ * Delegator action to switch between curved or straight node connections.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Martin Horn
  */
-public final class GradientBoostingClassificationPredictorNodeDialogPane extends NodeDialogPane {
-
-    private final TreeEnsemblePredictorPanel m_predictorPanel;
-
-    /**
-     *  */
-    public GradientBoostingClassificationPredictorNodeDialogPane() {
-        m_predictorPanel = new TreeEnsemblePredictorPanel(false, false);
-        addTab(TreeEnsemblePredictorPanel.PANEL_NAME, m_predictorPanel);
-    }
+public class CurvedConnectionsEditorAction extends AbstractEditorAction {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-        throws NotConfigurableException {
-        m_predictorPanel.loadSettingsFrom(settings, specs);
+    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
+        CurvedConnectionsAction action = new CurvedConnectionsAction(editor);
+        action.setChecked(editor.getWorkflowManager().getEditorUIInformation().getHasCurvedConnections());
+        return action;
     }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_predictorPanel.saveSettingsTo(settings);
-    }
-
 }
