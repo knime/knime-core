@@ -199,8 +199,7 @@ class TipsAndNewsInjector extends AbstractInjector {
             Element newsGraphicNode =
                 (Element)xpath.evaluate("//div[@id='news-graphic']", doc.getDocumentElement(), XPathConstants.NODE);
 
-            newsGraphicNode.removeAttribute("style");
-            newsGraphicNode.appendChild(doc.adoptNode(m_newsGraphic));
+            newsGraphicNode.getParentNode().replaceChild(doc.adoptNode(m_newsGraphic), newsGraphicNode);
         }
     }
 
@@ -237,12 +236,14 @@ class TipsAndNewsInjector extends AbstractInjector {
             fixRelativeURLs(m_news, xpath);
         }
 
-        m_tips = (Node)xpath.evaluate("//div[@class='contentWrapper']", res.getNode(), XPathConstants.NODE);
+        m_tips =
+            (Node)xpath.evaluate("//div[@id='col-right']//div[@class='contentWrapper']//div[@class='view-content']",
+                res.getNode(), XPathConstants.NODE);
         if (m_tips != null) {
             fixRelativeURLs(m_tips, xpath);
         }
 
-        m_newsGraphic = (Node)xpath.evaluate("//div[@class='news-graphic']", res.getNode(), XPathConstants.NODE);
+        m_newsGraphic = (Node)xpath.evaluate("//div[@id='news-graphic']", res.getNode(), XPathConstants.NODE);
         if (m_newsGraphic != null) {
             fixRelativeURLs(m_newsGraphic, xpath);
         }
