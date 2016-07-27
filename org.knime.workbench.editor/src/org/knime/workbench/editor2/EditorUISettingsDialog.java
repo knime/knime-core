@@ -235,11 +235,11 @@ public class EditorUISettingsDialog extends Dialog {
         Label h = new Label(horiz, SWT.NONE);
         h.setText("horizontal spacing (px):");
         h.setToolTipText("Preference page default value is " + WorkflowEditor.getPrefGridXSize());
-        h.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
+        h.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
         m_xGrid = new Text(horiz, SWT.SINGLE | SWT.BORDER);
         m_xGrid.setTextLimit(10);
         m_xGrid.setToolTipText("Preference page default value is " + WorkflowEditor.getPrefGridXSize());
-        m_xGrid.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        m_xGrid.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
         m_xGrid.addListener(SWT.Modify, new Listener() {
             @Override
             public void handleEvent(final Event event) {
@@ -254,11 +254,11 @@ public class EditorUISettingsDialog extends Dialog {
         Label v = new Label(vert, SWT.NONE);
         v.setText("vertical spacing (px):");
         v.setToolTipText("Preference page default value is " + WorkflowEditor.getPrefGridYSize());
-        v.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+        v.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
         m_yGrid = new Text(vert, SWT.SINGLE | SWT.BORDER);
         m_yGrid.setTextLimit(10);
         m_yGrid.setToolTipText("Preference page default value is " + WorkflowEditor.getPrefGridYSize());
-        m_yGrid.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        m_yGrid.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
         m_yGrid.getFont();
         m_yGrid.addListener(SWT.Modify, new Listener() {
@@ -277,8 +277,8 @@ public class EditorUISettingsDialog extends Dialog {
         border.setLayout(new GridLayout(2, true));
         border.setText(" Node Connections ");
         m_curvedConnections = new Button(border, SWT.CHECK);
-        m_curvedConnections.setText("Curved Connections");
-        m_curvedConnections.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+        m_curvedConnections.setText("Curved connections");
+        m_curvedConnections.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, true, false));
         m_curvedConnections.addListener(SWT.Selection, new Listener() {
             @Override
             public void handleEvent(final Event arg0) {
@@ -290,14 +290,14 @@ public class EditorUISettingsDialog extends Dialog {
         conn.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
         conn.setLayout(new GridLayout(2, true));
         Label v = new Label(conn, SWT.NONE);
-        v.setText("Connection Line Width:");
+        v.setText("Connection line width:");
         v.setToolTipText("Preference page default value is " + WorkflowEditor.getPrefConnectionLineWidth());
-        v.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        v.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
         m_connectionWidth = new Combo(conn, SWT.READ_ONLY);
         m_connectionWidth.setBounds(50, 50, 150, 65);
         m_connectionWidth.setItems(new String[] {"1", "2", "3"});
         m_connectionWidth.setToolTipText("Preference page default value is " + WorkflowEditor.getPrefConnectionLineWidth());
-        m_connectionWidth.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        m_connectionWidth.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
 
         m_connectionWidth.getFont();
         m_connectionWidth.addListener(SWT.Modify, new Listener() {
