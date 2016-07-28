@@ -3342,25 +3342,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 extInConnections.put(npi, index);
                 index++;
             }
-            WorkflowManager subwfm = createAndAddSubWorkflow(
-                    exposedInportTypes, new PortType[0], "Parallel Chunks");
-            NodeUIInformation startUIPlain = getNodeContainer(startID).getUIInformation();
-            if (startUIPlain != null) {
-                NodeUIInformation startUI = startUIPlain.
-                    createNewWithOffsetPosition(new int[]{60, -60, 0, 0});
-                subwfm.setUIInformation(startUI);
-            }
-            // connect outside(!) nodes to new sub metanode
-            for (Map.Entry<Pair<NodeID, Integer>, Integer> entry : extInConnections.entrySet()) {
-                final Pair<NodeID, Integer> npi = entry.getKey();
-                int metanodeindex = entry.getValue();
-                if (metanodeindex >= 0) {  // ignore variable port!
-                    // we need to find the source again (since our list
-                    // only holds the destination...)
-                    ConnectionContainer cc = this.getIncomingConnectionFor(
-                            npi.getFirst(), npi.getSecond());
-                    this.addConnection(cc.getSource(), cc.getSourcePort(),
-                            subwfm.getID(), metanodeindex);
+            WorkflowManager subwfm = null;
+            if (startNode.getNrRemoteChunks() > 0) {
+                subwfm = createAndAddSubWorkflow(exposedInportTypes, new PortType[0], "Parallel Chunks");
+                NodeUIInformation startUIPlain = getNodeContainer(startID).getUIInformation();
+                if (startUIPlain != null) {
+                    NodeUIInformation startUI = startUIPlain.createNewWithOffsetPosition(new int[]{60, -60, 0, 0});
+                    subwfm.setUIInformation(startUI);
+                }
+                // connect outside(!) nodes to new sub metanode
+                for (Map.Entry<Pair<NodeID, Integer>, Integer> entry : extInConnections.entrySet()) {
+                    final Pair<NodeID, Integer> npi = entry.getKey();
+                    int metanodeindex = entry.getValue();
+                    if (metanodeindex >= 0) { // ignore variable port!
+                        // we need to find the source again (since our list
+                        // only holds the destination...)
+                        ConnectionContainer cc = this.getIncomingConnectionFor(npi.getFirst(), npi.getSecond());
+                        this.addConnection(cc.getSource(), cc.getSourcePort(), subwfm.getID(), metanodeindex);
+                    }
                 }
             }
             ParallelizedChunkContentMaster pccm = new ParallelizedChunkContentMaster(subwfm, endNode,
