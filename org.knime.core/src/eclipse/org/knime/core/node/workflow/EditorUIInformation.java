@@ -72,6 +72,8 @@ public class EditorUIInformation implements UIInformation {
 
     private static final String KEY_CURVED_CONNECTIONS = "workflow.editor.curvedConnections";
 
+    private static final String KEY_CONNECTION_WIDTH = "workflow.editor.connectionWidth";
+
     private boolean m_snapToGrid;
 
     private boolean m_showGrid;
@@ -84,6 +86,8 @@ public class EditorUIInformation implements UIInformation {
 
     private boolean m_hasCurvedConnections;
 
+    private int m_connectionLineWidth;
+
     /**
      * Constructor with defaults.
      */
@@ -94,6 +98,7 @@ public class EditorUIInformation implements UIInformation {
         m_gridY = -1;
         m_zoomLevel = 1.0;
         m_hasCurvedConnections = false;
+        m_connectionLineWidth = 1;
     }
 
     /**
@@ -108,6 +113,7 @@ public class EditorUIInformation implements UIInformation {
         clone.m_gridY = m_gridY;
         clone.m_zoomLevel = m_zoomLevel;
         clone.m_hasCurvedConnections = m_hasCurvedConnections;
+        clone.m_connectionLineWidth = m_connectionLineWidth;
         return clone;
     }
 
@@ -122,6 +128,7 @@ public class EditorUIInformation implements UIInformation {
         config.addInt(KEY_Y_GRID, m_gridY);
         config.addDouble(KEY_ZOOM, m_zoomLevel);
         config.addBoolean(KEY_CURVED_CONNECTIONS, m_hasCurvedConnections);
+        config.addInt(KEY_CONNECTION_WIDTH, m_connectionLineWidth);
     }
 
     /**
@@ -144,6 +151,9 @@ public class EditorUIInformation implements UIInformation {
         }
         if(config.containsKey(KEY_CURVED_CONNECTIONS)) {
             m_hasCurvedConnections = config.getBoolean(KEY_CURVED_CONNECTIONS);
+        }
+        if(config.containsKey(KEY_CONNECTION_WIDTH)) {
+            m_connectionLineWidth = config.getInt(KEY_CONNECTION_WIDTH);
         }
     }
 
@@ -219,7 +229,7 @@ public class EditorUIInformation implements UIInformation {
 
     /**
      * @return whether connections are rendered as curves
-     * @since 3.2
+     * @since 3.3
      */
     public boolean getHasCurvedConnections() {
         return m_hasCurvedConnections;
@@ -227,10 +237,24 @@ public class EditorUIInformation implements UIInformation {
 
     /**
      * @param curved if <code>true</code> connections are rendered as curves, otherwise as straight lines
-     * @since 3.2
+     * @since 3.3
      */
     public void setHasCurvedConnections(final boolean curved) {
         m_hasCurvedConnections = curved;
+    }
+
+    /**
+     * @param width the width of the line connection two nodes
+     */
+    public void setConnectionLineWidth(final int width) {
+        m_connectionLineWidth = width;
+    }
+
+    /**
+     * @return the width of the line connecting two nodes
+     */
+    public int getConnectionLineWidth() {
+        return m_connectionLineWidth;
     }
 
     /**
@@ -238,8 +262,9 @@ public class EditorUIInformation implements UIInformation {
      */
     @Override
     public String toString() {
-        return "Grid: " + (m_snapToGrid?"on/":"off/") + (m_showGrid?"show":"hide") + "(" + m_gridX + "/" + m_gridY
-        + "), Zoom: " + m_zoomLevel +  ", Curved Connections: " + m_hasCurvedConnections;
+        return "Grid: " + (m_snapToGrid ? "on/" : "off/") + (m_showGrid ? "show" : "hide") + "(" + m_gridX + "/"
+            + m_gridY + "), Zoom: " + m_zoomLevel + ", Curved Connections: " + m_hasCurvedConnections
+            + ", Connection Line Width: " + m_connectionLineWidth;
     }
 
     /** {@inheritDoc} */
@@ -256,6 +281,7 @@ public class EditorUIInformation implements UIInformation {
         temp = Double.doubleToLongBits(m_zoomLevel);
         result = prime * result + (int)(temp ^ (temp >>> 32));
         result = prime * result + Boolean.hashCode(m_hasCurvedConnections);
+        result = prime * result + m_connectionLineWidth;
         return result;
     }
 
@@ -289,6 +315,9 @@ public class EditorUIInformation implements UIInformation {
             return false;
         }
         if (m_hasCurvedConnections != other.m_hasCurvedConnections) {
+            return false;
+        }
+        if (m_connectionLineWidth != other.m_connectionLineWidth) {
             return false;
         }
         return true;

@@ -58,7 +58,9 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * Action to open the dialog "Grid Settings".
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @deprecated Replaced by {@link ChangeEditorUIAction}
  */
+@Deprecated
 public class ChangeGridAction extends AbstractNodeAction {
 
     /** unique ID for this action. * */

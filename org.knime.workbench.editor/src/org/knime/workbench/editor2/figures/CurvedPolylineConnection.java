@@ -80,8 +80,6 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
 
     private static final Rectangle LINEBOUNDS = Rectangle.SINGLETON;
 
-    private static final int LINE_WIDTH = 2;
-
     private Path m_path = null;
 
     private boolean m_curved;
@@ -91,6 +89,7 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
      *            <code>false</code>)
      */
     public CurvedPolylineConnection(final boolean curved) {
+        super();
         m_curved = curved;
     }
 
@@ -108,7 +107,6 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
         if (m_curved) {
             if (m_state < 0) {
                 setLineStyle(SWT.LINE_SOLID);
-                setLineWidth(LINE_WIDTH);
             } else {
                 g.setLineDash(DASHES[m_state]);
             }

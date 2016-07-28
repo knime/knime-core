@@ -129,6 +129,15 @@ public interface PreferenceConstants {
     /** Default grid distance. */
     public static final int P_GRID_DEFAULT_SIZE_Y = 20;
 
+    /** Pref constant whether nodes connections should be drawn curved. */
+    public static final String P_CURVED_CONNECTIONS = "knime.curvedconnections";
+    /** Pref constant for the line width of node connections. */
+    public static final String P_CONNECTIONS_LINE_WIDTH = "knime.connectionslinewidth";
+    /** Default value for the curved connection property.  */
+    public static final boolean P_DEFAULT_CURVED_CONNECTIONS = false;
+    /** Default value for the connection line width. */
+    public static final int P_DEFAULT_CONNECTION_LINE_WIDTH = 1;
+
     /** Pref constant whether to enable auto save for workflows. */
     public static final String P_AUTO_SAVE_ENABLE = "knime.autosave.enable";
     /** Pref constant auto save interval (in secs). */

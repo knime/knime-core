@@ -1441,7 +1441,12 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Whether node connections should be drawn curved or straight.
      */
-    private boolean m_hasCurvedConnections;
+    private Boolean m_hasCurvedConnections = null;
+
+    /**
+     * Width of the line connecting two nodes.
+     */
+    private int m_connectionLineWidth;
 
     /**
      * Brings up the Save-Dialog and sets the m_isClosing flag.
@@ -2086,7 +2091,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         editorInfo.setShowGrid(getEditorIsGridVisible());
         editorInfo.setGridX(getEditorGridX());
         editorInfo.setGridY(getEditorGridY());
-        editorInfo.setHasCurvedConnections(m_hasCurvedConnections);
+        editorInfo.setHasCurvedConnections(getHasCurvedConnections());
+        editorInfo.setConnectionLineWidth(getConnectionLineWidth());
         return editorInfo;
     }
 
@@ -2103,6 +2109,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 new Dimension(settings.getGridX(), settings.getGridY()));
         setZoomfactor(settings.getZoomLevel());
         m_hasCurvedConnections = settings.getHasCurvedConnections();
+        m_connectionLineWidth = settings.getConnectionLineWidth();
     }
 
     private void applyEditorSettingsFromWorkflowManager() {
@@ -2132,7 +2139,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         result.setGridX(getPrefGridXSize());
         result.setGridY(getPrefGridYSize());
         result.setZoomLevel(1.0);
-        result.setHasCurvedConnections(false);
+        result.setHasCurvedConnections(getPrefHasCurvedConnections());
+        result.setConnectionLineWidth(getPrefConnectionLineWidth());
         return result;
     }
 
@@ -2567,6 +2575,32 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
+     * Returns the curved connections property or takes it from the preference page if not set.
+     *
+     * @return whether connections are drawn curved
+     */
+    private boolean getHasCurvedConnections() {
+        if (m_hasCurvedConnections != null) {
+            return m_hasCurvedConnections;
+        } else {
+            return getPrefHasCurvedConnections();
+        }
+    }
+
+    /**
+     * Returns the connection line width property or takes the value from the preference page if not set.
+     *
+     * @return the line width
+     */
+    private int getConnectionLineWidth() {
+        if (m_connectionLineWidth > 0) {
+            return m_connectionLineWidth;
+        } else {
+            return getPrefConnectionLineWidth();
+        }
+    }
+
+    /**
      * @return the value from the preference page for 'show grid' (each editor has its own property value which could be
      *         different)
      */
@@ -2606,6 +2640,26 @@ public class WorkflowEditor extends GraphicalEditor implements
             gridSize = prefStore.getDefaultInt(PreferenceConstants.P_GRID_SIZE_Y);
         }
         return gridSize;
+    }
+
+    /**
+     * @return the preference page value for whether to show node connections as curved lines
+     */
+    public static boolean getPrefHasCurvedConnections() {
+        IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        return prefStore.getBoolean(PreferenceConstants.P_CURVED_CONNECTIONS);
+    }
+
+    /**
+     * @return the preference page value for line width of a connection between two nodes
+     */
+    public static int getPrefConnectionLineWidth() {
+        IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        int lineWidth = prefStore.getInt(PreferenceConstants.P_CONNECTIONS_LINE_WIDTH);
+        if (lineWidth <= 0) {
+            lineWidth = prefStore.getDefaultInt(PreferenceConstants.P_CONNECTIONS_LINE_WIDTH);
+        }
+        return lineWidth;
     }
 
     /**

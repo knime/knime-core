@@ -45,28 +45,31 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.EditorUIInformation;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Display;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.editor2.EditorUISettingsDialog;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to toggle between curved and straight polylines that connect two nodes.
+ * Action to open the dialog "Workflow Editor Settings".
  *
+ * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  * @author Martin Horn
  */
-public class CurvedConnectionsAction extends AbstractNodeAction {
+public class ChangeEditorUIAction extends AbstractNodeAction {
 
-    /** unique ID for this action. */
-    public static final String ID = "knime.action.editor.curvedConnections";
+    /** unique ID for this action. * */
+    public static final String ID = "knime.action.editor.editorUISettings";
 
     /**
+     *
      * @param editor The workflow editor
      */
-    public CurvedConnectionsAction(final WorkflowEditor editor) {
+    public ChangeEditorUIAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -83,7 +86,7 @@ public class CurvedConnectionsAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Curved Connections";
+        return "Workflow Editor UI Settings...";
     }
 
     /**
@@ -91,15 +94,7 @@ public class CurvedConnectionsAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/curved_connections.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/curved_connections.png");
+        return ImageRepository.getIconDescriptor(KNIMEEditorPlugin.PLUGIN_ID, "icons/grid_16.png");
     }
 
     /**
@@ -107,42 +102,44 @@ public class CurvedConnectionsAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Curved node connections";
+        return "Open the dialog to UI settings for this editor (e.g. the grid, appearance of node connections etc.)";
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void runOnNodes(final NodeContainerEditPart[] parts) {
-        ScrollingGraphicalViewer provider =
-            (ScrollingGraphicalViewer)getEditor().getEditorSite().getSelectionProvider();
-        if (provider == null) {
-            return;
-        }
-
-        //store the curved connections state with the workflow (workflow is marked dirty)
-        EditorUIInformation currentEditorSettings = getEditor().getCurrentEditorSettings();
-        currentEditorSettings.setHasCurvedConnections(!getEditor().getWorkflowManager().getEditorUIInformation().getHasCurvedConnections());
-        getEditor().applyEditorSettings(currentEditorSettings);
-        getEditor().getWorkflowManager().setEditorUIInformation(currentEditorSettings);
-
-        //refresh workflow editor
-        
-        //TODO this doesn't work - it doesn't refresh the ConnectionContainerEditParts
-        //WorkflowRootEditPart editorPart = (WorkflowRootEditPart)
-        //            provider.getRootEditPart().getChildren().get(0);
-        //editorPart.refresh();
-        
-        //workaround to refresh all connection container edit parts
-        getEditor().getWorkflowManager().getConnectionContainers().forEach(cc -> cc.setUIInfo(cc.getUIInfo()));
-    }
-
-    /**
-     * {@inheritDoc}
+     * @return <code>true</code> if at we have a single node which has a dialog
+     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
     protected boolean internalCalculateEnabled() {
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        EditorUISettingsDialog dlg =
+            new EditorUISettingsDialog(Display.getCurrent().getActiveShell(), getEditor().getCurrentEditorSettings());
+        if (dlg.open() == Window.OK) {
+
+            //store settings with the workflow (workflow is marked dirty)
+            getEditor().markDirty();
+            getEditor().applyEditorSettings(dlg.getSettings());
+            getEditor().getWorkflowManager().setEditorUIInformation(dlg.getSettings());
+
+            //refresh workflow editor
+
+            //TODO this doesn't work - it doesn't refresh the ConnectionContainerEditParts
+            //WorkflowRootEditPart editorPart = (WorkflowRootEditPart)
+            //            provider.getRootEditPart().getChildren().get(0);
+            //editorPart.refresh();
+
+            //workaround to refresh all connection container edit parts
+            getEditor().getWorkflowManager().getConnectionContainers().forEach(cc -> cc.setUIInfo(cc.getUIInfo()));
+        }
     }
 }

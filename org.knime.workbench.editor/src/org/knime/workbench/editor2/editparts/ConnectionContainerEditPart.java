@@ -293,9 +293,10 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
             fig.setForegroundColor(AbstractPortFigure.getFlowVarPortColor());
         }
 
-        //update 'curved' settings
+        //update 'curved' settings and line width
         if (getWorkflowManager() != null && getWorkflowManager().getEditorUIInformation() != null) {
             fig.setCurved(getWorkflowManager().getEditorUIInformation().getHasCurvedConnections());
+            fig.setLineWidth(getWorkflowManager().getEditorUIInformation().getConnectionLineWidth());
         }
 
 

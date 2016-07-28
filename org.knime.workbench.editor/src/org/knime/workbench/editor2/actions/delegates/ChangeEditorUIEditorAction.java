@@ -42,25 +42,26 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
+ * History
+ *   28.06.2012 (Peter Ohl): created
  */
 package org.knime.workbench.editor2.actions.delegates;
 
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
-import org.knime.workbench.editor2.actions.CurvedConnectionsAction;
+import org.knime.workbench.editor2.actions.ChangeEditorUIAction;
 
 /**
- * Delegator action to switch between curved or straight node connections.
+ * Editor action for opening the Workflow Editor Settings dialog.
  *
- * @author Martin Horn
+ * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland.
  */
-public class CurvedConnectionsEditorAction extends AbstractEditorAction {
-
-    /** {@inheritDoc} */
+public class ChangeEditorUIEditorAction extends AbstractEditorAction {
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {
-        CurvedConnectionsAction action = new CurvedConnectionsAction(editor);
-        action.setChecked(editor.getWorkflowManager().getEditorUIInformation().getHasCurvedConnections());
-        return action;
+        return new ChangeEditorUIAction(editor);
     }
 }
