@@ -218,6 +218,20 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_annotation.registerOnNodeContainer(this);
     }
 
+    /**
+     * Create new NodeContainer with IDLE state. The provided node annotation will be taken over.
+     *
+     * @param parent the workflowmanager holding this node
+     * @param id the nodes identifier
+     * @param nodeAnno the node annotation to be copied from. If <code>null</code> then it's like calling {@link #NodeContainer(WorkflowManager, NodeID)}.
+     */
+    NodeContainer(final WorkflowManager parent, final NodeID id, final NodeAnnotation nodeAnno) {
+        this(parent, id);
+        if (nodeAnno != null) {
+            m_annotation.getData().copyFrom(nodeAnno.getData(), true);
+        }
+    }
+
     NodeContainer(final WorkflowManager parent, final NodeID id,
             final NodeContainerMetaPersistor persistor) {
         this(parent, id);
@@ -1633,7 +1647,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /**
      * Returns the node's lock status, i.e. whether the node is locked from being deleted, reseted or configured.
-     * 
+     *
      * @return the currently set {@link NodeLocks}
      * @since 3.2
      */
@@ -1687,7 +1701,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /**
      * Available locks to be passed in the {@link NodeContainer#changeNodeLocks(boolean, NodeLock...)}-method.
-     * 
+     *
      * @since 3.2
      */
     public static enum NodeLock {
