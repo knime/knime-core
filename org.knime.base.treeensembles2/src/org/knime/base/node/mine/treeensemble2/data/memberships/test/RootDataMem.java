@@ -53,8 +53,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.base.node.mine.treeensemble2.data.memberships.ColumnMemberships;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
 import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
 
@@ -71,7 +71,7 @@ public class RootDataMem implements DataMemberships {
     private final Map<Integer, Byte> m_weightMap;
 //    private final TIntByteMap m_weightMap;
     private final BitSet m_contained;
-    private final DataIndexManager m_indexManager;
+    private final IDataIndexManager m_indexManager;
 
     /**
      * Creates a RootDataMem object
@@ -80,7 +80,7 @@ public class RootDataMem implements DataMemberships {
      * @param indexManager the DataIndexManager object that contains the projections
      *        from original index to column indices and vice versa
      */
-    public RootDataMem(final RowSample rowSample, final DataIndexManager indexManager) {
+    public RootDataMem(final RowSample rowSample, final IDataIndexManager indexManager) {
         m_weightMap = new HashMap<Integer,Byte>(rowSample.getNrRows());
 //        m_weightMap = new TIntByteHashMap(rowSample.getNrRows());
         m_contained = new BitSet();
@@ -188,7 +188,7 @@ public class RootDataMem implements DataMemberships {
 
     ColMem descGetColumnMemberships(final int colIdx, final BitSet contained) {
         final BitSet sorted = new BitSet();
-        final int[] idxInCol = m_indexManager.getIndicesInColumn(colIdx);
+        final int[] idxInCol = m_indexManager.getPositionsInColumn(colIdx);
         for (int i = contained.nextSetBit(0); i >= 0; i = contained.nextSetBit(i + 1)) {
             sorted.set(idxInCol[i]);
         }

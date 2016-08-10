@@ -73,7 +73,7 @@ public class RootDescendantDataMembershipsTest {
         TreeEnsembleLearnerConfiguration config = new TreeEnsembleLearnerConfiguration(false);
         TestDataGenerator dataGen = new TestDataGenerator(config);
         TreeData data = dataGen.createTennisData();
-        DataIndexManager indexManager = new DataIndexManager(data);
+        DefaultDataIndexManager indexManager = new DefaultDataIndexManager(data);
         int nrRows = data.getNrRows();
         RowSample rowSample = new DefaultRowSample(nrRows);
         RootDataMemberships rootMemberships = new RootDataMemberships(rowSample, data, indexManager);
@@ -100,7 +100,7 @@ public class RootDescendantDataMembershipsTest {
         TreeEnsembleLearnerConfiguration config = new TreeEnsembleLearnerConfiguration(false);
         TestDataGenerator dataGen = new TestDataGenerator(config);
         TreeData data = dataGen.createTennisData();
-        DataIndexManager indexManager = new DataIndexManager(data);
+        DefaultDataIndexManager indexManager = new DefaultDataIndexManager(data);
         int nrRows = data.getNrRows();
         RowSample rowSample = new DefaultRowSample(nrRows);
         RootDataMemberships rootMemberships = new RootDataMemberships(rowSample, data, indexManager);

@@ -44,67 +44,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.01.2016 (Adrian Nembach): created
+ *   22.07.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
+package org.knime.base.node.mine.treeensemble2.data.memberships;
 
-import java.util.Map;
-
-import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
-import org.knime.base.node.mine.treeensemble2.data.TreeData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
-import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
-import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
-import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnData;
 
 /**
+ * Classes that implement this interface are used in the learning process of random forests. <br>
+ * They keep track which position in the original table (and in the {@link TreeTargetColumnData}) corresponds
+ * to which position in the individual {@link TreeAttributeColumnData} and vice versa. <br>
+ * For each execution of a Learner node there is only one {@link IDataIndexManager}. <br>
+ * <br>
+ * We use index to refer to columns and positions to refer to positions of records in columns or the original input table.
+ *
  *
  * @author Adrian Nembach, KNIME.com
  */
-public abstract class AbstractGradientBoostedTreesLearner extends AbstractGradientBoostingLearner {
+public interface IDataIndexManager {
 
     /**
-     * @param config the configuration for the learner
-     * @param data the data as it is provided by the user
+     * @param colIndex the index of the column, for which the mapping should be returned
+     * @return a mapping from the original positions to the positions in the column with <b>colIndex</b>
      */
-    public AbstractGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
-        super(config, data);
-    }
-
+    public int[] getPositionsInColumn(final int colIndex);
 
     /**
-     * Adapts the previous prediction by adding the predictions of the <b>tree</b> regulated by the respective
-     * coefficients in <b>coefficientMap</b>.
-     *
-     * @param previousPrediction Prediction of the previous steps
-     * @param tree the tree of the current iteration
-     * @param coefficientMap contains the coefficients for the leafs of the tree
+     * @param colIndex the index of the column, for which the mapping should be returned
+     * @return a mapping form the positions in the column with <b>colIndex</b> to the original positions
      */
-    protected void adaptPreviousPrediction(final double[] previousPrediction, final TreeModelRegression tree,
-        final Map<TreeNodeSignature, Double> coefficientMap) {
-        TreeData data = getData();
-        IDataIndexManager indexManager = getIndexManager();
-        for (int i = 0; i < data.getNrRows(); i++) {
-            PredictorRecord record = createPredictorRecord(data, indexManager, i);
-            previousPrediction[i] += coefficientMap.get(tree.findMatchingNode(record).getSignature());
-        }
-    }
+    public int[] getOriginalPositions(final int colIndex);
 
     /**
-     * Calculates the coefficients for all the leafs of the <b>tree</b>
-     *
-     * @param previousPrediction the prediction of the previous iterations
-     * @param tree tree of the current iteration
-     * @param residualData the residual data for the current iteration
-     * @return a map containing the coefficients for all leafs of <b>tree</b>
+     * @param colIndex the index of the column we want to map <b>originalIndex</b> to
+     * @param originalPosition the original position of a record in the input table
+     * @return the index of the record with <b>originalPosition</b> in the column corresponding to <b>colIndex</b>
      */
-    protected abstract Map<TreeNodeSignature, Double> calculateCoefficientMap(final double[] previousPrediction,
-        final TreeModelRegression tree, final TreeData residualData);
-
+    public int getPositionInColumn(final int colIndex, final int originalPosition);
 
     /**
-     * @return the initial value for the first iteration
+     * @param colIndex the index of the column from which we want to map <b>indexInColumn</b> to the original index in the input table
+     * @param positionInColumn the position of a record in the column with index <b>colIndex</b>
+     * @return the original position of the record with <b>positionInColumn</b> in the column identified by <b>colIndex</b>
      */
-    protected abstract double getInitialValue();
-
+    public int getOriginalPosition(final int colIndex, final int positionInColumn);
 }

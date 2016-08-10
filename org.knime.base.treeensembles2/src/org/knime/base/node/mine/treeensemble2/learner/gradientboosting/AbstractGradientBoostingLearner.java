@@ -62,8 +62,11 @@ import org.knime.base.node.mine.treeensemble2.data.TreeNominalColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeNumericColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.BitVectorDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingModel;
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
 import org.knime.core.data.RowKey;
@@ -80,7 +83,7 @@ public abstract class AbstractGradientBoostingLearner {
 
     private final TreeData m_data;
 
-    private final DataIndexManager m_indexManager;
+    private final IDataIndexManager m_indexManager;
 
     private final GradientBoostingLearnerConfiguration m_config;
 
@@ -90,7 +93,11 @@ public abstract class AbstractGradientBoostingLearner {
      */
     public AbstractGradientBoostingLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
         m_data = data;
-        m_indexManager = new DataIndexManager(data);
+        if (data.getTreeType() == TreeType.BitVector) {
+            m_indexManager = new BitVectorDataIndexManager(data.getNrRows());
+        } else {
+            m_indexManager = new DefaultDataIndexManager(data);
+        }
         m_config = config;
     }
 
@@ -111,7 +118,7 @@ public abstract class AbstractGradientBoostingLearner {
     /**
      * @return the {@link DataIndexManager} used by the initial {@link TreeData} object
      */
-    public DataIndexManager getIndexManager() {
+    public IDataIndexManager getIndexManager() {
         return m_indexManager;
     }
 
@@ -193,12 +200,12 @@ public abstract class AbstractGradientBoostingLearner {
      * @param rowIdx
      * @return a PredictorRecord for the row at <b>rowIdx</b> in <b>data</b>
      */
-    public static PredictorRecord createPredictorRecord(final TreeData data, final DataIndexManager indexManager,
+    public static PredictorRecord createPredictorRecord(final TreeData data, final IDataIndexManager indexManager,
         final int rowIdx) {
         Map<String, Object> valMap = new HashMap<String, Object>();
         for (TreeAttributeColumnData column : data.getColumns()) {
             TreeAttributeColumnMetaData meta = column.getMetaData();
-            valMap.put(meta.getAttributeName(), handleMissingValues(column.getValueAt(indexManager.getIndicesInColumn(meta.getAttributeIndex())[rowIdx]), column));
+            valMap.put(meta.getAttributeName(), handleMissingValues(column.getValueAt(indexManager.getPositionsInColumn(meta.getAttributeIndex())[rowIdx]), column));
         }
         return new PredictorRecord(valMap);
     }

@@ -61,8 +61,9 @@ import java.util.BitSet;
 
 import org.apache.commons.math.random.RandomData;
 import org.junit.Test;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
+import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
 import org.knime.base.node.mine.treeensemble2.learner.NumericMissingSplitCandidate;
 import org.knime.base.node.mine.treeensemble2.learner.NumericSplitCandidate;
@@ -168,7 +169,7 @@ public class TreeNumericColumnDataTest {
         double[] rowWeights = new double[data.length];
         Arrays.fill(rowWeights, 1.0);
         TreeData treeData = createTreeDataClassification(exampleData);
-        DataIndexManager indexManager = new DataIndexManager(treeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(treeData);
         DataMemberships dataMemberships = new RootDataMemberships(rowWeights, treeData, indexManager);
         ClassificationPriors priors = targetData.getDistribution(rowWeights, config);
         SplitCandidate splitCandidate = columnData.calcBestSplitClassification(dataMemberships, priors, targetData, rd);
@@ -225,7 +226,7 @@ public class TreeNumericColumnDataTest {
         TreeNumericColumnData columnData = exampleData.getFirst();
         TreeTargetNominalColumnData targetData = exampleData.getSecond();
         TreeData treeData = createTreeDataClassification(exampleData);
-        DataIndexManager indexManager = new DataIndexManager(treeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(treeData);
         DataMemberships dataMemberships = new RootDataMemberships(rowWeights, treeData, indexManager);
         ClassificationPriors priors = targetData.getDistribution(rowWeights, config);
         SplitCandidate splitCandidate = columnData.calcBestSplitClassification(dataMemberships, priors, targetData, rd);
@@ -263,7 +264,7 @@ public class TreeNumericColumnDataTest {
         double[] rowWeights = new double[data.length];
         Arrays.fill(rowWeights, 1.0);
         TreeData treeData = createTreeDataClassification(exampleData);
-        DataIndexManager indexManager = new DataIndexManager(treeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(treeData);
         DataMemberships dataMemberships = new RootDataMemberships(rowWeights, treeData, indexManager);
         ClassificationPriors priors = targetData.getDistribution(rowWeights, config);
         SplitCandidate splitCandidate = columnData.calcBestSplitClassification(dataMemberships, priors, targetData, rd);
@@ -316,7 +317,7 @@ public class TreeNumericColumnDataTest {
         double[] rowWeights = new double[data.length];
         Arrays.fill(rowWeights, 1.0);
         TreeData treeData = createTreeDataClassification(exampleData);
-        DataIndexManager indexManager = new DataIndexManager(treeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(treeData);
         DataMemberships dataMemberships = new RootDataMemberships(rowWeights, treeData, indexManager);
         ClassificationPriors priors = targetData.getDistribution(rowWeights, config);
         RandomData rd = config.createRandomData();
@@ -358,7 +359,7 @@ public class TreeNumericColumnDataTest {
         TreeData data = new TreeData(new TreeAttributeColumnData[]{attribute}, target, TreeType.Ordinary);
         double[] weights = new double[10];
         Arrays.fill(weights, 1.0);
-        DataMemberships rootMem = new RootDataMemberships(weights, data, new DataIndexManager(data));
+        DataMemberships rootMem = new RootDataMemberships(weights, data, new DefaultDataIndexManager(data));
         SplitCandidate firstSplit =
             attribute.calcBestSplitRegression(rootMem, target.getPriors(rootMem, config), target, rd);
         // calculated via OpenOffice calc

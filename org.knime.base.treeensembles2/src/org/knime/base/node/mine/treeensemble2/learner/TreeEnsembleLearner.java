@@ -56,10 +56,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.math.random.RandomData;
 import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.BitVectorDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeNode;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel;
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.sample.column.ColumnSample;
@@ -99,7 +102,7 @@ public class TreeEnsembleLearner {
 
     private TreeEnsembleModel m_ensembleModel;
 
-    private final DataIndexManager m_indexManager;
+    private final IDataIndexManager m_indexManager;
 
     private final TreeNodeSignatureFactory m_signatureFactory;
 
@@ -110,7 +113,11 @@ public class TreeEnsembleLearner {
     public TreeEnsembleLearner(final TreeEnsembleLearnerConfiguration config, final TreeData data) {
         m_config = config;
         m_data = data;
-        m_indexManager = new DataIndexManager(m_data);
+        if (data.getTreeType() == TreeType.BitVector) {
+            m_indexManager = new BitVectorDataIndexManager(m_data.getNrRows());
+        } else {
+            m_indexManager = new DefaultDataIndexManager(m_data);
+        }
         int maxLevel = config.getMaxLevels();
         if (maxLevel < TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {
             // provided we have a binary tree (which is the default)

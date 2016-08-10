@@ -54,8 +54,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
+import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
@@ -86,7 +86,7 @@ public class TreeTargetNominalColumnDataTest {
         TreeData data = new TreeData(new TreeAttributeColumnData[]{attribute}, target, TreeType.Ordinary);
         double[] weights = new double[7];
         Arrays.fill(weights, 1.0);
-        DataMemberships rootMemberships = new RootDataMemberships(weights, data, new DataIndexManager(data));
+        DataMemberships rootMemberships = new RootDataMemberships(weights, data, new DefaultDataIndexManager(data));
         // Gini
         config.setSplitCriterion(SplitCriterion.Gini);
         double expectedGini = 0.4897959184;

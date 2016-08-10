@@ -63,8 +63,9 @@ import java.util.BitSet;
 
 import org.apache.commons.math.random.RandomData;
 import org.junit.Test;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
+import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
 import org.knime.base.node.mine.treeensemble2.learner.NominalBinarySplitCandidate;
 import org.knime.base.node.mine.treeensemble2.learner.NominalMultiwaySplitCandidate;
@@ -256,7 +257,7 @@ public class TreeNominalColumnDataTest {
         TreeNominalColumnData columnData = twoClassTennisData.getFirst();
         TreeTargetNominalColumnData targetData = twoClassTennisData.getSecond();
         TreeData twoClassTennisTreeData = twoClassTennisTreeData(config);
-        DataIndexManager indexManager = new DataIndexManager(twoClassTennisTreeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(twoClassTennisTreeData);
         assertEquals(SplitCriterion.Gini, config.getSplitCriterion());
         double[] rowWeights = new double[TWO_CLASS_INDICES.length];
         Arrays.fill(rowWeights, 1.0);
@@ -294,7 +295,7 @@ public class TreeNominalColumnDataTest {
         // check correct behavior if no missing values are encountered during split search
         Pair<TreeNominalColumnData, TreeTargetNominalColumnData> twoClassTennisData = twoClassTennisData(config);
         TreeData treeData = dataGen.createTreeData(twoClassTennisData.getSecond(), twoClassTennisData.getFirst());
-        DataIndexManager indexManager = new DataIndexManager(treeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(treeData);
         double[] rowWeights = new double[TWO_CLASS_INDICES.length];
         Arrays.fill(rowWeights, 1.0);
         //        DataMemberships dataMemberships = TestDataGenerator.createMockDataMemberships(TWO_CLASS_INDICES.length);
@@ -321,7 +322,7 @@ public class TreeNominalColumnDataTest {
         columnData =
             dataGen.createNominalAttributeColumn(dataContainingMissingsCSV, "column containing missing values", 0);
         treeData = dataGen.createTreeData(targetData, columnData);
-        indexManager = new DataIndexManager(treeData);
+        indexManager = new DefaultDataIndexManager(treeData);
         dataMemberships = new RootDataMemberships(rowWeights, treeData, indexManager);
         splitCandidate = columnData.calcBestSplitClassification(dataMemberships, priors, targetData, null);
         assertNotNull(splitCandidate);
@@ -392,7 +393,7 @@ public class TreeNominalColumnDataTest {
         double[] rowWeights = new double[SMALL_COLUMN_DATA.length];
         Arrays.fill(rowWeights, 1.0);
         TreeData tennisTreeData = tennisTreeData(config);
-        DataIndexManager indexManager = new DataIndexManager(tennisTreeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(tennisTreeData);
         DataMemberships dataMemberships = new RootDataMemberships(rowWeights, tennisTreeData, indexManager);
         ClassificationPriors priors = targetData.getDistribution(rowWeights, config);
         SplitCandidate splitCandidate =
@@ -445,7 +446,7 @@ public class TreeNominalColumnDataTest {
         assertEquals(SplitCriterion.Gini, config.getSplitCriterion());
         double[] rowWeights = new double[targetData.getNrRows()];
         Arrays.fill(rowWeights, 1.0);
-        DataIndexManager indexManager = new DataIndexManager(treeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(treeData);
         DataMemberships dataMemberships = new RootDataMemberships(rowWeights, treeData, indexManager);
         ClassificationPriors priors = targetData.getDistribution(rowWeights, config);
         SplitCandidate splitCandidate =
@@ -536,7 +537,7 @@ public class TreeNominalColumnDataTest {
         assertEquals(SplitCriterion.Gini, config.getSplitCriterion());
         double[] rowWeights = new double[SMALL_COLUMN_DATA.length];
         Arrays.fill(rowWeights, 1.0);
-        DataIndexManager indexManager = new DataIndexManager(treeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(treeData);
         DataMemberships dataMemberships = new RootDataMemberships(rowWeights, treeData, indexManager);
         ClassificationPriors priors = targetData.getDistribution(rowWeights, config);
         SplitCandidate splitCandidate =
@@ -625,7 +626,7 @@ public class TreeNominalColumnDataTest {
         TreeData treeData = createTreeDataRegression(tennisDataRegression);
         double[] rowWeights = new double[SMALL_COLUMN_DATA.length];
         Arrays.fill(rowWeights, 1.0);
-        DataIndexManager indexManager = new DataIndexManager(treeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(treeData);
         DataMemberships dataMemberships = new RootDataMemberships(rowWeights, treeData, indexManager);
         RegressionPriors priors = targetData.getPriors(rowWeights, config);
         SplitCandidate splitCandidate = columnData.calcBestSplitRegression(dataMemberships, priors, targetData, null);
@@ -726,7 +727,7 @@ public class TreeNominalColumnDataTest {
         TreeData treeData = createTreeDataRegression(tennisDataRegression);
         double[] rowWeights = new double[SMALL_COLUMN_DATA.length];
         Arrays.fill(rowWeights, 1.0);
-        DataIndexManager indexManager = new DataIndexManager(treeData);
+        IDataIndexManager indexManager = new DefaultDataIndexManager(treeData);
         DataMemberships dataMemberships = new RootDataMemberships(rowWeights, treeData, indexManager);
         RegressionPriors priors = targetData.getPriors(rowWeights, config);
         SplitCandidate splitCandidate = columnData.calcBestSplitRegression(dataMemberships, priors, targetData, null);

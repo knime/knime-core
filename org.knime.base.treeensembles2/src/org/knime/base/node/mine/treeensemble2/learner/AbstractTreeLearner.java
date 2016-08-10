@@ -49,7 +49,7 @@ package org.knime.base.node.mine.treeensemble2.learner;
 
 import org.apache.commons.math.random.RandomData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.model.AbstractTreeModel;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.sample.column.ColumnSampleStrategy;
@@ -73,7 +73,7 @@ public abstract class AbstractTreeLearner {
 
     private final ColumnSampleStrategy m_colSamplingStrategy;
 
-    private final DataIndexManager m_indexManager;
+    private final IDataIndexManager m_indexManager;
 
     private final TreeNodeSignatureFactory m_signatureFactory;
 
@@ -83,7 +83,7 @@ public abstract class AbstractTreeLearner {
      * @param randomData
      */
     public AbstractTreeLearner(final TreeEnsembleLearnerConfiguration config, final TreeData data,
-        final DataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory,
+        final IDataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory,
         final RandomData randomData) {
         m_config = config;
         m_data = data;
@@ -94,7 +94,7 @@ public abstract class AbstractTreeLearner {
         m_signatureFactory = signatureFactory;
     }
 
-    final DataIndexManager getIndexManager() {
+    final IDataIndexManager getIndexManager() {
         return m_indexManager;
     }
 

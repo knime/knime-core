@@ -55,12 +55,15 @@ import java.io.IOException;
 import org.apache.commons.math.random.RandomData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeDataCreator;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.BitVectorDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.learner.TreeLearnerRegression;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModel;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObject;
 import org.knime.base.node.mine.treeensemble2.model.RegressionTreeModelPortObjectSpec;
+import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
@@ -159,7 +162,12 @@ final class RegressionTreeLearnerNodeModel extends NodeModel implements PortObje
         exec.setMessage("Learning tree");
 
         RandomData rd = m_configuration.createRandomData();
-        final DataIndexManager indexManager = new DataIndexManager(data);
+        final IDataIndexManager indexManager;
+        if (data.getTreeType() == TreeType.BitVector) {
+            indexManager = new BitVectorDataIndexManager(data.getNrRows());
+        } else {
+           indexManager = new DefaultDataIndexManager(data);
+        }
         TreeNodeSignatureFactory signatureFactory = null;
         int maxLevels = m_configuration.getMaxLevels();
         if (maxLevels < TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {

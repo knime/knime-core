@@ -44,131 +44,64 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   29.03.2016 (Adrian Nembach): created
+ *   22.07.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.data.memberships.test;
+package org.knime.base.node.mine.treeensemble2.data.memberships;
 
-import java.util.BitSet;
-
-import org.knime.base.node.mine.treeensemble2.data.memberships.ColumnMemberships;
-import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
+import java.util.stream.IntStream;
 
 /**
- * This class provides access to the index positions of the records in the current branch
- * for the respective column (defined by the provided column index)
+ * {@link IDataIndexManager} implementation for BitVector data. <br>
+ * For BitVector data, the positions in the original table do not differ from the positions in
+ * the individual columns. Therefore it is not necessary to store any mappings. <br>
+ * Furthermore, since BitVector data usually consists of a large number of columns (several thousand are possible),
+ * we can also save a lot of memory by not storing unnecessary mappings.
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class ColMem implements ColumnMemberships {
+public class BitVectorDataIndexManager implements IDataIndexManager {
+
+    // we store this single array because we need to be able to return arrays for some methods
+    private final int[] m_dummyPositions;
 
     /**
-     * Contains the indices for the current node in column order
+     * @param numRows the number of rows in the input table
      */
-    private final BitSet m_sorted;
-
-    private final IDataIndexManager m_indexManager;
-
-    private final RootDataMem m_root;
-
-    private final int m_colIdx;
-
-    private int m_iterator = 0;
-
-
-
-    ColMem(final BitSet sorted, final IDataIndexManager indexManager, final RootDataMem root, final int colIdx) {
-        m_sorted = sorted;
-        m_indexManager = indexManager;
-        m_root = root;
-        m_colIdx = colIdx;
+    public BitVectorDataIndexManager(final int numRows) {
+        m_dummyPositions = new int[numRows];
+        // all columns have the original index
+        IntStream.range(0, numRows).forEach(i -> m_dummyPositions[i] = i);
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int[] getPositionsInColumn(final int colIndex) {
+        return m_dummyPositions;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int size() {
-        return m_sorted.length();
+    public int[] getOriginalPositions(final int colIndex) {
+        return m_dummyPositions;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean next() {
-        if (m_iterator == -1) {
-            m_iterator = m_sorted.nextSetBit(0);
-        } else {
-            m_iterator = m_sorted.nextSetBit(m_iterator + 1);
-        }
-        return m_iterator != -1;
+    public int getPositionInColumn(final int colIndex, final int originalPosition) {
+        return originalPosition;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean nextIndexFrom(final int indexInColumn) {
-        m_iterator = m_sorted.nextSetBit(indexInColumn);
-        return m_iterator != -1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double getRowWeight() {
-        return m_root.getRowWeight(m_indexManager.getOriginalPosition(m_colIdx, m_iterator));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getOriginalIndex() {
-        return m_indexManager.getOriginalPosition(m_colIdx, m_iterator);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getIndexInColumn() {
-        return m_iterator;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getIndexInDataMemberships() {
-        // in this case original index and index in data memberships are the same
-        return getOriginalIndex();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void reset() {
-        m_iterator = -1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void goToLast() {
-        m_iterator = m_sorted.length() - 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean previous() {
-        m_iterator = m_sorted.previousSetBit(m_iterator - 1);
-        return m_iterator != -1;
+    public int getOriginalPosition(final int colIndex, final int positionInColumn) {
+        return positionInColumn;
     }
 
 }

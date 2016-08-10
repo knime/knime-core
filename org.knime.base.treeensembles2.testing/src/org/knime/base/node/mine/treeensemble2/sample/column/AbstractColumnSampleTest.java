@@ -44,64 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   11.02.2016 (Adrian Nembach): created
+ *   23.05.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.data;
+package org.knime.base.node.mine.treeensemble2.sample.column;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-
-import org.junit.Test;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
-import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
+import org.apache.commons.math.random.RandomData;
+import org.knime.base.node.mine.treeensemble2.data.TestDataGenerator;
+import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnData;
+import org.knime.base.node.mine.treeensemble2.data.TreeData;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetColumnData;
+import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class TreeTargetNumericColumnDataTest {
+public class AbstractColumnSampleTest {
 
-    private final static double DELTA = 1e-6;
-
-    /**
-     * Tests the {@link TreeTargetNumericColumnData#getPriors(DataMemberships, TreeEnsembleLearnerConfiguration)} and
-     * {@link TreeTargetNumericColumnData#getPriors(double[], TreeEnsembleLearnerConfiguration)} methods.
-     */
-    @Test
-    public void testGetPriors() {
-        String targetCSV = "1,4,3,5,6,7,8,12,22,1";
-        // irrelevant but necessary to build TreeDataObject
-        String someAttributeCSV = "A,B,A,B,A,A,B,A,A,B";
-        TreeEnsembleLearnerConfiguration config = new TreeEnsembleLearnerConfiguration(true);
-        TestDataGenerator dataGen = new TestDataGenerator(config);
-        TreeTargetNumericColumnData target = TestDataGenerator.createNumericTargetColumn(targetCSV);
-        TreeNominalColumnData attribute = dataGen.createNominalAttributeColumn(someAttributeCSV, "test-col", 0);
-        TreeData data = new TreeData(new TreeAttributeColumnData[]{attribute}, target, TreeType.Ordinary);
-        double[] weights = new double[10];
-        Arrays.fill(weights, 1.0);
-        DataMemberships rootMem = new RootDataMemberships(weights, data, new DefaultDataIndexManager(data));
-        RegressionPriors datMemPriors = target.getPriors(rootMem, config);
-        assertEquals(6.9, datMemPriors.getMean(), DELTA);
-        assertEquals(69, datMemPriors.getYSum(), DELTA);
-        assertEquals(352.9, datMemPriors.getSumSquaredDeviation(), DELTA);
-    }
+    protected final static int TREE_DATA_SIZE = 10;
+    protected final static RandomData RD = new TreeEnsembleLearnerConfiguration(false).createRandomData();
 
     /**
-     * Tests the {@link TreeTargetNumericColumnData#getMedian()} method.
+     * @return TreeData object for testing purposes
      */
-    @Test
-    public void testGetMedian() {
-        String target1CSV = "1,4,3,5,6,7,8,12,22,1";
-        String target2CSV = "111,103,101,102,99,22,10";
-        TreeTargetNumericColumnData target1 = TestDataGenerator.createNumericTargetColumn(target1CSV);
-        TreeTargetNumericColumnData target2 = TestDataGenerator.createNumericTargetColumn(target2CSV);
-
-        assertEquals(5.5, target1.getMedian(), DELTA);
-        assertEquals(101.0, target2.getMedian(), DELTA);
+    protected static TreeData createTreeData() {
+        final TestDataGenerator dataGen = new TestDataGenerator(new TreeEnsembleLearnerConfiguration(false));
+        final TreeAttributeColumnData[] cols = new TreeAttributeColumnData[10];
+        for (int i = 0; i < TREE_DATA_SIZE; i++) {
+            if (i % 2 == 0) {
+                cols[i] = dataGen.createNominalAttributeColumn("a, b", "nom" + i, i);
+            } else {
+                cols[i] = dataGen.createNumericAttributeColumn("1, 2", "num1", i);
+            }
+        }
+        TreeTargetColumnData target = TestDataGenerator.createNominalTargetColumn("A, B");
+        return dataGen.createTreeData(target, cols);
     }
 
+    protected static TreeNodeSignatureFactory createSignatureFactory() {
+        return new TreeNodeSignatureFactory(10);
+    }
 }
