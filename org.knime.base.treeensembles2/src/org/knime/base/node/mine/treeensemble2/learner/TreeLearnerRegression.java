@@ -58,8 +58,8 @@ import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeCondition;
@@ -92,7 +92,7 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
      * @param randomData needed for randomization (for example random tie breaking, column sampling, ...)
      */
     public TreeLearnerRegression(final TreeEnsembleLearnerConfiguration config, final TreeData data,
-        final DataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory, final RandomData randomData) {
+        final IDataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory, final RandomData randomData) {
         super(config, data, indexManager, signatureFactory, randomData);
         if (!(data.getTargetColumn() instanceof TreeTargetNumericColumnData)) {
             throw new IllegalStateException("Can't learn regression model on categorical target");
@@ -111,7 +111,7 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
         final TreeData data = getData();
         final RowSample rowSampling = getRowSampling();
         final TreeEnsembleLearnerConfiguration config = getConfig();
-        final DataIndexManager indexManager = new DataIndexManager(data);
+        final IDataIndexManager indexManager = getIndexManager();
         DataMemberships rootDataMemberships = new RootDataMemberships(rowSampling, data, indexManager);
         RegressionPriors targetPriors = targetColumn.getPriors(rootDataMemberships, config);
         BitSet forbiddenColumnSet = new BitSet(data.getNrAttributes());

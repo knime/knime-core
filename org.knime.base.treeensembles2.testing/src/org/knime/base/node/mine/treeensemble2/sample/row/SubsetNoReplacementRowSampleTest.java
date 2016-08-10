@@ -44,64 +44,71 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   11.02.2016 (Adrian Nembach): created
+ *   23.05.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.data;
+package org.knime.base.node.mine.treeensemble2.sample.row;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
-
+import org.apache.commons.math.random.RandomData;
 import org.junit.Test;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
-import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class TreeTargetNumericColumnDataTest {
+public class SubsetNoReplacementRowSampleTest {
 
-    private final static double DELTA = 1e-6;
+    private static final RandomData RD = new TreeEnsembleLearnerConfiguration(true).createRandomData();
 
     /**
-     * Tests the {@link TreeTargetNumericColumnData#getPriors(DataMemberships, TreeEnsembleLearnerConfiguration)} and
-     * {@link TreeTargetNumericColumnData#getPriors(double[], TreeEnsembleLearnerConfiguration)} methods.
+     * Tests the method {@link SubsetNoReplacementRowSample#getCountFor(int)}
+     * should always return 1
+     * @throws Exception
      */
     @Test
-    public void testGetPriors() {
-        String targetCSV = "1,4,3,5,6,7,8,12,22,1";
-        // irrelevant but necessary to build TreeDataObject
-        String someAttributeCSV = "A,B,A,B,A,A,B,A,A,B";
-        TreeEnsembleLearnerConfiguration config = new TreeEnsembleLearnerConfiguration(true);
-        TestDataGenerator dataGen = new TestDataGenerator(config);
-        TreeTargetNumericColumnData target = TestDataGenerator.createNumericTargetColumn(targetCSV);
-        TreeNominalColumnData attribute = dataGen.createNominalAttributeColumn(someAttributeCSV, "test-col", 0);
-        TreeData data = new TreeData(new TreeAttributeColumnData[]{attribute}, target, TreeType.Ordinary);
-        double[] weights = new double[10];
-        Arrays.fill(weights, 1.0);
-        DataMemberships rootMem = new RootDataMemberships(weights, data, new DefaultDataIndexManager(data));
-        RegressionPriors datMemPriors = target.getPriors(rootMem, config);
-        assertEquals(6.9, datMemPriors.getMean(), DELTA);
-        assertEquals(69, datMemPriors.getYSum(), DELTA);
-        assertEquals(352.9, datMemPriors.getSumSquaredDeviation(), DELTA);
+    public void testGetCountFor() throws Exception {
+        SubsetNoReplacementRowSample sample = new SubsetNoReplacementRowSample(20, 0.5, RD);
+        assertEquals("Row counts do not sum up correctly.", 10, sumUpRowCounts(sample));
+        sample = new SubsetNoReplacementRowSample(100, 0.455, RD);
+        assertEquals("Row counts do not sum up correctly.", 46, sumUpRowCounts(sample));
+        sample = new SubsetNoReplacementRowSample(100, 0.3, RD);
+        assertEquals("Row counts do not sum up correctly.", 30, sumUpRowCounts(sample));
+    }
+
+    private static int sumUpRowCounts(final RowSample sample) {
+        int rowCounts = 0;
+        for (int i = 0; i < sample.getNrRows(); i++) {
+            rowCounts += sample.getCountFor(i);
+        }
+        return rowCounts;
     }
 
     /**
-     * Tests the {@link TreeTargetNumericColumnData#getMedian()} method.
+     * Tests the method {@link SubsetNoReplacementRowSample#getNrRows()}
+     *
+     * @throws Exception
      */
     @Test
-    public void testGetMedian() {
-        String target1CSV = "1,4,3,5,6,7,8,12,22,1";
-        String target2CSV = "111,103,101,102,99,22,10";
-        TreeTargetNumericColumnData target1 = TestDataGenerator.createNumericTargetColumn(target1CSV);
-        TreeTargetNumericColumnData target2 = TestDataGenerator.createNumericTargetColumn(target2CSV);
-
-        assertEquals(5.5, target1.getMedian(), DELTA);
-        assertEquals(101.0, target2.getMedian(), DELTA);
+    public void testGetNrRows() throws Exception {
+        SubsetNoReplacementRowSample sample = new SubsetNoReplacementRowSample(20, 0.5, RD);
+        assertEquals("Wrong number of rows.", 20, sample.getNrRows());
+        sample = new SubsetNoReplacementRowSample(100, 0.3, RD);
+        assertEquals("Wrong number of rows.", 100, sample.getNrRows());
+        sample = new SubsetNoReplacementRowSample(50, 0.455, RD);
+        assertEquals("Wrong number of rows.", 50, sample.getNrRows());
     }
 
+    /**
+     * Tests the method {@link SubsetNoReplacementRowSample#toString()}
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testToString() throws Exception {
+        SubsetNoReplacementRowSample sample = new SubsetNoReplacementRowSample(20, 0.5, RD);
+        String expected = "Subset w/o repl; fraction: 0.5, nrRows: 20, nrBitsSet: 10";
+        assertEquals("Wrong string returned.", expected, sample.toString());
+    }
 }

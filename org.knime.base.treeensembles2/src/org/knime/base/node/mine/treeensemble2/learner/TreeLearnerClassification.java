@@ -50,8 +50,6 @@ package org.knime.base.node.mine.treeensemble2.learner;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.RecursiveTask;
 
 import org.apache.commons.math.random.RandomData;
 import org.knime.base.node.mine.treeensemble2.data.ClassificationPriors;
@@ -59,8 +57,8 @@ import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelClassification;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeClassification;
@@ -85,7 +83,7 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
      * @param data
      */
     TreeLearnerClassification(final TreeEnsembleLearnerConfiguration config, final TreeData data,
-        final DataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory,
+        final IDataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory,
         final RandomData randomData) {
         super(config, data, indexManager, signatureFactory, randomData);
         if (config.isRegression()) {

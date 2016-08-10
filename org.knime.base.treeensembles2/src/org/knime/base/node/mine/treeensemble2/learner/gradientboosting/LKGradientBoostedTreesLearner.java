@@ -65,7 +65,7 @@ import org.knime.base.node.mine.treeensemble2.data.TreeData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeTargetNumericColumnMetaData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataIndexManager;
+import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
 import org.knime.base.node.mine.treeensemble2.learner.TreeLearnerRegression;
 import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
 import org.knime.base.node.mine.treeensemble2.model.MultiClassGradientBoostedTreesModel;
@@ -268,7 +268,7 @@ public final class LKGradientBoostedTreesLearner extends AbstractGradientBoostin
     private void adaptPreviousFunction(final double[] previousFunction, final TreeModelRegression tree,
         final Map<TreeNodeSignature, Double> coefficientMap) {
         final TreeData data = getData();
-        final DataIndexManager indexManager = getIndexManager();
+        final IDataIndexManager indexManager = getIndexManager();
         for (int i = 0; i < previousFunction.length; i++) {
             final PredictorRecord record = createPredictorRecord(data, indexManager, i);
             final TreeNodeSignature signature = tree.findMatchingNode(record).getSignature();

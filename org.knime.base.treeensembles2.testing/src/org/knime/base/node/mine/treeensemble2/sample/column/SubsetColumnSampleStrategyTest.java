@@ -44,64 +44,52 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   11.02.2016 (Adrian Nembach): created
+ *   23.05.2016 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.data;
+package org.knime.base.node.mine.treeensemble2.sample.column;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
-
 import org.junit.Test;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DataMemberships;
-import org.knime.base.node.mine.treeensemble2.data.memberships.DefaultDataIndexManager;
-import org.knime.base.node.mine.treeensemble2.data.memberships.RootDataMemberships;
-import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
-import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble2.learner.TreeNodeSignatureFactory;
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class TreeTargetNumericColumnDataTest {
-
-    private final static double DELTA = 1e-6;
+public class SubsetColumnSampleStrategyTest extends AbstractColumnSampleTest {
 
     /**
-     * Tests the {@link TreeTargetNumericColumnData#getPriors(DataMemberships, TreeEnsembleLearnerConfiguration)} and
-     * {@link TreeTargetNumericColumnData#getPriors(double[], TreeEnsembleLearnerConfiguration)} methods.
+     * Tests the method {@link SubsetColumnSampleStrategy#getColumnSampleForTreeNode(org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature)}
+     * also tests {@link SubsetColumnSample} since the both always act in combination.
+     *
+     * @throws Exception
      */
     @Test
-    public void testGetPriors() {
-        String targetCSV = "1,4,3,5,6,7,8,12,22,1";
-        // irrelevant but necessary to build TreeDataObject
-        String someAttributeCSV = "A,B,A,B,A,A,B,A,A,B";
-        TreeEnsembleLearnerConfiguration config = new TreeEnsembleLearnerConfiguration(true);
-        TestDataGenerator dataGen = new TestDataGenerator(config);
-        TreeTargetNumericColumnData target = TestDataGenerator.createNumericTargetColumn(targetCSV);
-        TreeNominalColumnData attribute = dataGen.createNominalAttributeColumn(someAttributeCSV, "test-col", 0);
-        TreeData data = new TreeData(new TreeAttributeColumnData[]{attribute}, target, TreeType.Ordinary);
-        double[] weights = new double[10];
-        Arrays.fill(weights, 1.0);
-        DataMemberships rootMem = new RootDataMemberships(weights, data, new DefaultDataIndexManager(data));
-        RegressionPriors datMemPriors = target.getPriors(rootMem, config);
-        assertEquals(6.9, datMemPriors.getMean(), DELTA);
-        assertEquals(69, datMemPriors.getYSum(), DELTA);
-        assertEquals(352.9, datMemPriors.getSumSquaredDeviation(), DELTA);
+    public void testGetColumnSampleForTreeNode() throws Exception {
+        final SubsetColumnSampleStrategy strategy = new SubsetColumnSampleStrategy(createTreeData(), RD, 5);
+        TreeNodeSignatureFactory sigFac = createSignatureFactory();
+        TreeNodeSignature rootSig = sigFac.getRootSignature();
+        ColumnSample sample = strategy.getColumnSampleForTreeNode(rootSig);
+        assertEquals("Wrong number of columns in sample.", 5, sample.getNumCols());
+        int[] colIndices = sample.getColumnIndices();
+        sample = strategy.getColumnSampleForTreeNode(sigFac.getChildSignatureFor(rootSig, (byte)0));
+        assertEquals("Wrong number of columns in sample.", 5, sample.getNumCols());
+        assertArrayEquals(colIndices, sample.getColumnIndices());
+        sample = strategy.getColumnSampleForTreeNode(sigFac.getChildSignatureFor(rootSig, (byte)1));
+        assertEquals("Wrong number of columns in sample.", 5, sample.getNumCols());
+        assertArrayEquals(colIndices, sample.getColumnIndices());
     }
 
-    /**
-     * Tests the {@link TreeTargetNumericColumnData#getMedian()} method.
-     */
-    @Test
-    public void testGetMedian() {
-        String target1CSV = "1,4,3,5,6,7,8,12,22,1";
-        String target2CSV = "111,103,101,102,99,22,10";
-        TreeTargetNumericColumnData target1 = TestDataGenerator.createNumericTargetColumn(target1CSV);
-        TreeTargetNumericColumnData target2 = TestDataGenerator.createNumericTargetColumn(target2CSV);
-
-        assertEquals(5.5, target1.getMedian(), DELTA);
-        assertEquals(101.0, target2.getMedian(), DELTA);
+    @Test (expected = IllegalArgumentException.class)
+    public void testSubsetSizeSmallerZero() throws Exception {
+        new SubsetColumnSampleStrategy(createTreeData(), RD, -32);
     }
 
+    @Test (expected = IllegalArgumentException.class)
+    public void testSubsetSizeGreaterNumberColumns() throws Exception {
+        new SubsetColumnSampleStrategy(createTreeData(), RD, TREE_DATA_SIZE + 1);
+    }
 }

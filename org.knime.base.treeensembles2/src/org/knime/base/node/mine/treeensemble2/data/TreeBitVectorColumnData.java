@@ -89,7 +89,7 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
     /** {@inheritDoc} */
     @Override
     public SplitCandidate calcBestSplitClassification(final DataMemberships dataMemberships,
-        final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn, RandomData rd) {
+        final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn, final RandomData rd) {
         final NominalValueRepresentation[] targetVals = targetColumn.getMetaData().getValues();
         final IImpurity impurityCriterion = targetPriors.getImpurityCriterion();
         final int minChildSize = getConfiguration().getMinChildSize();
@@ -134,7 +134,7 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
     /** {@inheritDoc} */
     @Override
     public SplitCandidate calcBestSplitRegression(final DataMemberships dataMemberships,
-        final RegressionPriors targetPriors, final TreeTargetNumericColumnData targetColumn, RandomData rd) {
+        final RegressionPriors targetPriors, final TreeTargetNumericColumnData targetColumn, final RandomData rd) {
         final double ySumTotal = targetPriors.getYSum();
         final double nrRecordsTotal = targetPriors.getNrRecords();
         final double criterionTotal = ySumTotal * ySumTotal / nrRecordsTotal;
@@ -205,7 +205,7 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
      */
     @Override
     public int[] getOriginalIndicesInColumnList() {
-        int[] originalIndices = new int[m_columnBitSet.size()];
+        int[] originalIndices = new int[m_length];
         for (int i = 0; i < originalIndices.length; i++) {
             originalIndices[i] = i;
         }

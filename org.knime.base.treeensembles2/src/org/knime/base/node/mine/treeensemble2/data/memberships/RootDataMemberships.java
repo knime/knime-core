@@ -87,14 +87,14 @@ public class RootDataMemberships implements DataMemberships {
 
     private final int m_rowCountInRoot;
 
-    private final DataIndexManager m_indexManager;
+    private final IDataIndexManager m_indexManager;
 
     /**
      * @param rowSample
      * @param data
      * @param indexManager
      */
-    public RootDataMemberships(final RowSample rowSample, final TreeData data, final DataIndexManager indexManager) {
+    public RootDataMemberships(final RowSample rowSample, final TreeData data, final IDataIndexManager indexManager) {
         final int numRows = rowSample.getNrRows();
         m_numCols = data.getNrAttributes();
 //        m_cacheHashMap = new HashMap<Integer, ColumnMembershipsEntry>((int)(m_numCols * 1.5));
@@ -131,7 +131,7 @@ public class RootDataMemberships implements DataMemberships {
      * @param data
      * @param indexManager
      */
-    public RootDataMemberships(final double[] rowWeights, final TreeData data, final DataIndexManager indexManager) {
+    public RootDataMemberships(final double[] rowWeights, final TreeData data, final IDataIndexManager indexManager) {
         m_numCols = data.getNrAttributes();
 //        m_cacheHashMap = new HashMap<Integer, ColumnMembershipsEntry>();
         m_cache = CacheBuilder.newBuilder()
@@ -159,7 +159,7 @@ public class RootDataMemberships implements DataMemberships {
 
     }
 
-    private RootDataMemberships(final int numCols, final DataIndexManager indexManager, final int[] originalIndices,
+    private RootDataMemberships(final int numCols, final IDataIndexManager indexManager, final int[] originalIndices,
         final WeightContainer weights, final int rowCountInRoot) {
         m_numCols = numCols;
         m_indexManager = indexManager;
@@ -307,7 +307,7 @@ public class RootDataMemberships implements DataMemberships {
         @Override
         public ColumnMembershipsEntry load(final Integer key) throws Exception {
             final int dataMembershipsSize = m_originalIndices.length;
-            final int[] original2Column = m_indexManager.getIndicesInColumn(key);
+            final int[] original2Column = m_indexManager.getPositionsInColumn(key);
             final int originalSize = original2Column.length;
             final BitSet colBitSet = new BitSet(originalSize);
             final int[] columnIndex2dataMemIndex = new int[originalSize];

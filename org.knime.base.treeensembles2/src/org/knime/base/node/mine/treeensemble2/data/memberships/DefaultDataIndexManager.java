@@ -44,67 +44,64 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.01.2016 (Adrian Nembach): created
+ *   07.12.2015 (Adrian Nembach): created
  */
-package org.knime.base.node.mine.treeensemble2.learner.gradientboosting;
+package org.knime.base.node.mine.treeensemble2.data.memberships;
 
-import java.util.Map;
-
-import org.knime.base.node.mine.treeensemble2.data.PredictorRecord;
+import org.knime.base.node.mine.treeensemble2.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble2.data.TreeData;
-import org.knime.base.node.mine.treeensemble2.data.memberships.IDataIndexManager;
-import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
-import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
-import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
 
 /**
+ * This class is the {@link IDataIndexManager} implementation for all column types in which the
+ * original positions differ from the positions in the individual columns. <br>
+ * Currently this includes all column types except for the BitVector type.
  *
  * @author Adrian Nembach, KNIME.com
  */
-public abstract class AbstractGradientBoostedTreesLearner extends AbstractGradientBoostingLearner {
+public class DefaultDataIndexManager implements IDataIndexManager {
+
+    private final int[][] m_original2Column;
+    private final int[][] m_column2Original;
 
     /**
-     * @param config the configuration for the learner
-     * @param data the data as it is provided by the user
+     * Constructs a DataIndexManager from the given TreeData object
+     * @param data
      */
-    public AbstractGradientBoostedTreesLearner(final GradientBoostingLearnerConfiguration config, final TreeData data) {
-        super(config, data);
-    }
+    public DefaultDataIndexManager(final TreeData data) {
+        int numRows = data.getNrRows();
+        int numCols = data.getNrAttributes();
+        m_original2Column = new int[numCols][numRows];
+        m_column2Original = new int[numCols][numRows];
+        TreeAttributeColumnData[] columnData = data.getColumns();
 
+        for (int c = 0; c < numCols; c++) {
+            TreeAttributeColumnData column = columnData[c];
+            int[] originalIndices = column.getOriginalIndicesInColumnList();
 
-    /**
-     * Adapts the previous prediction by adding the predictions of the <b>tree</b> regulated by the respective
-     * coefficients in <b>coefficientMap</b>.
-     *
-     * @param previousPrediction Prediction of the previous steps
-     * @param tree the tree of the current iteration
-     * @param coefficientMap contains the coefficients for the leafs of the tree
-     */
-    protected void adaptPreviousPrediction(final double[] previousPrediction, final TreeModelRegression tree,
-        final Map<TreeNodeSignature, Double> coefficientMap) {
-        TreeData data = getData();
-        IDataIndexManager indexManager = getIndexManager();
-        for (int i = 0; i < data.getNrRows(); i++) {
-            PredictorRecord record = createPredictorRecord(data, indexManager, i);
-            previousPrediction[i] += coefficientMap.get(tree.findMatchingNode(record).getSignature());
+            for (int i = 0; i < numRows; i++) {
+                m_original2Column[c][originalIndices[i]] = i;
+            }
+            m_column2Original[c] = originalIndices;
         }
     }
 
-    /**
-     * Calculates the coefficients for all the leafs of the <b>tree</b>
-     *
-     * @param previousPrediction the prediction of the previous iterations
-     * @param tree tree of the current iteration
-     * @param residualData the residual data for the current iteration
-     * @return a map containing the coefficients for all leafs of <b>tree</b>
-     */
-    protected abstract Map<TreeNodeSignature, Double> calculateCoefficientMap(final double[] previousPrediction,
-        final TreeModelRegression tree, final TreeData residualData);
+    @Override
+    public int[] getPositionsInColumn(final int colIndex) {
+        return m_original2Column[colIndex];
+    }
 
+    @Override
+    public int[] getOriginalPositions(final int colIndex) {
+        return m_column2Original[colIndex];
+    }
 
-    /**
-     * @return the initial value for the first iteration
-     */
-    protected abstract double getInitialValue();
+    @Override
+    public int getPositionInColumn(final int colIndex, final int originalPosition) {
+        return m_original2Column[colIndex][originalPosition];
+    }
 
+    @Override
+    public int getOriginalPosition(final int colIndex, final int positionInColumn) {
+        return m_column2Original[colIndex][positionInColumn];
+    }
 }
