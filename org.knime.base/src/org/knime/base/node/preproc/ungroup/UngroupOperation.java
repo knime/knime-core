@@ -165,7 +165,7 @@ public class UngroupOperation {
 
     /**
      * Performs the ungroup operation on the given row input and pushes the result to the row output.
-     * 
+     *
      * @param in the row input, will NOT be closed when finished
      * @param out the row input, will NOT be closed when finished
      * @param exec the execution context to check cancellation and (optional) progress logging
@@ -214,7 +214,7 @@ public class UngroupOperation {
                         keys.add(row.getKey());
                         hiliteMapping.put(row.getKey(), keys);
                     }
-                    out.push(row);
+                    out.push(newRow);
                 }
                 continue;
             }
