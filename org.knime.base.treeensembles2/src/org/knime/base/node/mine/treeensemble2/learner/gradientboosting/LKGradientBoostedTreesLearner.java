@@ -74,6 +74,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
@@ -248,8 +249,9 @@ public final class LKGradientBoostedTreesLearner extends AbstractGradientBoostin
                     residualData[r] = classProbTarget.getValueFor(r) - m_probs[r];
                 }
                 final TreeData pseudoResiduals = createResidualDataFromArray(residualData, m_actual);
+                final RowSample rowSample = getRowSampler().createRowSample(m_rd);
                 final TreeLearnerRegression treeLearner =
-                    new TreeLearnerRegression(getConfig(), pseudoResiduals, getIndexManager(), m_signatureFactory, m_rd);
+                    new TreeLearnerRegression(getConfig(), pseudoResiduals, getIndexManager(), m_signatureFactory, m_rd, rowSample);
                 final TreeModelRegression tree = treeLearner.learnSingleTree(m_subExec, m_rd);
                 final Map<TreeNodeSignature, Double> coefficientMap =
                     calculateCoefficientMap(tree, pseudoResiduals, m_numClasses);

@@ -60,6 +60,7 @@ import java.util.Random;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -70,6 +71,8 @@ import javax.swing.SpinnerNumberModel;
 
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.ColumnSamplingMode;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSamplerFactory;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSamplerFactory.RowSamplingMode;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.ViewUtils;
 
@@ -82,6 +85,8 @@ public class EnsembleOptionsPanel extends JPanel {
     private final JCheckBox m_dataFractionPerTreeChecker;
 
     private final JSpinner m_dataFractionPerTreeSpinner;
+
+    private final JComboBox<RowSamplingMode> m_dataSamplingModeComboBox;
 
     private final JRadioButton m_dataSamplingWithReplacementChecker;
 
@@ -113,7 +118,7 @@ public class EnsembleOptionsPanel extends JPanel {
 
     /**
      *  */
-    public EnsembleOptionsPanel() {
+    public EnsembleOptionsPanel(final boolean isRegression) {
         super(new GridBagLayout());
         m_dataSamplingWithOutReplacementChecker = new JRadioButton("Without replacement");
         m_dataSamplingWithReplacementChecker = new JRadioButton("With replacement");
@@ -124,6 +129,7 @@ public class EnsembleOptionsPanel extends JPanel {
 
         m_dataFractionPerTreeSpinner =
             new JSpinner(new SpinnerNumberModel(TreeEnsembleLearnerConfiguration.DEF_DATA_FRACTION, 0.001, 1.0, 0.1));
+        m_dataSamplingModeComboBox = new JComboBox<RowSamplerFactory.RowSamplingMode>(RowSamplingMode.values(isRegression));
         m_dataFractionPerTreeChecker = new JCheckBox("Fraction of data to learn single model");
         m_dataFractionPerTreeChecker.addItemListener(new ItemListener() {
             @Override
@@ -131,10 +137,12 @@ public class EnsembleOptionsPanel extends JPanel {
                 final boolean enbl = m_dataFractionPerTreeChecker.isSelected();
                 if (!enbl) {
                     m_dataSamplingWithOutReplacementChecker.doClick();
+                    m_dataSamplingModeComboBox.setSelectedItem(RowSamplingMode.Random);
                 }
                 m_dataFractionPerTreeSpinner.setEnabled(enbl);
                 m_dataSamplingWithOutReplacementChecker.setEnabled(enbl);
                 m_dataSamplingWithReplacementChecker.setEnabled(enbl);
+                m_dataSamplingModeComboBox.setEnabled(enbl);
             }
         });
         m_dataFractionPerTreeChecker.doClick();
@@ -247,6 +255,12 @@ public class EnsembleOptionsPanel extends JPanel {
         gbc.weightx = 1.0;
         add(m_dataFractionPerTreeSpinner, gbc);
 
+        gbc.gridx = 1;
+        gbc.gridy += 1;
+        add(new JLabel("Data Sampling Mode"), gbc);
+        gbc.gridx += 1;
+        add(m_dataSamplingModeComboBox, gbc);
+
         gbc.weightx = 0.0;
         gbc.gridy += 1;
         gbc.gridx = 1;
@@ -343,6 +357,8 @@ public class EnsembleOptionsPanel extends JPanel {
             m_dataSamplingWithOutReplacementChecker.doClick();
         }
 
+        m_dataSamplingModeComboBox.setSelectedItem(cfg.getRowSamplingMode());
+
         double colFrac = cfg.getColumnFractionLinearValue();
         int colAbsolute = cfg.getColumnAbsoluteValue();
         boolean useDifferentAttributesAtEachNode = cfg.isUseDifferentAttributesAtEachNode();
@@ -398,6 +414,7 @@ public class EnsembleOptionsPanel extends JPanel {
         }
         cfg.setDataFractionPerTree(dataFrac);
         cfg.setDataSelectionWithReplacement(isSamplingWithReplacement);
+        cfg.setRowSamplingMode((RowSamplingMode)m_dataSamplingModeComboBox.getSelectedItem());
 
         ColumnSamplingMode cf;
         double columnFrac = 1.0;

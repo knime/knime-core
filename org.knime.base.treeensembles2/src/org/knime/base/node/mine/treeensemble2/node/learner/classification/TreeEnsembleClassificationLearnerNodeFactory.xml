@@ -13,8 +13,8 @@
         Learns an ensemble of decision trees (such as random forest variants). Each of the decision tree models is
         learned on a different set of rows (records) and/or a different set of columns (describing attributes), whereby 
         the latter can also be a bit/byte/double-vector descriptor (e.g. molecular fingerprint). The output model describes an
-        ensemble of decision tree models and is applied in the corresponding predictor node using a simple majority 
-        vote. 
+        ensemble of decision tree models and is applied in the corresponding predictor node using the selected aggregation mode
+        to aggregate the votes of the individual decision trees. 
       </p>
       <p>
         The following configuration settings learn a model that is similar to the
@@ -127,6 +127,13 @@
         "with replacement" is called bootstrapping. For sufficiently large data sets this bootstrap sample contains 
         about 2/3 different data rows from the input, some of which replicated multiple times. Rows which are not used
         in the training of a tree are called out-of-bag (see below). 
+      </option>
+      <option name="Data Sampling Mode">
+      	The sampling mode decides how the rows are sampled. In the random mode the rows are sampled from the whole data set i.e. each row has exactly the same probability to be in the sample.
+      	In case of equal size sampling, first a sample from the minority class is drawn and then the same number of rows as in the minority sample
+      	are drawn from all other classes i.e. each class is represented with the same number of rows in the sample.
+      	If stratified sampling is selected, the same fraction of rows are drawn from each class i.e. the class
+      	distribution in the sample is approximately the same as in the full set of rows.
       </option>
       <option name="Attribute Sampling (Columns)">
         Defines the sampling of attributes to learn an individual tree. This can either be a function based on the 

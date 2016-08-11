@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,58 +41,57 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Jan 2, 2012 (wiswedel): created
+ *   29.07.2016 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.sample.row;
 
 /**
+ * Abstract implementation of a {@link RowSampler}.
+ * It provides methods for subclasses to access parameters that are shared by the different implementations.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME.com
+ * @param <T> the {@link RowSample} type that is used.
  */
-public class SubsetWithReplacementRowSample implements RowSample {
+public abstract class AbstractRowSampler <T extends RowSample> implements RowSampler {
 
-    private final int[] m_perRowCounts;
+    private final double m_fraction;
+    private final SubsetSelector<T> m_subsetSelector;
+    private final int m_nrRows;
 
     /**
-     * @param perRowCounts the array containing the counts for all rows.
+     * @param fraction the fraction that should be used for sampling
+     * @param subsetSelector the {@link SubsetSelector} that is used to draw samples (with or without replacement)
+     * @param nrRows the number of rows in the full set of rows (i.e. the size of the input table)
      */
-    public SubsetWithReplacementRowSample(final int[] perRowCounts) {
-        m_perRowCounts = perRowCounts;
+    public AbstractRowSampler(final double fraction, final SubsetSelector<T> subsetSelector, final int nrRows) {
+        m_fraction = fraction;
+        m_subsetSelector = subsetSelector;
+        m_nrRows = nrRows;
     }
 
-
-    /** {@inheritDoc} */
-    @Override
-    public int getNrRows() {
-        return m_perRowCounts.length;
+    /**
+     * NOTE: The interpretation of the fraction depends on the individual sampling strategy
+     * @return the fraction of data that should be included.
+     */
+    protected double getFraction() {
+        return m_fraction;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public int getCountFor(final int rowIndex) {
-        return m_perRowCounts[rowIndex];
+    /**
+     * @return the subset selector that is used to select subsets from within a super set.
+     */
+    protected SubsetSelector<T> getSubsetSelector() {
+        return m_subsetSelector;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        int max = 0;
-        int sum = 0;
-        int nonIncluded = 0;
-        for (int i : m_perRowCounts) {
-            max = Math.max(max, i);
-            sum += i;
-            nonIncluded += (i == 0) ? 1 : 0;
-        }
-        StringBuilder b = new StringBuilder("Subset w/ repl");
-        b.append("; nrRows: ").append(m_perRowCounts.length);
-        b.append(", max occurrence: ").append(max);
-        b.append(", sum occurrence: ").append(sum);
-        b.append(", #not included: ").append(nonIncluded);
-        return b.toString();
+    /**
+     * @return the number of rows of the full set from which we want to draw samples.
+     */
+    protected int getNrRows() {
+        return m_nrRows;
     }
 
 }

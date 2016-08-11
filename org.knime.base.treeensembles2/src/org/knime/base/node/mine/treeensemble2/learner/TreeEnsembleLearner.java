@@ -68,6 +68,7 @@ import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerCo
 import org.knime.base.node.mine.treeensemble2.sample.column.ColumnSample;
 import org.knime.base.node.mine.treeensemble2.sample.column.ColumnSampleStrategy;
 import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSampler;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -106,6 +107,8 @@ public class TreeEnsembleLearner {
 
     private final TreeNodeSignatureFactory m_signatureFactory;
 
+    private final RowSampler m_rowSampler;
+
     /**
      * @param config
      * @param data
@@ -118,6 +121,7 @@ public class TreeEnsembleLearner {
         } else {
             m_indexManager = new DefaultDataIndexManager(m_data);
         }
+        m_rowSampler = config.createRowSampler(data);
         int maxLevel = config.getMaxLevels();
         if (maxLevel < TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {
             // provided we have a binary tree (which is the default)
@@ -288,13 +292,13 @@ public class TreeEnsembleLearner {
         public TreeLearnerResult call() throws Exception {
             try {
                 AbstractTreeLearner learner;
+                final RowSample rowSample = m_rowSampler.createRowSample(m_rd);
                 if (m_data.getMetaData().isRegression()) {
-                    learner = new TreeLearnerRegression(m_config, m_data, m_indexManager, m_signatureFactory, m_rd);
+                    learner = new TreeLearnerRegression(m_config, m_data, m_indexManager, m_signatureFactory, m_rd, rowSample);
                 } else {
-                    learner = new TreeLearnerClassification(m_config, m_data, m_indexManager, m_signatureFactory, m_rd);
+                    learner = new TreeLearnerClassification(m_config, m_data, m_indexManager, m_signatureFactory, m_rd, rowSample);
                 }
                 AbstractTreeModel model = learner.learnSingleTree(m_exec, m_rd);
-                final RowSample rowSample = learner.getRowSampling();
                 final ColumnSampleStrategy colSamplingStrategy = learner.getColSamplingStrategy();
                 TreeLearnerResult result = new TreeLearnerResult(model, rowSample, colSamplingStrategy);
                 m_exec.setProgress(1.0);

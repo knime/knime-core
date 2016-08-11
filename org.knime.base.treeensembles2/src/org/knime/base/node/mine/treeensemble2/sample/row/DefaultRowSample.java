@@ -49,13 +49,16 @@ package org.knime.base.node.mine.treeensemble2.sample.row;
 
 /**
  * Default sampling, each row is included once.
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class DefaultRowSample implements RowSample {
 
     private final int m_nrRows;
 
+    /**
+     * @param nrRows the number of rows in the full set of rows.
+     */
     public DefaultRowSample(final int nrRows) {
         m_nrRows = nrRows;
     }

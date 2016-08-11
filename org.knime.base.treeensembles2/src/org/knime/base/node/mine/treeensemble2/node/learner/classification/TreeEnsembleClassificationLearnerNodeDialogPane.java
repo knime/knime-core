@@ -61,7 +61,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class TreeEnsembleClassificationLearnerNodeDialogPane extends NodeDialogPane {
@@ -81,7 +81,7 @@ final class TreeEnsembleClassificationLearnerNodeDialogPane extends NodeDialogPa
         m_treeOptionsPanel = new TreeOptionsPanel(m_attributeSelectionPanel);
         addTab("Tree Options", new JScrollPane(m_treeOptionsPanel));
 
-        m_ensembleOptionsPanel = new EnsembleOptionsPanel();
+        m_ensembleOptionsPanel = new EnsembleOptionsPanel(false);
         addTab("Ensemble Configuration", new JScrollPane(m_ensembleOptionsPanel));
 
     }

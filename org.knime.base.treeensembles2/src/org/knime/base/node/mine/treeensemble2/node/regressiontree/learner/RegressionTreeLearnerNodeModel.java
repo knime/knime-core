@@ -67,6 +67,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer;
@@ -176,8 +177,8 @@ final class RegressionTreeLearnerNodeModel extends NodeModel implements PortObje
         } else {
             signatureFactory = new TreeNodeSignatureFactory();
         }
-
-        TreeLearnerRegression treeLearner = new TreeLearnerRegression(m_configuration, data, indexManager, signatureFactory, rd);
+        final RowSample rowSample = m_configuration.createRowSampler(data).createRowSample(rd);
+        TreeLearnerRegression treeLearner = new TreeLearnerRegression(m_configuration, data, indexManager, signatureFactory, rd, rowSample);
         TreeModelRegression regTree = treeLearner.learnSingleTree(learnExec, rd);
 
         RegressionTreeModel model = new RegressionTreeModel(m_configuration, data.getMetaData(), regTree, data.getTreeType());

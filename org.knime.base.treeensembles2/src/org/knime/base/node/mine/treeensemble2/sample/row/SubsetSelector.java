@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,58 +41,41 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Jan 2, 2012 (wiswedel): created
+ *   29.07.2016 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.sample.row;
 
+import java.util.Collection;
+
+import org.apache.commons.math.random.RandomData;
+
 /**
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Adrian Nembach, KNIME.com
+ * @param <T> the type of {@link RowSample} that is produced by this subset selector
  */
-public class SubsetWithReplacementRowSample implements RowSample {
-
-    private final int[] m_perRowCounts;
+public interface SubsetSelector <T extends RowSample> {
 
     /**
-     * @param perRowCounts the array containing the counts for all rows.
+     * Selects a subset of the numbers from 0 to <b>nrTotal</b>
+     *
+     * @param rd the random data object of the respective learner.
+     * @param nrTotal the size of the set to select from
+     * @param nrSelect the size of the subset
+     * @return a {@link RowSample} representing a subset of size <b>nrSelect</b>
      */
-    public SubsetWithReplacementRowSample(final int[] perRowCounts) {
-        m_perRowCounts = perRowCounts;
-    }
+    public T select(final RandomData rd, final int nrTotal, final int nrSelect);
 
-
-    /** {@inheritDoc} */
-    @Override
-    public int getNrRows() {
-        return m_perRowCounts.length;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public int getCountFor(final int rowIndex) {
-        return m_perRowCounts[rowIndex];
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        int max = 0;
-        int sum = 0;
-        int nonIncluded = 0;
-        for (int i : m_perRowCounts) {
-            max = Math.max(max, i);
-            sum += i;
-            nonIncluded += (i == 0) ? 1 : 0;
-        }
-        StringBuilder b = new StringBuilder("Subset w/ repl");
-        b.append("; nrRows: ").append(m_perRowCounts.length);
-        b.append(", max occurrence: ").append(max);
-        b.append(", sum occurrence: ").append(sum);
-        b.append(", #not included: ").append(nonIncluded);
-        return b.toString();
-    }
-
+    /**
+     * Combines the different subsets in <b>subsets</b> into one subset
+     * @param subsets the subsets to combine
+     * @param offsets the offsets at which the individual subsets begin
+     * @param totalNrRows the total number of rows in the complete super set
+     * i.e. the total number of rows in the input table.
+     * @return the combined subset
+     */
+    public T combine(final Collection<T> subsets, final int[] offsets, final int totalNrRows);
 }

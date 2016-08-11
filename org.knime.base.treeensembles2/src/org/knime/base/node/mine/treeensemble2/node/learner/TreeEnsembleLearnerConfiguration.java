@@ -67,10 +67,9 @@ import org.knime.base.node.mine.treeensemble2.sample.column.AllColumnSampleStrat
 import org.knime.base.node.mine.treeensemble2.sample.column.ColumnSampleStrategy;
 import org.knime.base.node.mine.treeensemble2.sample.column.RFSubsetColumnSampleStrategy;
 import org.knime.base.node.mine.treeensemble2.sample.column.SubsetColumnSampleStrategy;
-import org.knime.base.node.mine.treeensemble2.sample.row.DefaultRowSample;
-import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
-import org.knime.base.node.mine.treeensemble2.sample.row.SubsetNoReplacementRowSample;
-import org.knime.base.node.mine.treeensemble2.sample.row.SubsetWithReplacementRowSample;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSampler;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSamplerFactory;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSamplerFactory.RowSamplingMode;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -106,7 +105,7 @@ public class TreeEnsembleLearnerConfiguration {
 
     protected static final String KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE = "isUseDifferentAttributesAtEachNode";
 
-//    private static final String KEY_INCLUDE_ALL_COLUMNS = "includeAllColumns";
+    //    private static final String KEY_INCLUDE_ALL_COLUMNS = "includeAllColumns";
 
     private static final String KEY_INCLUDE_COLUMNS = "includeColumns";
 
@@ -146,6 +145,7 @@ public class TreeEnsembleLearnerConfiguration {
 
     public static final String KEY_COLUMN_FILTER_CONFIG = "columnFilterConfig";
 
+    private static final String KEY_ROW_SAMPLING_MODE = "rowSamplingMode";
 
     public enum MissingValueHandling {
             /**
@@ -182,8 +182,8 @@ public class TreeEnsembleLearnerConfiguration {
         InformationGain("Information Gain"),
 
         /**
-             * Information Gain Ratio See https://en.wikipedia.org/wiki/Information_gain_ratio for further information
-             * on the subject.
+         * Information Gain Ratio See https://en.wikipedia.org/wiki/Information_gain_ratio for further information on
+         * the subject.
          */
         InformationGainRatio("Information Gain Ratio"),
 
@@ -242,6 +242,8 @@ public class TreeEnsembleLearnerConfiguration {
     public static final int MIN_CHILD_SIZE_UNDEFINED = -1;
 
     static final int DEF_MAX_LEVEL = MAX_LEVEL_INFINITE;
+
+    static final RowSamplingMode DEF_ROW_SAMPLING_MODE = RowSamplingMode.Random;
 
     /**
      * Default for data fraction
@@ -332,6 +334,8 @@ public class TreeEnsembleLearnerConfiguration {
 
     private final boolean m_isRegression;
 
+    private RowSamplingMode m_rowSamplingMode = DEF_ROW_SAMPLING_MODE;
+
     /**
      * @param isRegression
      */
@@ -362,6 +366,7 @@ public class TreeEnsembleLearnerConfiguration {
         }
         m_targetColumn = targetColumn;
     }
+
 
     /**
      * @return the random seed to be used for deterministic behavior or null to have another random initialization with
@@ -699,8 +704,6 @@ public class TreeEnsembleLearnerConfiguration {
         m_fingerprintColumn = fingerprintColumn;
     }
 
-
-
     public DataColumnSpecFilterConfiguration getColumnFilterConfig() {
         return m_columnFilterConfig;
     }
@@ -775,6 +778,20 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /**
+     * @return the {@link RowSamplingMode} used to train the current model.
+     */
+    public RowSamplingMode getRowSamplingMode() {
+        return m_rowSamplingMode;
+    }
+
+    /**
+     * @param mode the {@link RowSamplingMode} that should be used to train the current model.
+     */
+    public void setRowSamplingMode(final RowSamplingMode mode) {
+        m_rowSamplingMode = mode;
+    }
+
+    /**
      * Saves the settings.
      *
      * @param settings
@@ -805,6 +822,7 @@ public class TreeEnsembleLearnerConfiguration {
         settings.addBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, m_ignoreColumnsWithoutDomain);
         settings.addInt(KEY_NR_HILITE_PATTERNS, m_nrHilitePatterns);
         settings.addBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, m_saveTargetDistributionInNodes);
+        settings.addString(KEY_ROW_SAMPLING_MODE, m_rowSamplingMode.name());
     }
 
     /**
@@ -875,21 +893,24 @@ public class TreeEnsembleLearnerConfiguration {
         setFingerprintColumn(settings.getString(KEY_FINGERPRINT_COLUMN));
         m_columnFilterConfig.loadConfigurationInModel(settings);
         //        setIncludeAllColumns(settings.getBoolean(KEY_INCLUDE_ALL_COLUMNS));
-//        if (m_fingerprintColumn != null) {
-//            // use fingerprint data, OK
-//        } else if (m_includeColumns != null && m_includeColumns.length > 0 || m_columnFilterConfig.) {
-//            // some attributes set, OK
-//            //        } else if (m_includeAllColumns) {
-//            //            // use all appropriate columns, OK
-//        } else {
-//            throw new InvalidSettingsException("No attribute columns selected");
-//        }
+        //        if (m_fingerprintColumn != null) {
+        //            // use fingerprint data, OK
+        //        } else if (m_includeColumns != null && m_includeColumns.length > 0 || m_columnFilterConfig.) {
+        //            // some attributes set, OK
+        //            //        } else if (m_includeAllColumns) {
+        //            //            // use all appropriate columns, OK
+        //        } else {
+        //            throw new InvalidSettingsException("No attribute columns selected");
+        //        }
         // added after first preview, be backward compatible (true as default)
         setIgnoreColumnsWithoutDomain(settings.getBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true));
         // added after first preview, be backward compatible (none as default)
         setNrHilitePatterns(settings.getInt(KEY_NR_HILITE_PATTERNS, -1));
         // added in 2.10
         setSaveTargetDistributionInNodes(settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, true));
+
+        setRowSamplingMode(
+            RowSamplingMode.valueOf(settings.getString(KEY_ROW_SAMPLING_MODE, DEF_ROW_SAMPLING_MODE.name())));
     }
 
     /**
@@ -962,7 +983,7 @@ public class TreeEnsembleLearnerConfiguration {
             }
         }
 
-//        m_includeColumns = settings.getStringArray(KEY_INCLUDE_COLUMNS, (String[])null);
+        //        m_includeColumns = settings.getStringArray(KEY_INCLUDE_COLUMNS, (String[])null);
         //        m_includeAllColumns = settings.getBoolean(KEY_INCLUDE_ALL_COLUMNS, true);
         m_columnFilterConfig.loadConfigurationInDialog(settings, inSpec);
 
@@ -1085,12 +1106,14 @@ public class TreeEnsembleLearnerConfiguration {
         m_nrHilitePatterns = settings.getInt(KEY_NR_HILITE_PATTERNS, -1);
         m_saveTargetDistributionInNodes =
             settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES);
+
+        setRowSamplingMode(
+            RowSamplingMode.valueOf(settings.getString(KEY_ROW_SAMPLING_MODE, DEF_ROW_SAMPLING_MODE.name())));
     }
 
     /**
-     * To be used in the configure of the learner nodes.
-     * Checks if the column selection makes sense and throws an InvalidSettingsException
-     * otherwise. The sanity checks include: <br>
+     * To be used in the configure of the learner nodes. Checks if the column selection makes sense and throws an
+     * InvalidSettingsException otherwise. The sanity checks include: <br>
      * Existence and type check of fingerprint columns if specified. <br>
      * Check if any attributes are selected if no fingerprint column is used for learning.
      *
@@ -1105,10 +1128,10 @@ public class TreeEnsembleLearnerConfiguration {
                 throw new InvalidSettingsException("The fingerprint column is not contained in the incoming table.");
             }
             DataType colType = colSpec.getType();
-            if (!(colType.isCompatible(BitVectorValue.class)
-                    || colType.isCompatible(ByteVectorValue.class)
-                    || colType.isCompatible(DoubleVectorValue.class))) {
-                throw new InvalidSettingsException("The specified fingerprint column is not of a compatible vector type.");
+            if (!(colType.isCompatible(BitVectorValue.class) || colType.isCompatible(ByteVectorValue.class)
+                || colType.isCompatible(DoubleVectorValue.class))) {
+                throw new InvalidSettingsException(
+                    "The specified fingerprint column is not of a compatible vector type.");
             }
         } else if (filterResult.getIncludes().length > 0) {
             // ok, there are some features selected
@@ -1162,7 +1185,7 @@ public class TreeEnsembleLearnerConfiguration {
                         // accept
                     }
                 } else {
-                        ignoreColumn = true;
+                    ignoreColumn = true;
                 }
                 //                }
                 if (ignoreColumn) {
@@ -1270,19 +1293,14 @@ public class TreeEnsembleLearnerConfiguration {
         return new RandomDataImpl(randomGenerator);
     }
 
+
     /**
-     * @param nrRows
-     * @param rd
-     * @return random row sample with <b>nrRows</b> rows based on RandomData <b>rd</b>
+     * @param data TreeData object that was created from the input table
+     * @return the {@link RowSampler} that fits the configuration
      */
-    public RowSample createRowSample(final int nrRows, final RandomData rd) {
-        if (m_isDataSelectionWithReplacement) {
-            return new SubsetWithReplacementRowSample(nrRows, m_dataFractionPerTree, rd);
-        } else if (m_dataFractionPerTree >= 1.0) {
-            return new DefaultRowSample(nrRows);
-        } else {
-            return new SubsetNoReplacementRowSample(nrRows, m_dataFractionPerTree, rd);
-        }
+    public RowSampler createRowSampler(final TreeData data) {
+        return RowSamplerFactory.createRowSampler(data.getTargetColumn(), m_rowSamplingMode, m_dataFractionPerTree,
+            m_isDataSelectionWithReplacement);
     }
 
     /**

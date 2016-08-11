@@ -92,8 +92,9 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
      * @param randomData needed for randomization (for example random tie breaking, column sampling, ...)
      */
     public TreeLearnerRegression(final TreeEnsembleLearnerConfiguration config, final TreeData data,
-        final IDataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory, final RandomData randomData) {
-        super(config, data, indexManager, signatureFactory, randomData);
+      	final IDataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory,
+        final RandomData randomData, final RowSample rowSample) {
+        super(config, data, indexManager, signatureFactory, randomData, rowSample);
         if (!(data.getTargetColumn() instanceof TreeTargetNumericColumnData)) {
             throw new IllegalStateException("Can't learn regression model on categorical target");
         }

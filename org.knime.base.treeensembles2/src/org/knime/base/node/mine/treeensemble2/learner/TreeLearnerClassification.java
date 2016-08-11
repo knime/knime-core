@@ -84,8 +84,8 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
      */
     TreeLearnerClassification(final TreeEnsembleLearnerConfiguration config, final TreeData data,
         final IDataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory,
-        final RandomData randomData) {
-        super(config, data, indexManager, signatureFactory, randomData);
+        final RandomData randomData, final RowSample rowSample) {
+        super(config, data, indexManager, signatureFactory, randomData, rowSample);
         if (config.isRegression()) {
             throw new IllegalStateException("Can't learn classification model on numeric target");
         }

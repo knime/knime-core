@@ -84,11 +84,11 @@ public abstract class AbstractTreeLearner {
      */
     public AbstractTreeLearner(final TreeEnsembleLearnerConfiguration config, final TreeData data,
         final IDataIndexManager indexManager, final TreeNodeSignatureFactory signatureFactory,
-        final RandomData randomData) {
+        final RandomData randomData, final RowSample rowSample) {
         m_config = config;
         m_data = data;
         m_randomData = randomData;
-        m_rowSampling = m_config.createRowSample(m_data.getNrRows(), randomData);
+        m_rowSampling = rowSample;
         m_colSamplingStrategy = m_config.createColumnSampleStrategy(m_data, randomData);
         m_indexManager = indexManager;
         m_signatureFactory = signatureFactory;

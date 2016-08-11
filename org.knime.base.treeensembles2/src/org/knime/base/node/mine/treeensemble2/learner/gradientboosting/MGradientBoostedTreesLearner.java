@@ -67,6 +67,7 @@ import org.knime.base.node.mine.treeensemble2.model.TreeNodeRegression;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeSignature;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
@@ -130,8 +131,9 @@ public final class MGradientBoostedTreesLearner extends AbstractGradientBoostedT
             residualData = createResidualDataFromArray(gradients, actualData);
             final RandomData rdSingle =
                 TreeEnsembleLearnerConfiguration.createRandomData(rd.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
+            final RowSample rowSample = getRowSampler().createRowSample(rdSingle);
             final TreeLearnerRegression treeLearner =
-                new TreeLearnerRegression(getConfig(), residualData, getIndexManager(), signatureFactory, rdSingle);
+                new TreeLearnerRegression(getConfig(), residualData, getIndexManager(), signatureFactory, rdSingle, rowSample);
             final TreeModelRegression tree = treeLearner.learnSingleTree(exec, rdSingle);
             final Map<TreeNodeSignature, Double> coefficientMap = calcCoefficientMap(residuals, quantile, tree);
             adaptPreviousPrediction(previousPrediction, tree, coefficientMap);

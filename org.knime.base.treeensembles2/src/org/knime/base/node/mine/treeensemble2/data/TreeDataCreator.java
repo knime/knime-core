@@ -47,6 +47,8 @@
  */
 package org.knime.base.node.mine.treeensemble2.data;
 
+import java.util.Comparator;
+
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.core.data.DataCell;
@@ -59,6 +61,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.sort.DataTableSorter;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.data.vector.doublevector.DoubleVectorValue;
@@ -175,10 +178,26 @@ public class TreeDataCreator {
         }
         int rejectedMissings = 0;
         final int nrHilitePatterns = m_configuration.getNrHilitePatterns();
-        for (DataRow r : learnData) {
+
+        // sort learnData according to the target column to enable equal size sampling
+        final int targetColIdx = learnData.getDataTableSpec().findColumnIndex(m_configuration.getTargetColumn());
+        Comparator<DataCell> targetComp = learnData.getDataTableSpec().getColumnSpec(targetColIdx).getType().getComparator();
+        DataTableSorter sorter = new DataTableSorter(learnData, learnData.size(), new Comparator<DataRow>() {
+
+            @Override
+            public int compare(final DataRow arg0, final DataRow arg1) {
+                return targetComp.compare(arg0.getCell(targetColIdx), arg1.getCell(targetColIdx));
+            }
+
+        });
+        final ExecutionMonitor sortExec = exec.createSubProgress(0.5);
+        final DataTable sortedTable = sorter.sort(sortExec);
+        final ExecutionMonitor readExec = exec.createSubProgress(0.5);
+
+        for (DataRow r : sortedTable) {
             double progress = index / (double)nrRows;
-            exec.setProgress(progress, "Row " + index + " of " + nrRows + " (\"" + r.getKey() + "\")");
-            exec.checkCanceled();
+            readExec.setProgress(progress, "Row " + index + " of " + nrRows + " (\"" + r.getKey() + "\")");
+            readExec.checkCanceled();
             boolean shouldReject = false;
             for (int i = 0; i < nrLearnCols; i++) {
                 DataCell c = r.getCell(i);

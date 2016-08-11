@@ -49,10 +49,8 @@ package org.knime.base.node.mine.treeensemble2.sample.row;
 
 import java.util.BitSet;
 
-import org.apache.commons.math.random.RandomData;
-
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class SubsetNoReplacementRowSample implements RowSample {
@@ -64,16 +62,16 @@ public final class SubsetNoReplacementRowSample implements RowSample {
     private final double m_fraction;
 
     /**
-     *  */
-    public SubsetNoReplacementRowSample(final int nrRows, final double fraction, final RandomData rd) {
-        int[] includes = rd.nextPermutation(nrRows, Math.min(nrRows, (int)Math.round(fraction * nrRows)));
-        m_includeBitSet = new BitSet(nrRows);
-        for (int i : includes) {
-            m_includeBitSet.set(i);
-        }
+     * @param include a BitSet in which all the bits corresponding to the included rows are set.
+     * @param nrRows the number of rows in the full set of rows.
+     * @param fraction the fraction of rows in the subset
+     */
+    public SubsetNoReplacementRowSample(final BitSet include, final int nrRows, final double fraction) {
+        m_includeBitSet = include;
         m_nrRows = nrRows;
         m_fraction = fraction;
     }
+
 
     /** {@inheritDoc} */
     @Override
@@ -92,6 +90,10 @@ public final class SubsetNoReplacementRowSample implements RowSample {
     public String toString() {
         return "Subset w/o repl; fraction: " + m_fraction + ", nrRows: " + m_nrRows + ", nrBitsSet: "
             + m_includeBitSet.cardinality();
+    }
+
+    BitSet getIncludedBitSet() {
+        return m_includeBitSet;
     }
 
 }

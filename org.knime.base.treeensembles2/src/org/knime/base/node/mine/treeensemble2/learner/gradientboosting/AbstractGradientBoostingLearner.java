@@ -69,6 +69,8 @@ import org.knime.base.node.mine.treeensemble2.model.AbstractGradientBoostingMode
 import org.knime.base.node.mine.treeensemble2.model.TreeEnsembleModel.TreeType;
 import org.knime.base.node.mine.treeensemble2.model.TreeModelRegression;
 import org.knime.base.node.mine.treeensemble2.node.gradientboosting.learner.GradientBoostingLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSample;
+import org.knime.base.node.mine.treeensemble2.sample.row.RowSampler;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -87,6 +89,8 @@ public abstract class AbstractGradientBoostingLearner {
 
     private final GradientBoostingLearnerConfiguration m_config;
 
+    private final RowSampler m_rowSampler;
+
     /**
      * @param config the configuration for the learner
      * @param data the initial data as it is provided by the user
@@ -99,6 +103,7 @@ public abstract class AbstractGradientBoostingLearner {
             m_indexManager = new DefaultDataIndexManager(data);
         }
         m_config = config;
+        m_rowSampler = config.createRowSampler(data);
     }
 
     /**
@@ -127,6 +132,13 @@ public abstract class AbstractGradientBoostingLearner {
      */
     public GradientBoostingLearnerConfiguration getConfig() {
         return m_config;
+    }
+
+    /**
+     * @return the {@link RowSampler} to provide {@link RowSample} objects to learn trees
+     */
+    protected RowSampler getRowSampler() {
+        return m_rowSampler;
     }
 
     /**

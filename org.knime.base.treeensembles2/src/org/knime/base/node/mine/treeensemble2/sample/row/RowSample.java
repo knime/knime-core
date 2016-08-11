@@ -48,13 +48,22 @@
 package org.knime.base.node.mine.treeensemble2.sample.row;
 
 /**
- * 
+ * Represents a sample of rows drawn from the full set of rows which usually corresponds to the input table. <br>
+ * A RowSample is typically used to train a single decision tree.
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface RowSample {
 
+    /**
+     * @return the number of rows in the set the sample is drawn from.
+     */
     public int getNrRows();
 
+    /**
+     * @param rowIndex the index of the row for which the count should be retrieved.
+     * @return the count of the row at <b>rowIndex</b> in the sample.
+     */
     public int getCountFor(final int rowIndex);
 
 }
