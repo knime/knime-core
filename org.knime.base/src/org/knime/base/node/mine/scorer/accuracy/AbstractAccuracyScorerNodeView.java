@@ -216,7 +216,7 @@ public abstract class AbstractAccuracyScorerNodeView<M extends NodeModel> extend
         m_accuracy.setText(accuracy);
         m_accuracy.setToolTipText(accuracyTooltip);
         m_cohenKappa.setText(kappa);
-        m_cohenKappa.setText(kappaTooltip);
+        m_cohenKappa.setToolTipText(kappaTooltip);
 
     }
     /**
