@@ -45,14 +45,18 @@
  */
 package org.knime.core.data.renderer;
 
+import java.awt.Color;
 import java.awt.Component;
 
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
+import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.MissingValue;
 import org.knime.core.node.NodeLogger;
 
 
@@ -148,9 +152,18 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
      * {@inheritDoc}
      */
     @Override
-    public Component getListCellRendererComponent(
-            final JList list, final Object value, final int index,
-            final boolean isSelected, final boolean cellHasFocus) {
+    public Component getListCellRendererComponent(final JList list, final Object value, final int index,
+        final boolean isSelected, final boolean cellHasFocus) {
+        if (isMissingValue(value)) {
+            return getListMissingValueRendererComponent(list, value, index, isSelected, cellHasFocus);
+        } else {
+            resetMissingValueRenderer();
+            return getCustomListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        }
+    }
+
+    private Component getCustomListCellRendererComponent(final JList list, final Object value, final int index,
+        final boolean isSelected, final boolean cellHasFocus) {
         /* Copied almost all code from DefaultListCellRenderer */
         setComponentOrientation(list.getComponentOrientation());
         if (isSelected) {
@@ -164,9 +177,7 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
         setValueCatchingException(value);
         setEnabled(list.isEnabled());
         setFont(list.getFont());
-        setBorder((cellHasFocus)
-                ? UIManager.getBorder("List.focusCellHighlightBorder")
-                : noFocusBorder);
+        setBorder((cellHasFocus) ? UIManager.getBorder("List.focusCellHighlightBorder") : noFocusBorder);
         return this;
     }
 
@@ -174,9 +185,28 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
      * {@inheritDoc}
      */
     @Override
+    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
+        final boolean hasFocus, final int row, final int column) {
+        if (isMissingValue(value)) {
+            return getTableMissingValueRendererComponent(table, value, isSelected, hasFocus, row, column);
+        } else {
+            resetMissingValueRenderer();
+            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Component getRendererComponent(final Object val) {
-        setValueCatchingException(val);
-        return this;
+        if (isMissingValue(val)) {
+            return getMissingValueRendererComponent(val);
+        } else {
+            resetMissingValueRenderer();
+            setValueCatchingException(val);
+            return this;
+        }
     }
 
     private void setValueCatchingException(final Object value) {
@@ -214,6 +244,81 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
     @Override
     public boolean accepts(final DataColumnSpec spec) {
         return true;
+    }
+
+
+    /* ----- Methods for missing value rendering, might be overridden by implementing subclasses in order to change the behavior ------ */
+
+    /**
+     * @param value the value to check whether it's a missing value
+     * @return <code>true</code> if its regarded as a missing value
+     */
+    protected boolean isMissingValue(final Object value) {
+        return value instanceof MissingValue;
+    }
+
+    /**
+     * Returns the render component for a table if the respective value is a missing value.
+     *
+     * @param table
+     * @param value
+     * @param isSelected
+     * @param hasFocus
+     * @param row
+     * @param column
+     * @return returns <code>this</code> since {@link DefaultTableCellRenderer} is a {@link Component} by itself
+     */
+    protected Component getTableMissingValueRendererComponent(final JTable table, final Object value, final boolean isSelected,
+        final boolean hasFocus, final int row, final int column) {
+        super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        return getMissingValueRendererComponent(value);
+    }
+
+    /**
+     * Returns the render component for a list if the respective value is a missing value.
+     *
+     * @param list
+     * @param value
+     * @param index
+     * @param isSelected
+     * @param cellHasFocus
+     * @return returns <code>this</code> since {@link DefaultListCellRenderer} is a {@link Component} by itself
+     */
+    protected Component getListMissingValueRendererComponent(
+            final JList list, final Object value, final int index,
+            final boolean isSelected, final boolean cellHasFocus) {
+        getCustomListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        return getMissingValueRendererComponent(value);
+    }
+
+    /**
+     * Manly to avoid code duplication. Method used by
+     * {@link #getTableMissingValueRendererComponent(JTable, Object, boolean, boolean, int, int)} and
+     * {@link #getListMissingValueRendererComponent(JList, Object, int, boolean, boolean)}.
+     *
+     * @param value
+     * @return returns <code>this</code> since the {@link DefaultDataValueRenderer} is a {@link Component} by itself
+     */
+    protected Component getMissingValueRendererComponent(final Object value) {
+        setForeground(Color.RED);
+        MissingValue val = (MissingValue)value;
+        setToolTipText("Missing Value" + (val.getError() != null ? " (" + val.getError() + ")" : ""));
+        setValue("?");
+        return this;
+    }
+
+    /**
+     * Since all the methods {@link #getTableCellRendererComponent(JTable, Object, boolean, boolean, int, int)}
+     * {@link #getTableMissingValueRendererComponent(JTable, Object, boolean, boolean, int, int)} etc. return
+     * <code>this</code> as the component to be rendered, the state of this object is important.
+     *
+     * This method allows one to reset the state when <code>this</code> value renderer has been used as a missing value
+     * renderer before (e.g. resetting the foreground color or the tooltip text).
+     *
+     */
+    protected void resetMissingValueRenderer() {
+        setToolTipText(null);
+        setForeground(null);
     }
 
 }

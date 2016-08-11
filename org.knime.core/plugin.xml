@@ -472,6 +472,13 @@
                serializerClass="org.knime.core.data.xml.PMMLBlobCell$PMMLSerializer">
          </serializer>
       </DataType>
+      <DataType
+            cellClass="org.knime.core.data.MissingCell">
+         <serializer
+               cellClass="org.knime.core.data.MissingCell"
+               serializerClass="org.knime.core.data.MissingCell$MissingSerializer">
+         </serializer>
+      </DataType>
    </extension>
    <extension
          point="org.knime.core.PortType">
