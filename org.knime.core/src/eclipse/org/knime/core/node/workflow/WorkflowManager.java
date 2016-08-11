@@ -8617,6 +8617,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     }
 
+    /** The version as read from workflow.knime file during load (or <code>null</code> if not loaded but newly created). 
+     * @return the workflow {@link LoadVersion}
+     * @since 3.3 */
+    public LoadVersion getLoadVersion() {
+        return m_loadVersion;
+    }
+
     /** {@inheritDoc} */
     @Override
     public NodeType getType() {
