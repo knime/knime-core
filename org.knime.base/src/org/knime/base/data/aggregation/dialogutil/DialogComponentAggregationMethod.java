@@ -59,6 +59,7 @@ import java.awt.event.ItemListener;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -73,6 +74,7 @@ import javax.swing.event.DocumentListener;
 
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -92,6 +94,8 @@ public class DialogComponentAggregationMethod extends DialogComponent
     implements ItemListener, DocumentListener, ActionListener, ChangeListener {
 
     private final JComboBox<AggregationMethod> m_aggregationMethod;
+
+    private DefaultComboBoxModel<AggregationMethod> m_aggregationMethodModel;
 
     private final JLabel m_label;
 
@@ -136,7 +140,8 @@ public class DialogComponentAggregationMethod extends DialogComponent
                     + "shouldn't be null or empty");
         }
         m_label = new JLabel(label);
-        m_aggregationMethod = new JComboBox<>();
+        m_aggregationMethodModel = new DefaultComboBoxModel<>();
+        m_aggregationMethod = new JComboBox<>(m_aggregationMethodModel);
         m_aggregationMethod.setRenderer(new AggregationFunctionAndRowListCellRenderer());
 
         for (final AggregationMethod o : methods) {
@@ -144,7 +149,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
                 throw new NullPointerException("Options in the selection"
                         + " list can't be null");
             }
-            m_aggregationMethod.addItem(o);
+            m_aggregationMethodModel.addElement(o);
         }
         m_aggregationMethod.addItemListener(this);
         // we need to update the selection, when the model changes.
@@ -229,8 +234,13 @@ public class DialogComponentAggregationMethod extends DialogComponent
             for (int i = 0, length = m_aggregationMethod.getItemCount();
                 i < length; i++) {
                 final AggregationMethod curVal = m_aggregationMethod.getItemAt(i);
-                if (curVal.equals(modelVal)) {
-                    val = curVal;
+                if (curVal.getId().equals(modelVal.getId())) {
+                	//replace the instance in the combobox model with the actual instance from the settings model
+                	//to keep all settings
+                    m_aggregationMethodModel.removeElementAt(i);
+                    m_aggregationMethodModel.insertElementAt(modelVal, i);
+                    m_aggregationMethodModel.setSelectedItem(modelVal);
+                    val = modelVal;
                     break;
                 }
             }
@@ -287,7 +297,11 @@ public class DialogComponentAggregationMethod extends DialogComponent
         // we transfer the value from the field into the model
         final SettingsModelAggregationMethod model = getMethodModel();
         model.removeChangeListener(this);
-        model.setValues(getSelectedAggregationMethod(), getValueDelimiter(), getMaxUniqueValues(), getIncludeMissing());
+        final AggregationOperator method = (AggregationOperator)getSelectedAggregationMethod();
+        //copy the include missing information from the select box into the method instance prior passing the method
+        //to the model
+        method.getOperatorColumnSettings().setInclMissing(getIncludeMissing());
+        model.setValues(method, getValueDelimiter(), getMaxUniqueValues());
         model.prependChangeListener(this);
     }
 
@@ -417,15 +431,18 @@ public class DialogComponentAggregationMethod extends DialogComponent
         }
 
         m_aggregationMethod.removeItemListener(this);
-        m_aggregationMethod.removeAllItems();
+        m_aggregationMethodModel.removeAllElements();
         AggregationMethod selOption = null;
         for (final AggregationMethod option : newItems) {
             if (option == null) {
                 throw new NullPointerException("Options in the selection list can't be null");
             }
-            m_aggregationMethod.addItem(option);
-            if (option.equals(sel)) {
+            if (option.getId().equals(sel.getId())) {
+            	//in order to not loose the method specific settings we have to use the given method instance
                 selOption = option;
+                m_aggregationMethodModel.addElement(option);
+            } else {
+                m_aggregationMethodModel.addElement(option);
             }
         }
         m_aggregationMethod.addItemListener(this);

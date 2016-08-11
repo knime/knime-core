@@ -97,8 +97,6 @@ public class SettingsModelAggregationMethod extends SettingsModel {
 
     private int m_maxUniqueValues;
 
-    private boolean m_includeMissing;
-
     /**
      * Creates a new object holding an {@link AggregationMethod}.
      *
@@ -124,7 +122,7 @@ public class SettingsModelAggregationMethod extends SettingsModel {
     public SettingsModelAggregationMethod(final String configName, final int inputPortIndex,
         final AggregationMethod defaultMethod) {
         this(configName, inputPortIndex, DEFAULT_SETTINGS.getValueDelimiter(),
-             DEFAULT_SETTINGS.getMaxUniqueValues(), defaultMethod, defaultMethod.inclMissingCells());
+             DEFAULT_SETTINGS.getMaxUniqueValues(), defaultMethod);
     }
     /**
      * Creates a new object holding an {@link AggregationMethod}.
@@ -135,28 +133,9 @@ public class SettingsModelAggregationMethod extends SettingsModel {
      * @param separator the default separator to use
      * @param maxUniqueValues the number of maximum unique values
      * @param defaultMethod the default {@link AggregationMethod} to use
-     * @deprecated {@link #SettingsModelAggregationMethod(String, int, String, int, AggregationMethod, boolean)}
      */
-    @Deprecated
     public SettingsModelAggregationMethod(final String configName, final int inputPortIndex,
                   final String separator, final int maxUniqueValues, final AggregationMethod defaultMethod) {
-        this(configName, inputPortIndex, separator, maxUniqueValues, defaultMethod, defaultMethod.inclMissingCells());
-    }
-    /**
-     * Creates a new object holding an {@link AggregationMethod}.
-     *
-     * @param configName the identifier the value is stored with in the
-     *            {@link org.knime.core.node.NodeSettings} object
-     * @param inputPortIndex the index of the input port that contains the data table spec
-     * @param separator the default separator to use
-     * @param maxUniqueValues the number of maximum unique values
-     * @param defaultMethod the default {@link AggregationMethod} to use
-     * @param includeMissing <code>true</code> if missing values should be included
-     * @since 3.2
-     */
-    public SettingsModelAggregationMethod(final String configName, final int inputPortIndex,
-                  final String separator, final int maxUniqueValues, final AggregationMethod defaultMethod,
-                  final boolean includeMissing) {
         if (configName == null || configName.isEmpty()) {
             throw new IllegalArgumentException("The configName must not be empty");
         }
@@ -168,7 +147,6 @@ public class SettingsModelAggregationMethod extends SettingsModel {
         m_inputPortIndex = inputPortIndex;
         m_maxUniqueValues = maxUniqueValues;
         m_valueDelimiter = separator;
-        m_includeMissing = includeMissing;
     }
 
     /**
@@ -185,8 +163,15 @@ public class SettingsModelAggregationMethod extends SettingsModel {
     @SuppressWarnings("unchecked")
     @Override
     protected SettingsModelAggregationMethod createClone() {
+        AggregationOperator operator = (AggregationOperator)m_method;
+        final AggregationMethod clone;
+        if (!operator.hasOptionalSettings()) {
+            clone = operator;
+        } else {
+            clone = operator.createInstance(operator.getGlobalSettings(), operator.getOperatorColumnSettings());
+        }
         return new SettingsModelAggregationMethod(m_configName, m_inputPortIndex, m_valueDelimiter,
-            m_maxUniqueValues, m_method, m_includeMissing);
+            m_maxUniqueValues, clone);
     }
 
     /**
@@ -208,42 +193,15 @@ public class SettingsModelAggregationMethod extends SettingsModel {
      * @param method the possibly new {@link AggregationMethod}
      * @param valueDelimiter the possibly new value separator
      * @param maxUniqueValues the possible new maximum number of unique values
-     * @deprecated {@link #setValues(AggregationMethod, String, int, boolean)}
      */
-    @Deprecated
     protected void setValues(final AggregationMethod method, final String valueDelimiter, final int maxUniqueValues) {
-        setValues(method, valueDelimiter, maxUniqueValues, method.inclMissingCells());
-    }
-
-    /**
-     * @param method the possibly new {@link AggregationMethod}
-     * @param valueDelimiter the possibly new value separator
-     * @param maxUniqueValues the possible new maximum number of unique values
-     * @param inlcudeMissing <code>true</code> if missing cells should be included
-     * @since 3.2
-     */
-    protected void setValues(final AggregationMethod method, final String valueDelimiter, final int maxUniqueValues,
-        final boolean inlcudeMissing) {
         boolean changed = updateAggregationMethod(method);
         changed = updateValueDelimiter(valueDelimiter) || changed;
         changed = updateMaxUniqueValues(maxUniqueValues) || changed;
-        changed = updateIncludeMissing(inlcudeMissing) || changed;
         if (changed) {
             //One of the values has changed notify the change listener
             notifyChangeListeners();
         }
-    }
-
-    /**
-     * @param includeMissing <code>true</code> if missing values should be included
-     * @return <code>true</code> if the setting has changed
-     */
-    private boolean updateIncludeMissing(final boolean includeMissing) {
-        if (m_includeMissing != includeMissing) {
-            m_includeMissing = includeMissing;
-            return true;
-        }
-        return false;
     }
 
     /**
@@ -291,7 +249,7 @@ public class SettingsModelAggregationMethod extends SettingsModel {
         final int noOfRows) {
         return m_method.createOperator(new GlobalSettings(fileStoreFactory, groupColNames,
                           m_maxUniqueValues, m_valueDelimiter, spec, noOfRows),
-                              new OperatorColumnSettings(m_includeMissing, origColSpec));
+                              new OperatorColumnSettings(m_method.inclMissingCells(), origColSpec));
     }
 
     /**
@@ -390,33 +348,18 @@ public class SettingsModelAggregationMethod extends SettingsModel {
         try {
             final NodeSettingsRO subSettings = settings.getNodeSettings(m_configName);
             final String methodId = subSettings.getString(CFG_METHOD_ID);
-            final AggregationMethod method = AggregationMethods.getMethod4Id(methodId);
+            final AggregationOperator method = (AggregationOperator)AggregationMethods.getMethod4Id(methodId);
+            final boolean includeMissing = subSettings.getBoolean(CFG_INCL_MISSING, method.inclMissingCells());
+            //update the missing value option in the method based on the settings
+            method.getOperatorColumnSettings().setInclMissing(includeMissing);
             if (method.hasOptionalSettings()) {
                 final NodeSettingsRO methodSettings = subSettings.getNodeSettings(CFG_METHOD_SETTINGS);
                 method.loadValidatedSettings(methodSettings);
             }
-            final boolean includeMissing = subSettings.getBoolean(CFG_INCL_MISSING, method.inclMissingCells());
             // no default value, throw an exception instead
-            setValues(method, subSettings.getString(CFG_VALUE_SEPARATOR),
-                      subSettings.getInt(CFG_MAX_UNIQUE_VALUES), includeMissing);
+            setValues(method, subSettings.getString(CFG_VALUE_SEPARATOR), subSettings.getInt(CFG_MAX_UNIQUE_VALUES));
         } catch (final IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae.getMessage());
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsForModel(final NodeSettingsWO settings) {
-        final NodeSettingsWO subSettings = settings.addNodeSettings(m_configName);
-        subSettings.addString(CFG_METHOD_ID, m_method.getId());
-        subSettings.addString(CFG_VALUE_SEPARATOR, m_valueDelimiter);
-        subSettings.addInt(CFG_MAX_UNIQUE_VALUES, m_maxUniqueValues);
-        subSettings.addBoolean(CFG_INCL_MISSING, m_includeMissing);
-        if (m_method.hasOptionalSettings()) {
-            final NodeSettingsWO methodSettings = subSettings.addNodeSettings(CFG_METHOD_SETTINGS);
-            m_method.saveSettingsTo(methodSettings);
         }
     }
 
@@ -439,17 +382,34 @@ public class SettingsModelAggregationMethod extends SettingsModel {
             }
             final NodeSettingsRO subSettings = settings.getNodeSettings(m_configName);
             final String methodId = subSettings.getString(CFG_METHOD_ID);
-            final AggregationMethod method = AggregationMethods.getMethod4Id(methodId);
+            final AggregationOperator method = (AggregationOperator)AggregationMethods.getMethod4Id(methodId);
+            final boolean includeMissing = subSettings.getBoolean(CFG_INCL_MISSING, method.inclMissingCells());
+            //update the missing value option in the method based on the settings
+            method.getOperatorColumnSettings().setInclMissing(includeMissing);
             if (method.hasOptionalSettings()) {
                 final NodeSettingsRO methodSettings = subSettings.getNodeSettings(CFG_METHOD_SETTINGS);
                 method.loadSettingsFrom(methodSettings, spec);
             }
-            final boolean includeMissing = subSettings.getBoolean(CFG_INCL_MISSING, method.inclMissingCells());
             // no default value, throw an exception instead
-            setValues(method, subSettings.getString(CFG_VALUE_SEPARATOR),
-                      subSettings.getInt(CFG_MAX_UNIQUE_VALUES), includeMissing);
+            setValues(method, subSettings.getString(CFG_VALUE_SEPARATOR), subSettings.getInt(CFG_MAX_UNIQUE_VALUES));
         } catch (final Exception iae) {
             throw new NotConfigurableException(iae.getMessage());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsForModel(final NodeSettingsWO settings) {
+        final NodeSettingsWO subSettings = settings.addNodeSettings(m_configName);
+        subSettings.addString(CFG_METHOD_ID, m_method.getId());
+        subSettings.addBoolean(CFG_INCL_MISSING, m_method.inclMissingCells());
+        subSettings.addString(CFG_VALUE_SEPARATOR, m_valueDelimiter);
+        subSettings.addInt(CFG_MAX_UNIQUE_VALUES, m_maxUniqueValues);
+        if (m_method.hasOptionalSettings()) {
+            final NodeSettingsWO methodSettings = subSettings.addNodeSettings(CFG_METHOD_SETTINGS);
+            m_method.saveSettingsTo(methodSettings);
         }
     }
 
