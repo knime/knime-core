@@ -1011,12 +1011,10 @@
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBJoinerNodeFactory"
             /> 
-<!--      <node
+      <node
             after="org.knime.base.node.io.database.DBJoinerNodeFactory"
             category-path="/database/database-manipulation"
-            factory-class="org.knime.base.node.io.database.tablecreator.DBTableCreatorNodeFactory"
-            id="org.knime.base.node.io.database.tablecreator.DBTableCreatorNodeFactory"/>  
-            />-->
+            factory-class="org.knime.base.node.io.database.tablecreator.DBTableCreatorNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             category-path="/database/database-io"

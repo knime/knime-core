@@ -76,6 +76,8 @@ import org.knime.core.node.port.database.connection.DBDriverFactory;
 import org.knime.core.node.port.database.connection.PriorityDriverFactory;
 import org.knime.core.node.port.database.reader.DBReader;
 import org.knime.core.node.port.database.reader.DBReaderImpl;
+import org.knime.core.node.port.database.tablecreator.DBTableCreator;
+import org.knime.core.node.port.database.tablecreator.DBTableCreatorImpl;
 import org.knime.core.node.port.database.writer.DBWriter;
 import org.knime.core.node.port.database.writer.DBWriterImpl;
 
@@ -391,5 +393,13 @@ public class DatabaseUtility {
      */
     public DBConnectionFactory getConnectionFactory() {
         return m_connFactory;
+    }
+
+    /**
+     * @param connSettings
+     * @return {@link DBTableCreator} to create a table in database
+     */
+    public DBTableCreator getTableCreator(final DatabaseConnectionSettings connSettings) {
+        return new DBTableCreatorImpl(connSettings);
     }
 }
