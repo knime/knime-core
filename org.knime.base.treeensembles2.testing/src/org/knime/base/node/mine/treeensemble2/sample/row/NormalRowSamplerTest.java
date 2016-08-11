@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   23.05.2016 (Adrian Nembach): created
+ *   03.08.2016 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.sample.row;
 
@@ -52,63 +52,39 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.commons.math.random.RandomData;
 import org.junit.Test;
-import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble2.data.TestDataGenerator;
 
 /**
+ * Contains unit tests for the {@link RandomRowSampler} implementation of the {@link RowSampler} interface.
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class SubsetNoReplacementRowSampleTest {
+public class NormalRowSamplerTest {
 
-    private static final RandomData RD = new TreeEnsembleLearnerConfiguration(true).createRandomData();
-
-    /**
-     * Tests the method {@link SubsetNoReplacementRowSample#getCountFor(int)}
-     * should always return 1
-     * @throws Exception
-     */
     @Test
-    public void testGetCountFor() throws Exception {
-        SubsetNoReplacementRowSample sample = new SubsetNoReplacementRowSample(20, 0.5, RD);
-        assertEquals("Row counts do not sum up correctly.", 10, sumUpRowCounts(sample));
-        sample = new SubsetNoReplacementRowSample(100, 0.455, RD);
-        assertEquals("Row counts do not sum up correctly.", 46, sumUpRowCounts(sample));
-        sample = new SubsetNoReplacementRowSample(100, 0.3, RD);
-        assertEquals("Row counts do not sum up correctly.", 30, sumUpRowCounts(sample));
+    public void testCreateRowSampleNoReplacement() throws Exception {
+        final SubsetSelector<SubsetNoReplacementRowSample> selector = SubsetNoReplacementSelector.getInstance();
+        final double fraction = 0.5;
+        final int nrRows = 20;
+        final RandomRowSampler<SubsetNoReplacementRowSample> sampler =
+            new RandomRowSampler<SubsetNoReplacementRowSample>(fraction, selector, nrRows);
+        final RandomData rd = TestDataGenerator.createRandomData();
+
+        final SubsetNoReplacementRowSample sample = sampler.createRowSample(rd);
+
+        assertEquals(10, sample.getIncludedBitSet().cardinality());
     }
 
-    private static int sumUpRowCounts(final RowSample sample) {
-        int rowCounts = 0;
-        for (int i = 0; i < sample.getNrRows(); i++) {
-            rowCounts += sample.getCountFor(i);
-        }
-        return rowCounts;
-    }
-
-    /**
-     * Tests the method {@link SubsetNoReplacementRowSample#getNrRows()}
-     *
-     * @throws Exception
-     */
     @Test
-    public void testGetNrRows() throws Exception {
-        SubsetNoReplacementRowSample sample = new SubsetNoReplacementRowSample(20, 0.5, RD);
-        assertEquals("Wrong number of rows.", 20, sample.getNrRows());
-        sample = new SubsetNoReplacementRowSample(100, 0.3, RD);
-        assertEquals("Wrong number of rows.", 100, sample.getNrRows());
-        sample = new SubsetNoReplacementRowSample(50, 0.455, RD);
-        assertEquals("Wrong number of rows.", 50, sample.getNrRows());
-    }
+    public void testCreateRowSampleWithReplacement() throws Exception {
+        final SubsetSelector<SubsetWithReplacementRowSample> selector = SubsetWithReplacementSelector.getInstance();
+        final double fraction = 0.8;
+        final int nrRows = 20;
+        final RandomRowSampler<SubsetWithReplacementRowSample> sampler =
+            new RandomRowSampler<SubsetWithReplacementRowSample>(fraction, selector, nrRows);
+        final RandomData rd = TestDataGenerator.createRandomData();
 
-    /**
-     * Tests the method {@link SubsetNoReplacementRowSample#toString()}
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testToString() throws Exception {
-        SubsetNoReplacementRowSample sample = new SubsetNoReplacementRowSample(20, 0.5, RD);
-        String expected = "Subset w/o repl; fraction: 0.5, nrRows: 20, nrBitsSet: 10";
-        assertEquals("Wrong string returned.", expected, sample.toString());
+        final SubsetWithReplacementRowSample sample = sampler.createRowSample(rd);
+        assertEquals(16, SamplerTestUtil.countRows(sample));
     }
 }

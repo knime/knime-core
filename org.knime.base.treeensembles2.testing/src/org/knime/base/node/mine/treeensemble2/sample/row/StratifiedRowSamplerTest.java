@@ -44,53 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   23.05.2016 (Adrian Nembach): created
+ *   04.08.2016 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.sample.row;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.commons.math.random.RandomData;
 import org.junit.Test;
+import org.knime.base.node.mine.treeensemble2.data.TestDataGenerator;
 
 /**
+ * Contains unit tests for the {@link StratifiedRowSampler} implementation of the {@link RowSampler} interface.
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class DefaultRowSampleTest {
+public class StratifiedRowSamplerTest {
 
-    /**
-     * Tests the method {@link DefaultRowSample#getCountFor(int)}
-     *
-     * @throws Exception
-     */
     @Test
-    public void testGetCountFor() throws Exception {
-        DefaultRowSample sample = new DefaultRowSample(20);
-        assertEquals("Wrong count.", 1, sample.getCountFor(0));
-        assertEquals("Wrong count.", 1, sample.getCountFor(10));
-        assertEquals("Wrong count.", 1, sample.getCountFor(19));
+    public void testCreateRowSampleNoReplacement() throws Exception {
+        final RandomData rd = TestDataGenerator.createRandomData();
+        double fraction = 0.5;
+        final SubsetSelector<SubsetNoReplacementRowSample> selector = SubsetNoReplacementSelector.getInstance();
+        StratifiedRowSampler<SubsetNoReplacementRowSample> sampler =
+            new StratifiedRowSampler<SubsetNoReplacementRowSample>(fraction, selector, SamplerTestUtil.TARGET);
+        SubsetNoReplacementRowSample sample = sampler.createRowSample(rd);
+        assertEquals(8, sample.getIncludedBitSet().cardinality());
+        assertEquals(SamplerTestUtil.TARGET.getNrRows(), sample.getNrRows());
+
+        fraction = 1.0;
+        sampler = new StratifiedRowSampler<SubsetNoReplacementRowSample>(fraction, selector, SamplerTestUtil.TARGET);
+        sample = sampler.createRowSample(rd);
+        assertEquals(SamplerTestUtil.TARGET.getNrRows(), sample.getIncludedBitSet().cardinality());
+        assertEquals(SamplerTestUtil.TARGET.getNrRows(), sample.getNrRows());
     }
 
-    /**
-     * Tests the method {@link DefaultRowSample#getNrRows()}
-     *
-     * @throws Exception
-     */
     @Test
-    public void testGetNrRows() throws Exception {
-        DefaultRowSample sample = new DefaultRowSample(20);
-        assertEquals("Wrong number of rows.", 20, sample.getNrRows());
-    }
+    public void testCreateRowSampleWithReplacement() throws Exception {
+        final RandomData rd = TestDataGenerator.createRandomData();
+        double fraction = 0.5;
+        final SubsetSelector<SubsetWithReplacementRowSample> selector = SubsetWithReplacementSelector.getInstance();
+        StratifiedRowSampler<SubsetWithReplacementRowSample> sampler =
+            new StratifiedRowSampler<SubsetWithReplacementRowSample>(fraction, selector, SamplerTestUtil.TARGET);
+        SubsetWithReplacementRowSample sample = sampler.createRowSample(rd);
+        assertEquals(8, SamplerTestUtil.countRows(sample));
+        assertEquals(SamplerTestUtil.TARGET.getNrRows(), sample.getNrRows());
 
-    /**
-     * Tests the method {@link DefaultRowSample#toString()}
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testToString() throws Exception {
-        DefaultRowSample sample = new DefaultRowSample(20);
-        String expected = "Default Sampling (20 rows)";
-        assertEquals("Wrong string returned", expected, sample.toString());
+        fraction = 1.0;
+        sampler = new StratifiedRowSampler<SubsetWithReplacementRowSample>(fraction, selector, SamplerTestUtil.TARGET);
+        sample = sampler.createRowSample(rd);
+        assertEquals(SamplerTestUtil.TARGET.getNrRows(), SamplerTestUtil.countRows(sample));
+        assertEquals(SamplerTestUtil.TARGET.getNrRows(), sample.getNrRows());
     }
 }

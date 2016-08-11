@@ -44,75 +44,42 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   23.05.2016 (Adrian Nembach): created
+ *   04.08.2016 (Adrian Nembach): created
  */
 package org.knime.base.node.mine.treeensemble2.sample.row;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import org.apache.commons.math.random.RandomData;
-import org.junit.Test;
-import org.knime.base.node.mine.treeensemble2.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble2.data.TestDataGenerator;
+import org.knime.base.node.mine.treeensemble2.data.TreeTargetNominalColumnData;
 
 /**
+ * Contains utility methods used by the unit tests for the different samplers and SubsetSelectors
  *
  * @author Adrian Nembach, KNIME.com
  */
-public class SubsetWithReplacementRowSampleTest {
+final class SamplerTestUtil {
 
-    private static final RandomData RD = new TreeEnsembleLearnerConfiguration(true).createRandomData();
+    private SamplerTestUtil() {}
 
-    /**
-     * Tests the both {@link SubsetWithReplacementRowSample#getCountFor(int)}
-     * The rowCounts must always sum up to the specified fraction of the total number of rows.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testGetCountFor() throws Exception {
-        SubsetWithReplacementRowSample sample = new SubsetWithReplacementRowSample(20, 0.5, RD);
-        assertEquals("Row counts do not sum up correctly.", 10, sumUpRowCounts(sample));
-        sample = new SubsetWithReplacementRowSample(100, 0.3, RD);
-        assertEquals("Row counts do not sum up correctly.", 30, sumUpRowCounts(sample));
-        sample = new SubsetWithReplacementRowSample(20, 0.5, RD);
-        assertEquals("Row counts do not sum up correctly.", 10, sumUpRowCounts(sample));
-        sample = new SubsetWithReplacementRowSample(100, 1, RD);
-        assertEquals("Row counts do not sum up correctly.", 100, sumUpRowCounts(sample));
-    }
+    static final TreeTargetNominalColumnData TARGET =
+            TestDataGenerator.createNominalTargetColumn("a, a, a, a, a, a, b, b, b, b, b, c, c, c, c");
 
-    private static int sumUpRowCounts(final RowSample sample) {
-        int rowCounts = 0;
+    static final int[] TARGET_OFFSETS = new int[]{0, 6, 11};
+
+    static int countRows(final RowSample sample) {
+        int count = 0;
         for (int i = 0; i < sample.getNrRows(); i++) {
-            rowCounts += sample.getCountFor(i);
+            count += sample.getCountFor(i);
         }
-        return rowCounts;
+        return count;
     }
 
-    /**
-     * Tests the method {@link SubsetWithReplacementRowSample#getNrRows()}
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testGetNrRows() throws Exception {
-        SubsetWithReplacementRowSample sample = new SubsetWithReplacementRowSample(20, 0.5, RD);
-        assertEquals("Wrong number of rows.", 20, sample.getNrRows());
-        sample = new SubsetWithReplacementRowSample(100, 0.4, RD);
-        assertEquals("Wrong number of rows.", 100, sample.getNrRows());
-        sample = new SubsetWithReplacementRowSample(33, 0.9, RD);
-        assertEquals("Wrong number of rows.", 33, sample.getNrRows());
-    }
-
-    /**
-     * Tests the method {@link SubsetWithReplacementRowSample#toString()}
-     *
-     * @throws Exception
-     */
-    @Test
-    public void testToString() throws Exception {
-        SubsetWithReplacementRowSample sample = new SubsetWithReplacementRowSample(20, 0.5, RD);
-        String regex = "Subset w/ repl; nrRows: 20, max occurrence: \\d+, sum occurrence: 10, #not included: \\d+";
-        assertTrue(sample.toString().matches(regex));
+    static int countUniqueRows(final SubsetWithReplacementRowSample sample) {
+        int uniqueCount = 0;
+        for (int i = 0; i < sample.getNrRows(); i++) {
+            if (sample.getCountFor(i) > 0) {
+                uniqueCount++;
+            }
+        }
+        return uniqueCount;
     }
 }
