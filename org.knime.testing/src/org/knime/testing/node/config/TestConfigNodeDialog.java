@@ -58,6 +58,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -69,6 +70,7 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -88,6 +90,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
@@ -127,6 +130,15 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     private final JSpinner m_maxHiliteRows = new JSpinner(new SpinnerNumberModel(2500, 0, Integer.MAX_VALUE, 10));
 
     private final JCheckBox m_streamingTest = new JCheckBox();
+
+    private final JComboBox<String> m_requiredLoadVersion = new JComboBox<>(Arrays
+        .<LoadVersion> asList(LoadVersion.values()).stream().filter((val) -> val != LoadVersion.FUTURE).map(val -> {
+            if (val == LoadVersion.UNKNOWN) {
+                return "None";
+            } else {
+                return val.getVersionString();
+            }
+        }).toArray((i) -> new String[i]));
 
     private int m_lastSelectedIndex = -1;
 
@@ -202,11 +214,21 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         c.gridy++;
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0;
-        p.add(new JLabel("Test in streaming mode   "), c);
+        p.add(new JLabel("Test in streaming mode:   "), c);
         c.gridx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1;
         p.add(m_streamingTest, c);
+
+        c.gridx = 0;
+        c.gridy++;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        p.add(new JLabel("Require workflow version:   "), c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        p.add(m_requiredLoadVersion, c);
 
         c.gridx = 0;
         c.gridy++;
@@ -445,6 +467,22 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     }
 
     /**
+     * Parse a {@link LoadVersion} from given String.
+     *
+     * @param s String to parse.
+     * @return a {@link LoadVersion} or <code>null</code> if s did not match any.
+     */
+    private LoadVersion parseLoadVersion(final String s) {
+        for (final LoadVersion v : LoadVersion.values()) {
+            if (v.getVersionString().equals(s)) {
+                return v;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -454,6 +492,9 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         m_settings.timeout((Integer) m_timeout.getValue());
         m_settings.maxHiliteRows((Integer) m_maxHiliteRows.getValue());
         m_settings.streamingTest(m_streamingTest.isSelected());
+
+        final String requiredLoadVersionName = (String)m_requiredLoadVersion.getSelectedItem();
+        m_settings.requiredLoadVersion(parseLoadVersion(requiredLoadVersionName));
 
         List<String> temp = new ArrayList<String>();
         for (int i = 0; i < m_logErrorsModel.getSize(); i++) {
@@ -495,6 +536,9 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         m_timeout.setValue(m_settings.timeout());
         m_maxHiliteRows.setValue(m_settings.maxHiliteRows());
         m_streamingTest.setSelected(m_settings.streamingTest());
+
+        LoadVersion loadVersion = m_settings.requiredLoadVersion();
+        m_requiredLoadVersion.setSelectedItem(loadVersion != null ? loadVersion.getVersionString() : null);
 
         m_logErrorsModel.removeAllElements();
         for (String l : m_settings.requiredLogErrors()) {

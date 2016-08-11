@@ -59,6 +59,7 @@ import java.util.Set;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.FullWorkflowTest;
@@ -91,6 +92,8 @@ public class TestConfigSettings {
     private int m_maxHiliteRows = 2500;
 
     private boolean m_streamingTest = false;
+
+    private LoadVersion m_requiredLoadVersion = null;
 
     private static final String[] EMPTY = new String[0];
 
@@ -310,6 +313,25 @@ public class TestConfigSettings {
     }
 
     /**
+     * @param version Vesion in which this test workflow is required to stay in to be functional or <code>null</code> to
+     *            not require a specific version.
+     */
+    public void requiredLoadVersion(final LoadVersion version) {
+        m_requiredLoadVersion = version;
+    }
+
+    /**
+     * Version in which this test workflow is required to stay in to be functional or <code>null</code> if no specific
+     * version is required. This is useful for testing backwards compatibility with older node settings for example.
+     *
+     * @return version in which this test workflow is required to stay in to be functional or <code>null</code> if no
+     *         specific version is required.
+     */
+    public LoadVersion requiredLoadVersion() {
+        return m_requiredLoadVersion;
+    }
+
+    /**
      * Sets the janitors that are used by this workflow. The passed collection has to contain their IDs.
      *
      * @param janitors a collection with janitor IDs
@@ -318,7 +340,6 @@ public class TestConfigSettings {
         m_usedJanitors.clear();
         m_usedJanitors.addAll(janitors);
     }
-
 
     /**
      * Returns the janitors that are used by this workflow. The returned list contains their IDs.
@@ -401,6 +422,10 @@ public class TestConfigSettings {
 
         // since 3.1
         m_streamingTest = settings.getBoolean("streamingTest", false);
+
+        // since 3.2
+        final String requiredLoadVersionName = settings.getString("requiredLoadVersion", null);
+        m_requiredLoadVersion = parseLoadVersion(requiredLoadVersionName);
     }
 
     /**
@@ -482,6 +507,24 @@ public class TestConfigSettings {
 
         m_streamingTest = settings.getBoolean("streamingTest", true);
 
+        final String requiredLoadVersionName = settings.getString("requiredLoadVersion", null);
+        m_requiredLoadVersion = parseLoadVersion(requiredLoadVersionName);
+    }
+
+    /**
+     * Parse a {@link LoadVersion} from given String.
+     *
+     * @param s String to parse.
+     * @return a {@link LoadVersion} or <code>null</code> if s did not match any.
+     */
+    private LoadVersion parseLoadVersion(final String s) {
+        for (final LoadVersion v : LoadVersion.values()) {
+            if (v.getVersionString().equals(s)) {
+                return v;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -521,6 +564,7 @@ public class TestConfigSettings {
         settings.addInt("maxHilitedRows", m_maxHiliteRows);
         settings.addStringArray("usedJanitors", m_usedJanitors.toArray(new String[m_usedJanitors.size()]));
         settings.addBoolean("streamingTest", m_streamingTest);
+        settings.addString("requiredLoadVersion", (m_requiredLoadVersion == null) ? "" : m_requiredLoadVersion.getVersionString());
     }
 
     /**
