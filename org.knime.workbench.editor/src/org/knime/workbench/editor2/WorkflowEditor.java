@@ -531,7 +531,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         try {
                             m_workflowCanBeDeleted.acquire();
                             File d = flowLoc.toLocalFile();
-                            if (d != null) {
+                            if (d != null && d.exists()) {
                                 FileUtils.deleteDirectory(d.getParentFile());
                             }
                         } catch (CoreException | IOException | InterruptedException e) {
