@@ -197,10 +197,14 @@ public class InvokeUpdateAction extends AbstractP2Action {
                         UpdateSingleIUWizard wizard = new UpdateSingleIUWizard(provUI, operation);
                         WizardDialog dialog = new WizardDialog(shell, wizard);
                         dialog.create();
-                        dialog.open();
+                        if (dialog.open() == 0) {
+                            clearOsgiAreaBeforeRestart();
+                        }
                     } else {
                         // Open the normal version of the update wizard
-                        provUI.openUpdateWizard(false, operation, job);
+                        if (provUI.openUpdateWizard(false, operation, job) == 0) {
+                            clearOsgiAreaBeforeRestart();
+                        }
                     }
                 }
             }

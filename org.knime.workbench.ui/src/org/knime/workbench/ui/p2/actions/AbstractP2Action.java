@@ -47,6 +47,13 @@
  */
 package org.knime.workbench.ui.p2.actions;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
@@ -55,9 +62,12 @@ import org.eclipse.equinox.internal.p2.ui.ProvUI;
 import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.action.Action;
+import org.eclipse.osgi.internal.framework.EquinoxContainer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.util.PathUtils;
 
 /**
  * Abstract action for p2 related tasks (installing new extensions or updating, e.g.).
@@ -129,6 +139,50 @@ public abstract class AbstractP2Action extends Action {
             return (mbox.open() == SWT.YES);
         }
         return true;
+    }
+
+    private final AtomicBoolean m_shutdownHookAdded = new AtomicBoolean();
+
+    /**
+     * Clears the OSGi configuration area in a shutdown hook. This forces re-initialization of all bundles information
+     * as if Eclipse would be started with "-clean".
+     */
+    protected final void clearOsgiAreaBeforeRestart() {
+        if (m_shutdownHookAdded.getAndSet(true)) {
+            return;
+        }
+
+        try {
+            @SuppressWarnings("restriction")
+            URL configUrl = Platform.getConfigurationLocation().getDataArea(EquinoxContainer.NAME);
+            Path configPath = Paths.get(configUrl.getPath());
+
+            // make sure PathUtils is initialized, because it registers a shutdown hook itself and this is not possible
+            // while the JVM shuts down
+            PathUtils.RWX_ALL_PERMISSIONS.isEmpty();
+
+            Runtime.getRuntime().addShutdownHook(new Thread("Clear OSGi configuration") {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void run() {
+                    try {
+                        if (Files.isWritable(configPath)) {
+                            NodeLogger.getLogger(AbstractP2Action.this.getClass())
+                                .debug("Deleting OSGi configuration area at " + configPath);
+                            PathUtils.deleteDirectoryIfExists(configPath);
+                        }
+                    } catch (IOException ex) {
+                        NodeLogger.getLogger(AbstractP2Action.this.getClass())
+                            .error("Could not clean OSGi configuration area: " + ex.getMessage());
+                    }
+                }
+            });
+        } catch (IOException ex) {
+            NodeLogger.getLogger(AbstractP2Action.this.getClass())
+                .error("Could acquire OSGi configuration area: " + ex.getMessage());
+        }
     }
 
     /**
