@@ -116,20 +116,16 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
 
     /** {@inheritDoc} */
     @Override
-    public List<Credentials> loadCredentials(
-            final List<Credentials> credentials) {
-        final List<Credentials> newCredentials =
-            new ArrayList<Credentials>();
+    public List<Credentials> loadCredentials(final List<Credentials> credentials) {
+        final List<Credentials> newCredentials = new ArrayList<Credentials>();
         // run sync'ly in UI thread
         m_display.syncExec(new Runnable() {
             @Override
             public void run() {
                 CredentialVariablesDialog dialog =
-                    new CredentialVariablesDialog(m_display.getActiveShell(),
-                            credentials, m_workflowName);
+                    new CredentialVariablesDialog(m_display.getActiveShell(), credentials, m_workflowName);
                 if (dialog.open() == Window.OK) {
-                    newCredentials.addAll(
-                            dialog.getCredentials());
+                    newCredentials.addAll(dialog.getCredentials());
                 } else {
                     newCredentials.addAll(credentials);
                 }
