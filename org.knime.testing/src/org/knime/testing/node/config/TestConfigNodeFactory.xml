@@ -79,6 +79,18 @@
 				the global Testrun Configuration! Otherwise the streaming test will be
 				skipped.
 			</option>
+			<option name="Require workflow version">
+				If set, the node will fail on execution if the workflow file was not in
+				the specified version.
+				This is useful for ensuring that a workflow stays in a specific previous
+				version to ensure backwards compatibility with node settings written with
+				that version.
+				This makes sure that the node settings were not overwritten by a newer
+				KNIME version, which would defeat the purpose of the workflow test.
+                <p>Note that version numbers from the drop-down don't necessarily correspond
+                to KNIME releases; these version strings are used internally in the framework
+                and are written to the workflow.knime.</p>
+			</option>
         </tab>
     </fullDescription>
     <ports />
