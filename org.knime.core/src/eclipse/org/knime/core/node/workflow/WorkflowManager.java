@@ -157,6 +157,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
+import org.knime.core.node.workflow.CredentialsStore.CredentialsNode;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
@@ -8444,12 +8445,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Update user/password fields in the credentials store assigned to the
      * workflow and update the node configuration.
      * @param credentialsList the list of credentials to be updated. It will
-     *  find matching crendentials in this workflow and update their fields.
+     *  find matching credentials in this workflow and update their fields.
      * @throws IllegalArgumentException If any of the credentials is unknown
      */
     public void updateCredentials(final Credentials... credentialsList) {
         try (WorkflowLock lock = lock()) {
             if (getCredentialsStore().update(credentialsList)) {
+                // update all CredentialsNode, which possibly inherit their password from (deprecated) workflow
+                // credentials, see AP-5974
+                for (Map.Entry<NodeID, CredentialsNode> credNodeEntry : findNodes(
+                    CredentialsNode.class, new NodeModelFilter<CredentialsNode>(), true, true).entrySet()) {
+                    NodeContainer nc = findNodeContainer(credNodeEntry.getKey());
+                    if (!nc.getInternalState().isExecuted()) {
+                        credNodeEntry.getValue().onWorkfowCredentialsChanged(Arrays.asList(credentialsList));
+                    }
+                }
                 configureAllNodesInWFM(false);
             }
         }
@@ -9005,19 +9015,34 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return findNodes(nodeModelClass, new NodeModelFilter<T>(), recurse);
     }
 
-    /** Find all nodes in this workflow, whose underlying {@link NodeModel} is
-     * of the requested type. Intended purpose is to allow certain extensions
-     * (reporting, web service, ...) access to specialized nodes.
-     * @param <T> Specific NodeModel derivation or another interface
-     *            implemented by NodeModel instances.
-     * @param nodeModelClass The class of interest
-     * @param filter A non-null filter to apply.
-     * @param recurse Whether to recurse into contained metanodes.
-     * @return A (unsorted) list of nodes matching the class criterion
+    /** Calls {@link #findNodes(Class, NodeModelFilter, boolean, boolean)} with last argument <code>false</code>
+     * (no recursion into wrapped metanodes).
+     * @param <T> see delegated method
+     * @param nodeModelClass see delegated method
+     * @param filter see delegated method
+     * @param recurseIntoMetaNodes see delegated method
+     * @return see delegated method
      * @since 2.7
      */
     public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter,
-                                        final boolean recurse) {
+        final boolean recurseIntoMetaNodes) {
+        return findNodes(nodeModelClass, filter, recurseIntoMetaNodes, false);
+    }
+
+    /**
+     * Find all nodes in this workflow, whose underlying {@link NodeModel} is of the requested type. Intended purpose is
+     * to allow certain extensions (reporting, web service, ...) access to specialized nodes.
+     *
+     * @param <T> Specific NodeModel derivation or another interface implemented by NodeModel instances.
+     * @param nodeModelClass The class of interest
+     * @param filter A non-null filter to apply.
+     * @param recurseIntoMetaNodes Whether to recurse into contained metanodes.
+     * @param recurseIntoSubnodes Whether to recurse into contained wrapped metanodes.
+     * @return A (unsorted) list of nodes matching the class criterion
+     * @since 3.2
+     */
+    public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter,
+                                        final boolean recurseIntoMetaNodes, final boolean recurseIntoSubnodes) {
         try (WorkflowLock lock = lock()) {
             Map<NodeID, T> result = new LinkedHashMap<NodeID, T>();
             for (NodeContainer nc : m_workflow.getNodeValues()) {
@@ -9031,10 +9056,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
-            if (recurse) { // do separately to maintain some sort of order
+            if (recurseIntoMetaNodes || recurseIntoSubnodes) { // do separately to maintain some sort of order
                 for (NodeContainer nc : m_workflow.getNodeValues()) {
-                    if (nc instanceof WorkflowManager) {
-                        result.putAll(((WorkflowManager)nc).findNodes(nodeModelClass, true));
+                    if (recurseIntoMetaNodes && nc instanceof WorkflowManager) {
+                        WorkflowManager child = (WorkflowManager)nc;
+                        result.putAll(child.findNodes(nodeModelClass, filter,
+                            recurseIntoMetaNodes, recurseIntoSubnodes));
+                    }
+                    if (recurseIntoSubnodes && nc instanceof SubNodeContainer) {
+                        WorkflowManager child = ((SubNodeContainer)nc).getWorkflowManager();
+                        result.putAll(child.findNodes(nodeModelClass, filter,
+                            recurseIntoMetaNodes, recurseIntoSubnodes));
                     }
                 }
             }

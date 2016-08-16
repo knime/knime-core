@@ -48,9 +48,12 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
@@ -67,6 +70,12 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
 
     private final Display m_display;
     private final String m_workflowName;
+    /** The updated(!) credentials. Stored as member so that modified workflow credentials can be passed into
+     * credential quickform nodes (given they have the same identifier) - prevents multiple prompts for the 'same'
+     * credentials key. It's indirectly related to AP-5974.
+     */
+    private final Map<String, Credentials> m_promptedCredentials = new HashMap<>();
+
 
     private static WorkflowContext createWorkflowContext(final URI uri, final File workflowDirectory,
         final File mountpointRoot) {
@@ -116,26 +125,38 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
 
     /** {@inheritDoc} */
     @Override
-    public List<Credentials> loadCredentials(
-            final List<Credentials> credentials) {
-        final List<Credentials> newCredentials =
-            new ArrayList<Credentials>();
-        // run sync'ly in UI thread
-        m_display.syncExec(new Runnable() {
-            @Override
-            public void run() {
-                CredentialVariablesDialog dialog =
-                    new CredentialVariablesDialog(m_display.getActiveShell(),
-                            credentials, m_workflowName);
-                if (dialog.open() == Window.OK) {
-                    newCredentials.addAll(
-                            dialog.getCredentials());
-                } else {
-                    newCredentials.addAll(credentials);
-                }
+    public List<Credentials> loadCredentials(final List<Credentials> credentialsList) {
+        // set the ones that were already prompted for into the result list ... don't prompt them again
+        final List<Credentials> newCredentialsList = new ArrayList<Credentials>();
+        final List<Credentials> credentialsToBePromptedList = new ArrayList<Credentials>();
+        for (Credentials c : credentialsList) {
+            Credentials updatedCredentials = m_promptedCredentials.get(c.getName());
+            if (updatedCredentials != null) {
+                newCredentialsList.add(updatedCredentials);
+            } else {
+                credentialsToBePromptedList.add(c);
             }
-        });
-        return newCredentials;
+        }
+        // prompt for details for the credentials that haven't been prompted for
+        if (!credentialsToBePromptedList.isEmpty()) {
+            // run sync'ly in UI thread
+            m_display.syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    CredentialVariablesDialog dialog = new CredentialVariablesDialog(
+                        m_display.getActiveShell(), credentialsToBePromptedList, m_workflowName);
+                    if (dialog.open() == Window.OK) {
+                        List<Credentials> updateCredentialsList = dialog.getCredentials();
+                        newCredentialsList.addAll(updateCredentialsList);
+                        updateCredentialsList.stream().filter(c -> StringUtils.isNotEmpty(c.getPassword()))
+                            .forEach(c -> m_promptedCredentials.put(c.getName(), c));
+                    } else {
+                        newCredentialsList.addAll(credentialsToBePromptedList);
+                    }
+                }
+            });
+        }
+        return newCredentialsList;
     }
 
     /** {@inheritDoc} */
