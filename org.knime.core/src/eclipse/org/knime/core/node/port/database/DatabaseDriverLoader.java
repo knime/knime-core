@@ -286,6 +286,9 @@ public final class DatabaseDriverLoader {
                         if ((driverClass != null) && Driver.class.isAssignableFrom(driverClass) &&
                                 ((driverClass.getModifiers() & Modifier.ABSTRACT) == 0)) {
                             try {
+                                // each driver has its own class loader
+                                final ClassLoader driverClassLoader = new URLClassLoader(classURLs, ClassLoader.getSystemClassLoader());
+                                driverClass = loadClass(name, bundleClassLoader, driverClassLoader);
                                 final DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver)driverClass.newInstance());
                                 final String driverName = d.toString();
                                 LOGGER.debug("Database driver " + driverName +
