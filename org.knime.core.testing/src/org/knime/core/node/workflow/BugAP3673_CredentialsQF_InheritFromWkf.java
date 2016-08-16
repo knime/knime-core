@@ -62,6 +62,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
  */
 public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
 
+    /** Test credentials that are set during load of workflow. */
     @Test
     public void testExecuteFlow() throws Exception {
         final TestWorkflowLoadHelper lH = new TestWorkflowLoadHelper("some-fixed-password");
@@ -69,6 +70,21 @@ public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
         setManager(loadWorkflow.getWorkflowManager());
         assertThat("Invalid prompt count - only workflow variables are expected to be prompted",
             lH.getPromptCount(), is(1));
+        executeAllAndWait();
+        checkState(getManager(), InternalNodeContainerState.EXECUTED);
+    }
+
+    /** Test credentials that are set after workflow has been loaded (mimics behavior on the server). */
+    @Test
+    public void testExecuteFlowThenChangeCredentials() throws Exception {
+        // provides no valid credentials, first execution supposed to fail
+        WorkflowLoadResult loadWorkflow = loadWorkflow(getDefaultWorkflowDirectory(), new ExecutionMonitor());
+        WorkflowManager wfm = loadWorkflow.getWorkflowManager();
+        setManager(wfm);
+        executeAllAndWait();
+        checkState(getManager(), InternalNodeContainerState.IDLE);
+        wfm.resetAndConfigureAll();
+        wfm.updateCredentials(new Credentials("credentials-input", "some-fixed-username", "some-fixed-password"));
         executeAllAndWait();
         checkState(getManager(), InternalNodeContainerState.EXECUTED);
     }
