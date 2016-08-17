@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Optional;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -133,7 +134,17 @@ public final class CredentialsStore implements Observer {
      * parent store).
      * @throws IllegalArgumentException If the identifier is unknown
      */
-    public synchronized Credentials get(final String name) {
+    public Credentials get(final String name) {
+        return getAsOptional(name).orElseThrow(() -> new IllegalArgumentException(
+            "No credentials stored to name \"" + name + "\""));
+    }
+
+    /**
+     * Implementation of {@link #get(String)} returning an optional.
+     * @param name The name to lookup
+     * @return The credentials for this name as {@link Optional} (either in this store or the parent store).
+     */
+    synchronized Optional<Credentials> getAsOptional(final String name) {
         Credentials c = m_credentials.get(name);
         WorkflowManager parent = m_manager.getParent();
         while (c == null && parent != null) {
@@ -141,11 +152,7 @@ public final class CredentialsStore implements Observer {
             c = parentStore.m_credentials.get(name);
             parent = parent.getParent();
         }
-        if (c == null) {
-            throw new IllegalArgumentException("No credentials stored to "
-                    + "name \"" + name + "\"");
-        }
-        return c;
+        return Optional.ofNullable(c);
     }
 
     /**
