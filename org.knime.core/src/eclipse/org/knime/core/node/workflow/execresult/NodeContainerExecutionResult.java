@@ -44,47 +44,81 @@
  */
 package org.knime.core.node.workflow.execresult;
 
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeMessage;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /**
- * Remote execution result. Derived classes define specialized access 
+ * Remote execution result. Derived classes define specialized access
  * methods for SingleNodeContainer and WorkflowManager.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public abstract class NodeContainerExecutionResult 
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS)
+public abstract class NodeContainerExecutionResult
     implements NodeContainerExecutionStatus {
-    
-    private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
-    
+
     private NodeMessage m_message;
+
     private boolean m_needsResetAfterLoad;
-    
+
     private boolean m_isSuccess;
-    
-    /** Get a node message that was set during execution. 
+
+
+    /**
+     * Creates an empty result.
+     */
+    public NodeContainerExecutionResult() {
+    }
+
+    /**
+     * Copy constructor.
+     *
+     * @param toCopy Execution result instance to copy from.
+     * @since 3.5
+     */
+    protected NodeContainerExecutionResult(final NodeContainerExecutionResult toCopy) {
+        m_message = toCopy.m_message;
+        m_needsResetAfterLoad = toCopy.m_needsResetAfterLoad;
+        m_isSuccess = toCopy.m_isSuccess;
+    }
+
+    /** Get a node message that was set during execution.
      * @return The node message. */
+    @JsonProperty("nodeMessage")
     public NodeMessage getNodeMessage() {
         return m_message;
     }
-    
+
     /** Set a node message.
      * @param message the message to set
      */
+    @JsonProperty("nodeMessage")
     public void setMessage(final NodeMessage message) {
         m_message = message;
     }
-    
-    /** Request a reset of the node after loading the result. The node is 
-     * allowed to trigger a reset if the loading process causes errors that 
+
+    /** Request a reset of the node after loading the result. The node is
+     * allowed to trigger a reset if the loading process causes errors that
      * invalidate the computed result. */
     public void setNeedsResetAfterLoad() {
         m_needsResetAfterLoad = true;
     }
-    
+
+    /**
+     * Private setter for Json deserialization.
+     *
+     * @param needsResetAfterLoad Whether to request a reset of the node after loading the result.
+     */
+    @JsonProperty("needsResetAfterLoad")
+    private void setNeedsResetAfterLoad(final boolean needsResetAfterLoad) {
+        m_needsResetAfterLoad = needsResetAfterLoad;
+    }
+
     /** @return true when the node needs to be reset after loading the results.
      * @see #setNeedsResetAfterLoad()
      */
+    @JsonProperty("needsResetAfterLoad")
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
     }
@@ -101,12 +135,7 @@ public abstract class NodeContainerExecutionResult
     public boolean isSuccess() {
         return m_isSuccess;
     }
-    
-    /** @return the logger (never null). */
-    protected NodeLogger getLogger() {
-        return m_logger;
-    }
-    
+
     /** {@inheritDoc} */
     @Override
     public String toString() {

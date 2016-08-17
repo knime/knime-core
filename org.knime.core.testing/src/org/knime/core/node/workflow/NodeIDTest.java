@@ -49,11 +49,16 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsSame.sameInstance;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import org.apache.commons.lang3.SerializationUtils;
 import org.junit.Test;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+
 
 /**
  * Check is the {@link NodeID} class works as expected.
@@ -95,7 +100,35 @@ public class NodeIDTest {
 
         NodeID serializationClone = SerializationUtils.clone(root);
         assertThat("Expected serialization-clone to be root", serializationClone.isRoot(), is(true));
+    }
 
+    /**
+     * Checks whether rootID serialization works
+     *
+     * @throws IOException during (de)serialization failures
+     */
+    @Test
+    public void testRootNodeIDJsonSerialization() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+
+        String serialized = mapper.writeValueAsString(NodeID.ROOTID);
+        assertThat("JSON (de)serialization respects singleton property of root NodeID", mapper.readValue(serialized, NodeID.class), sameInstance(NodeID.ROOTID));
+    }
+
+    /**
+     * Checks whether general NodeID serialization works
+     *
+     * @throws IOException during (de)serialization failures
+     */
+    @Test
+    public void testNodeIDJsonSerialization() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+
+        NodeID id = NodeID.fromString("0:1:2:3");
+        String serialized = mapper.writeValueAsString(id);
+        NodeID deserialized = mapper.readValue(serialized, NodeID.class);
+        assertThat("JSON deserialization returns equal NodeID", deserialized, is(id));
+        assertFalse("JSON deserialization does not return identical NodeID", id == deserialized);
     }
 
 }

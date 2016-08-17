@@ -47,11 +47,19 @@
  */
 package org.knime.core.node.workflow.execresult;
 
+import java.util.Arrays;
+
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeContentPersistor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  *
@@ -66,23 +74,78 @@ public class NodeExecutionResult implements NodeContentPersistor {
     private String m_warningMessage;
     private boolean m_needsResetAfterLoad;
 
+
     /**
-     *
+     * Creates an empty execution result.
      */
     public NodeExecutionResult() {
-        System.class.toGenericString();
+    }
+
+
+    /**
+     * Copy constructor.
+     *
+     * @param toCopy The instance that should be copied.
+     * @since 3.5
+     */
+    public NodeExecutionResult(final NodeExecutionResult toCopy) {
+        if (toCopy.m_internalHeldPortObjects != null) {
+            m_internalHeldPortObjects =
+                Arrays.copyOf(toCopy.m_internalHeldPortObjects, toCopy.m_internalHeldPortObjects.length);
+        }
+        m_nodeInternDir = toCopy.m_nodeInternDir;
+        if (toCopy.m_portObjects != null) {
+            m_portObjects = Arrays.copyOf(toCopy.m_portObjects, toCopy.m_portObjects.length);
+        }
+        if (toCopy.m_portObjectSpecs != null) {
+            m_portObjectSpecs = Arrays.copyOf(toCopy.m_portObjectSpecs, toCopy.m_portObjectSpecs.length);
+        }
+        m_warningMessage = toCopy.m_warningMessage;
+        m_needsResetAfterLoad = toCopy.m_needsResetAfterLoad;
     }
 
     /** {@inheritDoc} */
     @Override
+    @JsonIgnore
     public PortObject[] getInternalHeldPortObjects() {
         return m_internalHeldPortObjects;
     }
 
     /** {@inheritDoc} */
     @Override
+    @JsonIgnore
     public ReferencedFile getNodeInternDirectory() {
         return m_nodeInternDir;
+    }
+
+    /**
+     * @return The number of port objects held by this execution result.
+     * @see #getPortObject(int)
+     * @since 3.5
+     */
+    @JsonProperty("nrPortObjects")
+    public int getNrOfPortObjects() {
+        if (m_portObjects != null) {
+            return m_portObjects.length;
+        } else {
+            return 0;
+        }
+    }
+
+
+    /**
+     *
+     * @return The number of internal port objects held by this execution result.
+     * @see #getInternalHeldPortObjects()
+     * @since 3.5
+     */
+    @JsonProperty("nrInternalPortObjects")
+    public int getNrOfInternalHeldPortObjects() {
+        if (m_internalHeldPortObjects != null) {
+            return m_internalHeldPortObjects.length;
+        } else {
+            return 0;
+        }
     }
 
     /** {@inheritDoc} */
@@ -105,6 +168,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
 
     /** {@inheritDoc} */
     @Override
+    @JsonProperty("warningMsg")
     public String getWarningMessage() {
         return m_warningMessage;
     }
@@ -117,6 +181,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
 
     /** {@inheritDoc} */
     @Override
+    @JsonProperty("needsResetAfterLoad")
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
     }
@@ -144,6 +209,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
 
     /** {@inheritDoc} */
     @Override
+    @JsonIgnore
     public boolean hasContent() {
         return m_nodeInternDir != null;
     }
@@ -172,8 +238,54 @@ public class NodeExecutionResult implements NodeContentPersistor {
     /** {@inheritDoc}
      * @since 2.6*/
     @Override
+    @JsonIgnore
     public IFileStoreHandler getFileStoreHandler() {
         return null;
     }
 
+    /**
+     * Sets all ports to inactive.
+     *
+     * @since 3.5
+     */
+    public void setInactive() {
+        m_nodeInternDir = null;
+        if (m_portObjects != null) {
+            Arrays.fill(m_portObjects, InactiveBranchPortObject.INSTANCE);
+            Arrays.fill(m_portObjectSpecs, InactiveBranchPortObjectSpec.INSTANCE);
+        }
+        if (m_internalHeldPortObjects != null) {
+            Arrays.fill(m_internalHeldPortObjects, InactiveBranchPortObject.INSTANCE);
+        }
+    }
+
+
+    /**
+     * Factory method for JSON deserialization.
+     *
+     * @param nrOfPortObjects
+     * @param nrOfInternalPortObjects
+     * @param needsResetAfterLoad
+     * @param warningMessage
+     * @return An execution result where port object (spec) arrays are initialized, but contain null values.
+     * @since 3.3
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    @JsonCreator
+    private static NodeExecutionResult createEmptyNodeExecutionResult(
+        @JsonProperty("nrPortObjects") final int nrOfPortObjects,
+        @JsonProperty("nrInternalPortObjects") final int nrOfInternalPortObjects,
+        @JsonProperty("needsResetAfterLoad") final boolean needsResetAfterLoad,
+        @JsonProperty("warningMsg") final String warningMessage) {
+
+        final NodeExecutionResult toReturn = new NodeExecutionResult();
+        toReturn.setPortObjects(new PortObject[nrOfPortObjects]);
+        toReturn.setPortObjectSpecs(new PortObjectSpec[nrOfPortObjects]);
+        toReturn.setInternalHeldPortObjects(new PortObject[nrOfInternalPortObjects]);
+        if (needsResetAfterLoad) {
+            toReturn.setNeedsResetAfterLoad();
+        }
+        toReturn.setWarningMessage(warningMessage);
+        return toReturn;
+    }
 }

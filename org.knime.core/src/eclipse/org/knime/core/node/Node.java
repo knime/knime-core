@@ -356,6 +356,22 @@ public final class Node implements NodeModelWarningListener {
         return result;
     }
 
+    /**
+     * @return a {@link NodeExecutionResult} that has all output ports and specs filled with inactive objects, and which
+     *         has no internals.
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public NodeExecutionResult createInactiveNodeExecutionResult() {
+        NodeExecutionResult result = new NodeExecutionResult();
+        PortObject[] pos = new PortObject[getNrOutPorts()];
+        Arrays.fill(pos, InactiveBranchPortObject.INSTANCE);
+        PortObjectSpec[] poSpecs = new PortObjectSpec[getNrOutPorts()];
+        Arrays.fill(poSpecs, InactiveBranchPortObjectSpec.INSTANCE);
+        result.setPortObjects(pos);
+        result.setPortObjectSpecs(poSpecs);
+        return result;
+    }
+
     /** Check class of the spec instance.
      * @param spec The spec
      * @param portIdx the port

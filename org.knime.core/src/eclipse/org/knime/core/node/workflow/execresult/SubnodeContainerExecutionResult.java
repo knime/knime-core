@@ -48,6 +48,9 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Specialized execution result for {@link SubNodeContainer}. Wraps a {@link WorkflowExecutionResult}.
  *
@@ -65,11 +68,25 @@ public final class SubnodeContainerExecutionResult extends NodeContainerExecutio
      * @param baseID The node id of the sub node container.
      * @throws NullPointerException If the argument is null.
      */
-    public SubnodeContainerExecutionResult(final NodeID baseID) {
+    @JsonCreator
+    public SubnodeContainerExecutionResult(@JsonProperty("baseID") final NodeID baseID) {
         m_baseID = CheckUtils.checkArgumentNotNull(baseID, "ID must not be null");
     }
 
+    /**
+     * Copy constructor.
+     *
+     * @param toCopy The instance to copy.
+     * @since 3.5
+     */
+    public SubnodeContainerExecutionResult(final SubnodeContainerExecutionResult toCopy) {
+        super(toCopy);
+        m_baseID = toCopy.m_baseID;
+        m_workflowExecutionResult = new WorkflowExecutionResult(toCopy.m_workflowExecutionResult);
+    }
+
     /** @return Inner workflow execution result set vi. */
+    @JsonProperty("workflowExecResult")
     public WorkflowExecutionResult getWorkflowExecutionResult() {
         return m_workflowExecutionResult;
     }
@@ -79,6 +96,7 @@ public final class SubnodeContainerExecutionResult extends NodeContainerExecutio
      * @param workflowExecutionResult To be set, must have correct baseID.
      * @throws IllegalArgumentException If the id prefix is invalid or argument is null
      */
+    @JsonProperty("workflowExecResult")
     public void setWorkflowExecutionResult(final WorkflowExecutionResult workflowExecutionResult) {
         m_workflowExecutionResult = CheckUtils.checkArgumentNotNull(workflowExecutionResult, "Arg must not be null");
         CheckUtils.checkArgument(new NodeID(m_baseID, 0).equals(m_workflowExecutionResult.getBaseID()),
@@ -93,5 +111,14 @@ public final class SubnodeContainerExecutionResult extends NodeContainerExecutio
         CheckUtils.checkArgument(idSuffix == 0, "Exec result of Wrapped Metanode has only one child ('0'), got %d", idSuffix);
         CheckUtils.checkState(m_workflowExecutionResult != null, "No inner workflow result set");
         return m_workflowExecutionResult;
+    }
+
+    /**
+     * @return the node id of the sub node container.
+     * @since 3.5
+     */
+    @JsonProperty("baseID")
+    public NodeID getBaseID() {
+        return m_baseID;
     }
 }

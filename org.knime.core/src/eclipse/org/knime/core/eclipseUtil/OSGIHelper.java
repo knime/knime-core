@@ -150,6 +150,11 @@ public final class OSGIHelper {
 
             IProfileRegistry profileRegistry =
                 (IProfileRegistry)agent.getService(IProfileRegistry.SERVICE_NAME);
+            if (profileRegistry == null) {
+                NodeLogger.getLogger(OSGIHelper.class).debug("Couldn't get profile registry.");
+                return null;
+            }
+
             p2Profile = profileRegistry.getProfile(IProfileRegistry.SELF);
             if (p2Profile == null) {
                 NodeLogger.getLogger(OSGIHelper.class).debug("Couldn't get the p2 installation profile");
