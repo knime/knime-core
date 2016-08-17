@@ -58,6 +58,7 @@ import java.util.Set;
 
 import org.dmg.pmml.RuleSelectionMethodDocument.RuleSelectionMethod;
 import org.dmg.pmml.RuleSetModelDocument.RuleSetModel;
+import org.dmg.pmml.SimpleRuleDocument.SimpleRule;
 import org.knime.base.node.rules.engine.pmml.PMMLRuleTranslator.Rule;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
@@ -530,11 +531,12 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                 if (ruleSet.getRuleSet().getSimpleRuleList().size() == rules.size()) {
                     for (int i = 0; i < rules.size(); ++i) {
                         Rule rule = rules.get(i);
-                        ruleSet.getRuleSet().getSimpleRuleArray(i).setRecordCount(rule.getRecordCount());
+                        final SimpleRule simpleRuleArray = ruleSet.getRuleSet().getSimpleRuleArray(i);
+                        simpleRuleArray.setRecordCount(rule.getRecordCount());
                         if (validationColumnIdx >= 0) {
-                            ruleSet.getRuleSet().getSimpleRuleArray(i).setNbCorrect(rule.getNbCorrect());
-                        } else if (ruleSet.getRuleSet().getSimpleRuleArray(i).isSetNbCorrect()) {
-                            ruleSet.getRuleSet().getSimpleRuleArray(i).unsetNbCorrect();
+                            simpleRuleArray.setNbCorrect(rule.getNbCorrect());
+                        } else if (simpleRuleArray.isSetNbCorrect()) {
+                            simpleRuleArray.unsetNbCorrect();
                         }
                     }
                 }
