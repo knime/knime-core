@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,61 +43,71 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Feb 2, 2017 (bjoern): created
  */
 package org.knime.core.node.workflow.execresult;
 
-import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.IsSame.sameInstance;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.IOException;
+
+import org.junit.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Specialized execution result for {@link SingleNodeContainer}. Offers access
- * to the node's execution result (containing port objects and possibly
- * internals).
- * @author Bernd Wiswedel, University of Konstanz
- * @since 3.1
+ * Unit tests for {@link NodeExecutionResultTest}.
+ *
+ * @author Bjoern Lohrmann, KNIME.com GmbH
  */
-public class NativeNodeContainerExecutionResult extends NodeContainerExecutionResult {
-
-    private NodeExecutionResult m_nodeExecutionResult;
+public class NodeExecutionResultTest {
 
     /**
-     * Create an empty execution result.
-     */
-    public NativeNodeContainerExecutionResult() {
-    }
-
-    /**
-     * Copy constructor.
+     * Tests the JSON (de)serialization of NodeExecutionResult objects
      *
-     * @param toCopy Execution result that should be copied.
-     * @since 3.5
+     * @throws IOException
      */
-    public NativeNodeContainerExecutionResult(final NativeNodeContainerExecutionResult toCopy) {
-        super(toCopy);
-        m_nodeExecutionResult = new NodeExecutionResult(toCopy.m_nodeExecutionResult);
-    }
+    @Test
+    public void testJsonSerialization() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
 
-    /** @return The execution result for the node. */
-    @JsonProperty
-    public NodeExecutionResult getNodeExecutionResult() {
-        return m_nodeExecutionResult;
+        NodeExecutionResult orig = ExecutionResultFixtures.createNodeExecutionResultFixture();
+
+        String serialized = mapper.writeValueAsString(orig);
+
+        NodeExecutionResult deserialized = mapper.readValue(serialized, NodeExecutionResult.class);
+        assertEqualityAfterDeserialization(orig, deserialized);
     }
 
     /**
-     * @param nodeExecutionResult the result to set
-     * @throws NullPointerException If argument is null.
+     *
+     * @param orig
+     * @param deserialized
      */
-    @JsonProperty
-    public void setNodeExecutionResult(final NodeExecutionResult nodeExecutionResult) {
-        m_nodeExecutionResult = CheckUtils.checkArgumentNotNull(nodeExecutionResult);
-    }
+    public static void assertEqualityAfterDeserialization(final NodeExecutionResult orig,
+        final NodeExecutionResult deserialized) {
+        assertThat("Object is not the same", deserialized, not(sameInstance(orig)));
+        assertThat("Warning message is equal", deserialized.getWarningMessage(), is(orig.getWarningMessage()));
+        assertThat("Needs reset after load is equal", deserialized.needsResetAfterLoad(),
+            is(orig.needsResetAfterLoad()));
+        assertThat("Nr port objects is equal", deserialized.getNrOfPortObjects(), is(orig.getNrOfPortObjects()));
+        for (int i = 0; i < orig.getNrOfPortObjects(); i++) {
+            assertNull("port object is null", deserialized.getPortObject(i));
+        }
+        for (int i = 0; i < orig.getNrOfPortObjects(); i++) {
+            assertNull("port object spec is null", deserialized.getPortObjectSpec(i));
+        }
 
-    /** {@inheritDoc} */
-    @Override
-    public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
-        throw new IllegalStateException(getClass().getSimpleName() + " has no children");
-    }
+        for (int i = 0; i < orig.getNrOfInternalHeldPortObjects(); i++) {
+            assertNull("internal held port object is null", deserialized.getInternalHeldPortObjects()[i]);
+        }
 
+        assertThat("Nr internal port objects is equal", deserialized.getNrOfInternalHeldPortObjects(),
+            is(orig.getNrOfInternalHeldPortObjects()));
+    }
 }

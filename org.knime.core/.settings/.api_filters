@@ -891,4 +891,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeContainerExecutionResult.java" type="org.knime.core.node.workflow.execresult.NodeContainerExecutionResult">
+        <filter comment="Removed getLogger()" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.execresult.NodeContainerExecutionResult"/>
+                <message_argument value="getLogger()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,61 +43,45 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Feb 2, 2017 (bjoern): created
  */
 package org.knime.core.node.workflow.execresult;
 
-import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.io.IOException;
+
+import org.junit.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Specialized execution result for {@link SingleNodeContainer}. Offers access
- * to the node's execution result (containing port objects and possibly
- * internals).
- * @author Bernd Wiswedel, University of Konstanz
- * @since 3.1
+ * Unit tests for {@link SubnodeContainerExecutionResultTest}.
+ *
+ * @author Bjoern Lohrmann, KNIME.com GmbH
  */
-public class NativeNodeContainerExecutionResult extends NodeContainerExecutionResult {
-
-    private NodeExecutionResult m_nodeExecutionResult;
+public class SubnodeContainerExecutionResultTest {
 
     /**
-     * Create an empty execution result.
-     */
-    public NativeNodeContainerExecutionResult() {
-    }
-
-    /**
-     * Copy constructor.
+     * Tests JSON (de)serialization.
      *
-     * @param toCopy Execution result that should be copied.
-     * @since 3.5
+     * @throws IOException when something goes wrong during (de)serialization.
      */
-    public NativeNodeContainerExecutionResult(final NativeNodeContainerExecutionResult toCopy) {
-        super(toCopy);
-        m_nodeExecutionResult = new NodeExecutionResult(toCopy.m_nodeExecutionResult);
-    }
+    @Test
+    public void testSubnodeContainerExecutionResultSerialization() throws IOException {
+        ObjectMapper mapper = ExecutionResultFixtures.createObjectMapper();
 
-    /** @return The execution result for the node. */
-    @JsonProperty
-    public NodeExecutionResult getNodeExecutionResult() {
-        return m_nodeExecutionResult;
-    }
+        SubnodeContainerExecutionResult orig = ExecutionResultFixtures.createSubnodeContainerExecutionResultFixture();
+        String serialized = mapper.writeValueAsString(orig);
+        SubnodeContainerExecutionResult deserialized =
+            mapper.readValue(serialized, SubnodeContainerExecutionResult.class);
 
-    /**
-     * @param nodeExecutionResult the result to set
-     * @throws NullPointerException If argument is null.
-     */
-    @JsonProperty
-    public void setNodeExecutionResult(final NodeExecutionResult nodeExecutionResult) {
-        m_nodeExecutionResult = CheckUtils.checkArgumentNotNull(nodeExecutionResult);
-    }
+        ExecutionResultFixtures.assertEqualityAfterDeserialization(deserialized, orig);
+        WorkflowExecutionResultTest.assertEqualityAfterDeserialization(orig.getWorkflowExecutionResult(),
+            deserialized.getWorkflowExecutionResult());
 
-    /** {@inheritDoc} */
-    @Override
-    public NodeContainerExecutionStatus getChildStatus(final int idSuffix) {
-        throw new IllegalStateException(getClass().getSimpleName() + " has no children");
+        assertThat("Base ID is equal", deserialized.getBaseID(), is(orig.getBaseID()));
     }
-
 }
