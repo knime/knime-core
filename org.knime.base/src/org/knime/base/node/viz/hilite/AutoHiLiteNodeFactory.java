@@ -71,6 +71,7 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * Node that automatically hilites all incoming rows.
@@ -127,6 +128,7 @@ public class AutoHiLiteNodeFactory extends NodeFactory<NodeModel> {
                     }
                 }
                 hlh.fireHiLiteEvent(keys);
+                ViewUtils.invokeAndWaitInEDT(() -> {}); // wait for hilite to propagate
                 return inData;
             }
 
