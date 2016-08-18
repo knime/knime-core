@@ -44,31 +44,88 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   14.07.2016 (Adrian Nembach): created
+ *   Aug 17, 2016 (adrian): created
  */
 package org.knime.base.node.mine.treeensemble2.node.predictor.classification;
 
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.knime.base.node.mine.treeensemble2.model.TreeNodeClassification;
+import org.knime.core.node.util.CheckUtils;
 
 /**
- * Factory for SoftVoting objects.
+ * Acts as super-class for HardVoting and SoftVoting.
+ * Contains the logic that maps the target values to the internally index used
+ * for the class distributions.
  *
- * @author Adrian Nembach, KNIME.com
+ * @author Adrian Nembach, University of Konstanz
  */
-final class SoftVotingFactory implements VotingFactory {
+abstract class AbstractVoting implements Voting {
 
     private final Map<String, Integer> m_targetValueToIndexMap;
+    private int m_nrVotes;
 
-    public SoftVotingFactory(final Map<String, Integer> targetValueToIndexMap) {
+    /**
+     * @param targetValueToIndexMap a map that assigns a unique index to each target value
+     *
+     */
+    public AbstractVoting(final Map<String, Integer> targetValueToIndexMap) {
         m_targetValueToIndexMap = targetValueToIndexMap;
+        m_nrVotes = 0;
+    }
+
+    protected final int getIndexForClass(final String classValue) {
+        final Integer idx = m_targetValueToIndexMap.get(classValue);
+        CheckUtils.checkArgumentNotNull(idx, "The class \"%s\" is unknown.", classValue);
+        return idx.intValue();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Voting createVoting() {
-        return new SoftVoting(m_targetValueToIndexMap);
+    public final void addVote(final TreeNodeClassification leaf) {
+        m_nrVotes++;
+        updateDistribution(leaf);
     }
 
+    /**
+     * Updates the target distribution that is maintained by sub classes.
+     *
+     * @param leaf the matching leaf in the current tree.
+     */
+    protected abstract void updateDistribution(final TreeNodeClassification leaf);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final String getMajorityClass() {
+        String majorityClass = null;
+        if (m_nrVotes == 0) {
+            return majorityClass;
+        }
+        float highestProb = -1.0f;
+        final Set<Entry<String, Integer>> entries = m_targetValueToIndexMap.entrySet();
+        for (Entry<String, Integer> entry : entries) {
+            final String classValue = entry.getKey();
+            final float prob = getClassProbabilityForClass(classValue);
+            if (prob > highestProb) {
+                highestProb = prob;
+                majorityClass = classValue;
+            }
+        }
+        assert majorityClass != null : "It is not possible that no class has a probability >= 0.";
+        return majorityClass;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final int getNrVotes() {
+        return m_nrVotes;
+    }
 }

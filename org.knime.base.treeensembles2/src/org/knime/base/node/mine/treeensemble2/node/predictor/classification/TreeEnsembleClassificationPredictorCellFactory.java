@@ -49,6 +49,8 @@ package org.knime.base.node.mine.treeensemble2.node.predictor.classification;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -145,11 +147,16 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
         assert modelObject == null || targetValueMap != null : "Target values must be known during execution";
         DataColumnSpec[] newCols = newColsList.toArray(new DataColumnSpec[newColsList.size()]);
         int[] learnColumnInRealDataIndices = modelSpec.calculateFilterIndices(testDataSpec);
+        final Map<String, Integer> targetValueToIndexMap = new HashMap<String, Integer>(targetValueMap.size());
+        Iterator<String> targetValIterator = targetValueMap.keySet().iterator();
+        for (int i = 0; i < targetValueMap.size(); i++) {
+            targetValueToIndexMap.put(targetValIterator.next(), i);
+        }
         final VotingFactory votingFactory;
         if (configuration.isUseSoftVoting()) {
-            votingFactory = new SoftVotingFactory(targetValueMap.size());
+            votingFactory = new SoftVotingFactory(targetValueToIndexMap);
         } else {
-            votingFactory = new HardVotingFactory(targetValueMap.size());
+            votingFactory = new HardVotingFactory(targetValueToIndexMap);
         }
         return new TreeEnsembleClassificationPredictorCellFactory(predictor, targetValueMap, newCols,
             learnColumnInRealDataIndices, votingFactory);
@@ -196,26 +203,21 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
             }
         }
         final NominalValueRepresentation[] targetVals = ((TreeTargetNominalColumnMetaData)ensembleModel.getMetaData().getTargetMetaData()).getValues();
-        String bestValue = null;
-        int bestIdx = -1;
-        if (voting.getNrVotes() > 0) {
-            bestIdx = voting.getMajorityClassIdx();
-            bestValue = targetVals[bestIdx].getNominalValue();
-        }
+        String majorityClass = voting.getMajorityClass();
         int index = 0;
-        if (bestValue == null) {
+        if (majorityClass == null) {
             assert nrValidModels == 0;
             Arrays.fill(result, DataType.getMissingCell());
             index = size - 1;
         } else {
-            result[index++] = m_targetValueMap.get(bestValue);
-            final float[] distribution = voting.getClassProbabilities();
+            result[index++] = m_targetValueMap.get(majorityClass);
+//            final float[] distribution = voting.getClassProbabilities();
             if (appendConfidence) {
-                result[index++] = new DoubleCell(distribution[bestIdx]);
+                result[index++] = new DoubleCell(voting.getClassProbabilityForClass(majorityClass));
             }
             if (appendClassConfidences) {
-                for (final NominalValueRepresentation nomVal : targetVals) {
-                    result[index++] = new DoubleCell(distribution[nomVal.getAssignedInteger()]);
+                for (String targetValue : m_targetValueMap.keySet()) {
+                    result[index++] = new DoubleCell(voting.getClassProbabilityForClass(targetValue));
                 }
             }
         }

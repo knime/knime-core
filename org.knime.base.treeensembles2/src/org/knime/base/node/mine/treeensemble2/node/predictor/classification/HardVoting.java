@@ -48,66 +48,44 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.predictor.classification;
 
+import java.util.Map;
+
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeClassification;
 
 /**
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class HardVoting implements Voting {
+final class HardVoting extends AbstractVoting {
 
     private final int[] m_classCounts;
-    private int m_nrVotes;
 
-    public HardVoting(final int nrClasses) {
-        m_nrVotes = 0;
-        m_classCounts = new int[nrClasses];
+    public HardVoting(final Map<String, Integer> targetValueToIndexMap) {
+        super(targetValueToIndexMap);
+        m_classCounts = new int[targetValueToIndexMap.size()];
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void addVote(final TreeNodeClassification leaf) {
-        m_nrVotes++;
-        m_classCounts[leaf.getMajorityClassIndex()]++;
+    public float getClassProbabilityForClass(final String classValue) {
+        final int classIdx = getIndexForClass(classValue);
+        final float count = m_classCounts[classIdx];
+        final float prob = count / getNrVotes();
+        return prob;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getMajorityClassIdx() {
-        int majorityIdx = -1;
-        int maxCount = 0;
-        for (int i = 0; i < m_classCounts.length; i++) {
-            if (m_classCounts[i] > maxCount) {
-                majorityIdx = i;
-                maxCount = m_classCounts[i];
-            }
-        }
-        return majorityIdx;
+    protected void updateDistribution(final TreeNodeClassification leaf) {
+        int classIdx = getIndexForClass(leaf.getMajorityClassName());
+        m_classCounts[classIdx]++;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public float[] getClassProbabilities() {
-        final float[] classProbabilities = new float[m_classCounts.length];
-        final float nrModels = m_nrVotes;
-        for (int i = 0; i < m_classCounts.length; i++) {
-            classProbabilities[i] = m_classCounts[i] / nrModels;
-        }
-        return classProbabilities;
-    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrVotes() {
-        return m_nrVotes;
-    }
+
 
 }

@@ -48,17 +48,19 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.predictor.classification;
 
+import java.util.Map;
+
 /**
- * Factory for {@link HardVoting} objects.
+ * Factory for HardVoting objects.
  *
  * @author Adrian Nembach, KNIME.com
  */
 final class HardVotingFactory implements VotingFactory {
 
-    private final int m_nrClasses;
+    private final Map<String, Integer> m_targetValueToIndexMap;
 
-    public HardVotingFactory(final int nrClasses) {
-        m_nrClasses = nrClasses;
+    public HardVotingFactory(final Map<String, Integer> targetValueToIndexMap) {
+        m_targetValueToIndexMap = targetValueToIndexMap;
     }
 
     /**
@@ -66,7 +68,7 @@ final class HardVotingFactory implements VotingFactory {
      */
     @Override
     public Voting createVoting() {
-        return new HardVoting(m_nrClasses);
+        return new HardVoting(m_targetValueToIndexMap);
     }
 
 }

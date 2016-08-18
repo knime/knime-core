@@ -48,74 +48,55 @@
  */
 package org.knime.base.node.mine.treeensemble2.node.predictor.classification;
 
+import java.util.Map;
+
+import org.knime.base.node.mine.treeensemble2.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble2.model.TreeNodeClassification;
 
 /**
- * Implementation of SoftVoting
+ * Implements soft voting.
+ * In soft voting the probabilities of all trees are aggregated instead of votes.
  *
  * @author Adrian Nembach, KNIME.com
  */
-final class SoftVoting implements Voting {
+final class SoftVoting extends AbstractVoting {
 
-    private int m_nrVotes;
     private float[] m_distribution;
 
-    public SoftVoting(final int nrClasses) {
-        m_nrVotes = 0;
-        m_distribution = new float[nrClasses];
+    public SoftVoting(final Map<String, Integer> targetValueToIndexMap) {
+        super(targetValueToIndexMap);
+        m_distribution = new float[targetValueToIndexMap.size()];
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void addVote(final TreeNodeClassification leaf) {
-        m_nrVotes++;
+    public float getClassProbabilityForClass(final String classValue) {
+        int classIdx = getIndexForClass(classValue);
+        float prob = m_distribution[classIdx] / getNrVotes();
+        return prob;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void updateDistribution(final TreeNodeClassification leaf) {
         final float[] targetDistribution = leaf.getTargetDistribution();
         assert targetDistribution.length == m_distribution.length;
         float nrRecordsInLeaf = 0;
         for (float classCount : targetDistribution) {
             nrRecordsInLeaf += classCount;
         }
+        final NominalValueRepresentation[] targetVals = leaf.getTargetMetaData().getValues();
         for (int i = 0; i < m_distribution.length; i++) {
-            m_distribution[i] += targetDistribution[i] / nrRecordsInLeaf;
+            /* the nominal values in targetVals are in the order in which they first appeared in the
+             training table. This is not necessarily the same as the order in the domain information of
+             the target column
+             */
+            int idxInVotingDistr = getIndexForClass(targetVals[i].getNominalValue());
+            m_distribution[i] += targetDistribution[idxInVotingDistr] / nrRecordsInLeaf;
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getMajorityClassIdx() {
-        int majorityIdx = -1;
-        float maxVotes = 0.0f;
-        for (int i = 0; i < m_distribution.length; i++) {
-            if (maxVotes < m_distribution[i]) {
-                majorityIdx = i;
-                maxVotes = m_distribution[i];
-            }
-        }
-        return majorityIdx;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public float[] getClassProbabilities() {
-        final float[] classProbabilities = new float[m_distribution.length];
-        for (int i = 0; i < classProbabilities.length; i++) {
-            classProbabilities[i] = m_distribution[i] / m_nrVotes;
-        }
-        return classProbabilities;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrVotes() {
-        return m_nrVotes;
-    }
-
 }

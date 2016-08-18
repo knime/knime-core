@@ -59,9 +59,9 @@ interface Voting {
 
     public void addVote(final TreeNodeClassification leaf);
 
-    public int getMajorityClassIdx();
+    public String getMajorityClass();
 
-    public float[] getClassProbabilities();
+    public float getClassProbabilityForClass(String classValue);
 
     public int getNrVotes();
 }
