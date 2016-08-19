@@ -77,6 +77,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.blob.BinaryObjectCellFactory;
@@ -232,14 +233,6 @@ public class DBRowIteratorImpl extends RowIterator {
                         case Types.REAL:
                             cell = readFloat(i);
                             break;
-                        case Types.FLOAT:
-                        case Types.DOUBLE:
-                            cell = readDouble(i);
-                            break;
-                        case Types.DECIMAL:
-                        case Types.NUMERIC:
-                            cell = readBigDecimal(i);
-                            break;
                         default: cell = readDouble(i);
                     }
                 } else if (type.isCompatible(DateAndTimeValue.class)) {
@@ -306,8 +299,10 @@ public class DBRowIteratorImpl extends RowIterator {
                 cells[i] = cell;
             } catch (SQLException sqle) {
                 handlerException("SQL Exception reading Object of type \"" + dbType + "\": ", sqle);
+                cells[i] = new MissingCell(sqle.getMessage());
             } catch (IOException ioe) {
                 handlerException("I/O Exception reading Object of type \"" + dbType + "\": ", ioe);
+                cells[i] = new MissingCell(ioe.getMessage());
             }
         }
         long rowId;
