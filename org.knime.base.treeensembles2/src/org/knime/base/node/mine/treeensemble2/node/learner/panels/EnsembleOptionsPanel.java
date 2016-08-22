@@ -345,7 +345,8 @@ public class EnsembleOptionsPanel extends JPanel {
         m_nrModelsSpinner.setValue(cfg.getNrModels());
         double dataFrac = cfg.getDataFractionPerTree();
         boolean isDataWithReplacement = cfg.isDataSelectionWithReplacement();
-        boolean doesSampling = dataFrac < 1.0 || isDataWithReplacement;
+        boolean isEqualSizeSampling = cfg.getRowSamplingMode() == RowSamplingMode.EqualSize;
+        boolean doesSampling = dataFrac < 1.0 || isDataWithReplacement || isEqualSizeSampling;
 
         m_dataFractionPerTreeSpinner.setValue(dataFrac);
         if (m_dataFractionPerTreeChecker.isSelected() != doesSampling) {
