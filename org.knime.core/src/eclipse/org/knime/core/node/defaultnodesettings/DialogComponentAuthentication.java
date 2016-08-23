@@ -73,6 +73,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -118,6 +119,9 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     private final JTextField m_usernameField = new JTextField(20);
 
     private final JPasswordField m_passwordField = new JPasswordField(20);
+
+    private final JLabel m_usernameLabel = new JLabel("Username:", SwingConstants.LEFT);
+    private final JLabel m_passwordLabel = new JLabel("Password:", SwingConstants.LEFT);
 
     private final Component m_credentialPanel = getCredentialPanel();
 
@@ -324,7 +328,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         gbc.gridwidth = 1;
         gbc.weightx = 1;
         gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
-        panel.add(new JLabel("Username:", 10), gbc);
+        panel.add(m_usernameLabel, gbc);
         gbc.gridx = 1;
         gbc.insets = NEUTRAL_INSET;
         gbc.ipadx = 10;
@@ -340,19 +344,22 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 1;
-        gbc.weightx = 1;
+        gbc.weightx = 0;
         gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
-        panel.add(new JLabel("Username:", 10), gbc);
+        panel.add(m_usernameLabel, gbc);
         gbc.gridx = 1;
         gbc.insets = NEUTRAL_INSET;
         gbc.ipadx = 10;
+        gbc.weightx = 1;
         panel.add(m_usernameField, gbc);
         gbc.ipadx = 0;
         gbc.gridx = 0;
         gbc.gridy++;
+        gbc.weightx = 0;
         gbc.insets = new Insets(0, LEFT_INSET, 0, 5);
-        panel.add(new JLabel("Password:", 10), gbc);
+        panel.add(m_passwordLabel, gbc);
         gbc.gridx = 1;
+        gbc.weightx = 1;
         gbc.insets = NEUTRAL_INSET;
         panel.add(m_passwordField, gbc);
         return panel;
@@ -568,5 +575,25 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     public void actionPerformed(final ActionEvent e) {
         updateModel();
         updatePanel();
+    }
+
+    /**
+     * Set the text displayed in the usernameLabel
+     *
+     * @param usernameLabel the label text to be set
+     */
+    public void setUsernameLabel(final String usernameLabel) {
+        m_usernameLabel.setText(usernameLabel);
+        updateComponent();
+    }
+
+    /**
+     * Set the text displayed in the passwordLabel
+     *
+     * @param passwordLabel the label text to be set
+     */
+    public void setPasswordLabel(final String passwordLabel) {
+        m_passwordLabel.setText(passwordLabel);
+        updateComponent();
     }
 }
