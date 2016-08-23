@@ -61,6 +61,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.data.DataValue;
@@ -81,6 +82,8 @@ public final class ViewUtils {
         .getBoolean("knime.swt.disableEventLoopWorkaround");
 
     private static final boolean DISPLAY_AVAILABLE;
+
+    private static final AtomicBoolean LAF_SET = new AtomicBoolean();
 
     private static final Runnable EMPTY_RUNNABLE = new Runnable() {
         @Override
@@ -467,4 +470,27 @@ public final class ViewUtils {
         return fileName.substring(dot);
     }
 
+    /**
+     * Sets the look&feel for all Swing components. This method can be called multiple times but only the first
+     * invocation will change the look&feel.
+     */
+    public static void setLookAndFeel() {
+        if (!LAF_SET.getAndSet(true)) {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    String sysLaF = UIManager.getSystemLookAndFeelClassName();
+                    // The GTK L&F has apparently some serious problems. Weka dialogs
+                    // cannot be opened (NPE) and in 1.6.0 there were problems with
+                    // "Xlib: sequence lost" ... resulting in KNIME going down.
+                    if (sysLaF.equals("com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) {
+                        sysLaF = UIManager.getCrossPlatformLookAndFeelClassName();
+                    }
+                    UIManager.setLookAndFeel(sysLaF);
+                } catch (Exception e) {
+                    NodeLogger.getLogger(ViewUtils.class).error("Unable to set Look&Feel: " + e.getMessage(), e);
+                    // use the default look and feel then.
+                }
+            });
+        }
+    }
 }

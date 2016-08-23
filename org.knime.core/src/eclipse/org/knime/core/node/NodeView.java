@@ -89,6 +89,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         implements NodeModelWarningListener {
     static {
         MacFileChooserFixer.installFixer();
+        ViewUtils.setLookAndFeel();
     }
 
     private static final class UpdateObject {

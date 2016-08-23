@@ -64,8 +64,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.swing.UIManager;
-
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
@@ -236,22 +234,6 @@ public final class Node implements NodeModelWarningListener {
     // and the WFM is asking if the node isExecutable(), which it is in most
     // cases then
     private final Object m_configureLock = new Object();
-
-    static {
-        try {
-            String sysLaF = UIManager.getSystemLookAndFeelClassName();
-            // The GTK L&F has apparently some serious problems. Weka dialogs
-            // cannot be opened (NPE) and in 1.6.0 there were problems with
-            // "Xlib: sequence lost" ... resulting in KNIME going down.
-            if (sysLaF.equals("com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) {
-                sysLaF = UIManager.getCrossPlatformLookAndFeelClassName();
-            }
-            UIManager.setLookAndFeel(sysLaF);
-        } catch (Exception e) {
-            NodeLogger.getLogger(Node.class).error("Unable to set LaF", e);
-            // use the default look and feel then.
-        }
-    }
 
     /**
      * Creates a new node by retrieving the model, dialog, and views, from the
