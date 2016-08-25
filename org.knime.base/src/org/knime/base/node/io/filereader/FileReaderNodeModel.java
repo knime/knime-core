@@ -201,9 +201,8 @@ public class FileReaderNodeModel extends NodeModel {
                     while (it.hasNext()) {
                         row++;
                         DataRow next = it.next();
-                        String message =
-                                "Reading row #" + row + " (\"" + next.getKey() + "\")";
-                        exec.setMessage(message);
+                        final int finalRow = row;
+                        exec.setMessage(() -> "Reading row #" + finalRow + " (\"" + next.getKey() + "\")" );
                         exec.checkCanceled();
                         rowOutput.push(next);
                     }
