@@ -134,6 +134,7 @@ import org.knime.core.util.MutableInteger;
 public abstract class NodeDialogPane {
     static {
         MacFileChooserFixer.installFixer();
+        ViewUtils.setLookAndFeel();
     }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
