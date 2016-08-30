@@ -134,6 +134,8 @@ public class DateInputDialog extends JPanel {
 
     private JCheckBox m_useDate;
 
+    private boolean m_optionalTime;
+
     /**
      *
      * Returns how the dialog is configured, meaning which fields are displayed in it.
@@ -150,6 +152,11 @@ public class DateInputDialog extends JPanel {
         if (enabled) {
             m_startDate.setEnabled(true);
             m_useMinutes.setEnabled(true);
+            if (!m_optionalTime) {
+                m_hours.setEnabled(enabled);
+                m_minutes.setEnabled(enabled);
+                m_seconds.setEnabled(enabled);
+            }
         } else {
             m_startDate.setEnabled(false);
             m_useHours.setEnabled(false);
@@ -207,14 +214,25 @@ public class DateInputDialog extends JPanel {
                     m_useHours.setEnabled(true);
                 }
 
-                m_useMinutes.setEnabled(false);
-                m_useSeconds.setEnabled(false);
-                m_hours.setEnabled(false);
-                m_hours.setValue(0);
-                m_minutes.setEnabled(false);
-                m_minutes.setValue(0);
-                m_seconds.setEnabled(false);
-                m_seconds.setValue(0);
+                if (m_optionalTime) {
+                    m_useMinutes.setEnabled(false);
+                    m_useSeconds.setEnabled(false);
+                    m_hours.setEnabled(false);
+                    m_hours.setValue(0);
+                    m_minutes.setEnabled(false);
+                    m_minutes.setValue(0);
+                    m_seconds.setEnabled(false);
+                    m_seconds.setValue(0);
+                } else {
+                    m_useMinutes.setEnabled(true);
+                    m_useSeconds.setEnabled(true);
+                    m_hours.setEnabled(true);
+                    m_hours.setValue(0);
+                    m_minutes.setEnabled(true);
+                    m_minutes.setValue(0);
+                    m_seconds.setEnabled(true);
+                    m_seconds.setValue(0);
+                }
                 break;
 
             case HOURS:
@@ -298,6 +316,16 @@ public class DateInputDialog extends JPanel {
      * @param optional true, if no date has to be specified by the user.
      */
     public DateInputDialog(final Mode mode, final boolean optional) {
+        this(mode, optional, true);
+    }
+
+    /**
+     * @param mode
+     * @param optional whether the whole date is optional, <code>true</code> the date field is disabled by default, <code>false</code> the date is enabled
+     * @param optionalTime whether the time is optional, <code>true</code> makes time disabled by default, the spinners
+     *          are then to be enabled manually, <code>false</code> the spinners can not be disabled
+     */
+    public DateInputDialog(final Mode mode, final boolean optional, final boolean optionalTime) {
         switch (mode) {
             case HOURS:
                 m_displayHours = true;
@@ -314,10 +342,10 @@ public class DateInputDialog extends JPanel {
             default:
                 break;
         }
+        m_optionalTime = optionalTime;
         m_usedMode = mode;
         m_isOptional = optional;
         initialize();
-
     }
 
     /**
@@ -332,6 +360,7 @@ public class DateInputDialog extends JPanel {
 
         initialize();
     }
+
 
     /**
      * This method returns false if no date is specified, in case the component is optional.
@@ -472,19 +501,25 @@ public class DateInputDialog extends JPanel {
         outerBox.add(dateBox);
         Box timeBox = Box.createHorizontalBox();
         if (m_displayHours) {
-            timeBox.add(m_useHours);
+            if (m_optionalTime) {
+                timeBox.add(m_useHours);
+            }
             timeBox.add(new JLabel("Hour: "));
             timeBox.add(m_hours);
             timeBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
             timeBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
             if (m_displayMinutes) {
-                timeBox.add(m_useMinutes);
+                if (m_optionalTime) {
+                    timeBox.add(m_useMinutes);
+                }
                 timeBox.add(new JLabel("Minute: "));
                 timeBox.add(m_minutes);
                 timeBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
                 timeBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
                 if (m_displaySeconds) {
-                    timeBox.add(m_useSeconds);
+                    if (m_optionalTime) {
+                        timeBox.add(m_useSeconds);
+                    }
                     timeBox.add(new JLabel("Second: "));
                     timeBox.add(m_seconds);
                     timeBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
@@ -582,6 +617,13 @@ public class DateInputDialog extends JPanel {
                 }
             }
         });
+
+        if (!m_optionalTime) {
+            m_useHours.setSelected(true);
+            m_useMinutes.setSelected(true);
+            m_useSeconds.setSelected(true);
+        }
+
         add(outerBox);
         add(Box.createVerticalStrut(VERT_SPACE));
     }

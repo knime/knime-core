@@ -54,60 +54,95 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 import javax.swing.BorderFactory;
-import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * StandardDialogComponent allowing the input of a user specified duration in days, hours, minutes, seconds
+ * StandardDialogComponent allowing the input of a user specified time values for days, hours, minutes, seconds.
  *
  * @author Ole Ostergaard, KNIME.com GmbH
- * @since 3.3
  */
-public final class DialogComponentDuration extends DialogComponent {
+public class DialogComponentDuration extends DialogComponent {
 
+    private static final int SPINNER_WIDTH = 10;
 
-    private final JFormattedTextField m_durationField;
+    private final JSpinner m_days;
+    private final JSpinner m_hours;
+    private final JSpinner m_minutes;
+    private final JSpinner m_seconds;
 
     /**
-     * Creates a panel including the field for the duration. Optionally a label can be provided to be included
-     * in the then created border
-     *
-     * @param model model to store the input duration values
+     * @param model model to store the input duration
      * @param label to place on the dialog or <code>null</code> if no border and label is wanted
+     * @param displaySeconds whether or not the seconds spinner should be displayed. <code>true</code> to display, <code>false</code> to hide
      */
-    public DialogComponentDuration(final SettingsModelDuration model, final String label) {
+    public DialogComponentDuration(final SettingsModelDuration model, final String label, final boolean displaySeconds) {
+        this(model, label, displaySeconds, 364);
+    }
+
+    /**
+     * @param model model to store the input time values
+     * @param label to place on the dialog or <code>null</code> if no border and label is wanted
+     * @param displaySeconds <code>true</code> seconds are displayed, <code>false</code> seconds can only be set via flow variables
+     * @param maxDays the maximum amount of days that the spinner should allow
+     */
+    public DialogComponentDuration(final SettingsModelDuration model, final String label, final boolean displaySeconds, final int maxDays) {
         super(model);
-        m_durationField = new JFormattedTextField(model.getMask());
-        Dimension size = new Dimension(150, 25);
-        m_durationField.setPreferredSize(size);
-        m_durationField.setHorizontalAlignment(SwingConstants.RIGHT);
-        m_durationField.getDocument().addDocumentListener(new DocumentListener() {
+        // set spinners
+        SpinnerModel spinnerModelDays = new SpinnerNumberModel(0,0,maxDays, 1);
+        SpinnerModel spinnerModelHours = new SpinnerNumberModel(0, 0, 23, 1);
+        SpinnerModel spinnerModelMinutes = new SpinnerNumberModel(0, 0, 59, 1);
+        SpinnerModel spinnerModelSeconds = new SpinnerNumberModel(0, 0, 59, 1);
+
+        Dimension spinnerSize = new Dimension(SPINNER_WIDTH,25);
+        m_days = new JSpinner(spinnerModelDays);
+        m_days.setMaximumSize(spinnerSize);
+        m_days.addChangeListener(new ChangeListener() {
 
             @Override
-            public void removeUpdate(final DocumentEvent e) {
-                    updateModel();
+            public void stateChanged(final ChangeEvent e) {
+                ((SettingsModelDuration)getModel()).setDaysValue((int)m_days.getValue());
             }
+        });
+        m_hours = new JSpinner(spinnerModelHours);
+        m_hours.setMaximumSize(spinnerSize);
+        m_hours.addChangeListener(new ChangeListener() {
 
             @Override
-            public void insertUpdate(final DocumentEvent e) {
-                    updateModel();
+            public void stateChanged(final ChangeEvent e) {
+                ((SettingsModelDuration)getModel()).setHoursValue((int)m_hours.getValue());
             }
+        });
+        m_minutes = new JSpinner(spinnerModelMinutes);
+        m_minutes.setMaximumSize(spinnerSize);
+        m_minutes.addChangeListener(new ChangeListener() {
 
             @Override
-            public void changedUpdate(final DocumentEvent e) {
-                    updateModel();
+            public void stateChanged(final ChangeEvent e) {
+                ((SettingsModelDuration)getModel()).setMinutesValue((int)m_minutes.getValue());
             }
         });
 
-        // set panel
+        m_seconds = new JSpinner(spinnerModelSeconds);
+        m_seconds.setMaximumSize(spinnerSize);
+        m_seconds.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                ((SettingsModelDuration)getModel()).setSecondsValue((int)m_seconds.getValue());
+            }
+        });
+
+        // set panels
         JPanel panel = new JPanel(new GridBagLayout());
         if (label != null) {
             panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), label));
@@ -118,20 +153,28 @@ public final class DialogComponentDuration extends DialogComponent {
         gbc.insets = new Insets(5,5,5,5);
         gbc.gridx = 0;
         gbc.gridy = 0;
-        panel.add(new JLabel("Duration: "), gbc);
+
+        panel.add(new JLabel("Days: "), gbc);
         gbc.gridx++;
-        panel.add(m_durationField, gbc);
+        panel.add(m_days,gbc);
+        gbc.gridx++;
 
+        panel.add(new JLabel("Hours: "), gbc);
+        gbc.gridx++;
+        panel.add(m_hours, gbc);
+        gbc.gridx++;
+
+        panel.add(new JLabel("Minutes: "), gbc);
+        gbc.gridx++;
+        panel.add(m_minutes, gbc);
+        if (displaySeconds) {
+        gbc.gridx++;
+
+        panel.add(new JLabel("Seconds: "), gbc);
+            gbc.gridx++;
+            panel.add(m_seconds,gbc);
+        }
         getComponentPanel().add(panel);
-    }
-
-    /**
-     * Update the model
-     */
-    private void updateModel() {
-        // we transfer the value from the field into the model
-        ((SettingsModelDuration)getModel())
-                .setDurationString(m_durationField.getText());
     }
 
     /**
@@ -141,7 +184,10 @@ public final class DialogComponentDuration extends DialogComponent {
     protected void updateComponent() {
         final SettingsModelDuration model = (SettingsModelDuration)getModel();
         setEnabledComponents(model.isEnabled());
-        m_durationField.setText(model.getDurationString());
+        m_hours.setValue(model.getHoursValue());
+        m_minutes.setValue(model.getMinutesValue());
+        m_seconds.setValue(model.getSecondsValue());
+        m_days.setValue(model.getDaysValue());
 
     }
 
@@ -166,7 +212,10 @@ public final class DialogComponentDuration extends DialogComponent {
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
-        m_durationField.setEnabled(enabled);
+        m_hours.setEnabled(enabled);
+        m_minutes.setEnabled(enabled);
+        m_seconds.setEnabled(enabled);
+        m_days.setEnabled(enabled);
     }
 
     /**
@@ -174,6 +223,41 @@ public final class DialogComponentDuration extends DialogComponent {
      */
     @Override
     public void setToolTipText(final String text) {
-        m_durationField.setToolTipText(text);
+        m_hours.setToolTipText(text);
+        m_minutes.setToolTipText(text);
+        m_seconds.setToolTipText(text);
+        m_seconds.setToolTipText(text);
+    }
+
+    /**
+     * Returns the amount of days
+     * @return the amount of days
+     */
+    public int getDays() {
+        return (int) m_days.getValue();
+    }
+
+    /**
+     * Returns the amount of hours
+     * @return the amount of hours
+     */
+    public int getHours() {
+        return (int) m_hours.getValue();
+    }
+
+    /**
+     * Returns the amount of minutes
+     * @return the amount of minutes
+     */
+    public int getMinutes() {
+        return (int) m_minutes.getValue();
+    }
+
+    /**
+     * Returns the amount of seconds
+     * @return the amount of seconds
+     */
+    public int getSeconds() {
+        return (int) m_seconds.getValue();
     }
 }
