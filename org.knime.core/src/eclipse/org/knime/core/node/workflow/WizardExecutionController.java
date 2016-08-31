@@ -97,38 +97,29 @@ public final class WizardExecutionController extends ExecutionController {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WizardExecutionController.class);
 
     private static final String ID_WEB_RES = "org.knime.js.core.webResources";
-
     private static final String ID_JS_COMP = "org.knime.js.core.javascriptComponents";
-
     private static final String ID_IMPL_BUNDLE = "implementationBundleID";
-
     private static final String ID_IMPORT_RES = "importResource";
-
     private static final String ID_DEPENDENCY = "webDependency";
 
     private static final String ATTR_JS_ID = "javascriptComponentID";
-
     private static final String ATTR_NAMESPACE = "namespace";
-
     private static final String ATTR_RES_BUNDLE_ID = "webResourceBundleID";
-
     private static final String ATTR_PATH = "relativePath";
-
     private static final String ATTR_TYPE = "type";
-
     private static final String ATTR_INIT_METHOD_NAME = "init-method-name";
-
     private static final String ATTR_VALIDATE_METHOD_NAME = "validate-method-name";
-
     private static final String ATTR_GETCOMPONENTVALUE_METHOD_NAME = "getComponentValue-method-name";
-
     private static final String ATTR_SETVALIDATIONERROR_METHOD_NAME = "setValidationError-method-name";
 
     private static final String ID_WEB_RESOURCE = "webResource";
 
     private static final String ATTR_RELATIVE_PATH_SOURCE = "relativePathSource";
-
     private static final String ATTR_RELATIVE_PATH_TARGET = "relativePathTarget";
+
+    private static final String DEFAULT_DEPENDENCY = "knimeService_1.0";
+    private static final Set<WebResourceLocator> DEFAULT_RES =
+        getResourcesFromExtension(getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, DEFAULT_DEPENDENCY));
 
     /** Filter passed to WFM serach methods to find only QF nodes that are to be displayed. */
     @SuppressWarnings("rawtypes")
@@ -174,6 +165,7 @@ public final class WizardExecutionController extends ExecutionController {
             return getEmptyWebTemplate();
         }
         Set<WebResourceLocator> implementationRes = getResourcesFromExtension(implementationExtension);
+        webResList.addAll(DEFAULT_RES);
         for (IConfigurationElement dependencyConf : jsComponentExtension.getChildren(ID_DEPENDENCY)) {
             String dependencyID = dependencyConf.getAttribute(ATTR_RES_BUNDLE_ID);
             IConfigurationElement dependencyExtension =
