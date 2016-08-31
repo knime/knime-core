@@ -79,6 +79,7 @@ import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 
 /**
@@ -405,15 +406,15 @@ public final class WizardExecutionController extends ExecutionController {
         SubNodeContainer subNC = manager.getNodeContainer(currentSubnodeID, SubNodeContainer.class, true);
         WorkflowManager subWFM = subNC.getWorkflowManager();
         Map<NodeID, WizardNode> executedWizardNodeMap = subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER);
-        LinkedHashMap<String, WizardNode> resultMap = new LinkedHashMap<String, WizardNode>();
+        LinkedHashMap<NodeIDSuffix, WizardNode> resultMap = new LinkedHashMap<>();
         for (Map.Entry<NodeID, WizardNode> entry : executedWizardNodeMap.entrySet()) {
             if (!subWFM.getNodeContainer(entry.getKey(), NativeNodeContainer.class, true).isInactive()) {
                 NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(manager.getID(), entry.getKey());
-                resultMap.put(idSuffix.toString(), entry.getValue());
+                resultMap.put(idSuffix, entry.getValue());
             }
         }
         NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subWFM.getID());
-        return new WizardPageContent(pageID.toString(), resultMap, subNC.getLayoutJSONString());
+        return new WizardPageContent(pageID, resultMap, subNC.getLayoutJSONString());
     }
 
     /** ...
@@ -684,8 +685,8 @@ public final class WizardExecutionController extends ExecutionController {
     /** Result value of {@link WizardExecutionController#getCurrentWizardPage()}. */
     public static final class WizardPageContent {
 
-        private final String m_pageNodeID;
-        private final Map<String, WizardNode> m_pageMap;
+        private final NodeIDSuffix m_pageNodeID;
+        private final Map<NodeIDSuffix, WizardNode> m_pageMap;
         private final String m_layoutInfo;
 
         /**
@@ -694,7 +695,7 @@ public final class WizardExecutionController extends ExecutionController {
          * @param layoutInfo
          */
         @SuppressWarnings("rawtypes")
-        WizardPageContent(final String pageNodeID, final Map<String, WizardNode> pageMap,
+        WizardPageContent(final NodeIDSuffix pageNodeID, final Map<NodeIDSuffix, WizardNode> pageMap,
             final String layoutInfo) {
             m_pageNodeID = pageNodeID;
             m_pageMap = pageMap;
@@ -704,7 +705,7 @@ public final class WizardExecutionController extends ExecutionController {
         /**
          * @return the pageNodeID
          */
-        public String getPageNodeID() {
+        public NodeIDSuffix getPageNodeID() {
             return m_pageNodeID;
         }
 
@@ -712,7 +713,7 @@ public final class WizardExecutionController extends ExecutionController {
          * @return the pageMap
          */
         @SuppressWarnings("rawtypes")
-        public Map<String, WizardNode> getPageMap() {
+        public Map<NodeIDSuffix, WizardNode> getPageMap() {
             return m_pageMap;
         }
 
