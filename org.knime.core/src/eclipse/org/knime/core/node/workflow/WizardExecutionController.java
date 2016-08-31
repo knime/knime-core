@@ -61,7 +61,6 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
@@ -409,11 +408,11 @@ public final class WizardExecutionController extends ExecutionController {
         LinkedHashMap<String, WizardNode> resultMap = new LinkedHashMap<String, WizardNode>();
         for (Map.Entry<NodeID, WizardNode> entry : executedWizardNodeMap.entrySet()) {
             if (!subWFM.getNodeContainer(entry.getKey(), NativeNodeContainer.class, true).isInactive()) {
-                NodeIDSuffix idSuffix = NodeIDSuffix.create(manager.getID(), entry.getKey());
+                NodeID.NodeIDSuffix idSuffix = NodeID.NodeIDSuffix.create(manager.getID(), entry.getKey());
                 resultMap.put(idSuffix.toString(), entry.getValue());
             }
         }
-        NodeIDSuffix pageID = NodeIDSuffix.create(manager.getID(), subWFM.getID());
+        NodeID.NodeIDSuffix pageID = NodeID.NodeIDSuffix.create(manager.getID(), subWFM.getID());
         return new WizardPageContent(pageID.toString(), resultMap, subNC.getLayoutJSONString());
     }
 
@@ -521,7 +520,7 @@ public final class WizardExecutionController extends ExecutionController {
         Map<NodeID, WizardNode> wizardNodeSet = subNodeWFM.findNodes(WizardNode.class, NOT_HIDDEN_FILTER, false);
         Map<String, ValidationError> resultMap = new LinkedHashMap<String, ValidationError>();
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
-            NodeIDSuffix suffix = NodeIDSuffix.fromString(entry.getKey());
+            NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
             CheckUtils.checkState(id.hasPrefix(currentID), "The wizard page content for ID %s (suffix %s) "
                         + "does not belong to the current Wrapped Metanode (ID %s)", id, entry.getKey(), currentID);
@@ -552,7 +551,7 @@ public final class WizardExecutionController extends ExecutionController {
         manager.resetHaltedSubnode(currentID);
 //        manager.resetAndConfigureNode(currentID);
         for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
-            NodeIDSuffix suffix = NodeIDSuffix.fromString(entry.getKey());
+            NodeID.NodeIDSuffix suffix = NodeID.NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(manager.getID());
             WizardNode wizardNode = wizardNodeSet.get(id);
             WebViewContent newViewValue = wizardNode.createEmptyViewValue();
@@ -725,124 +724,6 @@ public final class WizardExecutionController extends ExecutionController {
             return m_layoutInfo;
         }
 
-    }
-
-    /** Utility class that only stores the workflow relative NodeID path. If the NodeID of the workflow is
-     * 0:3 and the quickforms in there are 0:3:1:1 and 0:3:1:2 then it only saves {1,1} and {1,2}. We must not
-     * save the wfm ID with the NodeIDs as those may change when the workflow is swapped out/read back in.
-     * See also bug 4478.
-     */
-    static final class NodeIDSuffix {
-        /* This class makes com.knime.enterprise.server.WorkflowInstance.NodeIDSuffix obsolete. */
-
-        private final int[] m_suffixes;
-
-        /** @param suffixes ... */
-        NodeIDSuffix(final int[] suffixes) {
-            m_suffixes = suffixes;
-        }
-
-        /** Create the suffix object by cutting the parentID from the argument nodeID.
-         * @param parentID ...
-         * @param nodeID ..
-         * @return The extracted suffix object
-         * @throws IllegalArgumentException If the parentID is not a prefix of the nodeID.
-         *
-         */
-        static NodeIDSuffix create(final NodeID parentID, final NodeID nodeID) {
-            if (!nodeID.hasPrefix(parentID)) {
-                throw new IllegalArgumentException("The argument node ID \"" + nodeID
-                    + "\" does not have the expected parent prefix \"" + parentID + "\"");
-            }
-            List<Integer> suffixList = new ArrayList<Integer>();
-            NodeID traverse = nodeID;
-            do {
-                suffixList.add(traverse.getIndex());
-                traverse = traverse.getPrefix();
-            } while (!parentID.equals(traverse));
-            Collections.reverse(suffixList);
-            return new NodeIDSuffix(ArrayUtils.toPrimitive(suffixList.toArray(new Integer[suffixList.size()])));
-        }
-
-        /** Reverse operation to {@link #create(NodeID, NodeID)}. Prepends the parentID to this suffix and
-         * returns a valid (new) NodeID.
-         * @param parentID ...
-         * @return ...
-         */
-        NodeID prependParent(final NodeID parentID) {
-            NodeID result = parentID;
-            for (int i : m_suffixes) {
-                result = new NodeID(result, i);
-            }
-            return result;
-        }
-
-        /** Utility function to convert a set of suffixes into a set of IDs. */
-        static Set<NodeID> toNodeIDSet(final NodeID parentID, final Set<NodeIDSuffix> suffixSet) {
-            LinkedHashSet<NodeID> resultSet = new LinkedHashSet<NodeID>();
-            for (NodeIDSuffix sID: suffixSet) {
-                resultSet.add(sID.prependParent(parentID));
-            }
-            return resultSet;
-        }
-
-        /** Utility function to convert a set of IDs into a set of suffixes. */
-        static Set<NodeIDSuffix> fromNodeIDSet(final NodeID parentID, final Set<NodeID> idSet) {
-            LinkedHashSet<NodeIDSuffix> resultSet = new LinkedHashSet<NodeIDSuffix>();
-            for (NodeID id: idSet) {
-                resultSet.add(NodeIDSuffix.create(parentID, id));
-            }
-            return resultSet;
-        }
-
-        /** @return the stored indices - used by the persistor. */
-        int[] getSuffixes() {
-            return m_suffixes;
-        }
-
-        /** Outputs the underlying string array, e.g. "2:5:4:2"
-         * {@inheritDoc} */
-        @Override
-        public String toString() {
-            return StringUtils.join(ArrayUtils.toObject(m_suffixes), ':');
-        }
-
-        /** Reverse operation of {@link #toString()}.
-         * @param string The string as returned by {@link #toString()}.
-         * @return A new {@link NodeIDSuffix}.
-         * @throws IllegalArgumentException If parsing fails.
-         */
-        public static NodeIDSuffix fromString(final String string) {
-            String[] splitString = StringUtils.split(string, ':');
-            int[] suffixes = new int[splitString.length];
-            for (int i = 0; i < suffixes.length; i++) {
-                try {
-                    suffixes[i] = Integer.parseInt(splitString[i]);
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Can't parse node id suffix string \""
-                            + string + "\": " + e.getMessage(), e);
-                }
-            }
-            return new NodeIDSuffix(suffixes);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public int hashCode() {
-            return Arrays.hashCode(m_suffixes);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public boolean equals(final Object obj) {
-            if (obj == this) {
-                return true;
-            }
-            if (!(obj instanceof NodeIDSuffix)) {
-                return false;
-            }
-            return Arrays.equals(m_suffixes, ((NodeIDSuffix)obj).m_suffixes);
-        }
     }
 
 }

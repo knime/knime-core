@@ -52,6 +52,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
  * Check is the {@link NodeID} class works as expected.
@@ -65,19 +66,19 @@ public class NodeIDTest {
     @Test
     public void testCombine() {
         NodeID p = NodeID.fromString("0:1");
-        NodeID s = NodeID.fromString("2:3");
-        assertThat("Unexpected combined NodeID", new NodeID(p, s).toString(), is("0:1:2:3"));
+        NodeIDSuffix s = NodeIDSuffix.fromString("2:3");
+        assertThat("Unexpected combined NodeID", s.prependParent(p).toString(), is("0:1:2:3"));
 
         p = NodeID.fromString("0:1");
-        s = NodeID.fromString("2");
-        assertThat("Unexpected combined NodeID", new NodeID(p, s).toString(), is("0:1:2"));
+        s = NodeIDSuffix.fromString("2");
+        assertThat("Unexpected combined NodeID", s.prependParent(p).toString(), is("0:1:2"));
 
         p = NodeID.fromString("0");
-        s = NodeID.fromString("1");
-        assertThat("Unexpected combined NodeID", new NodeID(p, s).toString(), is("0:1"));
+        s = NodeIDSuffix.fromString("1");
+        assertThat("Unexpected combined NodeID", s.prependParent(p).toString(), is("0:1"));
 
         p = NodeID.ROOTID;
-        s = NodeID.fromString("0");
-        assertThat("Unexpected combined NodeID", new NodeID(p, s).toString(), is("0"));
+        s = NodeIDSuffix.fromString("0");
+        assertThat("Unexpected combined NodeID", s.prependParent(p).toString(), is("0"));
     }
 }
