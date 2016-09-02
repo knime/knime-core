@@ -236,6 +236,10 @@ public final class JavaToDataCellConverterRegistry {
      * @return an optional converter factory
      */
     public Optional<JavaToDataCellConverterFactory<?>> getConverterFactory(final String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+
         if (id.startsWith(ArrayToCollectionConverterFactory.class.getName())) {
             // get the element converter factory id:
             final String elemConvFactoryId = id.substring(ArrayToCollectionConverterFactory.class.getName().length() + 1,

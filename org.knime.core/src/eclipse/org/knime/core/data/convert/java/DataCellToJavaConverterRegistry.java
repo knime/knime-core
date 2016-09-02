@@ -271,6 +271,9 @@ public final class DataCellToJavaConverterRegistry {
      * @return an optional of a converter factory or empty if no converter factory with given id could be found
      */
     public Optional<DataCellToJavaConverterFactory<?, ?>> getConverterFactory(final String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
         if (id.startsWith(CollectionConverterFactory.class.getName())) {
             // get the element converter factory id:
             final String elemConvFactoryId = id.substring(CollectionConverterFactory.class.getName().length() + 1,
