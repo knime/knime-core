@@ -223,6 +223,9 @@ public final class WizardExecutionController extends ExecutionController {
     }
 
     private static Set<WebResourceLocator> getResourcesFromExtension(final IConfigurationElement resConfig) {
+        if (resConfig == null) {
+            return Collections.emptySet();
+        }
         String pluginName = resConfig.getContributor().getName();
         LinkedHashSet<WebResourceLocator> locators = new LinkedHashSet<WebResourceLocator>();
         Map<String, String> resMap = getWebResources(resConfig);
