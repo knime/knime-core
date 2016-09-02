@@ -221,6 +221,20 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private static final String CFG_AUTHOR_INFORMATION = "authorInformation";
 
+    private static final String CFG_EDITOR_SNAP_GRID = "workflow.editor.snapToGrid";
+
+    private static final String CFG_EDITOR_SHOW_GRID = "workflow.editor.ShowGrid";
+
+    private static final String CFG_EDITOR_X_GRID = "workflow.editor.gridX";
+
+    private static final String CFG_EDITOR_Y_GRID = "workflow.editor.gridY";
+
+    private static final String CFG_EDITOR_ZOOM = "workflow.editor.zoomLevel";
+
+    private static final String CFG_EDITOR_CURVED_CONNECTIONS = "workflow.editor.curvedConnections";
+
+    private static final String CFG_EDITOR_CONNECTION_WIDTH = "workflow.editor.connectionWidth";
+
     private static final PortType FALLBACK_PORTTYPE = PortObject.TYPE;
 
     private static final NodeSettingsRO EMPTY_SETTINGS = new NodeSettings("<<empty>>");
@@ -1410,12 +1424,22 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     EditorUIInformation loadEditorUIInformation(final NodeSettingsRO settings) throws InvalidSettingsException {
         final LoadVersion loadVersion = getLoadVersion();
         if (loadVersion.isOlderThan(LoadVersion.V260) || !settings.containsKey(CFG_EDITOR_INFO)) {
-            return new EditorUIInformation();
+            return new EditorUIInformation.Builder().build();
         }
         NodeSettingsRO editorCfg = settings.getNodeSettings(CFG_EDITOR_INFO);
-        EditorUIInformation editorInfo = new EditorUIInformation();
-        editorInfo.load(editorCfg, loadVersion);
-        return editorInfo;
+        EditorUIInformation.Builder builder = new EditorUIInformation.Builder();
+        builder.setSnapToGrid(editorCfg.getBoolean(CFG_EDITOR_SNAP_GRID));
+        builder.setShowGrid(editorCfg.getBoolean(CFG_EDITOR_SHOW_GRID));
+        builder.setGridX(editorCfg.getInt(CFG_EDITOR_X_GRID));
+        builder.setGridY(editorCfg.getInt(CFG_EDITOR_Y_GRID));
+        builder.setZoomLevel(editorCfg.getDouble(CFG_EDITOR_ZOOM));
+        if (editorCfg.containsKey(CFG_EDITOR_CURVED_CONNECTIONS)) {
+            builder.setHasCurvedConnections(editorCfg.getBoolean(CFG_EDITOR_CURVED_CONNECTIONS));
+        }
+        if (editorCfg.containsKey(CFG_EDITOR_CONNECTION_WIDTH)) {
+            builder.setConnectionLineWidth(editorCfg.getInt(CFG_EDITOR_CONNECTION_WIDTH));
+        }
+        return builder.build();
     }
 
     ReferencedFile loadNodeFile(final NodeSettingsRO settings, final ReferencedFile workflowDirRef)
@@ -2139,8 +2163,14 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     static void saveEditorUIInformation(final WorkflowManager wfm, final NodeSettings settings) {
         EditorUIInformation editorInfo = wfm.getEditorUIInformation();
         if (editorInfo != null) {
-            NodeSettingsWO editorCfg = settings.addNodeSettings(CFG_EDITOR_INFO);
-            editorInfo.save(editorCfg);
+            NodeSettingsWO editorConfig = settings.addNodeSettings(CFG_EDITOR_INFO);
+            editorConfig.addBoolean(CFG_EDITOR_SNAP_GRID, editorInfo.getSnapToGrid());
+            editorConfig.addBoolean(CFG_EDITOR_SHOW_GRID, editorInfo.getShowGrid());
+            editorConfig.addInt(CFG_EDITOR_X_GRID, editorInfo.getGridX());
+            editorConfig.addInt(CFG_EDITOR_Y_GRID, editorInfo.getGridY());
+            editorConfig.addDouble(CFG_EDITOR_ZOOM, editorInfo.getZoomLevel());
+            editorConfig.addBoolean(CFG_EDITOR_CURVED_CONNECTIONS, editorInfo.getHasCurvedConnections());
+            editorConfig.addInt(CFG_EDITOR_CONNECTION_WIDTH, editorInfo.getConnectionLineWidth());
         }
     }
 

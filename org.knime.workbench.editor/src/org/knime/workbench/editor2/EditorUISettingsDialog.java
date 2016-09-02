@@ -335,12 +335,14 @@ public class EditorUISettingsDialog extends Dialog {
 
     private void settingsChanged() {
 
-        m_settings.setSnapToGrid(m_snapToGrid.getSelection());
-        m_settings.setShowGrid(m_showGrid.getSelection());
-        m_settings.setHasCurvedConnections(m_curvedConnections.getSelection());
+        EditorUIInformation.Builder builder = new EditorUIInformation.Builder();
+        builder.copyFrom(m_settings);
+        builder.setSnapToGrid(m_snapToGrid.getSelection());
+        builder.setShowGrid(m_showGrid.getSelection());
+        builder.setHasCurvedConnections(m_curvedConnections.getSelection());
 
         if (m_connectionWidth.getSelectionIndex() > -1) {
-            m_settings.setConnectionLineWidth(m_connectionWidth.getSelectionIndex() + 1);
+            builder.setConnectionLineWidth(m_connectionWidth.getSelectionIndex() + 1);
         }
 
         String x = m_xGrid.getText().trim();
@@ -355,7 +357,7 @@ public class EditorUISettingsDialog extends Dialog {
                 m_xGrid.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
                 return;
             }
-            m_settings.setGridX(xInt);
+            builder.setGridX(xInt);
             m_xGrid.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
         } catch (NumberFormatException nfe) {
             setError("Invalid number for horizontal X grid spacing.");
@@ -375,15 +377,15 @@ public class EditorUISettingsDialog extends Dialog {
                 m_yGrid.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
                 return;
             }
-            m_settings.setGridY(yInt);
+            builder.setGridY(yInt);
             m_yGrid.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
         } catch (NumberFormatException nfe) {
             setError("Invalid number for vertical Y grid spacing.");
             m_yGrid.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
             return;
         }
-
         setError("");
+        m_settings = builder.build();
     }
 
     private void setError(final String err) {

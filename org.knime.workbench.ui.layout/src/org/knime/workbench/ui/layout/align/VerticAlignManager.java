@@ -51,8 +51,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;

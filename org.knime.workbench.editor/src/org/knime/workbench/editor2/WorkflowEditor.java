@@ -2099,15 +2099,15 @@ public class WorkflowEditor extends GraphicalEditor implements
      *         workflow manager!)
      */
     public EditorUIInformation getCurrentEditorSettings() {
-        EditorUIInformation editorInfo = new EditorUIInformation();
-        editorInfo.setZoomLevel(getZoomfactor());
-        editorInfo.setSnapToGrid(getEditorSnapToGrid());
-        editorInfo.setShowGrid(getEditorIsGridVisible());
-        editorInfo.setGridX(getEditorGridX());
-        editorInfo.setGridY(getEditorGridY());
-        editorInfo.setHasCurvedConnections(getHasCurvedConnections());
-        editorInfo.setConnectionLineWidth(getConnectionLineWidth());
-        return editorInfo;
+        return new EditorUIInformation.Builder()
+            .setZoomLevel(getZoomfactor())
+            .setSnapToGrid(getEditorSnapToGrid())
+            .setShowGrid(getEditorIsGridVisible())
+            .setGridX(getEditorGridX())
+            .setGridY(getEditorGridY())
+            .setHasCurvedConnections(getHasCurvedConnections())
+            .setConnectionLineWidth(getConnectionLineWidth())
+            .build();
     }
 
     /**
@@ -2135,9 +2135,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 settings = m_parentEditor.getCurrentEditorSettings();
             } else {
                 // this is an old workflow: don't show or enable grid
-                settings = getEditorSettingsDefault();
-                settings.setShowGrid(false);
-                settings.setSnapToGrid(false);
+                settings = getEditorSettingsDefaultBuilder().setShowGrid(false).setSnapToGrid(false).build();
             }
         }
         applyEditorSettings(settings);
@@ -2146,16 +2144,15 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * @return an object with the default value (mostly from the preference page) for the editor settings
      */
-    public EditorUIInformation getEditorSettingsDefault() {
-        EditorUIInformation result = new EditorUIInformation();
-        result.setSnapToGrid(getPrefSnapToGrid());
-        result.setShowGrid(getPrefIsGridVisible());
-        result.setGridX(getPrefGridXSize());
-        result.setGridY(getPrefGridYSize());
-        result.setZoomLevel(1.0);
-        result.setHasCurvedConnections(getPrefHasCurvedConnections());
-        result.setConnectionLineWidth(getPrefConnectionLineWidth());
-        return result;
+    public EditorUIInformation.Builder getEditorSettingsDefaultBuilder() {
+        return new EditorUIInformation.Builder()
+                .setSnapToGrid(getPrefSnapToGrid())
+                .setShowGrid(getPrefIsGridVisible())
+                .setGridX(getPrefGridXSize())
+                .setGridY(getPrefGridYSize())
+                .setZoomLevel(1.0)
+                .setHasCurvedConnections(getPrefHasCurvedConnections())
+                .setConnectionLineWidth(getPrefConnectionLineWidth());
     }
 
     /**

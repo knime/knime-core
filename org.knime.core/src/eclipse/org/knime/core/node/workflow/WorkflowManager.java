@@ -107,6 +107,7 @@ import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -8604,7 +8605,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.6
      */
     public void setEditorUIInformation(final EditorUIInformation editorInfo) {
-        if (!ConvenienceMethods.areEqual(editorInfo, m_editorInfo)) {
+        if (!Objects.equals(editorInfo, m_editorInfo)) {
             m_editorInfo = editorInfo;
             setDirty();
         }
