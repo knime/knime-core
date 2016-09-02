@@ -50,6 +50,7 @@ package org.knime.core.data.date;
 import java.util.Calendar;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.data.convert.DataValueAccessMethod;
 
 /**
  * Interface supporting the representation of time and date independent of the
@@ -142,5 +143,6 @@ public interface DateAndTimeValue extends DataValue {
      *
      * @return a clone of the underlying UTC calendar
      */
+    @DataValueAccessMethod(name = "Calendar")
     Calendar getUTCCalendarClone();
 }

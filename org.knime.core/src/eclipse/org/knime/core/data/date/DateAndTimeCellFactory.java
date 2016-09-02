@@ -62,6 +62,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellFactory.FromComplexString;
 import org.knime.core.data.DataCellFactory.FromSimpleString;
 import org.knime.core.data.DataType;
+import org.knime.core.data.convert.DataCellFactoryMethod;
 
 /**
  * Factory for creating {@link DateAndTimeCell}s from various input types.
@@ -90,6 +91,7 @@ public final class DateAndTimeCellFactory implements FromSimpleString, FromCompl
     /**
      * {@inheritDoc}
      */
+    @DataCellFactoryMethod(name = "Date (yyyy-MM-dd'T'HH:mm:ss.S)")
     @Override
     public DataCell createCell(final String s) {
         return create(s, m_format);
