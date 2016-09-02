@@ -119,9 +119,10 @@ public class ToggleGridAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        EditorUIInformation settings = getEditor().getCurrentEditorSettings();
-        settings.setSnapToGrid(!settings.getSnapToGrid());
-        getEditor().applyEditorSettings(settings);
-        getEditor().markDirty();
+        final WorkflowEditor editor = getEditor();
+        EditorUIInformation settings = editor.getCurrentEditorSettings();
+        EditorUIInformation newSet = new EditorUIInformation.Builder().setSnapToGrid(!settings.getSnapToGrid()).build();
+        editor.applyEditorSettings(newSet);
+        editor.markDirty();
     }
 }
