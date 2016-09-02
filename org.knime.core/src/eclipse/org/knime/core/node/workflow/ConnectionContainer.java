@@ -46,6 +46,8 @@ package org.knime.core.node.workflow;
 
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.knime.core.api.node.workflow.ConnectionID;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.node.util.CheckUtils;
 
 /**
@@ -55,7 +57,7 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public class ConnectionContainer implements ConnectionProgressListener {
+public class ConnectionContainer implements IConnectionContainer, ConnectionProgressListener {
 
     private final NodeID m_source;
     private final int m_sourcePort;
@@ -69,21 +71,6 @@ public class ConnectionContainer implements ConnectionProgressListener {
     private final CopyOnWriteArraySet<ConnectionProgressListener>
     m_progressListeners = new CopyOnWriteArraySet<ConnectionProgressListener>();
 
-
-    /** Typ of the connection: metanode input, output, through or "standard" connection.
-     * @noreference */
-    public enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH;
-        /**
-         * @return Whether this type is leaving a workflow (through or out)
-         */
-        public boolean isLeavingWorkflow() {
-            switch (this) {
-                case WFMOUT:
-                case WFMTHROUGH: return true;
-                default: return false;
-            }
-        }
-    }
 
     private final ConnectionType m_type;
 
@@ -121,6 +108,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     /**
      * @return the dest
      */
+    @Override
     public NodeID getDest() {
         return m_dest;
     }
@@ -128,6 +116,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     /**
      * @return the destPort
      */
+    @Override
     public int getDestPort() {
         return m_destPort;
     }
@@ -135,6 +124,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     /**
      * @return the source
      */
+    @Override
     public NodeID getSource() {
         return m_source;
     }
@@ -142,6 +132,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     /**
      * @return the sourcePort
      */
+    @Override
     public int getSourcePort() {
         return m_sourcePort;
     }
@@ -149,6 +140,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     /**
      * @return the isDeletable
      */
+    @Override
     public boolean isDeletable() {
         return m_isDeletable;
     }
@@ -163,6 +155,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     /**
      * @return type of the connection
      */
+    @Override
     public ConnectionType getType() {
         return m_type;
     }
@@ -170,6 +163,7 @@ public class ConnectionContainer implements ConnectionProgressListener {
     /**
      * @return the ID for this connection.
      */
+    @Override
     public ConnectionID getID() {
         return new ConnectionID(m_dest, m_destPort);
     }

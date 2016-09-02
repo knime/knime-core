@@ -5,10 +5,12 @@ Bundle-SymbolicName: org.knime.core.api;singleton:=true
 Bundle-Version: 3.3.0.qualifier
 Bundle-ClassPath: knime-core-api.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Export-Package: org.knime.core.api
+Export-Package: org.knime.core.api,
+ org.knime.core.api.node.workflow
 Require-Bundle: com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.4.3,3.0.0)",
  com.fasterxml.jackson.core.jackson-core;bundle-version="[2.4.3,3.0.0)",
- org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)"
+ org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
+ org.knime.core.util;bundle-version="[5.4.1,6.0.0)"
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy

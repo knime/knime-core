@@ -40,49 +40,89 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   20.07.2006 (sieb): created
+ * Created: Mar 29, 2011
+ * Author: ohl
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.NodeID;
 
 /**
- * Basic interface for extra information.
  *
- * @author Christoph Sieb, University of Konstanz
+ * @author ohl, University of Konstanz
  */
-public interface UIInformation extends Cloneable {
+public class ConnectionID {
+
+    private final NodeID m_destinationNode;
+
+    private final int m_destinationPort;
 
     /**
-     * Stores all contained information into the given configuration.
+     * A connection is identified by its destination node and port index.
      *
-     * @param config The configuration to write the current settings into.
-     * @see #load
+     * @param destNode the endpoint of the connection
+     * @param destPort the port index of the destination node
      */
-    void save(final NodeSettingsWO config);
+    public ConnectionID(final NodeID destNode, final int destPort) {
+        if (destNode == null) {
+            throw new NullPointerException("Destination node ID can't be null");
+        }
+        if (destPort < 0) {
+            throw new NullPointerException(
+                    "Destination port index can't be negative");
+        }
+        m_destinationNode = destNode;
+        m_destinationPort = destPort;
+    }
 
     /**
-     * Reads the information from the NodeSettings object.
-     *
-     * @param config Retrieve the data from.
-     * @param loadVersion The workflow version that was used to store this
-     *        object
-     * @throws InvalidSettingsException If the required keys are not available
-     *             in the NodeSettings.
-     *
-     * @see #save
+     * {@inheritDoc}
      */
-    void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
-        throws InvalidSettingsException;
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + m_destinationNode.hashCode();
+        result = prime * result + m_destinationPort;
+        return result;
+    }
 
-    /** UIInformation objects are cloneable without further restriction.
-    *
-    * @return a clone of this object
-    */
-   UIInformation clone();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof ConnectionID)) {
+            return false;
+        }
+        ConnectionID other = (ConnectionID)obj;
+
+        if (!m_destinationNode.equals(other.m_destinationNode)) {
+            return false;
+        }
+        if (m_destinationPort != other.m_destinationPort) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @return the destinationNode
+     */
+    public NodeID getDestinationNode() {
+        return m_destinationNode;
+    }
+
+    /**
+     * @return the destinationPort
+     */
+    public int getDestinationPort() {
+        return m_destinationPort;
+    }
+
 }

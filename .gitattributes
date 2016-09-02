@@ -1,0 +1,35 @@
+* text=auto !eol
+**/.api_filters text diff=xml
+**/.classpath text diff=xml
+**/.project text diff=xml
+**/MANIFEST.MF text
+**/build.properties text
+**/p2.inf text
+*.ai binary filter=lfs diff=lfs merge=lfs
+*.bmp binary
+*.cspex text diff=xml
+*.gif binary
+*.html text diff=html
+*.ico binary
+*.jar binary filter=lfs diff=lfs merge=lfs
+*.java text diff=java
+*.jpg binary
+*.js text
+*.json text
+*.jsx text
+*.png binary
+*.prefs text
+*.sh text
+*.svg text diff=xml
+*.xml text diff=xml
+*.xsd text diff=xml
+*.css text diff=css
+*.zip binary filter=lfs diff=lfs merge=lfs
+*.pdf binary filter=lfs diff=lfs merge=lfs
+*.dll binary filter=lfs diff=lfs merge=lfs
+*.so binary filter=lfs diff=lfs merge=lfs
+*.dylib binary filter=lfs diff=lfs merge=lfs
+*.jsa binary filter=lfs diff=lfs merge=lfs
+*.sym binary filter=lfs diff=lfs merge=lfs
+*.msi binary filter=lfs diff=lfs merge=lfs
+*.tar.gz binary filter=lfs diff=lfs merge=lfs
