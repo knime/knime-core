@@ -1424,7 +1424,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     EditorUIInformation loadEditorUIInformation(final NodeSettingsRO settings) throws InvalidSettingsException {
         final LoadVersion loadVersion = getLoadVersion();
         if (loadVersion.isOlderThan(LoadVersion.V260) || !settings.containsKey(CFG_EDITOR_INFO)) {
-            return new EditorUIInformation.Builder().build();
+            return EditorUIInformation.builder().build();
         }
         NodeSettingsRO editorCfg = settings.getNodeSettings(CFG_EDITOR_INFO);
         EditorUIInformation.Builder builder = new EditorUIInformation.Builder();

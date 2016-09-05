@@ -241,6 +241,11 @@ public class EditorUIInformation implements UIInformation {
         return true;
     }
 
+    /** @return new Builder with defaults. */
+    public static final Builder builder() {
+        return new Builder();
+    }
+
 
     /** Builder pattern for {@link EditorUIInformation}. */
     public static final class Builder {
@@ -254,7 +259,7 @@ public class EditorUIInformation implements UIInformation {
         private int m_connectionLineWidth = 1;
 
         /** Builder with defaults. */
-        public Builder() {
+        Builder() {
         }
 
         /** Copy all fields from argument and return this.

@@ -335,11 +335,11 @@ public class EditorUISettingsDialog extends Dialog {
 
     private void settingsChanged() {
 
-        EditorUIInformation.Builder builder = new EditorUIInformation.Builder();
-        builder.copyFrom(m_settings);
-        builder.setSnapToGrid(m_snapToGrid.getSelection());
-        builder.setShowGrid(m_showGrid.getSelection());
-        builder.setHasCurvedConnections(m_curvedConnections.getSelection());
+        EditorUIInformation.Builder builder = EditorUIInformation.builder()
+                .copyFrom(m_settings)
+                .setSnapToGrid(m_snapToGrid.getSelection())
+                .setShowGrid(m_showGrid.getSelection())
+                .setHasCurvedConnections(m_curvedConnections.getSelection());
 
         if (m_connectionWidth.getSelectionIndex() > -1) {
             builder.setConnectionLineWidth(m_connectionWidth.getSelectionIndex() + 1);
