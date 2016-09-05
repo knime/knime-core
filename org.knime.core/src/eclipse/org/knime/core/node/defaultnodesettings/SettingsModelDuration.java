@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.time.Duration;
+
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -62,10 +64,10 @@ import org.knime.core.node.port.PortObjectSpec;
  */
 public class SettingsModelDuration extends SettingsModel {
 
-    private int m_days;
-    private int m_hours;
-    private int m_minutes;
-    private int m_seconds;
+    private String m_days;
+    private String m_hours;
+    private String m_minutes;
+    private String m_seconds;
 
     private final String m_configName;
 
@@ -80,7 +82,7 @@ public class SettingsModelDuration extends SettingsModel {
      * @param configName the identifier the value is stored with in the {@link org.knime.core.node.NodeSettings} object
      */
     public SettingsModelDuration(final String configName) {
-        this(configName, 0, 0, 0, 0);
+        this(configName, "0", "0", "0", "0");
     }
 
     /**
@@ -92,7 +94,7 @@ public class SettingsModelDuration extends SettingsModel {
      * @param minutes the initial value for minutes
      * @param seconds the initial value for seconds
      */
-    public SettingsModelDuration(final String configName,final int days, final int hours, final int minutes, final int seconds) {
+    public SettingsModelDuration(final String configName,final String days, final String hours, final String minutes, final String seconds) {
         if ((configName == null) || "".equals(configName)) {
             throw new IllegalArgumentException("The configName must be a non-empty string");
         }
@@ -139,7 +141,7 @@ public class SettingsModelDuration extends SettingsModel {
      *
      * @param days the new days value to be stored
      */
-    public void setDaysValue(final int days) {
+    public void setDaysValue(final String days) {
         boolean changed = (days != m_days);
         m_days = days;
         if (changed) {
@@ -153,7 +155,7 @@ public class SettingsModelDuration extends SettingsModel {
      *
      * @param hours the new hours value to be stored
      */
-    public void setHoursValue(final int hours) {
+    public void setHoursValue(final String hours) {
         boolean changed = (hours != m_hours);
         m_hours = hours;
         if (changed) {
@@ -167,7 +169,7 @@ public class SettingsModelDuration extends SettingsModel {
      *
      * @param minutes the new minutes value to be stored
      */
-    public void setMinutesValue(final int minutes) {
+    public void setMinutesValue(final String minutes) {
         boolean changed = (minutes != m_minutes);
         m_minutes = minutes;
         if (changed) {
@@ -181,7 +183,7 @@ public class SettingsModelDuration extends SettingsModel {
      *
      * @param seconds the new seconds value to be stored
      */
-    public void setSecondsValue(final int seconds) {
+    public void setSecondsValue(final String seconds) {
         boolean changed = (seconds != m_seconds);
         m_seconds = seconds;
         if (changed) {
@@ -193,8 +195,8 @@ public class SettingsModelDuration extends SettingsModel {
      * Returns the stored days value
      * @return the stored days value
      */
-    public int getDaysValue() {
-        return m_days;
+    public long getDaysValue() {
+        return Long.parseLong(m_days);
     }
 
     /**
@@ -202,8 +204,8 @@ public class SettingsModelDuration extends SettingsModel {
      *
      * @return the stored hours value
      */
-    public int getHoursValue() {
-        return m_hours;
+    public long getHoursValue() {
+        return Long.parseLong(m_hours);
     }
 
     /**
@@ -211,8 +213,8 @@ public class SettingsModelDuration extends SettingsModel {
      *
      * @return the stored minutes value
      */
-    public int getMinutesValue() {
-        return m_minutes;
+    public long getMinutesValue() {
+        return Long.parseLong(m_minutes);
     }
 
     /**
@@ -220,16 +222,21 @@ public class SettingsModelDuration extends SettingsModel {
      *
      * @return the stored seconds value
      */
-    public int getSecondsValue() {
-        return m_seconds;
+    public long getSecondsValue() {
+        return Long.parseLong(m_seconds);
     }
 
     /**
      * Returns the total calculated amount of time in milliseconds
      * @return the total amount of time in milliseconds
      */
-    public long getDurationInMillis() {
-        return (m_days * 24l * 60l * 60l * 100l) + (m_hours * 60l * 60l * 1000l) + (m_minutes * 60l * 1000l) + (m_seconds * 1000l);
+    public Duration getDuration() {
+        Duration duration = Duration.ofDays(getDaysValue());
+        duration = duration.plusHours(getHoursValue());
+        duration = duration.plusMinutes(getMinutesValue());
+        duration = duration.plusSeconds(getSecondsValue());
+        System.out.println(duration.toString());
+        return duration;
     }
 
     /**
@@ -238,10 +245,10 @@ public class SettingsModelDuration extends SettingsModel {
     @Override
     protected void loadSettingsForDialog(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
-        setDaysValue(settings.getInt(m_daysName, m_days));
-        setHoursValue(settings.getInt(m_hoursName, m_hours));
-        setMinutesValue(settings.getInt(m_minutesName, m_minutes));
-        setSecondsValue(settings.getInt(m_secondsName, m_seconds));
+        setDaysValue(settings.getString(m_daysName, m_days));
+        setHoursValue(settings.getString(m_hoursName, m_hours));
+        setMinutesValue(settings.getString(m_minutesName, m_minutes));
+        setSecondsValue(settings.getString(m_secondsName, m_seconds));
     }
 
     /**
@@ -257,10 +264,10 @@ public class SettingsModelDuration extends SettingsModel {
      */
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        settings.getInt(m_daysName, m_days);
-        settings.getInt(m_hoursName, m_hours);
-        settings.getInt(m_minutesName, m_minutes);
-        settings.getInt(m_secondsName, m_seconds);
+        settings.getString(m_daysName, m_days);
+        settings.getString(m_hoursName, m_hours);
+        settings.getString(m_minutesName, m_minutes);
+        settings.getString(m_secondsName, m_seconds);
     }
 
     /**
@@ -268,10 +275,10 @@ public class SettingsModelDuration extends SettingsModel {
      */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        setDaysValue(settings.getInt(m_daysName));
-        setHoursValue(settings.getInt(m_hoursName));
-        setMinutesValue(settings.getInt(m_minutesName));
-        setSecondsValue(settings.getInt(m_secondsName));
+        setDaysValue(settings.getString(m_daysName));
+        setHoursValue(settings.getString(m_hoursName));
+        setMinutesValue(settings.getString(m_minutesName));
+        setSecondsValue(settings.getString(m_secondsName));
     }
 
     /**
@@ -279,10 +286,10 @@ public class SettingsModelDuration extends SettingsModel {
      */
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
-        settings.addInt(m_daysName, m_days);
-        settings.addInt(m_hoursName, m_hours);
-        settings.addInt(m_minutesName, m_minutes);
-        settings.addInt(m_secondsName, m_seconds);
+        settings.addString(m_daysName, m_days);
+        settings.addString(m_hoursName, m_hours);
+        settings.addString(m_minutesName, m_minutes);
+        settings.addString(m_secondsName, m_seconds);
     }
 
     /**
@@ -290,7 +297,7 @@ public class SettingsModelDuration extends SettingsModel {
      */
     @Override
     public String toString() {
-        return "Days: " + getDaysValue() + "Hours: " + getHoursValue() +", Minutes: " + getMinutesValue() + ", Seconds: " + getSecondsValue();
+        return "Days: " + m_days + "Hours: " + m_hours +", Minutes: " + m_minutes + ", Seconds: " + m_seconds;
     }
 
 

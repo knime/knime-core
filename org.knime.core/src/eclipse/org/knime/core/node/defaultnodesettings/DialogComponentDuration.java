@@ -110,7 +110,7 @@ public class DialogComponentDuration extends DialogComponent {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                ((SettingsModelDuration)getModel()).setDaysValue((int)m_days.getValue());
+                ((SettingsModelDuration)getModel()).setDaysValue(m_days.getValue().toString());
             }
         });
         m_hours = new JSpinner(spinnerModelHours);
@@ -119,7 +119,7 @@ public class DialogComponentDuration extends DialogComponent {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                ((SettingsModelDuration)getModel()).setHoursValue((int)m_hours.getValue());
+                ((SettingsModelDuration)getModel()).setHoursValue(m_hours.getValue().toString());
             }
         });
         m_minutes = new JSpinner(spinnerModelMinutes);
@@ -128,7 +128,7 @@ public class DialogComponentDuration extends DialogComponent {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                ((SettingsModelDuration)getModel()).setMinutesValue((int)m_minutes.getValue());
+                ((SettingsModelDuration)getModel()).setMinutesValue(m_minutes.getValue().toString());
             }
         });
 
@@ -138,7 +138,7 @@ public class DialogComponentDuration extends DialogComponent {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                ((SettingsModelDuration)getModel()).setSecondsValue((int)m_seconds.getValue());
+                ((SettingsModelDuration)getModel()).setSecondsValue(m_seconds.getValue().toString());
             }
         });
 
