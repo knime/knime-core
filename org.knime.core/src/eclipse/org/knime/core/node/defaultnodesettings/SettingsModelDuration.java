@@ -235,7 +235,6 @@ public class SettingsModelDuration extends SettingsModel {
         duration = duration.plusHours(getHoursValue());
         duration = duration.plusMinutes(getMinutesValue());
         duration = duration.plusSeconds(getSecondsValue());
-        System.out.println(duration.toString());
         return duration;
     }
 
