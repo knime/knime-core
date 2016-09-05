@@ -61,7 +61,9 @@ import java.awt.event.ItemListener;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.swing.AbstractButton;
@@ -86,6 +88,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelAuthentication.AuthenticationType;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.util.Pair;
 
 /**
  * A component that allows a user to enter username/password or select credentials variable.
@@ -101,16 +104,11 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
 
     private final ButtonGroup m_authenticationType = new ButtonGroup();
 
-    private final JRadioButton m_typeNone =
-            createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.NONE, m_authenticationType, this);
-    private final JRadioButton m_typeUser =
-            createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.USER, m_authenticationType, this);
-    private final JRadioButton m_typeUserPwd =
-            createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.USER_PWD, m_authenticationType, this);
-    private final JRadioButton m_typeCredential =
-            createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.CREDENTIALS, m_authenticationType, this);
-    private final JRadioButton m_typeKerberos =
-            createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.KERBEROS, m_authenticationType, this);
+    private final JRadioButton m_typeNone;
+    private final JRadioButton m_typeUser;
+    private final JRadioButton m_typeUserPwd;
+    private final JRadioButton m_typeCredential;
+    private final JRadioButton m_typeKerberos;
 
     private final JComboBox<String> m_credentialField = new JComboBox<>();
 
@@ -134,16 +132,21 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     private JPanel m_rootPanel;
 
     private HashSet<AuthenticationType> m_supportedTypes;
+    private Map<AuthenticationType, Pair<String, String>> m_namingMap = new HashMap<>();
 
-    private static JRadioButton createAuthenticationTypeButton(final AuthenticationType type, final ButtonGroup group,
+    private JRadioButton createAuthenticationTypeButton(final AuthenticationType type, final ButtonGroup group,
         final ActionListener l) {
-        final JRadioButton button = new JRadioButton(type.getText());
+        boolean contains = m_namingMap.containsKey(type);
+        String buttonLabel = contains ? m_namingMap.get(type).getFirst() : type.getText();
+        String toolTip = contains ? m_namingMap.get(type).getSecond() : type.getToolTip();
+
+        final JRadioButton button = new JRadioButton(buttonLabel);
         button.setActionCommand(type.getActionCommand());
         if (type.isDefault()) {
             button.setSelected(true);
         }
         if (type.getToolTip() != null) {
-            button.setToolTipText(type.getToolTip());
+            button.setToolTipText(toolTip);
         }
         if (l != null) {
             button.addActionListener(l);
@@ -171,9 +174,32 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      */
     public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label,
         final AuthenticationType... supportedTypes) {
+        this(authModel, label, null, supportedTypes);
+    }
+
+    /** Constructor for this dialog component
+     *
+     * @param authModel The {@link SettingsModel}
+     * @param label The label.
+     * @param namingMap The map containing the {@link AuthenticationType} as key and a pair
+     *          consisting of the label and the tooltip String for the radio buttons for authentication types
+     * @param supportedTypes the authentication {@link AuthenticationType}s to display
+     */
+    public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label,
+        final HashMap<AuthenticationType, Pair<String, String>> namingMap, final AuthenticationType... supportedTypes) {
         super(authModel);
         m_supportedTypes = new HashSet<>(Arrays.asList(supportedTypes));
         m_label = label;
+
+        if (namingMap !=null) {
+            m_namingMap = namingMap;
+        }
+        m_typeNone = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.NONE, m_authenticationType, this);
+        m_typeUser = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.USER, m_authenticationType, this);
+        m_typeUserPwd = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.USER_PWD, m_authenticationType, this);
+        m_typeCredential = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.CREDENTIALS, m_authenticationType, this);
+        m_typeKerberos = createAuthenticationTypeButton(SettingsModelAuthentication.AuthenticationType.KERBEROS, m_authenticationType, this);
+
         m_rootPanel = getRootPanel();
         getComponentPanel().setLayout(new GridBagLayout());
         getComponentPanel().add(m_rootPanel);
