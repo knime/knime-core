@@ -184,10 +184,10 @@ public class DialogComponentDuration extends DialogComponent {
     protected void updateComponent() {
         final SettingsModelDuration model = (SettingsModelDuration)getModel();
         setEnabledComponents(model.isEnabled());
+        m_days.setValue(model.getDaysValue());
         m_hours.setValue(model.getHoursValue());
         m_minutes.setValue(model.getMinutesValue());
         m_seconds.setValue(model.getSecondsValue());
-        m_days.setValue(model.getDaysValue());
 
     }
 
@@ -212,10 +212,10 @@ public class DialogComponentDuration extends DialogComponent {
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
+        m_days.setEnabled(enabled);
         m_hours.setEnabled(enabled);
         m_minutes.setEnabled(enabled);
         m_seconds.setEnabled(enabled);
-        m_days.setEnabled(enabled);
     }
 
     /**
@@ -223,41 +223,9 @@ public class DialogComponentDuration extends DialogComponent {
      */
     @Override
     public void setToolTipText(final String text) {
+        m_days.setToolTipText(text);
         m_hours.setToolTipText(text);
         m_minutes.setToolTipText(text);
         m_seconds.setToolTipText(text);
-        m_seconds.setToolTipText(text);
-    }
-
-    /**
-     * Returns the amount of days
-     * @return the amount of days
-     */
-    public int getDays() {
-        return (int) m_days.getValue();
-    }
-
-    /**
-     * Returns the amount of hours
-     * @return the amount of hours
-     */
-    public int getHours() {
-        return (int) m_hours.getValue();
-    }
-
-    /**
-     * Returns the amount of minutes
-     * @return the amount of minutes
-     */
-    public int getMinutes() {
-        return (int) m_minutes.getValue();
-    }
-
-    /**
-     * Returns the amount of seconds
-     * @return the amount of seconds
-     */
-    public int getSeconds() {
-        return (int) m_seconds.getValue();
     }
 }
