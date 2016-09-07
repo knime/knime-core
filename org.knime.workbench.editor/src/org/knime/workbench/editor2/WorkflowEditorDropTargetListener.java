@@ -429,29 +429,24 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
         // edge-/nodedist
         double edgedist = Integer.MAX_VALUE;
         double nodedist = Integer.MAX_VALUE;
-        // hitbox size: (-8 to 8 = 16) * (-8 to 8 = 16)
-        for (int i = -8; i < 9; i++) {
-            for (int j = -8; j < 9; j++) {
-                Point dropLocation = getDropLocation(event);
-                EditPart ep = getViewer().findObjectAt(dropLocation.getTranslated(i, j));
-                if (ep instanceof NodeContainerEditPart) {
-                    double temp = dropLocation.getDistance(dropLocation.getTranslated(i, j));
-                    // choose nearest node to mouse position
-                    if (nodedist >= temp) {
-                        m_node = (NodeContainerEditPart)ep;
-                        nodedist = temp;
-                    }
-                    m_nodeCount++;
-                } else if (ep instanceof ConnectionContainerEditPart) {
-                    double temp = dropLocation.getDistance(dropLocation.getTranslated(i, j));
-                    // choose nearest edge to mouse-position
-                    if (edgedist >= temp) {
-                        m_edge = (ConnectionContainerEditPart)ep;
-                        edgedist = temp;
-                    }
-                    m_edgeCount++;
-                }
+        Point dropLocation = getDropLocation(event);
+        EditPart ep = getViewer().findObjectAt(dropLocation.getTranslated(0, 0));
+        if (ep instanceof NodeContainerEditPart) {
+            double temp = dropLocation.getDistance(dropLocation.getTranslated(0, 0));
+            // choose nearest node to mouse position
+            if (nodedist >= temp) {
+                m_node = (NodeContainerEditPart)ep;
+                nodedist = temp;
             }
+            m_nodeCount++;
+        } else if (ep instanceof ConnectionContainerEditPart) {
+            double temp = dropLocation.getDistance(dropLocation.getTranslated(0, 0));
+            // choose nearest edge to mouse-position
+            if (edgedist >= temp) {
+                m_edge = (ConnectionContainerEditPart)ep;
+                edgedist = temp;
+            }
+            m_edgeCount++;
         }
 
         unmark(wfm);
