@@ -52,6 +52,7 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.time.Duration;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
@@ -79,6 +80,8 @@ public class DialogComponentDuration extends DialogComponent {
     private final JSpinner m_hours;
     private final JSpinner m_minutes;
     private final JSpinner m_seconds;
+
+    private boolean m_loading;
 
     /**
      * @param model model to store the input duration
@@ -110,7 +113,7 @@ public class DialogComponentDuration extends DialogComponent {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                ((SettingsModelDuration)getModel()).setDaysValue(m_days.getValue().toString());
+                saveDuration();
             }
         });
         m_hours = new JSpinner(spinnerModelHours);
@@ -119,7 +122,7 @@ public class DialogComponentDuration extends DialogComponent {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                ((SettingsModelDuration)getModel()).setHoursValue(m_hours.getValue().toString());
+                saveDuration();
             }
         });
         m_minutes = new JSpinner(spinnerModelMinutes);
@@ -128,7 +131,7 @@ public class DialogComponentDuration extends DialogComponent {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                ((SettingsModelDuration)getModel()).setMinutesValue(m_minutes.getValue().toString());
+                saveDuration();
             }
         });
 
@@ -138,7 +141,7 @@ public class DialogComponentDuration extends DialogComponent {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                ((SettingsModelDuration)getModel()).setSecondsValue(m_seconds.getValue().toString());
+                saveDuration();
             }
         });
 
@@ -184,11 +187,7 @@ public class DialogComponentDuration extends DialogComponent {
     protected void updateComponent() {
         final SettingsModelDuration model = (SettingsModelDuration)getModel();
         setEnabledComponents(model.isEnabled());
-        m_days.setValue(model.getDaysValue());
-        m_hours.setValue(model.getHoursValue());
-        m_minutes.setValue(model.getMinutesValue());
-        m_seconds.setValue(model.getSecondsValue());
-
+        loadUnits(model);
     }
 
     /**
@@ -227,5 +226,30 @@ public class DialogComponentDuration extends DialogComponent {
         m_hours.setToolTipText(text);
         m_minutes.setToolTipText(text);
         m_seconds.setToolTipText(text);
+    }
+
+    /**
+     * Update the duration according to the units stored in the model
+     */
+    private void loadUnits(final SettingsModelDuration model) {
+        m_loading = true;
+        Duration duration =  ((SettingsModelDuration)getModel()).getDuration();
+        m_days.setValue(duration.toDays());
+        Duration durationMinusDays = duration.minusDays(duration.toDays());
+        m_hours.setValue(durationMinusDays.toHours());
+        Duration durationMinusHours = durationMinusDays.minusHours(durationMinusDays.toHours());
+        m_minutes.setValue(durationMinusHours.toMinutes());
+        Duration durationMinusSeconds = durationMinusHours.minusMinutes(durationMinusHours.toMinutes());
+        m_seconds.setValue(durationMinusSeconds.getSeconds());
+        m_loading = false;
+    }
+
+    /**
+     * Update the units according to the duration stored in the model
+     */
+    private void saveDuration() {
+        if (!m_loading) {
+            ((SettingsModelDuration)getModel()).setDuration(Duration.ZERO.plusDays(Long.parseLong(m_days.getValue().toString())).plusHours(Long.parseLong(m_hours.getValue().toString())).plusMinutes(Long.parseLong(m_minutes.getValue().toString())).plusSeconds(Long.parseLong(m_seconds.getValue().toString())));
+        }
     }
 }

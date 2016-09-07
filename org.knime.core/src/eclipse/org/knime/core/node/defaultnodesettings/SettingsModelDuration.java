@@ -50,12 +50,14 @@ package org.knime.core.node.defaultnodesettings;
 
 import java.time.Duration;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * The SettingsModel for the default time dialog component.
@@ -65,11 +67,6 @@ import org.knime.core.node.port.PortObjectSpec;
 public class SettingsModelDuration extends SettingsModel {
 
     private Duration m_duration;
-
-    private String m_days;
-    private String m_hours;
-    private String m_minutes;
-    private String m_seconds;
 
     private final String m_configName;
 
@@ -89,32 +86,9 @@ public class SettingsModelDuration extends SettingsModel {
      * @param duration The initial duration value
      */
     public SettingsModelDuration(final String configName,final Duration duration) {
-        if ((configName == null) || "".equals(configName)) {
-            throw new IllegalArgumentException("The configName must be a non-empty string");
-        }
+        CheckUtils.checkArgument(StringUtils.isNotBlank(configName), "The configName must be a non-empty string");
         m_configName = configName;
         m_duration = duration;
-        durationToUnits();
-    }
-
-    /**
-     * Update the duration according to the units stored in the model
-     */
-    private void durationToUnits() {
-        m_days = String.valueOf(m_duration.toDays());
-        Duration durationMinusDays = m_duration.minusDays(Long.parseLong(m_days));
-        m_hours = String.valueOf(durationMinusDays.toHours());
-        Duration durationMinusHours = durationMinusDays.minusHours(Long.parseLong(m_hours));
-        m_minutes = String.valueOf(durationMinusHours.toMinutes());
-        Duration durationMinusSeconds = durationMinusHours.minusMinutes(Long.parseLong(m_minutes));
-        m_seconds = String.valueOf(durationMinusSeconds.getSeconds());
-    }
-
-    /**
-     * Update the units according to the duration stored in the model
-     */
-    private void unitsToDuration() {
-        m_duration = Duration.ZERO.plusDays(Long.parseLong(m_days)).plusHours(Long.parseLong(m_hours)).plusMinutes(Long.parseLong(m_minutes)).plusSeconds(Long.parseLong(m_seconds));
     }
 
     /**
@@ -156,8 +130,8 @@ public class SettingsModelDuration extends SettingsModel {
     }
 
     /**
-     * Returns the total calculated amount of time in milliseconds
-     * @return the total amount of time in milliseconds
+     * Returns the total duration
+     * @return the total duration
      */
     public Duration getDuration() {
         return m_duration;
@@ -170,7 +144,6 @@ public class SettingsModelDuration extends SettingsModel {
     protected void loadSettingsForDialog(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
         m_duration = Duration.parse(settings.getString(m_configName, m_duration.toString()));
-        durationToUnits();
     }
 
     /**
@@ -195,7 +168,6 @@ public class SettingsModelDuration extends SettingsModel {
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_duration = Duration.parse(settings.getString(m_configName));
-        durationToUnits();
     }
 
     /**
@@ -203,7 +175,6 @@ public class SettingsModelDuration extends SettingsModel {
      */
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
-        unitsToDuration();
         settings.addString(m_configName, m_duration.toString());
     }
 
@@ -216,80 +187,9 @@ public class SettingsModelDuration extends SettingsModel {
     }
 
     /**
-     * Set the days value and update the duration representation.
-     *
-     * @param days the days value to be set
+     * @param duration
      */
-    public void setDaysValue(final String days) {
-        m_days = days;
-        unitsToDuration();
+    public void setDuration(final Duration duration) {
+        m_duration = duration;
     }
-
-
-    /**
-     * Set the hours value and update the duration representation.
-     *
-     * @param hours the hours value to be set
-     */
-    public void setHoursValue(final String hours) {
-        m_hours = hours;
-        unitsToDuration();
-    }
-
-    /**
-     * Set the minutes value and update the duration representation.
-     *
-     * @param minutes the seconds value to be set
-     */
-    public void setMinutesValue(final String minutes) {
-        m_minutes = minutes;
-        unitsToDuration();
-    }
-
-    /**
-     * Set the seconds value and update the duration representation.
-     *
-     * @param seconds the seconds value to be set
-     */
-    public void setSecondsValue(final String seconds) {
-        m_seconds = seconds;
-        unitsToDuration();
-    }
-
-    /**
-     * Gets the number of days stored in the model.
-     *
-     * @return the number of days
-     */
-    public long getDaysValue() {
-        return Long.parseLong(m_days);
-    }
-
-    /**
-     * Gets the number of hours stored in the model.
-     *
-     * @return The number of hours
-     */
-    public long getHoursValue() {
-        return Long.parseLong(m_hours);
-    }
-
-    /**
-     * Gets the number of minutes stored in the model.
-     *
-     * @return The number of minutes
-     */
-    public long getMinutesValue() {
-        return Long.parseLong(m_minutes);
-    }
-
-    /**
-     * Gets the number of seconds stored in the model.
-     *
-     * @return The number of seconds
-     */
-    public long getSecondsValue() {
-        return Long.parseLong(m_seconds);
-    }
-
 }
