@@ -53,6 +53,7 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.DefaultEditDomain;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
@@ -74,6 +75,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRouter;
@@ -294,11 +296,11 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         }
 
         //update 'curved' settings and line width
-        if (getWorkflowManager() != null && getWorkflowManager().getEditorUIInformation() != null) {
-            fig.setCurved(getWorkflowManager().getEditorUIInformation().getHasCurvedConnections());
-            fig.setLineWidth(getWorkflowManager().getEditorUIInformation().getConnectionLineWidth());
-        }
-
+        //use the workflow editor (instead of the WorkflowManager) to get the settings from, otherwise
+        //the settings won't get inherited from the parent workflow (if the displayed workflow is a metanode)
+        WorkflowEditor we = (WorkflowEditor)((DefaultEditDomain)getViewer().getEditDomain()).getEditorPart();
+        fig.setCurved(we.getCurrentEditorSettings().getHasCurvedConnections());
+        fig.setLineWidth(we.getCurrentEditorSettings().getConnectionLineWidth());
 
         // recreate list of bendpoints
         ArrayList<AbsoluteBendpoint> constraint =

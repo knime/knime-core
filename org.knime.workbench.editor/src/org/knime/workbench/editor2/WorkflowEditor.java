@@ -839,10 +839,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     protected void createGraphicalViewer(final Composite parent) {
         IEditorSite editorSite = getEditorSite();
-        GraphicalViewer viewer = null;
-        viewer =
-                new WorkflowGraphicalViewerCreator(editorSite,
-                        this.getActionRegistry()).createViewer(parent);
+        GraphicalViewer viewer = new WorkflowGraphicalViewerCreator(editorSite,
+            this.getActionRegistry()).createViewer(parent);
 
         // Add a listener to the static node provider
         NodeProvider.INSTANCE.addListener(this);
@@ -864,6 +862,12 @@ public class WorkflowEditor extends GraphicalEditor implements
         // remember this viewer
         m_graphicalViewer = viewer;
 
+        // load properties like grid- or node-connections settings (e.g. width, curved)
+        // needs to be called before getGraphicalViewer().setContents(m_manager), since
+        // the node connections are repainted on that setContents-call and the properties need
+        // to be set by then
+        loadProperties();
+
         // We already have the model - set it into the viewer
         getGraphicalViewer().setContents(m_manager);
 
@@ -872,7 +876,6 @@ public class WorkflowEditor extends GraphicalEditor implements
                 m_graphicalViewer.getControl(),
                 "org.knime.workbench.help.flow_editor_context");
 
-        loadProperties();
         updateEditorBackgroundColor();
         updateJobManagerDisplay();
         updateTempRemoteWorkflowMessage();
