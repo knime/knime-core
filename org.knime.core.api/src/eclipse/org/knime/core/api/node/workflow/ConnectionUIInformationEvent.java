@@ -45,21 +45,45 @@
  * History
  *   20.09.2007 (Fabian Dill): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
-import java.util.EventListener;
+import java.util.EventObject;
 
 /**
- * Listener for ui information changes on {@link ConnectionContainer}.
+ * Event that's fired by a {@link ConnectionContainer} when its UI information
+ * changes.
+ *
+ * @see ConnectionContainer#setUIInfo(ConnectionUIInformation)
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public interface ConnectionUIInformationListener extends EventListener {
+public class ConnectionUIInformationEvent extends EventObject {
+
+    private final ConnectionUIInformation m_uiInformation;
 
     /**
-     * Invoked when the ui information has changed.
-     *
-     * @param evt the event
+     * @param src the node id of the source node
+     * @param uiInformation the new UI information
      */
-    public void connectionUIInformationChanged(
-            final ConnectionUIInformationEvent evt);
+    public ConnectionUIInformationEvent(
+            final IConnectionContainer src,
+            final ConnectionUIInformation uiInformation) {
+        super(src);
+        m_uiInformation = uiInformation;
+    }
+
+    /**
+     *
+     * @return the new UI information
+     */
+    public ConnectionUIInformation getUIInformation() {
+        return m_uiInformation;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public IConnectionContainer getSource() {
+        return (IConnectionContainer)super.getSource();
+    }
+
 }

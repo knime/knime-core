@@ -54,9 +54,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.gef.EditPartViewer;
+import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -159,7 +159,7 @@ public final class PasteFromWorkflowPersistorCommand
                     conn.getUIInfo();
                 if (oldUI != null) {
                     ConnectionUIInformation newUI =
-                        oldUI.createNewWithOffsetPosition(moveDist);
+                        ConnectionUIInformation.builder(oldUI).translate(moveDist).build();
                     conn.setUIInfo(newUI);
                 }
             }

@@ -68,6 +68,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 
+import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
@@ -234,6 +235,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     private static final String CFG_EDITOR_CURVED_CONNECTIONS = "workflow.editor.curvedConnections";
 
     private static final String CFG_EDITOR_CONNECTION_WIDTH = "workflow.editor.connectionWidth";
+
+    /** The key under which the bounds to store the {@link ConnectionUIInformation} are registered. * */
+    public static final String KEY_BENDPOINTS = "extrainfo.conn.bendpoints";
 
     private static final PortType FALLBACK_PORTTYPE = PortObject.TYPE;
 
@@ -1508,16 +1512,25 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         ConnectionUIInformation connUIInfo = null;
         try {
             String uiInfoClass = loadUIInfoClassName(settings);
-            UIInformation uiInfo = loadUIInfoInstance(uiInfoClass);
-            if (uiInfo != null) {
-                if (!(uiInfo instanceof ConnectionUIInformation)) {
-                    getLogger().debug(
-                        "Could not load UI information for " + "connection between nodes " + sourceID + " and "
-                            + destID + ": expected " + ConnectionUIInformation.class.getName() + " but got "
-                            + uiInfoClass.getClass().getName());
+            if (uiInfoClass != null) {
+                if (!uiInfoClass.equals(ConnectionUIInformation.class.getName())) {
+                    getLogger().debug("Could not load UI information for " + "connection between nodes " + sourceID
+                        + " and " + destID + ": expected " + ConnectionUIInformation.class.getName() + " but got "
+                        + uiInfoClass.getClass().getName());
                 } else {
-                    loadUIInfoSettings(uiInfo, settings);
-                    connUIInfo = (ConnectionUIInformation)uiInfo;
+                    ConnectionUIInformation.Builder builder = ConnectionUIInformation.builder();
+                    // in previous releases, the settings were directly written to the
+                    // top-most node settings object; since 2.0 they are put into a
+                    // separate sub-settings object
+                    NodeSettingsRO subSettings = getLoadVersion().isOlderThan(LoadVersion.V200) ? settings
+                        : settings.getNodeSettings(CFG_UIINFO_SUB_CONFIG);
+                    int size = subSettings.getInt(KEY_BENDPOINTS + "_size");
+                    for (int i = 0; i < size; i++) {
+                        int[] tmp = subSettings.getIntArray(KEY_BENDPOINTS + "_" + i);
+                        //TODO add bendpoint directly as int array
+                        builder.addBendpoint(tmp[0], tmp[1], i);
+                    }
+                    connUIInfo = builder.build();
                 }
             }
         } catch (InvalidSettingsException ise) {
@@ -2374,10 +2387,17 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         settings.addInt("sourcePort", sourcePort);
         int targetPort = connection.getDestPort();
         settings.addInt("destPort", targetPort);
-        UIInformation uiInfo = connection.getUIInfo();
+        ConnectionUIInformation uiInfo = connection.getUIInfo();
         if (uiInfo != null) {
-            saveUIInfoClassName(settings, uiInfo);
-            saveUIInfoSettings(settings, uiInfo);
+            //TODO there is actually no need to store the class name - just keep it for now for backwards compatibility
+            settings.addString(CFG_UIINFO_CLASS, uiInfo.getClass().getName());
+            // nest into separate sub config
+            NodeSettingsWO subConfig = settings.addNodeSettings(CFG_UIINFO_SUB_CONFIG);
+            int[][] allBendpoints = uiInfo.getAllBendpoints();
+            subConfig.addInt(KEY_BENDPOINTS + "_size", allBendpoints.length);
+            for (int i = 0; i < allBendpoints.length; i++) {
+                subConfig.addIntArray(KEY_BENDPOINTS + "_" + i, allBendpoints[i]);
+            }
         }
         if (!connection.isDeletable()) {
             settings.addBoolean("isDeletable", false);

@@ -45,14 +45,11 @@
  * History
  *   09.07.2005 (Florian Georg): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 import java.util.ArrayList;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * Default implementation of a connection extra info.
@@ -61,41 +58,16 @@ import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class ConnectionUIInformation implements UIInformation {
-    /** The key under which the type is registered. * */
-    public static final String KEY_VERSION = "extrainfo.conn.version";
+public class ConnectionUIInformation {
 
-    /** The key under which the bounds are registered. * */
-    public static final String KEY_BENDPOINTS = "extrainfo.conn.bendpoints";
+    private final int[][] m_bendpoints;
 
-    private final ArrayList<int[]> m_bendpoints = new ArrayList<int[]>();
 
-    /**
-     * Constructs a <code>ConnectionUIInformation</code>.
-     *
-     */
-    public ConnectionUIInformation() {
-
-    }
-
-    /**
-     * Add a bendpoint.
-     *
-     * @param x x coordinate
-     * @param y y cordinate
-     * @param index index of the point
-     */
-    public void addBendpoint(final int x, final int y, final int index) {
-        m_bendpoints.add(index, new int[]{x, y});
-    }
-
-    /**
-     * Removes a bendpoint.
-     *
-     * @param index The point index
-     */
-    public void removeBendpoint(final int index) {
-        m_bendpoints.remove(index);
+    ConnectionUIInformation(final Builder connectionUIInfo) {
+        m_bendpoints =new int[connectionUIInfo.m_bendpoints.size()][];
+        for (int i = 0; i < m_bendpoints.length; i++) {
+            m_bendpoints[i] = connectionUIInfo.m_bendpoints.get(i).clone();
+        }
     }
 
     /**
@@ -105,7 +77,7 @@ public class ConnectionUIInformation implements UIInformation {
      * @return the point (int[]{x,y}), or <code>null</code>
      */
     public int[] getBendpoint(final int index) {
-        return m_bendpoints.get(index);
+        return m_bendpoints[index];
     }
 
     /**
@@ -114,47 +86,7 @@ public class ConnectionUIInformation implements UIInformation {
      * @return all bendpoints
      */
     public int[][] getAllBendpoints() {
-        return m_bendpoints.toArray(new int[m_bendpoints.size()][]);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void save(final NodeSettingsWO config) {
-        config.addInt(KEY_BENDPOINTS + "_size", m_bendpoints.size());
-        for (int i = 0; i < m_bendpoints.size(); i++) {
-            config.addIntArray(KEY_BENDPOINTS + "_" + i, m_bendpoints.get(i));
-        }
-
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
-            throws InvalidSettingsException {
-        int size = config.getInt(KEY_BENDPOINTS + "_size");
-        for (int i = 0; i < size; i++) {
-            m_bendpoints.add(i, config.getIntArray(KEY_BENDPOINTS + "_" + i));
-        }
-    }
-
-    /**
-     * Changes the position by setting the bend points according to the given
-     * moving distance.
-     *
-     * @param moveDist the distance to change the bend points
-     * @return A new copy of this object with all its bend points shifted
-     *         by the argument offset.
-     */
-    public ConnectionUIInformation createNewWithOffsetPosition(
-            final int[] moveDist) {
-        ConnectionUIInformation copy = new ConnectionUIInformation();
-        for (int[] point : m_bendpoints) {
-            copy.m_bendpoints.add(new int[] {
-                    point[0] +  moveDist[0], point[1] +  moveDist[1]});
-        }
-        return copy;
+        return m_bendpoints.clone();
     }
 
     /**
@@ -175,14 +107,95 @@ public class ConnectionUIInformation implements UIInformation {
     /** {@inheritDoc} */
     @Override
     public ConnectionUIInformation clone() {
-        ConnectionUIInformation newObject
-            = new ConnectionUIInformation();
-        newObject.m_bendpoints.clear();
-        for (int [] bendpoint : this.m_bendpoints) {
-            newObject.m_bendpoints.add(new int[] {
-                    bendpoint[0], bendpoint[1]
-            });
+        //we should not provide a clone method
+        //e.g. conflicts with the final-fields
+        //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
+        throw new UnsupportedOperationException();
+    }
+
+    /** @return new Builder with defaults. */
+    public static final Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * @param connectionUIInfo object to copy the values from
+     * @return new Builder with the values copied from the passed argument
+     */
+    public static final Builder builder(final ConnectionUIInformation connectionUIInfo) {
+        return new Builder().copyFrom(connectionUIInfo);
+    }
+
+    /** Builder pattern for {@link ConnectionUIInformation}. */
+    public static final class Builder {
+
+        private ArrayList<int[]> m_bendpoints = new ArrayList<int[]>();
+
+        /** Builder with defaults. */
+        Builder() {
         }
-        return newObject;
+
+        /** Copy all fields from argument and return this.
+         * @param connectionUIInfo to copy from, not null.
+         * @return this
+         */
+        public Builder copyFrom(final ConnectionUIInformation connectionUIInfo) {
+            m_bendpoints = new ArrayList<int[]>(connectionUIInfo.m_bendpoints.length);
+            for (int i = 0; i < connectionUIInfo.m_bendpoints.length; i++) {
+                m_bendpoints.add(connectionUIInfo.m_bendpoints[i].clone());
+            }
+            return this;
+        }
+
+        /**
+         * Changes the position by setting the bend points according to the given
+         * moving distance.
+         *
+         * @param moveDist the distance to change the bend points
+         * @return this
+         */
+        public Builder translate(final int[] moveDist) {
+            m_bendpoints.forEach(point -> {
+                point[0] = point[0] + moveDist[0];
+                point[1] = point[1] + moveDist[1];
+            });
+            return this;
+        }
+
+        /**
+         * Add a bendpoint.
+         *
+         * @param x x coordinate
+         * @param y y cordinate
+         * @param index index of the point
+         * @return this
+         */
+        public Builder addBendpoint(final int x, final int y, final int index) {
+            m_bendpoints.add(index, new int[]{x, y});
+            return this;
+        }
+
+        /**
+         * Removes a bendpoint.
+         *
+         * @param index The point index
+         * @return this
+         */
+        public Builder removeBendpoint(final int index) {
+            m_bendpoints.remove(index);
+            return this;
+        }
+
+        /** @return {@link ConnectionUIInformation} with current values. */
+        public ConnectionUIInformation build() {
+            return new ConnectionUIInformation(this);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return ToStringBuilder.reflectionToString(this);
+        }
+
     }
 }

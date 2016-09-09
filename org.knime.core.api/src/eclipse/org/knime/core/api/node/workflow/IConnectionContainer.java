@@ -71,10 +71,10 @@ public interface IConnectionContainer {
         }
     }
 
-//    /**
-//     * @return the uiInfo
-//     */
-//    ConnectionUIInformation getUIInfo();
+    /**
+     * @return the uiInfo
+     */
+    ConnectionUIInformation getUIInfo();
 
     /**
      * @return the dest
@@ -110,32 +110,32 @@ public interface IConnectionContainer {
      * @return the ID for this connection.
      */
     ConnectionID getID();
-//
-//    /**
-//     * @param uiInfo the uiInfo to set
-//     */
-//    void setUIInfo(ConnectionUIInformation uiInfo);
-//
-//    /** Add a listener to the list of registered listeners.
-//     * @param l The listener to add, must not be null.
-//     */
-//    void addUIInformationListener(ConnectionUIInformationListener l);
-//
-//    /** Remove a registered listener from the listener list.
-//     * @param l The listener to remove.
-//     */
-//    void removeUIInformationListener(ConnectionUIInformationListener l);
-//
-//    /**
-//     * Adds a listener to the list of registered progress listeners.
-//     * @param listener The listener to add, must not be null.
-//     */
-//    void addProgressListener(ConnectionProgressListener listener);
-//
-//    /**
-//     * Removes a listener from the list of registered progress listeners.
-//     * @param listener The listener to remove
-//     */
-//    void removeProgressListener(ConnectionProgressListener listener);
+
+    /**
+     * @param uiInfo the uiInfo to set
+     */
+    void setUIInfo(ConnectionUIInformation uiInfo);
+
+    /** Add a listener to the list of registered listeners.
+     * @param l The listener to add, must not be null.
+     */
+    void addUIInformationListener(ConnectionUIInformationListener l);
+
+    /** Remove a registered listener from the listener list.
+     * @param l The listener to remove.
+     */
+    void removeUIInformationListener(ConnectionUIInformationListener l);
+
+    /**
+     * Adds a listener to the list of registered progress listeners.
+     * @param listener The listener to add, must not be null.
+     */
+    void addProgressListener(ConnectionProgressListener listener);
+
+    /**
+     * Removes a listener from the list of registered progress listeners.
+     * @param listener The listener to remove
+     */
+    void removeProgressListener(ConnectionProgressListener listener);
 
 }

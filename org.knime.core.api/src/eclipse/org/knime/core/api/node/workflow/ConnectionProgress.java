@@ -43,44 +43,71 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
-import java.util.EventObject;
+import java.util.function.Supplier;
+
 
 /**
- * This event is fired in order to update the UI with connection statistics and
- * provide animation.
+ * Contained in a {@link ConnectionProgressEvent} which is fired when the
+ * progress information has changed.
  */
-@SuppressWarnings("serial")
-public final class ConnectionProgressEvent extends EventObject {
+public final class ConnectionProgress {
 
-    private final ConnectionProgress m_progress;
+    private final boolean m_inProgress;
+
+    private final Supplier<String> m_messageSupplier;
 
     /**
-     * @param src the source connection
-     * @param progress the progress object
+     * Create a progress event based on progress value and message.
+     *
+     * @param inProgress true if currently in-progress.
+     * @param message the message to display (or <code>null</code> to display
+     *            nothing)
      */
-    public ConnectionProgressEvent(final ConnectionContainer src,
-            final ConnectionProgress progress) {
-        super(src);
-        m_progress = progress;
+    public ConnectionProgress(final boolean inProgress, final String message) {
+        this(inProgress, () -> message);
     }
 
     /**
+     * Create a progress event based on progress value and message supplier. The supplier is only evaluated if
+     * the event is processed by the UI (avoids storm of string creation, possibly synced on number formats).
      *
-     * @return the progress object
+     * @param inProgress true if currently in-progress.
+     * @param messageSupplier the message supplier to display (or <code>null</code> to display nothing)
+     * @since 3.0
      */
-    public ConnectionProgress getConnectionProgress() {
-        return m_progress;
+    public ConnectionProgress(final boolean inProgress, final Supplier<String> messageSupplier) {
+        m_inProgress = inProgress;
+        m_messageSupplier = messageSupplier;
     }
 
     /**
-     *
-     * {@inheritDoc}
+     * @return whether we are currently in-progress. Within the UI, this
+     * determines whether we show the lines as dashed or solid. (If dashed, the
+     * lines are also animated, stepping with each event).
      */
-    @Override
-    public ConnectionContainer getSource() {
-        return (ConnectionContainer)super.getSource();
+    public boolean inProgress() {
+        return m_inProgress;
+    }
+
+    /**
+     * Returns the current progress message or <code>null</code> to display
+     * nothing.
+     *
+     * @return current progress message or <code>null</code> to display nothing.
+     */
+    public String getMessage() {
+        return m_messageSupplier.get();
+    }
+
+    /**
+     * Returns whether there is currently a message to display.
+     *
+     * @return whether there is currently a message to display.
+     */
+    public boolean hasMessage() {
+        return m_messageSupplier != null && m_messageSupplier.get() != null;
     }
 
 }

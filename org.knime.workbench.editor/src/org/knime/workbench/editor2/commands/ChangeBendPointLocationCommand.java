@@ -49,8 +49,8 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
+import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -150,7 +150,7 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
         int shiftX = shiftBack ? locationShift.x * -1 : locationShift.x;
         int shiftY = shiftBack ? locationShift.y * -1 : locationShift.y;
 
-        ConnectionUIInformation newUI = new ConnectionUIInformation();
+        ConnectionUIInformation.Builder newUIBuilder = ConnectionUIInformation.builder();
         for (int i = 0; i < length; i++) {
 
             // get old
@@ -158,10 +158,10 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
             int y = ui.getBendpoint(i)[1];
 
             // set the new point
-            newUI.addBendpoint(x + shiftX, y + shiftY, i);
+            newUIBuilder.addBendpoint(x + shiftX, y + shiftY, i);
         }
 
         // must set explicitly so that event is fired by container
-        cc.setUIInfo(newUI);
+        cc.setUIInfo(newUIBuilder.build());
     }
 }

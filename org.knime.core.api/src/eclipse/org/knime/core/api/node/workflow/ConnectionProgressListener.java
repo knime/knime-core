@@ -40,50 +40,24 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   20.09.2007 (Fabian Dill): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
-import java.util.EventObject;
+import java.util.EventListener;
 
 /**
- * Event that's fired by a {@link ConnectionContainer} when its UI information
- * changes.
- *
- * @see ConnectionContainer#setUIInfo(ConnectionUIInformation)
- *
- * @author Bernd Wiswedel, University of Konstanz
+ * Listener for <code>ConnectionProgressEvent</code> fired when the progress
+ * information has changed.
  */
-public class ConnectionUIInformationEvent extends EventObject {
-
-    private final ConnectionUIInformation m_uiInformation;
+public interface ConnectionProgressListener extends EventListener {
 
     /**
-     * @param src the node id of the source node
-     * @param uiInformation the new UI information
-     */
-    public ConnectionUIInformationEvent(
-            final ConnectionContainer src,
-            final ConnectionUIInformation uiInformation) {
-        super(src);
-        m_uiInformation = uiInformation;
-    }
-
-    /**
+     * Invoked when the progress has changed.
      *
-     * @return the new UI information
+     * @param pe The progress event holding the progress information.
      */
-    public ConnectionUIInformation getUIInformation() {
-        return m_uiInformation;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public ConnectionContainer getSource() {
-        return (ConnectionContainer)super.getSource();
-    }
+    void progressChanged(final ConnectionProgressEvent pe);
 
 }

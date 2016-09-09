@@ -51,8 +51,8 @@ import java.util.Map;
 
 import org.eclipse.gef.commands.Command;
 import org.knime.core.api.node.workflow.ConnectionID;
+import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;

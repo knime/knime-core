@@ -47,6 +47,11 @@ package org.knime.core.node.workflow;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.api.node.workflow.ConnectionID;
+import org.knime.core.api.node.workflow.ConnectionProgressEvent;
+import org.knime.core.api.node.workflow.ConnectionProgressListener;
+import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.ConnectionUIInformationEvent;
+import org.knime.core.api.node.workflow.ConnectionUIInformationListener;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.node.util.CheckUtils;
 
@@ -101,6 +106,7 @@ public class ConnectionContainer implements IConnectionContainer, ConnectionProg
     /**
      * @return the uiInfo
      */
+    @Override
     public ConnectionUIInformation getUIInfo() {
         return m_uiInfo;
     }
@@ -173,6 +179,7 @@ public class ConnectionContainer implements IConnectionContainer, ConnectionProg
     /**
      * @param uiInfo the uiInfo to set
      */
+    @Override
     public void setUIInfo(final ConnectionUIInformation uiInfo) {
         m_uiInfo = uiInfo;
         notifyUIListeners(new ConnectionUIInformationEvent(this, m_uiInfo));
@@ -181,6 +188,7 @@ public class ConnectionContainer implements IConnectionContainer, ConnectionProg
     /** Add a listener to the list of registered listeners.
      * @param l The listener to add, must not be null.
      */
+    @Override
     public void addUIInformationListener(
             final ConnectionUIInformationListener l) {
         m_uiListeners.add(CheckUtils.checkArgumentNotNull(l));
@@ -189,6 +197,7 @@ public class ConnectionContainer implements IConnectionContainer, ConnectionProg
     /** Remove a registered listener from the listener list.
      * @param l The listener to remove.
      */
+    @Override
     public void removeUIInformationListener(final ConnectionUIInformationListener l) {
         m_uiListeners.remove(l);
     }
@@ -197,6 +206,7 @@ public class ConnectionContainer implements IConnectionContainer, ConnectionProg
      * Adds a listener to the list of registered progress listeners.
      * @param listener The listener to add, must not be null.
      */
+    @Override
     public void addProgressListener(final ConnectionProgressListener listener) {
         m_progressListeners.add(CheckUtils.checkArgumentNotNull(listener));
     }
@@ -205,6 +215,7 @@ public class ConnectionContainer implements IConnectionContainer, ConnectionProg
      * Removes a listener from the list of registered progress listeners.
      * @param listener The listener to remove
      */
+    @Override
     public void removeProgressListener(final ConnectionProgressListener listener) {
         m_progressListeners.remove(listener);
     }

@@ -50,8 +50,9 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.api.node.workflow.ConnectionID;
+import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.ConnectionUIInformation.Builder;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -101,17 +102,19 @@ public class NewBendpointMoveCommand extends AbstractKNIMECommand {
     public void execute() {
         ConnectionContainer connection = getConnection();
         ConnectionUIInformation uiInfo = connection.getUIInfo();
+        ConnectionUIInformation.Builder uiInfoBuilder = ConnectionUIInformation.builder(connection.getUIInfo());
         int[] p = uiInfo.getBendpoint(m_index);
         m_oldLocation = new Point(p[0], p[1]);
 
         Point newLocation = m_newLocation.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, newLocation, true);
 
-        uiInfo.removeBendpoint(m_index);
-        uiInfo.addBendpoint(newLocation.x, newLocation.y, m_index);
+        //TODO for every single bendpoint move a new ConnectionUIInformation object needs to be created
+        uiInfoBuilder.removeBendpoint(m_index);
+        uiInfoBuilder.addBendpoint(newLocation.x, newLocation.y, m_index);
 
         // issue notification
-        connection.setUIInfo(uiInfo);
+        connection.setUIInfo(uiInfoBuilder.build());
     }
 
     /**
@@ -120,16 +123,16 @@ public class NewBendpointMoveCommand extends AbstractKNIMECommand {
     @Override
     public void redo() {
         ConnectionContainer connection = getConnection();
-        ConnectionUIInformation uiInfo = connection.getUIInfo();
-        uiInfo.removeBendpoint(m_index);
+        ConnectionUIInformation.Builder uiInfoBuilder = ConnectionUIInformation.builder(connection.getUIInfo());
+        uiInfoBuilder.removeBendpoint(m_index);
 
         Point newLocation = m_newLocation.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, newLocation, true);
 
-        uiInfo.addBendpoint(newLocation.x, newLocation.y, m_index);
+        uiInfoBuilder.addBendpoint(newLocation.x, newLocation.y, m_index);
 
         // issue notification
-        connection.setUIInfo(uiInfo);
+        connection.setUIInfo(uiInfoBuilder.build());
 
     }
 
@@ -142,11 +145,12 @@ public class NewBendpointMoveCommand extends AbstractKNIMECommand {
         ConnectionUIInformation uiInfo = connection.getUIInfo();
         Point oldLocation = m_oldLocation.getCopy();
 
-        uiInfo.removeBendpoint(m_index);
-        uiInfo.addBendpoint(oldLocation.x, oldLocation.y, m_index);
+        Builder builder = ConnectionUIInformation.builder(uiInfo);
+        builder.removeBendpoint(m_index);
+        builder.addBendpoint(oldLocation.x, oldLocation.y, m_index);
 
         // issue notification
-        connection.setUIInfo(uiInfo);
+        connection.setUIInfo(builder.build());
     }
 
     /**

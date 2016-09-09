@@ -58,9 +58,9 @@ import java.util.Map;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.knime.core.api.node.workflow.ConnectionID;
+import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -340,7 +340,7 @@ public class LayoutManager {
                 m_oldBendpoints.put(conn.getID(), null);
             }
 
-            ConnectionUIInformation newUI = new ConnectionUIInformation();
+            ConnectionUIInformation.Builder newUIBuilder = ConnectionUIInformation.builder();
             Edge e = m_workbenchToGraphEdges.get(conn);
             if (e == null) {
                 // a parallel connection not represented by the edge
@@ -357,10 +357,11 @@ public class LayoutManager {
                 int extraY = 24;
                 for (int i = 0; i < newBends.size(); i++) {
                     Point2D b = newBends.get(i);
-                    newUI.addBendpoint((int)Math.round((b.getX() - coordOffsetX) * X_STRETCH) + extraX + minX,
+                    newUIBuilder.addBendpoint((int)Math.round((b.getX() - coordOffsetX) * X_STRETCH) + extraX + minX,
                             (int)Math.round((b.getY() - coordOffsetY) * Y_STRETCH) + extraY + minY, i);
                 }
             }
+            ConnectionUIInformation newUI = newUIBuilder.build();
             conn.setUIInfo(newUI);
 
             // compute bendpoints for parallel connections (slightly offset)
@@ -369,7 +370,7 @@ public class LayoutManager {
                 // destination port determines offset
                 int yOffset = (parConn.getDestPort() - conn.getDestPort()) * 10;
                 ConnectionUIInformation parUI =
-                    newUI.createNewWithOffsetPosition(new int[] {0, yOffset});
+                    ConnectionUIInformation.builder(newUI).translate(new int[] {0, yOffset}).build();
                 parConn.setUIInfo(parUI);
             }
         }

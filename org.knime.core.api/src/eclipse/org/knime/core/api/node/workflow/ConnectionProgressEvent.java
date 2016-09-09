@@ -43,21 +43,44 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
-import java.util.EventListener;
+import java.util.EventObject;
 
 /**
- * Listener for <code>ConnectionProgressEvent</code> fired when the progress
- * information has changed.
+ * This event is fired in order to update the UI with connection statistics and
+ * provide animation.
  */
-public interface ConnectionProgressListener extends EventListener {
+@SuppressWarnings("serial")
+public final class ConnectionProgressEvent extends EventObject {
+
+    private final ConnectionProgress m_progress;
 
     /**
-     * Invoked when the progress has changed.
-     *
-     * @param pe The progress event holding the progress information.
+     * @param src the source connection
+     * @param progress the progress object
      */
-    void progressChanged(final ConnectionProgressEvent pe);
+    public ConnectionProgressEvent(final IConnectionContainer src,
+            final ConnectionProgress progress) {
+        super(src);
+        m_progress = progress;
+    }
+
+    /**
+     *
+     * @return the progress object
+     */
+    public ConnectionProgress getConnectionProgress() {
+        return m_progress;
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public IConnectionContainer getSource() {
+        return (IConnectionContainer)super.getSource();
+    }
 
 }

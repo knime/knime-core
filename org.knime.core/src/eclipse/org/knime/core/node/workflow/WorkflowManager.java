@@ -107,7 +107,6 @@ import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -115,6 +114,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.api.node.workflow.ConnectionID;
+import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.IConnectionContainer.ConnectionType;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
@@ -3801,9 +3801,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             && (newIDsHashSet.contains(cc.getDest()))) {
                         ConnectionUIInformation cuii = cc.getUIInfo();
                         if (cuii != null) {
-                            ConnectionUIInformation newUI =
-                                cuii.createNewWithOffsetPosition(
-                                        new int[] {xShift, yShift});
+                            ConnectionUIInformation newUI = ConnectionUIInformation.builder(cuii)
+                                .translate(new int[]{xShift, yShift}).build();
                             cc.setUIInfo(newUI);
                         }
                     }
@@ -4225,7 +4224,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if ((!cc.getSource().equals(newWFM.getID())) && (!cc.getDest().equals(newWFM.getID()))) {
                         ConnectionUIInformation uii = cc.getUIInfo();
                         if (uii != null) {
-                            ConnectionUIInformation newUI = uii.createNewWithOffsetPosition(new int[]{xshift, yshift});
+                            ConnectionUIInformation newUI = ConnectionUIInformation.builder(uii)
+                                .translate(new int[]{xshift, yshift}).build();
                             cc.setUIInfo(newUI);
                         }
                     }

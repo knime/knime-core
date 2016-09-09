@@ -52,8 +52,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.api.node.workflow.ConnectionID;
+import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -111,7 +111,7 @@ public class VerticAlignManager {
         for (Map.Entry<NodeContainerEditPart, Integer> e : offsets.entrySet()) {
             NodeContainerEditPart node = e.getKey();
             NodeContainer nc = node.getNodeContainer();
-            NodeUIInformation uiInfo = (NodeUIInformation)nc.getUIInformation();
+            NodeUIInformation uiInfo = nc.getUIInformation();
             int[] b = uiInfo.getBounds();
             NodeUIInformation newCoord =
                     new NodeUIInformation(b[0] + e.getValue(), b[1], b[2],
