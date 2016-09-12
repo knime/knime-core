@@ -51,7 +51,6 @@ import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
-import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -76,11 +75,8 @@ public class MainPreferencePage extends FieldEditorPreferencePage
 
     private RadioGroupFieldEditor m_consoleLogEditor;
 
-    private StringFieldEditor m_nodeLabelPrefix;
     private IntegerFieldEditor m_autoSaveIntervalEditor;
     private BooleanFieldEditor m_autoSaveWithDataEditor;
-
-    private BooleanFieldEditor m_emptyNodeLabel;
 
     /**
      * Constructor.
@@ -131,74 +127,6 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         addField(dataAwareExecutePromptEditor);
 
         addField(new HorizontalLineField(parent));
-        IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
-                PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,
-                "Maximal size for most frequently used nodes", parent, 3);
-        freqHistorySizeEditor.setValidRange(1, 50);
-        freqHistorySizeEditor.setTextLimit(3);
-        freqHistorySizeEditor.load();
-        IntegerFieldEditor usedHistorySizeEditor = new IntegerFieldEditor(
-                PreferenceConstants.P_FAV_LAST_USED_SIZE,
-                "Maximal size for last used nodes", parent, 3);
-        usedHistorySizeEditor.setValidRange(1, 50);
-        usedHistorySizeEditor.setTextLimit(3);
-        usedHistorySizeEditor.load();
-        addField(usedHistorySizeEditor);
-        addField(freqHistorySizeEditor);
-
-        addField(new HorizontalLineField(parent));
-        m_emptyNodeLabel = new BooleanFieldEditor(
-                PreferenceConstants.P_SET_NODE_LABEL,
-                "Set node label prefix", parent) {
-            /** {@inheritDoc}  */
-            @Override
-            protected void valueChanged(final boolean old, final boolean neu) {
-                m_nodeLabelPrefix.setEnabled(neu, parent);
-            }
-        };
-        m_nodeLabelPrefix = new StringFieldEditor(
-                PreferenceConstants.P_DEFAULT_NODE_LABEL,
-                "Default node label (prefix): ", parent);
-        addField(m_emptyNodeLabel);
-        addField(m_nodeLabelPrefix);
-        IntegerFieldEditor fontSizeEditor = new IntegerFieldEditor(
-                PreferenceConstants.P_NODE_LABEL_FONT_SIZE,
-                "Change node name and label font size", parent);
-        addField(fontSizeEditor);
-
-        addField(new HorizontalLineField(parent));
-        addField(new LabelField(parent, "These grid preferences apply to new workflows only."));
-        addField(new BooleanFieldEditor(PreferenceConstants.P_GRID_SHOW,
-                "Show grid", parent));
-        addField(new BooleanFieldEditor(PreferenceConstants.P_GRID_SNAP_TO,
-                "Snap to grid", parent));
-        IntegerFieldEditor gridSizeXEditor = new IntegerFieldEditor(
-                PreferenceConstants.P_GRID_SIZE_X, "Horiz. grid size (in px)", parent);
-        gridSizeXEditor.setValidRange(3, 500);
-        gridSizeXEditor.setTextLimit(3);
-        gridSizeXEditor.load();
-        addField(gridSizeXEditor);
-        IntegerFieldEditor gridSizeYEditor = new IntegerFieldEditor(
-                PreferenceConstants.P_GRID_SIZE_Y, "Vertic. grid size (in px)", parent);
-        gridSizeYEditor.setValidRange(3, 500);
-        gridSizeYEditor.setTextLimit(3);
-        gridSizeYEditor.load();
-        addField(gridSizeYEditor);
-        addField(new LabelField(parent, "To change the grid settings of a workflow, use the 'Workflow Editor Settings' "
-                + "toolbar button."));
-
-        addField(new HorizontalLineField(parent));
-        addField(new LabelField(parent, "These node connection settings apply to new workflows only."));
-        addField(new BooleanFieldEditor(PreferenceConstants.P_CURVED_CONNECTIONS,
-                "Curved connections", parent));
-        ComboFieldEditor lineWidthEditor = new ComboFieldEditor(PreferenceConstants.P_CONNECTIONS_LINE_WIDTH,
-            "Node connections line width", new String[][]{{"1", "1"}, {"2", "2"}, {"3", "3"}}, parent);
-        lineWidthEditor.load();
-        addField(lineWidthEditor);
-        addField(new LabelField(parent, "To change the node connection settings of a workflow, use the 'Workflow Editor Settings' "
-                + "toolbar button."));
-
-        addField(new HorizontalLineField(parent));
         final BooleanFieldEditor enableAutoSaveBooleanField = new BooleanFieldEditor(
             PreferenceConstants.P_AUTO_SAVE_ENABLE, "Auto Save open workflows", parent) {
             @Override
@@ -235,6 +163,23 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         addField(new HorizontalLineField(parent));
         addField(new BooleanFieldEditor(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING,
             "Suppress warnings about missing browser integration", parent));
+
+        addField(new HorizontalLineField(parent));
+        addField(new LabelField(parent, "Settings for the 'Favorite Nodes' view"));
+        IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
+                PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,
+                "Maximal size for most frequently used nodes", parent, 3);
+        freqHistorySizeEditor.setValidRange(1, 50);
+        freqHistorySizeEditor.setTextLimit(3);
+        freqHistorySizeEditor.load();
+        IntegerFieldEditor usedHistorySizeEditor = new IntegerFieldEditor(
+                PreferenceConstants.P_FAV_LAST_USED_SIZE,
+                "Maximal size for last used nodes", parent, 3);
+        usedHistorySizeEditor.setValidRange(1, 50);
+        usedHistorySizeEditor.setTextLimit(3);
+        usedHistorySizeEditor.load();
+        addField(usedHistorySizeEditor);
+        addField(freqHistorySizeEditor);
     }
 
     /** {@inheritDoc} */
@@ -251,8 +196,6 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         m_consoleLogEditor.setPreferenceStore(
                 KNIMECorePlugin.getDefault().getPreferenceStore());
         m_consoleLogEditor.load();
-        m_nodeLabelPrefix.setEnabled(m_emptyNodeLabel.getBooleanValue(),
-                getFieldEditorParent());
     }
 
     /** {@inheritDoc} */
