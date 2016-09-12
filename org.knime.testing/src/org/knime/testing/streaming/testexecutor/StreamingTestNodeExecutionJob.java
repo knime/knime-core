@@ -673,7 +673,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             WorkflowCopyContent sinkContent = workflowManager.paste(workflowPersistor);
             nodeContainers[i] = (NativeNodeContainer)workflowManager.getNodeContainer(sinkContent.getNodeIDs()[0]);
             nodeContainers[i]
-                .setUIInformation(uiInf.createNewWithOffsetPosition(new int[]{0, (i + 1) * uiInf.getBounds()[3]}));
+                .setUIInformation(NodeUIInformation.builder(uiInf).translate(new int[]{0, (i + 1) * uiInf.getBounds()[3]}).build());
             nodeIDs[i] = nodeContainers[i].getID();
 
             //set all incoming connections
