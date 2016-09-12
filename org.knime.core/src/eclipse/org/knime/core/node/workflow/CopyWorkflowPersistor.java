@@ -73,9 +73,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     private final Map<Integer, NodeContainerPersistor> m_ncs;
     private final Set<ConnectionContainerTemplate> m_cons;
-    private final UIInformation m_inportUIInfo;
+    private final NodeUIInformation m_inportUIInfo;
     private final WorkflowPortTemplate[] m_inportTemplates;
-    private final UIInformation m_outportUIInfo;
+    private final NodeUIInformation m_outportUIInfo;
     private final WorkflowPortTemplate[] m_outportTemplates;
     private final EditorUIInformation m_editorUIInformation;
     private final String m_name;
@@ -204,7 +204,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public UIInformation getInPortsBarUIInfo() {
+    public NodeUIInformation getInPortsBarUIInfo() {
         return m_inportUIInfo;
     }
 
@@ -272,7 +272,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public UIInformation getOutPortsBarUIInfo() {
+    public NodeUIInformation getOutPortsBarUIInfo() {
         return m_outportUIInfo;
     }
 

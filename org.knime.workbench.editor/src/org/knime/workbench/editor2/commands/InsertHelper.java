@@ -130,9 +130,11 @@ public class InsertHelper {
     public void reconnect(final NodeContainer container, final boolean snapToGrid, final int x, final int y) {
 
         // reset node position
-        NodeUIInformation info = new NodeUIInformation(x, y, -1, -1, false);
-        info.setSnapToGrid(snapToGrid);
-        info.setIsDropLocation(false);
+        NodeUIInformation info = NodeUIInformation.builder()
+                .setNodeLocation(x, y, -1, -1)
+                .setHasAbsoluteCoordinates(false)
+                .setSnapToGrid(snapToGrid)
+                .setIsDropLocation(false).build();
         container.setUIInformation(info);
 
         int p = (container instanceof WorkflowManager) ? 0 : 1; //skip fv port of nodes for now

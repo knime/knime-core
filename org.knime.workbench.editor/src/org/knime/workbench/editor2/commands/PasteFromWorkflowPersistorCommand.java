@@ -147,8 +147,7 @@ public final class PasteFromWorkflowPersistorCommand
             newIDs.add(id);
             NodeContainer nc = manager.getNodeContainer(id);
             NodeUIInformation oldUI = nc.getUIInformation();
-            NodeUIInformation newUI =
-                oldUI.createNewWithOffsetPosition(moveDist);
+            NodeUIInformation newUI = NodeUIInformation.builder(oldUI).translate(moveDist).build();
             nc.setUIInformation(newUI);
         }
         for (ConnectionContainer conn : manager.getConnectionContainers()) {

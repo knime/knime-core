@@ -154,9 +154,11 @@ public class ReplaceHelper {
         // reset node location
         NodeUIInformation uiInformation = m_oldNode.getUIInformation();
         int[] bounds = uiInformation.getBounds();
-        NodeUIInformation info = new NodeUIInformation(bounds[0], bounds[1], -1, -1, true);
-        info.setSnapToGrid(uiInformation.getSnapToGrid());
-        info.setIsDropLocation(false);
+        NodeUIInformation info = NodeUIInformation.builder()
+                .setNodeLocation(bounds[0], bounds[1], -1, -1)
+                .setHasAbsoluteCoordinates(true)
+                .setSnapToGrid(uiInformation.getSnapToGrid())
+                .setIsDropLocation(false).build();
         container.setUIInformation(info);
 
         int inShift;

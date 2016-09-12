@@ -144,10 +144,11 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
                 throw new RuntimeException("No template returned by load routine, see log for details");
             }
             // create extra info and set it
-            NodeUIInformation info = new NodeUIInformation(
-                    m_location.x, m_location.y, -1, -1, false);
-            info.setSnapToGrid(m_snapToGrid);
-            info.setIsDropLocation(true);
+            NodeUIInformation info = NodeUIInformation.builder()
+                    .setNodeLocation(m_location.x, m_location.y, -1, -1)
+                    .setHasAbsoluteCoordinates(false)
+                    .setSnapToGrid(m_snapToGrid)
+                    .setIsDropLocation(true).build();
             m_container.setUIInformation(info);
         } catch (Throwable t) {
             Throwable cause = t;

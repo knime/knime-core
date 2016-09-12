@@ -316,10 +316,10 @@ public class LayoutManager {
                         * X_STRETCH) + minX;
                 int y = (int)Math.round((m_g.getY(gNode) - coordOffsetY)
                         * Y_STRETCH) + minY;
-                NodeUIInformation newCoord =
-                        new NodeUIInformation(x, y, b[2], b[3],
-                                uiInfo.hasAbsoluteCoordinates());
-                newCoord.setSnapToGrid(WorkflowEditor.getActiveEditorSnapToGrid());
+                NodeUIInformation newCoord = NodeUIInformation.builder()
+                        .setNodeLocation(x, y, b[2], b[3])
+                        .setHasAbsoluteCoordinates(uiInfo.hasAbsoluteCoordinates())
+                        .setSnapToGrid(WorkflowEditor.getActiveEditorSnapToGrid()).build();
                 LOGGER.debug("Node " + nc + " gets auto-layout coordinates "
                         + newCoord);
                 // save old coordinates for undo

@@ -55,7 +55,7 @@ import java.util.EventObject;
  */
 public class NodeUIInformationEvent extends EventObject {
 
-    private final UIInformation m_uiInformation;
+    private final NodeUIInformation m_uiInformation;
 
     private final String m_description;
 
@@ -64,7 +64,7 @@ public class NodeUIInformationEvent extends EventObject {
      * @param uiInformation the new UI information
      */
     public NodeUIInformationEvent(final NodeID src,
-            final UIInformation uiInformation,
+            final NodeUIInformation uiInformation,
             final String description) {
         super(src);
         m_uiInformation = uiInformation;
@@ -75,7 +75,7 @@ public class NodeUIInformationEvent extends EventObject {
      *
      * @return the new UI information
      */
-    public UIInformation getUIInformation() {
+    public NodeUIInformation getUIInformation() {
         return m_uiInformation;
     }
 

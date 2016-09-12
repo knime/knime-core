@@ -111,11 +111,11 @@ public class AddNewMetaNodeCommand extends AbstractKNIMECommand {
         m_metanodeID = getHostWFM().createAndAddSubWorkflow(m_inPorts, m_outPorts, m_name).getID();
         // create extra info and set it
         NodeContainer cont = getHostWFM().getNodeContainer(m_metanodeID);
-        NodeUIInformation info = new NodeUIInformation(m_location.x, m_location.y, -1, -1, true);
+        NodeUIInformation.Builder infoBuilder = NodeUIInformation.builder().setNodeLocation(m_location.x, m_location.y, -1, -1);
         if (WorkflowEditor.getActiveEditorSnapToGrid()) {
-            info.setSnapToGrid(true);
+            infoBuilder.setSnapToGrid(true);
         }
-        cont.setUIInformation(info);
+        cont.setUIInformation(infoBuilder.build());
     }
 
     /** {@inheritDoc} */

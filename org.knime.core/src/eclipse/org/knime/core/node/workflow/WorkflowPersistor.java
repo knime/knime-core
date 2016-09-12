@@ -181,12 +181,12 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** Get UI information for workflow input ports.
      * @return the ui info or null if not set.
      */
-    public UIInformation getInPortsBarUIInfo();
+    public NodeUIInformation getInPortsBarUIInfo();
 
     /** Get UI information for workflow output ports.
      * @return the ui info or null if not set.
      */
-    public UIInformation getOutPortsBarUIInfo();
+    public NodeUIInformation getOutPortsBarUIInfo();
 
     /** @return editor UI infos.
      * @since 2.6  */

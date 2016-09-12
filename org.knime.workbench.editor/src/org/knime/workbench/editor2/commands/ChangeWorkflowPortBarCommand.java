@@ -111,9 +111,8 @@ public class ChangeWorkflowPortBarCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
-        NodeUIInformation uiInfo = new NodeUIInformation(
-                m_newBounds.x, m_newBounds.y,
-                m_newBounds.width, m_newBounds.height, true);
+        NodeUIInformation uiInfo = NodeUIInformation.builder()
+            .setNodeLocation(m_newBounds.x, m_newBounds.y, m_newBounds.width, m_newBounds.height).build();
         // must set explicitly so that event is fired by container
         barModel.setUIInfo(uiInfo);
         IFigure fig = m_bar.getFigure();
@@ -130,9 +129,8 @@ public class ChangeWorkflowPortBarCommand extends AbstractKNIMECommand {
     @Override
     public void undo() {
         WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
-        NodeUIInformation uiInfo = new NodeUIInformation(
-                m_oldBounds.x, m_oldBounds.y,
-                m_oldBounds.width, m_oldBounds.height, true);
+        NodeUIInformation uiInfo = NodeUIInformation.builder()
+            .setNodeLocation(m_oldBounds.x, m_oldBounds.y, m_oldBounds.width, m_oldBounds.height).build();
         // must set explicitly so that event is fired by container
         barModel.setUIInfo(uiInfo);
         IFigure fig = m_bar.getFigure();

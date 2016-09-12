@@ -159,7 +159,7 @@ public class SnapIconToGrid extends SnapToGrid {
      * @return the point in the figure that should be placed onto the grid points
      */
     public static Point getGridRefPointOffset(final NodeContainerFigure nodeFig) {
-        Point iconOffset = nodeFig.getOffsetToRefPoint(new NodeUIInformation());
+        Point iconOffset = nodeFig.getOffsetToRefPoint(NodeUIInformation.builder().build());
         iconOffset.translate(nodeFig.getSymbolFigure().getPreferredSize().width / 2,
                 nodeFig.getSymbolFigure().getPreferredSize().height / 2 - 1);
         return iconOffset;

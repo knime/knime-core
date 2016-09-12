@@ -126,7 +126,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public UIInformation getInPortsBarUIInfo() {
+    public NodeUIInformation getInPortsBarUIInfo() {
         throw new IllegalStateException("no ui information on root wfm");
     }
 
@@ -211,7 +211,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public UIInformation getOutPortsBarUIInfo() {
+    public NodeUIInformation getOutPortsBarUIInfo() {
         throw new IllegalStateException("no ui information on root wfm");
     }
 

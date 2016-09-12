@@ -127,12 +127,10 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
             NodeUIInformation uiInfo = newNode.getUIInformation();
             // create extra info and set it
             if (uiInfo == null) {
-                uiInfo =
-                        new NodeUIInformation(m_location.x, m_location.y, -1,
-                                -1, true);
+                uiInfo = NodeUIInformation.builder().setNodeLocation(m_location.x, m_location.y, -1, -1).build();
             } else {
-                uiInfo.setNodeLocation(m_location.x, m_location.y,
-                        uiInfo.getBounds()[2], uiInfo.getBounds()[3]);
+                uiInfo = NodeUIInformation.builder(uiInfo)
+                    .setNodeLocation(m_location.x, m_location.y, uiInfo.getBounds()[2], uiInfo.getBounds()[3]).build();
             }
             newNode.setUIInformation(uiInfo);
         }

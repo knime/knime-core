@@ -256,9 +256,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** ports of this Metanode (both arrays can have 0 length!). */
     private WorkflowInPort[] m_inPorts;
-    private UIInformation m_inPortsBarUIInfo;
+    private NodeUIInformation m_inPortsBarUIInfo;
     private WorkflowOutPort[] m_outPorts;
-    private UIInformation m_outPortsBarUIInfo;
+    private NodeUIInformation m_outPortsBarUIInfo;
 
     /** editor specific settings are stored with the workflow.
      * @since 2.6 */
@@ -3361,7 +3361,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 subwfm = createAndAddSubWorkflow(exposedInportTypes, new PortType[0], "Parallel Chunks");
                 NodeUIInformation startUIPlain = getNodeContainer(startID).getUIInformation();
                 if (startUIPlain != null) {
-                    NodeUIInformation startUI = startUIPlain.createNewWithOffsetPosition(new int[]{60, -60, 0, 0});
+                    NodeUIInformation startUI =
+                        NodeUIInformation.builder(startUIPlain).translate(new int[]{60, -60, 0, 0}).build();
                     subwfm.setUIInformation(startUI);
                 }
                 // connect outside(!) nodes to new sub metanode
@@ -3459,8 +3460,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 new VirtualParallelizedChunkPortObjectInNodeFactory(outTypes));
         NodeUIInformation startUIPlain = startNode.getUIInformation();
         if (startUIPlain != null) {
-            NodeUIInformation startUI = startUIPlain.
-                createNewWithOffsetPosition(moveUIDist);
+            NodeUIInformation startUI = NodeUIInformation.builder(startUIPlain).translate(moveUIDist).build();
             subWFM.getNodeContainer(virtualStartID).setUIInformation(startUI);
         }
         // create virtual end node
@@ -3475,8 +3475,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 new VirtualParallelizedChunkPortObjectOutNodeFactory(realInTypes));
         NodeUIInformation endUIPlain = endNode.getUIInformation();
         if (endUIPlain != null) {
-            NodeUIInformation endUI = endUIPlain.
-                createNewWithOffsetPosition(moveUIDist);
+            NodeUIInformation endUI = NodeUIInformation.builder(endUIPlain).translate(moveUIDist).build();
             subWFM.getNodeContainer(virtualEndID).setUIInformation(endUI);
         }
         // copy nodes in loop body
@@ -3491,7 +3490,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeContainer nc = subWFM.getNodeContainer(newIDs[i]);
             NodeUIInformation uiInfo = nc.getUIInformation();
             if (uiInfo != null) {
-                nc.setUIInformation(uiInfo.createNewWithOffsetPosition(moveUIDist));
+                nc.setUIInformation(NodeUIInformation.builder(uiInfo).translate(moveUIDist).build());
             }
         }
         // restore connections to nodes outside the loop body (only incoming)
@@ -3786,9 +3785,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NodeContainer nc = getNodeContainer(newIDs[i]);
                     uii = nc.getUIInformation();
                     if (uii != null) {
-                        NodeUIInformation newUii
-                           = uii.createNewWithOffsetPosition(
-                                   new int[]{xShift, yShift});
+                        NodeUIInformation newUii =
+                            NodeUIInformation.builder(uii).translate(new int[]{xShift, yShift}).build();
                         nc.setUIInformation(newUii);
                     }
                 }
@@ -4168,7 +4166,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             if (count >= 1) {
-                NodeUIInformation newUii = new NodeUIInformation(x / count, y / count, -1, -1, true);
+                NodeUIInformation newUii =
+                    NodeUIInformation.builder().setNodeLocation(x / count, y / count, -1, -1).build();
                 newWFM.setUIInformation(newUii);
             }
             // copy the nodes into the newly create WFM:
@@ -4211,7 +4210,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
                     NodeUIInformation uii = nc.getUIInformation();
                     if (uii != null) {
-                        NodeUIInformation newUii = uii.createNewWithOffsetPosition(new int[]{xshift, yshift});
+                        NodeUIInformation newUii =
+                            NodeUIInformation.builder(uii).translate(new int[]{xshift, yshift}).build();
                         nc.setUIInformation(newUii);
                     }
                 }
@@ -8798,7 +8798,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (typically aligned as a bar).
      * @param inPortsBarUIInfo The new UI info.
      */
-    public void setInPortsBarUIInfo(final UIInformation inPortsBarUIInfo) {
+    public void setInPortsBarUIInfo(final NodeUIInformation inPortsBarUIInfo) {
         if (!ConvenienceMethods.areEqual(m_inPortsBarUIInfo, inPortsBarUIInfo)) {
             m_inPortsBarUIInfo = inPortsBarUIInfo;
             setDirty();
@@ -8809,7 +8809,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (typically aligned as a bar).
      * @param outPortsBarUIInfo The new UI info.
      */
-    public void setOutPortsBarUIInfo(final UIInformation outPortsBarUIInfo) {
+    public void setOutPortsBarUIInfo(final NodeUIInformation outPortsBarUIInfo) {
         if (!ConvenienceMethods.areEqual(
                 m_outPortsBarUIInfo, outPortsBarUIInfo)) {
             m_outPortsBarUIInfo = outPortsBarUIInfo;
@@ -8821,7 +8821,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return the ui info or null if not set.
      * @see #setInPortsBarUIInfo(UIInformation)
      */
-    public UIInformation getInPortsBarUIInfo() {
+    public NodeUIInformation getInPortsBarUIInfo() {
         return m_inPortsBarUIInfo;
     }
 
@@ -8829,7 +8829,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return the ui info or null if not set.
      * @see #setOutPortsBarUIInfo(UIInformation)
      */
-    public UIInformation getOutPortsBarUIInfo() {
+    public NodeUIInformation getOutPortsBarUIInfo() {
         return m_outPortsBarUIInfo;
     }
 

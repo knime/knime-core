@@ -102,9 +102,8 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
     public void execute() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
             WorkflowManager wm = getHostWFM();
-            NodeUIInformation information =
-                    new NodeUIInformation(m_newBounds[0], m_newBounds[1],
-                            m_newBounds[2], m_newBounds[3], true);
+            NodeUIInformation information = NodeUIInformation.builder()
+                .setNodeLocation(m_newBounds[0], m_newBounds[1], m_newBounds[2], m_newBounds[3]).build();
             NodeContainer container = wm.getNodeContainer(m_nodeID);
             // must set explicitly so that event is fired by container
             container.setUIInformation(information);
@@ -119,9 +118,8 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
     @Override
     public void undo() {
         if (!Arrays.equals(m_oldBounds, m_newBounds)) {
-            NodeUIInformation information =
-                    new NodeUIInformation(m_oldBounds[0], m_oldBounds[1],
-                            m_oldBounds[2], m_oldBounds[3], true);
+            NodeUIInformation information = NodeUIInformation.builder()
+                .setNodeLocation(m_oldBounds[0], m_oldBounds[1], m_oldBounds[2], m_oldBounds[3]).build();
             NodeContainer container = getHostWFM().getNodeContainer(m_nodeID);
             container.setUIInformation(information);
         }

@@ -47,11 +47,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettingsRO;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * Special <code>NodeExtraInfo</code> object used by the workflow editor.
@@ -67,10 +64,7 @@ import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
  *
  * @author Florian Georg, University of Konstanz
  */
-public class NodeUIInformation implements UIInformation {
-
-    /** The key under which the bounds are registered. * */
-    private static final String KEY_BOUNDS = "extrainfo.node.bounds";
+public class NodeUIInformation {
 
     private int[] m_bounds = new int[]{0, 0, -1, -1};
 
@@ -91,62 +85,34 @@ public class NodeUIInformation implements UIInformation {
      * ui info from an old workflow sets this flag to false - and causes an
      * offset to be applied (in the NodeContainerEditPart).
      */
-    private boolean m_symbolRelative = true;
+    private final boolean m_symbolRelative;
 
     /**
      * Since v2.6.0 we support grid in the editor. The center of the node figure is snapped to the grid. The center
      * coordinates are only available after node figure creation. This flag adjusts the initially set coordinates to
      * snap the node figure to the grid. It should not be saved/loaded.
      */
-    private boolean m_roundToGrid = false;
+    private final boolean m_roundToGrid;
 
     /**
      * If true, the location will be corrected at editpart activation time (when the figure is available), so that the
      * icon center (or what ever reference point is lined up with the grid) is placed at the coordinates (i.e. at the
      * drop location, which is the cursor position). (Available since 2.6, not saved/loaded.)
      */
-    private boolean m_isDropLocation = false;
-
-    /** Creates new object, the bounds to be set are assumed to be absolute
-     * (m_isInitialized is true). */
-    public NodeUIInformation() {
-        m_hasAbsoluteCoordinates = true;
-    }
-
-    /** Inits new node figure with given coordinates.
-     * @param x x coordinate of the figures symbol (i.e. the background image)
-     * @param y y coordinate of the figures symbol (i.e. the background image)
-     * @param width width of figure
-     * @param height height of figure
-     * @param absoluteCoords If the coordinates are absolute.
-     */
-    public NodeUIInformation(final int x, final int y,
-            final int width, final int height, final boolean absoluteCoords) {
-        m_bounds[0] = x;
-        m_bounds[1] = y;
-        m_bounds[2] = width;
-        m_bounds[3] = height;
-        m_hasAbsoluteCoordinates = absoluteCoords;
-    }
+    private final boolean m_isDropLocation;
 
     /**
-     * {@inheritDoc}
+     * Constructor to create a new {@link NodeUIInformation}-object from it's {@link Builder}. All builder fields are
+     * copied.
+     *
+     * @param builder the builder
      */
-    @Override
-    public void save(final NodeSettingsWO config) {
-        config.addIntArray(KEY_BOUNDS, m_bounds);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void load(final NodeSettingsRO conf, final FileWorkflowPersistor.LoadVersion loadVersion)
-        throws InvalidSettingsException {
-        final int loadOrdinal = loadVersion.ordinal();
-        m_bounds = conf.getIntArray(KEY_BOUNDS);
-        m_symbolRelative = loadOrdinal >= FileWorkflowPersistor.LoadVersion.V230.ordinal();
-
+    NodeUIInformation(final Builder builder) {
+        m_bounds = builder.m_bounds.clone();
+        m_hasAbsoluteCoordinates = builder.m_hasAbsoluteCoordinates;
+        m_symbolRelative = builder.m_symbolRelative;
+        m_roundToGrid = builder.m_roundToGrid;
+        m_isDropLocation = builder.m_isDropLocation;
     }
 
     /**
@@ -179,16 +145,6 @@ public class NodeUIInformation implements UIInformation {
     }
 
     /**
-     * If true is passed, the node figure icon is centered (right after NodeContainerEditPart activation) onto the grid.
-     * It is placed on the nearest grid point (rounded).
-     * @param snapIt true causes node to be positioned on the closest grid point.
-     * @since 2.6
-     */
-    public void setSnapToGrid(final boolean snapIt) {
-        m_roundToGrid = snapIt;
-    }
-
-    /**
      * If set, the coordinates set should be changed right after edit part activation. They should be rounded to the
      * closest grid position.
      *
@@ -197,17 +153,6 @@ public class NodeUIInformation implements UIInformation {
      */
     public boolean getSnapToGrid() {
         return m_roundToGrid;
-    }
-
-    /**
-     * Set true, if the coordinates specify the location of the node drop and should be adjusted to place the node
-     * figure center under the cursor.
-
-     * @param isDropLoc true, if coordinates set are the location of the node drop
-     * @since 2.6
-     */
-    public void setIsDropLocation(final boolean isDropLoc) {
-        m_isDropLocation = isDropLoc;
     }
 
     /**
@@ -221,26 +166,6 @@ public class NodeUIInformation implements UIInformation {
     }
 
     /**
-     * Sets the location. The x/y location must be relative to the node figure's
-     * symbol (the background image that contains the node's icon). The
-     * NodeContainerEditPart translates it into a figure location - taking the
-     * actual font size (of the node name) into account.
-     *
-     * @param x x-coordinate of the figures symbol (i.e. the background image)
-     * @param y y-coordinate of the figures symbol (i.e. the background image)
-     * @param w width
-     * @param h height
-     *
-     */
-    public void setNodeLocation(final int x, final int y, final int w,
-            final int h) {
-        m_bounds[0] = x;
-        m_bounds[1] = y;
-        m_bounds[2] = w;
-        m_bounds[3] = h;
-    }
-
-    /**
      * @return Returns a clone of the bounds.
      */
     public int[] getBounds() {
@@ -248,33 +173,14 @@ public class NodeUIInformation implements UIInformation {
     }
 
     /**
-     * Changes the position by setting the bounds left top corner according to
-     * the given moving distance.
-     *
-     * @param moveDist the distance to change the left top corner
-     * @return A clone of this ui information, whereby its x,y coordinates
-     *         are shifted by the argument values.
-     */
-    public NodeUIInformation createNewWithOffsetPosition(final int[] moveDist) {
-        return new NodeUIInformation(
-                m_bounds[0] + moveDist[0], m_bounds[1] + moveDist[1],
-                m_bounds[2], m_bounds[3], m_hasAbsoluteCoordinates);
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     public NodeUIInformation clone() {
-        NodeUIInformation newObject;
-        try {
-            newObject = (NodeUIInformation)super.clone();
-        } catch (CloneNotSupportedException e) {
-            NodeLogger.getLogger(getClass()).fatal("Clone exception", e);
-            newObject = new NodeUIInformation();
-        }
-        newObject.m_bounds = this.m_bounds.clone();
-        return newObject;
+        //we should not provide a clone method
+        //e.g. conflicts with the final-fields
+        //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -289,5 +195,148 @@ public class NodeUIInformation implements UIInformation {
                 + (m_symbolRelative ? "" : " (TOPLEFT!)") + " width="
                 + m_bounds[2] + " height=" + m_bounds[3]
                 + (m_hasAbsoluteCoordinates ? "(absolute)" : "(relative)");
+    }
+
+    /** @return new Builder with defaults. */
+    public static final Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * @param nodeUIInfo object to copy the values from
+     * @return new Builder with the values copied from the passed argument
+     */
+    public static final Builder builder(final NodeUIInformation nodeUIInfo) {
+        return new Builder().copyFrom(nodeUIInfo);
+    }
+
+    /** Builder pattern for {@link NodeUIInformation}. */
+    public static final class Builder {
+
+        private int[] m_bounds = new int[]{0, 0, -1, -1};
+
+        private boolean m_hasAbsoluteCoordinates;
+        private boolean m_symbolRelative = true;
+        private boolean m_roundToGrid = false;
+        private boolean m_isDropLocation = false;
+
+        /** Creates new object, the bounds to be set are assumed to be absolute
+         * (m_isInitialized is true). */
+        private Builder() {
+            m_hasAbsoluteCoordinates = true;
+        }
+
+        /** Copy all fields from argument and return this.
+         * @param nodeUIInfo to copy from, not null.
+         * @return this
+         */
+        public Builder copyFrom(final NodeUIInformation nodeUIInfo) {
+            m_bounds = nodeUIInfo.m_bounds.clone();
+            m_hasAbsoluteCoordinates = nodeUIInfo.m_hasAbsoluteCoordinates;
+            m_roundToGrid = nodeUIInfo.m_roundToGrid;
+            m_isDropLocation = nodeUIInfo.m_isDropLocation;
+            m_symbolRelative = nodeUIInfo.m_symbolRelative;
+            return this;
+        }
+
+        /**
+         * If true is passed, the node figure icon is centered (right after NodeContainerEditPart activation) onto the grid.
+         * It is placed on the nearest grid point (rounded).
+         * @param snapIt true causes node to be positioned on the closest grid point.
+         * @since 2.6
+         * @return this
+         */
+        public Builder setSnapToGrid(final boolean snapIt) {
+            m_roundToGrid = snapIt;
+            return this;
+        }
+
+        /**
+         * Set true, if the coordinates specify the location of the node drop and should be adjusted to place the node
+         * figure center under the cursor.
+
+         * @param isDropLoc true, if coordinates set are the location of the node drop
+         * @since 2.6
+         * @return this
+         */
+        public Builder setIsDropLocation(final boolean isDropLoc) {
+            m_isDropLocation = isDropLoc;
+            return this;
+        }
+
+        /**
+         * Set to true if the bounds are absolute (correct in the context of the
+         * editor). It's false if the coordinates refer to relative coordinates and
+         * need to be adjusted by the NodeContainerFigure#initFigure... method.
+         * This field is transient and not stored as part of the
+         * {@link #save(NodeSettingsWO)} method. A loaded object has always absolute
+         * coordinates.
+         * @param hasAbsoluteCoordinates
+         * @return this
+         *
+         */
+        public Builder setHasAbsoluteCoordinates(final boolean hasAbsoluteCoordinates) {
+            m_hasAbsoluteCoordinates = hasAbsoluteCoordinates;
+            return this;
+        }
+
+        /**
+         * Sets the location. The x/y location must be relative to the node figure's
+         * symbol (the background image that contains the node's icon). The
+         * NodeContainerEditPart translates it into a figure location - taking the
+         * actual font size (of the node name) into account.
+         *
+         * @param x x-coordinate of the figures symbol (i.e. the background image)
+         * @param y y-coordinate of the figures symbol (i.e. the background image)
+         * @param w width
+         * @param h height
+         * @return this
+         *
+         */
+        public Builder setNodeLocation(final int x, final int y, final int w,
+                final int h) {
+            m_bounds[0] = x;
+            m_bounds[1] = y;
+            m_bounds[2] = w;
+            m_bounds[3] = h;
+            return this;
+        }
+
+        /**
+         * Changes the position by setting the bounds left top corner according to
+         * the given moving distance.
+         *
+         * @param moveDist the distance to change the left top corner
+         * @return A clone of this ui information, whereby its x,y coordinates
+         *         are shifted by the argument values.
+         */
+        public Builder translate(final int[] moveDist) {
+            m_bounds[0] = m_bounds[0] + moveDist[0];
+            m_bounds[1] = m_bounds[1] + moveDist[1];
+            return this;
+        }
+
+        /**
+         * If false, the coordinates are loaded with an old workflow and are
+         * relative to the top left corner of the node's figure.
+         * @param isSymbolRelative
+         * @return this
+         */
+        public Builder setIsSymbolRelative(final boolean isSymbolRelative) {
+            m_symbolRelative = isSymbolRelative;
+            return this;
+        }
+
+        /** @return {@link EditorUIInformation} with current values. */
+        public NodeUIInformation build() {
+            return new NodeUIInformation(this);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return ToStringBuilder.reflectionToString(this);
+        }
+
     }
 }

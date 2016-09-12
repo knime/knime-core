@@ -239,8 +239,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             updateFigureFromUIinfo(uiInfo);
         } else {
             // set a new empty UI info
-            NodeUIInformation info = new NodeUIInformation();
-            info.setNodeLocation(0, 0, -1, -1);
+            NodeUIInformation info = NodeUIInformation.builder().setNodeLocation(0, 0, -1, -1).build();
             // not yet a listener -- no event received
             cont.setUIInformation(info);
         }
@@ -560,8 +559,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         if (newBounds) {
             // don't trigger another event here, when updating ui info
             m_uiListenerActive = false;
-            getNodeContainer()
-                .setUIInformation(new NodeUIInformation(bounds[0], bounds[1], bounds[2], bounds[3], true));
+            getNodeContainer().setUIInformation(
+                NodeUIInformation.builder().setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3]).build());
             m_uiListenerActive = true;
         }
         // since v2.5 we ignore any width and height and keep bounds minimal
@@ -591,8 +590,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         if (set) {
             // notify uiInfo listeners (e.g. node annotations)
             m_uiListenerActive = false;
-            getNodeContainer()
-                .setUIInformation(new NodeUIInformation(bounds[0], bounds[1], bounds[2], bounds[3], true));
+            getNodeContainer().setUIInformation(
+                NodeUIInformation.builder().setNodeLocation(bounds[0], bounds[1], bounds[2], bounds[3]).build());
             m_uiListenerActive = true;
         }
 

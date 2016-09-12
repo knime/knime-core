@@ -113,9 +113,9 @@ public class VerticAlignManager {
             NodeContainer nc = node.getNodeContainer();
             NodeUIInformation uiInfo = nc.getUIInformation();
             int[] b = uiInfo.getBounds();
-            NodeUIInformation newCoord =
-                    new NodeUIInformation(b[0] + e.getValue(), b[1], b[2],
-                            b[3], uiInfo.hasAbsoluteCoordinates());
+            NodeUIInformation newCoord = NodeUIInformation.builder()
+                    .setNodeLocation(b[0] + e.getValue(), b[1], b[2], b[3])
+                    .setHasAbsoluteCoordinates(uiInfo.hasAbsoluteCoordinates()).build();
             LOGGER.debug("Node " + nc + " gets alignment coordinates "
                     + newCoord);
             // save old coordinates for undo
