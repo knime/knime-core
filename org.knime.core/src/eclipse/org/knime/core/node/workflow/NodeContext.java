@@ -75,9 +75,9 @@ import org.knime.core.node.NodeLogger;
  * @noreference
  */
 public final class NodeContext {
-    private static final NodeLogger logger = NodeLogger.getLogger(NodeContext.class);
-
     private static final ThreadLocal<Deque<NodeContext>> threadLocal = new ThreadLocal<Deque<NodeContext>>();
+
+    private static final NodeLogger logger = NodeLogger.getLogger(NodeContext.class);
 
     private final WeakReference<NodeContainer> m_nodeContainerRef;
 
