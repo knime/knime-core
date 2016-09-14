@@ -65,22 +65,19 @@ import org.eclipse.core.runtime.IProgressMonitor;
  */
 public interface URIToFileResolve {
     /**
-     * Resolves the given URI into a local file or throws an exception if that
-     * isn't possible (e.g. because the URI does not represent a local file).
+     * Resolves the given URI into a local file. If the URI doesn't denote a local file, <code>null</code> is returned.
      *
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
-     * @return the local file represented by the URI.
+     * @return the local file represented by the URI or <code>null</code>
      * @throws IOException If the URI can't be resolved
      */
     public File resolveToFile(final URI uri) throws IOException;
 
     /**
-     * Resolves the given URI into a local file or throws an exception if that
-     * isn't possible (e.g. because the URI does not represent a local file).
-     *
+     * Resolves the given URI into a local file. If the URI doesn't denote a local file, <code>null</code> is returned.
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
      * @param monitor a progress monitor, must not be <code>null</code>
-     * @return the local file represented by the URI.
+     * @return the local file represented by the URI or <code>null</code>
      * @throws IOException If the URI can't be resolved
      * @since 2.6
      */

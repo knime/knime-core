@@ -6603,6 +6603,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     origWfUri.getPort(), combinedPath, origWfUri.getQuery(), origWfUri.getFragment()).normalize();
             }
             File localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
+            if (localDir.isFile()) {
+                // looks like a zipped metanode downloaded from a 4.4+ server
+                File unzipped = FileUtil.createTempDir("metanode-template");
+                FileUtil.unzip(localDir, unzipped);
+                localDir = unzipped.listFiles()[0];
+            }
             TemplateNodeContainerPersistor loadPersistor = loadHelper.createTemplateLoadPersistor(localDir, sourceURI);
             loadResultChild = new MetaNodeLinkUpdateResult("Template from " + sourceURI.toString());
             tempParent.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
@@ -8627,7 +8633,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     }
 
-    /** The version as read from workflow.knime file during load (or <code>null</code> if not loaded but newly created). 
+    /** The version as read from workflow.knime file during load (or <code>null</code> if not loaded but newly created).
      * @return the workflow {@link LoadVersion}
      * @since 3.3 */
     public LoadVersion getLoadVersion() {
