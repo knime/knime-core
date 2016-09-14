@@ -48,6 +48,8 @@ package org.knime.core.node.workflow;
 import java.util.Collections;
 import java.util.Map;
 
+import org.knime.core.api.node.workflow.NodeUIInformation;
+
 
 
 /**

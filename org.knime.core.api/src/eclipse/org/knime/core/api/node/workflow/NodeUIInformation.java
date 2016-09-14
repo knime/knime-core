@@ -45,10 +45,9 @@
  * History
  *   30.05.2005 (Florian Georg): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Special <code>NodeExtraInfo</code> object used by the workflow editor.

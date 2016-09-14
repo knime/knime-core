@@ -47,6 +47,7 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;

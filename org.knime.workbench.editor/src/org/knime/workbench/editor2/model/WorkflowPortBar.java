@@ -41,41 +41,41 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2008 (Fabian Dill): created
  */
 package org.knime.workbench.editor2.model;
 
+import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowPortBar {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             WorkflowPortBar.class);
-    
+
     private final boolean m_in;
     private final WorkflowManager m_manager;
-    
+
     public WorkflowPortBar(final WorkflowManager manager, final boolean in) {
         m_in = in;
         m_manager = manager;
     }
-    
+
     public boolean isInPortBar() {
         return m_in;
     }
-    
+
     public WorkflowManager getWorkflowManager() {
         return m_manager;
     }
-    
+
     public NodeUIInformation getUIInfo() {
         // retrieve the ui info directly from manager
         if (m_in) {
@@ -86,7 +86,7 @@ public class WorkflowPortBar {
             return (NodeUIInformation)m_manager.getOutPortsBarUIInfo();
         }
     }
-    
+
     public void setUIInfo(final NodeUIInformation uiInfo) {
         LOGGER.debug("setting ui info to: " + uiInfo);
         // set here the ui info directly into the manager

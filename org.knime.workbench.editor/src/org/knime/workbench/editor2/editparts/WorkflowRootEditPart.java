@@ -72,12 +72,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.WorkflowAnnotation;
@@ -204,9 +204,9 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             if (m_inBar == null) {
                 m_inBar = new WorkflowPortBar(wfm, true);
                 NodeUIInformation uiInfo =
-                        (NodeUIInformation)wfm.getInPortsBarUIInfo();
+                        wfm.getInPortsBarUIInfo();
                 if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_inBar.setUIInfo((NodeUIInformation)wfm
+                    m_inBar.setUIInfo(wfm
                             .getInPortsBarUIInfo());
                 }
             }
@@ -216,10 +216,9 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             if (m_outBar == null) {
                 m_outBar = new WorkflowPortBar(wfm, false);
                 NodeUIInformation uiInfo =
-                        (NodeUIInformation)wfm.getOutPortsBarUIInfo();
+                        wfm.getOutPortsBarUIInfo();
                 if (uiInfo != null && uiInfo.isFilledProperly()) {
-                    m_outBar.setUIInfo((NodeUIInformation)
-                            wfm.getOutPortsBarUIInfo());
+                    m_outBar.setUIInfo(wfm.getOutPortsBarUIInfo());
                 }
             }
             modelChildren.add(m_outBar);

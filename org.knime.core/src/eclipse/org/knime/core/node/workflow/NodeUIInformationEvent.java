@@ -49,6 +49,8 @@ package org.knime.core.node.workflow;
 
 import java.util.EventObject;
 
+import org.knime.core.api.node.workflow.NodeUIInformation;
+
 /**
  *
  * @author Fabian Dill, University of Konstanz

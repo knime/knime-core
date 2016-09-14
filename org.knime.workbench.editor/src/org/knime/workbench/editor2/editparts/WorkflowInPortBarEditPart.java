@@ -52,8 +52,8 @@ import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodePort;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.figures.WorkflowInPortBarFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
