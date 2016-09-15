@@ -326,7 +326,7 @@ public class NodeUIInformation {
             return this;
         }
 
-        /** @return {@link EditorUIInformation} with current values. */
+        /** @return {@link NodeUIInformation} with current values. */
         public NodeUIInformation build() {
             return new NodeUIInformation(this);
         }

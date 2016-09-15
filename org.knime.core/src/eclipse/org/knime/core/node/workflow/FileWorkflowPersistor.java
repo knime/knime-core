@@ -995,23 +995,15 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 uiInfoClassName = null;
             }
             if (uiInfoClassName != null) {
-                if (!(uiInfoClassName.equals(NodeUIInformation.class.getName()))) {
-                    String error = "UI information to node with ID suffix " + nodeIDSuffix + " is not of class "
-                        + NodeUIInformation.class.getSimpleName() + " but " + uiInfoClassName;
-                    getLogger().debug(error);
+                try {
+                    //load node ui info
+                    nodeUIInfo = loadNodeUIInformation(nodeSetting);
+                } catch (InvalidSettingsException e) {
+                    String error = "Unable to load UI information to " + "node with ID suffix " + nodeIDSuffix
+                        + ", no UI information available: " + e.getMessage();
+                    getLogger().debug(error, e);
                     setDirtyAfterLoad();
                     loadResult.addError(error);
-                } else {
-                    try {
-                        //load node ui info
-                        nodeUIInfo = loadNodeUIInformation(nodeSetting);
-                    } catch (InvalidSettingsException e) {
-                        String error = "Unable to load UI information to " + "node with ID suffix " + nodeIDSuffix
-                            + ", no UI information available: " + e.getMessage();
-                        getLogger().debug(error, e);
-                        setDirtyAfterLoad();
-                        loadResult.addError(error);
-                    }
                 }
             }
 
