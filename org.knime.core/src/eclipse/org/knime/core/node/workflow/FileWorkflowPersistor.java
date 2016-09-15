@@ -68,6 +68,9 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 
+import org.knime.core.api.node.workflow.AnnotationData;
+import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
+import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.data.container.ContainerTable;
@@ -1717,12 +1720,76 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             List<WorkflowAnnotation> result = new ArrayList<WorkflowAnnotation>();
             for (String key : annoSettings.keySet()) {
                 NodeSettingsRO child = annoSettings.getNodeSettings(key);
-                WorkflowAnnotation anno = new WorkflowAnnotation();
-                anno.load(child, getLoadVersion());
+                AnnotationData annotationData = loadAnnotationData(child, getLoadVersion());
+                WorkflowAnnotation anno = new WorkflowAnnotation(annotationData);
+                anno.fireChangeEvent();
                 result.add(anno);
             }
             return result;
         }
+    }
+
+    /**
+     * Loads the annotation data from the given settings object.
+     *
+     * @param settings
+     * @param loadVersion
+     * @return a new {@link AnnotationData} object
+     * @throws InvalidSettingsException
+     */
+    static AnnotationData loadAnnotationData(final NodeSettingsRO settings, final LoadVersion loadVersion)
+        throws InvalidSettingsException {
+        AnnotationData.Builder builder = AnnotationData.builder();
+        builder.setText(settings.getString("text"));
+        builder.setBgColor(settings.getInt("bgcolor"));
+        int x = settings.getInt("x-coordinate");
+        int y = settings.getInt("y-coordinate");
+        int width = settings.getInt("width");
+        int height = settings.getInt("height");
+        int borderSize = settings.getInt("borderSize", 0); // default to 0 for backward compatibility
+        int borderColor = settings.getInt("borderColor", 0); // default for backward compatibility
+        int defFontSize = settings.getInt("defFontSize", -1); // default for backward compatibility
+        int version = settings.getInt("annotation-version", AnnotationData.VERSION_OLD); // added in 3.0
+        TextAlignment alignment = TextAlignment.LEFT;
+        if (loadVersion.ordinal() >= FileWorkflowPersistor.LoadVersion.V250.ordinal()) {
+            String alignmentS = settings.getString("alignment");
+            try {
+                alignment = TextAlignment.valueOf(alignmentS);
+            } catch (Exception e) {
+                throw new InvalidSettingsException("Invalid alignment: " + alignmentS, e);
+            }
+        }
+        builder.setDimension(x, y, width, height);
+        builder.setAlignment(alignment);
+        builder.setBorderSize(borderSize);
+        builder.setBorderColor(borderColor);
+        builder.setDefaultFontSize(defFontSize);
+        NodeSettingsRO styleConfigs = settings.getNodeSettings("styles");
+        StyleRange[] styles = new StyleRange[styleConfigs.getChildCount()];
+        int i = 0;
+        for (String key : styleConfigs.keySet()) {
+            NodeSettingsRO cur = styleConfigs.getNodeSettings(key);
+            styles[i++] = loadStyleRange(cur);
+        }
+        builder.setStyleRanges(styles);
+        return builder.build();
+    }
+
+    /**
+     * Helper method to load a style range from a settings object.
+     *
+     * @param settings
+     * @throws InvalidSettingsException
+     */
+    private static StyleRange loadStyleRange(final NodeSettingsRO settings) throws InvalidSettingsException {
+        StyleRange.Builder result = StyleRange.builder();
+        result.setStart(settings.getInt("start"));
+        result.setLength(settings.getInt("length"));
+        result.setFontName(settings.getString("fontname"));
+        result.setFontStyle(settings.getInt("fontstyle"));
+        result.setFontSize(settings.getInt("fontsize"));
+        result.setFgColor(settings.getInt("fgcolor"));
+        return result.build();
     }
 
     /** @return the wizard state saved in the file or null (often null).
@@ -2223,9 +2290,47 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         int i = 0;
         for (Annotation a : annotations) {
             NodeSettingsWO t = annoSettings.addNodeSettings("annotation_" + i);
-            a.save(t);
+            saveAnnotationData(annoSettings, a.getData());
             i += 1;
         }
+    }
+
+    /**
+     * Stores the given annotation data to the settings object
+     *
+     * @param settings
+     * @param annotationData
+     */
+    static void saveAnnotationData(final NodeSettingsWO settings, final AnnotationData annotationData) {
+        settings.addString("text", annotationData.getText());
+        settings.addInt("bgcolor", annotationData.getBgColor());
+        settings.addInt("x-coordinate", annotationData.getX());
+        settings.addInt("y-coordinate", annotationData.getY());
+        settings.addInt("width", annotationData.getWidth());
+        settings.addInt("height", annotationData.getHeight());
+        settings.addString("alignment", annotationData.getAlignment().toString());
+        settings.addInt("borderSize", annotationData.getBorderSize());
+        settings.addInt("borderColor", annotationData.getBorderColor());
+        settings.addInt("defFontSize", annotationData.getDefaultFontSize());
+        settings.addInt("annotation-version", annotationData.getVersion());
+        NodeSettingsWO styleConfigs = settings.addNodeSettings("styles");
+        int i = 0;
+        for (StyleRange sr : annotationData.getStyleRanges()) {
+            NodeSettingsWO cur = styleConfigs.addNodeSettings("style_" + (i++));
+            saveStyleRange(cur, sr);
+        }
+    }
+
+    /**
+     * Stores the given style range object to the settings object.
+     */
+    private static void saveStyleRange(final NodeSettingsWO settings, final StyleRange styleRange) {
+        settings.addInt("start", styleRange.getStart());
+        settings.addInt("length", styleRange.getLength());
+        settings.addString("fontname", styleRange.getFontName());
+        settings.addInt("fontstyle", styleRange.getFontStyle());
+        settings.addInt("fontsize", styleRange.getFontSize());
+        settings.addInt("fgcolor", styleRange.getFgColor());
     }
 
     /**

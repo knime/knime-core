@@ -52,8 +52,8 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.DirectEditPolicy;
 import org.eclipse.gef.requests.DirectEditRequest;
 import org.eclipse.swt.widgets.Composite;
+import org.knime.core.api.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.Annotation;
-import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 
@@ -68,13 +68,13 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
     @Override
     protected Command getDirectEditCommand(final DirectEditRequest edit) {
         StyledTextEditor ste = (StyledTextEditor)edit.getCellEditor();
-        AnnotationData newAnnoData = (AnnotationData)ste.getValue();
+        AnnotationData.Builder newAnnoDataBuilder = AnnotationData.builder((AnnotationData)ste.getValue(), true);
         AnnotationEditPart annoPart = (AnnotationEditPart)getHost();
         Annotation oldAnno = annoPart.getModel();
 
         Rectangle oldFigBounds = annoPart.getFigure().getBounds().getCopy();
         // y-coordinate is the only dimension that doesn't change
-        newAnnoData.setY(oldFigBounds.y);
+        newAnnoDataBuilder.setY(oldFigBounds.y);
 
         // trim was never really verified (was always 0 on my platform),
         // see also StyledTextEditorLocator#relocate
@@ -84,16 +84,17 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
 
         if (annoPart instanceof NodeAnnotationEditPart) {
             // the width and height grow with the text entered
-            newAnnoData.setX(compositeEditor.getBounds().x);
-            newAnnoData.setHeight(compositeEditor.getBounds().height - trim.height);
-            newAnnoData.setWidth(compositeEditor.getBounds().width - trim.width);
+            newAnnoDataBuilder.setX(compositeEditor.getBounds().x);
+            newAnnoDataBuilder.setHeight(compositeEditor.getBounds().height - trim.height);
+            newAnnoDataBuilder.setWidth(compositeEditor.getBounds().width - trim.width);
         } else {
             // with workflow annotations only the height grows with the text
-            newAnnoData.setX(oldFigBounds.x);
-            newAnnoData.setHeight(compositeEditor.getBounds().height - trim.height);
-            newAnnoData.setWidth(oldFigBounds.width - trim.width);
+            newAnnoDataBuilder.setX(oldFigBounds.x);
+            newAnnoDataBuilder.setHeight(compositeEditor.getBounds().height - trim.height);
+            newAnnoDataBuilder.setWidth(oldFigBounds.width - trim.width);
         }
 
+        AnnotationData newAnnoData = newAnnoDataBuilder.build();
         if (hasAnnotationDataChanged(oldAnno, newAnnoData)) {
             return new AnnotationEditCommand(annoPart, oldAnno, newAnnoData);
         }
@@ -109,14 +110,13 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
      */
     private static boolean hasAnnotationDataChanged(
             final Annotation oldAnno, final AnnotationData newAnnoData) {
-        AnnotationData oldAnnoRealData = new AnnotationData();
-        // copy bounds, overwrite text later
-        oldAnnoRealData.copyFrom(newAnnoData, true);
+        //copy bounds, overwrite text later
+        AnnotationData.Builder oldAnnoRealData = AnnotationData.builder(newAnnoData, true);
         oldAnnoRealData.copyFrom(oldAnno.getData(), false);
         // need to set text explicitely - default node annotations have
         // no text (it's determined during rendering)
         oldAnnoRealData.setText(AnnotationEditPart.getAnnotationText(oldAnno));
-        return !oldAnnoRealData.equals(newAnnoData);
+        return !oldAnnoRealData.build().equals(newAnnoData);
     }
 
     /**

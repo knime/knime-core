@@ -53,7 +53,7 @@ import org.eclipse.draw2d.geometry.PrecisionPoint;
 import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.swt.graphics.Point;
-import org.knime.core.node.workflow.AnnotationData;
+import org.knime.core.api.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -118,7 +118,7 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
         WorkflowEditor.adaptZoom(zoomManager, location, true);
 
         m_anno = new WorkflowAnnotation();
-        AnnotationData data = new AnnotationData();
+        AnnotationData.Builder data = AnnotationData.builder();
         // it is a workflow annotation
         data.setBgColor(INITIAL_FLOWANNO_COLOR);
         data.setDimension((int)location.preciseX, (int)location.preciseY, DEFAULT_WIDTH, DEFAULT_HEIGHT);
@@ -126,7 +126,7 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
         data.setBorderColor(INITAL_FLOWBORDER_COLOR);
         data.setText(INITIAL_FLOWANNO_TEXT);
         data.setStyleRanges(new AnnotationData.StyleRange[0]);
-        m_anno.copyFrom(data, true);
+        m_anno.copyFrom(data.build(), true);
         WorkflowManager hostWFM = getHostWFM();
         hostWFM.addWorkflowAnnotation(m_anno);
         m_viewer.deselectAll();

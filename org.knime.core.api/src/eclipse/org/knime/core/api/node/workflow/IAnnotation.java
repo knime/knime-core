@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,83 +41,109 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Sep 15, 2016 (hornm): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
-import org.knime.core.api.node.workflow.NodeAnnotationData;
-import org.knime.core.api.node.workflow.NodeUIInformationEvent;
-import org.knime.core.api.node.workflow.NodeUIInformationListener;
+import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
+import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
 
 /**
- * Annotation associated with a node. Moves with the node. Can't be moved
- * separately.
  *
- * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @author Martin Horn, KNIME.com
  */
-public final class NodeAnnotation extends Annotation<NodeAnnotationData> implements NodeUIInformationListener {
+public interface IAnnotation<D extends AnnotationData> {
 
-    private NodeContainer m_nodeContainer;
-
-    /**
-     * @param data */
-    public NodeAnnotation(final NodeAnnotationData data) {
-        super(data);
-    }
-
-    void registerOnNodeContainer(final NodeContainer node) {
-        assert m_nodeContainer == null;
-        if (node == null) {
-            throw new NullPointerException("Can't hook annotation to null");
-        }
-        m_nodeContainer = node;
-        m_nodeContainer.addUIInformationListener(this);
-    }
-
-    void unregisterFromNodeContainer() {
-        assert m_nodeContainer != null;
-        m_nodeContainer.removeUIInformationListener(this);
-        m_nodeContainer = null;
-    }
-
-    public NodeContainer getNodeContainer() {
-        return m_nodeContainer;
-    }
+    /** @return the data */
+    D getData();
 
     /**
+     * Sets the entire annotation data.
      *
-     * {@inheritDoc}
+     * @param data the annotation data to be set, don't need to copied since {@link AnnotationData} is immutable
      */
-    @Override
-    public void setDimensionNoNotify(final int x, final int y, final int width,
-            final int height) {
-        super.setDimensionNoNotify(x, y, width, height);
-    }
+    void setData(D data);
+
+    /** @return the text */
+    String getText();
+
+    /** @return the styleRanges */
+    StyleRange[] getStyleRanges();
+
+    /** @return the bgColor */
+    int getBgColor();
+
+    /** @return the x */
+    int getX();
+
+    /** @return the y */
+    int getY();
+
+    /** @return the width */
+    int getWidth();
+
+    /** @return the height */
+    int getHeight();
+
+    /** @return the alignment */
+    TextAlignment getAlignment();
+
+    /** @return the border size, 0 or neg. for none.
+     * @since 3.0*/
+    int getBorderSize();
+
+    /** @return the border color.
+     * @since 3.0*/
+    int getBorderColor();
 
     /**
-     * {@inheritDoc}
+     * @return the default font size for this annotation, or -1 if size from pref page should be used (for old
+     * annotations only)
+     * @since 3.1
      */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected NodeAnnotationData.Builder createAnnotationDataBuilder(final NodeAnnotationData annoData,
-        final boolean includeBounds) {
-        return NodeAnnotationData.builder(annoData, includeBounds);
-    }
+    int getDefaultFontSize();
 
     /**
-     * {@inheritDoc}
+     * @return The version to guarantee backward compatible look.
+     * @see org.knime.core.node.workflow.AnnotationData#getVersion()
+     * @since 3.0
      */
-    @Override
-    public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
-        // don't set dirty - event was fired by corresponding node
-        super.fireChangeEvent();
-    }
+    int getVersion();
+
+    /** Shift annotation after copy&amp;paste.
+     * @param xOff x offset
+     * @param yOff y offset
+     */
+    void shiftPosition(int xOff, int yOff);
+
+    /**
+     * Set dimensionality.
+     *
+     * @param x x-coordinate
+     * @param y y-coordinate
+     * @param width width of component
+     * @param height height of component
+     */
+    void setDimension(int x, int y, int width, int height);
 
     /** {@inheritDoc} */
     @Override
-    protected void fireChangeEvent() {
-        m_nodeContainer.setDirty();
-        super.fireChangeEvent();
-    }
+    String toString();
+
+    /**
+     * Copy content, styles, position from the argument and notify listeners.
+     *
+     * @param annotationData To copy from.
+     * @param includeBounds Whether to also update x, y, width, height. If
+     * false, it will only a copy the text with its styles
+     */
+    void copyFrom(D annotationData, boolean includeBounds);
+
+    void addUIInformationListener(NodeUIInformationListener l);
+
+    void removeUIInformationListener(NodeUIInformationListener l);
 
 }

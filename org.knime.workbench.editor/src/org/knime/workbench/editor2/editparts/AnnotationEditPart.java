@@ -70,12 +70,11 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.api.node.workflow.AnnotationData;
+import org.knime.core.api.node.workflow.NodeUIInformationEvent;
+import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.Annotation;
-import org.knime.core.node.workflow.AnnotationData;
-import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.node.workflow.NodeAnnotation;
-import org.knime.core.node.workflow.NodeUIInformationEvent;
-import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.workbench.editor2.WorkflowMarqueeSelectionTool;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
@@ -411,22 +410,22 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      * @return
      */
     public static AnnotationData toAnnotationData(final StyledText s) {
-        AnnotationData result = new AnnotationData();
+        AnnotationData.Builder result = AnnotationData.builder();
         result.setText(s.getText());
         result.setBgColor(colorToRGBint(s.getBackground()));
         result.setBorderColor(AnnotationEditPart.colorToRGBint(s.getMarginColor()));
         result.setBorderSize(s.getRightMargin()); // annotations have the same margin top/left/right/bottom.
         result.setDefaultFontSize(s.getFont().getFontData()[0].getHeight());
-        TextAlignment alignment;
+        AnnotationData.TextAlignment alignment;
         switch (s.getAlignment()) {
         case SWT.RIGHT:
-            alignment = TextAlignment.RIGHT;
+            alignment = AnnotationData.TextAlignment.RIGHT;
             break;
         case SWT.CENTER:
-            alignment = TextAlignment.CENTER;
+            alignment = AnnotationData.TextAlignment.CENTER;
             break;
         default:
-            alignment = TextAlignment.LEFT;
+            alignment = AnnotationData.TextAlignment.LEFT;
         }
         result.setAlignment(alignment);
 
@@ -438,7 +437,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
             if (sr.isUnstyled()) {
                 continue;
             }
-            AnnotationData.StyleRange waSr = new AnnotationData.StyleRange();
+            AnnotationData.StyleRange.Builder waSr = AnnotationData.StyleRange.builder();
             Color fg = sr.foreground;
             if (fg != null) {
                 int rgb = colorToRGBint(fg);
@@ -447,11 +446,11 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
             FontStore.saveAnnotationFontToStyleRange(waSr, sr.font);
             waSr.setStart(sr.start);
             waSr.setLength(sr.length);
-            wfStyleRanges.add(waSr);
+            wfStyleRanges.add(waSr.build());
         }
         result.setStyleRanges(wfStyleRanges
                 .toArray(new AnnotationData.StyleRange[wfStyleRanges.size()]));
-        return result;
+        return result.build();
     }
 
     @Override

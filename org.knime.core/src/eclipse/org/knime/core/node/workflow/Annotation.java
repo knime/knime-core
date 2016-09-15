@@ -47,12 +47,14 @@ package org.knime.core.node.workflow;
 
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.api.node.workflow.AnnotationData;
+import org.knime.core.api.node.workflow.AnnotationData.Builder;
+import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
+import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
+import org.knime.core.api.node.workflow.IAnnotation;
+import org.knime.core.api.node.workflow.NodeUIInformationEvent;
+import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.AnnotationData.StyleRange;
-import org.knime.core.node.workflow.AnnotationData.TextAlignment;
 
 /**
  * An annotation on the workflow. It keeps all relevant information, such as
@@ -61,9 +63,9 @@ import org.knime.core.node.workflow.AnnotationData.TextAlignment;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class Annotation implements UIInformation {
+public abstract class Annotation<D extends AnnotationData> implements IAnnotation<D> {
 
-    private AnnotationData m_data;
+    private D m_data;
 
     private CopyOnWriteArraySet<NodeUIInformationListener> m_uiListeners =
             new CopyOnWriteArraySet<NodeUIInformationListener>();
@@ -71,105 +73,142 @@ public abstract class Annotation implements UIInformation {
     /** Create new annotation with arg data (not null).
      * @param data The data
      */
-    Annotation(final AnnotationData data) {
+    Annotation(final D data) {
         m_data = CheckUtils.checkArgumentNotNull(data);
     }
 
-    /** @return the data */
-    public AnnotationData getData() {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public D getData() {
         return m_data;
     }
 
-    /** @return the text */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setData(final D data) {
+        m_data = data;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final String getText() {
         return m_data.getText();
     }
 
-    /** @return the styleRanges */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final StyleRange[] getStyleRanges() {
         return m_data.getStyleRanges();
     }
 
-    /** @return the bgColor */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final int getBgColor() {
         return m_data.getBgColor();
     }
 
-    /** @return the x */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final int getX() {
         return m_data.getX();
     }
 
-    /** @return the y */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final int getY() {
         return m_data.getY();
     }
 
-    /** @return the width */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final int getWidth() {
         return m_data.getWidth();
     }
 
-    /** @return the height */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final int getHeight() {
         return m_data.getHeight();
     }
 
-    /** @return the alignment */
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final TextAlignment getAlignment() {
         return m_data.getAlignment();
     }
 
-    /** @return the border size, 0 or neg. for none.
-     * @since 3.0*/
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final int getBorderSize() {
         return m_data.getBorderSize();
     }
 
-    /** @return the border color.
-     * @since 3.0*/
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final int getBorderColor()  {
         return m_data.getBorderColor();
     }
 
     /**
-     * @return the default font size for this annotation, or -1 if size from pref page should be used (for old
-     * annotations only)
-     * @since 3.1
+     * {@inheritDoc}
      */
+    @Override
     public final int getDefaultFontSize() {
         return m_data.getDefaultFontSize();
     }
 
     /**
-     * @return The version to guarantee backward compatible look.
-     * @see org.knime.core.node.workflow.AnnotationData#getVersion()
-     * @since 3.0
+     * {@inheritDoc}
      */
+    @Override
     public final int getVersion() {
         return m_data.getVersion();
     }
 
-    /** Shift annotation after copy&amp;paste.
-     * @param xOff x offset
-     * @param yOff y offset
+    /**
+     * {@inheritDoc}
+     *
+     * Note: with every call a new {@link AnnotationData} object is copied and created.
      */
+    @Override
     public final void shiftPosition(final int xOff, final int yOff) {
-        m_data.shiftPosition(xOff, yOff);
+        m_data = createAnnotationDataBuilder(m_data, true).shiftPosition(xOff, yOff).build();
         fireChangeEvent();
     }
 
     /**
-     * Set dimensionality.
+     * {@inheritDoc}
      *
-     * @param x x-coordinate
-     * @param y y-coordinate
-     * @param width width of component
-     * @param height height of component
+     * Note: with every call a new {@link AnnotationData} object is copied and created.
      */
+    @Override
     public final void setDimension(final int x, final int y, final int width,
             final int height) {
-        m_data.setDimension(x, y, width, height);
+        m_data = createAnnotationDataBuilder(m_data, true).setDimension(x, y, width, height).build();
         fireChangeEvent();
     }
 
@@ -177,6 +216,9 @@ public abstract class Annotation implements UIInformation {
      * Set dimensions, but don't notify any listener. (Used only by the GUI for
      * node annotations for legacy support. Sets dimensions in old workflows
      * without making the flow dirty.)
+     *
+     * Note: with every call a new {@link AnnotationData} object is copied and created.
+     *
      * @param x coordinate
      * @param y coordinate
      * @param width of the annotation
@@ -184,58 +226,53 @@ public abstract class Annotation implements UIInformation {
      */
     protected void setDimensionNoNotify(final int x, final int y, final int width,
             final int height) {
-        m_data.setDimension(x, y, width, height);
+        m_data = createAnnotationDataBuilder(m_data, true).setDimension(x, y, width, height).build();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void save(final NodeSettingsWO config) {
-        m_data.save(config);
-    }
 
-    /** {@inheritDoc}
-    * loads new values and fires change event. */
-    @Override
-    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
-            throws InvalidSettingsException {
-        m_data.load(config, loadVersion);
-        fireChangeEvent();
-    }
+    /**
+     * Creates the annotation data builder initialized with the values of the passed annotation data object.
+     *
+     * @param annoData
+     * @param includeBounds
+     * @return the new builder
+     */
+    protected abstract <B extends Builder<B, D>> B createAnnotationDataBuilder(D annoData, boolean includeBounds);
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return m_data.toString();
     }
 
     /**
-     * Copy content, styles, position from the argument and notify listeners.
-     *
-     * @param annotationData To copy from.
-     * @param includeBounds Whether to also update x, y, width, height. If
-     * false, it will only a copy the text with its styles
+     * {@inheritDoc}
      */
-    public void copyFrom(final AnnotationData annotationData,
+    @Override
+    public void copyFrom(final D annotationData,
             final boolean includeBounds) {
-        m_data.copyFrom(annotationData, includeBounds);
+        m_data = createAnnotationDataBuilder(annotationData, includeBounds).build();
         fireChangeEvent();
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("rawtypes")
     @Override
     public Annotation clone() {
-        try {
-            Annotation result = (Annotation)super.clone();
-            AnnotationData clonedData = m_data.clone();
-            result.m_data = clonedData;
-            result.m_uiListeners =
-                new CopyOnWriteArraySet<NodeUIInformationListener>();
-            return result;
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException("Clone failed", e);
-        }
+        //we should not provide a clone method
+        //e.g. conflicts with the final-fields
+        //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
+        throw new UnsupportedOperationException();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final void addUIInformationListener(final NodeUIInformationListener l) {
         if (l == null) {
             throw new NullPointerException(
@@ -244,6 +281,10 @@ public abstract class Annotation implements UIInformation {
         m_uiListeners.add(l);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final void removeUIInformationListener(final NodeUIInformationListener l) {
         m_uiListeners.remove(l);
     }

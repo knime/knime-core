@@ -48,8 +48,8 @@
 package org.knime.workbench.editor2.directannotationedit;
 
 import org.eclipse.gef.commands.Command;
+import org.knime.core.api.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.Annotation;
-import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
@@ -83,7 +83,7 @@ public class AnnotationEditCommand extends Command {
     @Override
     public void execute() {
         // store the old value for undo
-        m_oldAnnotation = m_theAnnotation.getData().clone();
+        m_oldAnnotation = m_theAnnotation.getData();
         m_theAnnotation.copyFrom(m_newAnnotation, true);
     }
 

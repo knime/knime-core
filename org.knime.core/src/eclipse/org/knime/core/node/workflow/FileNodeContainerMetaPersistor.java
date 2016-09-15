@@ -47,6 +47,7 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.api.node.workflow.NodeAnnotationData;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.FileNodePersistor;
@@ -338,11 +339,12 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
         } else {
             if (settings.containsKey("nodeAnnotation")) {
                 NodeSettingsRO anno = settings.getNodeSettings("nodeAnnotation");
-                NodeAnnotationData result = new NodeAnnotationData(false);
-                result.load(anno, getLoadVersion());
+                NodeAnnotationData result = NodeAnnotationData.builder()
+                    .copyFrom(FileWorkflowPersistor.loadAnnotationData(anno, getLoadVersion()), true)
+                    .setIsDefault(false).build();
                 return result;
             }
-            return new NodeAnnotationData(true);
+            return NodeAnnotationData.builder().setIsDefault(true).build();
         }
     }
 
@@ -631,7 +633,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
         NodeAnnotation annotation = nc.getNodeAnnotation();
         if (annotation != null && !annotation.getData().isDefault()) {
             NodeSettingsWO anno = settings.addNodeSettings("nodeAnnotation");
-            annotation.save(anno);
+            FileWorkflowPersistor.saveAnnotationData(anno, annotation.getData());
         }
     }
 
