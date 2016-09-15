@@ -124,7 +124,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
 
     private static final int PANEL_WIDTH = 4000;
 
-    // Column names for column property table
+    // Column names for colum n property table
     private static final String[] PROPERTY_COLUMN_NAMES =
         {"Name", "Width", "Type", "Missing Value Pattern", "Included"};
 
