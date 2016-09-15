@@ -84,20 +84,25 @@ public class DialogComponentDuration extends DialogComponent {
     /**
      * @param model model to store the input duration
      * @param label to place on the dialog or <code>null</code> if no border and label is wanted
-     * @param displaySeconds whether or not the seconds spinner should be displayed. <code>true</code> to display, <code>false</code> to hide
+     * @param displaySeconds whether or not the seconds spinner should be displayed. <code>true</code> to display,
+     *            <code>false</code> to hide
      */
-    public DialogComponentDuration(final SettingsModelDuration model, final String label, final boolean displaySeconds) {
+    public DialogComponentDuration(final SettingsModelDuration model, final String label,
+        final boolean displaySeconds) {
         this(model, label, displaySeconds, 364);
     }
 
     /**
      * @param model model to store the input time values
      * @param label to place on the dialog or <code>null</code> if no border and label is wanted
-     * @param displaySeconds <code>true</code> seconds are displayed, <code>false</code> seconds can only be set via flow variables
+     * @param displaySeconds <code>true</code> seconds are displayed, <code>false</code> seconds can only be set via
+     *            flow variables
      * @param maxDays the maximum amount of days that the spinner should allow
      */
-    public DialogComponentDuration(final SettingsModelDuration model, final String label, final boolean displaySeconds, final int maxDays) {
+    public DialogComponentDuration(final SettingsModelDuration model, final String label, final boolean displaySeconds,
+        final int maxDays) {
         super(model);
+
         // set spinners
         SpinnerModel spinnerModelDays = new SpinnerNumberModel(0,0,maxDays, 1);
         SpinnerModel spinnerModelHours = new SpinnerNumberModel(0, 0, 23, 1);
@@ -107,17 +112,13 @@ public class DialogComponentDuration extends DialogComponent {
         Dimension spinnerSize = new Dimension(SPINNER_WIDTH,25);
         m_days = new JSpinner(spinnerModelDays);
         m_days.setMaximumSize(spinnerSize);
-        m_days.addChangeListener(e -> saveDuration());
         m_hours = new JSpinner(spinnerModelHours);
         m_hours.setMaximumSize(spinnerSize);
-        m_hours.addChangeListener(e -> saveDuration());
         m_minutes = new JSpinner(spinnerModelMinutes);
         m_minutes.setMaximumSize(spinnerSize);
-        m_minutes.addChangeListener(e -> saveDuration());
 
         m_seconds = new JSpinner(spinnerModelSeconds);
         m_seconds.setMaximumSize(spinnerSize);
-        m_seconds.addChangeListener(e -> saveDuration());
 
         // set panels
         JPanel panel = new JPanel(new GridBagLayout());
@@ -168,7 +169,13 @@ public class DialogComponentDuration extends DialogComponent {
      */
     @Override
     protected void validateSettingsBeforeSave() throws InvalidSettingsException {
-        //
+        if (!m_loading) {
+            ((SettingsModelDuration)getModel())
+                .setDuration(Duration.ZERO.plusDays(Long.parseLong(m_days.getValue().toString()))
+                    .plusHours(Long.parseLong(m_hours.getValue().toString()))
+                    .plusMinutes(Long.parseLong(m_minutes.getValue().toString()))
+                    .plusSeconds(Long.parseLong(m_seconds.getValue().toString())));
+        }
     }
 
     /**
@@ -217,15 +224,6 @@ public class DialogComponentDuration extends DialogComponent {
             m_seconds.setValue(durationMinusSeconds.getSeconds());
         } finally {
             m_loading = false;
-        }
-    }
-
-    /**
-     * Update the units according to the duration stored in the model
-     */
-    private void saveDuration() {
-        if (!m_loading) {
-            ((SettingsModelDuration)getModel()).setDuration(Duration.ZERO.plusDays(Long.parseLong(m_days.getValue().toString())).plusHours(Long.parseLong(m_hours.getValue().toString())).plusMinutes(Long.parseLong(m_minutes.getValue().toString())).plusSeconds(Long.parseLong(m_seconds.getValue().toString())));
         }
     }
 }

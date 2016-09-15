@@ -116,18 +116,6 @@ public class SettingsModelDuration extends SettingsModel {
         return m_configName;
     }
 
-    /**
-     * Set the duration based on the ISO-8601 seconds based representation.
-     *  Like  "PnDTnHnMn" see {@link Duration}
-     * @param duration the duration to be set (in ISO-8601 second based representation)
-     */
-    public void setDuration(final String duration) {
-        boolean changed = (m_duration.toString().equals(duration));
-        m_duration = Duration.parse(duration);
-        if (changed) {
-            notifyChangeListeners();
-        }
-    }
 
     /**
      * Returns the total duration
