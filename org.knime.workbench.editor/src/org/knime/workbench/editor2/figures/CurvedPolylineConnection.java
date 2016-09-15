@@ -49,8 +49,8 @@
 package org.knime.workbench.editor2.figures;
 
 import java.awt.geom.CubicCurve2D;
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.geom.FlatteningPathIterator;
+import java.awt.geom.PathIterator;
 
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.geometry.Geometry;
@@ -73,7 +73,7 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
      * Tolerance for checking whether a point lies on the polyline (see {@link #containsPoint(int, int)}.
      * A bigger tolerance helps the user to select a connection more easily.
      */
-    private static final int TOLERANCE = 5;
+    private static final int TOLERANCE = 6;
 
     /**
      * The two control points for each bezier curve segments are moved by this amount (e.g. one third) to the right from
@@ -84,11 +84,17 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
 
     private static final Rectangle LINEBOUNDS = Rectangle.SINGLETON;
 
+
     /**
-     * Keeps track of all bezier curves as java.awt-objects for faster determination of {@link #containsPoint(int, int)}.
-     * At the same time it serves as a flag whether to draw a curved polyline (m_curves!=null) or a straight polyline (m_curves==null).
+     * Keeps track of all bezier curves as list of lines approximating it. It helps to speed-up the {@link #containsPoint(int, int)} calculation.
+     * At the same time it serves as a flag whether to draw a curved polyline (m_approxCurve!=null) or a straight polyline (m_approxCurve==null).
      */
-    private List<CubicCurve2D> m_curves;
+    private PointList m_approxCurve = null;
+
+    /**
+     * The curve to be drawn (in case of a curved connection).
+     */
+    private Path m_path = null;
 
     /**
      * @param curved whether the connections should be rendered curved (<code>true</code>) or straight (
@@ -96,7 +102,7 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
      */
     public CurvedPolylineConnection(final boolean curved) {
         super();
-        m_curves = curved ? new ArrayList<CubicCurve2D>() : null;
+        setCurved(curved);
     }
 
     /**
@@ -104,46 +110,31 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
      *            <code>false</code>)
      */
     public void setCurved(final boolean curved) {
-        m_curves = curved ? new ArrayList<CubicCurve2D>() : null;
+        if(curved) {
+            if(m_approxCurve == null) {
+                calcCurve();
+            }
+        } else {
+            m_approxCurve = null;
+            m_path = null;
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     protected void outlineShape(final Graphics g) {
-        if (m_curves != null) {
+        if (m_approxCurve != null) {
             if (m_state < 0) {
                 setLineStyle(SWT.LINE_SOLID);
             } else {
                 g.setLineDash(DASHES[m_state]);
             }
-            m_curves.clear();
-
             // set node connection color
             g.setForegroundColor(getForegroundColor());
+            g.drawPath(m_path);
 
-            PointList points = getPoints();
-            Path p = new Path(Display.getDefault());
-            p.moveTo(points.getFirstPoint().x, points.getFirstPoint().y);
-            Point lastPoint = points.getFirstPoint();
-            for (int i = 1; i < points.size(); i++) {
-                int x = points.getPoint(i).x;
-                int y = points.getPoint(i).y;
-                double dist = Math.sqrt((x - lastPoint.x) * (x - lastPoint.x) + (y - lastPoint.y) * (y - lastPoint.y));
-
-                //control pts
-                int cp1x = lastPoint.x + (int)(RELATIVE_CONTROL_POINT_PLACEMENT * dist);
-                int cp1y = lastPoint.y;
-                int cp2x = x - (int)(RELATIVE_CONTROL_POINT_PLACEMENT * dist);
-                int cp2y = y;
-                p.cubicTo(cp1x, cp1y, cp2x, cp2y, x, y);
-
-                CubicCurve2D cc = new CubicCurve2D.Float(lastPoint.x, lastPoint.y, cp1x, cp1y, cp2x, cp2y, x, y);
-                m_curves.add(cc);
-
-                lastPoint = new Point(x, y);
-
-            }
-            g.drawPath(p);
+            //for debugging to check whether the lines correctly approximate the curve
+            //g.drawPolyline(m_approxCurve);
         } else {
             super.outlineShape(g);
         }
@@ -155,26 +146,26 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
      */
     @Override
     public boolean containsPoint(final int x, final int y) {
-        if (m_curves != null) {
+        if (m_approxCurve != null) {
             int tolerance = (int)Math.max(getLineWidthFloat() / 2.0f, TOLERANCE);
             LINEBOUNDS.setBounds(getBounds());
-            LINEBOUNDS.expand(tolerance, tolerance);
+            LINEBOUNDS.expand(0, tolerance);
+            //shrink the horizontal bounds a bit - otherwise it'll be difficult to draw a connection from a already connected node (since the connection line will get selected first)
+            LINEBOUNDS.shrink(10, 0);
             if (!LINEBOUNDS.contains(x, y)) {
                 return false;
-            } else {
-                return m_curves.stream().anyMatch(cc -> {
-                    return cc.intersects(x - TOLERANCE, y - TOLERANCE, 2 * TOLERANCE + 1, 2 * TOLERANCE + 1);
-                });
             }
+            return Geometry.polylineContainsPoint(m_approxCurve, x, y, TOLERANCE) || childrenContainsPoint(x, y);
         } else {
             int tolerance = (int)Math.max(getLineWidthFloat() / 2.0f, TOLERANCE);
             LINEBOUNDS.setBounds(getBounds());
-            LINEBOUNDS.expand(tolerance, tolerance);
+            LINEBOUNDS.expand(0, tolerance);
+            //shrink the horizontal bounds a bit - otherwise it'll be difficult to draw a connection from a already connected node (since the connection line will get selected first)
+            LINEBOUNDS.shrink(10, 0);
             if (!LINEBOUNDS.contains(x, y)) {
                 return false;
             }
-            //in order to achieve the same 'tolerance-behavior' as with curved line, we seemingly need to pass twice the tolerance
-            return Geometry.polylineContainsPoint(getPoints(), x, y, 2 * TOLERANCE) || childrenContainsPoint(x, y);
+            return Geometry.polylineContainsPoint(getPoints(), x, y, TOLERANCE) || childrenContainsPoint(x, y);
         }
     }
 
@@ -183,15 +174,67 @@ public class CurvedPolylineConnection extends ProgressPolylineConnection {
      */
     @Override
     public Rectangle getBounds() {
-        if (m_curves != null) {
-            //unfortunately the bounding box given by m_path itself somehow is to small
-            //hence, we just take the polygon-bounding box and add a constant value in x-direction
-            //to account for the curves the stand out of the bounding box if the start point
-            //comes spatially (in x-direction) after the end point (same for bending points)
-            //TODO maybe there is a better way?
-            return super.getBounds().expand(20, 0);
+        if (m_approxCurve != null) {
+            if (bounds == null) {
+                int expand = (int)(getLineWidthFloat() / 2.0f) + 10;
+                bounds = m_approxCurve.getBounds().getExpanded(expand, expand);
+            }
+            return bounds;
         } else {
             return super.getBounds();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void fireFigureMoved() {
+        super.fireFigureMoved();
+        if(m_approxCurve != null) {
+        	bounds = null;
+            calcCurve();
+        }
+    }
+
+    private void calcCurve() {
+        //redraw the path and re-determine the curve approximation
+        if (m_approxCurve != null) {
+            m_approxCurve.removeAllPoints();
+        } else {
+            m_approxCurve = new PointList();
+        }
+
+        PointList points = getPoints();
+        m_path = new Path(Display.getDefault());
+        m_path.moveTo(points.getFirstPoint().x, points.getFirstPoint().y);
+        m_approxCurve.addPoint(points.getFirstPoint().x, points.getFirstPoint().y);
+        Point lastPoint = points.getFirstPoint();
+        for (int i = 1; i < points.size(); i++) {
+            int x = points.getPoint(i).x;
+            int y = points.getPoint(i).y;
+            double dist = Math.sqrt((x - lastPoint.x) * (x - lastPoint.x) + (y - lastPoint.y) * (y - lastPoint.y));
+
+            //control pts
+            int cp1x = lastPoint.x + (int)(RELATIVE_CONTROL_POINT_PLACEMENT * dist);
+            int cp1y = lastPoint.y;
+            int cp2x = x - (int)(RELATIVE_CONTROL_POINT_PLACEMENT * dist);
+            int cp2y = y;
+            m_path.cubicTo(cp1x, cp1y, cp2x, cp2y, x, y);
+
+            CubicCurve2D cc = new CubicCurve2D.Float(lastPoint.x, lastPoint.y, cp1x, cp1y, cp2x, cp2y, x, y);
+            FlatteningPathIterator fpi = new FlatteningPathIterator(cc.getPathIterator(null), 3, 5);
+            float[] coords = new float[6];
+            while (!fpi.isDone()) {
+                int type = fpi.currentSegment(coords);
+                switch (type) {
+                    case PathIterator.SEG_LINETO:
+                        m_approxCurve.addPoint((int)coords[0], (int)coords[1]);
+                        break;
+                }
+                fpi.next();
+            }
+            lastPoint = new Point(x, y);
         }
     }
 }
