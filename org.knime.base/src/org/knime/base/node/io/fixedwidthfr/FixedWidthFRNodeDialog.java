@@ -124,7 +124,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
 
     private static final int PANEL_WIDTH = 4000;
 
-    // Column names for colum n property table
+    // Column names for column property table
     private static final String[] PROPERTY_COLUMN_NAMES =
         {"Name", "Width", "Type", "Missing Value Pattern", "Included"};
 
@@ -207,7 +207,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
 
         m_url =
             new FilesHistoryPanel(flowVarBrowseModel, FILEREADER_HISTORY_ID, LocationValidation.FileInput,
-                new String[]{".xml"});
+                new String[]{".txt", ".csv"});
 
         m_url.addChangeListener(new ChangeListener() {
 
@@ -256,7 +256,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
         m_colTable = new JTable() {
             private final Color m_grey = new Color(125, 125, 125);
 
-            // set font color according to included/exculded
+            // set font color according to included/excluded
             @Override
             public Component prepareRenderer(final TableCellRenderer renderer, final int row, final int column) {
                 Component c = super.prepareRenderer(renderer, row, column);
