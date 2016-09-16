@@ -260,8 +260,9 @@ public class DBRowIteratorImpl extends RowIterator {
                         case Types.LONGVARCHAR:
                         case Types.LONGNVARCHAR:
                             cell = readAsciiStream(i); break;
-                        case Types.LONGVARBINARY:
                         case Types.BINARY:
+                        case Types.LONGVARBINARY:
+                        case Types.VARBINARY:
                             cell = readBinaryStream(i); break;
                         default: cell = readString(i);
                     }
