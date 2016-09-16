@@ -95,7 +95,7 @@ public final class ResolverUtil {
      *
      * @param uri The URI to resolve
      * @param monitor a progress monitor, must not be <code>null</code>
-     * @return The local file underlying the URI (if any)
+     * @return The local file underlying the URI (if any), or <code>null</code> if the URI does not denote a local file
      * @throws IOException If no service is registered or the URI can't be
      *             resolved.
      */

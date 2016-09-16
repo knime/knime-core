@@ -1218,18 +1218,13 @@ public final class FileUtil {
 
         if (urlConnection instanceof HttpURLConnection) {
             ((HttpURLConnection)urlConnection).setRequestMethod(httpMethod);
+            ((HttpURLConnection)urlConnection).setChunkedStreamingMode(1 << 20);
+            urlConnection = new HttpURLConnectionDecorator((HttpURLConnection)urlConnection);
         }
 
         urlConnection.setDoOutput(true);
         urlConnection.connect();
 
-        if (urlConnection instanceof HttpURLConnection) {
-            HttpURLConnection c = (HttpURLConnection)urlConnection;
-            if (c.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException("Error while writing to '" + c.getURL() + "': " + c.getResponseCode() + " - "
-                    + c.getResponseMessage());
-            }
-        }
         return urlConnection;
     }
 
