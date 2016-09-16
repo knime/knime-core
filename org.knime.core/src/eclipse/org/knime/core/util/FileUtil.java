@@ -1218,6 +1218,8 @@ public final class FileUtil {
 
         if (urlConnection instanceof HttpURLConnection) {
             ((HttpURLConnection)urlConnection).setRequestMethod(httpMethod);
+            ((HttpURLConnection)urlConnection).setChunkedStreamingMode(1 << 20);
+            urlConnection = new HttpURLConnectionDecorator((HttpURLConnection)urlConnection);
         }
 
         urlConnection.setDoOutput(true);
