@@ -79,8 +79,6 @@ public class DialogComponentDuration extends DialogComponent {
     private final JSpinner m_minutes;
     private final JSpinner m_seconds;
 
-    private boolean m_loading;
-
     /**
      * @param model model to store the input duration
      * @param label to place on the dialog or <code>null</code> if no border and label is wanted
@@ -169,13 +167,11 @@ public class DialogComponentDuration extends DialogComponent {
      */
     @Override
     protected void validateSettingsBeforeSave() throws InvalidSettingsException {
-        if (!m_loading) {
             ((SettingsModelDuration)getModel())
                 .setDuration(Duration.ZERO.plusDays(Long.parseLong(m_days.getValue().toString()))
                     .plusHours(Long.parseLong(m_hours.getValue().toString()))
                     .plusMinutes(Long.parseLong(m_minutes.getValue().toString()))
                     .plusSeconds(Long.parseLong(m_seconds.getValue().toString())));
-        }
     }
 
     /**
@@ -212,8 +208,6 @@ public class DialogComponentDuration extends DialogComponent {
      * Update the duration according to the units stored in the model
      */
     private void loadUnits(final SettingsModelDuration model) {
-        m_loading = true;
-        try {
             Duration duration =  ((SettingsModelDuration)getModel()).getDuration();
             m_days.setValue(duration.toDays());
             Duration durationMinusDays = duration.minusDays(duration.toDays());
@@ -222,8 +216,5 @@ public class DialogComponentDuration extends DialogComponent {
             m_minutes.setValue(durationMinusHours.toMinutes());
             Duration durationMinusSeconds = durationMinusHours.minusMinutes(durationMinusHours.toMinutes());
             m_seconds.setValue(durationMinusSeconds.getSeconds());
-        } finally {
-            m_loading = false;
-        }
     }
 }

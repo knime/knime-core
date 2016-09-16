@@ -178,6 +178,12 @@ public class SettingsModelDuration extends SettingsModel {
      * @param duration
      */
     public void setDuration(final Duration duration) {
+        boolean changed = (duration.equals(m_duration));
+
         m_duration = duration;
+
+        if (changed) {
+            notifyChangeListeners();
+        }
     }
 }
