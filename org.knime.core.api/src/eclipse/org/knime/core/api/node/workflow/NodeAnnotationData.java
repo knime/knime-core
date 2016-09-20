@@ -70,8 +70,10 @@ public final class NodeAnnotationData extends AnnotationData {
     /** {@inheritDoc} */
     @Override
     public NodeAnnotationData clone() {
-        //TODO we should use that
-        return (NodeAnnotationData)super.clone();
+        //we should not provide a clone method
+        //e.g. conflicts with the final-fields
+        //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
+        throw new UnsupportedOperationException();
     }
 
     public static NodeAnnotationData createFromObsoleteCustomName(

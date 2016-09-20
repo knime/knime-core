@@ -91,8 +91,7 @@ implements NodeContainerMetaPersistor {
             final boolean preserveDeletableFlag,
             final boolean isUndoableDeleteCommand) {
         NodeAnnotation nodeAnn = original.getNodeAnnotation();
-        m_nodeAnnotationData = nodeAnn == null ? null
-                : nodeAnn.getData().clone();
+        m_nodeAnnotationData = nodeAnn == null ? null : NodeAnnotationData.builder(nodeAnn.getData(), true).build();
         m_customDescription = original.getCustomDescription();
         m_nodeIDSuffix = original.getID().getIndex();
         NodeExecutionJobManager orig = original.getJobManager();
@@ -112,7 +111,7 @@ implements NodeContainerMetaPersistor {
         }
         m_nodeMessage = original.getNodeMessage();
         if (original.getUIInformation() != null) {
-            m_uiInformation = original.getUIInformation().clone();
+            m_uiInformation = NodeUIInformation.builder(original.getUIInformation()).build();
         } else {
             m_uiInformation = null;
         }
