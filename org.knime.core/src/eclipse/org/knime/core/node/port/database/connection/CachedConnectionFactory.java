@@ -177,18 +177,20 @@ public class CachedConnectionFactory implements DBConnectionFactory {
             Connection conn = CONNECTION_MAP.get(databaseConnKey);
             // if connection already exists
             if (conn != null) {
-                LOGGER.debug("Connection found in cache for key: " + databaseConnKey);
                 try {
-                    if (conn.isClosed() || !settings.getUtility().isValid(conn)) {
-                        LOGGER.debug("Connection closed or invalid for key: " + databaseConnKey);
-                        CONNECTION_MAP.remove(databaseConnKey);
+                    if (conn.isClosed()) {
+                        LOGGER.debug("Closed connection found in cache with key: " + databaseConnKey);
+                    } else if (!settings.getUtility().isValid(conn)) {
+                        LOGGER.debug("Invalid connection found in cache with key: " + databaseConnKey);
                     } else {
+                        LOGGER.debug("Valid connection found in cache with key: " + databaseConnKey);
                         conn.clearWarnings();
                         return conn;
                     }
+                    removeConnectionFromCache(databaseConnKey, conn);
                 } catch (Exception e) { // remove invalid connection
                     LOGGER.debug("Invalid connection with key: " + databaseConnKey + " Exception: " + e.getMessage());
-                    CONNECTION_MAP.remove(databaseConnKey);
+                    removeConnectionFromCache(databaseConnKey, conn);
                 }
             }
             final Driver d;
@@ -229,6 +231,26 @@ public class CachedConnectionFactory implements DBConnectionFactory {
                 throw new IOException("Connection to database '" + jdbcUrl + "' timed out");
             }
         }
+    }
+
+    /**
+     * Always use this method to remove a connection from the {@link #CONNECTION_MAP} since it ensures
+     * that the connection is closed before removing it from the map.
+     * @param databaseConnKey the key of the connection in the {@link #CONNECTION_MAP}
+     * @param conn the {@link Connection} to remove from the {@link #CONNECTION_MAP}
+     */
+    private void removeConnectionFromCache(final ConnectionKey databaseConnKey, final Connection conn) {
+        try {
+            if (!conn.isClosed()) {
+                LOGGER.debug("Closing connection with key: " + databaseConnKey);
+                conn.close();
+            }
+        }catch (Exception ex) {
+            LOGGER.debug("Error closing connection:" + ex.getMessage(), ex);
+        }
+        //remove the connection from the cache also if an exception occurs during closing
+        LOGGER.debug("Removing closed connection from cache with key: " + databaseConnKey);
+        CONNECTION_MAP.remove(databaseConnKey);
     }
 
     /**
