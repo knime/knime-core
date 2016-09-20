@@ -48,9 +48,9 @@
  */
 package org.knime.core.node.workflow.action;
 
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowAnnotation;
-import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
@@ -103,7 +103,7 @@ public final class ExpandSubnodeResult {
         for (NodeID id : m_expandedCopyContent.getNodeIDs()) {
             hostWFM.removeNode(id);
         }
-        for (WorkflowAnnotation anno : m_expandedCopyContent.getAnnotations()) {
+        for (IWorkflowAnnotation anno : m_expandedCopyContent.getAnnotations()) {
             hostWFM.removeAnnotation(anno);
         }
         hostWFM.paste(m_undoCopyPersistor);

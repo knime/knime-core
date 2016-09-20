@@ -263,10 +263,16 @@ public abstract class Annotation<D extends AnnotationData> implements IAnnotatio
     @SuppressWarnings("rawtypes")
     @Override
     public Annotation clone() {
-        //we should not provide a clone method
-        //e.g. conflicts with the final-fields
-        //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
-        throw new UnsupportedOperationException();
+        try {
+            Annotation result = (Annotation)super.clone();
+            AnnotationData clonedData = AnnotationData.builder(m_data, true).build();
+            result.m_data = clonedData;
+            result.m_uiListeners =
+                new CopyOnWriteArraySet<NodeUIInformationListener>();
+            return result;
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Clone failed", e);
+        }
     }
 
     /**
