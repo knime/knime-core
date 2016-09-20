@@ -45,41 +45,11 @@
  * History
  *   Oct 21, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow;
-
-import org.knime.core.api.node.workflow.AnnotationData;
-import org.knime.core.api.node.workflow.IWorkflowAnnotation;
+package org.knime.core.api.node.workflow;
 
 /** Workflow annotation (not associated with a node).
  * Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class WorkflowAnnotation extends Annotation<AnnotationData> implements IWorkflowAnnotation {
-
-    /** New empty annotation. */
-    public WorkflowAnnotation() {
-        this(AnnotationData.builder().build());
-    }
-
-    /** Restore annotation.
-     * @param data Data */
-    public WorkflowAnnotation(final AnnotationData data) {
-        super(data);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public WorkflowAnnotation clone() {
-        return (WorkflowAnnotation)super.clone();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("rawtypes")
-    @Override
-    protected AnnotationData.Builder createAnnotationDataBuilder(final AnnotationData annoData,
-        final boolean includeBounds) {
-        return AnnotationData.builder(annoData, includeBounds);
-    }
+public interface IWorkflowAnnotation extends IAnnotation<AnnotationData> {
 
 }
