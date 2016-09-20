@@ -133,6 +133,12 @@ public interface IAnnotation<D extends AnnotationData> {
     @Override
     String toString();
 
+
+    /**
+     * {@inheritDoc}
+     */
+    IAnnotation<D> clone();
+
     /**
      * Copy content, styles, position from the argument and notify listeners.
      *

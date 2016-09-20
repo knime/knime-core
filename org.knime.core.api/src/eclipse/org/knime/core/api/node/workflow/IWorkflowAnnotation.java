@@ -52,4 +52,10 @@ package org.knime.core.api.node.workflow;
  */
 public interface IWorkflowAnnotation extends IAnnotation<AnnotationData> {
 
+    /**
+     * @return
+     */
+    @Override
+    IWorkflowAnnotation clone();
+
 }
