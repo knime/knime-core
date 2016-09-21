@@ -46,12 +46,14 @@
  * History
  *   20.09.2016 (Simon): created
  */
-package org.knime.base.node.preproc.stringeditvariable;
+package org.knime.base.node.preproc.stringmanipulationvariable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.knime.base.util.flowvariable.FlowVariableProvider;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -64,36 +66,30 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
-import org.knime.ext.sun.nodes.script.settings.JavaScriptingCustomizer;
+import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
+import org.knime.ext.sun.nodes.script.expression.Expression;
+import org.knime.ext.sun.nodes.script.expression.Expression.ExpressionField;
+import org.knime.ext.sun.nodes.script.expression.Expression.FieldType;
+import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
+import org.knime.ext.sun.nodes.script.expression.ExpressionInstance;
+import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 
 /**
+ * The node model of the string manipulation node for flow variables.
  *
- * @author Simon
+ * @author Simon Schmid
  */
-public class StringEditVariableNodeModel extends NodeModel implements FlowVariableProvider {
+public class StringManipulationVariableNodeModel extends NodeModel implements FlowVariableProvider {
 
-    /**
-     * @param nrInDataPorts
-     * @param nrOutDataPorts
-     */
-    protected StringEditVariableNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
-        super(nrInDataPorts, nrOutDataPorts);
-        // TODO Auto-generated constructor stub
-    }
+    private final StringManipulationSettings m_settings;
+
 
     /**
      * flow var in, flow var out.
-     *
-     * @param customizer Customizer for settings.
      */
-    StringEditVariableNodeModel(final JavaScriptingCustomizer customizer) {
+    StringManipulationVariableNodeModel() {
         super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL}, new PortType[]{FlowVariablePortObject.TYPE});
-        //        m_customizer = customizer;
-
-        // must create empty settings as otherwise, the wrong expression
-        // version is guess in the dialog (non-existence --> v1)
-
-        //        m_settings = m_customizer.createSettings();
+        m_settings = new StringManipulationSettings();
     }
 
     /**
@@ -101,7 +97,6 @@ public class StringEditVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        //        calculate();
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
 
@@ -110,9 +105,45 @@ public class StringEditVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
-        // must not call calculate() as it has been done in configure()
-        // (and there would otherwise be the chance that we do a calculation
-        // on the already updated values!)
+        if (m_settings == null || m_settings.getExpression() == null) {
+            throw new InvalidSettingsException("No expression has been set.");
+        }
+
+        JavaScriptingSettings settings = m_settings.createJavaScriptingSettings();
+
+        settings.setInputAndCompile(new DataTableSpec());
+
+        Expression compiledExpression = settings.getCompiledExpression();
+        if (compiledExpression == null) {
+            throw new InstantiationException("No compiled expression in settings.");
+        }
+        ExpressionInstance m_expression = compiledExpression.getInstance();
+
+        HashMap<InputField, Object> m_flowVarAssignmentMap = new HashMap<InputField, Object>();
+        for (Map.Entry<InputField, ExpressionField> e : m_expression.getFieldMap().entrySet()) {
+            InputField f = e.getKey();
+            if (f.getFieldType().equals(FieldType.Variable)) {
+                Class<?> c = e.getValue().getFieldClass();
+                m_flowVarAssignmentMap.put(f, readVariable(f.getColOrVarName(), c));
+            }
+        }
+
+        m_expression.set(m_flowVarAssignmentMap);
+        Object evaluatedExpression = m_expression.evaluate();
+        if (evaluatedExpression != null) {
+            if (evaluatedExpression instanceof Integer) {
+                pushFlowVariableInt(m_settings.getColName(), (int)evaluatedExpression);
+            } else if (evaluatedExpression instanceof Double) {
+                pushFlowVariableDouble(m_settings.getColName(), (double)evaluatedExpression);
+            } else if (evaluatedExpression instanceof String) {
+                pushFlowVariableString(m_settings.getColName(), (String)evaluatedExpression);
+            } else {
+                throw new RuntimeException("Invalid variable class: " + evaluatedExpression.getClass());
+            }
+        }
+        else {
+            pushFlowVariableString(m_settings.getColName(), (String)evaluatedExpression);
+        }
         return new PortObject[]{FlowVariablePortObject.INSTANCE};
     }
 
@@ -122,8 +153,7 @@ public class StringEditVariableNodeModel extends NodeModel implements FlowVariab
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        // no internals
     }
 
     /**
@@ -132,8 +162,7 @@ public class StringEditVariableNodeModel extends NodeModel implements FlowVariab
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
-
+        // no internals
     }
 
     /**
@@ -141,8 +170,7 @@ public class StringEditVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // TODO Auto-generated method stub
-
+        m_settings.saveSettingsTo(settings);
     }
 
     /**
@@ -150,8 +178,7 @@ public class StringEditVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        new StringManipulationSettings().loadSettingsInModel(settings);
     }
 
     /**
@@ -159,8 +186,7 @@ public class StringEditVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        m_settings.loadSettingsInModel(settings);
     }
 
     /**
@@ -168,8 +194,31 @@ public class StringEditVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected void reset() {
-        // TODO Auto-generated method stub
+        // no internals
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object readVariable(final String name, final Class<?> type) {
+        if (Integer.class.equals(type)) {
+            return peekFlowVariableInt(name);
+        } else if (Double.class.equals(type)) {
+            return peekFlowVariableDouble(name);
+        } else if (String.class.equals(type)) {
+            return peekFlowVariableString(name);
+        } else {
+            throw new RuntimeException("Invalid variable class: " + type);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getRowCount() {
+        return 0;
     }
 
 }

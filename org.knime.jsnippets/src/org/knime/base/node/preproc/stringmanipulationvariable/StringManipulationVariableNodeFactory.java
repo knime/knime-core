@@ -45,57 +45,25 @@
  * History
  *   30.09.2011 (hofer): created
  */
-package org.knime.base.node.preproc.stringeditvariable;
+package org.knime.base.node.preproc.stringmanipulationvariable;
 
-import org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.ext.sun.nodes.script.settings.JavaScriptingCustomizer;
-import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetDoubleType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetIntType;
-import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetStringType;
 
 /**
  * The node factory of the string manipulation node.
  *
  * @author Heiko Hofer
  */
-public class StringEditVariableNodeFactory extends NodeFactory<StringEditVariableNodeModel> {
-
-    private final JavaScriptingCustomizer m_customizer;
-
-    /**
-    *
-    */
-   public StringEditVariableNodeFactory() {
-       m_customizer = new JavaScriptingCustomizer() {
-           /** {@inheritDoc} */
-           @Override
-           public JavaScriptingSettings createSettings() {
-               JavaScriptingSettings s = super.createSettings();
-               s.setArrayReturn(false);
-               // not applicable anyway
-               s.setInsertMissingAsNull(false);
-               return s;
-           }
-       };
-       m_customizer.setShowColumnList(false);
-       m_customizer.setShowGlobalDeclarationList(false);
-       m_customizer.setOutputIsVariable(true);
-       m_customizer.setShowArrayReturn(false);
-       m_customizer.setShowInsertMissingAsNull(false);
-       m_customizer.setReturnTypes(JavaSnippetIntType.INSTANCE,
-               JavaSnippetDoubleType.INSTANCE, JavaSnippetStringType.INSTANCE);
-   }
+public class StringManipulationVariableNodeFactory extends NodeFactory<StringManipulationVariableNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public StringEditVariableNodeModel createNodeModel() {
-        return new StringEditVariableNodeModel(m_customizer);
+    public StringManipulationVariableNodeModel createNodeModel() {
+        return new StringManipulationVariableNodeModel();
     }
 
     /**
@@ -110,8 +78,8 @@ public class StringEditVariableNodeFactory extends NodeFactory<StringEditVariabl
      * {@inheritDoc}
      */
     @Override
-    public NodeView<StringEditVariableNodeModel> createNodeView(final int viewIndex,
-        final StringEditVariableNodeModel nodeModel) {
+    public NodeView<StringManipulationVariableNodeModel> createNodeView(final int viewIndex,
+        final StringManipulationVariableNodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 
@@ -128,7 +96,7 @@ public class StringEditVariableNodeFactory extends NodeFactory<StringEditVariabl
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new StringManipulationNodeDialog();
+        return new StringManipulationVariableNodeDialog();
     }
 
 }

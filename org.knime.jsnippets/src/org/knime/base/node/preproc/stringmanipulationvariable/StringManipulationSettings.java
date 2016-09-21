@@ -45,7 +45,7 @@
  * History
  *   30.09.2011 (hofer): created
  */
-package org.knime.base.node.preproc.stringeditvariable;
+package org.knime.base.node.preproc.stringmanipulationvariable;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +59,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
+import org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.base.node.util.ManipulatorProvider;
 import org.knime.core.data.DataColumnSpec;
