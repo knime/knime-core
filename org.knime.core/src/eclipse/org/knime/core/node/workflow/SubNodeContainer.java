@@ -77,6 +77,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlException;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
@@ -1762,7 +1763,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * once the node is unwrapped to a metanode. */
     WorkflowPersistor getConvertToMetaNodeCopyPersistor() {
         assert isLockedByCurrentThread();
-        Collection<WorkflowAnnotation> workflowAnnotations = m_wfm.getWorkflowAnnotations();
+        Collection<IWorkflowAnnotation> workflowAnnotations = m_wfm.getWorkflowAnnotations();
         // all but virtual in and output node
         NodeID[] nodes = m_wfm.getNodeContainers().stream().map(nc -> nc.getID())
                 .filter(id -> id.getIndex() != m_virtualInNodeIDSuffix)
@@ -1770,7 +1771,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 .toArray(NodeID[]::new);
         WorkflowCopyContent cnt = new WorkflowCopyContent();
         cnt.setNodeIDs(nodes);
-        cnt.setAnnotation(workflowAnnotations.toArray(new WorkflowAnnotation[workflowAnnotations.size()]));
+        cnt.setAnnotation(workflowAnnotations.toArray(new IWorkflowAnnotation[workflowAnnotations.size()]));
         cnt.setIncludeInOutConnections(true);
         WorkflowPersistor persistor = m_wfm.copy(true, cnt);
         final Set<ConnectionContainerTemplate> additionalConnectionSet = persistor.getAdditionalConnectionSet();

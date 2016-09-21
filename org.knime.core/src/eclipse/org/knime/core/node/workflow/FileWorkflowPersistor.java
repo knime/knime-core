@@ -72,6 +72,7 @@ import org.knime.core.api.node.workflow.AnnotationData;
 import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
@@ -295,7 +296,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private List<Credentials> m_credentials;
 
-    private List<WorkflowAnnotation> m_workflowAnnotations;
+    private List<IWorkflowAnnotation> m_workflowAnnotations;
 
     private NodeSettingsRO m_wizardState;
 
@@ -497,7 +498,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     /** {@inheritDoc} */
     @Override
-    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+    public List<IWorkflowAnnotation> getWorkflowAnnotations() {
         return m_workflowAnnotations;
     }
 
@@ -1708,7 +1709,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
      * @return non-null list.
      * @throws InvalidSettingsException If this fails for any reason.
      */
-    List<WorkflowAnnotation> loadWorkflowAnnotations(final NodeSettingsRO settings) throws InvalidSettingsException {
+    List<IWorkflowAnnotation> loadWorkflowAnnotations(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V230)) {
             // no credentials in v2.2 and before
             return Collections.emptyList();
@@ -1717,7 +1718,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 return Collections.emptyList();
             }
             NodeSettingsRO annoSettings = settings.getNodeSettings("annotations");
-            List<WorkflowAnnotation> result = new ArrayList<WorkflowAnnotation>();
+            List<IWorkflowAnnotation> result = new ArrayList<IWorkflowAnnotation>();
             for (String key : annoSettings.keySet()) {
                 NodeSettingsRO child = annoSettings.getNodeSettings(key);
                 AnnotationData annotationData = loadAnnotationData(child, getLoadVersion());
@@ -2282,15 +2283,15 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     }
 
     protected static void saveWorkflowAnnotations(final WorkflowManager manager, final NodeSettingsWO settings) {
-        Collection<WorkflowAnnotation> annotations = manager.getWorkflowAnnotations();
+        Collection<IWorkflowAnnotation> annotations = manager.getWorkflowAnnotations();
         if (annotations.size() == 0) {
             return;
         }
         NodeSettingsWO annoSettings = settings.addNodeSettings("annotations");
         int i = 0;
-        for (Annotation a : annotations) {
+        for (IWorkflowAnnotation a : annotations) {
             NodeSettingsWO t = annoSettings.addNodeSettings("annotation_" + i);
-            saveAnnotationData(annoSettings, a.getData());
+            saveAnnotationData(t, a.getData());
             i += 1;
         }
     }

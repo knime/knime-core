@@ -56,6 +56,7 @@ import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeAnnotation;
@@ -63,7 +64,6 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodePropertyChangedEvent;
 import org.knime.core.node.workflow.NodePropertyChangedListener;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
@@ -147,7 +147,7 @@ public abstract class AbstractWorkflowPortBarEditPart
                 }
             }
         }
-        for (WorkflowAnnotation anno : manager.getWorkflowAnnotations()) {
+        for (IWorkflowAnnotation anno : manager.getWorkflowAnnotations()) {
             int x = anno.getX();
             if (minX > x) {
                 minX = x;

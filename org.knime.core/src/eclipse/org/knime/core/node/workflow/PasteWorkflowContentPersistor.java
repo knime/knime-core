@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
@@ -80,7 +81,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     private final Set<ConnectionContainerTemplate> m_connectionSet;
     private final Set<ConnectionContainerTemplate> m_additionalConnectionSet;
     private final Map<Integer, NodeContainerPersistor> m_loaderMap;
-    private final WorkflowAnnotation[] m_copiedAnnotations;
+    private final IWorkflowAnnotation[] m_copiedAnnotations;
     private final boolean m_isUndoableDeleteCommand;
 
     /** Create new persistor.
@@ -95,7 +96,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
             final Map<Integer, NodeContainerPersistor> loaderMap,
             final Set<ConnectionContainerTemplate> connectionSet,
             final Set<ConnectionContainerTemplate> additionalConnectionSet,
-            final WorkflowAnnotation[] copiedAnnotations,
+            final IWorkflowAnnotation[] copiedAnnotations,
             final boolean isUndoableDeleteCommand) {
         m_connectionSet = connectionSet;
         m_additionalConnectionSet = additionalConnectionSet;
@@ -244,15 +245,15 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+    public List<IWorkflowAnnotation> getWorkflowAnnotations() {
         if (m_isUndoableDeleteCommand) {
             return Arrays.asList(m_copiedAnnotations);
         } else {
             // must create a new fresh copy on each invocation
             // (multiple pastes possible)
-            ArrayList<WorkflowAnnotation> result =
-                new ArrayList<WorkflowAnnotation>(m_copiedAnnotations.length);
-            for (WorkflowAnnotation a : m_copiedAnnotations) {
+            ArrayList<IWorkflowAnnotation> result =
+                new ArrayList<IWorkflowAnnotation>(m_copiedAnnotations.length);
+            for (IWorkflowAnnotation a : m_copiedAnnotations) {
                 result.add(a.clone());
             }
             return result;

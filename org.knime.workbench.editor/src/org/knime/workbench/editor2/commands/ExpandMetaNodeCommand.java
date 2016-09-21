@@ -53,9 +53,9 @@ import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -73,7 +73,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
 
     private final NodeID m_id;
     private NodeID[] m_pastedNodes;
-    private WorkflowAnnotation[] m_pastedAnnotations;
+    private IWorkflowAnnotation[] m_pastedAnnotations;
     private WorkflowPersistor m_undoCopyPersistor;
     private final WorkflowEditor m_editor;
 
@@ -161,7 +161,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
         for (NodeID id : m_pastedNodes) {
             hostWFM.removeNode(id);
         }
-        for (WorkflowAnnotation anno : m_pastedAnnotations) {
+        for (IWorkflowAnnotation anno : m_pastedAnnotations) {
             hostWFM.removeAnnotation(anno);
         }
         hostWFM.paste(m_undoCopyPersistor);

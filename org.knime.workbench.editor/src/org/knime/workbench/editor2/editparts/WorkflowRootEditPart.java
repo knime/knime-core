@@ -72,6 +72,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.api.node.workflow.IAnnotation;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationEvent;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
@@ -80,7 +82,6 @@ import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -127,8 +128,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     private final Set<NodeID> m_futureSelection = new LinkedHashSet<NodeID>();
 
     /* same deal for added annotations */
-    private final Set<WorkflowAnnotation> m_annotationSelection =
-            new LinkedHashSet<WorkflowAnnotation>();
+    private final Set<IWorkflowAnnotation> m_annotationSelection =
+            new LinkedHashSet<IWorkflowAnnotation>();
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
@@ -161,7 +162,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      *            created
      */
     public void setFutureAnnotationSelection(
-            final Collection<WorkflowAnnotation> annos) {
+            final Collection<IWorkflowAnnotation> annos) {
         m_annotationSelection.clear();
         m_annotationSelection.addAll(annos);
     }
@@ -190,7 +191,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
 
         // Add workflow annotations as children of the workflow manager.
         // Add them first so they appear behind everything else
-        for (Annotation anno : wfm.getWorkflowAnnotations()) {
+        for (IAnnotation anno : wfm.getWorkflowAnnotations()) {
             modelChildren.add(anno);
         }
         // Add the annotations associated with nodes (add them after the

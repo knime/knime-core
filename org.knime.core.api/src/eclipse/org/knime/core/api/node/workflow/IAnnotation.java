@@ -55,7 +55,7 @@ import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
  *
  * @author Martin Horn, KNIME.com
  */
-public interface IAnnotation<D extends AnnotationData> {
+public interface IAnnotation<D extends AnnotationData> extends Cloneable {
 
     /** @return the data */
     D getData();

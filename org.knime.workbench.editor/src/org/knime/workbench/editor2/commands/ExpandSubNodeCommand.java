@@ -53,10 +53,10 @@ import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -114,7 +114,7 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
             }
 
             m_expandResult = hostWFM.expandSubWorkflow(m_id);
-            WorkflowAnnotation[] annotations = m_expandResult.getExpandedCopyContent().getAnnotations();
+            IWorkflowAnnotation[] annotations = m_expandResult.getExpandedCopyContent().getAnnotations();
             NodeID[] nodeIDs = m_expandResult.getExpandedCopyContent().getNodeIDs();
 
             EditPartViewer partViewer = m_editor.getViewer();

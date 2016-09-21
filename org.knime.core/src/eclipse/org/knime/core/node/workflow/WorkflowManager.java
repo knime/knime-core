@@ -115,7 +115,9 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.core.api.node.workflow.IConnectionContainer.ConnectionType;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationEvent;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
@@ -271,8 +273,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Vector holding workflow specific variables. */
     private Vector<FlowVariable> m_workflowVariables;
 
-    private final Vector<WorkflowAnnotation> m_annotations =
-        new Vector<WorkflowAnnotation>();
+    private final Vector<IWorkflowAnnotation> m_annotations =
+        new Vector<IWorkflowAnnotation>();
 
     // Misc members:
 
@@ -3680,7 +3682,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 i++;
             }
             // retrieve all workflow annotations
-            Collection<WorkflowAnnotation> annos =
+            Collection<IWorkflowAnnotation> annos =
                 subWFM.getWorkflowAnnotations();
             WorkflowAnnotation[] orgAnnos = annos.toArray(
                     new WorkflowAnnotation[annos.size()]);
@@ -3690,7 +3692,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             orgContent.setAnnotation(orgAnnos);
             WorkflowCopyContent newContent = this.copyFromAndPasteHere(subWFM, orgContent);
             NodeID[] newIDs = newContent.getNodeIDs();
-            Annotation[] newAnnos = newContent.getAnnotations();
+            IAnnotation[] newAnnos = newContent.getAnnotations();
             // create map and set of quick lookup/search
             Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
             HashSet<NodeID> newIDsHashSet = new HashSet<NodeID>();
@@ -3793,7 +3795,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         nc.setUIInformation(newUii);
                     }
                 }
-                for (Annotation anno : newAnnos) {
+                for (IAnnotation anno : newAnnos) {
                     anno.shiftPosition(xShift, yShift);
                 }
                 // move bendpoints of connections between moved nodes
@@ -4025,7 +4027,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return newly create metanode
      * @throws IllegalArgumentException if collapse cannot be done
      */
-    public CollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs, final WorkflowAnnotation[] orgAnnos,
+    public CollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs, final IWorkflowAnnotation[] orgAnnos,
         final String name) {
         try (WorkflowLock lock = lock()) {
             // make sure this is still true:
@@ -4219,7 +4221,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
                 // move new annotations
-                for (Annotation anno : newWFM.m_annotations) {
+                for (IAnnotation anno : newWFM.m_annotations) {
                     anno.shiftPosition(xshift, yshift);
                 }
                 // move bendpoints of all internal connections
@@ -7697,8 +7699,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             new LinkedHashMap<NodeID, NodeContainerPersistor>();
         Map<Integer, ? extends NodeContainerPersistor> nodeLoaderMap = persistor.getNodeLoaderMap();
         exec.setMessage("annotations");
-        List<WorkflowAnnotation> annos = persistor.getWorkflowAnnotations();
-        for (WorkflowAnnotation w : annos) {
+        List<IWorkflowAnnotation> annos = persistor.getWorkflowAnnotations();
+        for (IWorkflowAnnotation w : annos) {
             addWorkflowAnnotationInternal(w);
         }
         exec.setMessage("node & connection information");
@@ -8932,7 +8934,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /* -- Workflow Annotations ---------------------------------------------*/
 
     /** @return read-only collection of all currently registered annotations. */
-    public Collection<WorkflowAnnotation> getWorkflowAnnotations() {
+    public Collection<IWorkflowAnnotation> getWorkflowAnnotations() {
         return Collections.unmodifiableList(m_annotations);
     }
 
@@ -8949,7 +8951,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Adds annotation as in #addWorkf but does not fire dirty event. */
     private void addWorkflowAnnotationInternal(
-            final WorkflowAnnotation annotation) {
+            final IWorkflowAnnotation annotation) {
         if (m_annotations.contains(annotation)) {
             throw new IllegalArgumentException("Annotation \"" + annotation
                     + "\" already exists");
@@ -8963,7 +8965,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Remove workflow annotation, fire events.
      * @param annotation to remove
      * @throws IllegalArgumentException If annotation is not registered. */
-    public void removeAnnotation(final WorkflowAnnotation annotation) {
+    public void removeAnnotation(final IWorkflowAnnotation annotation) {
         if (!m_annotations.remove(annotation)) {
             throw new IllegalArgumentException("Annotation \"" + annotation
                     + "\" does not exists");

@@ -48,6 +48,7 @@ package org.knime.core.node.workflow;
 import java.util.Collections;
 import java.util.Map;
 
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 
 
@@ -61,7 +62,7 @@ import org.knime.core.api.node.workflow.NodeUIInformation;
 public final class WorkflowCopyContent {
 
     private NodeID[] m_nodeIDs;
-    private WorkflowAnnotation[] m_annotations;
+    private IWorkflowAnnotation[] m_annotations;
     /** see {@link #setIncludeInOutConnections(boolean)}. */
     private boolean m_isIncludeInOutConnections;
     /** A map which maps old NodeID to preferred ID suffix in the target wfm. Used for template loading. */
@@ -125,7 +126,7 @@ public final class WorkflowCopyContent {
     }
 
     /** @return the annotations, never null */
-    public WorkflowAnnotation[] getAnnotations() {
+    public IWorkflowAnnotation[] getAnnotations() {
         if (m_annotations == null) {
             return new WorkflowAnnotation[0];
         } else {
@@ -136,7 +137,7 @@ public final class WorkflowCopyContent {
     /** Sets annotation references.
      * @param annotations The annotations references.
      */
-    public void setAnnotation(final WorkflowAnnotation... annotations) {
+    public void setAnnotation(final IWorkflowAnnotation... annotations) {
         m_annotations = annotations;
     }
 

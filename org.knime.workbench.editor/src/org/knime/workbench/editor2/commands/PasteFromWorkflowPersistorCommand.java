@@ -55,12 +55,12 @@ import java.util.Set;
 
 import org.eclipse.gef.EditPartViewer;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.IAnnotation;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -125,7 +125,7 @@ public final class PasteFromWorkflowPersistorCommand
         WorkflowPersistor copyPersistor = m_clipboardObject.getCopyPersistor();
         m_pastedContent = manager.paste(copyPersistor);
         NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
-        WorkflowAnnotation[] pastedAnnos = m_pastedContent.getAnnotations();
+        IWorkflowAnnotation[] pastedAnnos = m_pastedContent.getAnnotations();
         Set<NodeID> newIDs = new HashSet<NodeID>(); // fast lookup below
         List<int[]> insertedElementBounds = new ArrayList<int[]>();
         for (NodeID i : pastedNodes) {
@@ -134,7 +134,7 @@ public final class PasteFromWorkflowPersistorCommand
             int[] bounds = ui.getBounds();
             insertedElementBounds.add(bounds);
         }
-        for (WorkflowAnnotation a : pastedAnnos) {
+        for (IWorkflowAnnotation a : pastedAnnos) {
             int[] bounds =
                 new int[] {a.getX(), a.getY(), a.getWidth(), a.getHeight()};
             insertedElementBounds.add(bounds);
@@ -163,7 +163,7 @@ public final class PasteFromWorkflowPersistorCommand
                 }
             }
         }
-        for (WorkflowAnnotation a : pastedAnnos) {
+        for (IWorkflowAnnotation a : pastedAnnos) {
             a.shiftPosition(moveDist[0], moveDist[1]);
         }
 
@@ -187,7 +187,7 @@ public final class PasteFromWorkflowPersistorCommand
     public boolean canUndo() {
         WorkflowManager manager = m_editor.getWorkflowManager();
         NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
-        Annotation[] pastedAnnos = m_pastedContent.getAnnotations();
+        IAnnotation[] pastedAnnos = m_pastedContent.getAnnotations();
         if ((pastedNodes == null || pastedNodes.length == 0)
                 && (pastedAnnos == null || pastedAnnos.length == 0)) {
             return false;
@@ -207,7 +207,7 @@ public final class PasteFromWorkflowPersistorCommand
         for (NodeID id : m_pastedContent.getNodeIDs()) {
             manager.removeNode(id);
         }
-        for (WorkflowAnnotation anno : m_pastedContent.getAnnotations()) {
+        for (IWorkflowAnnotation anno : m_pastedContent.getAnnotations()) {
             manager.removeAnnotation(anno);
         }
     }

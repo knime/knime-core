@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
@@ -88,7 +89,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
     private final List<FlowVariable> m_workflowVariables;
     private final List<Credentials> m_credentials;
-    private final List<WorkflowAnnotation> m_workflowAnnotations;
+    private final List<IWorkflowAnnotation> m_workflowAnnotations;
     private final boolean m_isProject;
     /** Create copy persistor.
      * @param original To copy from
@@ -157,9 +158,9 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         for (Credentials c : original.getCredentialsStore().getCredentials()) {
             m_credentials.add(c.clone());
         }
-        m_workflowAnnotations = new ArrayList<WorkflowAnnotation>();
-        for (WorkflowAnnotation w : original.getWorkflowAnnotations()) {
-            WorkflowAnnotation anno = isUndoableDeleteCommand ? w : w.clone();
+        m_workflowAnnotations = new ArrayList<IWorkflowAnnotation>();
+        for (IWorkflowAnnotation w : original.getWorkflowAnnotations()) {
+            IWorkflowAnnotation anno = isUndoableDeleteCommand ? w : w.clone();
             m_workflowAnnotations.add(anno);
         }
     }
@@ -255,7 +256,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public List<WorkflowAnnotation> getWorkflowAnnotations() {
+    public List<IWorkflowAnnotation> getWorkflowAnnotations() {
         return m_workflowAnnotations;
     }
 
