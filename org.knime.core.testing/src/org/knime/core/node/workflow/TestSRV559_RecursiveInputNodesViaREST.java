@@ -71,6 +71,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 
@@ -256,7 +257,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         assumeRunOnlyOnce();
         WorkflowManager manager = getManager();
         NodeContainer nc = manager.findNodeContainer(m_stringInputMetanodeLevel_21_10);
-        WorkflowCopyContent c = new WorkflowCopyContent().setNodeID(m_stringInputMetanodeLevel_21_10, 1234, null);
+        WorkflowCopyContent c = WorkflowCopyContent.builder().setNodeID(m_stringInputMetanodeLevel_21_10, 1234, null).build();
         final NodeID copiedNodeID = manager.getID().createChild(1234);
         manager.paste(nc.getParent().copy(c));
         executeAllAndWait(); // should work either way - executed or not

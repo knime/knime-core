@@ -52,12 +52,12 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
-import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
+import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
@@ -184,8 +184,8 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
             for (NodeID id : ids) {
                 wm.removeNode(id);
             }
-            for (IWorkflowAnnotation anno : m_copyContent.getAnnotations()) {
-                wm.removeAnnotation(anno);
+            for (WorkflowAnnotationID id : m_copyContent.getAnnotationIDs()) {
+                wm.removeAnnotation(id);
             }
         } else {
             MessageDialog.openInformation(Display.getDefault().getActiveShell(),

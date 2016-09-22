@@ -61,6 +61,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
@@ -159,7 +160,7 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
                 NodeID[] innerNodes = IntStream.of(2, 5).mapToObj(
                     i -> innerWFM.getID().createChild(i)).toArray(NodeID[]::new);
                 CollapseIntoMetaNodeResult collapse = innerWFM.collapseIntoMetaNode(
-                    innerNodes, new WorkflowAnnotation[0], "yet another level");
+                    innerNodes, new WorkflowAnnotationID[0], "yet another level");
                 if (m_testModification.equals(TestModifications.SubnodeInSubnode)) {
                     NodeID metaNodeID = collapse.getCollapsedMetanodeID();
                     innerWFM.convertMetaNodeToSubNode(metaNodeID);

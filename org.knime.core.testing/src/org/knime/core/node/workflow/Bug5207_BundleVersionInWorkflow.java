@@ -53,6 +53,7 @@ import static org.junit.Assert.assertFalse;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -111,9 +112,9 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
 
     @Test
     public void testBundleVersionAfterCopyPaste() throws Exception {
-        WorkflowCopyContent copyContent = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
         copyContent.setNodeIDs(m_tableCreator1);
-        WorkflowCopyContent pasteContent = getManager().copyFromAndPasteHere(getManager(), copyContent);
+        WorkflowCopyContent pasteContent = getManager().copyFromAndPasteHere(getManager(), copyContent.build());
         NodeID pasteID = pasteContent.getNodeIDs()[0];
 
         // bundle version number is reset after copy & paste

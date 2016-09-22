@@ -51,13 +51,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.gef.EditPartViewer;
+import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
-import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
@@ -75,7 +77,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
     /** Ids of nodes being deleted. */
     private final NodeID[] m_nodeIDs;
     /** References to annotations being deleted. */
-    private final WorkflowAnnotation[] m_annotations;
+    private final WorkflowAnnotationID[] m_annotations;
 
     /** Array containing connections that are to be deleted and which are not
      * part of the persistor (perisistor only covers connections whose source
@@ -153,8 +155,8 @@ public class DeleteCommand extends AbstractKNIMECommand {
         }
         m_viewer = viewer;
         m_nodeIDs = idSet.toArray(new NodeID[idSet.size()]);
-        m_annotations = annotationSet.toArray(
-                new WorkflowAnnotation[annotationSet.size()]);
+        m_annotations = annotationSet.stream().map(wa -> wa.getID().get()).collect(Collectors.toList())
+            .toArray(new WorkflowAnnotationID[annotationSet.size()]);
 
         m_connectionCount = conSet.size();
         // remove all connections that will be contained in the persistor
@@ -199,12 +201,12 @@ public class DeleteCommand extends AbstractKNIMECommand {
         // The WFM removes all connections for us, before the node is
         // removed.
         if (m_nodeIDs.length > 0 || m_annotations.length > 0) {
-            WorkflowCopyContent content = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
             content.setNodeIDs(m_nodeIDs);
-            content.setAnnotation(m_annotations);
-            m_undoPersitor = hostWFM.copy(true, content);
+            content.setAnnotationIDs(m_annotations);
+            m_undoPersitor = hostWFM.copy(true, content.build());
         }
-        for (WorkflowAnnotation anno : m_annotations) {
+        for (WorkflowAnnotationID anno : m_annotations) {
             hostWFM.removeAnnotation(anno);
         }
         for (NodeID id : m_nodeIDs) {

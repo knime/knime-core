@@ -57,6 +57,8 @@ import java.util.Set;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 
@@ -111,9 +113,9 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
         Assume.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
         final WorkflowManager manager = getManager();
         WorkflowManager metaNode = collapseToMetaNode(manager);
-        WorkflowCopyContent copyContent = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
         copyContent.setNodeIDs(metaNode.getID());
-        WorkflowCopyContent pasteContent = manager.copyFromAndPasteHere(manager, copyContent);
+        WorkflowCopyContent pasteContent = manager.copyFromAndPasteHere(manager, copyContent.build());
         NodeID copyID = pasteContent.getNodeIDs()[0];
         manager.addConnection(metaNode.getID(), 0, copyID, 0);
         checkListenerAndStateAfterExecAll(manager);
@@ -131,7 +133,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
         assertTrue(ids.remove(m_dataGenerator1));
         assertTrue(ids.remove(m_tableView12));
         final CollapseIntoMetaNodeResult collapseResult = manager.collapseIntoMetaNode(
-            ids.toArray(new NodeID[0]), new WorkflowAnnotation[0], "Collapsed Content");
+            ids.toArray(new NodeID[0]), new WorkflowAnnotationID[0], "Collapsed Content");
         WorkflowManager metaNode = manager.getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         // remaining: data gen, table view, and new meta node

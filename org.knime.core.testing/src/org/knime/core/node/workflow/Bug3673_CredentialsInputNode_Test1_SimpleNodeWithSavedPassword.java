@@ -55,6 +55,8 @@ import java.io.File;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.util.FileUtil;
@@ -97,9 +99,9 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
 
     @Test
     public void testCopyPasteExecuteFlow() throws Exception {
-        WorkflowCopyContent cnt = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
         cnt.setNodeIDs(m_credentialsInput_1, m_credentialsValidate_2);
-        WorkflowCopyContent pasteCNT = getManager().copyFromAndPasteHere(getManager(), cnt);
+        WorkflowCopyContent pasteCNT = getManager().copyFromAndPasteHere(getManager(), cnt.build());
 
         executeAndWait(pasteCNT.getNodeIDs());
         checkStateOfMany(EXECUTED, pasteCNT.getNodeIDs());
@@ -111,7 +113,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
 //        cnt.setNodeIDs(m_credentialsInput_1);
 //        getManager().copyFromAndPasteHere(getManager(), cnt);
         CollapseIntoMetaNodeResult collapseResult = getManager().collapseIntoMetaNode(
-            new NodeID[] {m_credentialsInput_1}, new WorkflowAnnotation[0], "Collapsed-by-Testflow");
+            new NodeID[] {m_credentialsInput_1}, new WorkflowAnnotationID[0], "Collapsed-by-Testflow");
         WorkflowManager metaNode = getManager().getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         getManager().convertMetaNodeToSubNode(metaNode.getID());

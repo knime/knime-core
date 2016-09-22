@@ -47,10 +47,27 @@
  */
 package org.knime.core.api.node.workflow;
 
-/** Workflow annotation (not associated with a node).
+import java.util.Optional;
+
+/**
+ * Workflow annotation (not associated with a node).
+ *
+ * Optionally a workfow annotation is associated with a {@link WorkflowAnnotationID}. It is required to identify a
+ * specific {@link IWorkflowAnnotation}-object within the workflow manager.
+ *
  * Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface IWorkflowAnnotation extends IAnnotation<AnnotationData> {
+
+    /**
+     * @return the associated workflow annotation ID if set, otherwise an empty {@link Optional}
+     */
+    Optional<WorkflowAnnotationID> getID();
+
+    /**
+     * @param wfaID the id to be set
+     */
+    void setID(WorkflowAnnotationID wfaID);
 
     /**
      * @return

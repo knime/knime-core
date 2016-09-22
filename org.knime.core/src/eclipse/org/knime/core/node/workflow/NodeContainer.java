@@ -55,6 +55,7 @@ import org.knime.core.api.node.workflow.NodeAnnotationData;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationEvent;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;

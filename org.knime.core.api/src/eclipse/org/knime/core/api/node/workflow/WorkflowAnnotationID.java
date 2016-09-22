@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,60 +40,71 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
- * History
- *   24.03.2015 (tibuch): created
  */
-package org.knime.workbench.editor2;
-
-import org.eclipse.gef.requests.CreationFactory;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.workbench.repository.model.MetaNodeTemplate;
+package org.knime.core.api.node.workflow;
 
 /**
- * A Factory to create metanodes.
- * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
+ * An identifier for a {@link IWorkflowAnnotation} object. It is only unique within one workflow (i.e. a workflow
+ * manager) but not among sub workflows and will not be persisted.
+ *
+ * There is also an order defined on {@link WorkflowAnnotationID}s (cp. {@link #compareTo(WorkflowAnnotationID)}) - e.g.
+ * in which order they are drawn.
+ *
+ * @author Martin Horn, KNIME.com
  */
-public class MetaNodeCreationFactory implements CreationFactory {
+public final class WorkflowAnnotationID implements Comparable<WorkflowAnnotationID> {
 
-    private MetaNodeTemplate m_template = null;
+    private final int m_index;
 
     /**
-     * {@inheritDoc}
+     * Creates a new {@link WorkflowAnnotationID} object with a given index.
+     * Within the same workflow manager there must not be equal {@link WorkflowAnnotationID}'s.
+     *
+     * The index also determines the order of workflow annotations (e.g. the order they are drawn).
+     *
+     * @param index an index
      */
-    @Override
-    public Object getNewObject() {
-        NodeID id = m_template.getManager().getID();
-        WorkflowManager sourceManager = WorkflowManager.META_NODE_ROOT;
-        WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
-        content.setNodeIDs(id);
-        return sourceManager.copy(content.build());
+    public WorkflowAnnotationID(final int index) {
+        m_index = index;
+    }
+
+    /**
+     * @return an index
+     */
+    public int getIndex() {
+        return m_index;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Object getObjectType() {
-        return WorkflowPersistor.class;
+    public boolean equals(final Object obj) {
+        if(this == obj) {
+            return true;
+        }
+        if(!(obj instanceof WorkflowAnnotationID)) {
+            return false;
+        }
+        int index  = ((WorkflowAnnotationID) obj).getIndex();
+        return index == m_index;
     }
 
     /**
-     * @return the metanode template
+     * {@inheritDoc}
      */
-    public MetaNodeTemplate getMetaNodeTemplate() {
-        return m_template;
+    @Override
+    public int hashCode() {
+        return m_index;
     }
 
     /**
-     * @param template the metanode template to set
+     * {@inheritDoc}
      */
-    public void setMetaNodeTemplate(final MetaNodeTemplate template) {
-        m_template = template;
+    @Override
+    public int compareTo(final WorkflowAnnotationID o) {
+        return Integer.compare(m_index, o.m_index);
     }
-
 }

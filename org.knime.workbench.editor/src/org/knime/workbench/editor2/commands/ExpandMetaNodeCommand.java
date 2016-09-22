@@ -48,15 +48,17 @@
 package org.knime.workbench.editor2.commands;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -73,7 +75,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
 
     private final NodeID m_id;
     private NodeID[] m_pastedNodes;
-    private IWorkflowAnnotation[] m_pastedAnnotations;
+    private List<IWorkflowAnnotation> m_pastedAnnotations;
     private WorkflowPersistor m_undoCopyPersistor;
     private final WorkflowEditor m_editor;
 
@@ -108,13 +110,13 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
             for (IEditorPart child : m_editor.getSubEditors(m_id)) {
                 child.getEditorSite().getPage().closeEditor(child, false);
             }
-            WorkflowCopyContent cnt = new WorkflowCopyContent();
+            WorkflowCopyContent.Builder cnt = WorkflowCopyContent.builder();
             cnt.setNodeIDs(m_id);
             cnt.setIncludeInOutConnections(true);
-            m_undoCopyPersistor = hostWFM.copy(true, cnt);
+            m_undoCopyPersistor = hostWFM.copy(true, cnt.build());
             WorkflowCopyContent wcc = hostWFM.expandMetaNode(m_id);
             m_pastedNodes = wcc.getNodeIDs();
-            m_pastedAnnotations = wcc.getAnnotations();
+            m_pastedAnnotations = Arrays.stream(wcc.getAnnotationIDs()).map(id -> hostWFM.getWorkflowAnnotation(id)).collect(Collectors.toList());
 
             EditPartViewer partViewer = m_editor.getViewer();
             partViewer.deselectAll();
@@ -123,7 +125,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
                 && partViewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
                 WorkflowRootEditPart rootEditPart = (WorkflowRootEditPart)partViewer.getRootEditPart().getContents();
                 rootEditPart.setFutureSelection(m_pastedNodes);
-                rootEditPart.setFutureAnnotationSelection(Arrays.asList(m_pastedAnnotations));
+                rootEditPart.setFutureAnnotationSelection(m_pastedAnnotations);
             }
 
 

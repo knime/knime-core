@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;

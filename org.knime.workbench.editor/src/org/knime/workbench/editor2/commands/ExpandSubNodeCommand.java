@@ -48,6 +48,8 @@
 package org.knime.workbench.editor2.commands;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -114,7 +116,9 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
             }
 
             m_expandResult = hostWFM.expandSubWorkflow(m_id);
-            IWorkflowAnnotation[] annotations = m_expandResult.getExpandedCopyContent().getAnnotations();
+            List<IWorkflowAnnotation> annotations =
+                Arrays.stream(m_expandResult.getExpandedCopyContent().getAnnotationIDs())
+                    .map(id -> hostWFM.getWorkflowAnnotation(id)).collect(Collectors.toList());
             NodeID[] nodeIDs = m_expandResult.getExpandedCopyContent().getNodeIDs();
 
             EditPartViewer partViewer = m_editor.getViewer();
@@ -124,7 +128,7 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
                 && partViewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
                 WorkflowRootEditPart rootEditPart = (WorkflowRootEditPart)partViewer.getRootEditPart().getContents();
                 rootEditPart.setFutureSelection(nodeIDs);
-                rootEditPart.setFutureAnnotationSelection(Arrays.asList(annotations));
+                rootEditPart.setFutureAnnotationSelection(annotations);
             }
 
         } catch (Exception e) {

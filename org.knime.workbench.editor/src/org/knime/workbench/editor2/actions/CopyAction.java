@@ -47,13 +47,18 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
+import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
-import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -133,13 +138,14 @@ public class CopyAction extends AbstractClipboardAction {
             NodeContainerEditPart nodeEP = m_nodeParts[i];
             ids[i] = nodeEP.getNodeContainer().getID();
         }
-        WorkflowAnnotation[] annotations =
-            AnnotationEditPart.extractWorkflowAnnotations(m_annotationParts);
+        List<WorkflowAnnotationID> annotationIDs =
+            Arrays.stream(AnnotationEditPart.extractWorkflowAnnotations(m_annotationParts)).map(wa -> wa.getID().get())
+                .collect(Collectors.toList());
 
-        WorkflowCopyContent content = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
         content.setNodeIDs(ids);
-        content.setAnnotation(annotations);
-        WorkflowPersistor copyPersistor = getManager().copy(false, content);
+        content.setAnnotationIDs(annotationIDs.toArray(new WorkflowAnnotationID[annotationIDs.size()]));
+        WorkflowPersistor copyPersistor = getManager().copy(false, content.build());
 
         // the information about the nodes is stored in the config XML format
         // also used to store workflow information in the kflow files
