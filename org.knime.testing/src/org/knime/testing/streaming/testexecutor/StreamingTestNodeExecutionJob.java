@@ -63,6 +63,7 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.api.node.workflow.NodeUIInformation;
+import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.DataContainerException;
@@ -97,7 +98,6 @@ import org.knime.core.node.workflow.NodeExecutionJob;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
-import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowLock;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -661,10 +661,10 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
     /** Creates the given number of copies of the given node */
     private NativeNodeContainer[] createNodeCopies(final NodeContainer nodeContainer, final int numCopies) {
         WorkflowManager workflowManager = nodeContainer.getParent();
-        WorkflowCopyContent sourceContent = new WorkflowCopyContent();
+        WorkflowCopyContent.Builder sourceContent = WorkflowCopyContent.builder();
         sourceContent.setNodeIDs(nodeContainer.getID());
         sourceContent.setIncludeInOutConnections(false);
-        WorkflowPersistor workflowPersistor = workflowManager.copy(sourceContent);
+        WorkflowPersistor workflowPersistor = workflowManager.copy(sourceContent.build());
         NativeNodeContainer[] nodeContainers = new NativeNodeContainer[numCopies];
         NodeID[] nodeIDs = new NodeID[numCopies];
         NodeUIInformation uiInf = nodeContainer.getUIInformation();
