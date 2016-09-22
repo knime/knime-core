@@ -45,21 +45,22 @@
  * History
  *   30.09.2011 (hofer): created
  */
-package org.knime.base.node.preproc.stringmanipulation;
+package org.knime.base.node.preproc.stringmanipulation.variable;
+
+import org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialogs;
 
 /**
- * The node dialog of the string manipulation node.
+ * The node dialog of the string manipulation (variable) node.
  *
- * @author Heiko Hofer
- * @author Thorsten Meinl, University of Konstanz
  * @author Simon Schmid
  */
-public class StringManipulationNodeDialog extends StringManipulationNodeDialogs {
+public class StringManipulationVariableNodeDialog extends StringManipulationNodeDialogs {
 
     /**
      *
      */
-    public StringManipulationNodeDialog() {
-        super(false);
+    public StringManipulationVariableNodeDialog(){
+        super(true);
     }
+
 }

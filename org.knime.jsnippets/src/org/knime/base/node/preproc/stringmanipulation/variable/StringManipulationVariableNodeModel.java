@@ -46,13 +46,14 @@
  * History
  *   20.09.2016 (Simon): created
  */
-package org.knime.base.node.preproc.stringmanipulationvariable;
+package org.knime.base.node.preproc.stringmanipulation.variable;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -75,7 +76,7 @@ import org.knime.ext.sun.nodes.script.expression.ExpressionInstance;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 
 /**
- * The node model of the string manipulation node for flow variables.
+ * The node model of the string manipulation (variable) node.
  *
  * @author Simon Schmid
  */
@@ -83,9 +84,8 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
 
     private final StringManipulationSettings m_settings;
 
-
     /**
-     * flow var in, flow var out.
+     * flow variable in, flow variable out.
      */
     StringManipulationVariableNodeModel() {
         super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL}, new PortType[]{FlowVariablePortObject.TYPE});
@@ -108,40 +108,39 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
         if (m_settings == null || m_settings.getExpression() == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
-
         JavaScriptingSettings settings = m_settings.createJavaScriptingSettings();
-
         settings.setInputAndCompile(new DataTableSpec());
 
         Expression compiledExpression = settings.getCompiledExpression();
         if (compiledExpression == null) {
             throw new InstantiationException("No compiled expression in settings.");
         }
-        ExpressionInstance m_expression = compiledExpression.getInstance();
 
+        ExpressionInstance expression = compiledExpression.getInstance();
         HashMap<InputField, Object> m_flowVarAssignmentMap = new HashMap<InputField, Object>();
-        for (Map.Entry<InputField, ExpressionField> e : m_expression.getFieldMap().entrySet()) {
+        for (Map.Entry<InputField, ExpressionField> e : expression.getFieldMap().entrySet()) {
             InputField f = e.getKey();
             if (f.getFieldType().equals(FieldType.Variable)) {
                 Class<?> c = e.getValue().getFieldClass();
                 m_flowVarAssignmentMap.put(f, readVariable(f.getColOrVarName(), c));
             }
         }
+        expression.set(m_flowVarAssignmentMap);
+        Object evaluatedExpression = expression.evaluate();
 
-        m_expression.set(m_flowVarAssignmentMap);
-        Object evaluatedExpression = m_expression.evaluate();
+        // set output
         if (evaluatedExpression != null) {
+            String colName = m_settings.getColName();
             if (evaluatedExpression instanceof Integer) {
-                pushFlowVariableInt(m_settings.getColName(), (int)evaluatedExpression);
+                pushFlowVariableInt(colName, (int)evaluatedExpression);
             } else if (evaluatedExpression instanceof Double) {
-                pushFlowVariableDouble(m_settings.getColName(), (double)evaluatedExpression);
+                pushFlowVariableDouble(colName, (double)evaluatedExpression);
             } else if (evaluatedExpression instanceof String) {
-                pushFlowVariableString(m_settings.getColName(), (String)evaluatedExpression);
+                pushFlowVariableString(colName, (String)evaluatedExpression);
             } else {
                 throw new RuntimeException("Invalid variable class: " + evaluatedExpression.getClass());
             }
-        }
-        else {
+        } else {
             pushFlowVariableString(m_settings.getColName(), (String)evaluatedExpression);
         }
         return new PortObject[]{FlowVariablePortObject.INSTANCE};
@@ -215,7 +214,9 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
 
     /**
      * {@inheritDoc}
+     * @deprecated
      */
+    @Deprecated
     @Override
     public int getRowCount() {
         return 0;

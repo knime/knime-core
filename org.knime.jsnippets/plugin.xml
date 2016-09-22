@@ -21,7 +21,7 @@
       <node
             category-path="/flowcontrol/variables"
             deprecated="false"
-            factory-class="org.knime.base.node.preproc.stringmanipulationvariable.StringManipulationVariableNodeFactory">
+            factory-class="org.knime.base.node.preproc.stringmanipulation.variable.StringManipulationVariableNodeFactory">
       </node>
    </extension>
    <extension point="org.knime.jsnippets.templaterepository">

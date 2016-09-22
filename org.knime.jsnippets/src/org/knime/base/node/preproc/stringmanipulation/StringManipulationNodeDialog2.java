@@ -45,7 +45,7 @@
  * History
  *   30.09.2011 (hofer): created
  */
-package org.knime.base.node.preproc.stringmanipulationvariable;
+package org.knime.base.node.preproc.stringmanipulation;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -57,32 +57,29 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
-import java.util.Map;
 
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
 
 import org.fife.ui.autocomplete.BasicCompletion;
-import org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.base.node.util.JSnippetPanel;
 import org.knime.base.node.util.JavaScriptingCompletionProvider;
 import org.knime.base.node.util.KnimeCompletionProvider;
 import org.knime.base.node.util.ManipulatorProvider;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.FlowVariableListCellRenderer;
-import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
@@ -92,7 +89,7 @@ import org.knime.ext.sun.nodes.script.expression.Expression;
  * @author Heiko Hofer
  * @author Thorsten Meinl, University of Konstanz
  */
-public class StringManipulationVariableNodeDialog extends NodeDialogPane {
+public class StringManipulationNodeDialog2 extends NodeDialogPane {
     private JSnippetPanel m_snippetPanel;
 
     private JRadioButton m_appendRadio;
@@ -101,43 +98,53 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
 
     private JRadioButton m_replaceRadio;
 
-    private JComboBox<FlowVariable> m_replaceVariableCombo;
+    private ColumnSelectionPanel m_replaceColumnCombo;
 
     private JCheckBox m_compileOnCloseChecker;
 
     private JCheckBox m_insertMissingAsNullChecker;
+
+    private DataTableSpec m_currentSpec = null;
 
     private KnimeCompletionProvider m_completionProvider;
 
     /**
      * Create new instance.
      */
-    public StringManipulationVariableNodeDialog() {
+    public StringManipulationNodeDialog2() {
         addTab("String Manipulation", createStringManipulationPanel());
     }
 
     /**
      * @return the controls for the string manipulation node
      */
+    @SuppressWarnings("unchecked")
     private Component createStringManipulationPanel() {
-        m_snippetPanel = new JSnippetPanel(StringManipulatorProvider.getDefault(), createCompletionProvider(), false);
+        m_snippetPanel =
+                new JSnippetPanel(StringManipulatorProvider.getDefault(),
+                        createCompletionProvider());
 
         m_newNameField = new JTextField(10);
         String radioButtonName;
         String radioButtonToolTip;
 
-        radioButtonName = "Append Variable: ";
-        radioButtonToolTip = "Appends a new variable to the input " + "with a given name.";
+        radioButtonName = "Append Column: ";
+        radioButtonToolTip =
+                "Appends a new column to the input "
+                        + "table with a given name and type.";
         m_appendRadio = new JRadioButton(radioButtonName);
         m_appendRadio.setToolTipText(radioButtonToolTip);
 
-        radioButtonName = "Replace Variable: ";
-        radioButtonToolTip = "Replaces the variable if the type stays the same.";
+        radioButtonName = "Replace Column: ";
+        radioButtonToolTip =
+                "Replaces the column and changes "
+                        + "the column type accordingly";
         m_replaceRadio = new JRadioButton(radioButtonName);
         m_replaceRadio.setToolTipText(radioButtonToolTip);
-        // show all variables
-        m_replaceVariableCombo = new JComboBox<FlowVariable>(new DefaultComboBoxModel<FlowVariable>());
-        m_replaceVariableCombo.setRenderer(new FlowVariableListCellRenderer());
+        // show all columns
+        m_replaceColumnCombo =
+                new ColumnSelectionPanel((Border)null, DataValue.class);
+        m_replaceColumnCombo.setRequired(false);
 
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(m_appendRadio);
@@ -145,7 +152,7 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
         ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                m_replaceVariableCombo.setEnabled(m_replaceRadio.isSelected());
+                m_replaceColumnCombo.setEnabled(m_replaceRadio.isSelected());
                 m_newNameField.setEnabled(m_appendRadio.isSelected());
             }
         };
@@ -153,11 +160,12 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
         m_replaceRadio.addActionListener(actionListener);
 
         m_compileOnCloseChecker = new JCheckBox("Syntax check on close");
-        m_compileOnCloseChecker.setToolTipText("Checks the syntax of the " + "expression on close.");
+        m_compileOnCloseChecker.setToolTipText("Checks the syntax of the "
+                + "expression on close.");
 
         m_insertMissingAsNullChecker = new JCheckBox("Insert Missing As Null");
-        m_insertMissingAsNullChecker
-            .setToolTipText("If unselected, missing " + "values in the input will produce a missing cell result");
+        m_insertMissingAsNullChecker.setToolTipText("If unselected, missing "
+                + "values in the input will produce a missing cell result");
         return createPanel();
     }
 
@@ -180,11 +188,13 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
         m_completionProvider = new JavaScriptingCompletionProvider();
 
         Collection<Manipulator> manipulators =
-            StringManipulatorProvider.getDefault().getManipulators(ManipulatorProvider.ALL_CATEGORY);
+                StringManipulatorProvider.getDefault().getManipulators(
+                        ManipulatorProvider.ALL_CATEGORY);
         for (Manipulator m : manipulators) {
             // A BasicCompletion is just a straightforward word completion.
-            m_completionProvider.addCompletion(
-                new BasicCompletion(m_completionProvider, m.getName(), m.getDisplayName(), m.getDescription()));
+            m_completionProvider.addCompletion(new BasicCompletion(
+                    m_completionProvider, m.getName(), m.getDisplayName(), m
+                            .getDescription()));
         }
 
         return m_completionProvider;
@@ -204,6 +214,7 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
         p.setPreferredSize(new Dimension(820, 420));
         return p;
     }
+
 
     private JPanel createAndOrReplacePanel() {
         JPanel panel = new JPanel(new GridBagLayout());
@@ -234,7 +245,7 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
 
         c.gridx += 1;
         c.insets = new Insets(2, 0, 4, 6);
-        panel.add(m_replaceVariableCombo, c);
+        panel.add(m_replaceColumnCombo, c);
 
         return panel;
     }
@@ -264,10 +275,11 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-        throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        DataTableSpec spec = specs[0];
         StringManipulationSettings s = new StringManipulationSettings();
-        s.loadSettingsInDialog(settings, new DataTableSpec());
+        s.loadSettingsInDialog(settings, spec);
 
         String exp = s.getExpression();
 
@@ -278,27 +290,19 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
         boolean isInsertMissingAsNull = s.isInsertMissingAsNull();
 
         m_newNameField.setText("");
-
-        DefaultComboBoxModel<FlowVariable> cmbModel =
-            (DefaultComboBoxModel<FlowVariable>)m_replaceVariableCombo.getModel();
-        cmbModel.removeAllElements();
-        final Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
-        for (FlowVariable v : availableFlowVariables.values()) {
-            switch (v.getScope()) {
-                case Flow:
-                    cmbModel.addElement(v);
-                    break;
-                default:
-                    // ignore
-            }
-        }
-        if (isReplace && availableFlowVariables.containsKey(newName)) {
-            m_replaceVariableCombo.setSelectedItem(availableFlowVariables.get(newName));
+        // will select newColName only if it is in the spec list
+        try {
+            m_replaceColumnCombo.update(spec, newName);
+        } catch (NotConfigurableException e1) {
+            NodeLogger.getLogger(getClass()).coding(
+                    "Combo box throws "
+                            + "exception although content is not required", e1);
         }
 
+        m_currentSpec = spec;
         // whether there are variables or columns available
         // -- which of two depends on the customizer
-        boolean fieldsAvailable = m_replaceVariableCombo.getItemCount() > 0;
+        boolean fieldsAvailable = m_replaceColumnCombo.getNrItemsInList() > 0;
 
         if (isReplace && fieldsAvailable) {
             m_replaceRadio.doClick();
@@ -308,7 +312,7 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
             m_newNameField.setText(newNameString);
         }
         m_replaceRadio.setEnabled(fieldsAvailable);
-        m_snippetPanel.update(exp, new DataTableSpec(), availableFlowVariables);
+        m_snippetPanel.update(exp, specs[0], getAvailableFlowVariables());
 
         m_compileOnCloseChecker.setSelected(isTestCompilation);
         m_insertMissingAsNullChecker.setSelected(isInsertMissingAsNull);
@@ -318,13 +322,14 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+    protected void saveSettingsTo(final NodeSettingsWO settings)
+            throws InvalidSettingsException {
         StringManipulationSettings s = new StringManipulationSettings();
 
         String newColName = null;
         boolean isReplace = m_replaceRadio.isSelected();
         if (isReplace) {
-            newColName = ((FlowVariable)m_replaceVariableCombo.getModel().getSelectedItem()).getName();
+            newColName = m_replaceColumnCombo.getSelectedColumn();
         } else {
             newColName = m_newNameField.getText();
         }
@@ -334,9 +339,10 @@ public class StringManipulationVariableNodeDialog extends NodeDialogPane {
         s.setExpression(exp);
         boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
         s.setTestCompilationOnDialogClose(isTestCompilation);
-        if (isTestCompilation) {
+        if (isTestCompilation && m_currentSpec != null) {
             try {
-                Expression.compile(s.createJavaScriptingSettings(), new DataTableSpec());
+                Expression.compile(s.createJavaScriptingSettings(),
+                        m_currentSpec);
             } catch (CompilationFailedException cfe) {
                 throw new InvalidSettingsException(cfe.getMessage(), cfe);
             }

@@ -45,16 +45,16 @@
  * History
  *   30.09.2011 (hofer): created
  */
-package org.knime.base.node.preproc.stringmanipulationvariable;
+package org.knime.base.node.preproc.stringmanipulation.variable;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The node factory of the string manipulation node.
+ * The node factory of the string manipulation (variable) node.
  *
- * @author Heiko Hofer
+ * @author Simon Schmid
  */
 public class StringManipulationVariableNodeFactory extends NodeFactory<StringManipulationVariableNodeModel> {
 

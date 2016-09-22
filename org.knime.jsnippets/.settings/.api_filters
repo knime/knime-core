@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.jsnippets" version="2">
-    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeDialog.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialog">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialog"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeFactory.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory">
         <filter id="1110441988">
             <message_arguments>
