@@ -664,19 +664,9 @@ public class AnnotationData {
             }
 
 
-            /** @return the start */
-            public int getStart() {
-                return m_start;
-            }
-
             /** @param start the start to set */
             public void setStart(final int start) {
                 m_start = start;
-            }
-
-            /** @return the length */
-            public int getLength() {
-                return m_length;
             }
 
             /** @param length the length to set */
@@ -684,19 +674,9 @@ public class AnnotationData {
                 m_length = length;
             }
 
-            /** @return the fontName */
-            public String getFontName() {
-                return m_fontName;
-            }
-
             /** @param fontName the fontName to set */
             public void setFontName(final String fontName) {
                 m_fontName = fontName;
-            }
-
-            /** @return the fontStyle */
-            public int getFontStyle() {
-                return m_fontStyle;
             }
 
             /** @param fontStyle the fontStyle to set */
@@ -704,19 +684,9 @@ public class AnnotationData {
                 m_fontStyle = fontStyle;
             }
 
-            /** @return the fontSize */
-            public int getFontSize() {
-                return m_fontSize;
-            }
-
             /** @param fontSize the fontSize to set */
             public void setFontSize(final int fontSize) {
                 m_fontSize = fontSize;
-            }
-
-            /** @return the fgColor */
-            public int getFgColor() {
-                return m_fgColor;
             }
 
             /** @param fgColor the fgColor to set */
