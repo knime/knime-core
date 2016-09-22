@@ -50,22 +50,16 @@ package org.knime.core.api.node.workflow;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * Special <code>NodeExtraInfo</code> object used by the workflow editor.
+ * Special <code>NodeUIInformation</code> object used by the workflow editor.
  * Basically this stores the visual bounds of the node in the workflow editor
  * pane. Note: To be independent of draw2d/GEF this doesn't use the "natural"
  * <code>Rectangle</code> object, but simply stores an <code>int[]</code>.
  *
- * TODO This needs to be in "core", as by now the WFM tries to make instances of
- * this class while <code>load()</code>ing.
- *
- *
- * see org.eclipse.draw2d.geometry.Rectangle
- *
  * @author Florian Georg, University of Konstanz
  */
-public class NodeUIInformation {
+public final class NodeUIInformation {
 
-    private int[] m_bounds = new int[]{0, 0, -1, -1};
+    private final int[] m_bounds;
 
     /** Set to true if the bounds are absolute (correct in the context of the
      * editor). It's false if the coordinates refer to relative coordinates and
@@ -214,15 +208,13 @@ public class NodeUIInformation {
 
         private int[] m_bounds = new int[]{0, 0, -1, -1};
 
-        private boolean m_hasAbsoluteCoordinates;
+        private boolean m_hasAbsoluteCoordinates = true;
         private boolean m_symbolRelative = true;
         private boolean m_roundToGrid = false;
         private boolean m_isDropLocation = false;
 
-        /** Creates new object, the bounds to be set are assumed to be absolute
-         * (m_isInitialized is true). */
+        /** Creates new object, the bounds to be set are assumed to be absolute. */
         private Builder() {
-            m_hasAbsoluteCoordinates = true;
         }
 
         /** Copy all fields from argument and return this.
@@ -267,9 +259,8 @@ public class NodeUIInformation {
          * Set to true if the bounds are absolute (correct in the context of the
          * editor). It's false if the coordinates refer to relative coordinates and
          * need to be adjusted by the NodeContainerFigure#initFigure... method.
-         * This field is transient and not stored as part of the
-         * {@link #save(NodeSettingsWO)} method. A loaded object has always absolute
-         * coordinates.
+         * This field is transient and not stored as part of a workflow save.
+         * A loaded object has always absolute coordinates.
          * @param hasAbsoluteCoordinates
          * @return this
          *

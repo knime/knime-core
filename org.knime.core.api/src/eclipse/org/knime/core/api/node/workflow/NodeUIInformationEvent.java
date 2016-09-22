@@ -55,7 +55,7 @@ import org.knime.core.node.workflow.NodeID;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public class NodeUIInformationEvent extends EventObject {
+public final class NodeUIInformationEvent extends EventObject {
 
     private final NodeUIInformation m_uiInformation;
 
