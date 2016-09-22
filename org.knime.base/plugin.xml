@@ -1182,6 +1182,11 @@
             >
       </node>
       <node
+            category-path="/flowcontrol/variables"
+            factory-class="org.knime.base.node.flowvariable.filenamecreator.FilenameCreatorNodeFactory"
+            >
+      </node>
+      <node
             category-path="/analytics/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
             

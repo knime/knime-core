@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./java_editvar.png" type="Manipulator">
+	<name>Filename Creator</name>
+	<shortDescription>Create a new file name as flow variable</shortDescription>
+	<fullDescription>
+		<intro>
+			This node takes a base directory path, a file name, and a file extension
+			to create a new file path. The inputs can be in a form of flow
+			variables, but not necessarily so. The output is a flow variable.
+		</intro>
+		<option name="Base directory">
+			Specify the base directory where the file will be located.
+		</option>
+		<option name="File name">
+			Specify the name of the file. Some special characters, such as /, \, ?, *, :, &lt;, &gt;, ", |
+			will be rejected.
+		</option>
+		<option name="File extension">
+			Specify the extension of the file. The dot (.) can be included, but not
+			necessary.
+		</option>
+	</fullDescription>
+	<ports>
+		<inPort name="Input variables (optional)" index="0">
+			Input variables (optional).
+		</inPort>
+		<outPort name="Output variable" index="0">
+			Output variable containing the new file name.
+		</outPort>
+	</ports>
+</knimeNode>
