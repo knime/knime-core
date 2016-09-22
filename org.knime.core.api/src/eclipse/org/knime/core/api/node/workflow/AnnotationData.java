@@ -664,34 +664,46 @@ public class AnnotationData {
             }
 
 
-            /** @param start the start to set */
-            public void setStart(final int start) {
+            /** @param start the start to set
+             * @return this*/
+            public Builder setStart(final int start) {
                 m_start = start;
+                return this;
             }
 
-            /** @param length the length to set */
-            public void setLength(final int length) {
+            /** @param length the length to set
+             * @return this*/
+            public Builder setLength(final int length) {
                 m_length = length;
+                return this;
             }
 
-            /** @param fontName the fontName to set */
-            public void setFontName(final String fontName) {
+            /** @param fontName the fontName to set
+             * @return this*/
+            public Builder setFontName(final String fontName) {
                 m_fontName = fontName;
+                return this;
             }
 
-            /** @param fontStyle the fontStyle to set */
-            public void setFontStyle(final int fontStyle) {
+            /** @param fontStyle the fontStyle to set
+             * @return this*/
+            public Builder setFontStyle(final int fontStyle) {
                 m_fontStyle = fontStyle;
+                return this;
             }
 
-            /** @param fontSize the fontSize to set */
-            public void setFontSize(final int fontSize) {
+            /** @param fontSize the fontSize to set
+             * @return this*/
+            public Builder setFontSize(final int fontSize) {
                 m_fontSize = fontSize;
+                return this;
             }
 
-            /** @param fgColor the fgColor to set */
-            public void setFgColor(final int fgColor) {
+            /** @param fgColor the fgColor to set
+             * @return this*/
+            public Builder setFgColor(final int fgColor) {
                 m_fgColor = fgColor;
+                return this;
             }
 
             /** @return {@link StyleRange} with current values. */
