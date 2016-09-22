@@ -98,7 +98,7 @@ public class StringManipulationNodeFactory
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new StringManipulationNodeDialog();
+        return new StringManipulationNodeDialog(false);
     }
 
 }

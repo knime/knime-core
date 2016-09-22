@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.variable;
 
+import org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
@@ -96,7 +97,7 @@ public class StringManipulationVariableNodeFactory extends NodeFactory<StringMan
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new StringManipulationVariableNodeDialog();
+        return new StringManipulationNodeDialog(true);
     }
 
 }

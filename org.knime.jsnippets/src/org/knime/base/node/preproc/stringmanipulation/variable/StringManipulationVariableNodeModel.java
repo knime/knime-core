@@ -50,11 +50,15 @@ package org.knime.base.node.preproc.stringmanipulation.variable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -67,12 +71,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
 import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
-import org.knime.ext.sun.nodes.script.expression.Expression;
-import org.knime.ext.sun.nodes.script.expression.Expression.ExpressionField;
-import org.knime.ext.sun.nodes.script.expression.Expression.FieldType;
-import org.knime.ext.sun.nodes.script.expression.Expression.InputField;
-import org.knime.ext.sun.nodes.script.expression.ExpressionInstance;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 
 /**
@@ -111,37 +111,23 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
         JavaScriptingSettings settings = m_settings.createJavaScriptingSettings();
         settings.setInputAndCompile(new DataTableSpec());
 
-        Expression compiledExpression = settings.getCompiledExpression();
-        if (compiledExpression == null) {
-            throw new InstantiationException("No compiled expression in settings.");
-        }
+        // calculate the result
+        ColumnCalculator cc = new ColumnCalculator(settings, this);
+        DataCell calculate = cc.calculate(new DefaultRow(new RowKey(""), new DataCell[]{}));
 
-        ExpressionInstance expression = compiledExpression.getInstance();
-        HashMap<InputField, Object> m_flowVarAssignmentMap = new HashMap<InputField, Object>();
-        for (Map.Entry<InputField, ExpressionField> e : expression.getFieldMap().entrySet()) {
-            InputField f = e.getKey();
-            if (f.getFieldType().equals(FieldType.Variable)) {
-                Class<?> c = e.getValue().getFieldClass();
-                m_flowVarAssignmentMap.put(f, readVariable(f.getColOrVarName(), c));
-            }
-        }
-        expression.set(m_flowVarAssignmentMap);
-        Object evaluatedExpression = expression.evaluate();
-
-        // set output
-        if (evaluatedExpression != null) {
+        // convert and push result as flow variable
+        if (!calculate.isMissing()) {
+            Class<? extends DataCell> cellType = calculate.getClass();
             String colName = m_settings.getColName();
-            if (evaluatedExpression instanceof Integer) {
-                pushFlowVariableInt(colName, (int)evaluatedExpression);
-            } else if (evaluatedExpression instanceof Double) {
-                pushFlowVariableDouble(colName, (double)evaluatedExpression);
-            } else if (evaluatedExpression instanceof String) {
-                pushFlowVariableString(colName, (String)evaluatedExpression);
+            if (cellType.equals(IntCell.class)) {
+                pushFlowVariableInt(colName, ((IntCell)calculate).getIntValue());
+            } else if (cellType.equals(DoubleCell.class)) {
+                pushFlowVariableDouble(colName, ((DoubleCell)calculate).getDoubleValue());
+            } else if (cellType.equals(StringCell.class)) {
+                pushFlowVariableString(colName, ((StringCell)calculate).getStringValue());
             } else {
-                throw new RuntimeException("Invalid variable class: " + evaluatedExpression.getClass());
+                throw new RuntimeException("Invalid variable class: " + cellType);
             }
-        } else {
-            pushFlowVariableString(m_settings.getColName(), (String)evaluatedExpression);
         }
         return new PortObject[]{FlowVariablePortObject.INSTANCE};
     }
@@ -214,6 +200,7 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
 
     /**
      * {@inheritDoc}
+     *
      * @deprecated
      */
     @Deprecated
