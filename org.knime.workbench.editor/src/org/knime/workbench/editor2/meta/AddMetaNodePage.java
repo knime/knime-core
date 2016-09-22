@@ -49,6 +49,7 @@ package org.knime.workbench.editor2.meta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.jface.wizard.WizardPage;
@@ -70,15 +71,16 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Text;
+import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.PortTypeUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
@@ -255,12 +257,14 @@ public class AddMetaNodePage extends WizardPage {
         // add the ports to the lists
         for (int i = 0; i < nrInPorts; i++) {
             // the "new index" is not maintained in this wizard page
-            MetaPortInfo info = new MetaPortInfo(BufferedDataTable.TYPE, -1);
+            MetaPortInfo info = MetaPortInfo.builder()
+                .setPortTypeUID(PortTypeUtil.getPortTypeUID(BufferedDataTable.TYPE)).setNewIndex(-1).build();
             m_inPortList.add(info);
         }
         for (int i = 0; i < nrOutPorts; i++) {
             // the "new index" is not maintained in this wizard page
-            MetaPortInfo info = new MetaPortInfo(BufferedDataTable.TYPE, -1);
+            MetaPortInfo info = MetaPortInfo.builder()
+                    .setPortTypeUID(PortTypeUtil.getPortTypeUID(BufferedDataTable.TYPE)).setNewIndex(-1).build();
             m_outPortList.add(info);
         }
     }
@@ -275,23 +279,43 @@ public class AddMetaNodePage extends WizardPage {
         selList.removeAll();
         for (int i = m_offset; i < infoList.size(); i++) {
             MetaPortInfo info = infoList.get(i);
-            String listEntry = namePrefix + i + " (" + info.getType().getName() + ")";
+            String listEntry = namePrefix + i + " (" + PortTypeUtil.getPortType(info.getTypeUID()).getName() + ")";
             selList.add(listEntry);
         }
     }
 
     /**
-     * @return list of entered out ports
+     * @return read-only list of entered out ports
      */
     public java.util.List<MetaPortInfo> getOutPorts() {
-        return m_outPortList;
+        return Collections.unmodifiableList(m_outPortList);
     }
 
     /**
-     * @return list of entered in ports
+     * Replaces the given port at the given index.
+     *
+     * @param idx
+     * @param mpi
      */
-    public java.util.List<MetaPortInfo>getInports() {
+    public void replaceOutPortAtIndex(final int idx, final MetaPortInfo mpi) {
+        m_outPortList.set(idx, mpi);
+    }
+
+    /**
+     * @return read-only list of entered in ports
+     */
+    public java.util.List<MetaPortInfo>getInPorts() {
         return m_inPortList;
+    }
+
+    /**
+     * Replaces the given port at the given index.
+     *
+     * @param idx
+     * @param mpi
+     */
+    public void replaceInPortAtIndex(final int idx, final MetaPortInfo mpi) {
+        m_inPortList.set(idx, mpi);
     }
 
 
@@ -609,7 +633,8 @@ public class AddMetaNodePage extends WizardPage {
         MetaPortDialog dialog = new MetaPortDialog(Display.getDefault().getActiveShell());
         PortType port = dialog.open();
         if (port != null) {
-            MetaPortInfo info = new MetaPortInfo(port, infoList.size());
+            MetaPortInfo info = MetaPortInfo.builder().setPortTypeUID(PortTypeUtil.getPortTypeUID(port))
+                .setNewIndex(infoList.size()).build();
             infoList.add(info);
             populateSelectionlistFromInfolist(portList, infoList, inPort ? "in_" : "out_");
             portList.select(portList.getItemCount() - 1);
@@ -731,19 +756,19 @@ public class AddMetaNodePage extends WizardPage {
                 int i = 0;
                 for (MetaPortInfo inPort : m_inPortList) {
                     int y = m_top + (((i + 1) * offset) - (PORT_SIZE));
-                    if (inPort.getType().equals(BufferedDataTable.TYPE)) {
+                    if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(BufferedDataTable.TYPE)) {
                         gc.drawPolygon(new int[] {
                                 left - PORT_SIZE, y,
                                 left, y + (PORT_SIZE / 2),
                                 left - PORT_SIZE, y + PORT_SIZE});
                     } else if (PMMLPortObject.TYPE.isSuperTypeOf(
-                            inPort.getType())) {
+                            PortTypeUtil.getPortType(inPort.getTypeUID()))) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(
                                 left - PORT_SIZE,
                                 y,
                                 PORT_SIZE, PORT_SIZE);
-                    } else if (inPort.getType().equals(
+                    } else if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(
                             DatabasePortObject.TYPE)) {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_DARK_RED));
@@ -751,7 +776,7 @@ public class AddMetaNodePage extends WizardPage {
                                 left - PORT_SIZE,
                                 y,
                                 PORT_SIZE, PORT_SIZE);
-                    } else if (inPort.getType().equals(
+                    } else if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(
                             FlowVariablePortObject.TYPE)) {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_RED));
@@ -779,21 +804,21 @@ public class AddMetaNodePage extends WizardPage {
                 int i = 0;
                 for (MetaPortInfo inPort : m_outPortList) {
                     int y = m_top + (((i + 1) * offset) - (PORT_SIZE));
-                    if (inPort.getType().equals(BufferedDataTable.TYPE)) {
+                    if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(BufferedDataTable.TYPE)) {
                         gc.drawPolygon(new int[] {
                                 right, y,
                                 right + PORT_SIZE, y + (PORT_SIZE / 2),
                                 right, y + PORT_SIZE});
                     } else if (PMMLPortObject.TYPE.isSuperTypeOf(
-                            inPort.getType())) {
+                            PortTypeUtil.getPortType(inPort.getTypeUID()))) {
                         gc.setBackground(ColorConstants.blue);
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
-                    } else if (inPort.getType().equals(
+                    } else if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(
                             DatabasePortObject.TYPE)) {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_DARK_RED));
                         gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
-                    } else if (inPort.getType().equals(
+                    } else if (PortTypeUtil.getPortType(inPort.getTypeUID()).equals(
                             FlowVariablePortObject.TYPE)) {
                         gc.setBackground(getShell().getDisplay().getSystemColor(
                                 SWT.COLOR_RED));

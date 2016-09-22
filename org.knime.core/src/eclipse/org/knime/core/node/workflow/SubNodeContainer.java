@@ -77,6 +77,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlException;
+import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
@@ -107,7 +108,6 @@ import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
-import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -144,6 +144,7 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeMode
 import org.knime.core.quickform.QuickFormRepresentation;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
+import org.knime.core.util.PortTypeUtil;
 import org.knime.core.util.ThreadPool;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -1958,7 +1959,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 isConnected = false;
                 message = null;
             }
-            result.add(new MetaPortInfo(portType, isConnected, message, i));
+            result.add(MetaPortInfo.builder()
+                .setPortTypeUID(PortTypeUtil.getPortTypeUID(portType))
+                .setIsConnected(isConnected)
+                .setMessage(message)
+                .setOldIndex(i).build());
         }
         return result.toArray(new MetaPortInfo[result.size()]);
     }
@@ -2002,7 +2007,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 isConnected = false;
                 message = null;
             }
-            result.add(new MetaPortInfo(portType, isConnected, message, i));
+            result.add(MetaPortInfo.builder()
+                .setPortTypeUID(PortTypeUtil.getPortTypeUID(portType))
+                .setIsConnected(isConnected)
+                .setMessage(message)
+                .setOldIndex(i).build());
         }
         return result.toArray(new MetaPortInfo[result.size()]);
     }

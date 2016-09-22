@@ -6,6 +6,7 @@ Bundle-Version: 3.3.0.qualifier
 Bundle-ClassPath: knime-core-api.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.core.api,
+ org.knime.core.api.node.port,
  org.knime.core.api.node.workflow
 Require-Bundle: com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.4.3,3.0.0)",
  com.fasterxml.jackson.core.jackson-core;bundle-version="[2.4.3,3.0.0)",

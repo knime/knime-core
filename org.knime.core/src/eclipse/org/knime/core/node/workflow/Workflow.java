@@ -59,11 +59,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.knime.core.api.node.workflow.IConnectionContainer.ConnectionType;
+import org.knime.core.api.node.port.MetaPortInfo;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
 import org.knime.core.util.Pair;
+import org.knime.core.util.PortTypeUtil;
 
 /** Container class wrapping wrapping the network of nodes forming
  * a workflow together with some of the basic functionality, especially
@@ -1062,7 +1063,7 @@ class Workflow {
                         sortedNodes.put(prevID, is);
                     }
                 } else {
-                    assert cc.getType().equals(ConnectionType.WFMTHROUGH);
+                    assert cc.getType().equals(IConnectionContainer.ConnectionType.WFMTHROUGH);
                     Set<Integer> is = new HashSet<Integer>();
                     is.add(cc.getSourcePort());
                     sortedNodes.put(prevID, is);
@@ -1179,7 +1180,11 @@ class Workflow {
                 isConnected = false;
                 message = null;
             }
-            result[i] = new MetaPortInfo(portType, isConnected, message, i);
+            result[i] = MetaPortInfo.builder()
+                    .setPortTypeUID(PortTypeUtil.getPortTypeUID(portType))
+                    .setIsConnected(isConnected)
+                    .setMessage(message)
+                    .setOldIndex(i).build();
         }
         return result;
     }
@@ -1224,7 +1229,11 @@ class Workflow {
                 isConnected = false;
                 message = null;
             }
-            result[i] = new MetaPortInfo(portType, isConnected, message, i);
+            result[i] = MetaPortInfo.builder()
+                .setPortTypeUID(PortTypeUtil.getPortTypeUID(portType))
+                .setIsConnected(isConnected)
+                .setMessage(message)
+                .setOldIndex(i).build();
         }
         return result;
     }

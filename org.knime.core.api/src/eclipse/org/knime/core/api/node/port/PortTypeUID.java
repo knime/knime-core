@@ -46,7 +46,7 @@
  * History
  *   Sep 20, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow;
+package org.knime.core.api.node.port;
 
 /**
  * A unique identifier for a PortType. The identifier is composed of the fully-qualified class name of the respective
@@ -56,6 +56,7 @@ package org.knime.core.api.node.workflow;
  */
 public class PortTypeUID {
 
+    private final String m_name;
     private final String m_className;
     private final boolean m_isOptional;
     private final int m_color;
@@ -65,10 +66,18 @@ public class PortTypeUID {
         if (builder.m_className == null) {
             throw new IllegalArgumentException("No class name set.");
         }
+        m_name = builder.m_name;
         m_className = builder.m_className;
         m_isOptional = builder.m_isOptional;
         m_isHidden = builder.m_isHidden;
         m_color = builder.m_color;
+    }
+
+    /**
+     * @return a human-readable name for this port type
+     */
+    public String getName() {
+        return m_name;
     }
 
     /**
@@ -106,7 +115,7 @@ public class PortTypeUID {
     /**
      * @return a new {@link Builder} with default values.
      */
-    public Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
@@ -115,6 +124,7 @@ public class PortTypeUID {
      */
     public static final class Builder {
 
+        private String m_name;
         private String m_className;
         private boolean m_isOptional;
         private int m_color;
@@ -122,6 +132,16 @@ public class PortTypeUID {
 
         private Builder() {
             //
+        }
+
+        /**
+         * Sets a human-readable name for this port type.
+         * @param name
+         * @return this
+         */
+        public Builder setName(final String name) {
+            m_name = name;
+            return this;
         }
 
         /**

@@ -113,6 +113,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.IAnnotation;
@@ -157,7 +158,6 @@ import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.ViewContent;
-import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -206,6 +206,7 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
+import org.knime.core.util.PortTypeUtil;
 import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 
@@ -1522,7 +1523,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     newMNPorts[i] = subFlowMgr.getInPort(oldIndex);
                     newMNPorts[i].setPortIndex(i);
                 } else {
-                    newMNPorts[i] = new WorkflowInPort(i, newPorts[i].getType());
+                    newMNPorts[i] = new WorkflowInPort(i, PortTypeUtil.getPortType(newPorts[i].getTypeUID()));
                 }
             }
             subFlowMgr.m_inPorts = newMNPorts;
@@ -1582,7 +1583,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     newMNPorts[i] = subFlowMgr.getOutPort(oldIndex);
                     newMNPorts[i].setPortIndex(i);
                 } else {
-                    newMNPorts[i] = new WorkflowOutPort(i, newPorts[i].getType());
+                    newMNPorts[i] = new WorkflowOutPort(i, PortTypeUtil.getPortType(newPorts[i].getTypeUID()));
                 }
             }
             subFlowMgr.m_outPorts = newMNPorts;
@@ -1634,7 +1635,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             PortType[] portTypes = new PortType[newPorts.length - 1];
             for (int i = 0; i < newPorts.length - 1; i++) {
-                portTypes[i] = newPorts[i + 1].getType();
+                portTypes[i] = PortTypeUtil.getPortType(newPorts[i + 1].getTypeUID());
             }
             snc.setInPorts(portTypes);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
@@ -1687,7 +1688,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             PortType[] portTypes = new PortType[newPorts.length - 1];
             for (int i = 0; i < newPorts.length - 1; i++) {
-                portTypes[i] = newPorts[i + 1].getType();
+                portTypes[i] = PortTypeUtil.getPortType(newPorts[i + 1].getTypeUID());
             }
             snc.setOutPorts(portTypes);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {

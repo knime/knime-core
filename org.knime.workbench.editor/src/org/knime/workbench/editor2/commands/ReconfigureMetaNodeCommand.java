@@ -51,12 +51,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.PortTypeUtil;
 
 /**
  * GEF command for reconfiguring (rename, change port number and/or types). Command executes only if at least one of the
@@ -202,10 +203,13 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
             if (newInfo.getOldIndex() >= 0) {
                 int revOldIdx = newInfo.getNewIndex();
                 int revNewIdx = newInfo.getOldIndex();
-                PortType revType = currentPortList[newInfo.getOldIndex()].getType();
+                PortType revType = PortTypeUtil.getPortType(currentPortList[newInfo.getOldIndex()].getTypeUID());
                 boolean revConn = currentPortList[newInfo.getOldIndex()].isConnected();
-                MetaPortInfo revInfo = new MetaPortInfo(revType, revConn, null, revOldIdx);
-                revInfo.setNewIndex(revNewIdx);
+                MetaPortInfo revInfo = MetaPortInfo.builder()
+                        .setPortTypeUID(PortTypeUtil.getPortTypeUID(revType))
+                        .setIsConnected(revConn)
+                        .setOldIndex(revOldIdx)
+                        .setNewIndex(revNewIdx).build();
                 reverse[revNewIdx] = revInfo;
             }
         }
@@ -216,8 +220,11 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
                 continue;
             }
             MetaPortInfo currentInfo = currentPortList[i];
-            MetaPortInfo revInfo = new MetaPortInfo(currentInfo.getType(), false, null, -1);
-            revInfo.setNewIndex(i);
+            MetaPortInfo revInfo = MetaPortInfo.builder(currentInfo)
+                    .setIsConnected(false)
+                    .setMessage(null)
+                    .setOldIndex(-1)
+                    .setNewIndex(i).build();
             reverse[i] = revInfo;
         }
         return new ArrayList<MetaPortInfo>(Arrays.asList(reverse));

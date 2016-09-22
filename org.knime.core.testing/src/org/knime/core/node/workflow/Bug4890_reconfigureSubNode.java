@@ -52,8 +52,9 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.util.PortTypeUtil;
 
 /**
  *
@@ -90,8 +91,8 @@ public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
         // Switch input ports
         reset(m_subNode);
         MetaPortInfo[] inPorts = getManager().getSubnodeInputPortInfo(m_subNode);
-        inPorts[1].setNewIndex(2);
-        inPorts[2].setNewIndex(1);
+        inPorts[1] = MetaPortInfo.builder(inPorts[1]).setNewIndex(2).build();
+        inPorts[2] = MetaPortInfo.builder(inPorts[2]).setNewIndex(1).build();
         getManager().changeSubNodeInputPorts(m_subNode, new MetaPortInfo[]{inPorts[0], inPorts[2], inPorts[1]});
         executeAllAndWait();
         checkState(m_diffChecker1, InternalNodeContainerState.EXECUTED);
@@ -99,8 +100,8 @@ public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
         // Switch output ports
         reset(m_subNode);
         MetaPortInfo[] outPorts = getManager().getSubnodeOutputPortInfo(m_subNode);
-        outPorts[1].setNewIndex(2);
-        outPorts[2].setNewIndex(1);
+        outPorts[1] = MetaPortInfo.builder(outPorts[1]).setNewIndex(2).build();
+        outPorts[2] = MetaPortInfo.builder(outPorts[2]).setNewIndex(1).build();
         getManager().changeSubNodeOutputPorts(m_subNode, new MetaPortInfo[]{outPorts[0], outPorts[2], outPorts[1]});
         executeAllAndWait();
         checkState(m_diffChecker1, InternalNodeContainerState.EXECUTED);
@@ -123,8 +124,8 @@ public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
             }
         }
         MetaPortInfo[] ports = new MetaPortInfo[2];
-        ports[0] = new MetaPortInfo(FlowVariablePortObject.TYPE, 0);
-        ports[1] = new MetaPortInfo(FlowVariablePortObject.TYPE, 1);
+        ports[0] = MetaPortInfo.builder().setPortTypeUID(PortTypeUtil.getPortTypeUID(FlowVariablePortObject.TYPE)).setOldIndex(0).build();
+        ports[1] = MetaPortInfo.builder().setPortTypeUID(PortTypeUtil.getPortTypeUID(FlowVariablePortObject.TYPE)).setOldIndex(1).build();
         getManager().changeSubNodeInputPorts(m_subNode, ports);
         getManager().changeSubNodeOutputPorts(m_subNode, ports);
         getManager().addConnection(m_varSource, 1, m_subNode, 1);

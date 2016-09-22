@@ -54,9 +54,10 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
+import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
+import org.knime.core.util.PortTypeUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -217,15 +218,15 @@ public class AddMetaNodeWizard extends Wizard {
     private void performCustomizedFinish() {
         // create subworkflow with the number and types
         // of the entered in- and out ports
-        PortType[] inPorts = new PortType[m_addPage.getInports().size()];
+        PortType[] inPorts = new PortType[m_addPage.getInPorts().size()];
         PortType[] outPorts = new PortType[m_addPage.getOutPorts().size()];
         int i = 0;
-        for (MetaPortInfo p : m_addPage.getInports()) {
-            inPorts[i++] = p.getType();
+        for (MetaPortInfo p : m_addPage.getInPorts()) {
+            inPorts[i++] = PortTypeUtil.getPortType(p.getTypeUID());
         }
         i = 0;
         for (MetaPortInfo p : m_addPage.getOutPorts()) {
-            outPorts[i++] = p.getType();
+            outPorts[i++] = PortTypeUtil.getPortType(p.getTypeUID());
         }
         String name = "";
         if (m_addPage.getMetaNodeName() != null

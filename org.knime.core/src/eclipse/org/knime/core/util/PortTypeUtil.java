@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,85 +41,50 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Jun 20, 2012 (wiswedel): created
+ *   Sep 22, 2016 (hornm): created
  */
-package org.knime.core.node.port;
+package org.knime.core.util;
 
-/** Object describing a metanode port. Used in the action to modify metanode
- * port orders, types, etc. It comprises the port type, whether it's connected
- * (only if created from the WFM) and what its index in the list of all
- * in/out ports is.
+import org.knime.core.api.node.port.PortTypeUID;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.PortTypeRegistry;
+
+/**
+ * Utility class for {@link PortType}-functions (e.g. conversion).
  *
- *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @noinstantiate This class is not intended to be instantiated by clients.
- * @since 2.6
+ * @author Martin Horn, KNIME.com
  */
-public final class MetaPortInfo {
+public class PortTypeUtil {
 
-    private final PortType m_type;
-    private final boolean m_isConnected;
-    private final String m_message;
-    private int m_oldIndex;
-    private int m_newIndex;
-
-    /** Created from the WFM. Fills the object according the arguments. A port
-     * may be connected or not.
-     * @param type ...
-     * @param isConnected .. if connected somewhere in (or outside) the flow
-     * @param message The tooltip (only if isConnected)
-     * @param oldIndex the port index. */
-    public MetaPortInfo(final PortType type, final boolean isConnected,
-            final String message, final int oldIndex) {
-        m_type = type;
-        m_isConnected = isConnected;
-        m_message = message;
-        m_oldIndex = oldIndex;
-        m_newIndex = -1;
+    private PortTypeUtil() {
+        // utility class
     }
 
-    /** Called from the UI to define a new port (not connected).
-     * @param type ...
-     * @param newIndex Index of port. */
-    public MetaPortInfo(final PortType type, final int newIndex) {
-        m_type = type;
-        m_newIndex = newIndex;
-        m_oldIndex = -1;
-        m_isConnected = false;
-        m_message = null;
+    /**
+     * Determines the unique port type identifier {@PortTypeUID} from the given {@link PortType}.
+     *
+     * @param portType
+     * @return the new port type uid
+     */
+    public static PortTypeUID getPortTypeUID(final PortType portType) {
+        return PortTypeUID.builder().setName(portType.getName()).setClassName(portType.getPortObjectClass().getName())
+            .setColor(portType.getColor()).setIsHidden(portType.isHidden()).setIsOptional(portType.isOptional())
+            .build();
     }
 
-    /** @return the type */
-    public PortType getType() {
-        return m_type;
+    /**
+     * Determines the {@link PortType} from the given {@link PortTypeUID}.
+     *
+     * @param portTypeUID
+     * @return the determined port type
+     */
+    public static PortType getPortType(final PortTypeUID portTypeUID) {
+        //TODO: how to deal with the isHidden, color etc. attributes???
+        PortTypeRegistry ptr = PortTypeRegistry.getInstance();
+        return ptr.getPortType(ptr.getObjectClass(portTypeUID.getPortObjectClassName()).get(),
+            portTypeUID.isOptional());
     }
-
-    /** @return the isConnected */
-    public boolean isConnected() {
-        return m_isConnected;
-    }
-
-    /** @return the message */
-    public String getMessage() {
-        return m_message;
-    }
-
-    /** @return the oldIndex */
-    public int getOldIndex() {
-        return m_oldIndex;
-    }
-
-    /** @return the newIndex */
-    public int getNewIndex() {
-        return m_newIndex;
-    }
-
-    /** @param newIndex the newIndex to set */
-    public void setNewIndex(final int newIndex) {
-        m_newIndex = newIndex;
-    }
-
 }
