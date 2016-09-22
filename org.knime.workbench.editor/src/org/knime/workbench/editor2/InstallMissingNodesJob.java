@@ -120,8 +120,8 @@ class InstallMissingNodesJob extends Job {
         } else {
             if (!missingNodes.isEmpty()) {
                 Display.getDefault().syncExec(() -> {
-                    MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "No all extension found",
-                        "No extension for the following nodes were found: "
+                    MessageDialog.openWarning(Display.getCurrent().getActiveShell(), "Not all extension found",
+                        "No extensions for the following nodes were found: "
                             + missingNodes.stream().map(i -> i.getNodeNameNotNull()).collect(Collectors.joining(", ")));
                 });
             }

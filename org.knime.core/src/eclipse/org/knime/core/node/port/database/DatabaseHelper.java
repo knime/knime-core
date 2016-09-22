@@ -152,8 +152,9 @@ public class DatabaseHelper {
                 break;
             // all types that can be interpreted as binary object
             case Types.BLOB:
-            case Types.LONGVARBINARY:
             case Types.BINARY:
+            case Types.LONGVARBINARY:
+            case Types.VARBINARY:
                 newType = BinaryObjectDataCell.TYPE;
                 break;
             case Types.ARRAY:

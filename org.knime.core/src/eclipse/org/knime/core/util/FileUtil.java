@@ -1053,13 +1053,14 @@ public final class FileUtil {
     }
 
     /**
-     * Returns the file path from a 'file' or 'knime' URL. For the latter the file is tried to be resolved, whereby
-     * only local files (e.g. workflow relative URLs) are successfully resolved. If the 'knime' URL points to a file
-     * located on a KNIME server it throws an exception with a proper cause and message.
+     * Returns the file path from a 'file' or 'knime' URL. For the latter the file is tried to be resolved, whereby only
+     * local files (e.g. workflow relative URLs) are successfully resolved. If the 'knime' URL points to a non-local
+     * file, <code>null</code> is returned.
      *
      * @param fileUrl an URL with the 'file' or 'knime' protocol
-     * @return the path
-     * @throws IllegalArgumentException if the URL is not denote a local file.
+     * @return the path or <code>null</code>
+     * @throws IllegalArgumentException if the URL protocol is neither 'file' nor 'knime' or resolving a 'knime'-URL
+     *             fails
      */
     public static File getFileFromURL(final URL fileUrl) {
         if (fileUrl.getProtocol().equalsIgnoreCase("file")) {
