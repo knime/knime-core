@@ -50,6 +50,7 @@ package org.knime.core.api.node.workflow;
 
 import java.net.URL;
 
+import org.knime.core.api.node.workflow.INodeContainer.NodeLock;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
@@ -405,22 +406,101 @@ public interface INodeContainer {
 //     */
 //    NodeContainerExecutionResult createExecutionResult(ExecutionMonitor exec) throws CanceledExecutionException;
 
-//    /**
-//     * Changes the nodes lock status for various actions, i.e. from being deleted, reseted or configured.
-//     *
-//     * @param setLock whether the locks should be set (<code>true</code>) or released (<code>false</code>)
-//     * @param locks the locks to be set or released, e.g. {@link NodeLock#DELETE}, {@link NodeLock#RESET},
-//     *            {@link NodeLock#CONFIGURE}
-//     * @since 3.2
-//     */
-//    void changeNodeLocks(boolean setLock, NodeLock... locks);
-//
-//    /**
-//     * Returns the node's lock status, i.e. whether the node is locked from being deleted, reseted or configured.
-//     *
-//     * @return the currently set {@link NodeLocks}
-//     * @since 3.2
-//     */
-//    NodeLocks getNodeLocks();
+    /**
+     * Changes the nodes lock status for various actions, i.e. from being deleted, reseted or configured.
+     *
+     * @param setLock whether the locks should be set (<code>true</code>) or released (<code>false</code>)
+     * @param locks the locks to be set or released, e.g. {@link NodeLock#DELETE}, {@link NodeLock#RESET},
+     *            {@link NodeLock#CONFIGURE}
+     * @since 3.2
+     */
+    void changeNodeLocks(boolean setLock, NodeLock... locks);
+
+    /**
+     * Returns the node's lock status, i.e. whether the node is locked from being deleted, reseted or configured.
+     *
+     * @return the currently set {@link NodeLocks}
+     * @since 3.2
+     */
+    NodeLocks getNodeLocks();
+
+
+    /**
+     * Class that represents the lock status of a node, i.e. whether a node has a reset, delete or configure-lock.
+     * If a lock is set then the respective action is not allowed to be performed.
+     *
+     * @since 3.2
+     */
+    public final static class NodeLocks {
+
+        private final boolean m_hasDeleteLock;
+        private final boolean m_hasResetLock;
+        private final boolean m_hasConfigureLock;
+
+        /**
+         * Creates a new {@link NodeLocks} instance.
+         *
+         * @param hasDeleteLock
+         * @param hasResetLock
+         * @param hasConfigureLock
+         */
+        public NodeLocks(final boolean hasDeleteLock, final boolean hasResetLock, final boolean hasConfigureLock) {
+            m_hasDeleteLock = hasDeleteLock;
+            m_hasResetLock = hasResetLock;
+            m_hasConfigureLock = hasConfigureLock;
+        }
+
+        /**
+         * @return <code>true</code> if the node can be deleted
+         */
+        public boolean hasDeleteLock() {
+           return m_hasDeleteLock;
+        }
+
+       /**
+        * @return <code>true</code> if the node is locked from being reseted, i.e. it is under NO circumstances resetable, if
+        *         <code>false</code> it still might be not resetable depending on the {@link NodeContainer#isResetable()}-implementation.
+        * @since 3.2
+        */
+       public boolean hasResetLock() {
+           return m_hasResetLock;
+       }
+
+       /**
+        * @return <code>true</code> if the node is locked from being configured
+        * @since 3.2
+        */
+       public boolean hasConfigureLock() {
+           return m_hasConfigureLock;
+       }
+
+    }
+
+    /**
+     * Available locks to be passed in the {@link NodeContainer#changeNodeLocks(boolean, NodeLock...)}-method.
+     *
+     * @since 3.2
+     */
+    public static enum NodeLock {
+        /**
+         * Represents all available locks.
+         */
+        ALL,
+
+        /**
+         * Represents a delete node lock.
+         */
+        DELETE,
+
+        /**
+         * Represents a reset node lock.
+         */
+        RESET,
+
+        /**
+         * Represents a configure node lock.
+         */
+        CONFIGURE;
+    }
 
 }
