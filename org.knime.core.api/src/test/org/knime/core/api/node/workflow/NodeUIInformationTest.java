@@ -50,8 +50,6 @@ package org.knime.core.api.node.workflow;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -94,14 +92,4 @@ public class NodeUIInformationTest {
         assertEquals(uiinf.getSnapToGrid(), uiinf2.getSnapToGrid());
         assertArrayEquals(uiinf.getBounds(), uiinf2.getBounds());
     }
-
-    @Test
-    public void testIsFilledProperlyMethod() {
-        NodeUIInformation uiinf = NodeUIInformation.builder().build();
-        assertFalse(uiinf.isFilledProperly());
-
-        uiinf = NodeUIInformation.builder().setNodeLocation(0, 1, 2, 3).build();
-        assertTrue(uiinf.isFilledProperly());
-    }
-
 }

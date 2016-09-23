@@ -101,11 +101,7 @@ public final class NodeUIInformation {
      * @param builder the builder
      */
     NodeUIInformation(final Builder builder) {
-        if(builder.m_bounds != null) {
-            m_bounds = builder.m_bounds.clone();
-        } else {
-            m_bounds = null;
-        }
+        m_bounds = builder.m_bounds.clone();
         m_hasAbsoluteCoordinates = builder.m_hasAbsoluteCoordinates;
         m_symbolRelative = builder.m_symbolRelative;
         m_roundToGrid = builder.m_roundToGrid;
@@ -114,6 +110,7 @@ public final class NodeUIInformation {
 
     /**
      * Returns if the loaded UI information is complete.
+     * TODO: currently this method always returns <code>true</code> - can probably removed then!!
      *
      * @return <code>true</code> if it is filled properly, <code>false</code>
      * otherwise
@@ -166,7 +163,11 @@ public final class NodeUIInformation {
      * @return Returns a clone of the bounds.
      */
     public int[] getBounds() {
-        return m_bounds.clone();
+        if (m_bounds != null) {
+            return m_bounds.clone();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -210,7 +211,7 @@ public final class NodeUIInformation {
     /** Builder pattern for {@link NodeUIInformation}. */
     public static final class Builder {
 
-        private int[] m_bounds = null;
+        private int[] m_bounds = new int[]{0, 0, -1, -1};
 
         private boolean m_hasAbsoluteCoordinates = true;
         private boolean m_symbolRelative = true;
@@ -289,9 +290,6 @@ public final class NodeUIInformation {
          */
         public Builder setNodeLocation(final int x, final int y, final int w,
                 final int h) {
-            if(m_bounds == null) {
-                m_bounds = new int[4];
-            }
             m_bounds[0] = x;
             m_bounds[1] = y;
             m_bounds[2] = w;
