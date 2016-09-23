@@ -65,7 +65,7 @@ public class MetaPortInfoTest {
 
     @Test
     public void testBuilderAndGetters() {
-        PortTypeUID uid = PortTypeUID.builder().setClassName("test").build();
+        PortTypeUID uid = PortTypeUID.builder("test").build();
         MetaPortInfo mpi = MetaPortInfo.builder()
                 .setIsConnected(false)
                 .setMessage("message")
@@ -81,7 +81,7 @@ public class MetaPortInfoTest {
 
     @Test
     public void testCopyBuilder() {
-        PortTypeUID uid = PortTypeUID.builder().setClassName("test").build();
+        PortTypeUID uid = PortTypeUID.builder("test").build();
         MetaPortInfo mpi = MetaPortInfo.builder()
                 .setIsConnected(false)
                 .setMessage("message")

@@ -70,7 +70,7 @@ public class PortTypeUtil {
      * @return the new port type uid
      */
     public static PortTypeUID getPortTypeUID(final PortType portType) {
-        return PortTypeUID.builder().setName(portType.getName()).setClassName(portType.getPortObjectClass().getName())
+        return PortTypeUID.builder(portType.getPortObjectClass().getName()).setName(portType.getName())
             .setColor(portType.getColor()).setIsHidden(portType.isHidden()).setIsOptional(portType.isOptional())
             .build();
     }

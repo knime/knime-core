@@ -61,10 +61,10 @@ public class NodeFactoryUID {
 
     private NodeFactoryUID(final Builder builder) {
         if (builder.m_className == null) {
-            throw new IllegalArgumentException("No class name set.");
+            throw new IllegalArgumentException("Class name must not be null.");
         }
         if (builder.m_nodeName == null) {
-            throw new IllegalArgumentException("No node name set.");
+            throw new IllegalArgumentException("Node name must not be null.");
         }
         m_className = builder.m_className;
         m_nodeName = builder.m_nodeName;
@@ -85,10 +85,12 @@ public class NodeFactoryUID {
     }
 
     /**
+     * @param className the node factory's fully qualified class name - not <code>null</code>
+     * @param nodeName  the name of the node - not <code>null</code>
      * @return a new {@link Builder} with default values.
      */
-    public Builder builder() {
-        return new Builder();
+    public Builder builder(final String className, final String nodeName) {
+        return new Builder(className, nodeName);
     }
 
     /**
@@ -99,8 +101,9 @@ public class NodeFactoryUID {
         private String m_className;
         private String m_nodeName;
 
-        private Builder() {
-            //
+        private Builder(final String className, final String nodeName) {
+            m_className = className;
+            m_nodeName = nodeName;
         }
 
         /**

@@ -64,8 +64,7 @@ public class PortTypeUIDTest {
 
     @Test
     public void testBuilderAndGetters() {
-        PortTypeUID uid = PortTypeUID.builder()
-                .setClassName("class")
+        PortTypeUID uid = PortTypeUID.builder("class")
                 .setName("name")
                 .setColor(3)
                 .setIsHidden(false)
@@ -83,8 +82,8 @@ public class PortTypeUIDTest {
     @Test
     public void testClassNameNotSet() throws IllegalArgumentException {
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("No class name set");
-        PortTypeUID uid = PortTypeUID.builder().build();
+        thrown.expectMessage("Class name must not be null");
+        PortTypeUID uid = PortTypeUID.builder(null).build();
     }
 
 }

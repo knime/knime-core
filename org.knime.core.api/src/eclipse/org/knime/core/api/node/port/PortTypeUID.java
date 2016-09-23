@@ -64,7 +64,7 @@ public class PortTypeUID {
 
     private PortTypeUID(final Builder builder) {
         if (builder.m_className == null) {
-            throw new IllegalArgumentException("No class name set.");
+            throw new IllegalArgumentException("Class name must not be null.");
         }
         m_name = builder.m_name;
         m_className = builder.m_className;
@@ -113,10 +113,11 @@ public class PortTypeUID {
 
 
     /**
-     * @return a new {@link Builder} with default values.
+     * @param className the associated port object's fully-qualified class name
+     * @return a new {@link Builder} with default values (except for the mandatory attributes).
      */
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(final String className) {
+        return new Builder(className);
     }
 
     /**
@@ -130,8 +131,8 @@ public class PortTypeUID {
         private int m_color;
         private boolean m_isHidden;
 
-        private Builder() {
-            //
+        private Builder(final String className) {
+            m_className = className;
         }
 
         /**
@@ -150,7 +151,7 @@ public class PortTypeUID {
          * @param name
          * @return this
          */
-        public Builder setClassName(final String name) {
+        public Builder setPortObjectClassName(final String name) {
             m_className = name;
             return this;
         }
