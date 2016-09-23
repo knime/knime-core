@@ -101,7 +101,11 @@ public final class NodeUIInformation {
      * @param builder the builder
      */
     NodeUIInformation(final Builder builder) {
-        m_bounds = builder.m_bounds.clone();
+        if(builder.m_bounds != null) {
+            m_bounds = builder.m_bounds.clone();
+        } else {
+            m_bounds = null;
+        }
         m_hasAbsoluteCoordinates = builder.m_hasAbsoluteCoordinates;
         m_symbolRelative = builder.m_symbolRelative;
         m_roundToGrid = builder.m_roundToGrid;
@@ -206,7 +210,7 @@ public final class NodeUIInformation {
     /** Builder pattern for {@link NodeUIInformation}. */
     public static final class Builder {
 
-        private int[] m_bounds = new int[]{0, 0, -1, -1};
+        private int[] m_bounds = null;
 
         private boolean m_hasAbsoluteCoordinates = true;
         private boolean m_symbolRelative = true;
@@ -285,6 +289,9 @@ public final class NodeUIInformation {
          */
         public Builder setNodeLocation(final int x, final int y, final int w,
                 final int h) {
+            if(m_bounds == null) {
+                m_bounds = new int[4];
+            }
             m_bounds[0] = x;
             m_bounds[1] = y;
             m_bounds[2] = w;
