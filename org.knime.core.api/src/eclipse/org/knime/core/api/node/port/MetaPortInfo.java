@@ -117,7 +117,7 @@ public final class MetaPortInfo {
      * @return a new builder with the values initialized by the ones given by the passed {@link MetaPortInfo}
      */
     public static Builder builder(final MetaPortInfo mpi) {
-        return new Builder();
+        return new Builder().copyFrom(mpi);
     }
 
     /**
