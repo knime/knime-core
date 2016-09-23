@@ -45,26 +45,26 @@
  * History
  *   30.09.2011 (hofer): created
  */
-package org.knime.base.node.preproc.stringmanipulation;
+package org.knime.base.node.preproc.stringmanipulation.variable;
 
+import org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The node factory of the string manipulation node.
+ * The node factory of the string manipulation (variable) node.
  *
- * @author Heiko Hofer
+ * @author Simon Schmid
  */
-public class StringManipulationNodeFactory
-    extends NodeFactory<StringManipulationNodeModel> {
+public class StringManipulationVariableNodeFactory extends NodeFactory<StringManipulationVariableNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public StringManipulationNodeModel createNodeModel() {
-        return new StringManipulationNodeModel();
+    public StringManipulationVariableNodeModel createNodeModel() {
+        return new StringManipulationVariableNodeModel();
     }
 
     /**
@@ -79,9 +79,8 @@ public class StringManipulationNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<StringManipulationNodeModel> createNodeView(
-            final int viewIndex,
-            final StringManipulationNodeModel nodeModel) {
+    public NodeView<StringManipulationVariableNodeModel> createNodeView(final int viewIndex,
+        final StringManipulationVariableNodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 
@@ -98,7 +97,7 @@ public class StringManipulationNodeFactory
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new StringManipulationNodeDialog(false);
+        return new StringManipulationNodeDialog(true);
     }
 
 }

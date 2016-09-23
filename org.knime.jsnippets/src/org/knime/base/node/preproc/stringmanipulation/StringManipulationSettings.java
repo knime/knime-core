@@ -379,7 +379,7 @@ public class StringManipulationSettings {
      * @return settings java scripting settings
      * @throws InvalidSettingsException when settings are not correct
      */
-    JavaScriptingSettings createJavaScriptingSettings()
+    public JavaScriptingSettings createJavaScriptingSettings()
         throws InvalidSettingsException {
         // determine return type
         m_returnType = null == m_returnType

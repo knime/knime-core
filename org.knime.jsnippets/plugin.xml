@@ -18,6 +18,11 @@
       <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeFactory"  />
       <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.rules.engine.totable.RulesToTableNodeFactory" />
       <node category-path="/analytics/mining/dtree" factory-class="org.knime.base.node.rules.engine.decisiontree.FromDecisionTreeNodeFactory" />
+      <node
+            category-path="/flowcontrol/variables"
+            deprecated="false"
+            factory-class="org.knime.base.node.preproc.stringmanipulation.variable.StringManipulationVariableNodeFactory">
+      </node>
    </extension>
    <extension point="org.knime.jsnippets.templaterepository">
          <template-repository id="org.knime.base.node.jsnippet.template.JavaSnippetFileTemplateRepositoryProvider" provider-class="org.knime.base.node.jsnippet.template.JavaSnippetFileTemplateRepositoryProvider" />
