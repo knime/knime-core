@@ -72,6 +72,7 @@ import org.knime.core.api.node.workflow.AnnotationData;
 import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.EditorUIInformation;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.data.container.ContainerTable;
@@ -1439,7 +1440,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             return EditorUIInformation.builder().build();
         }
         NodeSettingsRO editorCfg = settings.getNodeSettings(CFG_EDITOR_INFO);
-        EditorUIInformation.Builder builder = new EditorUIInformation.Builder();
+        EditorUIInformation.Builder builder = EditorUIInformation.builder();
         builder.setSnapToGrid(editorCfg.getBoolean(CFG_EDITOR_SNAP_GRID));
         builder.setShowGrid(editorCfg.getBoolean(CFG_EDITOR_SHOW_GRID));
         builder.setGridX(editorCfg.getInt(CFG_EDITOR_X_GRID));

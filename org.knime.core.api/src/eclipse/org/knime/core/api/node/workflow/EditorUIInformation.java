@@ -42,12 +42,9 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Stores workflow editor specific settings (like grid settings and zoom level, etc.).
@@ -56,7 +53,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  * @since 2.6
  */
-public class EditorUIInformation implements UIInformation {
+public class EditorUIInformation {
 
     private final boolean m_snapToGrid;
 
@@ -92,20 +89,6 @@ public class EditorUIInformation implements UIInformation {
         } catch (CloneNotSupportedException ex) {
             throw new InternalError(ex);
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void save(final NodeSettingsWO config) {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion) throws InvalidSettingsException {
     }
 
     /**

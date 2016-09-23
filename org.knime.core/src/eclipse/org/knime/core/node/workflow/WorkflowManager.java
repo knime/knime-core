@@ -116,6 +116,7 @@ import org.eclipse.core.runtime.Platform;
 import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.EditorUIInformation;
 import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.core.api.node.workflow.IConnectionContainer.ConnectionType;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
