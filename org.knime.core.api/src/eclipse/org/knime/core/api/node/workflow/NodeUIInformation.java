@@ -109,20 +109,6 @@ public final class NodeUIInformation {
     }
 
     /**
-     * Returns if the loaded UI information is complete.
-     * TODO: currently this method always returns <code>true</code> - can probably removed then!!
-     *
-     * @return <code>true</code> if it is filled properly, <code>false</code>
-     * otherwise
-     */
-    public boolean isFilledProperly() {
-        if (m_bounds == null) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
      * @return the hasAbsoluteCoordinates (transient) field
      */
     public boolean hasAbsoluteCoordinates() {

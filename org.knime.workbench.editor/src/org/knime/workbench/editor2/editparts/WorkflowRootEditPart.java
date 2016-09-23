@@ -206,7 +206,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 m_inBar = new WorkflowPortBar(wfm, true);
                 NodeUIInformation uiInfo =
                         wfm.getInPortsBarUIInfo();
-                if (uiInfo != null && uiInfo.isFilledProperly()) {
+                if (uiInfo != null) {
                     m_inBar.setUIInfo(wfm
                             .getInPortsBarUIInfo());
                 }
@@ -218,7 +218,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 m_outBar = new WorkflowPortBar(wfm, false);
                 NodeUIInformation uiInfo =
                         wfm.getOutPortsBarUIInfo();
-                if (uiInfo != null && uiInfo.isFilledProperly()) {
+                if (uiInfo != null) {
                     m_outBar.setUIInfo(wfm.getOutPortsBarUIInfo());
                 }
             }

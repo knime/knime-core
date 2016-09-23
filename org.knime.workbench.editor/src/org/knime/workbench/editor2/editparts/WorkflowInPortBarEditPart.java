@@ -84,7 +84,7 @@ public class WorkflowInPortBarEditPart extends AbstractWorkflowPortBarEditPart {
     @Override
     protected IFigure createFigure() {
         NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
-        if (uiInfo != null && uiInfo.isFilledProperly()) {
+        if (uiInfo != null) {
             int[] bounds = uiInfo.getBounds();
             Rectangle newBounds = new Rectangle(
                     bounds[0], bounds[1], bounds[2], bounds[3]);

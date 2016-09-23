@@ -106,7 +106,7 @@ public abstract class AbstractWorkflowPortBarEditPart
     protected void refreshVisuals() {
         NodeUIInformation uiInfo = ((WorkflowPortBar)getModel())
             .getUIInfo();
-        if (uiInfo != null && uiInfo.isFilledProperly()
+        if (uiInfo != null
                 && !((AbstractWorkflowPortBarFigure)getFigure())
                 .isInitialized()) {
             int[] bounds = uiInfo.getBounds();
