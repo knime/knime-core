@@ -46,10 +46,12 @@
  *   19.04.2005 (georg): created
  *   12.01.2006 (mb): clean up for code review
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 import java.text.DateFormat;
 import java.util.Date;
+
+import org.knime.core.node.workflow.NodeID;
 
 /**
  * Event-class for workflow events. Note that not all event types use all of the

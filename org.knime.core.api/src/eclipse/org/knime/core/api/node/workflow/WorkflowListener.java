@@ -46,7 +46,7 @@
  *   19.04.2005 (georg): created
  *   12.01.2006 (mb): clean up for code review
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 /**
  * Interface for listeners that receive workflow events.

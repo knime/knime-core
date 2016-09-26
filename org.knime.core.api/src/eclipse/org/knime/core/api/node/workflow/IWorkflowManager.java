@@ -925,18 +925,18 @@ public interface IWorkflowManager {
     /** {@inheritDoc} */
     String getCipherFileName(String fileName);
 
-//    /**
-//     * Add listener to list.
-//     *
-//     * @param listener new listener
-//     */
-//    void addListener(WorkflowListener listener);
+    /**
+     * Add listener to list.
+     *
+     * @param listener new listener
+     */
+    void addListener(WorkflowListener listener);
 
-//    /**
-//     * Remove listener.
-//     * @param listener listener to be removed
-//     */
-//    void removeListener(WorkflowListener listener);
+    /**
+     * Remove listener.
+     * @param listener listener to be removed
+     */
+    void removeListener(WorkflowListener listener);
 
     /** Copies the nodes with the given ids from the argument workflow manager
      * into this wfm instance. All nodes wil be reset (and configured id

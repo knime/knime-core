@@ -60,12 +60,12 @@ import org.knime.core.api.node.workflow.NodePropertyChangedEvent;
 import org.knime.core.api.node.workflow.NodePropertyChangedListener;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
+import org.knime.core.api.node.workflow.WorkflowEvent;
+import org.knime.core.api.node.workflow.WorkflowListener;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowEvent;
-import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.ThreadUtils;
 
