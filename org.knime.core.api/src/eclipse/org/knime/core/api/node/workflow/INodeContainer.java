@@ -72,12 +72,12 @@ public interface INodeContainer {
 //     */
 //    NodeContainerParent getDirectNCParent();
 
-//    /**
-//     * @return The job manager associated with this node or null if this
-//     * node will use the job manager of the parent (or the parent of ...)
-//     * @see #findJobManager()
-//     */
-//    NodeExecutionJobManager getJobManager();
+    /**
+     * @return the unique identifier (UID) of the job manager associated with this node or null if this
+     * node will use the job manager of the parent (or the parent of ...)
+     * @see #findJobManager()
+     */
+    JobManagerUID getJobManagerUID();
 
 //    /** @return NodeExecutionJobManager responsible for this node and all its children. */
 //    NodeExecutionJobManager findJobManager();
