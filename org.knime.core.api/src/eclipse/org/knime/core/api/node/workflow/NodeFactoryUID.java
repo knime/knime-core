@@ -48,6 +48,8 @@
  */
 package org.knime.core.api.node.workflow;
 
+import org.knime.core.node.util.CheckUtils;
+
 /**
  * A unique identifier for a particular NodeFactory. The identifier is composed of the fully-qualified class name and
  * the name of the node the node factory represents.
@@ -60,12 +62,8 @@ public class NodeFactoryUID {
     private final String m_nodeName;
 
     private NodeFactoryUID(final Builder builder) {
-        if (builder.m_className == null) {
-            throw new IllegalArgumentException("Class name must not be null.");
-        }
-        if (builder.m_nodeName == null) {
-            throw new IllegalArgumentException("Node name must not be null.");
-        }
+        CheckUtils.checkArgumentNotNull(builder.m_className, "Class name must not be null.");
+        CheckUtils.checkArgumentNotNull(builder.m_nodeName, "Node name must not be null.");
         m_className = builder.m_className;
         m_nodeName = builder.m_nodeName;
     }

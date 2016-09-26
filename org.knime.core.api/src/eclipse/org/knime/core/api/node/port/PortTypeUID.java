@@ -48,6 +48,8 @@
  */
 package org.knime.core.api.node.port;
 
+import org.knime.core.node.util.CheckUtils;
+
 /**
  * A unique identifier for a PortType. The identifier is composed of the fully-qualified class name of the respective
  * PortObject and some additional meta information (e.g. whether it's optional etc.).
@@ -63,9 +65,7 @@ public class PortTypeUID {
     private final boolean m_isHidden;
 
     private PortTypeUID(final Builder builder) {
-        if (builder.m_className == null) {
-            throw new IllegalArgumentException("Class name must not be null.");
-        }
+        CheckUtils.checkArgumentNotNull(builder.m_className, "Class name must not be null.");
         m_name = builder.m_name;
         m_className = builder.m_className;
         m_isOptional = builder.m_isOptional;
