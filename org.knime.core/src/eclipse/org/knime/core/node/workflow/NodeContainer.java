@@ -56,6 +56,8 @@ import org.knime.core.api.node.workflow.INodeContainer.NodeLocks;
 import org.knime.core.api.node.workflow.NodeAnnotationData;
 import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.api.node.workflow.NodeContainerStateObservable;
+import org.knime.core.api.node.workflow.NodeProgressEvent;
+import org.knime.core.api.node.workflow.NodeProgressListener;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.api.node.workflow.NodeUIInformation;

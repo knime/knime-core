@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 import java.text.NumberFormat;
 

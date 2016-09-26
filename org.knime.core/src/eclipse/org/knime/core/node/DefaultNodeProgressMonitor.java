@@ -55,11 +55,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
+import org.knime.core.api.node.workflow.NodeProgress;
+import org.knime.core.api.node.workflow.NodeProgressEvent;
+import org.knime.core.api.node.workflow.NodeProgressListener;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeProgress;
-import org.knime.core.node.workflow.NodeProgressEvent;
-import org.knime.core.node.workflow.NodeProgressListener;
 
 /**
  * The default node progress monitor which keep a progress value between 0 and 1, and a progress message. Both can be

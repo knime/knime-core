@@ -88,6 +88,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.knime.core.api.node.workflow.NodeProgressEvent;
+import org.knime.core.api.node.workflow.NodeProgressListener;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -102,8 +104,6 @@ import org.knime.core.node.tableview.TableView;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.NodeProgressEvent;
-import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.ThreadUtils;
 import org.knime.core.util.tokenizer.Comment;

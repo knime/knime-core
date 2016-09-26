@@ -55,11 +55,11 @@ import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.api.node.workflow.NodeProgress;
+import org.knime.core.api.node.workflow.NodeProgressEvent;
+import org.knime.core.api.node.workflow.NodeProgressListener;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeProgress;
-import org.knime.core.node.workflow.NodeProgressEvent;
-import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry;
 import org.knime.workbench.KNIMEEditorPlugin;
 
@@ -216,7 +216,7 @@ abstract class PersistWorkflowRunnable implements IRunnableWithProgress {
 
     protected IStatus createMultiStatus(
             final String message, final IStatus[] stats) {
-        return new MultiStatus(KNIMEEditorPlugin.PLUGIN_ID, Status.OK,
+        return new MultiStatus(KNIMEEditorPlugin.PLUGIN_ID, IStatus.OK,
                 stats, message, null);
     }
 

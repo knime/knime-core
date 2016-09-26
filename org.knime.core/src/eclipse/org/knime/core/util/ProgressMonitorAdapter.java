@@ -49,13 +49,13 @@ package org.knime.core.util;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.knime.core.api.node.workflow.NodeProgress;
+import org.knime.core.api.node.workflow.NodeProgressEvent;
+import org.knime.core.api.node.workflow.NodeProgressListener;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeProgress;
-import org.knime.core.node.workflow.NodeProgressEvent;
-import org.knime.core.node.workflow.NodeProgressListener;
 
 /**
  * Adapter that converts an {@link IProgressMonitor} into a {@link NodeProgressMonitor}.

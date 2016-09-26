@@ -59,7 +59,7 @@ import org.knime.core.node.workflow.NodeMessage;
  *
  * @author Martin Horn, KNIME.com
  */
-public interface INodeContainer {
+public interface INodeContainer extends NodeProgressListener, NodeContainerStateObservable{
 
 //    /**
 //     * @return parent workflowmanager holding this node (or null if root).
@@ -107,26 +107,22 @@ public interface INodeContainer {
 //     */
 //    void removeWaitingLoopHeadNode(FlowObject so);
 //
-//    /**
-//     * {@inheritDoc}
-//     */
-//    void progressChanged(NodeProgressEvent pe);
 
-//    /**
-//        *
-//        * @param listener listener to the node progress
-//        * @return true if the listener was not already registered before, false
-//        *         otherwise
-//        */
-//    boolean addProgressListener(NodeProgressListener listener);
-//
-//    /**
-//        *
-//        * @param listener existing listener to the node progress
-//        * @return true if the listener was successfully removed, false if it was
-//        *         not registered
-//        */
-//    boolean removeNodeProgressListener(NodeProgressListener listener);
+    /**
+        *
+        * @param listener listener to the node progress
+        * @return true if the listener was not already registered before, false
+        *         otherwise
+        */
+    boolean addProgressListener(NodeProgressListener listener);
+
+    /**
+        *
+        * @param listener existing listener to the node progress
+        * @return true if the listener was successfully removed, false if it was
+        *         not registered
+        */
+    boolean removeNodeProgressListener(NodeProgressListener listener);
 //
 //    /**
 //        *
@@ -171,13 +167,16 @@ public interface INodeContainer {
     void setUIInformation(NodeUIInformation uiInformation);
 
     /** {@inheritDoc} */
+    @Override
     boolean addNodeStateChangeListener(NodeStateChangeListener listener);
 
     /** {@inheritDoc} */
+    @Override
     boolean removeNodeStateChangeListener(NodeStateChangeListener listener);
 
     /** {@inheritDoc}
      * @since 2.8 */
+    @Override
     NodeContainerState getNodeContainerState();
 //
 //    /**

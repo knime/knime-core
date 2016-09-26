@@ -61,9 +61,9 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingConstants;
 
-import org.knime.core.node.workflow.NodeProgress;
-import org.knime.core.node.workflow.NodeProgressEvent;
-import org.knime.core.node.workflow.NodeProgressListener;
+import org.knime.core.api.node.workflow.NodeProgress;
+import org.knime.core.api.node.workflow.NodeProgressEvent;
+import org.knime.core.api.node.workflow.NodeProgressListener;
 
 /**
  * A dialog that contains a progress bar, a label with a message, and a cancel
@@ -125,6 +125,7 @@ public class NodeProgressMonitorView extends JDialog implements
         m_progressBar.setStringPainted(true);
         m_cancelButton = new JButton("Cancel");
         m_cancelButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 onPressCancel();
             }
@@ -168,6 +169,7 @@ public class NodeProgressMonitorView extends JDialog implements
      *
      * {@inheritDoc}
      */
+    @Override
     public void progressChanged(final NodeProgressEvent pe) {
         if (pe.getNodeProgress().hasProgress()) {
             double progress = pe.getNodeProgress().getProgress().doubleValue();

@@ -68,7 +68,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.workflow.NodeProgress;
+import org.knime.core.api.node.workflow.NodeProgress;
 
 /**
  * This figure creates the progress bar within a node container figure.
