@@ -82,10 +82,10 @@ public interface INodeContainer extends NodeProgressListener, NodeContainerState
 //    /** @return NodeExecutionJobManager responsible for this node and all its children. */
 //    NodeExecutionJobManager findJobManager();
 
-//    boolean addNodePropertyChangedListener(NodePropertyChangedListener l);
-//
-//    boolean removeNodePropertyChangedListener(NodePropertyChangedListener l);
-//
+    boolean addNodePropertyChangedListener(NodePropertyChangedListener l);
+
+    boolean removeNodePropertyChangedListener(NodePropertyChangedListener l);
+
 //    /** add a loop to the list of waiting loops.
 //     *
 //     * @param slc FlowLoopContext object of the loop.

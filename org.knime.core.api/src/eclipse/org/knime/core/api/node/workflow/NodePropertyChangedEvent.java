@@ -42,23 +42,64 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
+
+import java.util.EventObject;
+
+import org.knime.core.node.workflow.NodeID;
 
 /**
- * A listener interface for objects interested in changed properties of a node.
- *
- * @see NodePropertyChangedEvent
- *
+ * Event fired when properties of a node change. Monitored properties are
+ * represented by the {@link NodeProperty} enum.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public interface NodePropertyChangedListener {
+@SuppressWarnings("serial")
+public class NodePropertyChangedEvent extends EventObject {
+
+    private final NodeProperty m_property;
+
+    /** Property types that can possibly change. */
+    public enum NodeProperty {
+        /** Job manager (e.g. to SGE job executor) has changed. */
+        JobManager,
+        /** Name (of a metanode) has changed. */
+        Name,
+        /** Metanode template information has changed. */
+        TemplateConnection,
+        /** Metanode encryption/lock status has changed. */
+        LockStatus,
+        /** Metanode ports have changed.
+         * @since 2.6*/
+        MetaNodePorts
+    }
+
+    /** Create new event.
+     *
+     * @param src the {@link NodeID} of the {@link NodeContainer} whose
+     * property has changed (not null)
+     * @param property The property that changed (not null)
+     */
+    public NodePropertyChangedEvent(final NodeID src,
+            final NodeProperty property) {
+        super(src);
+        if (property == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
+        m_property = property;
+    }
 
     /**
-     * Gets called whenever a property of a node changes.
      *
-     * @param e event containing the {@link NodeID} of the source node, whose
-     * property has changed.
+     * {@inheritDoc}
      */
-    public void nodePropertyChanged(NodePropertyChangedEvent e);
+    @Override
+    public NodeID getSource() {
+        return (NodeID)super.getSource();
+    }
+
+    /** @return the property */
+    public NodeProperty getProperty() {
+        return m_property;
+    }
 
 }
