@@ -56,7 +56,7 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Martin Horn, KNIME.com
  */
-public class NodeFactoryUID {
+public final class NodeFactoryUID {
 
     private final String m_className;
     private final String m_nodeName;

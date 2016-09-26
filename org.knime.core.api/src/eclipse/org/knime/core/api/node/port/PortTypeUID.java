@@ -56,7 +56,7 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Martin Horn, KNIME.com
  */
-public class PortTypeUID {
+public final class PortTypeUID {
 
     private final String m_name;
     private final String m_className;
