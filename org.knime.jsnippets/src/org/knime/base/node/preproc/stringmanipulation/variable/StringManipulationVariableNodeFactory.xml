@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="../string_manipulation.png" type="Manipulator">
+<knimeNode icon="./string_manipulation_variable.png" type="Manipulator">
 	<name>String Manipulation (Variable)</name>
 	<shortDescription>Manipulates or defines values of variables like search and replace,
 		capitalize or remove leading and trailing white spaces.</shortDescription>
