@@ -45,7 +45,7 @@
  * History
  *   14.09.2007 (Fabian Dill): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 import java.util.EventListener;
 

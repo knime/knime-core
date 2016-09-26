@@ -54,14 +54,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.resources.IProject;
+import org.knime.core.api.node.workflow.NodeMessageEvent;
+import org.knime.core.api.node.workflow.NodeMessageListener;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeMessageEvent;
-import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.NodePropertyChangedEvent;
 import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.WorkflowEvent;

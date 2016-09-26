@@ -66,6 +66,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
+import org.knime.core.api.node.workflow.NodeMessageEvent;
+import org.knime.core.api.node.workflow.NodeMessageListener;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ContainerTable;
@@ -117,8 +119,6 @@ import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitTyp
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.node.workflow.NodeMessageEvent;
-import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.ScopeEndNode;
 import org.knime.core.node.workflow.ScopeStartNode;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;

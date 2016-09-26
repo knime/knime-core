@@ -123,21 +123,21 @@ public interface INodeContainer extends NodeProgressListener, NodeContainerState
         *         not registered
         */
     boolean removeNodeProgressListener(NodeProgressListener listener);
-//
-//    /**
-//        *
-//        * @param listener listener to the node messages (warnings and errors)
-//        * @return true if the listener was not already registered, false otherwise
-//        */
-//    boolean addNodeMessageListener(NodeMessageListener listener);
-//
-//    /**
-//        *
-//        * @param listener listener to the node messages
-//        * @return true if the listener was successfully removed, false if it was not
-//        *         registered
-//        */
-//    boolean removeNodeMessageListener(NodeMessageListener listener);
+
+    /**
+        *
+        * @param listener listener to the node messages (warnings and errors)
+        * @return true if the listener was not already registered, false otherwise
+        */
+    boolean addNodeMessageListener(NodeMessageListener listener);
+
+    /**
+        *
+        * @param listener listener to the node messages
+        * @return true if the listener was successfully removed, false if it was not
+        *         registered
+        */
+    boolean removeNodeMessageListener(NodeMessageListener listener);
 
     /** Get the message to be displayed to the user.
         * @return the node message consisting of type and message, never null. */
