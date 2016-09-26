@@ -52,14 +52,11 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestResult;
-
+import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
@@ -69,6 +66,9 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LockFailedException;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.TestResult;
 
 /**
  * A simple workflow test that runs the workflow and checks if all nodes are
