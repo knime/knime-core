@@ -48,9 +48,9 @@
 package org.knime.workbench.editor2.figures;
 
 import org.eclipse.swt.graphics.Image;
+import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 

@@ -54,6 +54,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.knime.core.api.node.workflow.INodeContainer.NodeLock;
 import org.knime.core.api.node.workflow.INodeContainer.NodeLocks;
 import org.knime.core.api.node.workflow.NodeAnnotationData;
+import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationEvent;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;

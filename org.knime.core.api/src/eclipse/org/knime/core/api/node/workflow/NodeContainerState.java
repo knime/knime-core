@@ -44,7 +44,7 @@
  *
  * Created on Apr 24, 2013 by wiswedel
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 /**
  * Possible status values of a NodeContainer. The actual implementation is an enum but is hidden to client

@@ -51,6 +51,7 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.api.node.workflow.NodeContainerState;
 
 /**
  * bug 2292: Loop restart with dangling branches flaky.

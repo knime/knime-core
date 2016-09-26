@@ -46,6 +46,8 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.api.node.workflow.NodeContainerState;
+
 /**
  * Trackable node container state object (either the node container itself or a port representing a connected node).
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland

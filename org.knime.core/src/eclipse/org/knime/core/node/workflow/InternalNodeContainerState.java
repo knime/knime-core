@@ -46,6 +46,7 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeContainer.State;
 
 /** (Package scope) implementation of {@link NodeContainerState}.

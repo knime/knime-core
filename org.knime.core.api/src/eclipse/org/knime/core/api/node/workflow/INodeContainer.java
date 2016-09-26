@@ -176,9 +176,9 @@ public interface INodeContainer {
 //    /** {@inheritDoc} */
 //    boolean removeNodeStateChangeListener(NodeStateChangeListener listener);
 //
-//    /** {@inheritDoc}
-//     * @since 2.8 */
-//    NodeContainerState getNodeContainerState();
+    /** {@inheritDoc}
+     * @since 2.8 */
+    NodeContainerState getNodeContainerState();
 //
 //    /**
 //     * @return the status of this node

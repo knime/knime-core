@@ -75,10 +75,10 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainerState;
-import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -234,7 +234,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         if (!(o instanceof IAdaptable)) {
             return null;
         }
-        return (IWorkbenchAdapter)((IAdaptable)o)
+        return ((IAdaptable)o)
                 .getAdapter(IWorkbenchAdapter.class);
     }
 
@@ -249,7 +249,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
         if (!(o instanceof IAdaptable)) {
             return null;
         }
-        return (IWorkbenchAdapter2)((IAdaptable)o)
+        return ((IAdaptable)o)
                 .getAdapter(IWorkbenchAdapter2.class);
     }
 

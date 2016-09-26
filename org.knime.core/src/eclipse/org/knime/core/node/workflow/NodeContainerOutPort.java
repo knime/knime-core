@@ -53,6 +53,7 @@ import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
+import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
