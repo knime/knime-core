@@ -55,6 +55,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
@@ -107,6 +109,7 @@ import org.knime.core.util.SimpleFileFilter;
  * @see org.knime.core.node.util.StringHistory
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public final class FilesHistoryPanel extends JPanel {
     /**
      * Enum for whether and which location validation should be performed.
@@ -163,6 +166,7 @@ public final class FilesHistoryPanel extends JPanel {
         /**
          * Color for error messages.
          */
+        @SuppressWarnings("hiding")
         protected static final Color ERROR = Color.RED;
 
         /**
@@ -643,6 +647,16 @@ public final class FilesHistoryPanel extends JPanel {
         }
         fileChooser.setFileSelectionMode(m_selectMode);
         fileChooser.setDialogType(m_dialogType);
+
+        // AP-2562
+        // It seems only resized event is happening when showing the dialog
+        // Grabbing the focus then makes two clicks to single click selection.
+        fileChooser.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(final ComponentEvent e) {
+                fileChooser.grabFocus();
+            }
+        });
 
         try {
             URL url = FileUtil.toURL(getSelectedFile());
