@@ -62,6 +62,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.eclipse.core.runtime.FileLocator;
 import org.junit.After;
 import org.junit.Assert;
+import org.knime.core.api.node.workflow.NodeStateChangeListener;
+import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;

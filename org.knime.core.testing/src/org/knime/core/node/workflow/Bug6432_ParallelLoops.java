@@ -51,6 +51,8 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.api.node.workflow.NodeStateChangeListener;
+import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**

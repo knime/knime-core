@@ -45,9 +45,11 @@
  * History
  *   20.09.2007 (Fabian Dill): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 import java.util.EventObject;
+
+import org.knime.core.node.workflow.NodeID;
 
 /**
  *
@@ -55,42 +57,29 @@ import java.util.EventObject;
  */
 public class NodeStateEvent extends EventObject {
 
-    private final InternalNodeContainerState m_internalNCState;
+    private final NodeContainerState m_state;
 
     /** A new event from the current node container ID and state.
-     * @param nc A node container to derive the state from (not null).
-     */
-    public NodeStateEvent(final NodeContainer nc) {
-        this(nc.getID(), nc.getInternalState());
-    }
-
-    /**
-     * @param src id of the node
-     * @param newState the new state.
-     */
-    NodeStateEvent(final NodeID src, final InternalNodeContainerState newState) {
-        super(src);
-        m_internalNCState = newState;
-    }
-
-    /**
+     * TODO: might be replace by an NodeStateEvent(INodeContainer)-constructor
      *
-     * @return the new state of the node
-     * @deprecated Don't get the state from the event but receive it from the node itself
+     * @param nodeID the id of the node which state has bee changed
+     * @param state the new state
      */
-    @Deprecated
-    public NodeContainer.State getState() {
-        return m_internalNCState.mapToOldStyleState();
-    }
-
-    /** @return the internalNCState */
-    InternalNodeContainerState getInternalNCState() {
-        return m_internalNCState;
+    public NodeStateEvent(final NodeID nodeID, final NodeContainerState state) {
+        super(nodeID);
+        m_state = state;
     }
 
     /** {@inheritDoc} */
     @Override
     public NodeID getSource() {
         return (NodeID)super.getSource();
+    }
+
+    /**
+     * @return the node's state
+     */
+    public NodeContainerState getState() {
+        return m_state;
     }
 }

@@ -40,25 +40,35 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * Created on Jul 12, 2013 by wiswedel
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
 /**
- * Interface for clients that are interested in notifications about state
- * changes of a node.
+ * Trackable node container state object (either the node container itself or a port representing a connected node).
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  *
- * @author Christoph Sieb, University of Konstanz
  */
-public interface NodeStateChangeListener {
+public interface NodeContainerStateObservable {
 
+    /** Current state of the node (or connected node).
+     * @return The state.
+     */
+    NodeContainerState getNodeContainerState();
 
     /**
-     * Callback from node, indicating that the given node has changed its state.
-     * Clients may observe the node in order to get the current state.
      *
-     * @param state Indicates the change of this node.
+     * @param listener listener to add
+     * @return true if the listener was added, false if it was already registered
      */
-    public void stateChanged(final NodeStateEvent state);
+    boolean addNodeStateChangeListener(final NodeStateChangeListener listener);
+
+    /**
+     * @param listener the listener to be unregistered
+     * @return true if it was successfully removed, false if it was not  registered
+     */
+    boolean removeNodeStateChangeListener(final NodeStateChangeListener listener);
 
 }

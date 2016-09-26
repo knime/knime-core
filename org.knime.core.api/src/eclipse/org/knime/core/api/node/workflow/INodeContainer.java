@@ -170,12 +170,12 @@ public interface INodeContainer {
         */
     void setUIInformation(NodeUIInformation uiInformation);
 
-//    /** {@inheritDoc} */
-//    boolean addNodeStateChangeListener(NodeStateChangeListener listener);
-//
-//    /** {@inheritDoc} */
-//    boolean removeNodeStateChangeListener(NodeStateChangeListener listener);
-//
+    /** {@inheritDoc} */
+    boolean addNodeStateChangeListener(NodeStateChangeListener listener);
+
+    /** {@inheritDoc} */
+    boolean removeNodeStateChangeListener(NodeStateChangeListener listener);
+
     /** {@inheritDoc}
      * @since 2.8 */
     NodeContainerState getNodeContainerState();

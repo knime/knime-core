@@ -78,6 +78,9 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlException;
 import org.knime.core.api.node.port.MetaPortInfo;
+import org.knime.core.api.node.workflow.NodeContainerState;
+import org.knime.core.api.node.workflow.NodeStateChangeListener;
+import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
@@ -441,7 +444,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             final WorkflowManager parent = getParent();
             assert parent.isLockedByCurrentThread() : "Unsynchronized workflow state event";
             final InternalNodeContainerState oldState = getInternalState();
-            final InternalNodeContainerState newState = state.getInternalNCState();
+            final InternalNodeContainerState newState;
+            if(state.getState() instanceof InternalNodeContainerState) {
+               newState = (InternalNodeContainerState) state.getState();
+            } else {
+                throw new IllegalArgumentException("Only InternaleNodeContainerState's supported.");
+            }
             final boolean gotReset = oldState.isExecuted() && !newState.isExecuted();
             if (gotReset) {
                 // a contained node was reset -- trigger reset downstream
@@ -1144,7 +1152,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * processing call from parent.
      * @param newState State of the internal WFM to decide whether to publish ports and/or specs. */
     @SuppressWarnings("null")
-    private boolean setVirtualOutputIntoOutport(final InternalNodeContainerState newState) {
+    private boolean setVirtualOutputIntoOutport(final NodeContainerState newState) {
         // retrieve results and copy to outports
         final VirtualSubNodeOutputNodeModel virtualOutNodeModel = getVirtualOutNodeModel();
         final boolean isInactive = getVirtualOutNode().isInactive();
@@ -1201,7 +1209,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             }
         }
         if (changed && !m_isPerformingActionCalledFromParent) {
-            notifyStateChangeListeners(new NodeStateEvent(this)); // updates port views
+            notifyStateChangeListeners(new NodeStateEvent(this.getID(), this.getNodeContainerState())); // updates port views
         }
         return changed;
     }
