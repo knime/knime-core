@@ -295,7 +295,8 @@ public abstract class Annotation<D extends AnnotationData> implements IAnnotatio
         m_uiListeners.remove(l);
     }
 
-    protected void fireChangeEvent() {
+    @Override
+    public void fireChangeEvent() {
         for (NodeUIInformationListener l : m_uiListeners) {
             l.nodeUIInformationChanged(new NodeUIInformationEvent(
                     new NodeID(0), null, null));

@@ -152,4 +152,9 @@ public interface IAnnotation<D extends AnnotationData> extends Cloneable {
 
     void removeUIInformationListener(NodeUIInformationListener l);
 
+    /**
+     * Informs all registered listeners that something has been changed.
+     */
+    public void fireChangeEvent();
+
 }
