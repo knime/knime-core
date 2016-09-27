@@ -54,7 +54,7 @@ import org.knime.core.node.workflow.NodeID;
  *
  * @author wiswedel
  */
-public interface IConnectionContainer {
+public interface IConnectionContainer extends ConnectionProgressListener{
 
     /** Typ of the connection: metanode input, output, through or "standard" connection.
      * @noreference */
@@ -137,5 +137,9 @@ public interface IConnectionContainer {
      * @param listener The listener to remove
      */
     void removeProgressListener(ConnectionProgressListener listener);
+
+    /** Removes all registered listeners in order to release references on
+     * this object. */
+    public void cleanup();
 
 }

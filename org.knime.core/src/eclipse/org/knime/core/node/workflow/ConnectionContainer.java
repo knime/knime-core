@@ -62,7 +62,7 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public class ConnectionContainer implements IConnectionContainer, ConnectionProgressListener {
+public class ConnectionContainer implements IConnectionContainer{
 
     private final NodeID m_source;
     private final int m_sourcePort;
@@ -235,6 +235,7 @@ public class ConnectionContainer implements IConnectionContainer, ConnectionProg
 
     /** Removes all registered listeners in order to release references on
      * this object. */
+    @Override
     public void cleanup() {
         m_uiListeners.clear();
         m_progressListeners.clear();
