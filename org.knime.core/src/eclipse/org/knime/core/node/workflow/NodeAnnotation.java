@@ -114,7 +114,7 @@ public final class NodeAnnotation extends Annotation<NodeAnnotationData> impleme
 
     /** {@inheritDoc} */
     @Override
-    protected void fireChangeEvent() {
+    public void fireChangeEvent() {
         m_nodeContainer.setDirty();
         super.fireChangeEvent();
     }
