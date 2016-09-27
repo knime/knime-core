@@ -59,7 +59,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.port.PortTypeUID;
 import org.knime.core.node.InvalidSettingsException;
@@ -68,6 +67,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.util.Pair;
 
 /**
  *
@@ -726,8 +726,8 @@ public interface IWorkflowManager {
     @Override
     String toString();
 
-    /** {@inheritDoc} */
-    Collection<INodeContainer> getNodeContainers();
+//    /** {@inheritDoc} */
+//    Collection<INodeContainer> getNodeContainers();
 
     /**
      * @return collection of ConnectionContainer in this WFM
