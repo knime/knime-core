@@ -73,7 +73,7 @@ import org.knime.core.util.Pair;
  *
  * @author Martin Horn, KNIME.com
  */
-public interface IWorkflowManager {
+public interface IWorkflowManager extends INodeContainer{
 
 //    /** The root of everything, a workflow with no in- or outputs.
 //     * This workflow holds the top level projects. */
@@ -673,9 +673,11 @@ public interface IWorkflowManager {
     void executeAll();
 
     /** {@inheritDoc} */
+    @Override
     boolean hasDialog();
 
     /** {@inheritDoc} */
+    @Override
     boolean areDialogAndNodeSettingsEqual();
 
 //    /**
@@ -1093,9 +1095,11 @@ public interface IWorkflowManager {
     void setAutoSaveDirectoryDirtyRecursivly();
 
     /** {@inheritDoc} */
+    @Override
     void setDirty();
 
     /** {@inheritDoc} */
+    @Override
     int getNrInPorts();
 
 //    /** {@inheritDoc} */
@@ -1105,6 +1109,7 @@ public interface IWorkflowManager {
 //    WorkflowOutPort getOutPort(int index);
 
     /** {@inheritDoc} */
+    @Override
     int getNrOutPorts();
 
     /** Set new name of this workflow or null to reset the name (will then
@@ -1139,6 +1144,7 @@ public interface IWorkflowManager {
      * from the workflow directory name. If no directory has been set, a static
      * string is returned. This method never returns null.
      * {@inheritDoc} */
+    @Override
     String getName();
 
     /** @return the name set in the constructor or via {@link #setName(String)}.
@@ -1148,21 +1154,26 @@ public interface IWorkflowManager {
     String getNameField();
 
     /** {@inheritDoc} */
+    @Override
     int getNrNodeViews();
 
 //    /** {@inheritDoc} */
 //    NodeView<NodeModel> getNodeView(int i);
 
     /** {@inheritDoc} */
+    @Override
     String getNodeViewName(int i);
 
     /** {@inheritDoc} */
+    @Override
     boolean hasInteractiveView();
 
     /** {@inheritDoc} */
+    @Override
     boolean hasInteractiveWebView();
 
     /** {@inheritDoc} */
+    @Override
     String getInteractiveViewName();
 
 //    /** {@inheritDoc} */
@@ -1192,6 +1203,7 @@ public interface IWorkflowManager {
 //    NodeType getType();
 
     /** {@inheritDoc} */
+    @Override
     URL getIcon();
 
     /**
