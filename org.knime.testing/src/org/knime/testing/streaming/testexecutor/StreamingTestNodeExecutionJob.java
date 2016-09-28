@@ -62,6 +62,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.data.DataTableSpec;
@@ -89,7 +90,6 @@ import org.knime.core.node.streamable.PortObjectOutput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -668,7 +668,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
         NativeNodeContainer[] nodeContainers = new NativeNodeContainer[numCopies];
         NodeID[] nodeIDs = new NodeID[numCopies];
         NodeUIInformation uiInf = nodeContainer.getUIInformation();
-        Set<ConnectionContainer> connections = workflowManager.getIncomingConnectionsFor(nodeContainer.getID());
+        Set<IConnectionContainer> connections = workflowManager.getIncomingConnectionsFor(nodeContainer.getID());
         for (int i = 0; i < numCopies; i++) {
             WorkflowCopyContent sinkContent = workflowManager.paste(workflowPersistor);
             nodeContainers[i] = (NativeNodeContainer)workflowManager.getNodeContainer(sinkContent.getNodeIDs()[0]);
@@ -677,7 +677,7 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
             nodeIDs[i] = nodeContainers[i].getID();
 
             //set all incoming connections
-            for (ConnectionContainer c : connections) {
+            for (IConnectionContainer c : connections) {
                 workflowManager.addConnection(c.getSource(), c.getSourcePort(), nodeContainers[i].getID(),
                     c.getDestPort());
             }
