@@ -62,6 +62,7 @@ import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.gef.tools.ConnectionDragCreationTool;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.WorkflowEvent;
 import org.knime.core.api.node.workflow.WorkflowListener;
 import org.knime.core.node.port.PortType;
@@ -106,8 +107,8 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @see WorkflowOutPortEditPart#getModelTargetConnections()
      *
      */
-    protected static final List<ConnectionContainer> EMPTY_LIST =
-            new LinkedList<ConnectionContainer>();
+    protected static final List<IConnectionContainer> EMPTY_LIST =
+            new LinkedList<IConnectionContainer>();
 
     /**
      * Subclasses must call this with the appropriate port type, port index and

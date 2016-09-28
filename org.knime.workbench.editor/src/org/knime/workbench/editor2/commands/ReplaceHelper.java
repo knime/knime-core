@@ -56,9 +56,9 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -70,25 +70,25 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  * @author Tim-Oliver Buchholz, KNIME.com AG, Zurich, Switzerland
  */
 public class ReplaceHelper {
-    private static final Comparator<ConnectionContainer> DEST_PORT_SORTER = new Comparator<ConnectionContainer>() {
+    private static final Comparator<IConnectionContainer> DEST_PORT_SORTER = new Comparator<IConnectionContainer>() {
         @Override
-        public int compare(final ConnectionContainer o1, final ConnectionContainer o2) {
+        public int compare(final IConnectionContainer o1, final IConnectionContainer o2) {
             return Integer.compare(o1.getDestPort(), o2.getDestPort());
         }
     };
 
-    private static final Comparator<ConnectionContainer> SOURCE_PORT_SORTER = new Comparator<ConnectionContainer>() {
+    private static final Comparator<IConnectionContainer> SOURCE_PORT_SORTER = new Comparator<IConnectionContainer>() {
         @Override
-        public int compare(final ConnectionContainer o1, final ConnectionContainer o2) {
+        public int compare(final IConnectionContainer o1, final IConnectionContainer o2) {
             return Integer.compare(o1.getSourcePort(), o2.getSourcePort());
         }
     };
 
     private WorkflowManager m_wfm;
 
-    private ArrayList<ConnectionContainer> m_incomingConnections;
+    private ArrayList<IConnectionContainer> m_incomingConnections;
 
-    private ArrayList<ConnectionContainer> m_outgoingConnections;
+    private ArrayList<IConnectionContainer> m_outgoingConnections;
 
     private NodeContainer m_oldNode;
 
@@ -117,7 +117,7 @@ public class ReplaceHelper {
      */
     public boolean replaceNode() {
         boolean hasExecutedSuccessor = false;
-        for (ConnectionContainer connectionContainer : m_outgoingConnections) {
+        for (IConnectionContainer connectionContainer : m_outgoingConnections) {
             hasExecutedSuccessor =
                 hasExecutedSuccessor
                     || m_wfm.findNodeContainer(connectionContainer.getDest()).getNodeContainerState().isExecuted()
@@ -187,7 +187,7 @@ public class ReplaceHelper {
         } else if (!(m_oldNode instanceof WorkflowManager) && container instanceof WorkflowManager) {
             // replacing a "normal" node with a metanode
             inShift = -1;
-            for (ConnectionContainer cc : m_incomingConnections) {
+            for (IConnectionContainer cc : m_incomingConnections) {
                 if (cc.getDestPort() == 0) {
                     inShift = 0;
                     break;
@@ -195,7 +195,7 @@ public class ReplaceHelper {
             }
 
             outShift = -1;
-            for (ConnectionContainer cc : m_outgoingConnections) {
+            for (IConnectionContainer cc : m_outgoingConnections) {
                 if (cc.getSourcePort() == 0) {
                     outShift = 0;
                     break;
@@ -208,7 +208,7 @@ public class ReplaceHelper {
 
         // set incoming connections
         NodeID newId = container.getID();
-        for (ConnectionContainer c : m_incomingConnections) {
+        for (IConnectionContainer c : m_incomingConnections) {
             if (m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), newId, c.getDestPort() + inShift)) {
                 m_wfm.addConnection(c.getSource(), c.getSourcePort(), newId, c.getDestPort() + inShift);
             } else {
@@ -217,7 +217,7 @@ public class ReplaceHelper {
         }
 
         // set outgoing connections
-        for (ConnectionContainer c : m_outgoingConnections) {
+        for (IConnectionContainer c : m_outgoingConnections) {
             if (m_wfm
                 .canAddConnection(newId, c.getSourcePort() + outShift, c.getDest(), c.getDestPort())) {
                 m_wfm.addConnection(newId, c.getSourcePort() + outShift, c.getDest(), c.getDestPort());

@@ -60,6 +60,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**
@@ -154,7 +155,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
             }
 
             // test outgoing connection delete
-            ConnectionContainer cc = findInConnection(m_colFilter, 1);
+            IConnectionContainer cc = findInConnection(m_colFilter, 1);
             assertNotNull(cc);
             assertFalse(m.canRemoveConnection(cc));
             try {
@@ -210,8 +211,8 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
             }
 
             // test outgoing connection delete
-            ConnectionContainer inConnection = findInConnection(m_blocker, 1);
-            ConnectionContainer outConnection = findInConnection(m_tblView, 1);
+            IConnectionContainer inConnection = findInConnection(m_blocker, 1);
+            IConnectionContainer outConnection = findInConnection(m_tblView, 1);
             assertNotNull(inConnection);
             assertNotNull(outConnection);
             assertFalse(m.canRemoveConnection(inConnection));

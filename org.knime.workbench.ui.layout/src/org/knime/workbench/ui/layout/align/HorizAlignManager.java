@@ -54,9 +54,9 @@ import java.util.Set;
 
 import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -141,10 +141,10 @@ public class HorizAlignManager {
             final int offset) {
         NodeContainer nc = node.getNodeContainer();
 
-        Set<ConnectionContainer> inConns =
+        Set<IConnectionContainer> inConns =
                 m_wfm.getIncomingConnectionsFor(nc.getID());
 
-        for (ConnectionContainer conn : inConns) {
+        for (IConnectionContainer conn : inConns) {
             ConnectionUIInformation ui =
                     conn.getUIInfo();
             if (ui == null) {
@@ -183,9 +183,9 @@ public class HorizAlignManager {
             conn.setUIInfo(newUIBuilder.build());
         }
 
-        Set<ConnectionContainer> outConns =
+        Set<IConnectionContainer> outConns =
                 m_wfm.getOutgoingConnectionsFor(nc.getID());
-        for (ConnectionContainer conn : outConns) {
+        for (IConnectionContainer conn : outConns) {
             ConnectionUIInformation ui =
                     conn.getUIInfo();
             if (ui == null || ui.getAllBendpoints().length == 0) {

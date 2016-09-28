@@ -50,6 +50,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 
 /**
  *
@@ -158,7 +159,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
     @Test
     public void testDeleteConnectionTryExecuteInsertAgain() throws Exception {
         WorkflowManager m = getManager();
-        ConnectionContainer connection = findInConnection(m_rowFilter, 1);
+        IConnectionContainer connection = findInConnection(m_rowFilter, 1);
         assertNotNull(connection);
         // although the connection exists, we can replace it. This is heavily
         // used when old connections are overwritten.
@@ -189,7 +190,7 @@ public class Simplechainofnodes extends WorkflowTestCase {
     public void testExecuteDeleteConnection() throws Exception {
         WorkflowManager m = getManager();
         executeAndWait(m_tblView);
-        ConnectionContainer connection = findInConnection(m_rowFilter, 1);
+        IConnectionContainer connection = findInConnection(m_rowFilter, 1);
         assertTrue(m.canRemoveConnection(connection));
         m.removeConnection(connection);
 

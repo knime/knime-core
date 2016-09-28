@@ -59,9 +59,9 @@ import java.util.Map;
 import org.eclipse.draw2d.geometry.Point;
 import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -85,7 +85,7 @@ public class LayoutManager {
 
     private HashMap<NodeContainer, Node> m_workbenchToGraphNodes;
 
-    private HashMap<ConnectionContainer, Edge> m_workbenchToGraphEdges;
+    private HashMap<IConnectionContainer, Edge> m_workbenchToGraphEdges;
 
     // nodes not laid out - but connected to nodes being laid out
     private HashMap<NodeContainer, Node> m_workbenchIncomingNodes;
@@ -102,7 +102,7 @@ public class LayoutManager {
     /* the graph stores only one edge between two nodes. The connections
      * represented are in the list.
      */
-    private HashMap<Edge, List<ConnectionContainer>> m_parallelConns;
+    private HashMap<Edge, List<IConnectionContainer>> m_parallelConns;
 
     private Graph m_g;
 
@@ -121,12 +121,12 @@ public class LayoutManager {
         m_initPlacementSeed = initialPlacementSeed;
         m_workbenchToGraphNodes = new HashMap<NodeContainer, Graph.Node>();
         m_workbenchToGraphEdges =
-                new HashMap<ConnectionContainer, Graph.Edge>();
+                new HashMap<IConnectionContainer, Graph.Edge>();
         m_workbenchIncomingNodes = new HashMap<NodeContainer, Graph.Node>();
         m_workbenchOutgoingNodes = new HashMap<NodeContainer, Graph.Node>();
         m_workbenchWFMInports = new HashMap<Integer, Graph.Node>();
         m_workbenchWFMOutports = new HashMap<Integer, Graph.Node>();
-        m_parallelConns = new HashMap<Edge, List<ConnectionContainer>>();
+        m_parallelConns = new HashMap<Edge, List<IConnectionContainer>>();
         m_g = new Graph();
     }
 
@@ -173,9 +173,9 @@ public class LayoutManager {
 
         // find all connections that connect from/to our nodes,
         // keep a flag that states: isClusterInternal
-        HashMap<ConnectionContainer, Boolean> allConns =
-                new HashMap<ConnectionContainer, Boolean>();
-        for (ConnectionContainer conn : m_wfm.getConnectionContainers()) {
+        HashMap<IConnectionContainer, Boolean> allConns =
+                new HashMap<IConnectionContainer, Boolean>();
+        for (IConnectionContainer conn : m_wfm.getConnectionContainers()) {
             Node src = null;
             if (!conn.getSource().equals(m_wfm.getID())) {
                 // if it's not a meta node incoming connection
@@ -201,7 +201,7 @@ public class LayoutManager {
         // Add all connections (internal and leading in/out the cluster)
         // to the graph
         Edge gEdge;
-        for (ConnectionContainer conn : allConns.keySet()) {
+        for (IConnectionContainer conn : allConns.keySet()) {
             Node srcGraphNode;
             Node destGraphNode;
             if (conn.getSource().equals(m_wfm.getID())) {
@@ -252,7 +252,7 @@ public class LayoutManager {
             gEdge = m_g.createEdge(srcGraphNode, destGraphNode);
             if (gEdge != null) {
                 m_workbenchToGraphEdges.put(conn, gEdge);
-                m_parallelConns.put(gEdge, new LinkedList<ConnectionContainer>(
+                m_parallelConns.put(gEdge, new LinkedList<IConnectionContainer>(
                         Collections.singletonList(conn)));
             } else {
                 // a connection between these node already exists in the graph
@@ -330,7 +330,7 @@ public class LayoutManager {
         }
 
         // delete old bendpoints - transfer new ones
-        for (ConnectionContainer conn : allConns.keySet()) {
+        for (IConnectionContainer conn : allConns.keySet()) {
 
             // store old bendpoint for undo
             ConnectionUIInformation ui = conn.getUIInfo();
@@ -347,7 +347,7 @@ public class LayoutManager {
                 continue;
             }
 
-            List<ConnectionContainer> conns = m_parallelConns.get(e);
+            List<IConnectionContainer> conns = m_parallelConns.get(e);
             assert conns.size() > 0;
             assert conns.get(0) == conn; // that is how we created it!
 
@@ -366,7 +366,7 @@ public class LayoutManager {
 
             // compute bendpoints for parallel connections (slightly offset)
             for (int i = 1; i < conns.size(); i++) { // idx 0 == conn!
-                ConnectionContainer parConn = conns.get(i);
+                IConnectionContainer parConn = conns.get(i);
                 // destination port determines offset
                 int yOffset = (parConn.getDestPort() - conn.getDestPort()) * 10;
                 ConnectionUIInformation parUI =

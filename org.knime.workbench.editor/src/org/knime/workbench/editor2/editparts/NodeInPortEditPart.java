@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -99,7 +100,7 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      *         {@inheritDoc}
      */
     @Override
-    public List<ConnectionContainer> getModelTargetConnections() {
+    public List<IConnectionContainer> getModelTargetConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
@@ -120,7 +121,7 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      *         {@inheritDoc}
      */
     @Override
-    protected List<ConnectionContainer> getModelSourceConnections() {
+    protected List<IConnectionContainer> getModelSourceConnections() {
         return EMPTY_LIST;
     }
 

@@ -55,6 +55,7 @@ import java.io.File;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.ExecutionMonitor;
@@ -124,7 +125,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         NodeID subnodeID = subNode.getID();
         final int subNodeIDIndex = subnodeID.getIndex();
 
-        ConnectionContainer findInConnection = findInConnection(m_credentialsValidate_2, 1);
+        IConnectionContainer findInConnection = findInConnection(m_credentialsValidate_2, 1);
         assertEquals("Source should be subnode", subnodeID, findInConnection.getSource());
 
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);

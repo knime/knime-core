@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.gef.EditPartViewer;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.Annotation;
@@ -82,7 +83,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
     /** Array containing connections that are to be deleted and which are not
      * part of the persistor (perisistor only covers connections whose source
      * and destination is part of the persistor as well). */
-    private final ConnectionContainer[] m_connections;
+    private final IConnectionContainer[] m_connections;
 
     /** Number of connections that will be deleted upon execute(). This includes
      * m_connections and all connections covered by the persistor. This number
@@ -109,8 +110,8 @@ public class DeleteCommand extends AbstractKNIMECommand {
         Set<NodeID> idSet = new LinkedHashSet<NodeID>();
         Set<WorkflowAnnotation> annotationSet =
             new LinkedHashSet<WorkflowAnnotation>();
-        Set<ConnectionContainer> conSet =
-            new LinkedHashSet<ConnectionContainer>();
+        Set<IConnectionContainer> conSet =
+            new LinkedHashSet<IConnectionContainer>();
         EditPartViewer viewer = null;
         for (Object p : editParts) {
             if (p instanceof NodeContainerEditPart) {
@@ -160,15 +161,15 @@ public class DeleteCommand extends AbstractKNIMECommand {
 
         m_connectionCount = conSet.size();
         // remove all connections that will be contained in the persistor
-        for (Iterator<ConnectionContainer> it = conSet.iterator();
+        for (Iterator<IConnectionContainer> it = conSet.iterator();
         it.hasNext();) {
-            ConnectionContainer c = it.next();
+            IConnectionContainer c = it.next();
             if (idSet.contains(c.getSource()) && idSet.contains(c.getDest())) {
                 it.remove();
             }
         }
 
-        m_connections = conSet.toArray(new ConnectionContainer[conSet.size()]);
+        m_connections = conSet.toArray(new IConnectionContainer[conSet.size()]);
     }
 
     /** {@inheritDoc} */
@@ -185,7 +186,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
                 return false;
             }
         }
-        for (ConnectionContainer cc : m_connections) {
+        for (IConnectionContainer cc : m_connections) {
             foundValid = true;
             if (!hostWFM.canRemoveConnection(cc)) {
                 return false;
@@ -212,7 +213,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
         for (NodeID id : m_nodeIDs) {
             hostWFM.removeNode(id);
         }
-        for (ConnectionContainer cc : m_connections) {
+        for (IConnectionContainer cc : m_connections) {
             hostWFM.removeConnection(cc);
         }
     }
@@ -232,7 +233,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
         if (m_undoPersitor != null) {
             hostWFM.paste(m_undoPersitor);
         }
-        for (ConnectionContainer cc : m_connections) {
+        for (IConnectionContainer cc : m_connections) {
             ConnectionContainer newCC = hostWFM.addConnection(cc.getSource(),
                     cc.getSourcePort(), cc.getDest(), cc.getDestPort());
             newCC.setUIInfo(cc.getUIInfo());

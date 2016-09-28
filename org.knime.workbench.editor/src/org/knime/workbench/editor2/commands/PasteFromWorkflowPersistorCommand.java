@@ -57,11 +57,11 @@ import java.util.stream.Collectors;
 import org.eclipse.gef.EditPartViewer;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.IAnnotation;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -153,7 +153,7 @@ public final class PasteFromWorkflowPersistorCommand
             NodeUIInformation newUI = NodeUIInformation.builder(oldUI).translate(moveDist).build();
             nc.setUIInformation(newUI);
         }
-        for (ConnectionContainer conn : manager.getConnectionContainers()) {
+        for (IConnectionContainer conn : manager.getConnectionContainers()) {
             if (newIDs.contains(conn.getDest())
                     && newIDs.contains(conn.getSource())) {
                 // get bend points and move them

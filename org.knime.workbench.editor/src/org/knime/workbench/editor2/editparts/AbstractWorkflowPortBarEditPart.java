@@ -56,11 +56,11 @@ import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodePropertyChangedEvent;
 import org.knime.core.api.node.workflow.NodePropertyChangedListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
@@ -157,7 +157,7 @@ public abstract class AbstractWorkflowPortBarEditPart
                 maxX = x;
             }
         }
-        for (ConnectionContainer conn : manager.getConnectionContainers()) {
+        for (IConnectionContainer conn : manager.getConnectionContainers()) {
             ConnectionUIInformation uiInfo = conn.getUIInfo();
             if (uiInfo != null) {
                 int[][] bendpoints = uiInfo.getAllBendpoints();

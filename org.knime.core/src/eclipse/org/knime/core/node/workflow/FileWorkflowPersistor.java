@@ -73,6 +73,7 @@ import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.EditorUIInformation;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.api.node.workflow.NodeUIInformation;
@@ -2118,10 +2119,16 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             execMon.setMessage("connection information");
             NodeSettingsWO connSettings = saveSettingsForConnections(preFilledSettings);
             int connectionNumber = 0;
-            for (ConnectionContainer cc : wm.getConnectionContainers()) {
-                NodeSettingsWO nextConnectionConfig = connSettings.addNodeSettings("connection_" + connectionNumber);
-                saveConnection(nextConnectionConfig, cc);
-                connectionNumber += 1;
+            for (IConnectionContainer cc : wm.getConnectionContainers()) {
+                if (cc instanceof ConnectionContainer) {
+                    NodeSettingsWO nextConnectionConfig =
+                        connSettings.addNodeSettings("connection_" + connectionNumber);
+                    saveConnection(nextConnectionConfig, (ConnectionContainer)cc);
+                    connectionNumber += 1;
+                } else {
+                    throw new IllegalArgumentException(
+                        "Connection container of type " + cc.getClass().getName() + " are not supported, yet.");
+                }
             }
             int inCount = wm.getNrInPorts();
             NodeSettingsWO inPortsSetts = inCount > 0 ? saveInPortsSetting(preFilledSettings) : null;

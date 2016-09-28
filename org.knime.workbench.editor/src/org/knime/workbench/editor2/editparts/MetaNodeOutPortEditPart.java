@@ -54,11 +54,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowOutPort;
@@ -137,15 +137,15 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
      * {@inheritDoc}
      */
     @Override
-    public List<ConnectionContainer> getModelSourceConnections() {
+    public List<IConnectionContainer> getModelSourceConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        Set<ConnectionContainer> containers =
+        Set<IConnectionContainer> containers =
                 getManager().getOutgoingConnectionsFor(
                         getNodeContainer().getID(),
                         getIndex());
-        List<ConnectionContainer>conns = new ArrayList<ConnectionContainer>();
+        List<IConnectionContainer>conns = new ArrayList<IConnectionContainer>();
         if (containers != null) {
             conns.addAll(containers);
         }
@@ -159,7 +159,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
      * {@inheritDoc}
      */
     @Override
-    protected List<ConnectionContainer> getModelTargetConnections() {
+    protected List<IConnectionContainer> getModelTargetConnections() {
         return EMPTY_LIST;
     }
 

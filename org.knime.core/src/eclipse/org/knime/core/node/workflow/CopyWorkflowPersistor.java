@@ -58,6 +58,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.api.node.workflow.EditorUIInformation;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
@@ -150,8 +151,13 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
                     m_tableRep, null, true, isUndoableDeleteCommand));
         }
 
-        for (ConnectionContainer cc : original.getConnectionContainers()) {
-            m_cons.add(new ConnectionContainerTemplate(cc, true));
+        for (IConnectionContainer cc : original.getConnectionContainers()) {
+            if (cc instanceof ConnectionContainer) {
+                m_cons.add(new ConnectionContainerTemplate((ConnectionContainer)cc, true));
+            } else {
+                throw new IllegalArgumentException(
+                    "Connection containers of type " + cc.getClass().getName() + " not supported, yet.");
+            }
         }
         List<FlowVariable> vars = original.getWorkflowVariables();
         m_workflowVariables = vars == null ? Collections.EMPTY_LIST

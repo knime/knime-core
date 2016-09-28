@@ -62,6 +62,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.eclipse.core.runtime.FileLocator;
 import org.junit.After;
 import org.junit.Assert;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -275,11 +276,11 @@ public abstract class WorkflowTestCase {
         return parent.getNodeContainer(id);
     }
 
-    protected ConnectionContainer findInConnection(final NodeID id,
+    protected IConnectionContainer findInConnection(final NodeID id,
             final int port)
         throws Exception {
         WorkflowManager parent = findParent(id);
-        for (ConnectionContainer cc : parent.getConnectionContainers()) {
+        for (IConnectionContainer cc : parent.getConnectionContainers()) {
             if (cc.getDest().equals(id) && cc.getDestPort() == port) {
                 return cc;
             }
@@ -334,14 +335,14 @@ public abstract class WorkflowTestCase {
         return result;
     }
 
-    protected ConnectionContainer findLeavingWorkflowConnection(final NodeID id,
+    protected IConnectionContainer findLeavingWorkflowConnection(final NodeID id,
             final int port) throws Exception {
         NodeContainer nc = findNodeContainer(id);
         if (!(nc instanceof WorkflowManager)) {
             throw new IllegalArgumentException("Node " + id
                     + " is not a workflow manager");
         }
-        for (ConnectionContainer cc
+        for (IConnectionContainer cc
                 : ((WorkflowManager)nc).getConnectionContainers()) {
             if (cc.getDest().equals(id) && cc.getDestPort() == port) {
                 return cc;

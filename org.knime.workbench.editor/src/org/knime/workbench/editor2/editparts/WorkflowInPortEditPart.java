@@ -57,8 +57,8 @@ import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowInPort;
@@ -153,6 +153,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
                 getManager().getNrInPorts(), getIndex(), tooltip);
         f.addMouseListener(new MouseListener() {
 
+            @Override
             public void mouseDoubleClicked(final MouseEvent me) { }
 
             /**
@@ -165,6 +166,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
              *
              * {@inheritDoc}
              */
+            @Override
             public void mousePressed(final MouseEvent me) {
                 setSelected(true);
             }
@@ -179,6 +181,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
              *
              * {@inheritDoc}
              */
+            @Override
             public void mouseReleased(final MouseEvent me) {
                 setSelected(false);
             }
@@ -227,15 +230,15 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
      */
     @Override
-    public List<ConnectionContainer> getModelSourceConnections() {
+    public List<IConnectionContainer> getModelSourceConnections() {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        Set<ConnectionContainer> containers =
+        Set<IConnectionContainer> containers =
                 getManager().getOutgoingConnectionsFor(
                         getNodeContainer().getID(),
                         getIndex());
-        List<ConnectionContainer>conns = new ArrayList<ConnectionContainer>();
+        List<IConnectionContainer>conns = new ArrayList<IConnectionContainer>();
         if (containers != null) {
             conns.addAll(containers);
         }
@@ -250,7 +253,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      *      #getModelSourceConnections()
      */
     @Override
-    protected List<ConnectionContainer> getModelTargetConnections() {
+    protected List<IConnectionContainer> getModelTargetConnections() {
         return EMPTY_LIST;
     }
 

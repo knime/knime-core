@@ -240,7 +240,7 @@ class Workflow {
      * @param cc the connection to be removed.
      * @throws IllegalArgumentException if connection does not exist.
      */
-    synchronized void removeConnection(final ConnectionContainer cc) throws IllegalArgumentException {
+    synchronized void removeConnection(final IConnectionContainer cc) throws IllegalArgumentException {
         clearGraphAnnotationCache();
         // 1) try to delete it from set of outgoing connections
         if (!m_connectionsBySource.get(cc.getSource()).remove(cc)) {

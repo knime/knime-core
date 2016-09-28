@@ -83,4 +83,13 @@ public class JobManagerUtil {
     public static JobManagerUID getJobManagerUID(final NodeExecutionJobManagerFactory factory) {
         return JobManagerUID.builder(factory.getID()).setName(factory.getLabel()).build();
     }
+
+    /**
+     * Maps a {@link NodeExecutionJobManager} to a unique job manager identifier.
+     * @param jobManager the job manager to map
+     * @return a newly created instance of {@link JobManagerUID} with its id taken from the argument job manager (and nothing else)
+     */
+    public static JobManagerUID getJobManagerUID(final NodeExecutionJobManager jobManager) {
+        return JobManagerUID.builder(jobManager.getID()).build();
+    }
 }

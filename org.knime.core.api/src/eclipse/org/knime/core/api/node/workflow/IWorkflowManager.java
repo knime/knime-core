@@ -938,14 +938,14 @@ public interface IWorkflowManager {
      */
     void removeListener(WorkflowListener listener);
 
-    /** Copies the nodes with the given ids from the argument workflow manager
-     * into this wfm instance. All nodes wil be reset (and configured id
-     * possible). Connections among the nodes are kept.
-     * @param sourceManager The wfm to copy from
-     * @param content The content to copy (must exist in sourceManager)
-     * @return Inserted NodeIDs and annotations.
-     */
-    WorkflowCopyContent copyFromAndPasteHere(IWorkflowManager sourceManager, WorkflowCopyContent content);
+//    /** Copies the nodes with the given ids from the argument workflow manager
+//     * into this wfm instance. All nodes wil be reset (and configured id
+//     * possible). Connections among the nodes are kept.
+//     * @param sourceManager The wfm to copy from
+//     * @param content The content to copy (must exist in sourceManager)
+//     * @return Inserted NodeIDs and annotations.
+//     */
+//    WorkflowCopyContent copyFromAndPasteHere(IWorkflowManager sourceManager, WorkflowCopyContent content);
 
 //    /** Copy the given content.
 //     * @param content The content to copy (must exist).

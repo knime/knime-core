@@ -51,9 +51,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.knime.core.api.node.workflow.INodeContainer.NodeLock;
-import org.knime.core.api.node.workflow.INodeContainer.NodeLocks;
-import org.knime.core.api.node.workflow.NodePropertyChangedEvent.NodeProperty;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.JobManagerUID;
 import org.knime.core.api.node.workflow.NodeAnnotationData;
 import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.api.node.workflow.NodeContainerStateObservable;
@@ -62,6 +61,7 @@ import org.knime.core.api.node.workflow.NodeMessageListener;
 import org.knime.core.api.node.workflow.NodeProgressEvent;
 import org.knime.core.api.node.workflow.NodeProgressListener;
 import org.knime.core.api.node.workflow.NodePropertyChangedEvent;
+import org.knime.core.api.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.api.node.workflow.NodePropertyChangedListener;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
@@ -103,6 +103,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.util.JobManagerUtil;
 
 /**
  * Abstract super class for containers holding node or just structural
@@ -112,7 +113,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  * @noextend This class is not intended to be subclassed by clients.
  */
-public abstract class NodeContainer implements NodeProgressListener, NodeContainerStateObservable {
+public abstract class NodeContainer implements INodeContainer {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
@@ -317,6 +318,12 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
     }
 
+
+    @Override
+    public final JobManagerUID getJobManagerUID() {
+        return JobManagerUtil.getJobManagerUID(m_jobManager);
+    }
+
     /**
      * @return The job manager associated with this node or null if this
      * node will use the job manager of the parent (or the parent of ...)
@@ -349,11 +356,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         return m_executionJob;
     }
 
+    @Override
     public boolean addNodePropertyChangedListener(
             final NodePropertyChangedListener l) {
         return m_nodePropertyChangedListeners.add(l);
     }
 
+    @Override
     public boolean removeNodePropertyChangedListener(
             final NodePropertyChangedListener l) {
         return m_nodePropertyChangedListeners.remove(l);
@@ -653,6 +662,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /** clears the list of waiting loops.
      */
+    @Override
     public void clearWaitingLoopList() {
         m_listOfWaitingLoops.clear();
     }
@@ -698,7 +708,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     * @return true if the listener was not already registered before, false
     *         otherwise
     */
-   public boolean addProgressListener(final NodeProgressListener listener) {
+   @Override
+public boolean addProgressListener(final NodeProgressListener listener) {
        if (listener == null) {
            throw new NullPointerException("Node progress listener must not be null");
        }
@@ -712,7 +723,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     * @return true if the listener was successfully removed, false if it was
     *         not registered
     */
-   public boolean removeNodeProgressListener(final NodeProgressListener listener) {
+   @Override
+       public boolean removeNodeProgressListener(final NodeProgressListener listener) {
        return m_progressListeners.remove(listener);
    }
 
@@ -736,6 +748,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     * @param listener listener to the node messages (warnings and errors)
     * @return true if the listener was not already registered, false otherwise
     */
+   @Override
    public boolean addNodeMessageListener(final NodeMessageListener listener) {
        if (listener == null) {
            throw new NullPointerException("Node message listner must not be null!");
@@ -749,12 +762,14 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     * @return true if the listener was successfully removed, false if it was not
     *         registered
     */
+   @Override
    public boolean removeNodeMessageListener(final NodeMessageListener listener) {
        return m_messageListeners.remove(listener);
    }
 
    /** Get the message to be displayed to the user.
     * @return the node message consisting of type and message, never null. */
+   @Override
    public final NodeMessage getNodeMessage() {
        return m_nodeMessage;
    }
@@ -762,7 +777,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
    /**
     * @param newMessage the nodeMessage to set
     */
-   public final void setNodeMessage(final NodeMessage newMessage) {
+   @Override
+public final void setNodeMessage(final NodeMessage newMessage) {
        NodeMessage oldMessage = m_nodeMessage;
        m_nodeMessage = newMessage == null ? NodeMessage.NONE : newMessage;
        if (!m_nodeMessage.equals(oldMessage)) {
@@ -784,6 +800,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
    /* ---------------- UI -----------------*/
 
+   @Override
    public void addUIInformationListener(final NodeUIInformationListener l) {
        if (l == null) {
            throw new NullPointerException("NodeUIInformationListener must not be null!");
@@ -791,6 +808,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
        m_uiListeners.add(l);
    }
 
+   @Override
    public void removeUIInformationListener(final NodeUIInformationListener l) {
        m_uiListeners.remove(l);
    }
@@ -806,6 +824,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     *
     * @return a the node information
     */
+   @Override
    public NodeUIInformation getUIInformation() {
        return m_uiInformation;
    }
@@ -815,6 +834,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     * @param uiInformation new user interface information of the node such as
     *   coordinates on workbench.
     */
+   @Override
    public void setUIInformation(final NodeUIInformation uiInformation) {
        // ui info is a property of the outer workflow (it just happened
        // to be a field member of this class)
@@ -940,6 +960,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return that property
      * @since 2.6
      */
+    @Override
     public boolean hasDataAwareDialogPane() {
         return false;
     }
@@ -977,6 +998,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @see WorkflowManager#isAllInputDataAvailableToNode(NodeID)
      * @noreference This method is not intended to be referenced by clients.
      */
+    @Override
     public final boolean isAllInputDataAvailable() {
         return getParent().isAllInputDataAvailableToNode(m_id);
     }
@@ -989,6 +1011,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @since 2.8
      * @noreference This method is not intended to be referenced by clients.
      */
+    @Override
     public final boolean canExecuteUpToHere() {
         return getParent().isFullyConnected(m_id);
     }
@@ -1008,6 +1031,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      *
      * @throws InvalidSettingsException if settings are not applicable.
      */
+    @Override
     public void applySettingsFromDialog() throws InvalidSettingsException {
         CheckUtils.checkState(hasDialog(), "Node \"%s\" has no dialog", getName());
         // TODO do we need to reset the node first??
@@ -1021,6 +1045,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
     }
 
+    @Override
     public boolean areDialogSettingsValid() {
         CheckUtils.checkState(hasDialog(), "Node \"%s\" has no dialog", getName());
         NodeSettings sett = new NodeSettings("node settings");
@@ -1038,6 +1063,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /* --------------- Dialog handling --------------- */
 
+    @Override
     public abstract boolean hasDialog();
 
 
@@ -1047,6 +1073,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     abstract NodeDialogPane getDialogPane();
 
+    @Override
     public abstract boolean areDialogAndNodeSettingsEqual();
 
     void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
@@ -1104,17 +1131,20 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /* ------------- ports --------------- */
 
+    @Override
     public abstract int getNrInPorts();
 
     public abstract NodeInPort getInPort(final int index);
 
     public abstract NodeOutPort getOutPort(final int index);
 
+    @Override
     public abstract int getNrOutPorts();
 
     /* -------------- views ---------------- */
 
 
+    @Override
     public int getNrViews() {
 
         int numOfNodeViews = getNrNodeViews();
@@ -1132,8 +1162,10 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * Returns the number of views provided by the node implementation.
      * @return the number of views provided by the node implementation
      */
+    @Override
     public abstract int getNrNodeViews();
 
+    @Override
     public String getViewName(final int i) {
         if (i < getNrNodeViews()) {
             return getNodeViewName(i);
@@ -1143,6 +1175,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
     }
 
+    @Override
     public abstract String getNodeViewName(final int i);
 
     public AbstractNodeView<NodeModel> getView(final int i) {
@@ -1188,6 +1221,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return true if node provides an interactive view.
      * @since 2.8
      */
+    @Override
     public abstract boolean hasInteractiveView();
 
     /** Get the 'interactive web views' provided by this node. That is, views providing a {@link WebTemplate} for an interactive
@@ -1201,7 +1235,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return An new {@link InteractiveWebViewsResult} with possibly 0 or more views.
      * @since 3.3
      */
-    public abstract InteractiveWebViewsResult getInteractiveWebViews();
+    @Override
+    public abstract boolean hasInteractiveWebView();
 
     /**
      * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
@@ -1209,6 +1244,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return name of the interactive view or <code>null</code>
      * @since 2.8
      */
+    @Override
     public abstract String getInteractiveViewName();
 
     /**
@@ -1226,16 +1262,20 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @since 3.1 */
     public abstract FlowObjectStack getFlowObjectStack();
 
+    @Override
     public abstract URL getIcon();
 
     public abstract NodeType getType();
 
+    @Override
     public final NodeID getID() {
         return m_id;
     }
 
+    @Override
     public abstract String getName();
 
+    @Override
     public final String getNameWithID() {
         return getName() + " " + getID().toString();
     }
@@ -1250,6 +1290,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return the display label for {@link NodeView}, {@link OutPortView} and
      * {@link NodeDialog}
      */
+    @Override
     public String getDisplayLabel() {
         String label = getID().toString() + " - "
             + getName();
@@ -1314,6 +1355,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      *         flows the custom name) or null, if no annotation or no old custom
      *         name is set.
      */
+    @Override
     public String getCustomName() {
         String annoLine = getFirstAnnotationLine();
         if (annoLine.isEmpty()) {
@@ -1330,10 +1372,12 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         return m_annotation;
     }
 
+    @Override
     public String getCustomDescription() {
         return m_customDescription;
     }
 
+    @Override
     public void setCustomDescription(final String customDescription) {
         boolean notify = false;
         synchronized (m_nodeMutex) {
@@ -1368,6 +1412,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     protected abstract boolean isLocalWFM();
 
     /** @param value the isDeletable to set */
+    @Override
     public void setDeletable(final boolean value) {
         if (m_nodeLocks.hasDeleteLock() == value) {
             changeNodeLocks(!value, NodeLock.DELETE);
@@ -1375,6 +1420,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     }
 
     /** @return the isDeletable */
+    @Override
     public boolean isDeletable() {
         return !m_nodeLocks.hasDeleteLock();
     }
@@ -1397,6 +1443,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     /**
      * @return the isDirty
      */
+    @Override
     public final boolean isDirty() {
         final ReferencedFile ncDirectory = getNodeContainerDirectory();
         return ncDirectory == null || ncDirectory.isDirty() || internalIsDirty();
@@ -1432,6 +1479,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     /**
      * Mark this node container to be changed, that is, it needs to be saved.
      */
+    @Override
     public void setDirty() {
         if (setDirty(getNodeContainerDirectory())) {
             LOGGER.debug("Setting dirty flag on " + getNameWithID());
@@ -1639,6 +1687,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      *            {@link NodeLock#CONFIGURE}
      * @since 3.2
      */
+    @Override
     public void changeNodeLocks(final boolean setLock, final NodeLock... locks) {
         boolean deleteLock = m_nodeLocks.hasDeleteLock();
         boolean resetLock = m_nodeLocks.hasResetLock();
@@ -1676,6 +1725,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return the currently set {@link NodeLocks}
      * @since 3.2
      */
+    @Override
     public NodeLocks getNodeLocks() {
         return m_nodeLocks;
     }
