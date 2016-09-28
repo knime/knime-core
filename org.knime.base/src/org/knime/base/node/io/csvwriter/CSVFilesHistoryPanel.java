@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.io.csvwriter;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -63,6 +64,7 @@ import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.InvalidPathException;
 import java.util.LinkedHashSet;
 
 import javax.swing.DefaultComboBoxModel;
@@ -232,6 +234,9 @@ public final class CSVFilesHistoryPanel extends JPanel {
             try {
                 URL newUrl = FileUtil.toURL(selFile);
                 m_warnMsg.checkLocation(newUrl);
+            } catch (InvalidPathException ex) {
+                m_warnMsg.setText("Invalid file system path: " + ex.getMessage());
+                m_warnMsg.setForeground(Color.RED);
             } catch (IOException ex) {
                 // ignore it
             }
