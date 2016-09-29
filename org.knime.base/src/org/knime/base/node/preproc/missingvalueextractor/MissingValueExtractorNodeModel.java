@@ -123,7 +123,7 @@ final class MissingValueExtractorNodeModel extends NodeModel {
      */
     private void execute(final RowInput inData, final RowOutput output, final ExecutionContext exec,
         final long rowCount) throws Exception {
-        final AppendErrorMessageCellFactory cellFactory = create(inData.getDataTableSpec());
+        final AppendErrorMessageCellFactory cellFactory = createCellFactory(inData.getDataTableSpec());
         DataRow row;
         long currentRowIndex = 0;
         while ((row = inData.poll()) != null) {
@@ -146,11 +146,32 @@ final class MissingValueExtractorNodeModel extends NodeModel {
         output.close();
     }
 
+    /**
+     * @param inSpec Current input spec
+     * @return The CR describing the output
+     */
     private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
         ColumnRearranger rearranger = new ColumnRearranger(inSpec);
-        AppendErrorMessageCellFactory cellFac = create(inSpec);
+        AppendErrorMessageCellFactory cellFac = createCellFactory(inSpec);
         rearranger.append(cellFac);
         return rearranger;
+    }
+
+    /** @param inSpec Current input spec
+     * @return The cell factory for the output cells.
+     */
+    private AppendErrorMessageCellFactory createCellFactory(final DataTableSpec inSpec) {
+
+        String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
+        String suffix = m_suffix.getStringValue();
+
+        int[] includeIndexes = Arrays.stream(includeList).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
+        UniqueNameGenerator nameGen = new UniqueNameGenerator(inSpec);
+
+        DataColumnSpec[] newCols = Arrays.stream(includeList)
+                .map(s -> nameGen.newColumn(s + suffix, StringCell.TYPE))
+                .toArray(DataColumnSpec[]::new);
+        return new AppendErrorMessageCellFactory(includeIndexes, newCols);
     }
 
     @Override
@@ -271,21 +292,6 @@ final class MissingValueExtractorNodeModel extends NodeModel {
         // nothing to do
     }
 
-    private AppendErrorMessageCellFactory create(final DataTableSpec inSpec) {
-
-        String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-        String suffix = m_suffix.getStringValue();
-
-        int[] includeIndexes = Arrays.stream(includeList).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-        UniqueNameGenerator nameGen = new UniqueNameGenerator(inSpec);
-
-        DataColumnSpec[] newCols = Arrays.stream(includeList)
-                .map(s -> nameGen.newColumn(s + suffix, StringCell.TYPE))
-                .toArray(DataColumnSpec[]::new);
-        return new AppendErrorMessageCellFactory(includeIndexes, newCols);
-    }
-
-
     final class AppendErrorMessageCellFactory extends AbstractCellFactory {
 
         private final int[] m_includeIndices;
@@ -310,12 +316,6 @@ final class MissingValueExtractorNodeModel extends NodeModel {
         }
 
         Optional<DataCell[]> getCellsOptional(final DataRow row) {
-            // filter columns
-            final DataCell[] filteredCells = new DataCell[m_includeIndices.length];
-            for (int i = 0; i < filteredCells.length; i++) {
-                filteredCells[i] = row.getCell(m_includeIndices[i]);
-            }
-
             // check if the row should be filtered (or the default return value applies)
             boolean hasMissingCells = Arrays.stream(m_includeIndices)
                     .mapToObj(i -> row.getCell(i))
