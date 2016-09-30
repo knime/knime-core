@@ -49,6 +49,8 @@
 package org.knime.core.node.util;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Utility class providing functions to select and use implementations of interfaces instead of the interfaces itself.
@@ -61,6 +63,14 @@ public class UseImplUtil {
 
     private UseImplUtil() {
         //utility class
+    }
+
+    /**
+     * @param theInterface
+     * @return the {@link WorkflowManager} implementation
+     */
+    public static final WorkflowManager getWFImplOf(final IWorkflowManager theInterface) {
+        return getImplOf(theInterface, WorkflowManager.class);
     }
 
     /**
