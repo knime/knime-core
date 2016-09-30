@@ -57,6 +57,7 @@ import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.util.PortTypeUtil;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -211,7 +212,7 @@ public class AddMetaNodeWizard extends Wizard {
         } while (ep instanceof NodeContainerEditPart);
 
         AddNewMetaNodeCommand cmd =
-                new AddNewMetaNodeCommand(m_wfEditor.getWorkflowManager(), inPorts, outPorts, name, location);
+                new AddNewMetaNodeCommand(UseImplUtil.getWFMImplOf(m_wfEditor.getWorkflowManager()), inPorts, outPorts, name, location);
         m_wfEditor.getViewer().getEditDomain().getCommandStack().execute(cmd);
     }
 

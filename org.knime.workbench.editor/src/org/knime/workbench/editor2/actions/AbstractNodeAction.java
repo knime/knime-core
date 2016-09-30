@@ -59,6 +59,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.keys.IBindingService;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -104,7 +105,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
      * @return shortcut sequence or empty string if no shortcut sequence is available
      */
     public String getHotkey(final String commandID) {
-        IBindingService bindingService = (IBindingService) PlatformUI.getWorkbench().getAdapter(IBindingService.class);
+        IBindingService bindingService = PlatformUI.getWorkbench().getAdapter(IBindingService.class);
         if (bindingService == null) {
             return "";
         }
@@ -122,7 +123,7 @@ public abstract class AbstractNodeAction extends SelectionAction {
      *
      */
     protected final WorkflowManager getManager() {
-        return m_editor.getWorkflowManager();
+        return UseImplUtil.getWFMImplOf(m_editor.getWorkflowManager());
 
     }
 

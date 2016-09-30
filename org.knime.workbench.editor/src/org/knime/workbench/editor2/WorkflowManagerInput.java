@@ -52,30 +52,30 @@ import java.net.URI;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowManagerInput implements IEditorInput {
-    private final WorkflowManager m_manager;
+    private final IWorkflowManager m_manager;
     private final WorkflowEditor m_parent;
     private final URI m_workflowLocation;
 
-    public WorkflowManagerInput(final WorkflowManager manager, final WorkflowEditor parent) {
+    public WorkflowManagerInput(final IWorkflowManager manager, final WorkflowEditor parent) {
         m_manager = manager;
         m_parent = parent;
         m_workflowLocation = null;
     }
 
-    public WorkflowManagerInput(final WorkflowManager manager, final URI workflowLocation) {
+    public WorkflowManagerInput(final IWorkflowManager manager, final URI workflowLocation) {
         m_manager = manager;
         m_parent = null;
         m_workflowLocation = workflowLocation;
     }
 
-    public WorkflowManager getWorkflowManager() {
+    public IWorkflowManager getWorkflowManager() {
         return m_manager;
     }
 
@@ -124,6 +124,7 @@ public class WorkflowManagerInput implements IEditorInput {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getToolTipText() {
        return m_manager.getName() + "(not persisted yet)";
     }

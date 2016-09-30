@@ -48,7 +48,7 @@
 package org.knime.workbench.ui.navigator;
 
 import org.eclipse.ui.IEditorPart;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 
 /**
  * Hackaround to avoid cyclic dependencies. The navigator needs to ask the
@@ -57,10 +57,10 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author ohl, University of Konstanz
  */
 public class WorkflowEditorAdapter {
-    private final WorkflowManager m_wfm;
+    private final IWorkflowManager m_wfm;
     private final IEditorPart m_parentEditor;
 
-    public WorkflowEditorAdapter(final WorkflowManager wfm, final IEditorPart parentEditor) {
+    public WorkflowEditorAdapter(final IWorkflowManager wfm, final IEditorPart parentEditor) {
         m_wfm = wfm;
         m_parentEditor = parentEditor;
     }
@@ -70,7 +70,7 @@ public class WorkflowEditorAdapter {
      *
      * @param a workflow manager
      */
-    public WorkflowManager getWorkflowManager() {
+    public IWorkflowManager getWorkflowManager() {
         return m_wfm;
     }
 

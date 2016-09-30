@@ -729,7 +729,12 @@ public interface IWorkflowManager extends INodeContainer{
     String toString();
 
 //    /** {@inheritDoc} */
-//    Collection<INodeContainer> getNodeContainers();
+//    Collection<NodeContainer> getNodeContainers();
+
+    /**
+     * @return all node containers within this workflow manager
+     */
+    Collection<INodeContainer> getAllNodeContainers();
 
     /**
      * @return collection of ConnectionContainer in this WFM

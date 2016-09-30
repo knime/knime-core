@@ -69,7 +69,7 @@ public class UseImplUtil {
      * @param theInterface
      * @return the {@link WorkflowManager} implementation
      */
-    public static final WorkflowManager getWFImplOf(final IWorkflowManager theInterface) {
+    public static final WorkflowManager getWFMImplOf(final IWorkflowManager theInterface) {
         return getImplOf(theInterface, WorkflowManager.class);
     }
 

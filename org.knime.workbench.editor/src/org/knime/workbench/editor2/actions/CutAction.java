@@ -57,6 +57,7 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.DeleteCommand;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
@@ -146,7 +147,7 @@ public class CutAction extends AbstractClipboardAction {
         coll.addAll(Arrays.asList(annotationParts));
 
         DeleteCommand delete = new DeleteCommand(
-                coll, getEditor().getWorkflowManager());
+                coll, UseImplUtil.getWFMImplOf(getEditor().getWorkflowManager()));
         getCommandStack().execute(delete); // enable undo
 
         getEditor().updateActions();

@@ -66,6 +66,7 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.SelectionListenerAction;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -77,7 +78,7 @@ import org.knime.workbench.ui.navigator.WorkflowEditorAdapter;
 /**
  *
  * @author ohl, University of Konstanz
- * 
+ *
  * @deprecated since AP 3.0
  */
 @Deprecated
@@ -173,9 +174,9 @@ public class DeleteAction extends SelectionListenerAction {
                         continue;
                     }
                     WorkflowEditorAdapter wea =
-                            (WorkflowEditorAdapter)editor
-                                    .getAdapter(WorkflowEditorAdapter.class);
-                    NodeContainer editWFM = null;
+                            editor
+                            .getAdapter(WorkflowEditorAdapter.class);
+                    INodeContainer editWFM = null;
                     if (wea != null) {
                         editWFM = wea.getWorkflowManager();
                     }

@@ -46,6 +46,7 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NativeNodeContainer;
@@ -141,7 +142,7 @@ public class StepLoopAction extends AbstractNodeAction {
                 // either the node is paused...
                 return true;
             }
-            WorkflowManager wm = getEditor().getWorkflowManager();
+            IWorkflowManager wm = getEditor().getWorkflowManager();
             if (wm.canExecuteNodeDirectly(nc.getID())) {
                 // ...or we can execute it (then this will be the first step)
                 return true;

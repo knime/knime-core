@@ -48,6 +48,7 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -130,7 +131,7 @@ public class ExecuteAction extends AbstractNodeAction {
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
         // enable if we have at least one executable node in our selection
-        WorkflowManager wm = getEditor().getWorkflowManager();
+        IWorkflowManager wm = getEditor().getWorkflowManager();
         if (wm == null) { // fixes NPE when shutting down
             return false;
         }
