@@ -40,57 +40,44 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   26.09.2007 (mb/bw): created
+ * ------------------------------------------------------------------------
  */
-package org.knime.core.node.workflow;
+package org.knime.core.api.node.workflow;
 
-import org.knime.core.api.node.workflow.IWorkflowInPort;
-import org.knime.core.node.port.PortType;
+import org.knime.core.api.node.port.PortTypeUID;
+
 
 /**
+ * Node port interface which keeps an index and a port name.
+ * Represents a node port of a {@link INodeContainer}.
  *
- * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
+ * @author Michael Berthold &amp; B. Wiswedel, University of Konstanz
+ * @author Martin Horn, KNIME.com
  */
-public final class WorkflowInPort extends NodeInPort implements IWorkflowInPort {
-
-    /** wrap the underlying port in yet another wrapper to enable
-     * us to return this one as a wrapper.
-     * (Needed for connection going directly from a workflow inport
-     * to the same workflow's outport - ConnectionType.WFM_THROUGH)
-     */
-    private final NodeOutPortWrapper m_underlyingPortWrapper;
+public interface INodePort {
 
     /**
+     * @return The port index.
+     */
+    public int getPortIndex();
+
+    /**
+     * @return the unique identifier for the port type.
+     */
+    public PortTypeUID getPortTypeUID();
+
+    /**
+     * @return The port name.
+     */
+    public String getPortName();
+
+    /**
+     * Sets a new name for this port. If null or an empty string is passed, the
+     * default name will be generated: "Port [" + portID + "]".
      *
+     * @param portName The new name for this port. If null is passed, the
+     *            default name will be generated.
      */
-    WorkflowInPort(final int index, final PortType pType) {
-        super(index, pType);
-        m_underlyingPortWrapper = new NodeOutPortWrapper(index, pType);
-    }
-
-
-    void setUnderlyingPort(final NodeOutPort port) {
-        m_underlyingPortWrapper.setUnderlyingPort(port);
-    }
-
-    /**
-     * @return the underlyingOutPort
-     */
-    public NodeOutPort getUnderlyingPort() {
-        return m_underlyingPortWrapper;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @since 2.6
-     */
-    @Override
-    public void setPortIndex(final int portIndex) {
-        m_underlyingPortWrapper.setPortIndex(portIndex);
-        super.setPortIndex(portIndex);
-    }
+    public void setPortName(final String portName);
 
 }

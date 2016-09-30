@@ -47,6 +47,7 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.api.node.workflow.IWorkflowOutPort;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 
@@ -54,7 +55,7 @@ import org.knime.core.node.port.PortType;
  *
  * @author M. Berthold, University of Konstanz
  */
-public class WorkflowOutPort extends NodeOutPortWrapper  {
+public class WorkflowOutPort extends NodeOutPortWrapper implements IWorkflowOutPort {
 
     private final NodeInPort m_simulatedInPort;
 

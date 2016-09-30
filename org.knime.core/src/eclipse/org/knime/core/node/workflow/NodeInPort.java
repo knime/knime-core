@@ -44,26 +44,37 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.api.node.port.PortTypeUID;
+import org.knime.core.api.node.workflow.INodeInPort;
 import org.knime.core.node.port.PortType;
+import org.knime.core.util.PortTypeUtil;
 
 /**
  * Implements a node's input port. Internally it keeps a reference to its
  * connected <code>NodeOutPort</code> if available and to its node. The node
  * gets notified, whenever the connection changes.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
- * 
+ *
  * @see NodeOutPort
  */
-public class NodeInPort extends NodePortAdaptor implements NodePort {
+public class NodeInPort extends NodePortAdaptor implements INodeInPort {
 
     /**
      * Creates a new input port with index and type assigned from the node.
-     * 
+     *
      * @param portIndex the index of this port.
      */
     public NodeInPort(final int portIndex, final PortType type) {
         super(portIndex, type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortTypeUID getPortTypeUID() {
+        return PortTypeUtil.getPortTypeUID(getPortType());
     }
 
 }

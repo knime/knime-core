@@ -241,9 +241,9 @@ public interface INodeContainer extends NodeProgressListener, NodeContainerState
 
     int getNrInPorts();
 
-//    NodeInPort getInPort(int index);
-//
-//    NodeOutPort getOutPort(int index);
+    INodeInPort getInPort(int index);
+
+    INodeOutPort getOutPort(int index);
 
     int getNrOutPorts();
 

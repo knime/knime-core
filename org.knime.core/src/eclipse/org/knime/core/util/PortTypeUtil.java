@@ -49,8 +49,10 @@
 package org.knime.core.util;
 
 import org.knime.core.api.node.port.PortTypeUID;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 
 /**
  * Utility class for {@link PortType}-functions (e.g. conversion).
@@ -58,6 +60,11 @@ import org.knime.core.node.port.PortTypeRegistry;
  * @author Martin Horn, KNIME.com
  */
 public class PortTypeUtil {
+
+    public static final PortTypeUID BufferedDataTablePortTypeUID = getPortTypeUID(BufferedDataTable.TYPE);
+    public static final PortTypeUID BuffferedDataTablePortTypeOptionalUID = getPortTypeUID(BufferedDataTable.TYPE_OPTIONAL);
+    public static final PortTypeUID FlowVariablePortTypeUID = getPortTypeUID(FlowVariablePortObject.TYPE);
+    public static final PortTypeUID FlowVariablePortTypeOptionalUID = getPortTypeUID(FlowVariablePortObject.TYPE_OPTIONAL);
 
     private PortTypeUtil() {
         // utility class

@@ -1102,11 +1102,13 @@ public interface IWorkflowManager extends INodeContainer{
     @Override
     int getNrInPorts();
 
-//    /** {@inheritDoc} */
-//    WorkflowInPort getInPort(int index);
+    /** {@inheritDoc} */
+    @Override
+    IWorkflowInPort getInPort(int index);
 
-//    /** {@inheritDoc} */
-//    WorkflowOutPort getOutPort(int index);
+    /** {@inheritDoc} */
+    @Override
+    IWorkflowOutPort getOutPort(int index);
 
     /** {@inheritDoc} */
     @Override

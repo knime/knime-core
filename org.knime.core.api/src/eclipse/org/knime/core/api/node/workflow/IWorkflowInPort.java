@@ -45,52 +45,21 @@
  * History
  *   26.09.2007 (mb/bw): created
  */
-package org.knime.core.node.workflow;
-
-import org.knime.core.api.node.workflow.IWorkflowInPort;
-import org.knime.core.node.port.PortType;
+package org.knime.core.api.node.workflow;
 
 /**
+ * Represents an in-port of a workflow (e.g. a metanode).
  *
  * @author M. Berthold &amp; B. Wiswedel, University of Konstanz
+ * @author Martin Horn, KNIME.com
  */
-public final class WorkflowInPort extends NodeInPort implements IWorkflowInPort {
+public interface IWorkflowInPort extends INodeInPort {
 
-    /** wrap the underlying port in yet another wrapper to enable
-     * us to return this one as a wrapper.
-     * (Needed for connection going directly from a workflow inport
-     * to the same workflow's outport - ConnectionType.WFM_THROUGH)
-     */
-    private final NodeOutPortWrapper m_underlyingPortWrapper;
 
     /**
-     *
-     */
-    WorkflowInPort(final int index, final PortType pType) {
-        super(index, pType);
-        m_underlyingPortWrapper = new NodeOutPortWrapper(index, pType);
-    }
-
-
-    void setUnderlyingPort(final NodeOutPort port) {
-        m_underlyingPortWrapper.setUnderlyingPort(port);
-    }
-
-    /**
-     * @return the underlyingOutPort
-     */
-    public NodeOutPort getUnderlyingPort() {
-        return m_underlyingPortWrapper;
-    }
-
-    /**
-     * {@inheritDoc}
+     * @param portIndex the new portIndex to set
      * @since 2.6
      */
-    @Override
-    public void setPortIndex(final int portIndex) {
-        m_underlyingPortWrapper.setPortIndex(portIndex);
-        super.setPortIndex(portIndex);
-    }
+    public void setPortIndex(final int portIndex);
 
 }
