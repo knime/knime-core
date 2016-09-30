@@ -63,6 +63,14 @@ public class UseImplUtil {
         //utility class
     }
 
+    /**
+     * Tries to cast the given interface to a particular implementation.
+     *
+     * @param theInterface the object to cast
+     * @param clazz the implementation to cast to
+     * @return the interface cast to the desired class or an exception, if not possible
+     * @throws NotImplementedException if cannot be cast, i.e. the desired implementation is not given
+     */
     public static final <I, C extends I> C getImplOf(final I theInterface, final Class<C> clazz) {
         if (clazz.isInstance(theInterface)) {
             return clazz.cast(theInterface);
