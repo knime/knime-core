@@ -207,7 +207,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
 
         m_url =
             new FilesHistoryPanel(flowVarBrowseModel, FILEREADER_HISTORY_ID, LocationValidation.FileInput,
-                new String[]{".xml"});
+                new String[]{".txt", ".csv"});
 
         m_url.addChangeListener(new ChangeListener() {
 
@@ -256,7 +256,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
         m_colTable = new JTable() {
             private final Color m_grey = new Color(125, 125, 125);
 
-            // set font color according to included/exculded
+            // set font color according to included/excluded
             @Override
             public Component prepareRenderer(final TableCellRenderer renderer, final int row, final int column) {
                 Component c = super.prepareRenderer(renderer, row, column);

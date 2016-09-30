@@ -121,7 +121,7 @@ public class ClusterNodeModel extends NodeModel {
     /** Config key for the maximal number of iterations. */
     public static final String CFG_MAX_ITERATIONS = "maxNrIterations";
 
-    /** Config key for the enable hiliting setting. 
+    /** Config key for the enable hiliting setting.
      * @since 3.3 */
     public static final String CFG_ENABLE_HILITE = "enableHilite";
 
@@ -373,7 +373,7 @@ public class ClusterNodeModel extends NodeModel {
                 }
             }
             // update cluster centers
-            updateClusterCenters(clusterCoverage, clusters, delta);
+            finished = updateClusterCenters(clusterCoverage, clusters, delta);
             currentIteration++;
         } // while(!finished & nrIt<maxNrIt)
         // create list of feature names

@@ -1183,7 +1183,7 @@
       </node>
       <node
             category-path="/flowcontrol/variables"
-            factory-class="org.knime.base.node.flowvariable.filenamecreator.FilenameCreatorNodeFactory"
+            factory-class="org.knime.base.node.flowvariable.createfilename.CreateFilenameNodeFactory"
             >
       </node>
       <node
@@ -1699,13 +1699,15 @@
       </node>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.pmml.missingval.compute.MissingValueHandlerNodeFactory"
-            >
+            factory-class="org.knime.base.node.preproc.pmml.missingval.compute.MissingValueHandlerNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory"
-            >
+            factory-class="org.knime.base.node.preproc.pmml.missingval.apply.MissingValueApplyNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-transform"
+            factory-class="org.knime.base.node.preproc.missingvalueextractor.MissingValueExtractorNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-convert+replace"
