@@ -43,7 +43,7 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.node.preproc.missingvalueextractor;
+package org.knime.base.node.preproc.extractmissingvaluecause;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,7 +90,7 @@ import org.knime.core.util.UniqueNameGenerator;
  *
  * @author Simon Schmid
  */
-final class MissingValueExtractorNodeModel extends NodeModel {
+final class ExtractMissingValueCauseNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_isFiltered = createIsFilteredModel();
 
@@ -114,7 +114,7 @@ final class MissingValueExtractorNodeModel extends NodeModel {
     }
 
     /** One in, one out. */
-    MissingValueExtractorNodeModel() {
+    ExtractMissingValueCauseNodeModel() {
         super(1, 1);
     }
 
@@ -222,7 +222,7 @@ final class MissingValueExtractorNodeModel extends NodeModel {
                 throws Exception {
                 final RowInput in = (RowInput)inputs[0];
                 final RowOutput out = (RowOutput)outputs[0];
-                MissingValueExtractorNodeModel.this.execute(in, out, exec, -1);
+                ExtractMissingValueCauseNodeModel.this.execute(in, out, exec, -1);
             }
         };
     }

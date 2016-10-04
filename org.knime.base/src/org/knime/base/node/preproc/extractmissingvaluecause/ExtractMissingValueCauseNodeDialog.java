@@ -40,60 +40,35 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
+ *
  */
-package org.knime.base.node.preproc.missingvalueextractor;
+package org.knime.base.node.preproc.extractmissingvaluecause;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 
 /**
- * Factory class of the missing value extractor node.
+ * The node dialog of the missing value extractor node.
  *
  * @author Simon Schmid
  */
-public final class MissingValueExtractorNodeFactory extends NodeFactory<MissingValueExtractorNodeModel> {
+final class ExtractMissingValueCauseNodeDialog extends DefaultNodeSettingsPane {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new MissingValueExtractorNodeDialog();
-    }
+    /** Setting up all DialogComponents. */
+    ExtractMissingValueCauseNodeDialog() {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public MissingValueExtractorNodeModel createNodeModel() {
-        return new MissingValueExtractorNodeModel();
-    }
+        addDialogComponent(new DialogComponentBoolean(ExtractMissingValueCauseNodeModel.createIsFilteredModel(),
+                "Filter rows without missing values"));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<MissingValueExtractorNodeModel> createNodeView(final int viewIndex,
-            final MissingValueExtractorNodeModel nodeModel) {
-        return null;
-    }
+        addDialogComponent(new DialogComponentString(ExtractMissingValueCauseNodeModel.createSuffixModel(),
+            "Column name suffix:", false, 10));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
+        addDialogComponent(new DialogComponentColumnFilter2(
+            ExtractMissingValueCauseNodeModel.createColSelectModel(), 0));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
     }
 
 }
