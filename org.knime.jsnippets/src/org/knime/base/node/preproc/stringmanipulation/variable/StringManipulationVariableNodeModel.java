@@ -97,6 +97,10 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        try {
+            execute(new PortObject[]{}, null);
+        } catch (Exception e) {
+        }
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
 
