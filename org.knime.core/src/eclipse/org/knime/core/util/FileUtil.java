@@ -1271,13 +1271,25 @@ public final class FileUtil {
      * @since 2.6 */
     public static InputStream openInputStream(final String loc)
         throws IOException, InvalidSettingsException {
+        return openInputStream(loc, urlTimeout);
+    }
+
+    /** Opens a buffered input stream for the location (file path or URL).
+     * @param loc the location; can be both a file path or URL.
+     * @param timeoutInMilliseconds The timeout in milliseconds ({@code >0}).
+     * @return a buffered input stream.
+     * @throws IOException Forwarded from file input stream or url.openStream.
+     * @throws InvalidSettingsException If the argument is invalid or null.
+     * @since 3.3*/
+    public static InputStream openInputStream(final String loc, final int timeoutInMilliseconds)
+        throws IOException, InvalidSettingsException {
         if (loc == null || loc.length() == 0) {
             throw new InvalidSettingsException("No location provided");
         }
         InputStream stream;
         try {
             URL url = new URL(loc);
-            stream = FileUtil.openStreamWithTimeout(url);
+            stream = FileUtil.openStreamWithTimeout(url, timeoutInMilliseconds);
         } catch (MalformedURLException mue) {
             File file = new File(loc);
             if (!file.exists()) {
