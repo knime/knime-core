@@ -8939,6 +8939,7 @@ public boolean canCancelAll() {
      * @param i Index of the port
      * @return The incoming port at the given index
      */
+    @Override
     public NodeOutPort getWorkflowIncomingPort(final int i) {
         return m_inPorts[i].getUnderlyingPort();
     }
@@ -8947,6 +8948,7 @@ public boolean canCancelAll() {
      * @param i Index of the port
      * @return The outgoing port at the given index
      */
+    @Override
     public NodeInPort getWorkflowOutgoingPort(final int i) {
         return m_outPorts[i].getSimulatedInPort();
     }

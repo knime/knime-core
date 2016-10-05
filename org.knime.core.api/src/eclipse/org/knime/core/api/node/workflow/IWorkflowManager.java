@@ -1223,17 +1223,17 @@ public interface IWorkflowManager extends INodeContainer{
      */
     int getNrWorkflowOutgoingPorts();
 
-//    /**
-//     * @param i Index of the port
-//     * @return The incoming port at the given index
-//     */
-//    NodeOutPort getWorkflowIncomingPort(int i);
+    /**
+     * @param i Index of the port
+     * @return The incoming port at the given index
+     */
+    INodeOutPort getWorkflowIncomingPort(int i);
 
-//    /**
-//     * @param i Index of the port
-//     * @return The outgoing port at the given index
-//     */
-//    NodeInPort getWorkflowOutgoingPort(int i);
+    /**
+     * @param i Index of the port
+     * @return The outgoing port at the given index
+     */
+    INodeInPort getWorkflowOutgoingPort(int i);
 
     /** Set UI information for workflow's input ports
      * (typically aligned as a bar).
