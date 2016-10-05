@@ -131,6 +131,17 @@ public interface IAnnotation<D extends AnnotationData> extends Cloneable {
      */
     void setDimension(int x, int y, int width, int height);
 
+    /**
+     * Set dimensions, but don't notify any listener. (Used only by the GUI for node annotations for legacy support.
+     * Sets dimensions in old workflows without making the flow dirty.)
+     *
+     * @param x coordinate
+     * @param y coordinate
+     * @param width of the annotation
+     * @param height of the component
+     */
+    void setDimensionNoNotify(final int x, final int y, final int width, final int height);
+
     /** {@inheritDoc} */
     @Override
     String toString();

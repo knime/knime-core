@@ -213,18 +213,12 @@ public abstract class Annotation<D extends AnnotationData> implements IAnnotatio
     }
 
     /**
-     * Set dimensions, but don't notify any listener. (Used only by the GUI for
-     * node annotations for legacy support. Sets dimensions in old workflows
-     * without making the flow dirty.)
+     * {@inheritDoc}
      *
      * Note: with every call a new {@link AnnotationData} object is copied and created.
-     *
-     * @param x coordinate
-     * @param y coordinate
-     * @param width of the annotation
-     * @param height of the component
      */
-    protected void setDimensionNoNotify(final int x, final int y, final int width,
+    @Override
+    public void setDimensionNoNotify(final int x, final int y, final int width,
             final int height) {
         m_data = createAnnotationDataBuilder(m_data, true).setDimension(x, y, width, height).build();
     }
