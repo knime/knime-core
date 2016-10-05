@@ -52,6 +52,8 @@ import org.knime.core.api.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.api.node.workflow.AnnotationData.TextAlignment;
 
 /**
+ * An annotation on the workflow. It keeps all relevant information, such as
+ * text, bg color and individual formatting.
  *
  * @author Martin Horn, KNIME.com
  */

@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,88 +41,24 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Oct 5, 2016 (hornm): created
  */
-package org.knime.core.node.workflow;
-
-import org.knime.core.api.node.workflow.INodeAnnotation;
-import org.knime.core.api.node.workflow.NodeAnnotationData;
-import org.knime.core.api.node.workflow.NodeUIInformationEvent;
-import org.knime.core.api.node.workflow.NodeUIInformationListener;
+package org.knime.core.api.node.workflow;
 
 /**
  * Annotation associated with a node. Moves with the node. Can't be moved
  * separately.
  *
- * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @author Martin Horn, KNIME.com
  */
-public final class NodeAnnotation extends Annotation<NodeAnnotationData> implements INodeAnnotation, NodeUIInformationListener {
-
-    private NodeContainer m_nodeContainer;
+public interface INodeAnnotation extends IAnnotation<NodeAnnotationData>{
 
     /**
-     * @param data */
-    public NodeAnnotation(final NodeAnnotationData data) {
-        super(data);
-    }
-
-    void registerOnNodeContainer(final NodeContainer node) {
-        assert m_nodeContainer == null;
-        if (node == null) {
-            throw new NullPointerException("Can't hook annotation to null");
-        }
-        m_nodeContainer = node;
-        m_nodeContainer.addUIInformationListener(this);
-    }
-
-    void unregisterFromNodeContainer() {
-        assert m_nodeContainer != null;
-        m_nodeContainer.removeUIInformationListener(this);
-        m_nodeContainer = null;
-    }
-
-    /**
-     * {@inheritDoc}
+     * @return the node container this node annotation belongs to
      */
-    @Override
-    public NodeContainer getNodeContainer() {
-        return m_nodeContainer;
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public void setDimensionNoNotify(final int x, final int y, final int width,
-            final int height) {
-        super.setDimensionNoNotify(x, y, width, height);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected NodeAnnotationData.Builder createAnnotationDataBuilder(final NodeAnnotationData annoData,
-        final boolean includeBounds) {
-        return NodeAnnotationData.builder(annoData, includeBounds);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
-        // don't set dirty - event was fired by corresponding node
-        super.fireChangeEvent();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void fireChangeEvent() {
-        m_nodeContainer.setDirty();
-        super.fireChangeEvent();
-    }
+    INodeContainer getNodeContainer();
 
 }
