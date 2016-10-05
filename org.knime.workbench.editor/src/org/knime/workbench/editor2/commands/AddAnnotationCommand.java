@@ -54,6 +54,7 @@ import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.swt.graphics.Point;
 import org.knime.core.api.node.workflow.AnnotationData;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -127,7 +128,7 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
         data.setText(INITIAL_FLOWANNO_TEXT);
         data.setStyleRanges(new AnnotationData.StyleRange[0]);
         m_anno.copyFrom(data.build(), true);
-        WorkflowManager hostWFM = getHostWFM();
+        IWorkflowManager hostWFM = getHostWFM();
         hostWFM.addWorkflowAnnotation(m_anno);
         m_viewer.deselectAll();
         // select the new ones....

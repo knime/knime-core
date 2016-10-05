@@ -52,10 +52,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
 
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -100,7 +101,7 @@ public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
             return false;
         }
         for (NodeID id : m_ids) {
-            NodeContainer nc = getHostWFM().getNodeContainer(id);
+            INodeContainer nc = getHostWFM().getNodeContainer(id);
             if (nc instanceof WorkflowManager) {
                 WorkflowManager wm = (WorkflowManager)nc;
                 MetaNodeTemplateInformation lI = wm.getTemplateInformation();
@@ -117,9 +118,9 @@ public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
     public void execute() {
         m_changedIDs = new ArrayList<NodeID>();
         m_oldTemplInfos = new ArrayList<MetaNodeTemplateInformation>();
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
         for (NodeID id : m_ids) {
-            NodeContainer nc = hostWFM.getNodeContainer(id);
+            INodeContainer nc = hostWFM.getNodeContainer(id);
             if (nc instanceof WorkflowManager) {
                 WorkflowManager wm = (WorkflowManager)nc;
                 MetaNodeTemplateInformation lI = wm.getTemplateInformation();
@@ -157,7 +158,7 @@ public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
         for (int i = 0; i < m_changedIDs.size(); i++) {
             NodeID id = m_changedIDs.get(i);
             MetaNodeTemplateInformation old = m_oldTemplInfos.get(i);
-            getHostWFM().setTemplateInformation(id, old);
+            UseImplUtil.getWFMImplOf(getHostWFM()).setTemplateInformation(id, old);
         }
         m_changedIDs = null;
         m_oldTemplInfos = null;

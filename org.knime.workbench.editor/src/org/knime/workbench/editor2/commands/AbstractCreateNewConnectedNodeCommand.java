@@ -56,15 +56,17 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.INodeInPort;
+import org.knime.core.api.node.workflow.INodeOutPort;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeInPort;
-import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.PortTypeUtil;
 
 /**
  * Abstract super class for commands that insert new nodes into a workflow and
@@ -123,7 +125,7 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
                 autoConnectNewNode();
             }
 
-            NodeContainer newNode = getHostWFM().getNodeContainer(m_newNode);
+            INodeContainer newNode = getHostWFM().getNodeContainer(m_newNode);
             NodeUIInformation uiInfo = newNode.getUIInformation();
             // create extra info and set it
             if (uiInfo == null) {
@@ -153,9 +155,9 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         if (m_connectTo == null) {
             return;
         }
-        WorkflowManager hostWFM = getHostWFM();
-        NodeContainer sourceNode = hostWFM.getNodeContainer(m_connectTo);
-        NodeContainer nc = hostWFM.getNodeContainer(m_newNode);
+        IWorkflowManager hostWFM = getHostWFM();
+        INodeContainer sourceNode = hostWFM.getNodeContainer(m_connectTo);
+        INodeContainer nc = hostWFM.getNodeContainer(m_newNode);
         Map<Integer, Integer> matchingPorts = getMatchingPorts(sourceNode, nc);
         if (matchingPorts.size() == 0) {
             LOGGER.info("Can't auto-connect new node (" + m_newNode + "): "
@@ -185,8 +187,8 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         }
     }
 
-    private Map<Integer, Integer> getMatchingPorts(final NodeContainer left,
-            final NodeContainer right) {
+    private Map<Integer, Integer> getMatchingPorts(final INodeContainer left,
+            final INodeContainer right) {
         // don't auto connect to flow var ports - start with port index 1
         int leftFirst = (left instanceof WorkflowManager) ? 0 : 1;
         int rightFirst = (right instanceof WorkflowManager) ? 0 : 1;
@@ -195,10 +197,10 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         Set<Integer> assignedRight = new HashSet<Integer>();
         for (int rightPidx = rightFirst; rightPidx < right.getNrInPorts(); rightPidx++) {
             for (int leftPidx = leftFirst; leftPidx < left.getNrOutPorts(); leftPidx++) {
-                NodeOutPort leftPort = left.getOutPort(leftPidx);
-                NodeInPort rightPort = right.getInPort(rightPidx);
-                PortType leftPortType = leftPort.getPortType();
-                PortType rightPortType = rightPort.getPortType();
+                INodeOutPort leftPort = left.getOutPort(leftPidx);
+                INodeInPort rightPort = right.getInPort(rightPidx);
+                PortType leftPortType = PortTypeUtil.getPortType(leftPort.getPortTypeUID());
+                PortType rightPortType = PortTypeUtil.getPortType(rightPort.getPortTypeUID());
                 if (leftPortType.isSuperTypeOf(rightPortType)) {
                     if (getHostWFM().getOutgoingConnectionsFor(left.getID(),
                             leftPidx).size() == 0) {

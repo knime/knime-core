@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.node.util.UseImplUtil.getWFMImplOf;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,6 +58,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
@@ -105,7 +108,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            WorkflowManager hostWFM = getHostWFM();
+            WorkflowManager hostWFM = getWFMImplOf(getHostWFM());
             // close editor of metanode and children
             for (IEditorPart child : m_editor.getSubEditors(m_id)) {
                 child.getEditorSite().getPage().closeEditor(child, false);
@@ -143,7 +146,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public boolean canUndo() {
         if (m_undoCopyPersistor != null) {
-            WorkflowManager hostWFM = getHostWFM();
+            IWorkflowManager hostWFM = getHostWFM();
             for (NodeID id : m_pastedNodes) {
                 if (!hostWFM.canRemoveNode(id)) {
                     return false;
@@ -159,7 +162,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManager hostWFM = getWFMImplOf(getHostWFM());
         for (NodeID id : m_pastedNodes) {
             hostWFM.removeNode(id);
         }

@@ -50,8 +50,8 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.node.util.UseImplUtil;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -93,7 +93,7 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
         m_destPort = container.getModel().getDestPort();
     }
 
-    private ConnectionContainer getConnectionContainer() {
+    private IConnectionContainer getConnectionContainer() {
         if (m_destNodeID == null) {
             return null;
         }
@@ -134,7 +134,7 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
 
     private void changeBendpointsUIInfo(final boolean shiftBack) {
 
-        ConnectionContainer cc = getConnectionContainer();
+        IConnectionContainer cc = getConnectionContainer();
         ConnectionUIInformation ui = cc.getUIInfo();
         if (ui == null) {
             return;

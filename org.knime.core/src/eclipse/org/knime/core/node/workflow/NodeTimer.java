@@ -80,6 +80,7 @@ import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -201,7 +202,7 @@ public final class NodeTimer {
                 processStatChanges();
             }
         }
-        public void addConnectionCreation(final NodeContainer source, final NodeContainer dest) {
+        public void addConnectionCreation(final INodeContainer source, final INodeContainer dest) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
@@ -632,7 +633,7 @@ public final class NodeTimer {
 
     public static final GlobalNodeStats GLOBAL_TIMER = new GlobalNodeStats();
 
-    private static String getCanonicalName(final NodeContainer nc) {
+    private static String getCanonicalName(final INodeContainer nc) {
         String cname = "NodeContainer";
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer node = (NativeNodeContainer)nc;

@@ -45,6 +45,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.node.util.UseImplUtil.getWFMImplOf;
+
 import java.util.Arrays;
 
 import org.eclipse.draw2d.geometry.Point;
@@ -121,7 +123,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
     public void execute() {
         // Add node to workflow and get the container
         try {
-            WorkflowManager wfm = getHostWFM();
+            WorkflowManager wfm = getWFMImplOf(getHostWFM());
             m_copyContent = wfm.paste(m_persistor);
             NodeID[] nodeIDs = m_copyContent.getNodeIDs();
             if (nodeIDs.length > 0) {
@@ -179,7 +181,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
             }
             LOGGER.debug(debug);
         }
-        WorkflowManager wm = getHostWFM();
+        WorkflowManager wm = getWFMImplOf(getHostWFM());
         if (canUndo()) {
             for (NodeID id : ids) {
                 wm.removeNode(id);

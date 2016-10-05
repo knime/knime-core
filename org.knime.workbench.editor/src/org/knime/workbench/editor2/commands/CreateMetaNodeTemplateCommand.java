@@ -60,6 +60,7 @@ import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -136,7 +137,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
             // this one sets the workflow manager in the editor
-            loadRunnable = new LoadMetaNodeTemplateRunnable(getHostWFM(), m_templateKNIMEFolder);
+            loadRunnable = new LoadMetaNodeTemplateRunnable(UseImplUtil.getWFMImplOf(getHostWFM()), m_templateKNIMEFolder);
             ps.run(false, true, loadRunnable);
             MetaNodeLinkUpdateResult result = loadRunnable.getLoadResult();
             m_container = (NodeContainer)result.getLoadedInstance();

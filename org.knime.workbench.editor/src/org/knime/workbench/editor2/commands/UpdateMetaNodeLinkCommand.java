@@ -55,9 +55,10 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeContainerTemplate;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.UpdateMetaNodeTemplateRunnable;
@@ -100,7 +101,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
             return false;
         }
         boolean containsUpdateableMN = false;
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
         for (NodeID id : m_ids) {
             NodeContainer nc = hostWFM.findNodeContainer(id);
             if (nc instanceof NodeContainerTemplate) {
@@ -124,7 +125,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
         try {
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
-            WorkflowManager hostWFM = getHostWFM();
+            WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
             updateRunner = new UpdateMetaNodeTemplateRunnable(hostWFM, m_ids);
             ps.busyCursorWhile(updateRunner);
             m_newIDs = updateRunner.getNewIDs();
@@ -164,7 +165,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
     public void undo() {
         LOGGER.debug("Undo: Reverting metanode links ("
                 + m_newIDs.size() + " metanode(s))");
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
         for (int i = 0; i < m_newIDs.size(); i++) {
             NodeID id = m_newIDs.get(i);
             WorkflowPersistor p = m_undoPersistors.get(i);

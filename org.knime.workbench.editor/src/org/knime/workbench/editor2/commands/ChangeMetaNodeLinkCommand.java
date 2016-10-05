@@ -51,6 +51,7 @@ import java.net.URI;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -99,7 +100,7 @@ public class ChangeMetaNodeLinkCommand extends AbstractKNIMECommand {
     }
 
     private boolean setLink(final URI link) {
-        NodeContainer metaNode = getHostWFM().getNodeContainer(m_metaNodeID);
+        NodeContainer metaNode = UseImplUtil.getWFMImplOf(getHostWFM()).getNodeContainer(m_metaNodeID);
         if (!(metaNode instanceof WorkflowManager)) {
             LOGGER.error("Command failed: Specified node is not a metanode");
             return false;
@@ -113,7 +114,7 @@ public class ChangeMetaNodeLinkCommand extends AbstractKNIMECommand {
             LOGGER.error("Command failed: Specified node is not a metanode with a link." + e1.getMessage(), e1);
             return false;
         }
-        getHostWFM().setTemplateInformation(m_metaNodeID, newInfo);
+        UseImplUtil.getWFMImplOf(getHostWFM()).setTemplateInformation(m_metaNodeID, newInfo);
         return true;
     }
 

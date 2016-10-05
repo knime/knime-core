@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.node.util.UseImplUtil.getWFMImplOf;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +106,7 @@ public class DisconnectSubNodeLinkCommand extends AbstractKNIMECommand {
             return false;
         }
         for (NodeID id : m_ids) {
-            NodeContainer nc = getHostWFM().getNodeContainer(id);
+            NodeContainer nc = getWFMImplOf(getHostWFM()).getNodeContainer(id);
             if (nc instanceof SubNodeContainer) {
                 SubNodeContainer snc = (SubNodeContainer)nc;
                 MetaNodeTemplateInformation lI = snc.getTemplateInformation();
@@ -121,7 +123,7 @@ public class DisconnectSubNodeLinkCommand extends AbstractKNIMECommand {
     public void execute() {
         m_changedIDs = new ArrayList<NodeID>();
         m_oldTemplInfos = new ArrayList<MetaNodeTemplateInformation>();
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManager hostWFM = getWFMImplOf(getHostWFM());
         for (NodeID id : m_ids) {
             NodeContainer nc = hostWFM.getNodeContainer(id);
             if (nc instanceof SubNodeContainer) {
@@ -160,7 +162,7 @@ public class DisconnectSubNodeLinkCommand extends AbstractKNIMECommand {
         for (int i = 0; i < m_changedIDs.size(); i++) {
             NodeID id = m_changedIDs.get(i);
             MetaNodeTemplateInformation old = m_oldTemplInfos.get(i);
-            getHostWFM().setTemplateInformation(id, old);
+            getWFMImplOf(getHostWFM()).setTemplateInformation(id, old);
         }
         m_changedIDs = null;
         m_oldTemplInfos = null;

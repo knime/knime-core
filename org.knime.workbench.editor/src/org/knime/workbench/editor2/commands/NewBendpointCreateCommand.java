@@ -51,7 +51,6 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -97,11 +96,11 @@ public class NewBendpointCreateCommand extends AbstractKNIMECommand {
         m_destPort = cc.getDestPort();
     }
 
-    private ConnectionContainer getConnectionContainer() {
+    private IConnectionContainer getConnectionContainer() {
         return getHostWFM().getIncomingConnectionFor(m_destNodeID, m_destPort);
     }
 
-    private ConnectionUIInformation getUIInfo(final ConnectionContainer conn) {
+    private ConnectionUIInformation getUIInfo(final IConnectionContainer conn) {
         ConnectionUIInformation uiInfo = conn.getUIInfo();
         if (uiInfo == null) {
             uiInfo = ConnectionUIInformation.builder().build();
@@ -114,7 +113,7 @@ public class NewBendpointCreateCommand extends AbstractKNIMECommand {
      */
     @Override
     public void execute() {
-        ConnectionContainer connection = getConnectionContainer();
+        IConnectionContainer connection = getConnectionContainer();
         ConnectionUIInformation uiInfo = getUIInfo(connection);
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
@@ -131,7 +130,7 @@ public class NewBendpointCreateCommand extends AbstractKNIMECommand {
      */
     @Override
     public void redo() {
-        ConnectionContainer connection = getConnectionContainer();
+        IConnectionContainer connection = getConnectionContainer();
         ConnectionUIInformation uiInfo = getUIInfo(connection);
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
@@ -148,7 +147,7 @@ public class NewBendpointCreateCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        ConnectionContainer connection = getConnectionContainer();
+        IConnectionContainer connection = getConnectionContainer();
         ConnectionUIInformation uiInfo = getUIInfo(connection);
         uiInfo = ConnectionUIInformation.builder(uiInfo).removeBendpoint(m_index).build();
         // we need this to fire some update event up

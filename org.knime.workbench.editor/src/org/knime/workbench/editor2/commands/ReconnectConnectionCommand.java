@@ -53,11 +53,10 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.util.UseImplUtil;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -166,9 +165,9 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
     public void execute() {
         // confirm replacement?
         // check if old target node was executed
-        WorkflowManager hostWFM = getHostWFM();
-        NodeContainer oldTarget = hostWFM.getNodeContainer(m_oldTarget);
-        NodeContainer newTarget = hostWFM.getNodeContainer(m_newTarget);
+        IWorkflowManager hostWFM = getHostWFM();
+        INodeContainer oldTarget = hostWFM.getNodeContainer(m_oldTarget);
+        INodeContainer newTarget = hostWFM.getNodeContainer(m_newTarget);
         if (oldTarget == null || newTarget == null) {
             // something is very wrong here
             return;

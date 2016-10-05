@@ -56,6 +56,7 @@ import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
@@ -117,7 +118,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
         // Add node to workflow and get the container
         try {
             NodeID id = hostWFM.createAndAddNode(m_factory);

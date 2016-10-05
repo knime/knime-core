@@ -48,7 +48,7 @@
 package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 
 /**
  * Abstract super class for KNIME related commands. It holds a reference to
@@ -58,10 +58,10 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 public abstract class AbstractKNIMECommand extends Command {
 
-   private WorkflowManager m_hostWFM;
+   private IWorkflowManager m_hostWFM;
 
    /** @param hostWFM The host workflow, must not be null. */
-    public AbstractKNIMECommand(final WorkflowManager hostWFM) {
+    public AbstractKNIMECommand(final IWorkflowManager hostWFM) {
         if (hostWFM == null) {
             throw new IllegalArgumentException("Argument must not be null.");
         }
@@ -69,7 +69,7 @@ public abstract class AbstractKNIMECommand extends Command {
     }
 
     /** @return the hostWFM, not null unless this command is disposed. */
-    protected final WorkflowManager getHostWFM() {
+    protected final IWorkflowManager getHostWFM() {
         return m_hostWFM;
     }
 

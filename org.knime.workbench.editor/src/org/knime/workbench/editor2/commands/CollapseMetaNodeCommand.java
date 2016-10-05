@@ -47,6 +47,8 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import static org.knime.core.node.util.UseImplUtil.getWFMImplOf;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -115,9 +117,9 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            m_collapseResult = getHostWFM().collapseIntoMetaNode(m_nodes, m_annos, m_name);
+            m_collapseResult = getWFMImplOf(getHostWFM()).collapseIntoMetaNode(m_nodes, m_annos, m_name);
             if (m_encapsulateAsSubnode) {
-                m_metaNodeToSubNodeResult = getHostWFM().convertMetaNodeToSubNode(
+                m_metaNodeToSubNodeResult = getWFMImplOf(getHostWFM()).convertMetaNodeToSubNode(
                     m_collapseResult.getCollapsedMetanodeID());
             }
         } catch (Exception e) {

@@ -56,8 +56,10 @@ import java.util.stream.Collectors;
 import org.eclipse.gef.EditPartViewer;
 import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
@@ -105,7 +107,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
      * @param manager wfm hosting the nodes.
      */
     public DeleteCommand(final Collection<?> editParts,
-            final WorkflowManager manager) {
+            final IWorkflowManager manager) {
         super(manager);
         Set<NodeID> idSet = new LinkedHashSet<NodeID>();
         Set<WorkflowAnnotation> annotationSet =
@@ -179,7 +181,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
             return false;
         }
         boolean foundValid = false;
-        WorkflowManager hostWFM = getHostWFM();
+        IWorkflowManager hostWFM = getHostWFM();
         for (NodeID id : m_nodeIDs) {
             foundValid = true;
             if (!hostWFM.canRemoveNode(id)) {
@@ -198,7 +200,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
         // The WFM removes all connections for us, before the node is
         // removed.
         if (m_nodeIDs.length > 0 || m_annotations.length > 0) {
@@ -229,7 +231,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
             m_viewer.deselectAll();
         }
 
-        WorkflowManager hostWFM = getHostWFM();
+        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
         if (m_undoPersitor != null) {
             hostWFM.paste(m_undoPersitor);
         }

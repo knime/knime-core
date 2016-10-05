@@ -49,6 +49,7 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
@@ -88,7 +89,7 @@ public class ConvertSubNodeToMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            m_subNodeToMetaNodeResult = getHostWFM().convertSubNodeToMetaNode(m_id);
+            m_subNodeToMetaNodeResult = UseImplUtil.getWFMImplOf(getHostWFM()).convertSubNodeToMetaNode(m_id);
         } catch (Exception e) {
             String error = "Unwrapping failed: " + e.getMessage();
             LOGGER.error(error, e);

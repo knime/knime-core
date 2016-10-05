@@ -52,8 +52,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.knime.core.api.node.port.MetaPortInfo;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -126,16 +127,17 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
         if (m_metanodeID == null) {
             return false;
         }
-        NodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
+        INodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
         boolean isWriteProtected;
-        if (nc instanceof WorkflowManager) {
-            isWriteProtected = ((WorkflowManager)nc).isWriteProtected();
+        if (nc instanceof IWorkflowManager) {
+            isWriteProtected = ((IWorkflowManager)nc).isWriteProtected();
         } else if (nc instanceof SubNodeContainer) {
+            //TODO use interface here!
             isWriteProtected = ((SubNodeContainer)nc).isWriteProtected();
         } else {
             return false;
         }
-        if (!(nc instanceof WorkflowManager) && !(nc instanceof SubNodeContainer)) {
+        if (!(nc instanceof IWorkflowManager) && !(nc instanceof SubNodeContainer)) {
             return false;
         }
         if (isWriteProtected) {
@@ -148,10 +150,10 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        NodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
-        if (nc instanceof WorkflowManager) {
+        INodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
+        if (nc instanceof IWorkflowManager) {
             if (m_name != null) {
-                WorkflowManager metaNode = (WorkflowManager) nc;
+                IWorkflowManager metaNode = (IWorkflowManager) nc;
                 m_oldName = metaNode.getName();
                 metaNode.setName(m_name);
             }
@@ -250,10 +252,10 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        NodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
-        if (nc instanceof WorkflowManager) {
+        INodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
+        if (nc instanceof IWorkflowManager) {
             if (m_oldName != null) {
-                ((WorkflowManager)nc).setName(m_oldName);
+                ((IWorkflowManager)nc).setName(m_oldName);
 
             }
             if (m_reverseInports != null) {
