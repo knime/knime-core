@@ -54,10 +54,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.gef.EditPartViewer;
+import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
-import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
@@ -145,7 +145,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
             } else if (p instanceof AnnotationEditPart) {
                 // this gets the node annotations and the workflow annotations
                 AnnotationEditPart anno = (AnnotationEditPart)p;
-                Annotation annotationModel = anno.getModel();
+                IAnnotation annotationModel = anno.getModel();
                 if (annotationModel instanceof WorkflowAnnotation) {
                     annotationSet.add((WorkflowAnnotation)annotationModel);
                 }

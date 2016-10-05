@@ -59,7 +59,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.part.CellEditorActionHandler;
 import org.knime.core.api.node.workflow.AnnotationData;
-import org.knime.core.node.workflow.Annotation;
+import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.FontStore;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
@@ -97,7 +97,7 @@ public class AnnotationEditManager extends DirectEditManager {
         editPart.getRoot().getViewer().deselectAll();
         editPart.getFigure().setVisible(false);
         StyledTextEditor stw = (StyledTextEditor)getCellEditor();
-        Annotation anno = ((AnnotationEditPart)editPart).getModel();
+        IAnnotation anno = ((AnnotationEditPart)editPart).getModel();
         Font defaultFont;
         if (editPart instanceof NodeAnnotationEditPart) {
             defaultFont = AnnotationEditPart.getNodeAnnotationDefaultFont();

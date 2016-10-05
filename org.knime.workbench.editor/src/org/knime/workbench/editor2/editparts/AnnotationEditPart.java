@@ -71,10 +71,11 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.api.node.workflow.AnnotationData;
+import org.knime.core.api.node.workflow.IAnnotation;
+import org.knime.core.api.node.workflow.INodeAnnotation;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.NodeUIInformationEvent;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
-import org.knime.core.node.workflow.Annotation;
-import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.workbench.editor2.WorkflowMarqueeSelectionTool;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
@@ -268,15 +269,15 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
 
     /** {@inheritDoc} */
     @Override
-    public Annotation getModel() {
-        return (Annotation)super.getModel();
+    public IAnnotation getModel() {
+        return (IAnnotation)super.getModel();
     }
     /**
      * {@inheritDoc}
      */
     @Override
     protected IFigure createFigure() {
-        Annotation anno = getModel();
+        IAnnotation anno = getModel();
         NodeAnnotationFigure f = new WorkflowAnnotationFigure(anno);
         if (anno instanceof WorkflowAnnotation) {
             f.setBounds(new Rectangle(anno.getX(), anno.getY(), anno.getWidth(),
@@ -295,7 +296,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
             KNIMEUIPlugin.getDefault().getPreferenceStore();
         store.addPropertyChangeListener(this);
 
-        Annotation anno = getModel();
+        IAnnotation anno = getModel();
         anno.addUIInformationListener(this);
         // update the ui info now
         nodeUIInformationChanged(null);
@@ -309,7 +310,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         IPreferenceStore store =
             KNIMEUIPlugin.getDefault().getPreferenceStore();
         store.removePropertyChangeListener(this);
-        Annotation anno = getModel();
+        IAnnotation anno = getModel();
         anno.removeUIInformationListener(this);
         super.deactivate();
     }
@@ -330,7 +331,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
-        Annotation anno = getModel();
+        IAnnotation anno = getModel();
         NodeAnnotationFigure annoFig = (NodeAnnotationFigure)getFigure();
         annoFig.newContent(anno);
         WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
@@ -356,15 +357,15 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      * ...).
      * @param t The annotation, not null.
      * @return The above text. */
-    public static String getAnnotationText(final Annotation t) {
+    public static String getAnnotationText(final IAnnotation t) {
         if (!isDefaultNodeAnnotation(t)) {
             return t.getText();
         }
         String text;
-        if (((NodeAnnotation)t).getNodeContainer() == null) {
+        if (((INodeAnnotation)t).getNodeContainer() == null) {
             return "";
         }
-        int id = ((NodeAnnotation)t).getNodeContainer().getID().getIndex();
+        int id = ((INodeAnnotation)t).getNodeContainer().getID().getIndex();
         String prefix = KNIMEUIPlugin.getDefault().getPreferenceStore().
             getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
         if (prefix == null || prefix.isEmpty()) {
@@ -378,9 +379,9 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     /**
      * @param t
      * @return */
-    public static boolean isDefaultNodeAnnotation(final Annotation t) {
-        return t instanceof NodeAnnotation
-        && (((NodeAnnotation)t).getData()).isDefault();
+    public static boolean isDefaultNodeAnnotation(final IAnnotation t) {
+        return t instanceof INodeAnnotation
+        && (((INodeAnnotation)t).getData()).isDefault();
     }
 
     public static StyleRange[] toSWTStyleRanges(final AnnotationData t,
@@ -491,16 +492,16 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      * @return The workflow annotation models (possibly fewer than selected
      * edit parts!!!)
      */
-    public static WorkflowAnnotation[] extractWorkflowAnnotations(
+    public static IWorkflowAnnotation[] extractWorkflowAnnotations(
             final AnnotationEditPart[] annoParts) {
-        List<WorkflowAnnotation> annoList = new ArrayList<WorkflowAnnotation>();
+        List<IWorkflowAnnotation> annoList = new ArrayList<IWorkflowAnnotation>();
         for (int i = 0; i < annoParts.length; i++) {
-            Annotation model = annoParts[i].getModel();
-            if (model instanceof WorkflowAnnotation) {
-                annoList.add((WorkflowAnnotation)model);
+            IAnnotation model = annoParts[i].getModel();
+            if (model instanceof IWorkflowAnnotation) {
+                annoList.add((IWorkflowAnnotation)model);
             }
         }
-        return annoList.toArray(new WorkflowAnnotation[annoList.size()]);
+        return annoList.toArray(new IWorkflowAnnotation[annoList.size()]);
     }
 
 

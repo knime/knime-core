@@ -52,11 +52,11 @@ import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.Request;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.api.node.workflow.IAnnotation;
+import org.knime.core.api.node.workflow.INodeAnnotation;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationEvent;
-import org.knime.core.node.workflow.Annotation;
-import org.knime.core.node.workflow.NodeAnnotation;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.figures.NodeAnnotationFigure;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
@@ -83,11 +83,11 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
             @Override
             public void run() {
                 WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
-                NodeAnnotation anno = (NodeAnnotation)getModel();
+                INodeAnnotation anno = (INodeAnnotation)getModel();
                 NodeAnnotationFigure annoFig = (NodeAnnotationFigure)getFigure();
                 annoFig.newContent(anno);
                 // node annotation ignores its x/y ui info and hooks itself to its node
-                NodeContainer node = anno.getNodeContainer();
+                INodeContainer node = anno.getNodeContainer();
                 if (node == null) {
                     // may happen if the node is disposed before this runnable is executed
                     return;
@@ -163,7 +163,7 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
      */
     @Override
     protected IFigure createFigure() {
-        Annotation anno = getModel();
+        IAnnotation anno = getModel();
         NodeAnnotationFigure f = new NodeAnnotationFigure(anno);
         return f;
     }

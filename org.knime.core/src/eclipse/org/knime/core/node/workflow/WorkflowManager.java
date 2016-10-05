@@ -7483,7 +7483,7 @@ public boolean canCancelAll() {
             }
             IWorkflowAnnotation[] annotations =
                 Arrays.stream(content.getAnnotationIDs()).map(wfaID -> m_annotations.get(wfaID))
-                    .collect(Collectors.toList()).toArray(new IWorkflowAnnotation[m_annotations.size()]);
+                    .collect(Collectors.toList()).toArray(new IWorkflowAnnotation[0]);
             return new PasteWorkflowContentPersistor(loaderMap, connTemplates,
                     additionalConnTemplates, annotations,
                     isUndoableDeleteCommand);

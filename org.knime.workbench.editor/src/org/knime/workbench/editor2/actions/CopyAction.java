@@ -55,10 +55,10 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
+import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -122,7 +122,7 @@ public class CopyAction extends AbstractClipboardAction {
             getSelectedParts(NodeContainerEditPart.class);
         AnnotationEditPart[] annoParts =
             getSelectedParts(AnnotationEditPart.class);
-        WorkflowAnnotation[] annos =
+        IWorkflowAnnotation[] annos =
             AnnotationEditPart.extractWorkflowAnnotations(annoParts);
         return nodeParts.length > 0 || annos.length > 0;
     }

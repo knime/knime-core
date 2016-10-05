@@ -53,7 +53,7 @@ import org.eclipse.gef.editpolicies.DirectEditPolicy;
 import org.eclipse.gef.requests.DirectEditRequest;
 import org.eclipse.swt.widgets.Composite;
 import org.knime.core.api.node.workflow.AnnotationData;
-import org.knime.core.node.workflow.Annotation;
+import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 
@@ -70,7 +70,7 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
         StyledTextEditor ste = (StyledTextEditor)edit.getCellEditor();
         AnnotationData.Builder newAnnoDataBuilder = AnnotationData.builder((AnnotationData)ste.getValue(), true);
         AnnotationEditPart annoPart = (AnnotationEditPart)getHost();
-        Annotation oldAnno = annoPart.getModel();
+        IAnnotation oldAnno = annoPart.getModel();
 
         Rectangle oldFigBounds = annoPart.getFigure().getBounds().getCopy();
         // y-coordinate is the only dimension that doesn't change
@@ -109,7 +109,7 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
      * with "Node x")
      */
     private static boolean hasAnnotationDataChanged(
-            final Annotation oldAnno, final AnnotationData newAnnoData) {
+            final IAnnotation oldAnno, final AnnotationData newAnnoData) {
         //copy bounds, overwrite text later
         AnnotationData.Builder oldAnnoRealData = AnnotationData.builder(newAnnoData, true);
         oldAnnoRealData.copyFrom(oldAnno.getData(), false);

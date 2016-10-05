@@ -65,8 +65,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.knime.core.api.node.workflow.AnnotationData;
+import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.FontStore;
@@ -82,7 +82,7 @@ public class NodeAnnotationFigure extends Figure {
     /**
      * @param annotation the annotation to display
      */
-    public NodeAnnotationFigure(final Annotation annotation) {
+    public NodeAnnotationFigure(final IAnnotation annotation) {
         setLayoutManager(new BorderLayout());
         Color bg = AnnotationEditPart.getWorkflowAnnotationDefaultBackgroundColor();
         m_page = new FlowPage();
@@ -95,7 +95,7 @@ public class NodeAnnotationFigure extends Figure {
         newContent(annotation);
     }
 
-    public void newContent(final Annotation annotation) {
+    public void newContent(final IAnnotation annotation) {
         boolean isNodeAnnotation = (annotation instanceof NodeAnnotation);
         String text;
         AnnotationData.StyleRange[] sr;
