@@ -1183,7 +1183,7 @@
       </node>
       <node
             category-path="/flowcontrol/variables"
-            factory-class="org.knime.base.node.flowvariable.filenamecreator.FilenameCreatorNodeFactory"
+            factory-class="org.knime.base.node.flowvariable.createfilename.CreateFilenameNodeFactory"
             >
       </node>
       <node

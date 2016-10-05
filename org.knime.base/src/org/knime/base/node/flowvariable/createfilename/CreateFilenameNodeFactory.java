@@ -44,31 +44,58 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   30.08.2016 (andisadewi): created
+ *   30.09.2016 (andisadewi): created
  */
-package org.knime.base.node.flowvariable.filenamecreator;
+package org.knime.base.node.flowvariable.createfilename;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- *
- * @author Andisa Dewi, KNIME.com, Berlin, Germany
- */
-public class FilenameCreatorConfigKeys {
-    private FilenameCreatorConfigKeys() {
-    }
+*
+* @author Andisa Dewi, KNIME.com, Berlin, Germany
+*/
+public class CreateFilenameNodeFactory extends NodeFactory<CreateFilenameNodeModel> {
 
-    /**
-     * The configuration key of the path to the base directory.
-     */
-    public static final String CFGKEY_BASE_DIR = "BaseDir";
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public CreateFilenameNodeModel createNodeModel() {
+       return new CreateFilenameNodeModel();
+   }
 
-    /**
-     * The configuration key of the name of the new file.
-     */
-    public static final String CFGKEY_FILENAME = "FileName";
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   protected int getNrNodeViews() {
+       return 0;
+   }
 
-    /**
-     * The configuration key of the extension of the new file.
-     */
-    public static final String CFGKEY_FILE_EXT = "FileExtension";
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public NodeView<CreateFilenameNodeModel> createNodeView(final int viewIndex,
+       final CreateFilenameNodeModel nodeModel) {
+       return null;
+   }
 
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   protected boolean hasDialog() {
+       return true;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   protected NodeDialogPane createNodeDialogPane() {
+       return new CreateFilenameNodeDialog();
+   }
 }
