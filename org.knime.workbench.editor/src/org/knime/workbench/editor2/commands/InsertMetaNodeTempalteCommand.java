@@ -52,7 +52,7 @@ import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.RootEditPart;
-import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
@@ -63,7 +63,7 @@ import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
  */
 public class InsertMetaNodeTempalteCommand extends CreateMetaNodeTemplateCommand {
 
-    private ConnectionContainer m_edge;
+    private IConnectionContainer m_edge;
 
     private final RootEditPart m_root;
 

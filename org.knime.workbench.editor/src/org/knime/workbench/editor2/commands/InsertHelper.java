@@ -52,11 +52,11 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -66,14 +66,14 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  */
 public class InsertHelper {
 
-    private ConnectionContainer m_edge;
-    private WorkflowManager hostWFM;
+    private IConnectionContainer m_edge;
+    private IWorkflowManager hostWFM;
 
     /**
      * @param wfm the workflow manager
      * @param edge on which the new node will be inserted
      */
-    public InsertHelper(final WorkflowManager wfm, final ConnectionContainer edge) {
+    public InsertHelper(final IWorkflowManager wfm, final IConnectionContainer edge) {
         hostWFM = wfm;
         m_edge = edge;
     }
@@ -127,7 +127,7 @@ public class InsertHelper {
      * @param x coordinate of the new node
      * @param y coordinate of the new node
      */
-    public void reconnect(final NodeContainer container, final boolean snapToGrid, final int x, final int y) {
+    public void reconnect(final INodeContainer container, final boolean snapToGrid, final int x, final int y) {
 
         // reset node position
         NodeUIInformation info = NodeUIInformation.builder()
@@ -137,7 +137,7 @@ public class InsertHelper {
                 .setIsDropLocation(false).build();
         container.setUIInformation(info);
 
-        int p = (container instanceof WorkflowManager) ? 0 : 1; //skip fv port of nodes for now
+        int p = (container instanceof IWorkflowManager) ? 0 : 1; //skip fv port of nodes for now
         while (!hostWFM.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), p)) {
             // search for a valid connection of the source node to this node
             p++;
@@ -147,14 +147,14 @@ public class InsertHelper {
         }
         if (p < container.getNrInPorts()) {
             hostWFM.addConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), p);
-        } else if (!(container instanceof WorkflowManager)) {
+        } else if (!(container instanceof IWorkflowManager)) {
             // try if the fv port of nodes would work
             if (hostWFM.canAddConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), 0)) {
                 hostWFM.addConnection(m_edge.getSource(), m_edge.getSourcePort(), container.getID(), 0);
             }
         }
 
-        int pout = (container instanceof WorkflowManager) ? 0 : 1; //skip fv port of nodes for now;
+        int pout = (container instanceof IWorkflowManager) ? 0 : 1; //skip fv port of nodes for now;
         while (!hostWFM.canAddConnection(container.getID(), pout, m_edge.getDest(), m_edge.getDestPort())) {
             // search for a valid connection of this node to the destination node of the edge
             pout++;
@@ -164,7 +164,7 @@ public class InsertHelper {
         }
         if (pout < container.getNrOutPorts()) {
             hostWFM.addConnection(container.getID(), pout, m_edge.getDest(), m_edge.getDestPort());
-        } else if (!(container instanceof WorkflowManager)) {
+        } else if (!(container instanceof IWorkflowManager)) {
             // try if the fv port of nodes would work
             if (hostWFM.canAddConnection(container.getID(), 0, m_edge.getDest(), m_edge.getDestPort())) {
                 hostWFM.addConnection(container.getID(), 0, m_edge.getDest(), m_edge.getDestPort());

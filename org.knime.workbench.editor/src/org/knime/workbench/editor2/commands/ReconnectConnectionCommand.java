@@ -52,7 +52,9 @@ import java.util.Collections;
 import org.eclipse.gef.EditPart;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
-import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -98,7 +100,7 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
             final ConnectionContainerEditPart connection,
             final AbstractPortEditPart host,
             final AbstractPortEditPart target) {
-        super(connection.getWorkflowManager());
+        super(UseImplUtil.getWFMImplOf(connection.getWorkflowManager()));
 
         m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
@@ -107,12 +109,12 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
         EditPart hostParent = host.getParent();
         ConnectableEditPart srcEP = (ConnectableEditPart)hostParent;
 
-        WorkflowManager hostWFM = connection.getWorkflowManager();
+        IWorkflowManager hostWFM = connection.getWorkflowManager();
         // create the delete command
         m_deleteCommand =
-            new DeleteCommand(Collections.singleton(connection), hostWFM);
+            new DeleteCommand(Collections.singleton(connection), UseImplUtil.getWFMImplOf(hostWFM));
 
-        ConnectionContainer oldConnection = connection.getModel();
+        IConnectionContainer oldConnection = connection.getModel();
         m_oldTarget = oldConnection.getDest();
 
         m_newTarget = target.getID();
@@ -127,7 +129,7 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
                     || host instanceof MetaNodeOutPortEditPart) {
             // we need the manager to execute the command
             CreateConnectionCommand cmd =
-                new CreateConnectionCommand(hostWFM);
+                new CreateConnectionCommand(UseImplUtil.getWFMImplOf(hostWFM));
             cmd.setNewConnectionUIInfo(oldConnection.getUIInfo());
             cmd.setSourceNode(srcEP);
             cmd.setSourcePortID(host.getIndex());

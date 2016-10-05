@@ -67,18 +67,13 @@ import org.knime.core.api.node.workflow.ConnectionProgressListener;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.ConnectionUIInformationEvent;
 import org.knime.core.api.node.workflow.ConnectionUIInformationListener;
+import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.INodeOutPort;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.ConnectionProgressEvent;
-import org.knime.core.node.workflow.ConnectionProgressListener;
-import org.knime.core.node.workflow.ConnectionUIInformation;
-import org.knime.core.node.workflow.ConnectionUIInformationEvent;
-import org.knime.core.node.workflow.ConnectionUIInformationListener;
-import org.knime.core.node.workflow.EditorUIInformation;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
@@ -90,7 +85,7 @@ import org.knime.workbench.editor2.figures.ProgressPolylineConnection;
 
 /**
  * EditPart controlling a <code>ConnectionContainer</code> object in the
- * workflow. Model: {@link ConnectionContainer} View: {@link PolylineConnection}
+ * workflow. Model: {@link IConnectionContainer} View: {@link PolylineConnection}
  * created in {@link #createFigure()} Controller:
  * {@link ConnectionContainerEditPart}
  *
@@ -105,8 +100,8 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
     /** {@inheritDoc} */
     @Override
-    public ConnectionContainer getModel() {
-        return (ConnectionContainer)super.getModel();
+    public IConnectionContainer getModel() {
+        return (IConnectionContainer)super.getModel();
     }
 
     /**
@@ -115,7 +110,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      *
      * @return The hosting WFM
      */
-    public WorkflowManager getWorkflowManager() {
+    public IWorkflowManager getWorkflowManager() {
         EditPart targetEditPart = getTarget();
         if (targetEditPart instanceof NodeInPortEditPart) {
             return ((NodeInPortEditPart)targetEditPart).getManager();
@@ -137,7 +132,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      * @param node id of the node to return
      * @return the node with the specified id.
      */
-    private NodeContainer getNode(final WorkflowManager wfm, final NodeID node) {
+    private INodeContainer getNode(final IWorkflowManager wfm, final NodeID node) {
         if (wfm != null) {
             if (wfm.getID().equals(node)) {
                 return wfm;
@@ -148,14 +143,15 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
         // follow the hierarchy
         NodeID prefix = node.getPrefix();
-        if (prefix.equals(WorkflowManager.ROOT.getID())) {
+        if (prefix.equals(NodeID.ROOTID)) {
+            //TODO -> don't use the WorkflowManager root to manage workflow projects (see https://knime-com.atlassian.net/projects/AP/issues/AP-6511)
             return WorkflowManager.ROOT.getNodeContainer(node);
         } else {
-            NodeContainer nc = getNode(null, prefix);
-            if (!(nc instanceof WorkflowManager)) {
+            INodeContainer nc = getNode(null, prefix);
+            if (!(nc instanceof IWorkflowManager)) {
                 return null;
             }
-            WorkflowManager parent = (WorkflowManager)nc;
+            IWorkflowManager parent = (IWorkflowManager)nc;
             return parent.getNodeContainer(node);
         }
     }
@@ -230,20 +226,20 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     }
 
     private boolean isFlowVariablePortConnection() {
-        ConnectionContainer connCon = getModel();
-        NodeContainer node = getNode(getWorkflowManager(), connCon.getSource());
+        IConnectionContainer connCon = getModel();
+        INodeContainer node = getNode(getWorkflowManager(), connCon.getSource());
         if (node != null) {
-            NodeOutPort srcPort;
+            INodeOutPort srcPort;
             if (isIncomingConnection(connCon)) {
                 // then this is a workflow port
                 srcPort =
-                        ((WorkflowManager)node).getWorkflowIncomingPort(connCon
+                        ((IWorkflowManager)node).getWorkflowIncomingPort(connCon
                                 .getSourcePort());
             } else {
                 srcPort = node.getOutPort(connCon.getSourcePort());
             }
             if (srcPort != null
-                    && srcPort.getPortType()
+                    && PortTypeUtil.getPortType(srcPort.getPortTypeUID())
                             .equals(FlowVariablePortObject.TYPE)) {
                 return true;
             }
@@ -258,7 +254,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      * @param conn
      * @return
      */
-    private boolean isIncomingConnection(final ConnectionContainer conn) {
+    private boolean isIncomingConnection(final IConnectionContainer conn) {
         switch (conn.getType()) {
             case WFMIN:
             case WFMTHROUGH:

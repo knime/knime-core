@@ -50,16 +50,21 @@ package org.knime.core.node.util;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Utility class providing functions to select and use implementations of interfaces instead of the interfaces itself.
  * The methods help to unify those cases (exception handling and messages) and also later on track those lines in the
- * code (all hierarchy).
+ * code (call hierarchy).
  *
  * @author Martin Horn, KNIME.com
  */
 public class UseImplUtil {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(UseImplUtil.class);
+
+    private static int COUNT = 0;
 
     private UseImplUtil() {
         //utility class
@@ -83,6 +88,7 @@ public class UseImplUtil {
      */
     public static final <I, C extends I> C getImplOf(final I theInterface, final Class<C> clazz) {
         if (clazz.isInstance(theInterface)) {
+            LOGGER.warn("Implementation (" + clazz.getSimpleName() + ") used directly instead of the interface (global count: " + (COUNT++) + ").");
             return clazz.cast(theInterface);
         } else {
             throw new NotImplementedException("The interface " + theInterface.getClass().getSimpleName()

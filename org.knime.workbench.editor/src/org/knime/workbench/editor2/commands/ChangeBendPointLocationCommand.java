@@ -50,6 +50,7 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -85,7 +86,7 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
     public ChangeBendPointLocationCommand(
             final ConnectionContainerEditPart container,
             final Point locationShift, final ZoomManager zoomManager) {
-        super(container.getWorkflowManager());
+        super(UseImplUtil.getWFMImplOf(container.getWorkflowManager()));
         m_zoomManager = zoomManager;
         m_locationShift = locationShift;
         m_destNodeID = container.getModel().getDest();
