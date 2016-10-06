@@ -51,7 +51,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Vector;
 
 import javax.swing.filechooser.FileFilter;
 
@@ -65,7 +64,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.StringHistory;
 
 
 /**
@@ -86,8 +84,6 @@ public class ARFFReaderNodeModel extends NodeModel {
 
     /** Key used to store the row prefix in the settings object. */
     static final String CFGKEY_ROWPREFIX = "RowPrefix";
-
-    private static final String ARFF_HISTORY_ID = "ARFFFiles";
 
     private String m_rowPrefix;
 
@@ -149,8 +145,6 @@ public class ARFFReaderNodeModel extends NodeModel {
             throw new NullPointerException("Configure the ARFF reader before"
                     + " you execute it, please.");
         }
-        // now that we actually read it, add it to the history.
-        ARFFReaderNodeModel.addToFileHistory(m_file.toString());
 
         BufferedDataTable out = exec.createBufferedDataTable(new ARFFTable(
                 m_file,
@@ -222,8 +216,12 @@ public class ARFFReaderNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        String location = settings.getString(CFGKEY_FILEURL);
+        if(location == null || location.equals("")){
+            throw new InvalidSettingsException("No input selected");
+        }
         try {
-            stringToURL(settings.getString(CFGKEY_FILEURL));
+            stringToURL(location);
         } catch (MalformedURLException mue) {
             throw new InvalidSettingsException(mue);
         }
@@ -256,58 +254,6 @@ public class ARFFReaderNodeModel extends NodeModel {
             newURL = tmp.getAbsoluteFile().toURI().toURL();
         }
         return newURL;
-    }
-
-    /**
-     * @param removeNotExistingFiles if <code>true</code> the returned list
-     *            will not contain files that doesn't exist (they will not be
-     *            removed from the global history though
-     * @return the current file history associated with the ARFF reader/writer
-     */
-    public static String[] getFileHistory(
-            final boolean removeNotExistingFiles) {
-
-        StringHistory h = StringHistory.getInstance(ARFF_HISTORY_ID);
-        Vector<String> allLocs = new Vector<String>();
-
-        for (int l = 0; l < h.getHistory().length; l++) {
-            String loc = h.getHistory()[l];
-
-            if (removeNotExistingFiles) {
-                URL url;
-                try {
-                    url = new URL(loc);
-                    if (url.getProtocol().equalsIgnoreCase("FILE")) {
-                        // if we have a file location check its existence
-                        File f = new File(url.getPath());
-                        if (f.exists()) {
-                            allLocs.add(loc);
-                        } // else ignore old, not existing entries
-                    } else {
-                        // non-file URL we just take over
-                        allLocs.add(loc);
-                    }
-                } catch (MalformedURLException mue) {
-                    // ignore this (invalid) entry in the history
-                }
-
-            } else {
-                allLocs.add(loc);
-            }
-
-        }
-        return allLocs.toArray(new String[0]);
-
-    }
-
-    /**
-     * Adds the specified string to the ARFF reader/writer history.
-     *
-     * @param filename the filename to add
-     */
-    public static void addToFileHistory(final String filename) {
-        StringHistory h = StringHistory.getInstance(ARFF_HISTORY_ID);
-        h.add(filename);
     }
 
     /**
