@@ -86,7 +86,6 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
         JPanel panel = new JPanel(new BorderLayout());
 
         m_rowPrefix = new JTextField("Row", 10);
-        System.out.println("prefix: \"" + m_rowPrefix.getText()+ "\"");
         m_filePanel =
             new FilesHistoryPanel(createFlowVariableModel(ARFFReaderNodeModel.CFGKEY_FILEURL, FlowVariable.Type.STRING),
                 "arff_read", LocationValidation.FileInput, ".arff");
@@ -126,7 +125,6 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
         m_filePanel.setSelectedFile(settings.getString(ARFFReaderNodeModel.CFGKEY_FILEURL, ""));
         String rowPrefix = settings.getString(ARFFReaderNodeModel.CFGKEY_ROWPREFIX, "Row");
         m_rowPrefix.setText(rowPrefix != null ? rowPrefix : "Row");
-        System.out.println("prefix: \"" + m_rowPrefix.getText()+ "\"");
 
     }
 
