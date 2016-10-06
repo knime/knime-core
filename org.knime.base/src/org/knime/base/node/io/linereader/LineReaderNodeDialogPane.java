@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.io.linereader;
 
-import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -60,18 +60,15 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.FlowVariableModel;
-import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.FilesHistoryPanel;
+import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
 import org.knime.core.node.util.StringHistoryPanel;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -82,7 +79,6 @@ import org.knime.core.node.workflow.FlowVariable;
 final class LineReaderNodeDialogPane extends NodeDialogPane {
 
     private final FilesHistoryPanel m_filePanel;
-    private final FlowVariableModelButton m_filePanelVarButton;
     private final JTextField m_columnHeaderField;
     private final JTextField m_rowHeadPrefixField;
     private final JCheckBox m_limitRowCountChecker;
@@ -93,17 +89,9 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
 
     /** Create new dialog, init layout. */
     LineReaderNodeDialogPane() {
-        m_filePanel = new FilesHistoryPanel("line_read");
-        FlowVariableModel varModel = createFlowVariableModel(
-                LineReaderConfig.CFG_URL, FlowVariable.Type.STRING);
-        m_filePanelVarButton = new FlowVariableModelButton(varModel);
-        varModel.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                FlowVariableModel wvm = (FlowVariableModel)(e.getSource());
-                m_filePanel.setEnabled(!wvm.isVariableReplacementEnabled());
-            }
-        });
+        JPanel panel = new JPanel(new BorderLayout());
+        m_filePanel = new FilesHistoryPanel(createFlowVariableModel(LineReaderConfig.CFG_URL, FlowVariable.Type.STRING),
+            "line_read", LocationValidation.FileInput, "");
         int col = 10;
         m_columnHeaderField = new JTextField("Column", col);
         m_rowHeadPrefixField = new JTextField("Row", col);
@@ -133,7 +121,9 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             }
         });
         m_limitRowCountSpinner.setEnabled(false);
-        JPanel panel = initLayout();
+        panel.add(m_filePanel, BorderLayout.NORTH);
+        JPanel centerPanel = initLayout();
+        panel.add(centerPanel, BorderLayout.CENTER);
         addTab("Line Reader", panel);
     }
 
@@ -144,12 +134,6 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
-
-        gbc.gridwidth = 2;
-        JPanel filePanel = new JPanel(new FlowLayout());
-        filePanel.add(m_filePanel);
-        filePanel.add(m_filePanelVarButton);
-        panel.add(filePanel, gbc);
 
         gbc.gridy += 1;
         gbc.gridwidth = 1;
