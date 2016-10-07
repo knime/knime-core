@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
+<knimeNode icon="date_time.png" type="Manipulator">
+	<name>Legacy date&amp;time to date&amp;time</name>
+	<shortDescription>
+		Converts old date&amp;time to new.
+	</shortDescription>
+	<fullDescription>
+		<intro>
+			<p>
+				This node converts columns from the old date&amp;time data type to the new
+				types.
+			</p>
+		</intro>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				Only the included columns will be converted.
+			</option>
+		</tab>
+		<tab name="New Type Selection">
+			<option name="Automatic type detection">
+				If checked, the type of the new column will be
+				determined by the content of the first row's cell. If unchecked, the
+				user has to choose the new type manually.
+			</option>
+			<option name="New Type">
+				The user can choose the new type. Available types are
+				<i>LocalDateTime</i>
+				,
+				<i>ZonedDateTime</i>
+				,
+				<i>LocalDate</i>
+				and
+				<i>LocalTime</i>
+				. If
+				<i>ZonedDateTime</i>
+				is selected, a time zone can be chosen below.
+			</option>
+		</tab>
+		<tab name="Time Zone Selection">
+			<option name="Add time zone">
+				If automatic type detection is enabled, you can
+				choose whether a time zone should be added or not. If checked, a
+				time zone can be chosen below.
+			</option>
+			<option name="Time Zone">
+				If
+				<i>Add time zone</i>
+				is checked or
+				<i>ZonedDateTime</i>
+				is selected as new type, the user can choose the time zone here.
+			</option>
+		</tab>
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Table to be extracted">
+			Input table.
+		</inPort>
+		<outPort index="0" name="Extracted table">
+			Output table containing the converted
+			columns.
+		</outPort>
+	</ports>
+</knimeNode>
