@@ -45,6 +45,8 @@
  */
 package org.knime.base.node.io.csvwriter;
 
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -151,6 +153,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                 }
             }
         });
+        filePanel.setMaximumSize(new Dimension(m_textBox.getMaximumSize().width, 25));
         filePanel.add(m_textBox);
         filePanel.add(Box.createHorizontalGlue());
 
@@ -240,10 +243,13 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         final JPanel overwriteFilePane = new JPanel();
         overwriteFilePane.setLayout(
                 new BoxLayout(overwriteFilePane, BoxLayout.X_AXIS));
+        m_overwritePolicyOverwriteButton.setAlignmentY(Component.TOP_ALIGNMENT);
         overwriteFilePane.add(m_overwritePolicyOverwriteButton);
-        overwriteFilePane.add(Box.createGlue());
+        overwriteFilePane.add(Box.createHorizontalStrut(20));
+        m_overwritePolicyAppendButton.setAlignmentY(Component.TOP_ALIGNMENT);
         overwriteFilePane.add(m_overwritePolicyAppendButton);
-        overwriteFilePane.add(Box.createGlue());
+        overwriteFilePane.add(Box.createHorizontalStrut(20));
+        m_overwritePolicyAbortButton.setAlignmentY(Component.TOP_ALIGNMENT);
         overwriteFilePane.add(m_overwritePolicyAbortButton);
         overwriteFilePane.add(Box.createHorizontalGlue());
 
@@ -265,7 +271,6 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         panel.add(filePanel);
         panel.add(Box.createVerticalStrut(5));
         panel.add(optionsPanel);
-        panel.add(Box.createVerticalGlue());
 
         addTab("Settings", panel);
 
