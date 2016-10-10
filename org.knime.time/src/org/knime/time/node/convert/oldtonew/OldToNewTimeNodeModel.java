@@ -103,7 +103,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
 
     private final SettingsModelString m_timeZone = createTimeZoneSelectModel();
 
-    private String[] m_newTypes = null;
+    private DateTimeTypes[] m_newTypes = null;
 
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
@@ -118,7 +118,8 @@ final class OldToNewTimeNodeModel extends NodeModel {
 
     /** @return the string select model, used in both dialog and model. */
     static SettingsModelString createTypeSelectModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("type_select", "LocalDateTime");
+        final SettingsModelString settingsModelString =
+            new SettingsModelString("type_select", DateTimeTypes.LOCAL_DATE_TIME.toString());
         settingsModelString.setEnabled(false);
         return settingsModelString;
     }
@@ -168,7 +169,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
      */
     private DataColumnSpec[] getNewIncludedColumnSpecs(final DataTableSpec inSpec, final DataRow row) {
         final String[] includes = m_colSelect.applyTo(inSpec).getIncludes();
-        m_newTypes = new String[includes.length];
+        m_newTypes = new DateTimeTypes[includes.length];
         final DataColumnSpec[] newSpec = new DataColumnSpec[includes.length];
 
         /*
@@ -182,29 +183,29 @@ final class OldToNewTimeNodeModel extends NodeModel {
                     if (!m_addZone.getBooleanValue()) {
                         final DataCell cell = row.getCell(inSpec.findColumnIndex(includes[i]));
                         if (cell.isMissing()) {
-                            m_newTypes[i] = "LocalDateTime";
+                            m_newTypes[i] = DateTimeTypes.LOCAL_DATE_TIME;
                             dataColumnSpecCreator =
                                 new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateTimeCell.class));
                         } else {
                             final DateAndTimeCell timeCell = (DateAndTimeCell)cell;
                             if (!timeCell.hasDate()) {
-                                m_newTypes[i] = "LocalTime";
+                                m_newTypes[i] = DateTimeTypes.LOCAL_TIME;
                                 dataColumnSpecCreator =
                                     new DataColumnSpecCreator(includes[i], DataType.getType(LocalTimeCell.class));
                             } else {
                                 if (!timeCell.hasTime()) {
-                                    m_newTypes[i] = "LocalDate";
+                                    m_newTypes[i] = DateTimeTypes.LOCAL_DATE;
                                     dataColumnSpecCreator =
                                         new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateCell.class));
                                 } else {
-                                    m_newTypes[i] = "LocalDateTime";
+                                    m_newTypes[i] = DateTimeTypes.LOCAL_DATE_TIME;
                                     dataColumnSpecCreator = new DataColumnSpecCreator(includes[i],
                                         DataType.getType(LocalDateTimeCell.class));
                                 }
                             }
                         }
                     } else {
-                        m_newTypes[i] = "ZonedDateTime";
+                        m_newTypes[i] = DateTimeTypes.ZONED_DATE_TIME;
                         dataColumnSpecCreator =
                             new DataColumnSpecCreator(includes[i], DataType.getType(ZonedDateTimeCell.class));
                     }
@@ -232,29 +233,25 @@ final class OldToNewTimeNodeModel extends NodeModel {
              */
         } else {
             DataType newDataType = null;
+            DateTimeTypes type = null;
             final String typeString = m_typeSelect.getStringValue();
-            switch (typeString) {
-                case "LocalDate": {
-                    newDataType = DataType.getType(LocalDateCell.class);
-                    break;
-                }
-                case "LocalTime": {
-                    newDataType = DataType.getType(LocalTimeCell.class);
-                    break;
-                }
-                case "LocalDateTime": {
-                    newDataType = DataType.getType(LocalDateTimeCell.class);
-                    break;
-                }
-                case "ZonedDateTime": {
-                    newDataType = DataType.getType(ZonedDateTimeCell.class);
-                    break;
-                }
+            if (typeString.equals(DateTimeTypes.LOCAL_DATE.toString())) {
+                newDataType = DataType.getType(LocalDateCell.class);
+                type = DateTimeTypes.LOCAL_DATE;
+            } else if (typeString.equals(DateTimeTypes.LOCAL_TIME.toString())) {
+                newDataType = DataType.getType(LocalTimeCell.class);
+                type = DateTimeTypes.LOCAL_TIME;
+            } else if (typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.toString())) {
+                newDataType = DataType.getType(LocalDateTimeCell.class);
+                type = DateTimeTypes.LOCAL_DATE_TIME;
+            } else if (typeString.equals(DateTimeTypes.ZONED_DATE_TIME.toString())) {
+                newDataType = DataType.getType(ZonedDateTimeCell.class);
+                type = DateTimeTypes.ZONED_DATE_TIME;
             }
             for (int i = 0; i < includes.length; i++) {
                 final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includes[i], newDataType);
                 newSpec[i] = dataColumnSpecCreator.createSpec();
-                m_newTypes[i] = typeString;
+                m_newTypes[i] = type;
             }
             return newSpec;
         }
@@ -403,7 +400,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                 millis = timeCell.getMillis();
             }
             switch (m_newTypes[m_typeIndex]) {
-                case "LocalDate": {
+                case LOCAL_DATE: {
                     try {
                         final LocalDate ld =
                             LocalDate.of(timeCell.getYear(), timeCell.getMonth() + 1, timeCell.getDayOfMonth());
@@ -412,7 +409,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                         return new MissingCell(e.getMessage());
                     }
                 }
-                case "LocalTime": {
+                case LOCAL_TIME: {
                     try {
                         final LocalTime lt = LocalTime.of(timeCell.getHourOfDay(), timeCell.getMinute(),
                             timeCell.getSecond(), (int)TimeUnit.MILLISECONDS.toNanos(millis));
@@ -421,7 +418,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                         return new MissingCell(e.getMessage());
                     }
                 }
-                case "LocalDateTime": {
+                case LOCAL_DATE_TIME: {
                     try {
                         final LocalDate ld =
                             LocalDate.of(timeCell.getYear(), timeCell.getMonth() + 1, timeCell.getDayOfMonth());
@@ -432,7 +429,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
                         return new MissingCell(e.getMessage());
                     }
                 }
-                case "ZonedDateTime": {
+                case ZONED_DATE_TIME: {
                     try {
                         final LocalDate ld =
                             LocalDate.of(timeCell.getYear(), timeCell.getMonth() + 1, timeCell.getDayOfMonth());

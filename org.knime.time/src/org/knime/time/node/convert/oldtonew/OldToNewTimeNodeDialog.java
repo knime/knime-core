@@ -74,11 +74,14 @@ final class OldToNewTimeNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentColumnFilter2(OldToNewTimeNodeModel.createColSelectModel(), 0));
 
         createNewGroup("New Type Selection");
+        setHorizontalPlacement(true);
         final SettingsModelBoolean typeModelBool = OldToNewTimeNodeModel.createTypeModelBool();
         addDialogComponent(
             new DialogComponentBoolean(typeModelBool, "Automatic type detection (based on the first row)"));
 
-        final String[] availableTypes = new String[]{"LocalDateTime", "ZonedDateTime", "LocalDate", "LocalTime"};
+        final String[] availableTypes =
+            new String[]{DateTimeTypes.LOCAL_DATE_TIME.toString(), DateTimeTypes.ZONED_DATE_TIME.toString(),
+                DateTimeTypes.LOCAL_DATE.toString(), DateTimeTypes.LOCAL_TIME.toString()};
         final SettingsModelString typeSelectModel = OldToNewTimeNodeModel.createTypeSelectModel();
         typeSelectModel.setEnabled(!typeModelBool.getBooleanValue());
         addDialogComponent(new DialogComponentStringSelection(typeSelectModel, "New type: ", availableTypes));
@@ -109,7 +112,7 @@ final class OldToNewTimeNodeDialog extends DefaultNodeSettingsPane {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                if (typeSelectModel.getStringValue() == "ZonedDateTime") {
+                if (typeSelectModel.getStringValue().equals(DateTimeTypes.ZONED_DATE_TIME.toString())) {
                     zoneSelectModel.setEnabled(true);
                 } else {
                     zoneSelectModel.setEnabled(false);
