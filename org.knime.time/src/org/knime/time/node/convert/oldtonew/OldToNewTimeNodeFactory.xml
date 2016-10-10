@@ -53,10 +53,10 @@
 		</tab>
 	</fullDescription>
 	<ports>
-		<inPort index="0" name="Table to be extracted">
+		<inPort index="0" name="Table to be converted">
 			Input table.
 		</inPort>
-		<outPort index="0" name="Extracted table">
+		<outPort index="0" name="Extracted converted">
 			Output table containing the converted
 			columns.
 		</outPort>
