@@ -50,9 +50,9 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 
 /**
- * The node dialog of the missing value extractor node.
+ * The node dialog of the node which converts new to old date&time types.
  *
- * @author Simon Schmid
+ * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 final class NewToOldTimeNodeDialog extends DefaultNodeSettingsPane {
 

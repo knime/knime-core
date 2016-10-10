@@ -94,9 +94,9 @@ import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 
 /**
- * The {@link NodeModel} implementation of the missing value extractor node.
+ * The {@link NodeModel} implementation of the node which converts new to old date&time types.
  *
- * @author Simon Schmid
+ * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 final class NewToOldTimeNodeModel extends NodeModel {
 
