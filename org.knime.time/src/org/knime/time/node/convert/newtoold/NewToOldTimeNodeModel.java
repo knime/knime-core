@@ -47,19 +47,16 @@ package org.knime.time.node.convert.newtoold;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Optional;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.MissingValue;
-import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.AbstractCellFactory;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.StringCell;
+import org.knime.core.data.time.localdate.LocalDateValue;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.localtime.LocalTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -68,12 +65,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.streamable.BufferedDataTableRowOutput;
-import org.knime.core.node.streamable.DataTableRowInput;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.streamable.PartitionInfo;
@@ -83,7 +76,6 @@ import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
-import org.knime.core.util.UniqueNameGenerator;
 
 /**
  * The {@link NodeModel} implementation of the missing value extractor node.
@@ -92,25 +84,13 @@ import org.knime.core.util.UniqueNameGenerator;
  */
 final class NewToOldTimeNodeModel extends NodeModel {
 
-    private final SettingsModelBoolean m_isFiltered = createIsFilteredModel();
-
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
-    private final SettingsModelString m_suffix = createSuffixModel();
-
-    /** @return the 'is filtered' model for both dialog and model. */
-    static SettingsModelBoolean createIsFilteredModel() {
-        return new SettingsModelBoolean("isFiltered", true);
-    }
-
     /** @return the column select model, used in both dialog and model. */
+    @SuppressWarnings("unchecked")
     static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select");
-    }
-
-    /** @return the suffix model used in both dialog and model. */
-    static SettingsModelString createSuffixModel() {
-        return new SettingsModelString("suffix", " (error cause)");
+        return new SettingsModelColumnFilter2("col_select", LocalDateTimeValue.class, ZonedDateTimeValue.class,
+            LocalDateValue.class, LocalTimeValue.class);
     }
 
     /** One in, one out. */
@@ -118,80 +98,11 @@ final class NewToOldTimeNodeModel extends NodeModel {
         super(1, 1);
     }
 
-    /**
-     * helper method to compute output
-     */
-    private void execute(final RowInput inData, final RowOutput output, final ExecutionContext exec,
-        final long rowCount) throws Exception {
-        final AppendErrorMessageCellFactory cellFactory = createCellFactory(inData.getDataTableSpec());
-        DataRow row;
-        long currentRowIndex = 0;
-        while ((row = inData.poll()) != null) {
-            exec.checkCanceled();
-            // set progress if not streaming
-            if (rowCount >= 0) {
-                exec.setProgress(currentRowIndex / (double)rowCount);
-            }
-            final long currentRowIndexFinal = currentRowIndex;
-            exec.setMessage(() -> "Row " + currentRowIndexFinal + "/" + rowCount);
-            // compute new cells
-            Optional<DataCell[]> newCellsOptional = cellFactory.getCellsOptional(row);
-            if (newCellsOptional.isPresent()) {
-                DataCell[] newCells= newCellsOptional.get();
-                output.push(new AppendedColumnRow(row, newCells));
-            }
-            currentRowIndex += 1;
-        }
-        inData.close();
-        output.close();
-    }
-
-    /**
-     * @param inSpec Current input spec
-     * @return The CR describing the output
-     */
-    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
-        ColumnRearranger rearranger = new ColumnRearranger(inSpec);
-        AppendErrorMessageCellFactory cellFac = createCellFactory(inSpec);
-        rearranger.append(cellFac);
-        return rearranger;
-    }
-
-    /** @param inSpec Current input spec
-     * @return The cell factory for the output cells.
-     */
-    private AppendErrorMessageCellFactory createCellFactory(final DataTableSpec inSpec) {
-
-        String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-        String suffix = m_suffix.getStringValue();
-
-        int[] includeIndexes = Arrays.stream(includeList).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-        UniqueNameGenerator nameGen = new UniqueNameGenerator(inSpec);
-
-        DataColumnSpec[] newCols = Arrays.stream(includeList)
-                .map(s -> nameGen.newColumn(s + suffix, StringCell.TYPE))
-                .toArray(DataColumnSpec[]::new);
-        return new AppendErrorMessageCellFactory(includeIndexes, newCols);
-    }
-
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inObjects, final ExecutionContext exec)
         throws Exception {
 
-        final ColumnRearranger columnRearranger = createColumnRearranger(inObjects[0].getDataTableSpec());
-        if (!m_isFiltered.getBooleanValue()) {
-            final BufferedDataTable out = exec.createColumnRearrangeTable(inObjects[0], columnRearranger, exec);
-
-            return new BufferedDataTable[]{out};
-
-        } else {
-            exec.setProgress(0);
-            final BufferedDataTableRowOutput out =
-                new BufferedDataTableRowOutput(exec.createDataContainer(columnRearranger.createSpec()));
-            execute(new DataTableRowInput(inObjects[0]), out, exec, inObjects[0].size());
-
-            return new BufferedDataTable[]{out.getDataTable()};
-        }
+        return new BufferedDataTable[]{};
     }
 
     /** {@inheritDoc} */
@@ -222,7 +133,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                 throws Exception {
                 final RowInput in = (RowInput)inputs[0];
                 final RowOutput out = (RowOutput)outputs[0];
-                NewToOldTimeNodeModel.this.execute(in, out, exec, -1);
+                //                NewToOldTimeNodeModel.this.execute(in, out, exec, -1);
             }
         };
     }
@@ -232,8 +143,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{rearranger.createSpec()};
+        //        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
+        return new DataTableSpec[]{};
     }
 
     /**
@@ -259,9 +170,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_isFiltered.saveSettingsTo(settings);
         m_colSelect.saveSettingsTo(settings);
-        m_suffix.saveSettingsTo(settings);
     }
 
     /**
@@ -269,9 +178,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_isFiltered.validateSettings(settings);
         m_colSelect.validateSettings(settings);
-        m_suffix.validateSettings(settings);
     }
 
     /**
@@ -279,9 +186,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_isFiltered.loadSettingsFrom(settings);
         m_colSelect.loadSettingsFrom(settings);
-        m_suffix.loadSettingsFrom(settings);
     }
 
     /**
@@ -294,57 +199,17 @@ final class NewToOldTimeNodeModel extends NodeModel {
 
     final class AppendErrorMessageCellFactory extends AbstractCellFactory {
 
-        private final int[] m_includeIndices;
-        private final DataCell[] m_defaultReturnAllMissings;
-
-
         /**
          * @param includeIndices
          * @param newCols
          */
         AppendErrorMessageCellFactory(final int[] includeIndices, final DataColumnSpec[] newCols) {
             super(newCols);
-            m_includeIndices = includeIndices;
-            m_defaultReturnAllMissings = new DataCell[m_includeIndices.length];
-            Arrays.fill(m_defaultReturnAllMissings, DataType.getMissingCell());
         }
 
         @Override
         public DataCell[] getCells(final DataRow row) {
-            return getCellsOptional(row).orElseThrow(
-                () -> new IllegalStateException("Not supposed to be null at this point"));
-        }
-
-        Optional<DataCell[]> getCellsOptional(final DataRow row) {
-            // check if the row should be filtered (or the default return value applies)
-            boolean hasMissingCells = Arrays.stream(m_includeIndices)
-                    .mapToObj(i -> row.getCell(i))
-                    .anyMatch(c -> c.isMissing());
-
-            final DataCell[] cells;
-            if (hasMissingCells) { // if it has missing -- extract the error messages into new array
-                cells = new DataCell[m_includeIndices.length];
-                // add error messages
-                for (int i = 0; i < m_includeIndices.length; i++) {
-                    final DataCell cell = row.getCell(m_includeIndices[i]);
-                    if (cell.isMissing()) {
-                        String error = ((MissingValue)cell).getError();
-                        if (error == null) {
-                            cells[i] = new StringCell("");
-                        } else {
-                            cells[i] = new StringCell(error);
-                        }
-                    } else {
-                        cells[i] = DataType.getMissingCell();
-                    }
-                }
-            } else if (m_isFiltered.getBooleanValue()) { // no missings and rows to be removed ... null return
-                cells = null;
-            } else { // keep rows (even though non is missing), default return type (all missing cells in error cols)
-                cells = m_defaultReturnAllMissings;
-            }
-
-            return Optional.ofNullable(cells);
+            return null;
         }
 
     }

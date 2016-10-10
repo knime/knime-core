@@ -49,9 +49,9 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * Factory class of the missing value extractor node.
+ * The factory class of the node which converts new to old date&time types.
  *
- * @author Simon Schmid
+ * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public final class NewToOldTimeNodeFactory extends NodeFactory<NewToOldTimeNodeModel> {
 
@@ -75,8 +75,7 @@ public final class NewToOldTimeNodeFactory extends NodeFactory<NewToOldTimeNodeM
      * {@inheritDoc}
      */
     @Override
-    public NodeView<NewToOldTimeNodeModel> createNodeView(final int viewIndex,
-            final NewToOldTimeNodeModel nodeModel) {
+    public NodeView<NewToOldTimeNodeModel> createNodeView(final int viewIndex, final NewToOldTimeNodeModel nodeModel) {
         return null;
     }
 

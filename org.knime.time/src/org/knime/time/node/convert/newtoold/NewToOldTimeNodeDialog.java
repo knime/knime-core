@@ -46,9 +46,7 @@
 package org.knime.time.node.convert.newtoold;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
 
 /**
  * The node dialog of the missing value extractor node.
@@ -60,14 +58,8 @@ final class NewToOldTimeNodeDialog extends DefaultNodeSettingsPane {
     /** Setting up all DialogComponents. */
     NewToOldTimeNodeDialog() {
 
-        addDialogComponent(new DialogComponentBoolean(NewToOldTimeNodeModel.createIsFilteredModel(),
-                "Filter rows without missing values"));
-
-        addDialogComponent(new DialogComponentString(NewToOldTimeNodeModel.createSuffixModel(),
-            "Column name suffix:", true, 10));
-
-        addDialogComponent(new DialogComponentColumnFilter2(
-            NewToOldTimeNodeModel.createColSelectModel(), 0));
+        createNewGroup("Column Selection");
+        addDialogComponent(new DialogComponentColumnFilter2(NewToOldTimeNodeModel.createColSelectModel(), 0));
 
     }
 
