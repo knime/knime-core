@@ -47,15 +47,30 @@ package org.knime.time.node.convert.newtoold;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
+import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.AbstractCellFactory;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.time.localdate.LocalDateCell;
 import org.knime.core.data.time.localdate.LocalDateValue;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.localtime.LocalTimeCell;
 import org.knime.core.data.time.localtime.LocalTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -65,6 +80,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.streamable.InputPortRole;
@@ -86,6 +102,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
 
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
+    private final SettingsModelBoolean m_timeZoneSelect = createBooleanModel();
+
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
     static SettingsModelColumnFilter2 createColSelectModel() {
@@ -93,16 +111,67 @@ final class NewToOldTimeNodeModel extends NodeModel {
             LocalDateValue.class, LocalTimeValue.class);
     }
 
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelBoolean createBooleanModel() {
+        return new SettingsModelBoolean("time_zone_select", true);
+    }
+
     /** One in, one out. */
     NewToOldTimeNodeModel() {
         super(1, 1);
     }
 
+    /**
+     *
+     * @param inSpec Current input spec
+     * @param row First row of the table, if called by execute, or null, if called by configure
+     * @return Column specs of the output (only of the included columns)
+     */
+    private DataTableSpec getOutSpec(final DataTableSpec inSpec) {
+        // merge the outspecs (included and excluded)
+        final int[] includeIndexes =
+            Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
+        final DataColumnSpec[] colSpecs = new DataColumnSpec[inSpec.getNumColumns()];
+        for (int i = 0; i < inSpec.getNumColumns(); i++) {
+            final int searchIdx = Arrays.binarySearch(includeIndexes, i);
+            if (searchIdx < 0) {
+                colSpecs[i] = inSpec.getColumnSpec(i);
+            } else {
+                final DataColumnSpecCreator dataColumnSpecCreator =
+                    new DataColumnSpecCreator(inSpec.getColumnSpec(i).getName(), DateAndTimeCell.TYPE);
+                colSpecs[i] = dataColumnSpecCreator.createSpec();
+            }
+        }
+        return new DataTableSpec(colSpecs);
+    }
+
+    /**
+     * @param inSpec Current input spec
+     * @return The CR describing the output
+     */
+    private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
+        final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
+        final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
+        final int[] includeIndexes =
+            Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
+
+        int i = 0;
+        for (String includedCol : includeList) {
+            final DataColumnSpecCreator dataColumnSpecCreator =
+                new DataColumnSpecCreator(includedCol, DateAndTimeCell.TYPE);
+            ConvertTimeCellFactory cellFac =
+                new ConvertTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndexes[i++]);
+            rearranger.replace(cellFac, includedCol);
+        }
+        return rearranger;
+    }
+
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inObjects, final ExecutionContext exec)
         throws Exception {
-
-        return new BufferedDataTable[]{};
+        final ColumnRearranger columnRearranger = createColumnRearranger(inObjects[0].getDataTableSpec());
+        final BufferedDataTable out = exec.createColumnRearrangeTable(inObjects[0], columnRearranger, exec);
+        return new BufferedDataTable[]{out};
     }
 
     /** {@inheritDoc} */
@@ -133,7 +202,27 @@ final class NewToOldTimeNodeModel extends NodeModel {
                 throws Exception {
                 final RowInput in = (RowInput)inputs[0];
                 final RowOutput out = (RowOutput)outputs[0];
-                //                NewToOldTimeNodeModel.this.execute(in, out, exec, -1);
+
+                final DataTableSpec inSpec = in.getDataTableSpec();
+                String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
+                final int[] includeIndexes =
+                    Arrays.stream(includeList).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
+
+                DataRow row;
+                while ((row = in.poll()) != null) {
+                    exec.checkCanceled();
+                    DataCell[] datacells = new DataCell[includeIndexes.length];
+                    for (int i = 0; i < includeIndexes.length; i++) {
+                        final DataColumnSpecCreator dataColumnSpecCreator =
+                            new DataColumnSpecCreator(includeList[i], DateAndTimeCell.TYPE);
+                        ConvertTimeCellFactory cellFac =
+                            new ConvertTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndexes[i]);
+                        datacells[i] = cellFac.getCells(row)[0];
+                    }
+                    out.push(new ReplacedColumnsDataRow(row, datacells, includeIndexes));
+                }
+                in.close();
+                out.close();
             }
         };
     }
@@ -143,8 +232,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        //        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
-        return new DataTableSpec[]{};
+        return new DataTableSpec[]{getOutSpec(inSpecs[0])};
     }
 
     /**
@@ -171,6 +259,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_colSelect.saveSettingsTo(settings);
+        m_timeZoneSelect.saveSettingsTo(settings);
     }
 
     /**
@@ -179,6 +268,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.validateSettings(settings);
+        m_timeZoneSelect.validateSettings(settings);
     }
 
     /**
@@ -187,6 +277,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.loadSettingsFrom(settings);
+        m_timeZoneSelect.loadSettingsFrom(settings);
     }
 
     /**
@@ -197,20 +288,75 @@ final class NewToOldTimeNodeModel extends NodeModel {
         // nothing to do
     }
 
-    final class AppendErrorMessageCellFactory extends AbstractCellFactory {
+    /**
+    *
+    */
+    private final class ConvertTimeCellFactory extends SingleCellFactory {
+
+        private final int m_colIndex;
 
         /**
-         * @param includeIndices
-         * @param newCols
+         * @param inSpec
+         * @param colIndex
          */
-        AppendErrorMessageCellFactory(final int[] includeIndices, final DataColumnSpec[] newCols) {
-            super(newCols);
+        public ConvertTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
+            super(inSpec);
+            m_colIndex = colIndex;
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public DataCell[] getCells(final DataRow row) {
+        public DataCell getCell(final DataRow row) {
+            DataCell cell = row.getCell(m_colIndex);
+            if (cell.isMissing()) {
+                return cell;
+            }
+            if (cell instanceof LocalDateTimeValue) {
+                LocalDateTime ldt = ((LocalDateTimeCell)cell).getLocalDateTime();
+                if (ldt.getNano() == 0) {
+                    return new DateAndTimeCell(ldt.getYear(), ldt.getMonthValue() - 1, ldt.getDayOfMonth(),
+                        ldt.getHour(), ldt.getMinute(), ldt.getSecond());
+                } else {
+                    return new DateAndTimeCell(ldt.getYear(), ldt.getMonthValue() - 1, ldt.getDayOfMonth(),
+                        ldt.getHour(), ldt.getMinute(), ldt.getSecond(),
+                        (int)TimeUnit.NANOSECONDS.toMillis(ldt.getNano()));
+                }
+            }
+            if (cell instanceof ZonedDateTimeValue) {
+                LocalDateTime ldt = null;
+                if (m_timeZoneSelect.getBooleanValue()) {
+                    ZonedDateTime zdt = ((ZonedDateTimeCell)cell).getZonedDateTime();
+                    LocalDateTime ldtUTC = LocalDateTime.of(zdt.getYear(), zdt.getMonth(), zdt.getDayOfMonth(),
+                        zdt.getHour(), zdt.getMinute(), zdt.getSecond(), zdt.getNano());
+                    ldt = LocalDateTime.ofInstant(ldtUTC.toInstant(ZoneOffset.UTC), zdt.getZone());
+                } else {
+                    ldt = ((ZonedDateTimeCell)cell).getZonedDateTime().toLocalDateTime();
+                }
+                if (ldt.getNano() == 0) {
+                    return new DateAndTimeCell(ldt.getYear(), ldt.getMonthValue() - 1, ldt.getDayOfMonth(),
+                        ldt.getHour(), ldt.getMinute(), ldt.getSecond());
+                } else {
+                    return new DateAndTimeCell(ldt.getYear(), ldt.getMonthValue() - 1, ldt.getDayOfMonth(),
+                        ldt.getHour(), ldt.getMinute(), ldt.getSecond(),
+                        (int)TimeUnit.NANOSECONDS.toMillis(ldt.getNano()));
+                }
+            }
+            if (cell instanceof LocalTimeValue) {
+                LocalTime lt = ((LocalTimeCell)cell).getLocalTime();
+                if (lt.getNano() == 0) {
+                    return new DateAndTimeCell(lt.getHour(), lt.getMinute(), lt.getSecond(), -1);
+                } else {
+                    return new DateAndTimeCell(lt.getHour(), lt.getMinute(), lt.getSecond(),
+                        (int)TimeUnit.NANOSECONDS.toMillis(lt.getNano()));
+                }
+            }
+            if (cell instanceof LocalDateValue) {
+                LocalDate ld = ((LocalDateCell)cell).getLocalDate();
+                return new DateAndTimeCell(ld.getYear(), ld.getMonthValue() - 1, ld.getDayOfMonth());
+            }
             return null;
         }
-
     }
 }

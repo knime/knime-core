@@ -1,34 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
 <knimeNode icon="date_time.png" type="Manipulator">
-	<name>Date/time to legacy date/time</name>
+	<name>Date&amp;time to legacy date&amp;time</name>
 	<shortDescription>
-		Converts new to old.
+		Converts new date&amp;time to old.
 	</shortDescription>
 	<fullDescription>
 		<intro>
 			<p>
-				This node can ...
+				This node converts columns from the new date&amp;time data types to the old
+				type.
 			</p>
 		</intro>
-		<option name="Filter rows without missing values">
-			If checked, only rows containing missing values will be in the output table.
-		</option>
-		<option name="Column name suffix">
-			The new columns containing the extracted error message will be labeled with this suffix.
-		</option>
-		<option name="Column Selector">
-			Only the error messages of the included columns will be extracted.
-		</option>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				Only the included columns will be converted.
+			</option>
+		</tab>
+		<tab name="Time Zone Handling">
+			<option name="Add the offset of the time zone to the time">
+				If checked, the offset of the time zone will be added to the time. Otherwise the time zone will be just dropped.
+			</option>			
+		</tab>
 	</fullDescription>
 	<ports>
-		<inPort index="0" name="Table to be extracted">
-			Table from which error messages of
-			missing values are to be extracted.
+		<inPort index="0" name="Table to be converted">
+			Input table
 		</inPort>
-		<outPort index="0" name="Extracted table">
-			Table appending the error messages of
-			missing values.
+		<outPort index="0" name="Converted table">
+			Output table containing the converted
+			columns.
 		</outPort>
 	</ports>
 </knimeNode>
