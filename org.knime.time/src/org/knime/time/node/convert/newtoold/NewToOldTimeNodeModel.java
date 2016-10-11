@@ -124,8 +124,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
     /**
      *
      * @param inSpec Current input spec
-     * @param row First row of the table, if called by execute, or null, if called by configure
-     * @return Column specs of the output (only of the included columns)
+     * @return Output spec
      */
     private DataTableSpec getOutSpec(final DataTableSpec inSpec) {
         // merge the outspecs (included and excluded)
