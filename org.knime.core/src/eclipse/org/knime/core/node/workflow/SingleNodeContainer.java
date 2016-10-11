@@ -959,6 +959,7 @@ public abstract class SingleNodeContainer extends NodeContainer implements ISing
      * @return true if node is part of a scope context.
      * @since 2.8
      */
+    @Override
     public boolean isMemberOfScope() {
         synchronized (m_nodeMutex) {
             // we need to check if either a FlowScopeObject is on the stack or of

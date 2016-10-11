@@ -110,14 +110,14 @@ public interface ISingleNodeContainer {
 //     * @see org.knime.core.node.Node#getOutgoingFlowObjectStack()
 //     */
 //    FlowObjectStack getOutgoingFlowObjectStack();
-//
-//    /** Check if the given node is part of a scope (loop, try/catch...).
-//     *
-//     * @return true if node is part of a scope context.
-//     * @since 2.8
-//     */
-//    boolean isMemberOfScope();
-//
+
+    /** Check if the given node is part of a scope (loop, try/catch...).
+     *
+     * @return true if node is part of a scope context.
+     * @since 2.8
+     */
+    boolean isMemberOfScope();
+
 //    /** Creates a copy of the stack held by the Node and modifies the copy
 //     * by pushing all outgoing flow variables onto it. If the node represents
 //     * a scope end node, it will also pop the corresponding scope context
