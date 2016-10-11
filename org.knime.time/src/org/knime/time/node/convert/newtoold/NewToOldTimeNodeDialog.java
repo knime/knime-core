@@ -48,26 +48,23 @@ package org.knime.time.node.convert.newtoold;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
 
 /**
- * The node dialog of the missing value extractor node.
+ * The node dialog of the node which converts new to old date&time types.
  *
- * @author Simon Schmid
+ * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 final class NewToOldTimeNodeDialog extends DefaultNodeSettingsPane {
 
     /** Setting up all DialogComponents. */
     NewToOldTimeNodeDialog() {
 
-        addDialogComponent(new DialogComponentBoolean(NewToOldTimeNodeModel.createIsFilteredModel(),
-                "Filter rows without missing values"));
+        createNewGroup("Column Selection");
+        addDialogComponent(new DialogComponentColumnFilter2(NewToOldTimeNodeModel.createColSelectModel(), 0));
 
-        addDialogComponent(new DialogComponentString(NewToOldTimeNodeModel.createSuffixModel(),
-            "Column name suffix:", true, 10));
-
-        addDialogComponent(new DialogComponentColumnFilter2(
-            NewToOldTimeNodeModel.createColSelectModel(), 0));
+        createNewGroup("Time Zone Handling");
+        addDialogComponent(new DialogComponentBoolean(NewToOldTimeNodeModel.createBooleanModel(),
+            "Add the offset of the time zone to the time"));
 
     }
 
