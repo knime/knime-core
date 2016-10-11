@@ -50,6 +50,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.core.api.node.workflow.ISingleNodeContainer;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -79,7 +80,7 @@ import org.w3c.dom.Element;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public abstract class SingleNodeContainer extends NodeContainer {
+public abstract class SingleNodeContainer extends NodeContainer implements ISingleNodeContainer {
 
     /** my logger. */
     private static final NodeLogger LOGGER =

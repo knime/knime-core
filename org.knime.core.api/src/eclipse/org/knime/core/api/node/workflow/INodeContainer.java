@@ -56,6 +56,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 
 /**
+ * TODO
  *
  * @author Martin Horn, KNIME.com
  */

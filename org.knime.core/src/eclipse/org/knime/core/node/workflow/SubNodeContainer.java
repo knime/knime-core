@@ -78,13 +78,14 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlException;
 import org.knime.core.api.node.port.MetaPortInfo;
+import org.knime.core.api.node.workflow.ISubNodeContainer;
 import org.knime.core.api.node.workflow.NodeContainerState;
+import org.knime.core.api.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
-import org.knime.core.api.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
@@ -160,7 +161,7 @@ import org.w3c.dom.Element;
  * @author M. Berthold &amp; B. Wiswedel
  * @since 2.9
  */
-public final class SubNodeContainer extends SingleNodeContainer implements NodeContainerParent, NodeContainerTemplate {
+public final class SubNodeContainer extends SingleNodeContainer implements NodeContainerParent, NodeContainerTemplate, ISubNodeContainer {
 
     /** Shown in help description when nothing is set in input/output node. */
     private static final String NO_DESCRIPTION_SET = "<no description set>";
@@ -750,6 +751,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /**
      * @return underlying workflow.
      */
+    @Override
     public WorkflowManager getWorkflowManager() {
         return m_wfm;
     }
