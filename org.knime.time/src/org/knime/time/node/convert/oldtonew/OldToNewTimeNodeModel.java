@@ -235,16 +235,20 @@ final class OldToNewTimeNodeModel extends NodeModel {
             DataType newDataType = null;
             DateTimeTypes type = null;
             final String typeString = m_typeSelect.getStringValue();
-            if (typeString.equals(DateTimeTypes.LOCAL_DATE.toString())) {
+            if ((typeString.equals(DateTimeTypes.LOCAL_DATE.toString()))
+                || (typeString.equals(DateTimeTypes.LOCAL_DATE.name()))) {
                 newDataType = DataType.getType(LocalDateCell.class);
                 type = DateTimeTypes.LOCAL_DATE;
-            } else if (typeString.equals(DateTimeTypes.LOCAL_TIME.toString())) {
+            } else if ((typeString.equals(DateTimeTypes.LOCAL_TIME.toString()))
+                || (typeString.equals(DateTimeTypes.LOCAL_TIME.name()))) {
                 newDataType = DataType.getType(LocalTimeCell.class);
                 type = DateTimeTypes.LOCAL_TIME;
-            } else if (typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.toString())) {
+            } else if ((typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.toString()))
+                || (typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.name()))) {
                 newDataType = DataType.getType(LocalDateTimeCell.class);
                 type = DateTimeTypes.LOCAL_DATE_TIME;
-            } else if (typeString.equals(DateTimeTypes.ZONED_DATE_TIME.toString())) {
+            } else if ((typeString.equals(DateTimeTypes.ZONED_DATE_TIME.toString()))
+                || (typeString.equals(DateTimeTypes.ZONED_DATE_TIME.name()))) {
                 newDataType = DataType.getType(ZonedDateTimeCell.class);
                 type = DateTimeTypes.ZONED_DATE_TIME;
             }
@@ -326,6 +330,22 @@ final class OldToNewTimeNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_colSelect.saveSettingsTo(settings);
         m_autoType.saveSettingsTo(settings);
+        final String typeString = m_typeSelect.getStringValue();
+        if (typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.toString())) {
+            m_typeSelect.setStringValue(DateTimeTypes.LOCAL_DATE_TIME.name());
+        } else {
+            if (typeString.equals(DateTimeTypes.LOCAL_DATE.toString())) {
+                m_typeSelect.setStringValue(DateTimeTypes.LOCAL_DATE.name());
+            } else {
+                if (typeString.equals(DateTimeTypes.LOCAL_TIME.toString())) {
+                    m_typeSelect.setStringValue(DateTimeTypes.LOCAL_TIME.name());
+                } else {
+                    if (typeString.equals(DateTimeTypes.ZONED_DATE_TIME.toString())) {
+                        m_typeSelect.setStringValue(DateTimeTypes.ZONED_DATE_TIME.name());
+                    }
+                }
+            }
+        }
         m_typeSelect.saveSettingsTo(settings);
         m_addZone.saveSettingsTo(settings);
         m_timeZone.saveSettingsTo(settings);
@@ -351,6 +371,22 @@ final class OldToNewTimeNodeModel extends NodeModel {
         m_colSelect.loadSettingsFrom(settings);
         m_autoType.loadSettingsFrom(settings);
         m_typeSelect.loadSettingsFrom(settings);
+        final String typeString = m_typeSelect.getStringValue();
+        if (typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.name())) {
+            m_typeSelect.setStringValue(DateTimeTypes.LOCAL_DATE_TIME.toString());
+        } else {
+            if (typeString.equals(DateTimeTypes.LOCAL_DATE.name())) {
+                m_typeSelect.setStringValue(DateTimeTypes.LOCAL_DATE.toString());
+            } else {
+                if (typeString.equals(DateTimeTypes.LOCAL_TIME.name())) {
+                    m_typeSelect.setStringValue(DateTimeTypes.LOCAL_TIME.toString());
+                } else {
+                    if (typeString.equals(DateTimeTypes.ZONED_DATE_TIME.name())) {
+                        m_typeSelect.setStringValue(DateTimeTypes.ZONED_DATE_TIME.toString());
+                    }
+                }
+            }
+        }
         m_addZone.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
     }
