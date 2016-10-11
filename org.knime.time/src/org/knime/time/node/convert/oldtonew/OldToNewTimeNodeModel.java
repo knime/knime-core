@@ -55,6 +55,7 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -82,9 +83,22 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.Config;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.MergeOperator;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
  * The {@link NodeModel} implementation of the node which converts old to new date&time types.
@@ -398,6 +412,166 @@ final class OldToNewTimeNodeModel extends NodeModel {
     protected void reset() {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
+        SimpleStreamableOperatorInternals simpleStreamableOperatorInternals = new SimpleStreamableOperatorInternals();
+        simpleStreamableOperatorInternals.getConfig().addBoolean("hasIterated", true);
+        simpleStreamableOperatorInternals.getConfig().addInt("sizeRow", 0);
+        return simpleStreamableOperatorInternals;
+    }
+
+    @Override
+    public boolean iterate(final StreamableOperatorInternals internals) {
+        try {
+            boolean a = (m_autoType.getBooleanValue()
+                && ((SimpleStreamableOperatorInternals)internals).getConfig().getBoolean("hasIterated"));
+            return a;
+        } catch (InvalidSettingsException e) {
+            return false;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[]{InputPortRole.DISTRIBUTED_STREAMABLE};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[]{OutputPortRole.DISTRIBUTED};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
+        final PortOutput[] output) throws Exception {
+        // TODO Auto-generated method stub
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+
+        return new StreamableOperator() {
+
+            SimpleStreamableOperatorInternals internals = new SimpleStreamableOperatorInternals();
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void runIntermediate(final PortInput[] inputs, final ExecutionContext exec) throws Exception {
+                if (partitionInfo.getPartitionIndex() == 0) {
+                    RowInput rowInput = (RowInput)inputs[0];
+                    try {
+                        DataRow row = rowInput.poll();
+                        DataColumnSpec[] colSpecs = new DataColumnSpec[row.getNumCells()];
+                        DataTableSpec inSpec = rowInput.getDataTableSpec();
+                        DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
+                        final int[] includeIndexes = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
+                            .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
+                        for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                            final int searchIdx = Arrays.binarySearch(includeIndexes, i);
+                            if (searchIdx < 0) {
+                                colSpecs[i] = inSpec.getColumnSpec(i);
+                            } else {
+                                colSpecs[i] = newColumnSpecs[searchIdx];
+                            }
+                        }
+                        Config config = internals.getConfig();
+                        config.addBoolean("hasIterated", false);
+                        for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                            config.addDataType("type" + i, colSpecs[i].getType());
+                            config.addString("colname" + i, colSpecs[i].getName());
+                        }
+                        config.addInt("sizeRow", colSpecs.length);
+                    } catch (Exception e) {
+                        internals.getConfig().addInt("sizeRow", 0);
+                    }
+                }
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public StreamableOperatorInternals saveInternals() {
+                return internals;
+            }
+
+            @Override
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+                final RowInput in = (RowInput)inputs[0];
+                final RowOutput out = (RowOutput)outputs[0];
+                final DataTableSpec inSpec = in.getDataTableSpec();
+                final int[] includeIndexes = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
+                    .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
+
+                DataRow row;
+                while ((row = in.poll()) != null) {
+                    exec.checkCanceled();
+                    final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
+                    DataCell[] datacells = new DataCell[includeIndexes.length];
+                    for (int i = 0; i < includeIndexes.length; i++) {
+                        ConvertTimeCellFactory cellFac =
+                            new ConvertTimeCellFactory(newColumnSpecs[i], i, includeIndexes[i]);
+                        datacells[i] = cellFac.getCells(row)[0];
+                    }
+                    out.push(new ReplacedColumnsDataRow(row, datacells, includeIndexes));
+                }
+                in.close();
+                out.close();
+            }
+        };
+        //        }
+    }
+
+    @Override
+    public MergeOperator createMergeOperator() {
+        return new MergeOperator() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public StreamableOperatorInternals mergeIntermediate(final StreamableOperatorInternals[] operators) {
+                return operators[0];
+            }
+
+            @Override
+            public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] operators) {
+                return null;
+            }
+        };
+
+    }
+
+    @Override
+    public PortObjectSpec[] computeFinalOutputSpecs(final StreamableOperatorInternals internals,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        if (m_autoType.getBooleanValue()) {
+            SimpleStreamableOperatorInternals simpleInternals = (SimpleStreamableOperatorInternals)internals;
+            Config config = simpleInternals.getConfig();
+            DataColumnSpec[] colSpecs = new DataColumnSpec[config.getInt("sizeRow")];
+            for (int i = 0; i < colSpecs.length; i++) {
+                DataColumnSpecCreator dataColumnSpecCreator =
+                    new DataColumnSpecCreator(config.getString("colname" + i), config.getDataType("type" + i));
+                colSpecs[i] = dataColumnSpecCreator.createSpec();
+            }
+            return new DataTableSpec[]{new DataTableSpec(colSpecs)};
+        } else {
+            return configure(new DataTableSpec[]{(DataTableSpec)inSpecs[0]});
+        }
     }
 
     /**
