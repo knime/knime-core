@@ -1369,6 +1369,7 @@ public final void setNodeMessage(final NodeMessage newMessage) {
     /**
      * @return the annotation associated with the node, never null.
      */
+    @Override
     public NodeAnnotation getNodeAnnotation() {
         return m_annotation;
     }

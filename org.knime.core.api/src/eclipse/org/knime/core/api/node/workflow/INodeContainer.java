@@ -335,10 +335,10 @@ public interface INodeContainer extends NodeProgressListener, NodeContainerState
      */
     String getCustomName();
 
-//    /**
-//     * @return the annotation associated with the node, never null.
-//     */
-//    NodeAnnotation getNodeAnnotation();
+    /**
+     * @return the annotation associated with the node, never null.
+     */
+    INodeAnnotation getNodeAnnotation();
 
     String getCustomDescription();
 
