@@ -132,14 +132,14 @@ public interface ISingleNodeContainer {
 //     * @since 2.8
 //     */
 //    boolean isModelCompatibleTo(Class<?> nodeModelClass);
-//
-//    /**
-//     * @return true if configure or execute were skipped because node is
-//     *   part of an inactive branch.
-//     * @see Node#isInactive()
-//     */
-//    boolean isInactive();
-//
+
+    /**
+     * @return true if configure or execute were skipped because node is
+     *   part of an inactive branch.
+     * @see Node#isInactive()
+     */
+    boolean isInactive();
+
 //    /** @return <code>true</code> if the underlying node is able to consume
 //     * inactive objects (implements
 //     * {@link org.knime.core.node.port.inactive.InactiveBranchConsumer}).

@@ -279,6 +279,7 @@ public abstract class NodeContainer implements INodeContainer {
     /**
      * @return parent workflowmanager holding this node (or null if root).
      */
+    @Override
     public final WorkflowManager getParent() {
         return m_parent;
     }

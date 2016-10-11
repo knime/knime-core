@@ -1015,6 +1015,7 @@ public abstract class SingleNodeContainer extends NodeContainer implements ISing
      *   part of an inactive branch.
      * @see Node#isInactive()
      */
+    @Override
     public abstract boolean isInactive();
 
     /** @return <code>true</code> if the underlying node is able to consume

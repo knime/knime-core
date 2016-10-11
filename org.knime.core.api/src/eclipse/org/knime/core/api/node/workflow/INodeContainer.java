@@ -62,10 +62,10 @@ import org.knime.core.node.workflow.NodeMessage;
  */
 public interface INodeContainer extends NodeProgressListener, NodeContainerStateObservable{
 
-//    /**
-//     * @return parent workflowmanager holding this node (or null if root).
-//     */
-//    WorkflowManager getParent();
+    /**
+     * @return parent workflowmanager holding this node (or null if root).
+     */
+    IWorkflowManager getParent();
 
 //    /** Returns the {@linkplain #getParent() parent workflow manager}. A {@link WorkflowManager} instance contained
 //     * in a {@link SubNodeContainer} overrides it to return the subnode (which then is responsible for all the actions).
