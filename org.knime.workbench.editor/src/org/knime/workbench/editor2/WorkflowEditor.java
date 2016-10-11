@@ -159,6 +159,7 @@ import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 import org.knime.core.api.node.workflow.EditorUIInformation;
 import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.ISubNodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.api.node.workflow.NodePropertyChangedEvent;
@@ -182,7 +183,6 @@ import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
@@ -491,8 +491,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             // if node doesn't exist - or just got deleted, then there are no sub editors
             return editors;
         }
-        if (child instanceof SubNodeContainer) {
-            child_mgr = ((SubNodeContainer)child).getWorkflowManager();
+        if (child instanceof ISubNodeContainer) {
+            child_mgr = ((ISubNodeContainer)child).getWorkflowManager();
         } else if (child instanceof IWorkflowManager) {
             child_mgr = (IWorkflowManager)child;
         } else {
@@ -2989,8 +2989,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                     IWorkflowManager wm = null;
                     if (oldValue instanceof IWorkflowManager) {
                         wm = (IWorkflowManager)oldValue;
-                    } else if (oldValue instanceof SubNodeContainer) {
-                        wm = ((SubNodeContainer)oldValue).getWorkflowManager();
+                    } else if (oldValue instanceof ISubNodeContainer) {
+                        wm = ((ISubNodeContainer)oldValue).getWorkflowManager();
                     }
                     if (wm != null) {
                         // since the equals method of the WorkflowManagerInput
