@@ -1342,10 +1342,10 @@ public interface IWorkflowManager extends INodeContainer{
      * @param evt Change event. */
     void nodeUIInformationChanged(NodeUIInformationEvent evt);
 
-//    /**
-//     * @return a list of all node annotations in the contained flow.
-//     */
-//    List<NodeAnnotation> getNodeAnnotations();
+    /**
+     * @return a list of all node annotations in the contained flow.
+     */
+    List<INodeAnnotation> getNodeAnnotations();
 
     /**
      * Retrieves the node with the given ID, fetches the underlying

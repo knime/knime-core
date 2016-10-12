@@ -123,6 +123,7 @@ import org.knime.core.api.node.workflow.EditorUIInformation;
 import org.knime.core.api.node.workflow.IAnnotation;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.IConnectionContainer.ConnectionType;
+import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.IWorkflowManager;
@@ -9242,10 +9243,11 @@ public boolean canCancelAll() {
     /**
      * @return a list of all node annotations in the contained flow.
      */
-    public List<NodeAnnotation> getNodeAnnotations() {
+    @Override
+    public List<INodeAnnotation> getNodeAnnotations() {
         try (WorkflowLock lock = lock()) {
             Collection<NodeContainer> nodeContainers = getNodeContainers();
-            List<NodeAnnotation> result = new LinkedList<NodeAnnotation>();
+            List<INodeAnnotation> result = new LinkedList<INodeAnnotation>();
             for (NodeContainer node : nodeContainers) {
                 result.add(node.getNodeAnnotation());
             }
