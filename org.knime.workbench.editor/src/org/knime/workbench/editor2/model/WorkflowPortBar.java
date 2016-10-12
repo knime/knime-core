@@ -47,9 +47,9 @@
  */
 package org.knime.workbench.editor2.model;
 
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  *
@@ -61,9 +61,9 @@ public class WorkflowPortBar {
             WorkflowPortBar.class);
 
     private final boolean m_in;
-    private final WorkflowManager m_manager;
+    private final IWorkflowManager m_manager;
 
-    public WorkflowPortBar(final WorkflowManager manager, final boolean in) {
+    public WorkflowPortBar(final IWorkflowManager manager, final boolean in) {
         m_in = in;
         m_manager = manager;
     }
@@ -72,7 +72,7 @@ public class WorkflowPortBar {
         return m_in;
     }
 
-    public WorkflowManager getWorkflowManager() {
+    public IWorkflowManager getWorkflowManager() {
         return m_manager;
     }
 
@@ -80,10 +80,10 @@ public class WorkflowPortBar {
         // retrieve the ui info directly from manager
         if (m_in) {
             LOGGER.debug("getting ui info: " + m_manager.getInPortsBarUIInfo());
-            return (NodeUIInformation)m_manager.getInPortsBarUIInfo();
+            return m_manager.getInPortsBarUIInfo();
         } else {
             LOGGER.debug("getting ui info: " + m_manager.getOutPortsBarUIInfo());
-            return (NodeUIInformation)m_manager.getOutPortsBarUIInfo();
+            return m_manager.getOutPortsBarUIInfo();
         }
     }
 

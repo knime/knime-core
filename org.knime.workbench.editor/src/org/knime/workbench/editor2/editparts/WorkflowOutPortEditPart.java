@@ -56,11 +56,10 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.GraphicalEditPart;
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
@@ -107,14 +106,14 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final NodeContainer getNodeContainer() {
+    protected final INodeContainer getNodeContainer() {
         if (getParent() == null) {
             return null;
         }
         // if the referring WorkflowManager is displayed as a metanode, then
         // the parent is a NodeContainerEditPart
         if (getParent() instanceof NodeContainerEditPart) {
-            return (NodeContainer) getParent().getModel();
+            return (INodeContainer) getParent().getModel();
         }
         // if the referring WorkflowManager is the "root" workflow manager of
         // the open editor then the parent is a WorkflowRootEditPart
@@ -127,8 +126,8 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final WorkflowManager getManager() {
-        return (WorkflowManager)getNodeContainer();
+    protected final IWorkflowManager getManager() {
+        return (IWorkflowManager)getNodeContainer();
     }
 
     /**
@@ -158,7 +157,7 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
         if (getManager() == null) {
             return EMPTY_LIST;
         }
-        ConnectionContainer container = getManager().getIncomingConnectionFor(
+        IConnectionContainer container = getManager().getIncomingConnectionFor(
                 getNodeContainer().getID(), getIndex());
 
         if (container != null) {

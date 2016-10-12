@@ -57,14 +57,15 @@ import org.eclipse.gef.Request;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeAnnotation;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.INodePort;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodePropertyChangedEvent;
 import org.knime.core.api.node.workflow.NodePropertyChangedListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.NodeAnnotation;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.AbstractWorkflowPortBarFigure;
@@ -125,10 +126,10 @@ public abstract class AbstractWorkflowPortBarEditPart
         int maxX = Integer.MIN_VALUE;
         int minX = Integer.MAX_VALUE;
         // find the smallest and the biggest X coordinate in all the UI infos in the flow
-        WorkflowManager manager = ((WorkflowPortBar)getModel()).getWorkflowManager();
-        for (NodeContainer nc : manager.getNodeContainers()) {
+        IWorkflowManager manager = ((WorkflowPortBar)getModel()).getWorkflowManager();
+        for (INodeContainer nc : manager.getAllNodeContainers()) {
             int nodeWidth = NodeContainerFigure.WIDTH;
-            NodeAnnotation nodeAnno = nc.getNodeAnnotation();
+            INodeAnnotation nodeAnno = nc.getNodeAnnotation();
             if ((nodeAnno != null) && (nodeAnno.getWidth() > nodeWidth)) {
                 nodeWidth = nodeAnno.getWidth();
             }
@@ -183,7 +184,7 @@ public abstract class AbstractWorkflowPortBarEditPart
         for (Object ep : getChildren()) {
             if (ep instanceof AbstractPortEditPart) {
                 Object model = ((EditPart)ep).getModel();
-                if (model instanceof NodePort) {
+                if (model instanceof INodePort) {
                     ((AbstractPortEditPart)ep).setIndex(((NodePort)model).getPortIndex());
                 }
             }
@@ -235,7 +236,7 @@ public abstract class AbstractWorkflowPortBarEditPart
 
     /** {@inheritDoc} */
     @Override
-    public WorkflowManager getNodeContainer() {
+    public IWorkflowManager getNodeContainer() {
         return ((WorkflowPortBar)getModel()).getWorkflowManager();
     }
 

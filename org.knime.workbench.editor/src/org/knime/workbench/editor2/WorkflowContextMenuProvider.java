@@ -316,7 +316,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     EditPart child = (EditPart)o;
                     if (child instanceof WorkflowInPortEditPart
                             && ((WorkflowInPortEditPart)child).isSelected()) {
-                        final WorkflowManager wm = ((WorkflowPortBar)root.getModel()).getWorkflowManager();
+                        final WorkflowManager wm = UseImplUtil.getWFMImplOf(((WorkflowPortBar)root.getModel()).getWorkflowManager());
                         action = new OpenWorkflowPortViewAction(wm,
                             ((WorkflowInPortEditPart)child).getIndex(), wm.getNrInPorts());
                         manager.appendToGroup("outPortViews", action);

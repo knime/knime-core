@@ -55,12 +55,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.INodeOutPort;
+import org.knime.core.api.node.workflow.IWorkflowOutPort;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.workbench.editor2.figures.MetaNodeOutPortFigure;
 
@@ -91,7 +92,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
      */
     @Override
     protected IFigure createFigure() {
-        NodeContainer nc = getNodeContainer();
+        INodeContainer nc = getNodeContainer();
         LOGGER.debug("returning new sub metanode out port figure "
                 + " with type " + getType() + " index " + getIndex()
                 + " nr outports " + nc.getNrOutPorts()
@@ -101,7 +102,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
         LOGGER.debug("model: " + getModel()
                 + " state: " + model.getNodeState());
 
-        NodeOutPort port = nc.getOutPort(getIndex());
+        INodeOutPort port = nc.getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
 
         MetaNodeOutPortFigure f = new MetaNodeOutPortFigure(
@@ -116,7 +117,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     @Override
     public void activate() {
         super.activate();
-        WorkflowOutPort model = (WorkflowOutPort)getModel();
+        IWorkflowOutPort model = (IWorkflowOutPort)getModel();
         model.addNodeStateChangeListener(this);
     }
 
@@ -124,7 +125,7 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     @Override
     public void deactivate() {
         // TODO remove the figure from the model
-        ((WorkflowOutPort)getModel()).removeNodeStateChangeListener(this);
+        ((IWorkflowOutPort)getModel()).removeNodeStateChangeListener(this);
         super.deactivate();
     }
 
@@ -184,10 +185,10 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
                         return;
                     }
                     MetaNodeOutPortFigure fig = (MetaNodeOutPortFigure)getFigure();
-                    WorkflowOutPort model = (WorkflowOutPort)getModel();
+                    IWorkflowOutPort model = (IWorkflowOutPort)getModel();
                     fig.setState(model.getNodeState());
                     rebuildTooltip();
-                    WorkflowOutPort outPort = (WorkflowOutPort)getModel();
+                    IWorkflowOutPort outPort = (IWorkflowOutPort)getModel();
                     fig.setInactive(outPort.isInactive());
                     fig.repaint();
                 }

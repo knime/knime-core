@@ -52,9 +52,9 @@ import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.knime.core.api.node.workflow.INodePort;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.NodePort;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.figures.WorkflowOutPortBarFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -70,10 +70,10 @@ public class WorkflowOutPortBarEditPart
      * {@inheritDoc}
      */
     @Override
-    protected List<NodePort> getModelChildren() {
-        WorkflowManager manager = ((WorkflowPortBar)getModel())
+    protected List<INodePort> getModelChildren() {
+        IWorkflowManager manager = ((WorkflowPortBar)getModel())
             .getWorkflowManager();
-        List<NodePort> ports = new ArrayList<NodePort>();
+        List<INodePort> ports = new ArrayList<INodePort>();
         for (int i = 0; i < manager.getNrWorkflowOutgoingPorts(); i++) {
             ports.add(manager.getOutPort(i));
         }

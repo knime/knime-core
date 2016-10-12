@@ -58,11 +58,13 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.INodeOutPort;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowInPort;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowContextMenuProvider;
 import org.knime.workbench.editor2.figures.NewToolTipFigure;
 import org.knime.workbench.editor2.figures.WorkflowInPortFigure;
@@ -109,7 +111,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final NodeContainer getNodeContainer() {
+    protected final INodeContainer getNodeContainer() {
         if (getParent() == null) {
             return null;
         }
@@ -129,8 +131,8 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      * {@inheritDoc}
      */
     @Override
-    protected final WorkflowManager getManager() {
-        return (WorkflowManager)getNodeContainer();
+    protected final IWorkflowManager getManager() {
+        return (IWorkflowManager)getNodeContainer();
     }
 
     /**
@@ -147,7 +149,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      */
     @Override
     protected IFigure createFigure() {
-        NodeOutPort port = getManager().getInPort(getIndex()).getUnderlyingPort();
+        INodeOutPort port = getManager().getInPort(getIndex()).getUnderlyingPort();
         String tooltip = getTooltipText(PORT_NAME + ": "  + getIndex(), port);
         WorkflowInPortFigure f = new WorkflowInPortFigure(getType(),
                 getManager().getNrInPorts(), getIndex(), tooltip);
