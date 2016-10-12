@@ -62,4 +62,9 @@ public interface IWorkflowInPort extends INodeInPort {
      */
     public void setPortIndex(final int portIndex);
 
+    /**
+     * @return the underlyingOutPort
+     */
+    public INodeOutPort getUnderlyingPort();
+
 }

@@ -79,6 +79,7 @@ public final class WorkflowInPort extends NodeInPort implements IWorkflowInPort 
     /**
      * @return the underlyingOutPort
      */
+    @Override
     public NodeOutPort getUnderlyingPort() {
         return m_underlyingPortWrapper;
     }
