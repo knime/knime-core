@@ -78,10 +78,10 @@ public interface INodeOutPort extends INodePort, NodeStateChangeListener, NodeCo
     public String getPortSummary();
 
 
-//    /** @return true if the contained spec is not null and instance of
-//     * {@link org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec}
-//     */
-//    public boolean isInactive();
+    /** @return true if the contained spec is not null and instance of
+     * {@link org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec}
+     */
+    public boolean isInactive();
 
     /**
      * @return the state of the node owning this port.

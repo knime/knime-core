@@ -93,6 +93,7 @@ public interface NodeOutPort extends INodeOutPort, NodePort {
     /** @return true if the contained spec is not null and instance of
      * {@link org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec}
      */
+    @Override
     public boolean isInactive();
 
     /**
