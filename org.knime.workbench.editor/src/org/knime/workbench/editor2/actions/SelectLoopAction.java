@@ -49,6 +49,8 @@ import java.util.List;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.ISingleNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -119,11 +121,11 @@ public class SelectLoopAction extends AbstractNodeAction {
         if (selected.length != 1) {
             return false;
         }
-        NodeContainer node = selected[0].getNodeContainer();
-        if (!(node instanceof SingleNodeContainer)) {
+        INodeContainer node = selected[0].getNodeContainer();
+        if (!(node instanceof ISingleNodeContainer)) {
             return false;
         }
-        if (((SingleNodeContainer)node).isMemberOfScope()) {
+        if (((ISingleNodeContainer)node).isMemberOfScope()) {
              return true;
         }
         return false;
@@ -136,7 +138,7 @@ public class SelectLoopAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         WorkflowManager wfm = getManager();
         for (NodeContainerEditPart selNode : nodeParts) {
-            NodeContainer selNC = selNode.getNodeContainer();
+            INodeContainer selNC = selNode.getNodeContainer();
             if (selNC instanceof SingleNodeContainer) {
                 EditPartViewer viewer = selNode.getViewer();
                 List<NodeContainer> loopNodes = wfm.getNodesInScope((SingleNodeContainer)selNC);

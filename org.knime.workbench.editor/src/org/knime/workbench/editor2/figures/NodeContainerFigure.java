@@ -67,15 +67,15 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.NodeType;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.ISingleNodeContainer;
 import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.editparts.FontStore;
@@ -535,11 +535,11 @@ public class NodeContainerFigure extends RectangleFigure {
      *
      * @param nc new state of underlying node
      */
-    public void setStateFromNC(final NodeContainer nc) {
+    public void setStateFromNC(final INodeContainer nc) {
         boolean isInactive = false;
         LoopStatus loopStatus = LoopStatus.NONE;
-        if (nc instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)nc;
+        if (nc instanceof ISingleNodeContainer) {
+            ISingleNodeContainer snc = (ISingleNodeContainer)nc;
             isInactive = snc.isInactive();
             if (snc instanceof NativeNodeContainer) {
                 NativeNodeContainer nnc = (NativeNodeContainer)snc;

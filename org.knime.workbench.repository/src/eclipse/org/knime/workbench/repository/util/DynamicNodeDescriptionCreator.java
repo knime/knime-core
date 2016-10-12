@@ -53,12 +53,14 @@ import java.util.Set;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.ISingleNodeContainer;
+import org.knime.core.api.node.workflow.ISubNodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
@@ -218,13 +220,13 @@ public final class DynamicNodeDescriptionCreator {
      *            otherwise the entire full description is added
      * @param bld the buffer to add the one line strings to.
      */
-    public void addDescription(final NodeContainer nc,
+    public void addDescription(final INodeContainer nc,
             final boolean useSingleLine, final StringBuilder bld) {
 
-        if (!(nc instanceof SingleNodeContainer)) {
+        if (!(nc instanceof ISingleNodeContainer)) {
             addSubWorkflowDescription(nc, useSingleLine, bld);
         } else {
-            SingleNodeContainer singleNC = (SingleNodeContainer)nc;
+            ISingleNodeContainer singleNC = (ISingleNodeContainer)nc;
             if (useSingleLine) {
                 bld.append("<dt><b>");
                 bld.append(nc.getName());
@@ -281,13 +283,13 @@ public final class DynamicNodeDescriptionCreator {
         }
     }
 
-    private void addSubWorkflowDescription(final NodeContainer nc,
+    private void addSubWorkflowDescription(final INodeContainer nc,
             final boolean useSingleLine, final StringBuilder bld) {
-        WorkflowManager wfm;
-        if (nc instanceof SubNodeContainer) {
-            wfm = ((SubNodeContainer)nc).getWorkflowManager();
+        IWorkflowManager wfm;
+        if (nc instanceof ISubNodeContainer) {
+            wfm = ((ISubNodeContainer)nc).getWorkflowManager();
         } else {
-            wfm = (WorkflowManager)nc;
+            wfm = (IWorkflowManager)nc;
         }
         if (!useSingleLine) {
             bld.append(getHeader());
@@ -299,7 +301,7 @@ public final class DynamicNodeDescriptionCreator {
                 bld.append("<p>" + nc.getCustomDescription() + "</p>");
             }
             bld.append("<h2>Contained nodes: </h2>");
-            for (NodeContainer child : wfm.getNodeContainers()) {
+            for (INodeContainer child : wfm.getAllNodeContainers()) {
                 addDescription(child, true, bld);
             }
             bld.append("</body></html>");
@@ -309,7 +311,7 @@ public final class DynamicNodeDescriptionCreator {
             bld.append("</b></dt>");
             bld.append("<dd>");
             bld.append("<dl>");
-            for (NodeContainer child : wfm.getNodeContainers()) {
+            for (INodeContainer child : wfm.getAllNodeContainers()) {
                 addDescription(child, true, bld);
             }
             bld.append("</dl>");

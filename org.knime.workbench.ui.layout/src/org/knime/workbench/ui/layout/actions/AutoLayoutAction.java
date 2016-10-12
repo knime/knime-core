@@ -52,7 +52,7 @@ import java.util.ArrayList;
 
 import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -122,9 +122,9 @@ public class AutoLayoutAction extends AbstractNodeAction {
             return;
         }
 
-        ArrayList<NodeContainer> nodes = null;
+        ArrayList<INodeContainer> nodes = null;
         if (parts != null && parts.length > 0) {
-            nodes = new ArrayList<NodeContainer>(parts.length);
+            nodes = new ArrayList<INodeContainer>(parts.length);
             for (NodeContainerEditPart p : parts) {
                 nodes.add(p.getNodeContainer());
             }

@@ -52,7 +52,9 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
@@ -139,7 +141,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
         // selection
         boolean atLeastOneNodeIsExecuted = false;
         for (int i = 0; i < parts.length; i++) {
-            NodeContainer nc = parts[i].getNodeContainer();
+            INodeContainer nc = parts[i].getNodeContainer();
             boolean hasView = nc.getNrViews() > 0;
             hasView |= nc.hasInteractiveView() || nc.getInteractiveWebViews().size() > 0;
             hasView |= OpenSubnodeWebViewAction.hasContainerView(nc);
@@ -159,8 +161,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
         LOGGER.debug("Creating open default view job for " + nodeParts.length
                 + " node(s)...");
         for (NodeContainerEditPart p : nodeParts) {
-            final NodeContainer cont = p.getNodeContainer();
-            final InteractiveWebViewsResult webViewsResult = cont.getInteractiveWebViews();
+            final NodeContainer cont = UseImplUtil.getImplOf(p.getNodeContainer(), NodeContainer.class);
             boolean hasView = cont.getNrViews() > 0;
             hasView |= cont.hasInteractiveView() || webViewsResult.size() > 0;
             hasView |= OpenSubnodeWebViewAction.hasContainerView(cont);

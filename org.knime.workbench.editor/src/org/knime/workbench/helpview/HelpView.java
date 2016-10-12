@@ -68,6 +68,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.part.ViewPart;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -216,7 +217,7 @@ public class HelpView extends ViewPart implements ISelectionListener,
                     // if multiple nodes in the editor are selected we should
                     // not show description for the same node (if used multiple
                     // times) twice. We store the node name in the set.
-                    NodeContainer nc = ((NodeContainerEditPart)sel)
+                    INodeContainer nc = ((NodeContainerEditPart)sel)
                             .getNodeContainer();
                     if (!ids.contains(nc.getName())) {
                         ids.add(nc.getName());

@@ -54,7 +54,6 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
@@ -80,7 +79,7 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
      * @param figureBounds The new bounds of the figure
      * @param figure the figure that is going to be moved
      */
-    public ChangeNodeBoundsCommand(final NodeContainer container,
+    public ChangeNodeBoundsCommand(final INodeContainer container,
             final NodeContainerFigure figure, final Rectangle figureBounds) {
         super(container.getParent());
 

@@ -101,6 +101,7 @@ import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.tableview.TableView;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
@@ -434,7 +435,7 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
         //
         if (sel instanceof NodeContainerEditPart) {
             // a NodeContainer was selected, display it's name and status
-            NodeContainer nc = ((NodeContainerEditPart)sel).getNodeContainer();
+            NodeContainer nc = UseImplUtil.getImplOf(((NodeContainerEditPart)sel).getNodeContainer(), NodeContainer.class);
             WorkflowManager wfm = nc.getParent();
             checkWorkflowManagerListener(wfm);
             updateNodeContainerInfo(nc.getID());

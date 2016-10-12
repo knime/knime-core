@@ -95,11 +95,11 @@ import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.util.KNIMEJob;
 import org.knime.core.util.Pair;
 import org.knime.workbench.core.KNIMECorePlugin;
@@ -379,7 +379,7 @@ public class WorkflowCoachView extends ViewPart implements ISelectionListener, I
         Iterator<?> selIt = structSel.iterator();
 
         boolean nodeSelected = selIt.hasNext();
-        NodeContainer nc = null;
+        INodeContainer nc = null;
         if (nodeSelected) {
             Object sel = selIt.next();
             nodeSelected &= (sel instanceof NodeContainerEditPart);

@@ -46,12 +46,12 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -135,7 +135,7 @@ public class StepLoopAction extends AbstractNodeAction {
         }
         // enabled if the one selected node is a configured and "in progress"
         // LoopEndNode
-        NodeContainer nc = parts[0].getNodeContainer();
+        INodeContainer nc = parts[0].getNodeContainer();
         if (nc instanceof NativeNodeContainer) {
             NativeNodeContainer nnc = (NativeNodeContainer)nc;
             if (nnc.isModelCompatibleTo(LoopEndNode.class) && nnc.getLoopStatus().equals(LoopStatus.PAUSED)) {
@@ -162,7 +162,7 @@ public class StepLoopAction extends AbstractNodeAction {
                 + nodeParts.length + " node(s)...");
         WorkflowManager manager = getManager();
         for (NodeContainerEditPart p : nodeParts) {
-            NodeContainer nc = p.getNodeContainer();
+            INodeContainer nc = p.getNodeContainer();
             if (nc instanceof NativeNodeContainer) {
                 NativeNodeContainer nnc = (NativeNodeContainer)nc;
                 if (nnc.isModelCompatibleTo(LoopEndNode.class) && nnc.getLoopStatus().equals(LoopStatus.PAUSED)) {

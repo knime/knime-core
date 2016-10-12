@@ -56,7 +56,6 @@ import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeTimer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -97,7 +96,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      * not.
      * @param hostWFM The host workflow
      */
-    public CreateConnectionCommand(final WorkflowManager hostWFM) {
+    public CreateConnectionCommand(final IWorkflowManager hostWFM) {
         super(hostWFM);
         m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);

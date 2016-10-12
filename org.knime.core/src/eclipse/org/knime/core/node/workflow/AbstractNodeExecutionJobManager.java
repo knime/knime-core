@@ -49,6 +49,7 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 import java.net.URL;
 
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
@@ -95,7 +96,7 @@ public abstract class AbstractNodeExecutionJobManager implements NodeExecutionJo
      * @return the url of the decorator icon (attached to a node container figure). If null no icon is shown for
      * the node.
      */
-    public URL getIconForChild(final NodeContainer child) {
+    public URL getIconForChild(final INodeContainer child) {
         return null;
     }
 

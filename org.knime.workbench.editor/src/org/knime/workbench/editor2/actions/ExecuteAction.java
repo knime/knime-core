@@ -48,9 +48,9 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -136,7 +136,7 @@ public class ExecuteAction extends AbstractNodeAction {
             return false;
         }
         for (int i = 0; i < parts.length; i++) {
-            NodeContainer nc = parts[i].getNodeContainer();
+            INodeContainer nc = parts[i].getNodeContainer();
             if (wm.canExecuteNode(nc.getID())) {
                 return true;
             }

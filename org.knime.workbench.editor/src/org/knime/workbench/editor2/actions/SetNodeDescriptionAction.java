@@ -52,8 +52,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -149,7 +149,7 @@ public class SetNodeDescriptionAction extends AbstractNodeAction {
             return;
         }
 
-        final NodeContainer container = nodeParts[0].getNodeContainer();
+        final INodeContainer container = nodeParts[0].getNodeContainer();
 
         try {
             Shell parent = PlatformUI.getWorkbench().getDisplay().getActiveShell();

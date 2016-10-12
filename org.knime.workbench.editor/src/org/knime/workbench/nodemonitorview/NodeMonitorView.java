@@ -93,6 +93,7 @@ import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
@@ -366,7 +367,7 @@ public class NodeMonitorView extends ViewPart
         //
         if (sel instanceof NodeContainerEditPart) {
             // a NodeContainer was selected, display it's name and status
-            NodeContainer nc = ((NodeContainerEditPart)sel).getNodeContainer();
+            NodeContainer nc = UseImplUtil.getImplOf(((NodeContainerEditPart)sel).getNodeContainer(), NodeContainer.class);
             updateNodeContainerInfo(nc);
         } else {
             // unsupported selection

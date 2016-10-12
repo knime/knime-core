@@ -53,9 +53,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -121,7 +121,7 @@ public class VerticAlignmentCenter {
         int refX = nui.getBounds()[0];
 
         for (int i = 1 /* idx 0 is anchor */; i < nodes.length; i++) {
-            NodeContainer nc = nodes[i].getNodeContainer();
+            INodeContainer nc = nodes[i].getNodeContainer();
             NodeUIInformation ui = nc.getUIInformation();
             if (ui.getBounds()[0] != refX) {
                 offsets.put(nodes[i], refX - ui.getBounds()[0]);

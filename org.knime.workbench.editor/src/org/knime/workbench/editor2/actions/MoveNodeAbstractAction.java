@@ -56,7 +56,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -216,7 +216,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
             if (epart instanceof NodeContainerEditPart) {
                 NodeContainerEditPart node = (NodeContainerEditPart)epart;
                 noNodes++;
-                NodeContainer nc = node.getNodeContainer();
+                INodeContainer nc = node.getNodeContainer();
                 NodeContainerFigure figure = (NodeContainerFigure)node.getFigure();
                 Rectangle bounds = figure.getBounds().getCopy();
                 bounds.translate(offset);

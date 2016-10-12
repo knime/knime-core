@@ -53,9 +53,9 @@ import java.util.Map;
 
 import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -110,7 +110,7 @@ public class VerticAlignManager {
         // transfer new coordinates into nodes
         for (Map.Entry<NodeContainerEditPart, Integer> e : offsets.entrySet()) {
             NodeContainerEditPart node = e.getKey();
-            NodeContainer nc = node.getNodeContainer();
+            INodeContainer nc = node.getNodeContainer();
             NodeUIInformation uiInfo = nc.getUIInformation();
             int[] b = uiInfo.getBounds();
             NodeUIInformation newCoord = NodeUIInformation.builder()

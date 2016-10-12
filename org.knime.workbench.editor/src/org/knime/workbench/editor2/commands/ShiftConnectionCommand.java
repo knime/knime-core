@@ -45,9 +45,9 @@
 package org.knime.workbench.editor2.commands;
 
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -86,7 +86,7 @@ public class ShiftConnectionCommand extends AbstractKNIMECommand {
      * @return the lowest index of a port that is not connected.
      */
     private int getLastConnectedPort() {
-        NodeContainer nc = m_node.getNodeContainer();
+        INodeContainer nc = m_node.getNodeContainer();
         int startIdx = 1;
         if (nc instanceof WorkflowManager) {
             startIdx = 0;

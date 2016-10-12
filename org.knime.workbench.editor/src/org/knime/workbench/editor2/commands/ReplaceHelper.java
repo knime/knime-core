@@ -57,11 +57,14 @@ import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.PortTypeUtil;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -84,13 +87,13 @@ public class ReplaceHelper {
         }
     };
 
-    private WorkflowManager m_wfm;
+    private IWorkflowManager m_wfm;
 
     private ArrayList<IConnectionContainer> m_incomingConnections;
 
     private ArrayList<IConnectionContainer> m_outgoingConnections;
 
-    private NodeContainer m_oldNode;
+    private INodeContainer m_oldNode;
 
 
 
@@ -98,7 +101,7 @@ public class ReplaceHelper {
      * @param wfm the workflow manager
      * @param oldNode the node which was replaced
      */
-    public ReplaceHelper(final WorkflowManager wfm, final NodeContainer oldNode) {
+    public ReplaceHelper(final IWorkflowManager wfm, final INodeContainer oldNode) {
         m_wfm = wfm;
         m_oldNode = oldNode;
         m_incomingConnections = new ArrayList<>(m_wfm.getIncomingConnectionsFor(m_oldNode.getID()));
@@ -169,7 +172,7 @@ public class ReplaceHelper {
             // replacing a metanode (no opt. flow var ports) with a "normal" node (that has optional flow var ports)
             if (m_oldNode.getNrInPorts() > 0 && container.getNrInPorts() > 1) {
                 // shift ports one index - unless we need to use the invisible optional flow var port of new node
-                if (!m_oldNode.getInPort(0).getPortType().equals(FlowVariablePortObject.TYPE)) {
+                if (!PortTypeUtil.getPortType(m_oldNode.getInPort(0).getPortTypeUID()).equals(FlowVariablePortObject.TYPE)) {
                     inShift = 1;
                 } else if (container.getInPort(1).getPortType().equals(FlowVariablePortObject.TYPE)) {
                     inShift = 1;
@@ -178,7 +181,7 @@ public class ReplaceHelper {
 
             outShift = 0;
             if (m_oldNode.getNrOutPorts() > 0 && container.getNrOutPorts() > 1) {
-                if (!m_oldNode.getOutPort(0).getPortType().equals(FlowVariablePortObject.TYPE)) {
+                if (!PortTypeUtil.getPortType(m_oldNode.getOutPort(0).getPortTypeUID()).equals(FlowVariablePortObject.TYPE)) {
                     outShift = 1;
                 } else if (container.getOutPort(1).getPortType().equals(FlowVariablePortObject.TYPE)) {
                     outShift = 1;

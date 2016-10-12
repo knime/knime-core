@@ -67,9 +67,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -146,7 +147,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        NodeContainer nc = nodes[0].getNodeContainer();
+        INodeContainer nc = nodes[0].getNodeContainer();
         if (!(nc instanceof WorkflowManager)) {
             return false;
         }

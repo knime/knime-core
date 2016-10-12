@@ -71,6 +71,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
@@ -150,7 +151,7 @@ public class ChangeSubNodeLinkAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        NodeContainer nc = nodes[0].getNodeContainer();
+        NodeContainer nc = UseImplUtil.getImplOf(nodes[0].getNodeContainer(), NodeContainer.class);
         if (!(nc instanceof SubNodeContainer)) {
             return false;
         }

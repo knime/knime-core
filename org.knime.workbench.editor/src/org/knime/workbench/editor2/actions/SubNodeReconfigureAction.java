@@ -51,6 +51,7 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -119,7 +120,7 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        NodeContainer nc = nodes[0].getNodeContainer();
+        NodeContainer nc = UseImplUtil.getImplOf(nodes[0].getNodeContainer(), NodeContainer.class);
         if (nc instanceof SubNodeContainer) {
             return !((SubNodeContainer)nc).isWriteProtected();
         }

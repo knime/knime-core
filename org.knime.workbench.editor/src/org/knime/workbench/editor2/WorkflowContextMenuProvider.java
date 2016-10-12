@@ -63,7 +63,11 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.ISingleNodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -277,12 +281,12 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 addSelectLoop = false;
                 break;
             }
-            NodeContainer nc = ((NodeContainerEditPart)p).getNodeContainer();
-            if (!(nc instanceof SingleNodeContainer)) {
+            INodeContainer nc = ((NodeContainerEditPart)p).getNodeContainer();
+            if (!(nc instanceof ISingleNodeContainer)) {
                 addSelectLoop = false;
                 break;
             }
-            if (!((SingleNodeContainer)nc).isMemberOfScope()) {
+            if (!((ISingleNodeContainer)nc).isMemberOfScope()) {
                 addSelectLoop = false;
                 break;
             }
@@ -322,10 +326,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             }
             if (p instanceof NodeContainerEditPart) {
 
-                NodeContainer container = null;
-                container = (NodeContainer)((NodeContainerEditPart)p).getModel();
+                INodeContainer container = null;
+                container = (INodeContainer)((NodeContainerEditPart)p).getModel();
 
-                if (!(container instanceof WorkflowManager)) {
+                if (!(container instanceof IWorkflowManager)) {
                     action = m_actionRegistry.getAction(ToggleFlowVarPortsAction.ID);
                     manager.appendToGroup(FLOW_VAR_PORT_GRP, action);
                     ((AbstractNodeAction)action).update();
@@ -334,13 +338,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 // add for node views option if applicable
                 int numNodeViews = container.getNrViews();
                 for (int i = 0; i < numNodeViews; i++) {
-                    action = new OpenViewAction(container, i);
+                    action = new OpenViewAction(UseImplUtil.getImplOf(container, NodeContainer.class), i);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 }
 
                 // add interactive view options
-                if (container.hasInteractiveView()) {
-                    action = new OpenInteractiveViewAction(container);
+                if (container.hasInteractiveView() || container.hasInteractiveWebView()) {
+                    action = new OpenInteractiveViewAction(UseImplUtil.getImplOf(container, NodeContainer.class));
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 } else {
                     // in the 'else' block? Yes:
@@ -417,7 +421,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                         // skip the implicit flow var ports on "normal" nodes
                         continue;
                     }
-                    action = new OpenPortViewAction(container, i, numOutPorts);
+                    action = new OpenPortViewAction(UseImplUtil.getImplOf(container, NodeContainer.class), i, numOutPorts);
                     manager.appendToGroup("outPortViews", action);
                 }
 
@@ -428,7 +432,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         boolean addSubNodeActions = false;
         for (Object p : parts) {
             if (p instanceof NodeContainerEditPart) {
-                NodeContainer model = ((NodeContainerEditPart)p).getNodeContainer();
+                INodeContainer model = ((NodeContainerEditPart)p).getNodeContainer();
                 if (model instanceof WorkflowManager) {
                     addMetaNodeActions = true;
                 } else if (model instanceof SubNodeContainer) {

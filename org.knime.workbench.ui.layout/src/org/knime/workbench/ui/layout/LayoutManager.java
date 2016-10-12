@@ -60,11 +60,11 @@ import org.eclipse.draw2d.geometry.Point;
 import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
@@ -79,19 +79,19 @@ public class LayoutManager {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(LayoutManager.class);
 
-    private WorkflowManager m_wfm;
+    private IWorkflowManager m_wfm;
 
     private long m_initPlacementSeed;
 
-    private HashMap<NodeContainer, Node> m_workbenchToGraphNodes;
+    private HashMap<INodeContainer, Node> m_workbenchToGraphNodes;
 
     private HashMap<IConnectionContainer, Edge> m_workbenchToGraphEdges;
 
     // nodes not laid out - but connected to nodes being laid out
-    private HashMap<NodeContainer, Node> m_workbenchIncomingNodes;
+    private HashMap<INodeContainer, Node> m_workbenchIncomingNodes;
 
     // nodes not laid out - but connected to nodes being laid out
-    private HashMap<NodeContainer, Node> m_workbenchOutgoingNodes;
+    private HashMap<INodeContainer, Node> m_workbenchOutgoingNodes;
 
     // Meta node incoming port indices connected to nodes being laid out
     private HashMap<Integer, Node> m_workbenchWFMInports;
@@ -115,15 +115,15 @@ public class LayoutManager {
      *
      * @param wfManager contains the flow being laid out
      */
-    public LayoutManager(final WorkflowManager wfManager,
+    public LayoutManager(final IWorkflowManager wfManager,
             final long initialPlacementSeed) {
         m_wfm = wfManager;
         m_initPlacementSeed = initialPlacementSeed;
-        m_workbenchToGraphNodes = new HashMap<NodeContainer, Graph.Node>();
+        m_workbenchToGraphNodes = new HashMap<INodeContainer, Graph.Node>();
         m_workbenchToGraphEdges =
                 new HashMap<IConnectionContainer, Graph.Edge>();
-        m_workbenchIncomingNodes = new HashMap<NodeContainer, Graph.Node>();
-        m_workbenchOutgoingNodes = new HashMap<NodeContainer, Graph.Node>();
+        m_workbenchIncomingNodes = new HashMap<INodeContainer, Graph.Node>();
+        m_workbenchOutgoingNodes = new HashMap<INodeContainer, Graph.Node>();
         m_workbenchWFMInports = new HashMap<Integer, Graph.Node>();
         m_workbenchWFMOutports = new HashMap<Integer, Graph.Node>();
         m_parallelConns = new HashMap<Edge, List<IConnectionContainer>>();
@@ -135,7 +135,7 @@ public class LayoutManager {
      *            workflow manager passed to the constructor are laid out.
      *
      */
-    public void doLayout(final Collection<NodeContainer> nodes) {
+    public void doLayout(final Collection<INodeContainer> nodes) {
 
         int X_STRETCH = 100;
         int Y_STRETCH = 120;
@@ -149,16 +149,16 @@ public class LayoutManager {
             Y_STRETCH = WorkflowEditor.getActiveEditorGridYOffset(Y_STRETCH);
         }
         // add all nodes that should be laid out to the graph
-        Collection<NodeContainer> allNodes = nodes;
+        Collection<INodeContainer> allNodes = nodes;
         if (allNodes == null || allNodes.size() <= 1) {
-            allNodes = m_wfm.getNodeContainers();
+            allNodes = m_wfm.getAllNodeContainers();
         }
         // keep the left upper corner of the node cluster.
         // Nodes laid out are placed right and below
         int minX = Integer.MAX_VALUE;
         int minY = Integer.MAX_VALUE;
         // add all nodes that are to be laid out
-        for (NodeContainer nc : allNodes) {
+        for (INodeContainer nc : allNodes) {
             Node gNode = createGraphNodeForNC(nc);
             m_workbenchToGraphNodes.put(nc, gNode);
             NodeUIInformation ui = nc.getUIInformation();
@@ -215,7 +215,7 @@ public class LayoutManager {
                     m_workbenchWFMInports.put(portIdx, srcGraphNode);
                 }
             } else {
-                NodeContainer s = m_wfm.getNodeContainer(conn.getSource());
+                INodeContainer s = m_wfm.getNodeContainer(conn.getSource());
                 srcGraphNode = m_workbenchToGraphNodes.get(s);
                 if (srcGraphNode == null) {
                     // then it connects to an "outside" node
@@ -237,7 +237,7 @@ public class LayoutManager {
                     m_workbenchWFMOutports.put(portIdx, destGraphNode);
                 }
             } else {
-                NodeContainer d = m_wfm.getNodeContainer(conn.getDest());
+                INodeContainer d = m_wfm.getNodeContainer(conn.getDest());
                 destGraphNode = m_workbenchToGraphNodes.get(d);
                 if (destGraphNode == null) {
                     // then it connects to an "outside" node
@@ -301,12 +301,12 @@ public class LayoutManager {
         // start at 0.
         double coordOffsetX = Integer.MAX_VALUE;
         double coordOffsetY = Integer.MAX_VALUE;
-        for (NodeContainer nc : allNodes) {
+        for (INodeContainer nc : allNodes) {
             Node gNode = m_workbenchToGraphNodes.get(nc);
             coordOffsetX = Math.min(coordOffsetX, m_g.getX(gNode));
             coordOffsetY = Math.min(coordOffsetY, m_g.getY(gNode));
         }
-        for (NodeContainer nc : allNodes) {
+        for (INodeContainer nc : allNodes) {
 
             NodeUIInformation uiInfo = nc.getUIInformation();
             if (uiInfo != null) {
@@ -384,7 +384,7 @@ public class LayoutManager {
      * @param nc
      * @return
      */
-    private Node createGraphNodeForNC(final NodeContainer nc) {
+    private Node createGraphNodeForNC(final INodeContainer nc) {
         NodeUIInformation uiInfo = nc.getUIInformation();
         int x = 0;
         int y = 0;

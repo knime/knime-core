@@ -46,9 +46,9 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.LoopEndNode;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -131,7 +131,7 @@ public class PauseLoopExecutionAction extends AbstractNodeAction {
             return false;
         }
         // enabled if the one selected node is an executing LoopEndNode
-        NodeContainer nc = parts[0].getNodeContainer();
+        INodeContainer nc = parts[0].getNodeContainer();
         if (nc instanceof SingleNodeContainer) {
             SingleNodeContainer snc = (SingleNodeContainer)nc;
             if ((snc.isModelCompatibleTo(LoopEndNode.class)) && (nc.getNodeContainerState().isExecutionInProgress())) {

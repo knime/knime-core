@@ -54,8 +54,11 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -148,8 +151,8 @@ public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
                 = new ArrayList<AbstractExplorerFileStore>();
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
-            if (model instanceof WorkflowManager) {
-                NodeContext.pushContext(p.getNodeContainer());
+            if (model instanceof IWorkflowManager) {
+                NodeContext.pushContext(UseImplUtil.getImplOf(p.getNodeContainer(), NodeContainer.class));
                 try {
                     WorkflowManager wm = (WorkflowManager)model;
                     MetaNodeTemplateInformation i = wm.getTemplateInformation();
