@@ -434,9 +434,12 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         WebTemplate template = creator.getWebTemplate();
         String pullMethod = template.getPullViewContentMethodName();
         String ns = creator.getNamespacePrefix();
-        String evalCode =
-                creator.wrapInTryCatch("if (typeof " + ns.substring(0, ns.length()-1) + " != 'undefined') { return JSON.stringify(" + ns + pullMethod + "());}");
-        String jsonString = (String)m_browser.evaluate(evalCode);
+        String jsonString = null;
+        if (ns != null && !ns.isEmpty() && pullMethod != null && !pullMethod.isEmpty()) {
+            String evalCode =
+                    creator.wrapInTryCatch("if (typeof " + ns.substring(0, ns.length()-1) + " != 'undefined') { return JSON.stringify(" + ns + pullMethod + "());}");
+            jsonString = (String)m_browser.evaluate(evalCode);
+        }
         if (jsonString == null) {
             // no view value present in view
             return false;
