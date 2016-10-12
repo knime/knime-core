@@ -46,7 +46,7 @@
  * History
  *   Sep 20, 2016 (hornm): created
  */
-package org.knime.core.api.node.workflow;
+package org.knime.core.api.node;
 
 import org.knime.core.node.util.CheckUtils;
 

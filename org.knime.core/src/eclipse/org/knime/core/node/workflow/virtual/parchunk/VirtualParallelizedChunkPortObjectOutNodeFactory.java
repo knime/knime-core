@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.virtual.parchunk;
 
+import org.knime.core.api.node.NodeType;
 import org.knime.core.node.DelegateNodeDescription;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
@@ -147,7 +148,7 @@ public class VirtualParallelizedChunkPortObjectOutNodeFactory extends DynamicNod
 	 * {@inheritDoc}
 	 */
 	@Override
-    public org.knime.core.node.NodeFactory.NodeType getType() {
+    public NodeType getType() {
 	    return NodeType.VirtualOut;
 	}
 

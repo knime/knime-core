@@ -58,7 +58,7 @@ import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.impl.values.NamespaceManager;
 import org.apache.xmlbeans.impl.values.XmlObjectBase;
 import org.junit.Test;
-import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.api.node.NodeType;
 import org.knime.core.node.testfactories.v13.DTD_v13;
 import org.knime.core.node.testfactories.v13.DTD_v13_deprecated;
 import org.knime.core.node.testfactories.v13.DTD_v13_invalid;

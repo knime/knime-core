@@ -66,6 +66,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
+import org.knime.core.api.node.NodeType;
 import org.knime.core.api.node.workflow.NodeMessageEvent;
 import org.knime.core.api.node.workflow.NodeMessageListener;
 import org.knime.core.data.DataTableSpec;
@@ -77,7 +78,6 @@ import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.dialog.ValueControlledDialogPane;
 import org.knime.core.node.dialog.ValueControlledNode;
 import org.knime.core.node.interactive.InteractiveNode;

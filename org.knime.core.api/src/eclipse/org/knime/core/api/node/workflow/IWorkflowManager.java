@@ -59,6 +59,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.knime.core.api.node.NodeFactoryUID;
 import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.port.PortTypeUID;
 import org.knime.core.node.InvalidSettingsException;

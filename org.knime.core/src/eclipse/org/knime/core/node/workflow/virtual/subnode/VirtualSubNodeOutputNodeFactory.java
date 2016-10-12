@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.virtual.subnode;
 
+import org.knime.core.api.node.NodeType;
 import org.knime.core.node.DelegateNodeDescription;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
@@ -135,7 +136,7 @@ public class VirtualSubNodeOutputNodeFactory extends DynamicNodeFactory<VirtualS
 
     /** {@inheritDoc} */
     @Override
-    public org.knime.core.node.NodeFactory.NodeType getType() {
+    public NodeType getType() {
         return NodeType.VirtualOut;
     }
 

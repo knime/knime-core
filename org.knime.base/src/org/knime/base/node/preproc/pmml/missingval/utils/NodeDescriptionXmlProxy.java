@@ -47,8 +47,8 @@
  */
 package org.knime.base.node.preproc.pmml.missingval.utils;
 
+import org.knime.core.api.node.NodeType;
 import org.knime.core.node.NodeDescription;
-import org.knime.core.node.NodeFactory.NodeType;
 import org.w3c.dom.Element;
 
 /**

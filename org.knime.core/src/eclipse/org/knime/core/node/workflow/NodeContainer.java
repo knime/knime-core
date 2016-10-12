@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.knime.core.api.node.NodeType;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.JobManagerUID;
 import org.knime.core.api.node.workflow.NodeAnnotationData;
@@ -79,7 +80,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeProgressMonitor;

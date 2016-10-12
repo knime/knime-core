@@ -51,6 +51,7 @@ package org.knime.core.node.workflow.virtual.parchunk;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.knime.core.api.node.NodeType;
 import org.knime.core.node.DelegateNodeDescription;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
@@ -176,7 +177,7 @@ public class VirtualParallelizedChunkPortObjectInNodeFactory extends DynamicNode
 	 * {@inheritDoc}
 	 */
 	@Override
-    public org.knime.core.node.NodeFactory.NodeType getType() {
+    public NodeType getType() {
 	    return NodeType.VirtualIn;
 	}
 
