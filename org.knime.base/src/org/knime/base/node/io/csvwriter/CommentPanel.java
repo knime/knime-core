@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 9, 2007 (ohl): created
  */
@@ -60,7 +60,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 class CommentPanel extends JPanel {
@@ -82,15 +82,13 @@ class CommentPanel extends JPanel {
     private final JCheckBox m_addCustom = new JCheckBox();
 
     /**
-     * 
+     *
      */
     public CommentPanel() {
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(createWhatPanel());
         add(createCommentPanel());
-        add(Box.createVerticalGlue());
-        add(Box.createVerticalGlue());
     }
 
     private JPanel createCommentPanel() {
@@ -115,14 +113,16 @@ class CommentPanel extends JPanel {
         m_commentEnd.setMaximumSize(TEXTFIELDDIM);
         patternBox.add(m_commentEnd);
         patternBox.add(Box.createHorizontalGlue());
-        patternBox.add(Box.createHorizontalGlue());
+        patternBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, TEXTFIELDDIM.height));
 
         JPanel commentPanel = new JPanel();
         commentPanel.setLayout(new BoxLayout(commentPanel, BoxLayout.Y_AXIS));
         commentPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Comment Pattern"));
         commentPanel.add(textBox);
+        commentPanel.add(Box.createVerticalStrut(50));
         commentPanel.add(patternBox);
+        commentPanel.add(Box.createVerticalGlue());
 
         return commentPanel;
     }
@@ -131,24 +131,28 @@ class CommentPanel extends JPanel {
 
         m_addDate.setText("the current creation time");
         m_addDate.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 selectionChanged();
             }
         });
         m_addUser.setText("the user account name");
         m_addUser.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 selectionChanged();
             }
         });
         m_addTableName.setText("the input table name");
         m_addTableName.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 selectionChanged();
             }
         });
         m_addCustom.setText("this text:");
         m_addCustom.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 selectionChanged();
             }
@@ -169,16 +173,19 @@ class CommentPanel extends JPanel {
         userBox.add(Box.createHorizontalStrut(leftInset));
         userBox.add(m_addUser);
         userBox.add(Box.createHorizontalGlue());
+        userBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_addUser.getMaximumSize().height));
 
         Box dateBox = Box.createHorizontalBox();
         dateBox.add(Box.createHorizontalStrut(leftInset));
         dateBox.add(m_addDate);
         dateBox.add(Box.createHorizontalGlue());
+        dateBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_addDate.getMaximumSize().height));
 
         Box nameBox = Box.createHorizontalBox();
         nameBox.add(Box.createHorizontalStrut(leftInset));
         nameBox.add(m_addTableName);
         nameBox.add(Box.createHorizontalGlue());
+        nameBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_addTableName.getMaximumSize().height));
 
         Box customBox = Box.createHorizontalBox();
         customBox.add(Box.createHorizontalStrut(leftInset));
@@ -186,23 +193,30 @@ class CommentPanel extends JPanel {
         customBox.add(Box.createHorizontalStrut(3));
         customBox.add(m_commentLine);
         customBox.add(Box.createHorizontalGlue());
+        customBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_commentLine.getMaximumSize().height));
 
         JPanel whatPanel = new JPanel();
         whatPanel.setLayout(new BoxLayout(whatPanel, BoxLayout.Y_AXIS));
         whatPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Comment Header Content"));
+
         whatPanel.add(textBox);
+        whatPanel.add(Box.createVerticalStrut(10));
         whatPanel.add(dateBox);
+        whatPanel.add(Box.createVerticalStrut(10));
         whatPanel.add(userBox);
+        whatPanel.add(Box.createVerticalStrut(10));
         whatPanel.add(nameBox);
+        whatPanel.add(Box.createVerticalStrut(10));
         whatPanel.add(customBox);
+        whatPanel.add(Box.createVerticalStrut(10));
 
         return whatPanel;
     }
 
     /**
      * Updates the values in the components from the passed settings object.
-     * 
+     *
      * @param settings the object holding the values to load.
      */
     void loadValuesIntoPanel(final FileWriterNodeSettings settings) {
@@ -230,14 +244,14 @@ class CommentPanel extends JPanel {
      * selected comments to add.
      */
     private void selectionChanged() {
-        
+
         boolean addComment = false;
-        
+
         addComment |= m_addCustom.isSelected();
         addComment |= m_addDate.isSelected();
         addComment |= m_addUser.isSelected();
         addComment |= m_addTableName.isSelected();
-        
+
         m_commentLine.setEnabled(m_addCustom.isSelected());
 
         m_commentBegin.setEnabled(addComment);
@@ -246,7 +260,7 @@ class CommentPanel extends JPanel {
 
     /**
      * Saves the current values from the panel into the passed object.
-     * 
+     *
      * @param settings the object to write the values into
      */
     void saveValuesFromPanelInto(final FileWriterNodeSettings settings) {

@@ -64,6 +64,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 
 /**
@@ -84,6 +85,8 @@ public class ARFFReaderNodeModel extends NodeModel {
 
     /** Key used to store the row prefix in the settings object. */
     static final String CFGKEY_ROWPREFIX = "RowPrefix";
+
+    static final String ARFF_HISTORY_ID = "ARFFFiles";
 
     private String m_rowPrefix;
 
@@ -119,17 +122,19 @@ public class ARFFReaderNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_file == null) {
-            throw new InvalidSettingsException("File is not specified.");
-        }
-        try {
-            return new DataTableSpec[]{ARFFTable
-                    .createDataTableSpecFromARFFfile(m_file, null)};
-        } catch (IOException ioe) {
-            throw new InvalidSettingsException("ARFFReader: I/O Error: " + ioe.getMessage(), ioe);
-        } catch (CanceledExecutionException cee) {
-            // never flies
-            throw new InvalidSettingsException("ARFFReader: User canceled action.");
+        String warning = CheckUtils.checkSourceFile(m_file == null ? null : m_file.toString());
+        if (warning != null) {
+            setWarningMessage(warning);
+            return new DataTableSpec[] {null};
+        } else {
+            try {
+                return new DataTableSpec[]{ARFFTable.createDataTableSpecFromARFFfile(m_file, null)};
+            } catch (IOException ioe) {
+                throw new InvalidSettingsException("ARFFReader: I/O Error: " + ioe.getMessage(), ioe);
+            } catch (CanceledExecutionException cee) {
+                // never flies
+                throw new InvalidSettingsException("ARFFReader: User canceled action.");
+            }
         }
     }
 
@@ -162,7 +167,7 @@ public class ARFFReaderNodeModel extends NodeModel {
         try {
             m_file = stringToURL(settings.getString(CFGKEY_FILEURL));
         } catch (MalformedURLException mue) {
-            throw new InvalidSettingsException(mue);
+            m_file = null;
         }
         m_rowPrefix = settings.getString(CFGKEY_ROWPREFIX);
     }
@@ -216,15 +221,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String location = settings.getString(CFGKEY_FILEURL);
-        if(location == null || location.equals("")){
-            throw new InvalidSettingsException("No input selected");
-        }
-        try {
-            stringToURL(location);
-        } catch (MalformedURLException mue) {
-            throw new InvalidSettingsException(mue);
-        }
+        settings.getString(CFGKEY_FILEURL);
         settings.getString(CFGKEY_ROWPREFIX);
     }
 

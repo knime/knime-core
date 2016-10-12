@@ -175,7 +175,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_filePanel.getSelectedFile());
+        settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_filePanel.getSelectedFile().trim());
 
         settings.addBoolean(ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK,
                 m_overwritePolicyOverwriteButton.isSelected());

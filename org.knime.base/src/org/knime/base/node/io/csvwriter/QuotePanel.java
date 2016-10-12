@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 8, 2007 (ohl): created
  */
@@ -63,7 +63,7 @@ import javax.swing.event.ChangeListener;
 import org.knime.base.node.io.csvwriter.FileWriterSettings.quoteMode;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 class QuotePanel extends JPanel {
@@ -87,7 +87,7 @@ class QuotePanel extends JPanel {
     private JRadioButton m_never;
 
     /**
-     * 
+     *
      */
     public QuotePanel() {
 
@@ -95,8 +95,6 @@ class QuotePanel extends JPanel {
         add(createQuotePanel());
         add(Box.createVerticalStrut(5));
         add(createWhenPanel());
-        add(Box.createVerticalGlue());
-        add(Box.createVerticalGlue());
     }
 
     private JPanel createQuotePanel() {
@@ -122,14 +120,16 @@ class QuotePanel extends JPanel {
         m_rightQuote.setMaximumSize(TEXTFIELDDIM);
         patternBox.add(m_rightQuote);
         patternBox.add(Box.createHorizontalGlue());
-        patternBox.add(Box.createHorizontalGlue());
+        patternBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, TEXTFIELDDIM.height));
 
         JPanel quotePanel = new JPanel();
         quotePanel.setLayout(new BoxLayout(quotePanel, BoxLayout.Y_AXIS));
         quotePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Quote Pattern"));
         quotePanel.add(textBox);
+        quotePanel.add(Box.createVerticalStrut(10));
         quotePanel.add(patternBox);
+        quotePanel.add(Box.createVerticalStrut(10));
 
         return quotePanel;
     }
@@ -155,6 +155,7 @@ class QuotePanel extends JPanel {
         m_always.setToolTipText("The missing value pattern is never put"
                 + " into quotes");
         m_always.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 selectionChanged();
             }
@@ -164,6 +165,7 @@ class QuotePanel extends JPanel {
                 + " equals the missing value pattern."
                 + " Right quotes inside the data must be replaced.");
         m_ifNeeded.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 selectionChanged();
             }
@@ -174,6 +176,7 @@ class QuotePanel extends JPanel {
                 + " without quotes");
         m_string.setSelected(true);
         m_string.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 selectionChanged();
             }
@@ -183,6 +186,7 @@ class QuotePanel extends JPanel {
         m_never.setToolTipText("The separator must be replaced, if it occurs "
                 + "in the data written.");
         m_never.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 selectionChanged();
             }
@@ -198,21 +202,25 @@ class QuotePanel extends JPanel {
         alwaysBox.add(Box.createHorizontalStrut(leftInset));
         alwaysBox.add(m_always);
         alwaysBox.add(Box.createHorizontalGlue());
+        alwaysBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_always.getMaximumSize().height));
 
         Box neededBox = Box.createHorizontalBox();
         neededBox.add(Box.createHorizontalStrut(leftInset));
         neededBox.add(m_ifNeeded);
         neededBox.add(Box.createHorizontalGlue());
+        neededBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_ifNeeded.getMaximumSize().height));
 
         Box stringBox = Box.createHorizontalBox();
         stringBox.add(Box.createHorizontalStrut(leftInset));
         stringBox.add(m_string);
         stringBox.add(Box.createHorizontalGlue());
+        stringBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_string.getMaximumSize().height));
 
         Box neverBox = Box.createHorizontalBox();
         neverBox.add(Box.createHorizontalStrut(leftInset));
         neverBox.add(m_never);
         neverBox.add(Box.createHorizontalGlue());
+        neverBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_never.getMaximumSize().height));
 
         Box replQuoteBox = Box.createHorizontalBox();
         replQuoteBox.add(Box.createHorizontalStrut(leftInset + 20));
@@ -220,6 +228,7 @@ class QuotePanel extends JPanel {
         replQuoteBox.add(Box.createHorizontalStrut(5));
         replQuoteBox.add(m_quoteReplacement);
         replQuoteBox.add(Box.createHorizontalGlue());
+//        replQuoteBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_quoteReplacement.getMaximumSize().height));
 
         Box replSepBox = Box.createHorizontalBox();
         replSepBox.add(Box.createHorizontalStrut(leftInset + 20));
@@ -227,6 +236,7 @@ class QuotePanel extends JPanel {
         replSepBox.add(Box.createHorizontalStrut(5));
         replSepBox.add(m_sepReplacement);
         replSepBox.add(Box.createHorizontalGlue());
+//        replSepBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_sepReplacement.getMaximumSize().height));
 
         JPanel whenPanel = new JPanel();
         whenPanel.setLayout(new BoxLayout(whenPanel, BoxLayout.Y_AXIS));
@@ -239,13 +249,14 @@ class QuotePanel extends JPanel {
         whenPanel.add(neverBox);
         whenPanel.add(replQuoteBox);
         whenPanel.add(replSepBox);
+        whenPanel.add(Box.createVerticalGlue());
 
         return whenPanel;
     }
 
     /**
      * Updates the values in the components from the passed settings object.
-     * 
+     *
      * @param settings the object holding the values to load.
      */
     void loadValuesIntoPanel(final FileWriterSettings settings) {
@@ -279,7 +290,7 @@ class QuotePanel extends JPanel {
 
     /**
      * Saves the current values from the panel into the passed object.
-     * 
+     *
      * @param settings the object to write the values into
      */
     void saveValuesFromPanelInto(final FileWriterSettings settings) {

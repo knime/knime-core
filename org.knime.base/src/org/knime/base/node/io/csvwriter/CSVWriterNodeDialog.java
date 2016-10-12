@@ -359,7 +359,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
 
         FileWriterNodeSettings values = new FileWriterNodeSettings();
 
-        values.setFileName(m_filePanel.getSelectedFile());
+        values.setFileName(m_filePanel.getSelectedFile().trim());
 
         values.setWriteColumnHeader(m_colHeaderChecker.isSelected());
         values.setSkipColHeaderIfFileExists(m_colHeaderWriteSkipOnAppend

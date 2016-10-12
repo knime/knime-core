@@ -90,7 +90,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
 
         m_filePanel =
                 new FilesHistoryPanel(createFlowVariableModel(ARFFReaderNodeModel.CFGKEY_FILEURL, FlowVariable.Type.STRING),
-                    "org.knime.base.node.io.arffreader", LocationValidation.FileInput, ".arff");
+                    ARFFReaderNodeModel.ARFF_HISTORY_ID, LocationValidation.FileInput, ".arff");
         m_filePanel.setDialogType(JFileChooser.OPEN_DIALOG);
 
         final JPanel filePanel = new JPanel();
@@ -152,9 +152,6 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        if (m_filePanel.getSelectedFile() == null || m_filePanel.getSelectedFile().equals("")) {
-            throw new InvalidSettingsException("No input selected");
-        }
         settings.addString(ARFFReaderNodeModel.CFGKEY_FILEURL, m_filePanel.getSelectedFile().trim());
         settings.addString(ARFFReaderNodeModel.CFGKEY_ROWPREFIX, m_rowPrefix.getText());
     }
