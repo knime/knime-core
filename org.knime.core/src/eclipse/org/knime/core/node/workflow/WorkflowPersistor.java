@@ -285,7 +285,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             }
             m_isDeletable = !preserveDeletableFlag || original.isDeletable();
             ConnectionUIInformation origUIInfo = original.getUIInfo();
-            m_uiInfo = origUIInfo == null ? null : origUIInfo.clone();
+            m_uiInfo = origUIInfo == null ? null : ConnectionUIInformation.builder(origUIInfo).build();
         }
 
         /** @return the source identifier */
