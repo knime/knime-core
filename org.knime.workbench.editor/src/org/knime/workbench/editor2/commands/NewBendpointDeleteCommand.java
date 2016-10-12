@@ -49,9 +49,9 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.gef.commands.Command;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
-import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
 /**
@@ -61,7 +61,7 @@ import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
  */
 public class NewBendpointDeleteCommand extends Command {
 
-    private final WorkflowManager m_workflowManager;
+    private final IWorkflowManager m_workflowManager;
     private final NodeID m_destNodeID;
     private final int m_destPort;
 
@@ -77,7 +77,7 @@ public class NewBendpointDeleteCommand extends Command {
      */
     public NewBendpointDeleteCommand(
             final ConnectionContainerEditPart connection,
-            final WorkflowManager workflowManager,
+            final IWorkflowManager workflowManager,
             final int index) {
         m_workflowManager = workflowManager;
         m_index = index;
@@ -85,12 +85,12 @@ public class NewBendpointDeleteCommand extends Command {
         m_destPort = connection.getModel().getDestPort();
     }
 
-    private ConnectionContainer getConnectionContainer() {
+    private IConnectionContainer getConnectionContainer() {
         return m_workflowManager.getIncomingConnectionFor(
                 m_destNodeID, m_destPort);
     }
 
-    private ConnectionUIInformation getUIInfo(final ConnectionContainer conn) {
+    private ConnectionUIInformation getUIInfo(final IConnectionContainer conn) {
         ConnectionUIInformation uiInfo = conn.getUIInfo();
         if (uiInfo == null) {
             uiInfo = ConnectionUIInformation.builder().build();
@@ -103,7 +103,7 @@ public class NewBendpointDeleteCommand extends Command {
      */
     @Override
     public void execute() {
-        ConnectionContainer connection = getConnectionContainer();
+        IConnectionContainer connection = getConnectionContainer();
         ConnectionUIInformation uiInfo = getUIInfo(connection);
         m_point = uiInfo.getBendpoint(m_index);
         uiInfo = ConnectionUIInformation.builder(uiInfo).removeBendpoint(m_index).build();
@@ -117,7 +117,7 @@ public class NewBendpointDeleteCommand extends Command {
      */
     @Override
     public void redo() {
-        ConnectionContainer connection = getConnectionContainer();
+        IConnectionContainer connection = getConnectionContainer();
         ConnectionUIInformation uiInfo = getUIInfo(connection);
         uiInfo = ConnectionUIInformation.builder(uiInfo).removeBendpoint(m_index).build();
         // issue notification
@@ -129,7 +129,7 @@ public class NewBendpointDeleteCommand extends Command {
      */
     @Override
     public void undo() {
-        ConnectionContainer connection = getConnectionContainer();
+        IConnectionContainer connection = getConnectionContainer();
         ConnectionUIInformation uiInfo = getUIInfo(connection);
         uiInfo = ConnectionUIInformation.builder(uiInfo).addBendpoint(m_point[0], m_point[1], m_index).build();
         // issue notification

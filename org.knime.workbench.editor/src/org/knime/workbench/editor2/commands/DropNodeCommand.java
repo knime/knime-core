@@ -49,6 +49,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeCreationContext;
@@ -88,7 +89,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      * @param snapToGrid if location should be rounded to closest grid location
      */
-    public DropNodeCommand(final WorkflowManager manager,
+    public DropNodeCommand(final IWorkflowManager manager,
             final ContextAwareNodeFactory<NodeModel> factory,
             final NodeCreationContext context, final Point location, final boolean snapToGrid) {
         super(manager);

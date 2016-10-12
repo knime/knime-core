@@ -55,11 +55,11 @@ import org.eclipse.gef.editparts.AbstractEditPart;
 import org.eclipse.gef.editpolicies.ContainerEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.CreateDropRequest;
 import org.knime.workbench.editor2.CreateDropRequest.RequestType;
@@ -106,7 +106,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 
 
         WorkflowRootEditPart workflowPart = (WorkflowRootEditPart)this.getHost();
-        WorkflowManager manager = workflowPart.getWorkflowManager();
+        IWorkflowManager manager = workflowPart.getWorkflowManager();
 
         if (request instanceof CreateDropRequest) {
             Object obj = request.getNewObject();
@@ -136,7 +136,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
      * @param content the metanode content
      * @param request the drop request
      */
-    private Command handleMetaNodeDrop(final WorkflowManager manager, final WorkflowPersistor content, final CreateDropRequest request) {
+    private Command handleMetaNodeDrop(final IWorkflowManager manager, final WorkflowPersistor content, final CreateDropRequest request) {
         Point location = request.getLocation();
         if (request.getRequestType().equals(RequestType.CREATE)) {
             // create metanode from node repository
@@ -172,7 +172,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
      * @param request the drop request
      * @param filestore the location of the metanode template
      */
-    private Command handleMetaNodeTemplateDrop(final WorkflowManager manager,
+    private Command handleMetaNodeTemplateDrop(final IWorkflowManager manager,
         final CreateDropRequest request, final AbstractExplorerFileStore filestore) {
             RequestType requestType = request.getRequestType();
             Point location = request.getLocation();
@@ -211,7 +211,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
      * @param factory the ndoe factory
      * @param request the drop request
      */
-    private Command handleNodeDrop( final WorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
+    private Command handleNodeDrop( final IWorkflowManager manager, final NodeFactory<? extends NodeModel> factory,
         final CreateDropRequest request) {
         RequestType requestType = request.getRequestType();
         Point location = request.getLocation();

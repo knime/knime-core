@@ -52,6 +52,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
@@ -100,7 +101,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      * @param snapToGrid snap new node to grid
      */
-    public CreateNodeCommand(final WorkflowManager manager,
+    public CreateNodeCommand(final IWorkflowManager manager,
             final NodeFactory<? extends NodeModel> factory, final Point location, final boolean snapToGrid) {
         super(manager);
         m_factory = factory;

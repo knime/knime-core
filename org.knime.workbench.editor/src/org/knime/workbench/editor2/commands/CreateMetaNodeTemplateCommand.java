@@ -56,6 +56,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
@@ -63,7 +64,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.workbench.editor2.LoadMetaNodeTemplateRunnable;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
@@ -106,7 +106,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      * @param snapToGrid if node should be placed on closest grid location
      */
-    public CreateMetaNodeTemplateCommand(final WorkflowManager manager,
+    public CreateMetaNodeTemplateCommand(final IWorkflowManager manager,
             final AbstractExplorerFileStore templateFolder,
             final Point location, final boolean snapToGrid) {
         super(manager);

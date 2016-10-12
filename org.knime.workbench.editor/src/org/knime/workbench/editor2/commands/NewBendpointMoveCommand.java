@@ -53,7 +53,7 @@ import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.ConnectionUIInformation.Builder;
 import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
@@ -84,7 +84,7 @@ public class NewBendpointMoveCommand extends AbstractKNIMECommand {
      */
     public NewBendpointMoveCommand(
             final ConnectionContainerEditPart connection,
-            final WorkflowManager manager,
+            final IWorkflowManager manager,
             final int index, final Point newLocation,
             final ZoomManager zoomManager) {
         super(manager);

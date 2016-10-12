@@ -49,7 +49,7 @@ import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.RootEditPart;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -74,7 +74,7 @@ public class ReplaceMetaNodeCommand extends CreateMetaNodeCommand {
      * @param snapToGrid should metanode snap to grid
      * @param node which will be replaced by this metanode
      */
-    public ReplaceMetaNodeCommand(final WorkflowManager manager, final WorkflowPersistor persistor,
+    public ReplaceMetaNodeCommand(final IWorkflowManager manager, final WorkflowPersistor persistor,
         final Point location, final boolean snapToGrid, final NodeContainerEditPart node) {
         super(manager, persistor, location, snapToGrid);
         m_node = node;

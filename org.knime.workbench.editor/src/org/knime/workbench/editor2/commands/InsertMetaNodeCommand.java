@@ -50,7 +50,7 @@ import java.util.Collections;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.RootEditPart;
 import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
@@ -76,7 +76,7 @@ public class InsertMetaNodeCommand extends CreateMetaNodeCommand {
      * @param snapToGrid should metanode snap to grid
      * @param edge on which the metanode should be inserted
      */
-    public InsertMetaNodeCommand(final WorkflowManager manager, final WorkflowPersistor persistor,
+    public InsertMetaNodeCommand(final IWorkflowManager manager, final WorkflowPersistor persistor,
         final Point location, final boolean snapToGrid, final ConnectionContainerEditPart edge) {
         super(manager, persistor, location, snapToGrid);
         m_root = edge.getRoot();

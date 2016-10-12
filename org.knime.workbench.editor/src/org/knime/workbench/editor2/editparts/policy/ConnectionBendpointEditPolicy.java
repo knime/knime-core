@@ -65,7 +65,7 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.SelectionHandlesEditPolicy;
 import org.eclipse.gef.requests.BendpointRequest;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.workbench.editor2.commands.NewBendpointCreateCommand;
 import org.knime.workbench.editor2.commands.NewBendpointDeleteCommand;
 import org.knime.workbench.editor2.commands.NewBendpointMoveCommand;
@@ -463,7 +463,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     }
 
     /** @return The workflow manager associated with the host. */
-    public WorkflowManager getWorkflowManager() {
+    public IWorkflowManager getWorkflowManager() {
         // we need the workflow manager
         // This is a bit tricky here, as the parent of the connection's edit
         // part is the ScalableFreefromEditPart. We need to get the first (and
@@ -496,7 +496,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
         int index = req.getIndex();
         ConnectionContainerEditPart editPart
             = (ConnectionContainerEditPart)getHost();
-        WorkflowManager wfm = getWorkflowManager();
+        IWorkflowManager wfm = getWorkflowManager();
         return new NewBendpointDeleteCommand(editPart, wfm, index);
     }
 
@@ -512,7 +512,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
 
         ZoomManager zoomManager = (ZoomManager)getHost().getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString());
-        WorkflowManager m = getWorkflowManager();
+        IWorkflowManager m = getWorkflowManager();
         return new NewBendpointMoveCommand(edit, m, index, loc, zoomManager);
     }
 }

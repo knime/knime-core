@@ -51,8 +51,8 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.IConnectionContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 
@@ -84,7 +84,7 @@ public class NewBendpointCreateCommand extends AbstractKNIMECommand {
      */
     public NewBendpointCreateCommand(
             final ConnectionContainerEditPart connection,
-            final WorkflowManager manager,
+            final IWorkflowManager manager,
             final int index, final Point location,
             final ZoomManager zoomManager) {
         super(manager);

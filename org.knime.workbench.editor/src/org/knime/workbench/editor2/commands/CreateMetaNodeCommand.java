@@ -54,6 +54,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
@@ -103,7 +104,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      * @param snapToGrid if node location should be rounded to closest grid location.
      */
-    public CreateMetaNodeCommand(final WorkflowManager manager,
+    public CreateMetaNodeCommand(final IWorkflowManager manager,
             final WorkflowPersistor persistor, final Point location, final boolean snapToGrid) {
         super(manager);
         m_persistor = persistor;

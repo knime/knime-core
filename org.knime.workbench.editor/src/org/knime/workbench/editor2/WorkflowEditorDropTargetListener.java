@@ -70,10 +70,10 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.CreateDropRequest.RequestType;
 import org.knime.workbench.editor2.actions.CreateSpaceAction.CreateSpaceDirection;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
@@ -420,7 +420,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
      */
     @Override
     public void dragOver(final DropTargetEvent event) {
-        WorkflowManager wfm = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getWorkflowManager();
+        IWorkflowManager wfm = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getWorkflowManager();
         m_node = null;
         m_edge = null;
         m_nodeCount = 0;
@@ -488,7 +488,7 @@ public abstract class WorkflowEditorDropTargetListener<T extends CreationFactory
      *
      * @param wfm the workflow manager
      */
-    private void unmark(final WorkflowManager wfm) {
+    private void unmark(final IWorkflowManager wfm) {
         if (m_markedNode != null) {
             m_markedNode.unmark();
             m_markedNode = null;

@@ -53,7 +53,7 @@ import java.util.Collections;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.RootEditPart;
 import org.knime.core.api.node.workflow.IConnectionContainer;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
@@ -78,7 +78,7 @@ public class InsertMetaNodeTempalteCommand extends CreateMetaNodeTemplateCommand
      * @param snapToGrid should metanode snap to grid
      * @param edge on which the metanode should be inserted
      */
-    public InsertMetaNodeTempalteCommand(final WorkflowManager manager, final AbstractExplorerFileStore templateFolder,
+    public InsertMetaNodeTempalteCommand(final IWorkflowManager manager, final AbstractExplorerFileStore templateFolder,
         final Point location, final boolean snapToGrid, final ConnectionContainerEditPart edge) {
         super(manager, templateFolder, location, snapToGrid);
         m_edge = edge.getModel();

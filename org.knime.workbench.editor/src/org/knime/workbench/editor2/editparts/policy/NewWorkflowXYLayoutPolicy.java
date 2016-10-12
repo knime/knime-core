@@ -61,8 +61,8 @@ import org.eclipse.gef.editpolicies.XYLayoutEditPolicy;
 import org.eclipse.gef.handles.MoveHandle;
 import org.eclipse.gef.requests.CreateRequest;
 import org.eclipse.swt.graphics.Cursor;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeWorkflowPortBarCommand;
@@ -124,7 +124,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
             // TODO the workflow annotation could know what its WFM is?
             WorkflowRootEditPart root =
                     (WorkflowRootEditPart)annoPart.getParent();
-            WorkflowManager wm = root.getWorkflowManager();
+            IWorkflowManager wm = root.getWorkflowManager();
             command = new ChangeAnnotationBoundsCommand(wm, annoPart, rect);
         }
         return command;

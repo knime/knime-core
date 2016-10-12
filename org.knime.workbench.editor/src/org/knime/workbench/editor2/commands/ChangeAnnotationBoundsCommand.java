@@ -49,7 +49,7 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.api.node.workflow.IAnnotation;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
@@ -70,7 +70,7 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
      * @param portBar The workflow port bar to change
      * @param newBounds The new bounds
      */
-    public ChangeAnnotationBoundsCommand(final WorkflowManager hostWFM,
+    public ChangeAnnotationBoundsCommand(final IWorkflowManager hostWFM,
             final AnnotationEditPart portBar,
             final Rectangle newBounds) {
         super(hostWFM);

@@ -52,7 +52,7 @@ import java.util.Collections;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.RootEditPart;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
@@ -78,7 +78,7 @@ public class ReplaceMetaNodeTemplateCommand extends CreateMetaNodeTemplateComman
      * @param snapToGrid should metanode snap to grid
      * @param node which will be replaced by this metanode template
      */
-    public ReplaceMetaNodeTemplateCommand(final WorkflowManager manager,
+    public ReplaceMetaNodeTemplateCommand(final IWorkflowManager manager,
         final AbstractExplorerFileStore templateFolder, final Point location, final boolean snapToGrid,
         final NodeContainerEditPart node) {
         super(manager, templateFolder, location, snapToGrid);
