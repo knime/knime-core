@@ -50,6 +50,7 @@ package org.knime.core.api.node.workflow;
 
 import java.net.URL;
 
+import org.knime.core.api.node.NodeType;
 import org.knime.core.api.node.workflow.INodeContainer.NodeLock;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.NodeID;
@@ -306,7 +307,7 @@ public interface INodeContainer extends NodeProgressListener, NodeContainerState
 
     URL getIcon();
 
-//    NodeType getType();
+    NodeType getType();
 
     NodeID getID();
 
