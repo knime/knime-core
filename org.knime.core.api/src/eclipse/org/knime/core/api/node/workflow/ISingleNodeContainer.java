@@ -48,6 +48,8 @@
  */
 package org.knime.core.api.node.workflow;
 
+import org.w3c.dom.Element;
+
 /**
  * TODO
  *
@@ -146,12 +148,12 @@ public interface ISingleNodeContainer {
 //     * @see Node#isInactiveBranchConsumer()
 //     */
 //    boolean isInactiveBranchConsumer();
-//
-//    /**
-//     * @return the XML description of the node for the NodeDescription view
-//     */
-//    Element getXMLDescription();
-//
+
+    /**
+     * @return the XML description of the node for the NodeDescription view
+     */
+    Element getXMLDescription();
+
 //    /**
 //     * Get the policy for the data outports, that is, keep the output in main
 //     * memory or write it to disc. This method is used from within the

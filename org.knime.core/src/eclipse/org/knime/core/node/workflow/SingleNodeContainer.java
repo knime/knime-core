@@ -1029,6 +1029,7 @@ public abstract class SingleNodeContainer extends NodeContainer implements ISing
     /**
      * @return the XML description of the node for the NodeDescription view
      */
+    @Override
     public abstract Element getXMLDescription();
 
     /** {@inheritDoc} */
