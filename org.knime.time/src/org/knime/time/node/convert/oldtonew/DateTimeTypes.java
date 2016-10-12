@@ -48,6 +48,12 @@
  */
 package org.knime.time.node.convert.oldtonew;
 
+import org.knime.core.data.DataType;
+import org.knime.core.data.time.localdate.LocalDateCell;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
+import org.knime.core.data.time.localtime.LocalTimeCell;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
+
 /**
  * An enumeration that contains all different Date&Time Types.
  *
@@ -70,6 +76,21 @@ enum DateTimeTypes {
     @Override
     public String toString() {
         return m_name;
+    }
+
+    public DataType getDataType() {
+        switch (this) {
+            case LOCAL_DATE:
+                return DataType.getType(LocalDateCell.class);
+            case LOCAL_TIME:
+                return DataType.getType(LocalTimeCell.class);
+            case LOCAL_DATE_TIME:
+                return DataType.getType(LocalDateTimeCell.class);
+            case ZONED_DATE_TIME:
+                return DataType.getType(ZonedDateTimeCell.class);
+            default:
+                return null;
+        }
     }
 
 }

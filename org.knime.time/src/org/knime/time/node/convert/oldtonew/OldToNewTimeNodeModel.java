@@ -111,11 +111,11 @@ final class OldToNewTimeNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_autoType = createTypeModelBool();
 
-    private final SettingsModelString m_typeSelect = createTypeSelectModel();
-
     private final SettingsModelBoolean m_addZone = createZoneModelBool();
 
     private final SettingsModelString m_timeZone = createTimeZoneSelectModel();
+
+    private String m_selectedNewType;
 
     private DateTimeTypes[] m_newTypes = null;
 
@@ -128,14 +128,6 @@ final class OldToNewTimeNodeModel extends NodeModel {
     /** @return the boolean model, used in both dialog and model. */
     static SettingsModelBoolean createTypeModelBool() {
         return new SettingsModelBoolean("type_bool", true);
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createTypeSelectModel() {
-        final SettingsModelString settingsModelString =
-            new SettingsModelString("type_select", DateTimeTypes.LOCAL_DATE_TIME.toString());
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
     }
 
     /** @return the boolean model, used in both dialog and model. */
@@ -246,26 +238,8 @@ final class OldToNewTimeNodeModel extends NodeModel {
              * if the type of the new cells is determined by the user itself
              */
         } else {
-            DataType newDataType = null;
-            DateTimeTypes type = null;
-            final String typeString = m_typeSelect.getStringValue();
-            if ((typeString.equals(DateTimeTypes.LOCAL_DATE.toString()))
-                || (typeString.equals(DateTimeTypes.LOCAL_DATE.name()))) {
-                newDataType = DataType.getType(LocalDateCell.class);
-                type = DateTimeTypes.LOCAL_DATE;
-            } else if ((typeString.equals(DateTimeTypes.LOCAL_TIME.toString()))
-                || (typeString.equals(DateTimeTypes.LOCAL_TIME.name()))) {
-                newDataType = DataType.getType(LocalTimeCell.class);
-                type = DateTimeTypes.LOCAL_TIME;
-            } else if ((typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.toString()))
-                || (typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.name()))) {
-                newDataType = DataType.getType(LocalDateTimeCell.class);
-                type = DateTimeTypes.LOCAL_DATE_TIME;
-            } else if ((typeString.equals(DateTimeTypes.ZONED_DATE_TIME.toString()))
-                || (typeString.equals(DateTimeTypes.ZONED_DATE_TIME.name()))) {
-                newDataType = DataType.getType(ZonedDateTimeCell.class);
-                type = DateTimeTypes.ZONED_DATE_TIME;
-            }
+            DateTimeTypes type = DateTimeTypes.valueOf(m_selectedNewType);
+            DataType newDataType = type.getDataType();
             for (int i = 0; i < includes.length; i++) {
                 final DataColumnSpecCreator dataColumnSpecCreator = new DataColumnSpecCreator(includes[i], newDataType);
                 newSpec[i] = dataColumnSpecCreator.createSpec();
@@ -323,7 +297,6 @@ final class OldToNewTimeNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
 
     }
 
@@ -333,7 +306,6 @@ final class OldToNewTimeNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-        // TODO Auto-generated method stub
 
     }
 
@@ -344,25 +316,9 @@ final class OldToNewTimeNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_colSelect.saveSettingsTo(settings);
         m_autoType.saveSettingsTo(settings);
-        final String typeString = m_typeSelect.getStringValue();
-        if (typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.toString())) {
-            m_typeSelect.setStringValue(DateTimeTypes.LOCAL_DATE_TIME.name());
-        } else {
-            if (typeString.equals(DateTimeTypes.LOCAL_DATE.toString())) {
-                m_typeSelect.setStringValue(DateTimeTypes.LOCAL_DATE.name());
-            } else {
-                if (typeString.equals(DateTimeTypes.LOCAL_TIME.toString())) {
-                    m_typeSelect.setStringValue(DateTimeTypes.LOCAL_TIME.name());
-                } else {
-                    if (typeString.equals(DateTimeTypes.ZONED_DATE_TIME.toString())) {
-                        m_typeSelect.setStringValue(DateTimeTypes.ZONED_DATE_TIME.name());
-                    }
-                }
-            }
-        }
-        m_typeSelect.saveSettingsTo(settings);
         m_addZone.saveSettingsTo(settings);
         m_timeZone.saveSettingsTo(settings);
+        settings.addString("newTypeEnum", m_selectedNewType);
     }
 
     /**
@@ -372,7 +328,6 @@ final class OldToNewTimeNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.validateSettings(settings);
         m_autoType.validateSettings(settings);
-        m_typeSelect.validateSettings(settings);
         m_addZone.validateSettings(settings);
         m_timeZone.validateSettings(settings);
     }
@@ -384,25 +339,9 @@ final class OldToNewTimeNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.loadSettingsFrom(settings);
         m_autoType.loadSettingsFrom(settings);
-        m_typeSelect.loadSettingsFrom(settings);
-        final String typeString = m_typeSelect.getStringValue();
-        if (typeString.equals(DateTimeTypes.LOCAL_DATE_TIME.name())) {
-            m_typeSelect.setStringValue(DateTimeTypes.LOCAL_DATE_TIME.toString());
-        } else {
-            if (typeString.equals(DateTimeTypes.LOCAL_DATE.name())) {
-                m_typeSelect.setStringValue(DateTimeTypes.LOCAL_DATE.toString());
-            } else {
-                if (typeString.equals(DateTimeTypes.LOCAL_TIME.name())) {
-                    m_typeSelect.setStringValue(DateTimeTypes.LOCAL_TIME.toString());
-                } else {
-                    if (typeString.equals(DateTimeTypes.ZONED_DATE_TIME.name())) {
-                        m_typeSelect.setStringValue(DateTimeTypes.ZONED_DATE_TIME.toString());
-                    }
-                }
-            }
-        }
         m_addZone.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
+        m_selectedNewType = settings.getString("newTypeEnum");
     }
 
     /**
