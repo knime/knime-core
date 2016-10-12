@@ -78,6 +78,8 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.FilesHistoryPanel;
+import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
 
@@ -89,7 +91,7 @@ import org.knime.core.util.FileUtil;
 public class CSVWriterNodeDialog extends NodeDialogPane {
 
     /** textfield to enter file name. */
-    private final CSVFilesHistoryPanel m_textBox;
+    private final FilesHistoryPanel m_filePanel;
 
     /** Checkbox for writing column header. */
     private final JCheckBox m_colHeaderChecker;
@@ -121,23 +123,26 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
     boolean m_isLocalDestination;
 
 
+
     /**
      * Creates a new CSV writer dialog.
      */
     public CSVWriterNodeDialog() {
         super();
 
+        m_filePanel =
+            new FilesHistoryPanel(createFlowVariableModel(FileWriterNodeSettings.CFGKEY_FILE, FlowVariable.Type.STRING),
+                "org.knime.base.node.io.csvwriter", LocationValidation.FileOutput, ".csv", ".txt");
+        m_filePanel.setDialogTypeSaveWithExtension(".csv");
+
         final JPanel filePanel = new JPanel();
         filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
         filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Output location:"));
-        m_textBox = new CSVFilesHistoryPanel(createFlowVariableModel(
-              FileWriterNodeSettings.CFGKEY_FILE,
-              FlowVariable.Type.STRING));
-        m_textBox.addChangeListener(new ChangeListener() {
+        m_filePanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                String selFile = m_textBox.getSelectedFile();
+                String selFile = m_filePanel.getSelectedFile();
                 if ((selFile != null) && !selFile.isEmpty()) {
                     try {
                         URL newUrl = FileUtil.toURL(selFile);
@@ -153,8 +158,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                 }
             }
         });
-        filePanel.setMaximumSize(new Dimension(m_textBox.getMaximumSize().width, 25));
-        filePanel.add(m_textBox);
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        filePanel.add(m_filePanel);
         filePanel.add(Box.createHorizontalGlue());
 
         final JPanel optionsPanel = new JPanel();
@@ -197,7 +202,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_useGzipChecker.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
-                String file = m_textBox.getSelectedFile();
+                String file = m_filePanel.getSelectedFile();
                 if (m_useGzipChecker.isSelected()) {
                     if (m_overwritePolicyAppendButton.isSelected()) {
                         m_overwritePolicyAbortButton.doClick();
@@ -205,11 +210,11 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                     m_overwritePolicyAppendButton.setEnabled(false);
                     if (file != null && file.length() > 0
                     		&& !file.toLowerCase().endsWith(".gz")) {
-                        m_textBox.setSelectedFile(file + ".gz");
+                        m_filePanel.setSelectedFile(file + ".gz");
                     }
                 } else {
                     if (file != null && file.toLowerCase().endsWith(".gz")) {
-                        m_textBox.setSelectedFile(file.substring(
+                        m_filePanel.setSelectedFile(file.substring(
                                 0, file.length() - ".gz".length()));
                     }
                     m_overwritePolicyAppendButton.setEnabled(true);
@@ -312,8 +317,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
             newValues = new FileWriterNodeSettings();
         }
 
-        m_textBox.updateHistory();
-        m_textBox.setSelectedFile(newValues.getFileName());
+        m_filePanel.updateHistory();
+        m_filePanel.setSelectedFile(newValues.getFileName());
         m_colHeaderChecker.setSelected(newValues.writeColumnHeader());
         m_colHeaderWriteSkipOnAppend.setSelected(newValues
                 .skipColHeaderIfFileExists());
@@ -354,7 +359,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
 
         FileWriterNodeSettings values = new FileWriterNodeSettings();
 
-        values.setFileName(m_textBox.getSelectedFile());
+        values.setFileName(m_filePanel.getSelectedFile());
 
         values.setWriteColumnHeader(m_colHeaderChecker.isSelected());
         values.setSkipColHeaderIfFileExists(m_colHeaderWriteSkipOnAppend
@@ -384,5 +389,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         values.setCharacterEncoding(s.getCharsetName());
 
         values.saveSettingsTo(settings);
+
+        m_filePanel.addToHistory();
     }
 }

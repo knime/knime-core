@@ -47,7 +47,7 @@
  */
 package org.knime.base.node.io.csvreader;
 
-import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -55,8 +55,12 @@ import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
@@ -103,10 +107,21 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
 
     /** Create new dialog, init layout.*/
     public CSVReaderNodeDialog() {
-        JPanel panel = new JPanel(new BorderLayout());
+        super();
+
         m_filePanel =
             new FilesHistoryPanel(createFlowVariableModel(CSVReaderConfig.CFG_URL, FlowVariable.Type.STRING),
-                "csv_read", LocationValidation.FileInput, ".csv", ".txt");
+                "org.knime.base.node.io.csvreader", LocationValidation.FileInput, ".csv", ".txt");
+        m_filePanel.setDialogType(JFileChooser.OPEN_DIALOG);
+
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Input location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
+
         int col = 3;
         m_colDelimiterField = new JTextField("###", col);
         m_rowDelimiterField = new JTextField("###", col);
@@ -133,13 +148,20 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
             }
         });
         m_limitRowsChecker.doClick();
-        panel.add(m_filePanel, BorderLayout.NORTH);
-        JPanel centerPanel = createPanel();
-        panel.add(centerPanel, BorderLayout.CENTER);
-        panel.add(new JLabel(" "), BorderLayout.WEST);
-        addTab("CSV Reader", panel);
+
+        final JPanel optionsPanel = createPanel();
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+            .createEtchedBorder(), "Reader options:"));
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(filePanel);
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(optionsPanel);
+        addTab("Settings", panel);
+
         m_encodingPanel = new CharsetNamePanel(new FileReaderSettings());
-        addTab("CSV Reader Encoding", m_encodingPanel);
+        addTab("Encoding", m_encodingPanel);
     }
 
     private JPanel createPanel() {
@@ -148,13 +170,17 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
         centerPanel.add(getInFlowLayout(m_colDelimiterField, new JLabel("Column Delimiter ")), gbc);
         gbc.gridx += 1;
         centerPanel.add(getInFlowLayout(m_rowDelimiterField, new JLabel("Row Delimiter ")), gbc);
+        gbc.gridx +=1;
+        gbc.weightx = 1;
+        centerPanel.add(new JPanel(), gbc);
 
         gbc.gridx = 0;
         gbc.gridy += 1;
+        gbc.weightx = 0;
         centerPanel.add(getInFlowLayout(m_quoteStringField, new JLabel("Quote Char ")), gbc);
         gbc.gridx += 1;
         centerPanel.add(getInFlowLayout(m_commentStartField, new JLabel("Comment Char ")), gbc);
@@ -178,6 +204,12 @@ public final class CSVReaderNodeDialog extends NodeDialogPane {
         centerPanel.add(getInFlowLayout(m_limitRowsChecker), gbc);
         gbc.gridx += 1;
         centerPanel.add(getInFlowLayout(m_limitRowsSpinner), gbc);
+
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        gbc.weighty = 1;
+        centerPanel.add(new JPanel(), gbc);
+
         return centerPanel;
     }
 

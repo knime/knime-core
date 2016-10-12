@@ -47,14 +47,23 @@
  */
 package org.knime.base.node.io.arffwriter;
 
-import java.awt.Container;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
+import javax.swing.ButtonGroup;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -64,7 +73,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.FilesHistoryPanel;
 import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
-import org.knime.core.node.workflow.FlowVariable.Type;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.util.FileUtil;
 
 /**
  * Contains the dialog for the ARFF file writer.
@@ -73,17 +83,14 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  */
 public class ARFFWriterNodeDialog extends NodeDialogPane {
 
-    private static final int VERT_SPACE = 5;
+    /** textfield to enter file name. */
+    private final FilesHistoryPanel m_filePanel;
 
-    private static final int HORIZ_SPACE = 5;
+    private final JRadioButton m_overwritePolicyAbortButton;
 
-    private static final int COMPONENT_HEIGHT = 25;
+    private final JRadioButton m_overwritePolicyOverwriteButton;
 
-    private FilesHistoryPanel m_url;
-
-    private JCheckBox m_overwriteOKChecker;
-
-    private static final int TABWIDTH = 600;
+    boolean m_isLocalDestination;
 
     /**
      * Creates a new ARFF file reader dialog.
@@ -91,63 +98,75 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
     public ARFFWriterNodeDialog() {
         super();
 
-        addTab("Specify ARFF file", createFilePanel());
-    }
+        m_filePanel =
+                new FilesHistoryPanel(createFlowVariableModel(ARFFWriterNodeModel.CFGKEY_FILENAME, FlowVariable.Type.STRING),
+                    "org.knime.base.node.io.arffwriter", LocationValidation.FileOutput, ".arff");
+        m_filePanel.setDialogTypeSaveWithExtension(".arff");
 
-    private JPanel createFilePanel() {
-        int sumOfCompHeigth = 0;
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Output location:"));
+        m_filePanel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                String selFile = m_filePanel.getSelectedFile();
+                if ((selFile != null) && !selFile.isEmpty()) {
+                    try {
+                        URL newUrl = FileUtil.toURL(selFile);
+                        Path path = FileUtil.resolveToPath(newUrl);
+                        m_isLocalDestination = (path != null);
+                        m_overwritePolicyAbortButton.setEnabled(m_isLocalDestination);
+                        m_overwritePolicyOverwriteButton.setEnabled(m_isLocalDestination);
+                    } catch (IOException | URISyntaxException | InvalidPathException ex) {
+                        // ignore
+                    }
+                }
+            }
+        });
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
 
-        JPanel filePanel = new JPanel();
-        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.Y_AXIS));
-        filePanel.add(Box.createGlue());
+        final JPanel optionsPanel = new JPanel();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Writer options:"));
 
-        JPanel innerBox = new JPanel();
-        innerBox.setLayout(new BoxLayout(innerBox, BoxLayout.Y_AXIS));
-        innerBox.add(Box.createVerticalStrut(COMPONENT_HEIGHT + VERT_SPACE));
-        sumOfCompHeigth += COMPONENT_HEIGHT + VERT_SPACE;
+        ButtonGroup bg = new ButtonGroup();
+        m_overwritePolicyOverwriteButton = new JRadioButton("Overwrite");
+        bg.add(m_overwritePolicyOverwriteButton);
+        m_overwritePolicyAbortButton = new JRadioButton("Abort");
+        bg.add(m_overwritePolicyAbortButton);
+        m_overwritePolicyAbortButton.doClick();
 
-        JPanel fPanel = new JPanel();
-        fPanel.setLayout(new BoxLayout(fPanel, BoxLayout.X_AXIS));
-        fPanel
-                .setBorder(BorderFactory.createTitledBorder(BorderFactory
-                        .createEtchedBorder(),
-                        "Enter location to write ARFF file to:"));
-        Container fileBox = Box.createHorizontalBox();
-        sumOfCompHeigth += COMPONENT_HEIGHT;
+        final JPanel overwriteFileLabelPane = new JPanel();
+        overwriteFileLabelPane.setLayout(
+                new BoxLayout(overwriteFileLabelPane, BoxLayout.X_AXIS));
+        overwriteFileLabelPane.add(new JLabel(" If file exists... "));
+        overwriteFileLabelPane.add(Box.createHorizontalGlue());
+        final JPanel overwriteFilePane = new JPanel();
+        overwriteFilePane.setLayout(
+                new BoxLayout(overwriteFilePane, BoxLayout.X_AXIS));
+        m_overwritePolicyOverwriteButton.setAlignmentY(Component.TOP_ALIGNMENT);
+        overwriteFilePane.add(m_overwritePolicyOverwriteButton);
+        overwriteFilePane.add(Box.createHorizontalStrut(20));
+        m_overwritePolicyAbortButton.setAlignmentY(Component.TOP_ALIGNMENT);
+        overwriteFilePane.add(m_overwritePolicyAbortButton);
+        overwriteFilePane.add(Box.createHorizontalGlue());
 
-        m_url =
-            new FilesHistoryPanel(createFlowVariableModel(ARFFWriterNodeModel.CFGKEY_FILENAME, Type.STRING),
-                "org.knime.base.node.io.arffwriter", LocationValidation.FileOutput, ".arff");
-        m_url.setBorder(null);
-        fileBox.add(m_url);
-        fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
+        optionsPanel.add(overwriteFileLabelPane);
+        optionsPanel.add(Box.createVerticalStrut(3));
+        optionsPanel.add(overwriteFilePane);
+        optionsPanel.add(Box.createVerticalGlue());
 
-        sumOfCompHeigth += COMPONENT_HEIGHT + VERT_SPACE;
+        final JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(filePanel);
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(optionsPanel);
 
-        fPanel.add(fileBox);
-        innerBox.add(fPanel);
-        innerBox.add(Box.createVerticalStrut(VERT_SPACE));
-        sumOfCompHeigth += VERT_SPACE;
-
-        m_overwriteOKChecker = new JCheckBox("Overwrite OK");
-        Container overwriteOKBox = Box.createHorizontalBox();
-        overwriteOKBox.add(Box.createHorizontalGlue());
-        overwriteOKBox.add(m_overwriteOKChecker);
-        overwriteOKBox.add(Box.createHorizontalStrut(20));
-        innerBox.add(overwriteOKBox);
-        innerBox.add(Box.createVerticalStrut(VERT_SPACE));
-        sumOfCompHeigth += VERT_SPACE;
-
-
-        innerBox.add(Box.createVerticalStrut(VERT_SPACE));
-        sumOfCompHeigth += COMPONENT_HEIGHT + (2 * VERT_SPACE);
-
-        innerBox.setMaximumSize(new Dimension(TABWIDTH, sumOfCompHeigth));
-
-        filePanel.add(innerBox);
-        filePanel.add(Box.createGlue());
-
-        return filePanel;
+        addTab("Settings", panel);
     }
 
     /**
@@ -156,10 +175,12 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_url.getSelectedFile());
+        settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_filePanel.getSelectedFile());
+
         settings.addBoolean(ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK,
-                m_overwriteOKChecker.isSelected());
-        m_url.addToHistory();
+                m_overwritePolicyOverwriteButton.isSelected());
+
+        m_filePanel.addToHistory();
     }
 
     /**
@@ -169,9 +190,14 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         // set the selected file
-        m_url.setSelectedFile(settings.getString(ARFFWriterNodeModel.CFGKEY_FILENAME, ""));
+        m_filePanel.updateHistory();
+        m_filePanel.setSelectedFile(settings.getString(ARFFWriterNodeModel.CFGKEY_FILENAME, ""));
 
-        m_overwriteOKChecker.setSelected(settings.getBoolean(
-                ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK, false));
+        if(settings.getBoolean(
+                ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK, false)){
+            m_overwritePolicyOverwriteButton.doClick();
+        }else{
+            m_overwritePolicyAbortButton.doClick();
+        }
     }
 }

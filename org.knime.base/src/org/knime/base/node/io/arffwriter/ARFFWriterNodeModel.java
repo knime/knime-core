@@ -149,7 +149,10 @@ public class ARFFWriterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getString(CFGKEY_FILENAME);
+        String fileName = settings.getString(CFGKEY_FILENAME);
+        if (fileName == null || fileName.length() == 0) {
+            throw new InvalidSettingsException("Missing output file name.");
+        }
         // overwrite flag added in v2.1 - not required here
     }
 

@@ -47,11 +47,15 @@
  */
 package org.knime.base.node.io.arffreader;
 
-import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -83,34 +87,48 @@ public class ARFFReaderNodeDialog extends NodeDialogPane {
      */
     public ARFFReaderNodeDialog() {
         super();
-        JPanel panel = new JPanel(new BorderLayout());
 
-        m_rowPrefix = new JTextField("Row", 10);
         m_filePanel =
-            new FilesHistoryPanel(createFlowVariableModel(ARFFReaderNodeModel.CFGKEY_FILEURL, FlowVariable.Type.STRING),
-                "arff_read", LocationValidation.FileInput, ".arff");
-        panel.add(m_filePanel, BorderLayout.NORTH);
-        JPanel centerPanel = initLayout();
-        panel.add(centerPanel, BorderLayout.CENTER);
+                new FilesHistoryPanel(createFlowVariableModel(ARFFReaderNodeModel.CFGKEY_FILEURL, FlowVariable.Type.STRING),
+                    "org.knime.base.node.io.arffreader", LocationValidation.FileInput, ".arff");
+        m_filePanel.setDialogType(JFileChooser.OPEN_DIALOG);
 
-        addTab("Specify ARFF file", panel);
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Input location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
 
-    }
 
-    private JPanel initLayout() {
-        JPanel panel = new JPanel(new GridBagLayout());
+        final JPanel optionsPanel = new JPanel(new GridBagLayout());
+        optionsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+            .createEtchedBorder(), "Reader options:"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        optionsPanel.add(new JLabel("RowID prefix: "), gbc);
 
-        gbc.gridy += 1;
-        gbc.gridwidth = 1;
-        panel.add(new JLabel("RowID prefix: "), gbc);
         gbc.gridx += 1;
-        panel.add(m_rowPrefix, gbc);
-        return panel;
+        m_rowPrefix = new JTextField("Row", 10);
+        optionsPanel.add(m_rowPrefix, gbc);
+
+        gbc.gridx++;
+        gbc.gridy++;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        optionsPanel.add(new JPanel(), gbc);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(filePanel);
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(optionsPanel);
+
+        addTab("Settings", panel);
     }
 
 
