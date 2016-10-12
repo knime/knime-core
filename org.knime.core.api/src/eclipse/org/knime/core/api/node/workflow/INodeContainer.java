@@ -49,6 +49,7 @@
 package org.knime.core.api.node.workflow;
 
 import java.net.URL;
+import java.util.Optional;
 
 import org.knime.core.api.node.NodeType;
 import org.knime.core.api.node.workflow.INodeContainer.NodeLock;
@@ -75,14 +76,14 @@ public interface INodeContainer extends NodeProgressListener, NodeContainerState
 //    NodeContainerParent getDirectNCParent();
 
     /**
-     * @return the unique identifier (UID) of the job manager associated with this node or null if this
+     * @return the unique identifier (UID) of the job manager associated with this node or an empty optional if this
      * node will use the job manager of the parent (or the parent of ...)
-     * @see #findJobManager()
+     * @see #findJobManagerUID()
      */
-    JobManagerUID getJobManagerUID();
+    Optional<JobManagerUID> getJobManagerUID();
 
-//    /** @return NodeExecutionJobManager responsible for this node and all its children. */
-//    NodeExecutionJobManager findJobManager();
+    /** @return the unique identifier (UID) of the job manager that is responsible for this node and all its children. */
+    JobManagerUID findJobManagerUID();
 
     boolean addNodePropertyChangedListener(NodePropertyChangedListener l);
 

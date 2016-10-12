@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.api.node.NodeType;
@@ -319,9 +320,21 @@ public abstract class NodeContainer implements INodeContainer {
     }
 
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public final JobManagerUID getJobManagerUID() {
-        return JobManagerUtil.getJobManagerUID(m_jobManager);
+    public final Optional<JobManagerUID> getJobManagerUID() {
+        return getJobManager() != null ? Optional.of(JobManagerUtil.getJobManagerUID(getJobManager()))
+            : Optional.empty();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JobManagerUID findJobManagerUID() {
+        return JobManagerUtil.getJobManagerUID(findJobManager());
     }
 
     /**
