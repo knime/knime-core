@@ -533,7 +533,6 @@ final class OldToNewTimeNodeModel extends NodeModel {
                 out.close();
             }
         };
-        //        }
     }
 
     @Override
