@@ -49,10 +49,10 @@
 package org.knime.time.node.convert.oldtonew;
 
 import org.knime.core.data.DataType;
-import org.knime.core.data.time.localdate.LocalDateCell;
-import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
-import org.knime.core.data.time.localtime.LocalTimeCell;
-import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
+import org.knime.core.data.time.localdate.LocalDateCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
+import org.knime.core.data.time.localtime.LocalTimeCellFactory;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 
 /**
  * An enumeration that contains all different Date&Time Types.
@@ -60,14 +60,17 @@ import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 enum DateTimeTypes {
-
-        LOCAL_DATE("Local date"), LOCAL_TIME("Local time"), LOCAL_DATE_TIME("Local date&time"),
-        ZONED_DATE_TIME("Zoned date&time");
+        LOCAL_DATE("Local date", LocalDateCellFactory.TYPE), LOCAL_TIME("Local time", LocalTimeCellFactory.TYPE),
+        LOCAL_DATE_TIME("Local date&time", LocalDateTimeCellFactory.TYPE),
+        ZONED_DATE_TIME("Zoned date&time", ZonedDateTimeCellFactory.TYPE);
 
     private final String m_name;
 
-    private DateTimeTypes(final String name) {
+    private final DataType m_dataType;
+
+    private DateTimeTypes(final String name, final DataType dataType) {
         m_name = name;
+        m_dataType = dataType;
     }
 
     /**
@@ -79,18 +82,6 @@ enum DateTimeTypes {
     }
 
     public DataType getDataType() {
-        switch (this) {
-            case LOCAL_DATE:
-                return DataType.getType(LocalDateCell.class);
-            case LOCAL_TIME:
-                return DataType.getType(LocalTimeCell.class);
-            case LOCAL_DATE_TIME:
-                return DataType.getType(LocalDateTimeCell.class);
-            case ZONED_DATE_TIME:
-                return DataType.getType(ZonedDateTimeCell.class);
-            default:
-                return null;
-        }
+        return m_dataType;
     }
-
 }
