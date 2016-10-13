@@ -220,19 +220,16 @@ final class OldToNewTimeNodeModel extends NodeModel {
                 return newSpec;
                 // row is not null, if the method is called by the execute method
             } else {
-                DataColumnSpecCreator dataColumnSpecCreator;
-                for (int i = 0; i < includes.length; i++) {
-                    if (m_addZone.getBooleanValue()) {
-                        dataColumnSpecCreator =
+                if (m_addZone.getBooleanValue()) {
+                    for (int i = 0; i < includes.length; i++) {
+                        DataColumnSpecCreator dataColumnSpecCreator =
                             new DataColumnSpecCreator(includes[i], DataType.getType(ZonedDateTimeCell.class));
-                    } else {
-
-                        dataColumnSpecCreator =
-                            new DataColumnSpecCreator(includes[i], DataType.getType(LocalDateTimeCell.class));
+                        newSpec[i] = dataColumnSpecCreator.createSpec();
                     }
-                    newSpec[i] = dataColumnSpecCreator.createSpec();
+                    return newSpec;
+                } else {
+                    return null;
                 }
-                return null;
             }
             /*
              * if the type of the new cells is determined by the user itself

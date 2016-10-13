@@ -8,7 +8,8 @@
 	<fullDescription>
 		<intro>
 			<p>
-				This node converts columns from the new date&amp;time data types to the old
+				This node converts columns from the new date&amp;time data types
+				to the old
 				type.
 			</p>
 		</intro>
@@ -19,8 +20,19 @@
 		</tab>
 		<tab name="Time Zone Handling">
 			<option name="Add the offset of the time zone to the time">
-				If checked, the offset of the time zone will be added to the time. Otherwise the time zone will be just dropped.
-			</option>			
+				<p>If checked, the offset of the time zone will be
+				added to the time. Otherwise the time zone will be just dropped,
+				because the legacy Date&amp;Type type does not support time zones.
+				</p>
+				<p>
+				<u> Example:</u><br/>
+				Input:<br/>
+				<i>2015-07-09T13:00:00+02:00[Europe/Berlin]</i><br/>
+				Output if checked:<br/>
+				<i>09.Jul.2015 15:00:00</i><br/>
+				Output if not checked:<br/>
+				<i>09.Jul.2015 13:00:00</i></p>
+			</option>
 		</tab>
 	</fullDescription>
 	<ports>
