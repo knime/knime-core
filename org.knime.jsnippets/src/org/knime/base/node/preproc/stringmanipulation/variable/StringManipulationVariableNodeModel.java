@@ -73,6 +73,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
 import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
+import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 
 /**
@@ -97,18 +98,24 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        try {
-            execute(new PortObject[]{}, null);
-        } catch (Exception e) {
+        if (m_settings == null || m_settings.getExpression() == null) {
+            throw new InvalidSettingsException("No expression has been set.");
         }
+        try {
+            calculate();
+        } catch (InstantiationException | CompilationFailedException e) {
+            throw new InvalidSettingsException(e.getMessage(), e);
+        }
+
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
 
     /**
-     * {@inheritDoc}
+     * @throws CompilationFailedException
+     * @throws InstantiationException
+     * @throws Exception
      */
-    @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+    private void calculate() throws InvalidSettingsException, CompilationFailedException, InstantiationException {
         if (m_settings == null || m_settings.getExpression() == null) {
             throw new InvalidSettingsException("No expression has been set.");
         }
@@ -133,6 +140,16 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
                 throw new RuntimeException("Invalid variable class: " + cellType);
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        // must not call calculate() as it has been done in configure()
+        // (and there would otherwise be the chance that we do a calculation
+        // on the already updated values!)
         return new PortObject[]{FlowVariablePortObject.INSTANCE};
     }
 
