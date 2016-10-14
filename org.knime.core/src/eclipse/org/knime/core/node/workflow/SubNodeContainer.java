@@ -1886,6 +1886,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @return the layoutJSONString
      * @since 3.1
      */
+    @Override
     public String getLayoutJSONString() {
         if (m_layoutJSONString == null) {
             m_layoutJSONString = "";
@@ -1897,6 +1898,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @param layoutJSONString the layoutJSONString to set
      * @since 3.1
      */
+    @Override
     public void setLayoutJSONString(final String layoutJSONString) {
         if (!StringUtils.equals(m_layoutJSONString, layoutJSONString)) {
             m_layoutJSONString = layoutJSONString;
