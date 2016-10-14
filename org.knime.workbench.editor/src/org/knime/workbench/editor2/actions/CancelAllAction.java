@@ -51,8 +51,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -126,7 +126,7 @@ public class CancelAllAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        WorkflowManager manager = getManager();
+        IWorkflowManager manager = getManager();
         if (manager.getParent() == null) {
             return false;
         }
@@ -148,7 +148,7 @@ public class CancelAllAction extends AbstractNodeAction {
             return;
         }
         LOGGER.debug("(Cancel all)  cancel all running jobs.");
-        WorkflowManager manager = getManager();
+        IWorkflowManager manager = getManager();
         manager.getParent().cancelExecution(manager);
         try {
             // Give focus to the editor again. Otherwise the actions (selection)

@@ -48,7 +48,7 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -121,7 +121,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        WorkflowManager wm = getManager();
+        IWorkflowManager wm = getManager();
         return wm.canExecuteAll();
     }
 
@@ -135,7 +135,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        WorkflowManager wm = getManager();
+        IWorkflowManager wm = getManager();
         wm.executeAll();
         try {
             // Give focus to the editor again. Otherwise the actions (selection)

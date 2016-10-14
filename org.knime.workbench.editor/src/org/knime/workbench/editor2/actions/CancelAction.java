@@ -51,7 +51,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -154,7 +153,7 @@ public class CancelAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Creating cancel job for " + nodeParts.length
                 + " node(s)...");
-        WorkflowManager manager = getManager();
+        IWorkflowManager manager = getManager();
 
         for (NodeContainerEditPart p : nodeParts) {
             manager.cancelExecution(p.getNodeContainer());

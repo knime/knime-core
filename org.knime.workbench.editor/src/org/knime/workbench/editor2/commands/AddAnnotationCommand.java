@@ -56,7 +56,6 @@ import org.eclipse.swt.graphics.Point;
 import org.knime.core.api.node.workflow.AnnotationData;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.workflow.WorkflowAnnotation;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -92,7 +91,7 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
      * @param viewer
      * @param location
      */
-    public AddAnnotationCommand(final WorkflowManager wfm,
+    public AddAnnotationCommand(final IWorkflowManager wfm,
             final GraphicalViewer viewer, final Point location) {
         super(wfm);
         m_location = location;

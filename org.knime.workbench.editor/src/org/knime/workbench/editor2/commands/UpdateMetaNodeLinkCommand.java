@@ -54,9 +54,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.UseImplUtil;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -84,7 +85,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
      * @param manager The workflow manager containing the links to be updated.
      * @param ids The ids of the link nodes.
      */
-    public UpdateMetaNodeLinkCommand(final WorkflowManager manager,
+    public UpdateMetaNodeLinkCommand(final IWorkflowManager manager,
             final NodeID[] ids) {
         super(manager);
         m_ids = ids.clone();
@@ -101,9 +102,9 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
             return false;
         }
         boolean containsUpdateableMN = false;
-        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+        IWorkflowManager hostWFM = getHostWFM();
         for (NodeID id : m_ids) {
-            NodeContainer nc = hostWFM.findNodeContainer(id);
+            INodeContainer nc = hostWFM.findNodeContainer(id);
             if (nc instanceof NodeContainerTemplate) {
                 NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
                 final WorkflowManager parent = tnc.getParent();

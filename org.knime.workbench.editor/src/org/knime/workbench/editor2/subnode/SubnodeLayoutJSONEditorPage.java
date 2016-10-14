@@ -105,15 +105,13 @@ import org.eclipse.swt.widgets.Text;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.knime.core.api.node.workflow.ISubNodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
-import org.knime.core.node.workflow.SubNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.js.core.layout.DefaultLayoutCreatorImpl;
 import org.knime.js.core.layout.bs.JSONLayoutColumn;
 import org.knime.js.core.layout.bs.JSONLayoutContent;
 import org.knime.js.core.layout.bs.JSONLayoutPage;
@@ -135,11 +133,9 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
 
     private static NodeLogger LOGGER = NodeLogger.getLogger(SubnodeLayoutJSONEditorPage.class);
 
-    private SubNodeContainer m_subNodeContainer;
-    private WorkflowManager m_wfManager;
-    private DefaultLayoutCreatorImpl m_layoutCreator;
-    @SuppressWarnings("rawtypes")
-    private Map<NodeIDSuffix, WizardNode> m_viewNodes;
+    private IWorkflowManager m_wfManager;
+    private ISubNodeContainer m_subNodeContainer;
+    private List<NodeID> m_viewNodes;
     private String m_jsonDocument;
     private Label m_statusLine;
     private RSyntaxTextArea m_textArea;
@@ -573,7 +569,8 @@ public class SubnodeLayoutJSONEditorPage extends WizardPage {
      * @param subnodeContainer the wrapped metanode container
      * @param viewNodes a map of all available view nodes
      */
-    public void setNodes(final WorkflowManager manager, final SubNodeContainer subnodeContainer, @SuppressWarnings("rawtypes") final Map<NodeIDSuffix, WizardNode> viewNodes) {
+    public void setNodes(final IWorkflowManager manager, final ISubNodeContainer subnodeContainer,
+        final List<NodeID> viewNodes) {
         m_wfManager = manager;
         m_subNodeContainer = subnodeContainer;
         m_viewNodes = viewNodes;

@@ -54,9 +54,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -78,7 +78,7 @@ public class VerticAlignmentCenter {
      * @return a map with offsets for the nodes
      */
     static Map<NodeContainerEditPart, Integer> doLayout(
-            final WorkflowManager wfm,
+            final IWorkflowManager wfm,
             final NodeContainerEditPart[] nodeParts) {
 
         if (nodeParts.length == 0) {

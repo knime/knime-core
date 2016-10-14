@@ -56,8 +56,7 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.internal.GEFMessages;
 import org.eclipse.gef.ui.actions.DeleteAction;
 import org.eclipse.ui.IWorkbenchPart;
-import org.knime.core.node.util.UseImplUtil;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.DeleteCommand;
 import org.knime.workbench.editor2.commands.VerifyingCompoundCommand;
@@ -106,8 +105,7 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         NodeContainerEditPart[] nodeParts = AbstractNodeAction.filterObjects(
                 NodeContainerEditPart.class, objects);
 
-        WorkflowManager manager =
-            UseImplUtil.getWFMImplOf(((WorkflowEditor)getWorkbenchPart()).getWorkflowManager());
+        IWorkflowManager manager =((WorkflowEditor)getWorkbenchPart()).getWorkflowManager();
         DeleteCommand cmd = new DeleteCommand(objects, manager);
         int nodeCount = cmd.getNodeCount();
         int connCount = cmd.getConnectionCount();

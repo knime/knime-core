@@ -61,10 +61,10 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
@@ -92,7 +92,7 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
      * @param annos the workflow annotations to collapse
      * @param name of new metanode
      */
-    private CollapseMetaNodeCommand(final WorkflowManager wfm,
+    private CollapseMetaNodeCommand(final IWorkflowManager wfm,
             final NodeID[] nodes, final WorkflowAnnotationID[] annos,
             final String name, final boolean encapsulateAsSubnode) {
         super(wfm);
@@ -167,7 +167,7 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
      * @param encapsulateAsSubnode TODO
      * @return
      */
-    public static Optional<CollapseMetaNodeCommand> create(final WorkflowManager manager,
+    public static Optional<CollapseMetaNodeCommand> create(final IWorkflowManager manager,
         final NodeContainerEditPart[] nodeParts, final AnnotationEditPart[] annoParts,
         final boolean encapsulateAsSubnode) {
 

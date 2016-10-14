@@ -87,7 +87,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
      * @param id of node to be expanded.
      * @param editor this command is called on.
      */
-    public ExpandMetaNodeCommand(final WorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
+    public ExpandMetaNodeCommand(final IWorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
         super(wfm);
         m_editor = editor;
         m_id = id;

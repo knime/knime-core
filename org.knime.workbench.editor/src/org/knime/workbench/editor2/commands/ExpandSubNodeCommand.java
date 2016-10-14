@@ -56,6 +56,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeID;
@@ -85,7 +86,7 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
      * @param id of node to be expanded.
      * @param editor on which this command is executed
      */
-    public ExpandSubNodeCommand(final WorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
+    public ExpandSubNodeCommand(final IWorkflowManager wfm, final NodeID id, final WorkflowEditor editor) {
         super(wfm);
         m_id = id;
         m_editor = editor;

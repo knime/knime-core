@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.WeakHashMap;
 
 import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
@@ -84,7 +85,7 @@ public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
      * @param manager The workflow manager containing the links to change
      * @param ids The ids of the link nodes.
      */
-    public DisconnectMetaNodeLinkCommand(final WorkflowManager manager,
+    public DisconnectMetaNodeLinkCommand(final IWorkflowManager manager,
             final NodeID[] ids) {
         super(manager);
         m_ids = ids.clone();

@@ -51,6 +51,7 @@ import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.ISingleNodeContainer;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -136,10 +137,10 @@ public class SelectLoopAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        WorkflowManager wfm = getManager();
+        WorkflowManager wfm = UseImplUtil.getWFMImplOf(getManager());
         for (NodeContainerEditPart selNode : nodeParts) {
             INodeContainer selNC = selNode.getNodeContainer();
-            if (selNC instanceof SingleNodeContainer) {
+            if (selNC instanceof ISingleNodeContainer) {
                 EditPartViewer viewer = selNode.getViewer();
                 List<NodeContainer> loopNodes = wfm.getNodesInScope((SingleNodeContainer)selNC);
                 for (NodeContainer nc : loopNodes) {

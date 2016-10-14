@@ -49,7 +49,9 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -146,8 +148,8 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
 
         LOGGER.debug("Creating 'Expand Wrapped Metanode' job for " + nodeParts.length + " node(s)...");
         try {
-            WorkflowManager manager = getManager();
-            SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getNodeContainer();
+            IWorkflowManager manager = getManager();
+            SubNodeContainer subNode = UseImplUtil.getImplOf(nodeParts[0].getNodeContainer(), SubNodeContainer.class);
             if (!subNode.getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
                 return;
             }

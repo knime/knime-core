@@ -56,10 +56,10 @@ import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
@@ -75,7 +75,7 @@ public class HorizAlignManager {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(HorizAlignManager.class);
 
-    private WorkflowManager m_wfm;
+    private IWorkflowManager m_wfm;
 
     private HashMap<NodeID, NodeUIInformation> m_oldCoordinates;
 
@@ -90,7 +90,7 @@ public class HorizAlignManager {
      * @param nodes the nodes to align
      *
      */
-    public HorizAlignManager(final WorkflowManager wfManager,
+    public HorizAlignManager(final IWorkflowManager wfManager,
             final NodeContainerEditPart[] nodes) {
         m_wfm = wfManager;
         m_nodeParts = nodes.clone();

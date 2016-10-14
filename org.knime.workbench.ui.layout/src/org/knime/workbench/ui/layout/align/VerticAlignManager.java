@@ -54,10 +54,10 @@ import java.util.Map;
 import org.knime.core.api.node.workflow.ConnectionID;
 import org.knime.core.api.node.workflow.ConnectionUIInformation;
 import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -69,7 +69,7 @@ public class VerticAlignManager {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(VerticAlignManager.class);
 
-    private WorkflowManager m_wfm;
+    private IWorkflowManager m_wfm;
 
     private HashMap<NodeID, NodeUIInformation> m_oldCoordinates;
 
@@ -84,7 +84,7 @@ public class VerticAlignManager {
      * @param nodes the nodes to align
      *
      */
-    public VerticAlignManager(final WorkflowManager wfManager,
+    public VerticAlignManager(final IWorkflowManager wfManager,
             final NodeContainerEditPart[] nodes) {
         m_wfm = wfManager;
         m_nodeParts = nodes.clone();

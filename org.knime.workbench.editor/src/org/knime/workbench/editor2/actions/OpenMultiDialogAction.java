@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.util.UseImplUtil;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -152,7 +153,7 @@ public class OpenMultiDialogAction extends AbstractNodeAction {
             }
         }
         WrappedMultipleNodeDialog dlg =
-                new WrappedMultipleNodeDialog(Display.getCurrent().getActiveShell(), getManager(), splitType,
+                new WrappedMultipleNodeDialog(Display.getCurrent().getActiveShell(), UseImplUtil.getWFMImplOf(getManager()), splitType,
                         nodes);
         dlg.open(); // the dialog applies new settings on OK
     }

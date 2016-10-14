@@ -49,6 +49,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -147,7 +148,7 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
         LOGGER.debug("Creating 'Expand MetaNode' job for "
                 + nodeParts.length + " node(s)...");
         try {
-            WorkflowManager manager = getManager();
+            IWorkflowManager manager = getManager();
             WorkflowManager metaNode =
                 (WorkflowManager)nodeParts[0].getNodeContainer();
             if (!metaNode.unlock(new GUIWorkflowCipherPrompt())) {

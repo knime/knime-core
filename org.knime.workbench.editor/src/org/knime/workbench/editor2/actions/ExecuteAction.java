@@ -52,7 +52,6 @@ import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -161,7 +160,7 @@ public class ExecuteAction extends AbstractNodeAction {
         }
         LOGGER.debug("Creating execution job for " + nodeParts.length
                 + " node(s)...");
-        WorkflowManager manager = getManager();
+        IWorkflowManager manager = getManager();
         NodeID[] ids = new NodeID[nodeParts.length];
         for (int i = 0; i < nodeParts.length; i++) {
             ids[i] = nodeParts[i].getNodeContainer().getID();
