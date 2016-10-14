@@ -68,7 +68,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.SelectionListenerAction;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.VMFileLocker;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
@@ -164,7 +163,7 @@ public class DeleteAction extends SelectionListenerAction {
                 PlatformUI.getWorkbench().getActiveWorkbenchWindow()
                         .getActivePage();
         for (IContainer wf : allWorkflows) {
-            NodeContainer wfm =
+            INodeContainer wfm =
                     ProjectWorkflowMap.getWorkflow(wf.getLocationURI());
             if (wfm != null) {
                 for (IEditorReference editRef : page.getEditorReferences()) {

@@ -54,6 +54,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.resources.IProject;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeMessageEvent;
 import org.knime.core.api.node.workflow.NodeMessageListener;
 import org.knime.core.api.node.workflow.NodePropertyChangedEvent;
@@ -167,12 +169,12 @@ public final class ProjectWorkflowMap {
      * instance. Maintained by WorkflowEditor, used by KnimeResourceNavigator.
      * (This map contains only open workflows.)
      */
-    private static final Map<MapWFKey, NodeContainer> PROJECTS
-        = new LinkedHashMap<MapWFKey, NodeContainer>() {
+    private static final Map<MapWFKey, INodeContainer> PROJECTS
+        = new LinkedHashMap<MapWFKey, INodeContainer>() {
 
         @Override
-        public NodeContainer put(final MapWFKey key, final NodeContainer value) {
-            NodeContainer old = super.put(key, value);
+        public INodeContainer put(final MapWFKey key, final INodeContainer value) {
+            INodeContainer old = super.put(key, value);
             if (old != null) {
                 LOGGER.debug("Removing \"" + key + "\" from project map");
             }
@@ -184,8 +186,8 @@ public final class ProjectWorkflowMap {
         };
 
         @Override
-        public NodeContainer remove(final Object key) {
-            NodeContainer old = super.remove(key);
+        public INodeContainer remove(final Object key) {
+            INodeContainer old = super.remove(key);
             if (old != null) {
                 LOGGER.debug("Removing \"" + key
                         + "\" from project map (" + size() + " remaining)");
@@ -350,12 +352,12 @@ public final class ProjectWorkflowMap {
      *  {@link WorkflowManager} is stored in the map
      */
     public static void replace(final URI newPath,
-            final WorkflowManager nc, final URI oldPath) {
+            final IWorkflowManager nc, final URI oldPath) {
         if (oldPath == null) {
             throw new IllegalArgumentException("Old path must not be null (old is null, new is " + newPath + ")");
         }
         final MapWFKey oldKey = new MapWFKey(oldPath);
-        NodeContainer removed = PROJECTS.remove(oldKey);
+        INodeContainer removed = PROJECTS.remove(oldKey);
         if (removed == null) {
             throw new IllegalArgumentException("No project registered on URI " + oldPath);
         }
@@ -431,11 +433,11 @@ public final class ProjectWorkflowMap {
      * @param manager {@link WorkflowManager} in memory holding the workflow
      */
     public static void putWorkflow(final URI path,
-            final WorkflowManager manager) {
+            final IWorkflowManager manager) {
         MapWFKey p = new MapWFKey(path);
         // in case the manager is replaced
         // -> unregister listeners from the old one
-        NodeContainer oldOne = PROJECTS.get(p);
+        INodeContainer oldOne = PROJECTS.get(p);
         if (oldOne != null) {
             oldOne.removeNodeStateChangeListener(NSC_LISTENER);
             ((WorkflowManager)oldOne).removeListener(WF_LISTENER);
@@ -465,7 +467,7 @@ public final class ProjectWorkflowMap {
      * @return the corresponding {@link WorkflowManager} or <code>null</code>
      * if the workflow manager is not registered with the passed URI
      */
-    public static NodeContainer getWorkflow(final URI path) {
+    public static INodeContainer getWorkflow(final URI path) {
         return PROJECTS.get(new MapWFKey(path));
     }
 
@@ -479,7 +481,7 @@ public final class ProjectWorkflowMap {
      *         null, if the workflow is not registered (not opened).
      */
     public static URI findProjectFor(final NodeID workflowID) {
-        for (Map.Entry<MapWFKey, NodeContainer> entry : PROJECTS.entrySet()) {
+        for (Map.Entry<MapWFKey, INodeContainer> entry : PROJECTS.entrySet()) {
             if (entry.getValue().getID().equals(workflowID)) {
                 return entry.getKey().getURI();
             }

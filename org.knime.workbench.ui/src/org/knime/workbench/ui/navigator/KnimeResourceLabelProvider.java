@@ -75,12 +75,14 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.knime.core.api.node.workflow.INodeContainer;
+import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.JobManagerUtil;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -181,10 +183,10 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     protected ImageDescriptor decorateImage(final ImageDescriptor input,
             final Object element) {
         if (element instanceof IContainer) {
-            NodeContainer cont = ProjectWorkflowMap.getWorkflow(
+            INodeContainer cont = ProjectWorkflowMap.getWorkflow(
                     ((IContainer)element).getLocationURI());
             if (cont != null) {
-                URL iconURL = cont.findJobManager().getIcon();
+                URL iconURL = JobManagerUtil.getJobManagerFactory(cont.findJobManagerUID()).getInstance().getIcon();
                 if (iconURL != null) {
                     ImageDescriptor descr = ImageDescriptor.createFromURL(
                             iconURL);
@@ -259,7 +261,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     @Override
     public Image getImage(final Object element) {
         Image img = super.getImage(element);
-        NodeContainer projectNode = null;
+        INodeContainer projectNode = null;
         if (element instanceof IContainer) {
             IContainer container = (IContainer)element;
             if (container.exists(WORKFLOW_FILE)) {
@@ -277,16 +279,16 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                     return WORKFLOW_GROUP;
                 }
             }
-        } else if (element instanceof NodeContainer) {
-                projectNode = (NodeContainer)element;
+        } else if (element instanceof INodeContainer) {
+                projectNode = (INodeContainer)element;
         }
         if (projectNode != null) {
-            if (projectNode instanceof WorkflowManager
+            if (projectNode instanceof IWorkflowManager
                     // display state only for projects
                     // with this check only projects (
                     // direct children of the ROOT
                     // are displayed with state
-                    && ((WorkflowManager)projectNode).getID().hasSamePrefix(WorkflowManager.ROOT.getID())) {
+                    && ((IWorkflowManager)projectNode).getID().hasSamePrefix(WorkflowManager.ROOT.getID())) {
                 NodeContainerState state = projectNode.getNodeContainerState();
                 if (projectNode.getNodeMessage().getMessageType().equals(NodeMessage.Type.ERROR)) {
                     return ERROR;
@@ -317,9 +319,9 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     @Override
     public String getText(final Object element) {
 
-        if (element instanceof NodeContainer) {
-            String output =  ((NodeContainer)element).getName()
-                + " (#" + ((NodeContainer)element).getID().getIndex() + ")";
+        if (element instanceof INodeContainer) {
+            String output =  ((INodeContainer)element).getName()
+                + " (#" + ((INodeContainer)element).getID().getIndex() + ")";
             // meta nodes are as object (workflow open) represented with ":"
             // then it cannot be found
             return output.replace(":", "_");

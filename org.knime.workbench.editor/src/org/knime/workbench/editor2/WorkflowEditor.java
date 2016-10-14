@@ -1134,7 +1134,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                             throw new RuntimeException(loadWorkflowRunnable.getThrowable());
                         }
                     }
-                    ProjectWorkflowMap.putWorkflow(m_fileResource, castWFM(m_manager));
+                    ProjectWorkflowMap.putWorkflow(m_fileResource, m_manager);
                 }
                 if (oldManager == null) { // not null if via doSaveAs
                     // in any case register as client (also if the workflow was already loaded by another client

@@ -78,8 +78,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ContainerGenerator;
 import org.eclipse.ui.dialogs.IOverwriteQuery;
 import org.eclipse.ui.wizards.datatransfer.ImportOperation;
+import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
@@ -166,7 +166,7 @@ public final class KnimeResourceUtil {
      *         an editor
      */
     public static boolean isOpenedWorkflow(final IResource r) {
-        NodeContainer nc = ProjectWorkflowMap.getWorkflow(
+        INodeContainer nc = ProjectWorkflowMap.getWorkflow(
                 r.getLocationURI());
         if (nc != null) {
             return true;
@@ -181,7 +181,7 @@ public final class KnimeResourceUtil {
      *         an editor and is dirty
      */
     public static boolean isDirtyWorkflow(final IResource r) {
-        NodeContainer nc = ProjectWorkflowMap.getWorkflow(r.getLocationURI());
+        INodeContainer nc = ProjectWorkflowMap.getWorkflow(r.getLocationURI());
         if (nc != null) {
             return nc.isDirty();
         }
