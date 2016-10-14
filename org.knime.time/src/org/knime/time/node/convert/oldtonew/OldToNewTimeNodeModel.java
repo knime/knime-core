@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
-y *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -294,7 +294,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-
+        // no internals
     }
 
     /**
@@ -303,7 +303,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
-
+        // no internals
     }
 
     /**
@@ -346,7 +346,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // TODO Auto-generated method stub
+        // no internals
 
     }
 
@@ -360,13 +360,8 @@ final class OldToNewTimeNodeModel extends NodeModel {
 
     @Override
     public boolean iterate(final StreamableOperatorInternals internals) {
-        try {
-            boolean a = (m_autoType.getBooleanValue()
-                && ((SimpleStreamableOperatorInternals)internals).getConfig().getBoolean("hasIterated"));
-            return a;
-        } catch (InvalidSettingsException e) {
-            return false;
-        }
+        return (m_autoType.getBooleanValue()
+            && ((SimpleStreamableOperatorInternals)internals).getConfig().getBoolean("hasIterated", false));
     }
 
     /** {@inheritDoc} */
@@ -387,7 +382,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
     @Override
     public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
         final PortOutput[] output) throws Exception {
-        // TODO Auto-generated method stub
+        // not needed
     }
 
     /**
@@ -399,7 +394,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
 
         return new StreamableOperator() {
 
-            SimpleStreamableOperatorInternals internals = new SimpleStreamableOperatorInternals();
+            SimpleStreamableOperatorInternals m_internals = new SimpleStreamableOperatorInternals();
 
             /**
              * {@inheritDoc}
@@ -408,8 +403,8 @@ final class OldToNewTimeNodeModel extends NodeModel {
             public void runIntermediate(final PortInput[] inputs, final ExecutionContext exec) throws Exception {
                 if (partitionInfo.getPartitionIndex() == 0) {
                     RowInput rowInput = (RowInput)inputs[0];
-                    try {
-                        DataRow row = rowInput.poll();
+                    DataRow row = rowInput.poll();
+                    if (row != null) {
                         DataColumnSpec[] colSpecs = new DataColumnSpec[row.getNumCells()];
                         DataTableSpec inSpec = rowInput.getDataTableSpec();
                         DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
@@ -423,15 +418,15 @@ final class OldToNewTimeNodeModel extends NodeModel {
                                 colSpecs[i] = newColumnSpecs[searchIdx];
                             }
                         }
-                        Config config = internals.getConfig();
+                        Config config = m_internals.getConfig();
                         config.addBoolean("hasIterated", false);
                         for (int i = 0; i < inSpec.getNumColumns(); i++) {
                             config.addDataType("type" + i, colSpecs[i].getType());
                             config.addString("colname" + i, colSpecs[i].getName());
                         }
                         config.addInt("sizeRow", colSpecs.length);
-                    } catch (Exception e) {
-                        internals.getConfig().addInt("sizeRow", 0);
+                    } else {
+                        m_internals.getConfig().addInt("sizeRow", 0);
                     }
                 }
             }
@@ -441,7 +436,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
              */
             @Override
             public StreamableOperatorInternals saveInternals() {
-                return internals;
+                return m_internals;
             }
 
             @Override

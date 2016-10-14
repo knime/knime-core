@@ -82,15 +82,15 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 final class OldToNewTimeNodeDialog extends NodeDialogPane {
 
-    private final DialogComponentColumnFilter2 dialogCompColFilter;
+    private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 
-    private final DialogComponentBoolean dialogCompZoneBool;
+    private final DialogComponentBoolean m_dialogCompZoneBool;
 
     private final JComboBox<DateTimeTypes> m_typeCombobox;
 
-    private final DialogComponentBoolean dialogCompTypeBool;
+    private final DialogComponentBoolean m_dialogCompTypeBool;
 
-    private final DialogComponentStringSelection dialogCompTimeZoneSelec;
+    private final DialogComponentStringSelection m_dialogCompTimeZoneSelec;
 
     /** Setting up all DialogComponents. */
     OldToNewTimeNodeDialog() {
@@ -98,21 +98,21 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         /*
          * DialogComponents
          */
-        dialogCompColFilter = new DialogComponentColumnFilter2(OldToNewTimeNodeModel.createColSelectModel(), 0);
+        m_dialogCompColFilter = new DialogComponentColumnFilter2(OldToNewTimeNodeModel.createColSelectModel(), 0);
 
         final SettingsModelBoolean typeModelBool = OldToNewTimeNodeModel.createTypeModelBool();
-        dialogCompTypeBool =
+        m_dialogCompTypeBool =
             new DialogComponentBoolean(typeModelBool, "Automatic type detection (based on the first row)");
 
         final SettingsModelBoolean zoneModelBool = OldToNewTimeNodeModel.createZoneModelBool();
-        dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone");
+        m_dialogCompZoneBool = new DialogComponentBoolean(zoneModelBool, "Add time zone");
 
         final SettingsModelString zoneSelectModel = OldToNewTimeNodeModel.createTimeZoneSelectModel();
         final Set<String> availableZoneIds = ZoneId.getAvailableZoneIds();
         final String[] availableZoneIdsArray = availableZoneIds.toArray(new String[availableZoneIds.size()]);
         Arrays.sort(availableZoneIdsArray);
         zoneSelectModel.setEnabled(zoneModelBool.getBooleanValue());
-        dialogCompTimeZoneSelec =
+        m_dialogCompTimeZoneSelec =
             new DialogComponentStringSelection(zoneSelectModel, "Time zone: ", availableZoneIdsArray);
 
         /*
@@ -132,8 +132,8 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
          */
         final JPanel panelColFilter = new JPanel(new BorderLayout());
         panelColFilter.setBorder(BorderFactory.createTitledBorder("Column Selection"));
-        panelColFilter.add(dialogCompColFilter.getComponentPanel(), BorderLayout.CENTER);
-        panel.add(dialogCompColFilter.getComponentPanel(), gbc);
+        panelColFilter.add(m_dialogCompColFilter.getComponentPanel(), BorderLayout.CENTER);
+        panel.add(m_dialogCompColFilter.getComponentPanel(), gbc);
 
         /*
          * add type selection
@@ -149,7 +149,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         gbcTS.gridy = 0;
         gbcTS.weightx = 1;
         gbcTS.weighty = 1;
-        panelTypeSelec.add(dialogCompTypeBool.getComponentPanel(), gbcTS);
+        panelTypeSelec.add(m_dialogCompTypeBool.getComponentPanel(), gbcTS);
 
         // add label and combo box for type selection
         gbcTS.gridx++;
@@ -174,9 +174,9 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         gbcZS.gridx = 0;
         gbcZS.gridy = 0;
         gbcZS.weightx = 0.5;
-        panelZoneSelec.add(dialogCompZoneBool.getComponentPanel(), gbcZS);
+        panelZoneSelec.add(m_dialogCompZoneBool.getComponentPanel(), gbcZS);
         gbcZS.gridx++;
-        panelZoneSelec.add(dialogCompTimeZoneSelec.getComponentPanel(), gbcZS);
+        panelZoneSelec.add(m_dialogCompTimeZoneSelec.getComponentPanel(), gbcZS);
 
         gbc.gridy++;
         panel.add(panelZoneSelec, gbc);
@@ -203,7 +203,7 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                if (m_typeCombobox.getModel().getSelectedItem() == DateTimeTypes.ZONED_DATE_TIME) {
+                if (m_typeCombobox.getModel().getSelectedItem().equals(DateTimeTypes.ZONED_DATE_TIME)) {
                     zoneSelectModel.setEnabled(true);
                 } else {
                     zoneSelectModel.setEnabled(false);
@@ -225,10 +225,10 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        dialogCompColFilter.saveSettingsTo(settings);
-        dialogCompTypeBool.saveSettingsTo(settings);
-        dialogCompZoneBool.saveSettingsTo(settings);
-        dialogCompTimeZoneSelec.saveSettingsTo(settings);
+        m_dialogCompColFilter.saveSettingsTo(settings);
+        m_dialogCompTypeBool.saveSettingsTo(settings);
+        m_dialogCompZoneBool.saveSettingsTo(settings);
+        m_dialogCompTimeZoneSelec.saveSettingsTo(settings);
         settings.addBoolean("typeBool", m_typeCombobox.isEnabled());
         settings.addString("newTypeEnum", ((DateTimeTypes)m_typeCombobox.getModel().getSelectedItem()).name());
     }
@@ -239,15 +239,13 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
-        dialogCompColFilter.loadSettingsFrom(settings, specs);
-        dialogCompTypeBool.loadSettingsFrom(settings, specs);
-        m_typeCombobox.setEnabled(!dialogCompTypeBool.isSelected());
-        try {
-            m_typeCombobox.setSelectedItem(DateTimeTypes.valueOf(settings.getString("newTypeEnum")));
-        } catch (InvalidSettingsException e) {
-        }
-        dialogCompZoneBool.loadSettingsFrom(settings, specs);
-        dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
+        m_dialogCompColFilter.loadSettingsFrom(settings, specs);
+        m_dialogCompTypeBool.loadSettingsFrom(settings, specs);
+        m_typeCombobox.setEnabled(!m_dialogCompTypeBool.isSelected());
+        m_typeCombobox
+            .setSelectedItem(DateTimeTypes.valueOf(settings.getString("newTypeEnum", DateTimeTypes.LOCAL_DATE.name())));
+        m_dialogCompZoneBool.loadSettingsFrom(settings, specs);
+        m_dialogCompTimeZoneSelec.loadSettingsFrom(settings, specs);
     }
 
 }
