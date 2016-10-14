@@ -45,7 +45,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.core.node.util.UseImplUtil.getWFMImplOf;
+import static org.knime.core.node.util.CastUtil.castWFM;
 
 import java.util.Arrays;
 
@@ -124,7 +124,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
     public void execute() {
         // Add node to workflow and get the container
         try {
-            WorkflowManager wfm = getWFMImplOf(getHostWFM());
+            WorkflowManager wfm = castWFM(getHostWFM());
             m_copyContent = wfm.paste(m_persistor);
             NodeID[] nodeIDs = m_copyContent.getNodeIDs();
             if (nodeIDs.length > 0) {
@@ -182,7 +182,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
             }
             LOGGER.debug(debug);
         }
-        WorkflowManager wm = getWFMImplOf(getHostWFM());
+        WorkflowManager wm = castWFM(getHostWFM());
         if (canUndo()) {
             for (NodeID id : ids) {
                 wm.removeNode(id);

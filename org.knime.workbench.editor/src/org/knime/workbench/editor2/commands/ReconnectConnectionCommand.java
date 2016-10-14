@@ -55,7 +55,7 @@ import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
@@ -99,7 +99,7 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
             final ConnectionContainerEditPart connection,
             final AbstractPortEditPart host,
             final AbstractPortEditPart target) {
-        super(UseImplUtil.getWFMImplOf(connection.getWorkflowManager()));
+        super(CastUtil.castWFM(connection.getWorkflowManager()));
 
         m_confirm = KNIMEUIPlugin.getDefault().getPreferenceStore()
             .getBoolean(PreferenceConstants.P_CONFIRM_RECONNECT);
@@ -111,7 +111,7 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
         IWorkflowManager hostWFM = connection.getWorkflowManager();
         // create the delete command
         m_deleteCommand =
-            new DeleteCommand(Collections.singleton(connection), UseImplUtil.getWFMImplOf(hostWFM));
+            new DeleteCommand(Collections.singleton(connection), CastUtil.castWFM(hostWFM));
 
         IConnectionContainer oldConnection = connection.getModel();
         m_oldTarget = oldConnection.getDest();
@@ -128,7 +128,7 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
                     || host instanceof MetaNodeOutPortEditPart) {
             // we need the manager to execute the command
             CreateConnectionCommand cmd =
-                new CreateConnectionCommand(UseImplUtil.getWFMImplOf(hostWFM));
+                new CreateConnectionCommand(CastUtil.castWFM(hostWFM));
             cmd.setNewConnectionUIInfo(oldConnection.getUIInfo());
             cmd.setSourceNode(srcEP);
             cmd.setSourcePortID(host.getIndex());

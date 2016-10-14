@@ -54,7 +54,7 @@ import java.net.URI;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -104,7 +104,7 @@ public class ChangeSubNodeLinkCommand extends AbstractKNIMECommand {
     }
 
     private boolean setLink(final URI link) {
-        NodeContainer subNode = UseImplUtil.getWFMImplOf(getHostWFM()).getNodeContainer(m_subNodeID);
+        NodeContainer subNode = CastUtil.castWFM(getHostWFM()).getNodeContainer(m_subNodeID);
         if (!(subNode instanceof SubNodeContainer)) {
             LOGGER.error("Command failed: Specified node is not a Wrapped Metanode");
             return false;
@@ -118,7 +118,7 @@ public class ChangeSubNodeLinkCommand extends AbstractKNIMECommand {
             LOGGER.error("Command failed: Specified node is not a Wrapped Metanode with a link." + e1.getMessage(), e1);
             return false;
         }
-        UseImplUtil.getWFMImplOf(getHostWFM()).setTemplateInformation(m_subNodeID, newInfo);
+        CastUtil.castWFM(getHostWFM()).setTemplateInformation(m_subNodeID, newInfo);
         return true;
     }
 

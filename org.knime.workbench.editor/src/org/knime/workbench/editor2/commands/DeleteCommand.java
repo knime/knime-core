@@ -59,7 +59,7 @@ import org.knime.core.api.node.workflow.IConnectionContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
@@ -200,7 +200,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
         // The WFM removes all connections for us, before the node is
         // removed.
         if (m_nodeIDs.length > 0 || m_annotations.length > 0) {
@@ -231,7 +231,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
             m_viewer.deselectAll();
         }
 
-        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
         if (m_undoPersitor != null) {
             hostWFM.paste(m_undoPersitor);
         }

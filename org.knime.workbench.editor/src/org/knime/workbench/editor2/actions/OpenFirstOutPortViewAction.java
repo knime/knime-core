@@ -54,7 +54,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -167,7 +167,7 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
                     /** {inheritDoc} */
                     @Override
                     public void run() {
-                        NodeOutPort port = UseImplUtil.getImplOf(cont.getOutPort(portIndex.getAsInt()), NodeOutPort.class);
+                        NodeOutPort port = CastUtil.cast(cont.getOutPort(portIndex.getAsInt()), NodeOutPort.class);
                         LOGGER.debug("Open First Out-Port View "
                            + cont.getName() + " on port " + port.getPortName());
                         java.awt.Rectangle bounds = new java.awt.Rectangle(knimeWindowBounds.x, knimeWindowBounds.y, knimeWindowBounds.width, knimeWindowBounds.height);

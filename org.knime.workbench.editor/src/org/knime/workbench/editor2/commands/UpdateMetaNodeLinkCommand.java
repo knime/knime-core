@@ -57,7 +57,7 @@ import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -126,7 +126,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
         try {
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
-            WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+            WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
             updateRunner = new UpdateMetaNodeTemplateRunnable(hostWFM, m_ids);
             ps.busyCursorWhile(updateRunner);
             m_newIDs = updateRunner.getNewIDs();
@@ -166,7 +166,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
     public void undo() {
         LOGGER.debug("Undo: Reverting metanode links ("
                 + m_newIDs.size() + " metanode(s))");
-        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
         for (int i = 0; i < m_newIDs.size(); i++) {
             NodeID id = m_newIDs.get(i);
             WorkflowPersistor p = m_undoPersistors.get(i);

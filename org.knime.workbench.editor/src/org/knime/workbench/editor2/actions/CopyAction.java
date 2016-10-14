@@ -58,7 +58,7 @@ import org.eclipse.ui.actions.ActionFactory;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.editor2.ClipboardObject;
@@ -146,7 +146,7 @@ public class CopyAction extends AbstractClipboardAction {
         WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
         content.setNodeIDs(ids);
         content.setAnnotationIDs(annotationIDs.toArray(new WorkflowAnnotationID[annotationIDs.size()]));
-        WorkflowPersistor copyPersistor = UseImplUtil.getWFMImplOf(getManager()).copy(false, content.build());
+        WorkflowPersistor copyPersistor = CastUtil.castWFM(getManager()).copy(false, content.build());
 
         // the information about the nodes is stored in the config XML format
         // also used to store workflow information in the kflow files

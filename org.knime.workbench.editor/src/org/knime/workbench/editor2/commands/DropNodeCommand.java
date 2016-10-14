@@ -55,7 +55,7 @@ import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -112,7 +112,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         // Add node to workflow and get the container
-        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
         try {
             NodeID id =
                     hostWFM.addNodeAndApplyContext(m_factory, m_dropContext);

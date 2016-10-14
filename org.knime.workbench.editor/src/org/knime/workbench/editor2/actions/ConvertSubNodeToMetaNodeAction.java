@@ -51,7 +51,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -144,7 +144,7 @@ public class ConvertSubNodeToMetaNodeAction extends AbstractNodeAction {
 
         try {
             IWorkflowManager manager = getManager();
-            SubNodeContainer subNode = UseImplUtil.getImplOf(nodeParts[0].getNodeContainer(), SubNodeContainer.class);
+            SubNodeContainer subNode = CastUtil.cast(nodeParts[0].getNodeContainer(), SubNodeContainer.class);
             if (!subNode.getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
                 return;
             }

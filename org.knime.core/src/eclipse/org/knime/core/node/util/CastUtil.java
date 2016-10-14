@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.util;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -60,13 +59,13 @@ import org.knime.core.node.workflow.WorkflowManager;
  *
  * @author Martin Horn, KNIME.com
  */
-public class UseImplUtil {
+public class CastUtil {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(UseImplUtil.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(CastUtil.class);
 
     private static int COUNT = 0;
 
-    private UseImplUtil() {
+    private CastUtil() {
         //utility class
     }
 
@@ -74,8 +73,17 @@ public class UseImplUtil {
      * @param theInterface
      * @return the {@link WorkflowManager} implementation
      */
-    public static final WorkflowManager getWFMImplOf(final IWorkflowManager theInterface) {
-        return getImplOf(theInterface, WorkflowManager.class);
+    public static final WorkflowManager castWFM(final IWorkflowManager theInterface) {
+        return cast(theInterface, WorkflowManager.class);
+    }
+
+    /**
+     * @param theInterface
+     * @param suppressWarning whether or not a logger warning message should be issued
+     * @return the {@link WorkflowManager} implementation
+     */
+    public static final WorkflowManager castWFM(final IWorkflowManager theInterface, final boolean suppressWarning) {
+        return cast(theInterface, WorkflowManager.class, suppressWarning);
     }
 
     /**
@@ -84,14 +92,30 @@ public class UseImplUtil {
      * @param theInterface the object to cast
      * @param clazz the implementation to cast to
      * @return the interface cast to the desired class or an exception, if not possible
-     * @throws NotImplementedException if cannot be cast, i.e. the desired implementation is not given
+     * @throws ClassCastException if cannot be cast, i.e. the desired implementation is not given, logger warning message will be issued
      */
-    public static final <I, C extends I> C getImplOf(final I theInterface, final Class<C> clazz) {
+    public static final <I, C extends I> C cast(final I theInterface, final Class<C> clazz) {
+        return cast(theInterface, clazz, false);
+    }
+
+    /**
+     * Tries to cast the given interface to a particular implementation.
+     *
+     * @param theInterface the object to cast
+     * @param clazz the implementation to cast to
+     * @param suppressWarning whether or not a logger warning message should be issued
+     * @return the interface cast to the desired class or an exception, if not possible
+     * @throws ClassCastException if cannot be cast, i.e. the desired implementation is not given
+     */
+    public static final <I, C extends I> C cast(final I theInterface, final Class<C> clazz, final boolean suppressWarning) {
         if (clazz.isInstance(theInterface)) {
-            LOGGER.warn("Implementation (" + clazz.getSimpleName() + ") used directly instead of the interface (global count: " + (COUNT++) + ").");
+            if (!suppressWarning) {
+                LOGGER.warn("Implementation (" + clazz.getSimpleName()
+                    + ") used directly instead of the interface (global count: " + (COUNT++) + ").");
+            }
             return clazz.cast(theInterface);
         } else {
-            throw new NotImplementedException("The interface " + theInterface.getClass().getSimpleName()
+            throw new ClassCastException("The interface " + theInterface.getClass().getSimpleName()
                 + " cannot be used here directly. Specific implementation required: " + clazz.getSimpleName());
         }
     }

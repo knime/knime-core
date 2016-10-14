@@ -50,7 +50,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 
@@ -88,7 +88,7 @@ public class ConvertMetaNodeToSubNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            m_metaNodeToSubNodeResult = UseImplUtil.getWFMImplOf(getHostWFM()).convertMetaNodeToSubNode(m_id);
+            m_metaNodeToSubNodeResult = CastUtil.castWFM(getHostWFM()).convertMetaNodeToSubNode(m_id);
         } catch (Exception e) {
             String error = "Converting Metanode failed: " + e.getMessage();
             LOGGER.error(error, e);

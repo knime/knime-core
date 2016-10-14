@@ -53,7 +53,7 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -136,7 +136,7 @@ public class MetaNodeReconfigureAction extends AbstractNodeAction {
             return;
         }
         NodeContainerEditPart ep = nodeParts[0];
-        WorkflowManager metanode = UseImplUtil.getWFMImplOf((WorkflowManager)ep.getModel());
+        WorkflowManager metanode = CastUtil.castWFM((WorkflowManager)ep.getModel());
         if (!metanode.unlock(new GUIWorkflowCipherPrompt())) {
             return;
         }

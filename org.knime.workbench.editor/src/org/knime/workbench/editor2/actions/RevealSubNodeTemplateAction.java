@@ -57,7 +57,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
@@ -154,7 +154,7 @@ public class RevealSubNodeTemplateAction extends AbstractNodeAction {
         for (NodeContainerEditPart p : nodes) {
             Object model = p.getModel();
             if (model instanceof SubNodeContainer) {
-                NodeContext.pushContext(UseImplUtil.getImplOf(p.getNodeContainer(), NodeContainer.class));
+                NodeContext.pushContext(CastUtil.cast(p.getNodeContainer(), NodeContainer.class));
                 try {
                     SubNodeContainer snc = (SubNodeContainer)model;
                     MetaNodeTemplateInformation i = snc.getTemplateInformation();

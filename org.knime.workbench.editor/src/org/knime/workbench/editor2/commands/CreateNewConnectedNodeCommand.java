@@ -55,7 +55,7 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeTimer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -103,7 +103,7 @@ public class CreateNewConnectedNodeCommand extends AbstractCreateNewConnectedNod
     protected NodeID createNewNode() {
         // Add node to workflow and get the container
         NodeID newID = null;
-        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
         try {
             newID = hostWFM.createAndAddNode(m_factory);
             NodeTimer.GLOBAL_TIMER.addNodeCreation(hostWFM.getNodeContainer(newID));

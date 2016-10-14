@@ -58,7 +58,7 @@ import org.eclipse.ui.IEditorPart;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -109,7 +109,7 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+            WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
 
             // close editor of subnode and children
             NodeID wfmID = ((SubNodeContainer)hostWFM.getNodeContainer(m_id)).getWorkflowManager().getID();

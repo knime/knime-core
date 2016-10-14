@@ -57,7 +57,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.LockFailedException;
@@ -94,7 +94,7 @@ abstract class AbstractSaveRunnable extends PersistWorkflowRunnable {
     public final void run(final IProgressMonitor pm) {
         File workflowDir = getSaveLocation();
         try {
-            final WorkflowManager wfm = UseImplUtil.getWFMImplOf(m_editor.getWorkflowManager());
+            final WorkflowManager wfm = CastUtil.castWFM(m_editor.getWorkflowManager());
             ProgressHandler progressHandler =
                 new ProgressHandler(pm, wfm.getNodeContainers().size(), "Saving workflow... (cannot be canceled)");
             final CheckCancelNodeProgressMonitor progressMonitor = new CheckCancelNodeProgressMonitor(pm);

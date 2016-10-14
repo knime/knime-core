@@ -45,7 +45,7 @@
  */
 package org.knime.workbench.editor2;
 
-import static org.knime.core.node.util.UseImplUtil.getWFMImplOf;
+import static org.knime.core.node.util.CastUtil.castWFM;
 
 import java.io.File;
 import java.io.IOException;
@@ -548,7 +548,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         final ReferencedFile autoSaveDirectory;
         if (m_manager != null && m_parentEditor == null && m_fileResource != null) {
-            autoSaveDirectory = getWFMImplOf(m_manager).getAutoSaveDirectory();
+            autoSaveDirectory = castWFM(m_manager).getAutoSaveDirectory();
         } else {
             autoSaveDirectory = null;
         }
@@ -1014,7 +1014,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                                 + "new resource: \"%s\", old manager: \"%s\", manager to old resource: \"%s\"",
                                 oldFileResource, m_fileResource, oldManager, managerForOldResource));
                     }
-                    ProjectWorkflowMap.replace(m_fileResource, getWFMImplOf(oldManager), oldFileResource);
+                    ProjectWorkflowMap.replace(m_fileResource, castWFM(oldManager), oldFileResource);
                     isEnableAutoSave = m_isAutoSaveAllowed;
                 } else {
                     m_manager = (IWorkflowManager)ProjectWorkflowMap.getWorkflow(m_fileResource);
@@ -1134,7 +1134,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                             throw new RuntimeException(loadWorkflowRunnable.getThrowable());
                         }
                     }
-                    ProjectWorkflowMap.putWorkflow(m_fileResource, getWFMImplOf(m_manager));
+                    ProjectWorkflowMap.putWorkflow(m_fileResource, castWFM(m_manager));
                 }
                 if (oldManager == null) { // not null if via doSaveAs
                     // in any case register as client (also if the workflow was already loaded by another client
@@ -1209,7 +1209,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     private void updateJobManagerDisplay() {
-        NodeExecutionJobManager jobManager = getWFMImplOf(m_manager).findJobManager();
+        NodeExecutionJobManager jobManager = castWFM(m_manager).findJobManager();
         URL url;
         if (jobManager instanceof AbstractNodeExecutionJobManager) {
             url = ((AbstractNodeExecutionJobManager)jobManager).getIconForWorkflow();
@@ -1284,7 +1284,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // also called from doSaveAs for projects -- old m_fileResource != null
         if (oldFileResource != null) {
-            ProjectWorkflowMap.replace(m_fileResource, getWFMImplOf(m_manager), oldFileResource);
+            ProjectWorkflowMap.replace(m_fileResource, castWFM(m_manager), oldFileResource);
         }
     }
 
@@ -1821,17 +1821,17 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         /** Performs the save, returns null if no save needed (=not dirty). */
         private IStatus doIt(final IProgressMonitor jobMonitor) {
-            NodeContext.pushContext(getWFMImplOf(m_manager));
+            NodeContext.pushContext(castWFM(m_manager));
             try {
-                ReferencedFile autoSaveDir = getWFMImplOf(getWorkflowManager()).getAutoSaveDirectory();
+                ReferencedFile autoSaveDir = castWFM(getWorkflowManager()).getAutoSaveDirectory();
                 if (autoSaveDir == null) { // net yet auto-saved
                     if (!isDirty()) {      // main editor not dirty
                         return null;
                     }
-                    final ReferencedFile ncDirRef = getWFMImplOf(getWorkflowManager()).getNodeContainerDirectory();
+                    final ReferencedFile ncDirRef = castWFM(getWorkflowManager()).getNodeContainerDirectory();
                     autoSaveDir = new ReferencedFile(WorkflowSaveHelper.getAutoSaveDirectory(ncDirRef));
                     autoSaveDir.setDirty(true);
-                    getWFMImplOf(getWorkflowManager()).setAutoSaveDirectory(autoSaveDir);
+                    castWFM(getWorkflowManager()).setAutoSaveDirectory(autoSaveDir);
                 }
                 if (!autoSaveDir.isDirty()) {
                     return null;
@@ -2325,7 +2325,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             nodeLoc = getClosestGridLocation(nodeLoc);
         }
         Command newNodeCmd =
-                new CreateNewConnectedMetaNodeCommand(getViewer(), getWFMImplOf(m_manager),
+                new CreateNewConnectedMetaNodeCommand(getViewer(), castWFM(m_manager),
                         sourceManager, id, nodeLoc, preID);
         getCommandStack().execute(newNodeCmd);
         // after adding a node the editor should get the focus
@@ -2353,11 +2353,11 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (preNode == null) {
             nodeLoc = getViewportCenterLocation();
             // this command accepts/requires relative coordinates
-            newNodeCmd = new CreateNodeCommand(getWFMImplOf(m_manager), nodeFactory, nodeLoc, getEditorSnapToGrid());
+            newNodeCmd = new CreateNodeCommand(castWFM(m_manager), nodeFactory, nodeLoc, getEditorSnapToGrid());
         } else {
             nodeLoc = getLocationRightOf(preNode);
             newNodeCmd =
-                    new CreateNewConnectedNodeCommand(getViewer(), getWFMImplOf(m_manager),
+                    new CreateNewConnectedNodeCommand(getViewer(), castWFM(m_manager),
                             nodeFactory, nodeLoc, preNode.getNodeContainer()
                                     .getID());
         }

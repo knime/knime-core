@@ -123,7 +123,7 @@ import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -1148,7 +1148,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     @SuppressWarnings("rawtypes")
     public Object getAdapter(final Class adapter) {
         if (adapter == IPropertySource.class) {
-            return new NodeContainerProperties(UseImplUtil.getImplOf(getNodeContainer(), NodeContainer.class));
+            return new NodeContainerProperties(CastUtil.cast(getNodeContainer(), NodeContainer.class));
         }
         return super.getAdapter(adapter);
     }

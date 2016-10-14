@@ -50,7 +50,7 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -101,7 +101,7 @@ public class CreateNewConnectedMetaNodeCommand extends
     protected NodeID createNewNode() {
         WorkflowCopyContent.Builder content = WorkflowCopyContent.builder();
         content.setNodeIDs(m_sourceID);
-        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
         NodeID[] copied =
                 hostWFM.copyFromAndPasteHere(m_source, content.build()).getNodeIDs();
         assert copied.length == 1;

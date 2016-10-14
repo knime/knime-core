@@ -67,7 +67,7 @@ import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.ISingleNodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -316,7 +316,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     EditPart child = (EditPart)o;
                     if (child instanceof WorkflowInPortEditPart
                             && ((WorkflowInPortEditPart)child).isSelected()) {
-                        final WorkflowManager wm = UseImplUtil.getWFMImplOf(((WorkflowPortBar)root.getModel()).getWorkflowManager());
+                        final WorkflowManager wm = CastUtil.castWFM(((WorkflowPortBar)root.getModel()).getWorkflowManager());
                         action = new OpenWorkflowPortViewAction(wm,
                             ((WorkflowInPortEditPart)child).getIndex(), wm.getNrInPorts());
                         manager.appendToGroup("outPortViews", action);
@@ -338,13 +338,13 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 // add for node views option if applicable
                 int numNodeViews = container.getNrViews();
                 for (int i = 0; i < numNodeViews; i++) {
-                    action = new OpenViewAction(UseImplUtil.getImplOf(container, NodeContainer.class), i);
+                    action = new OpenViewAction(CastUtil.cast(container, NodeContainer.class), i);
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 }
 
                 // add interactive view options
                 if (container.hasInteractiveView() || container.hasInteractiveWebView()) {
-                    action = new OpenInteractiveViewAction(UseImplUtil.getImplOf(container, NodeContainer.class));
+                    action = new OpenInteractiveViewAction(CastUtil.cast(container, NodeContainer.class));
                     manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 } else {
                     // in the 'else' block? Yes:
@@ -421,7 +421,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                         // skip the implicit flow var ports on "normal" nodes
                         continue;
                     }
-                    action = new OpenPortViewAction(UseImplUtil.getImplOf(container, NodeContainer.class), i, numOutPorts);
+                    action = new OpenPortViewAction(CastUtil.cast(container, NodeContainer.class), i, numOutPorts);
                     manager.appendToGroup("outPortViews", action);
                 }
 

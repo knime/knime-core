@@ -47,7 +47,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.core.node.util.UseImplUtil.getWFMImplOf;
+import static org.knime.core.node.util.CastUtil.castWFM;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,7 +97,7 @@ public final class PasteFromWorkflowPersistorCommand
     public PasteFromWorkflowPersistorCommand(final WorkflowEditor editor,
             final ClipboardObject clipboardObject,
             final ShiftCalculator shiftCalculator) {
-        super(getWFMImplOf(editor.getWorkflowManager()));
+        super(castWFM(editor.getWorkflowManager()));
         m_editor = editor;
         m_clipboardObject = clipboardObject;
         m_shiftCalculator = shiftCalculator;
@@ -125,7 +125,7 @@ public final class PasteFromWorkflowPersistorCommand
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        WorkflowManager manager = getWFMImplOf(m_editor.getWorkflowManager());
+        WorkflowManager manager = castWFM(m_editor.getWorkflowManager());
         WorkflowPersistor copyPersistor = m_clipboardObject.getCopyPersistor();
         m_pastedContent = manager.paste(copyPersistor);
         NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
@@ -189,7 +189,7 @@ public final class PasteFromWorkflowPersistorCommand
     /** {@inheritDoc} */
     @Override
     public boolean canUndo() {
-        WorkflowManager manager = getWFMImplOf(m_editor.getWorkflowManager());
+        WorkflowManager manager = castWFM(m_editor.getWorkflowManager());
         NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
         List<IAnnotation> pastedAnnos = Arrays.stream(m_pastedContent.getAnnotationIDs())
             .map(id -> getHostWFM().getWorkflowAnnotation(id)).collect(Collectors.toList());
@@ -208,7 +208,7 @@ public final class PasteFromWorkflowPersistorCommand
     /** {@inheritDoc} */
     @Override
     public void undo() {
-        WorkflowManager manager = getWFMImplOf(m_editor.getWorkflowManager());
+        WorkflowManager manager = castWFM(m_editor.getWorkflowManager());
         for (NodeID id : m_pastedContent.getNodeIDs()) {
             manager.removeNode(id);
         }

@@ -47,8 +47,8 @@
  */
 package org.knime.workbench.nodemonitorview;
 
-import static org.knime.core.node.util.UseImplUtil.getImplOf;
-import static org.knime.core.node.util.UseImplUtil.getWFMImplOf;
+import static org.knime.core.node.util.CastUtil.cast;
+import static org.knime.core.node.util.CastUtil.castWFM;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -437,12 +437,12 @@ public class NodeOutputView extends ViewPart implements ISelectionListener, Loca
         //
         if (sel instanceof NodeContainerEditPart) {
             // a NodeContainer was selected, display it's name and status
-            NodeContainer nc = getImplOf(((NodeContainerEditPart)sel).getNodeContainer(), NodeContainer.class);
+            NodeContainer nc = cast(((NodeContainerEditPart)sel).getNodeContainer(), NodeContainer.class);
             WorkflowManager wfm = nc.getParent();
             checkWorkflowManagerListener(wfm);
             updateNodeContainerInfo(nc.getID());
         } else if (sel instanceof WorkflowInPortBarEditPart) {
-            WorkflowManager wfm = getWFMImplOf(((WorkflowInPortBarEditPart)sel).getNodeContainer());
+            WorkflowManager wfm = castWFM(((WorkflowInPortBarEditPart)sel).getNodeContainer());
             checkWorkflowManagerListener(wfm);
 
         } else {

@@ -47,7 +47,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.core.node.util.UseImplUtil.getWFMImplOf;
+import static org.knime.core.node.util.CastUtil.castWFM;
 
 import java.util.Arrays;
 import java.util.List;
@@ -108,7 +108,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            WorkflowManager hostWFM = getWFMImplOf(getHostWFM());
+            WorkflowManager hostWFM = castWFM(getHostWFM());
             // close editor of metanode and children
             for (IEditorPart child : m_editor.getSubEditors(m_id)) {
                 child.getEditorSite().getPage().closeEditor(child, false);
@@ -162,7 +162,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        WorkflowManager hostWFM = getWFMImplOf(getHostWFM());
+        WorkflowManager hostWFM = castWFM(getHostWFM());
         for (NodeID id : m_pastedNodes) {
             hostWFM.removeNode(id);
         }

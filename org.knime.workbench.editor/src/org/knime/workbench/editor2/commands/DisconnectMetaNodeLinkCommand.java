@@ -55,7 +55,7 @@ import java.util.WeakHashMap;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeID;
@@ -119,7 +119,7 @@ public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
     public void execute() {
         m_changedIDs = new ArrayList<NodeID>();
         m_oldTemplInfos = new ArrayList<MetaNodeTemplateInformation>();
-        WorkflowManager hostWFM = UseImplUtil.getWFMImplOf(getHostWFM());
+        WorkflowManager hostWFM = CastUtil.castWFM(getHostWFM());
         for (NodeID id : m_ids) {
             INodeContainer nc = hostWFM.getNodeContainer(id);
             if (nc instanceof WorkflowManager) {
@@ -159,7 +159,7 @@ public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
         for (int i = 0; i < m_changedIDs.size(); i++) {
             NodeID id = m_changedIDs.get(i);
             MetaNodeTemplateInformation old = m_oldTemplInfos.get(i);
-            UseImplUtil.getWFMImplOf(getHostWFM()).setTemplateInformation(id, old);
+            CastUtil.castWFM(getHostWFM()).setTemplateInformation(id, old);
         }
         m_changedIDs = null;
         m_oldTemplInfos = null;

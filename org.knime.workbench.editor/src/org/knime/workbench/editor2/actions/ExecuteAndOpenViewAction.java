@@ -53,8 +53,8 @@ import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.NodeContainerState;
 import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeStateEvent;
-import org.knime.core.node.NodeLger;
-import org.knime.core.node.util.UseImplUtil;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.util.ImageRepository;
@@ -213,7 +213,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
         LOGGER.debug("Creating 'Execute and Open Views' job for "
                 + nodeParts.length + " node(s)...");
         for (NodeContainerEditPart p : nodeParts) {
-            final NodeContainer cont = UseImplUtil.getImplOf(p.getNodeContainer(), NodeContainer.class);
+            final NodeContainer cont = CastUtil.cast(p.getNodeContainer(), NodeContainer.class);
             executeAndOpen(cont);
         }
         try {
