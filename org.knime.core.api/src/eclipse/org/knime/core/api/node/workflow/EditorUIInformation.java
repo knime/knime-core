@@ -84,11 +84,10 @@ public class EditorUIInformation {
      */
     @Override
     public EditorUIInformation clone() {
-        try {
-            return (EditorUIInformation)super.clone();
-        } catch (CloneNotSupportedException ex) {
-            throw new InternalError(ex);
-        }
+        //we should not provide a clone method
+        //e.g. conflicts with the final-fields
+        //see also https://stackoverflow.com/questions/2427883/clone-vs-copy-constructor-which-is-recommended-in-java
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -227,6 +226,14 @@ public class EditorUIInformation {
     /** @return new Builder with defaults. */
     public static final Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * @param editorUIInfo the instance to take the initial values from
+     * @return a new {@link Builder} initialized with all the values copied from the passed argument
+     */
+    public static final Builder builder(final EditorUIInformation editorUIInfo) {
+        return new Builder().copyFrom(editorUIInfo);
     }
 
 

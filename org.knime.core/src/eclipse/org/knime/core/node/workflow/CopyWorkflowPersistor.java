@@ -128,7 +128,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
                 new WorkflowPortTemplate(i, in.getPortType());
         }
         m_editorUIInformation = original.getEditorUIInformation() != null
-            ? original.getEditorUIInformation().clone() : null;
+            ? EditorUIInformation.builder(original.getEditorUIInformation()).build() : null;
         m_name = original.getNameField();
         m_workflowCipher = original.getWorkflowCipher().clone();
         m_templateInformation = original.getTemplateInformation().clone();
