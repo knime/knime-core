@@ -80,8 +80,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.OutputPortRole;
@@ -100,9 +100,13 @@ import org.knime.core.node.streamable.StreamableOperatorInternals;
  */
 final class NewToOldTimeNodeModel extends NodeModel {
 
+    static final String TIME_ZONE_OPT1 = "Add the offset of the time zone to the time";
+
+    static final String TIME_ZONE_OPT2 = "Drop time zone information";
+
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
-    private final SettingsModelBoolean m_timeZoneSelect = createBooleanModel();
+    private final SettingsModelString m_timeZoneSelect = createStringModel();
 
     /** @return the column select model, used in both dialog and model. */
     @SuppressWarnings("unchecked")
@@ -112,8 +116,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
     }
 
     /** @return the string model, used in both dialog and model. */
-    static SettingsModelBoolean createBooleanModel() {
-        return new SettingsModelBoolean("time_zone_select", true);
+    static SettingsModelString createStringModel() {
+        return new SettingsModelString("time_zone_select", TIME_ZONE_OPT1);
     }
 
     /** One in, one out. */
@@ -321,7 +325,7 @@ final class NewToOldTimeNodeModel extends NodeModel {
                 }
             } else if (cell instanceof ZonedDateTimeValue) {
                 LocalDateTime ldt = null;
-                if (m_timeZoneSelect.getBooleanValue()) {
+                if (m_timeZoneSelect.getStringValue().equals(TIME_ZONE_OPT1)) {
                     ZonedDateTime zdt = ((ZonedDateTimeCell)cell).getZonedDateTime();
                     LocalDateTime ldtUTC = LocalDateTime.of(zdt.getYear(), zdt.getMonth(), zdt.getDayOfMonth(),
                         zdt.getHour(), zdt.getMinute(), zdt.getSecond(), zdt.getNano());

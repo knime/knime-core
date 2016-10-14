@@ -46,7 +46,7 @@
 package org.knime.time.node.convert.newtoold;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 
 /**
@@ -63,9 +63,8 @@ final class NewToOldTimeNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentColumnFilter2(NewToOldTimeNodeModel.createColSelectModel(), 0));
 
         createNewGroup("Time Zone Handling");
-        addDialogComponent(new DialogComponentBoolean(NewToOldTimeNodeModel.createBooleanModel(),
-            "Add the offset of the time zone to the time"));
-
+        addDialogComponent(new DialogComponentButtonGroup(NewToOldTimeNodeModel.createStringModel(), true, null,
+            NewToOldTimeNodeModel.TIME_ZONE_OPT1, NewToOldTimeNodeModel.TIME_ZONE_OPT2));
     }
 
 }
