@@ -120,15 +120,11 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
         if (nodes.length != 1) {
             return false;
         }
-        try {
-            NodeContainer nc = CastUtil.cast(nodes[0].getNodeContainer(), NodeContainer.class, true);
-            if (nc instanceof SubNodeContainer) {
-                return !((SubNodeContainer)nc).isWriteProtected();
-            }
-            return false;
-        } catch (ClassCastException e) {
-            return false;
+        NodeContainer nc = CastUtil.castOptional(nodes[0].getNodeContainer(), NodeContainer.class).orElse(null);
+        if (nc instanceof SubNodeContainer) {
+            return !((SubNodeContainer)nc).isWriteProtected();
         }
+        return false;
     }
 
     /** {@inheritDoc} */

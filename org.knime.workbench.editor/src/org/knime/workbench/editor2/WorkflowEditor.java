@@ -176,6 +176,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.EditorUIInformation;
@@ -549,7 +550,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         final ReferencedFile autoSaveDirectory;
         if (m_manager != null && m_parentEditor == null && m_fileResource != null) {
-            autoSaveDirectory = castWFM(m_manager).getAutoSaveDirectory();
+            autoSaveDirectory = CastUtil.castWFMOptional(m_manager).map(wfm -> wfm.getAutoSaveDirectory()).orElse(null);
         } else {
             autoSaveDirectory = null;
         }

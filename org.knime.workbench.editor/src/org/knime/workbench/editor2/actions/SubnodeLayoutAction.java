@@ -132,18 +132,17 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        try {
-            final WorkflowManager manager = CastUtil.castWFM(getManager(), true);
-            if (manager.isWriteProtected()) {
-                return false;
-            }
-            if (manager.getDirectNCParent() instanceof SubNodeContainer) {
-                return !manager.findNodes(WizardNode.class, false).isEmpty();
-            }
-            return false;
-        } catch (ClassCastException e) {
+        final WorkflowManager manager = CastUtil.castWFMOptional(getManager()).orElse(null);
+        if(manager == null) {
             return false;
         }
+        if (manager.isWriteProtected()) {
+            return false;
+        }
+        if (manager.getDirectNCParent() instanceof SubNodeContainer) {
+            return !manager.findNodes(WizardNode.class, false).isEmpty();
+        }
+        return false;
     }
 
     /** {@inheritDoc} */

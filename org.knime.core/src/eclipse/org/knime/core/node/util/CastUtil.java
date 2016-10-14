@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.util;
 
+import java.util.Optional;
+
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -79,44 +81,46 @@ public class CastUtil {
 
     /**
      * @param theInterface
-     * @param suppressWarning whether or not a logger warning message should be issued
      * @return the {@link WorkflowManager} implementation
      */
-    public static final WorkflowManager castWFM(final IWorkflowManager theInterface, final boolean suppressWarning) {
-        return cast(theInterface, WorkflowManager.class, suppressWarning);
+    public static final Optional<WorkflowManager> castWFMOptional(final IWorkflowManager theInterface) {
+        return castOptional(theInterface, WorkflowManager.class);
     }
 
     /**
-     * Tries to cast the given interface to a particular implementation.
+     * Tries to cast the given interface to a particular implementation. Logger warning messages will be issued when a
+     * class has been cast.
      *
      * @param theInterface the object to cast
      * @param clazz the implementation to cast to
      * @return the interface cast to the desired class or an exception, if not possible
-     * @throws ClassCastException if cannot be cast, i.e. the desired implementation is not given, logger warning message will be issued
+     * @throws ClassCastException if cannot be cast, i.e. the desired implementation is not given, logger warning
+     *             message will be issued
      */
     public static final <I, C extends I> C cast(final I theInterface, final Class<C> clazz) {
-        return cast(theInterface, clazz, false);
-    }
-
-    /**
-     * Tries to cast the given interface to a particular implementation.
-     *
-     * @param theInterface the object to cast
-     * @param clazz the implementation to cast to
-     * @param suppressWarning whether or not a logger warning message should be issued
-     * @return the interface cast to the desired class or an exception, if not possible
-     * @throws ClassCastException if cannot be cast, i.e. the desired implementation is not given
-     */
-    public static final <I, C extends I> C cast(final I theInterface, final Class<C> clazz, final boolean suppressWarning) {
         if (clazz.isInstance(theInterface)) {
-            if (!suppressWarning) {
-                LOGGER.warn("Implementation (" + clazz.getSimpleName()
-                    + ") used directly instead of the interface (global count: " + (COUNT++) + ").");
-            }
+            LOGGER.warn("Implementation (" + clazz.getSimpleName()
+                + ") used directly instead of the interface (global count: " + (COUNT++) + ").");
             return clazz.cast(theInterface);
         } else {
             throw new ClassCastException("The interface " + theInterface.getClass().getSimpleName()
                 + " cannot be used here directly. Specific implementation required: " + clazz.getSimpleName());
+        }
+    }
+
+    /**
+     * Tries to cast the given interface to a particular implementation. If cast is not possibly an empty optional will
+     * be returned. No logger warning messages will be issued.
+     *
+     * @param theInterface the object to cast
+     * @param clazz the implementation to cast to
+     * @return the interface cast to the desired class or an empty optional, if not possible
+     */
+    public static final <I, C extends I> Optional<C> castOptional(final I theInterface, final Class<C> clazz) {
+        if (clazz.isInstance(theInterface)) {
+            return Optional.of(clazz.cast(theInterface));
+        } else {
+            return Optional.empty();
         }
     }
 
