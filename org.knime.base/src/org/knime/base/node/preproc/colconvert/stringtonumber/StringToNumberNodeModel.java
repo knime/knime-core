@@ -75,7 +75,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.streamable.simple.SimpleStreamableFunctionWithInternalsNodeModel;
 import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
@@ -225,14 +224,6 @@ public class StringToNumberNodeModel extends SimpleStreamableFunctionWithInterna
             LOGGER.warn(errorMessage);
             setWarningMessage(warnings.toString().replaceAll("[\r\n]+$", ""));
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
-        return new SimpleStreamableOperatorInternals();
     }
 
     /**

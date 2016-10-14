@@ -79,7 +79,6 @@ import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
-import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 
 /**
  * Database writer model which creates a new table and adds the entire table to
@@ -257,14 +256,6 @@ final class DBWriterNodeModel extends NodeModel {
         return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_STREAMABLE, InputPortRole.NONDISTRIBUTED_NONSTREAMABLE};
     }
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
-        return new SimpleStreamableOperatorInternals();
-    }
 
     /**
      * {@inheritDoc}
