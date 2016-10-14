@@ -147,6 +147,13 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
     private DecisionTree m_tree;
 
     /**
+     * Only used when a regression tree model is read in a pmml model appender node.
+     * This is because in pmml there is no real difference between regression and classification
+     * trees other than the kind of function they perform (regression or classification).
+     */
+    private boolean m_isClassification;
+
+    /**
      * Creates a new decision tree translator initialized with the decision
      * tree. For usage with the
      * {@link #exportTo(PMMLDocument, PMMLPortObjectSpec)} method.
@@ -156,6 +163,7 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
     public PMMLDecisionTreeTranslator(final DecisionTree tree) {
         this();
         m_tree = tree;
+        m_isClassification = true;
     }
 
     /**
@@ -177,7 +185,11 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
 
         PMMLMiningSchemaTranslator.writeMiningSchema(spec, treeModel);
         treeModel.setModelName("DecisionTree");
-        treeModel.setFunctionName(MININGFUNCTION.CLASSIFICATION);
+        if (m_isClassification) {
+            treeModel.setFunctionName(MININGFUNCTION.CLASSIFICATION);
+        } else {
+            treeModel.setFunctionName(MININGFUNCTION.REGRESSION);
+        }
 
         // ----------------------------------------------
         // set up splitCharacteristic
@@ -398,7 +410,10 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
         // --------------------------------------------
         // check the mining function, only classification is allowed
         if (MININGFUNCTION.CLASSIFICATION != treeModel.getFunctionName()) {
-            LOGGER.error("Only classification tree is supported!");
+//            LOGGER.error("Only classification tree is supported!");
+            m_isClassification = false;
+        } else {
+            m_isClassification = true;
         }
 
         // --------------------------------------------
@@ -438,6 +453,9 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
      * @return the decision tree stored by this translator
      */
     public DecisionTree getDecisionTree() {
+        if (!m_isClassification) {
+            throw new IllegalStateException("The provided PMML Tree Model is not a classification tree.");
+        }
         return m_tree;
     }
 
