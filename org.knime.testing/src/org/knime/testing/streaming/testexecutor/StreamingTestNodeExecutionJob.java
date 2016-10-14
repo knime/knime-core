@@ -286,12 +286,12 @@ public class StreamingTestNodeExecutionJob extends NodeExecutionJob {
 
         /* --- intermediate runs --- */
 
-        //sanity check: either NodeModel#createInitialStreamableOperatorInternals" AND "NodeModel#iterate" are overridden
-        //or none of them (^ = xor)
+        //sanity check: if NodeModel#createInitialStreamableOperatorInternals" is overridden, the "NodeModel#iterate" should be overridden, too.
+        //Otherwise it doesn't make sense.
         if (checkForOverriddenMethod(localNodeContainer, "createInitialStreamableOperatorInternals")
-            ^ checkForOverriddenMethod(localNodeContainer, "iterate", StreamableOperatorInternals.class)) {
+            && !checkForOverriddenMethod(localNodeContainer, "iterate", StreamableOperatorInternals.class)) {
             m_warningMessages.add(
-                "Implementation warning: Please override both, the 'createInitialStreamableOperatorInternals'- AND the 'iterate'-method, or none of them.");
+                "Implementation warning: Overriding the 'createInitialStreamableOperatorInternals'-method without overriding the 'iterate'-method doesn't make sense.");
         }
 
         // create initial streamable operator internals for the first call of the iterate-method
