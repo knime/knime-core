@@ -47,13 +47,16 @@
  */
 package org.knime.base.node.io.linereader;
 
-import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -89,9 +92,18 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
 
     /** Create new dialog, init layout. */
     LineReaderNodeDialogPane() {
-        JPanel panel = new JPanel(new BorderLayout());
+    	
         m_filePanel = new FilesHistoryPanel(createFlowVariableModel(LineReaderConfig.CFG_URL, FlowVariable.Type.STRING),
             "line_read", LocationValidation.FileInput, "");
+
+        final JPanel filePanel = new JPanel();
+        filePanel.setLayout(new BoxLayout(filePanel, BoxLayout.X_AXIS));
+        filePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Input location:"));
+        filePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        filePanel.add(m_filePanel);
+        filePanel.add(Box.createHorizontalGlue());
+
         int col = 10;
         m_columnHeaderField = new JTextField("Column", col);
         m_rowHeadPrefixField = new JTextField("Row", col);
@@ -121,14 +133,20 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             }
         });
         m_limitRowCountSpinner.setEnabled(false);
-        panel.add(m_filePanel, BorderLayout.NORTH);
-        JPanel centerPanel = initLayout();
-        panel.add(centerPanel, BorderLayout.CENTER);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(filePanel);
+        JPanel optionsPanel = initLayout();
+        panel.add(optionsPanel);
+
         addTab("Line Reader", panel);
     }
 
     private JPanel initLayout() {
         JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+            .createEtchedBorder(), "Reader options:"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.gridx = 0;
@@ -164,6 +182,13 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
         panel.add(m_regexChecker, gbc);
         gbc.gridx += 1;
         panel.add(m_regexField, gbc);
+
+        gbc.gridx++;
+        gbc.gridy++;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        panel.add(new JPanel(), gbc);
+
         return panel;
     }
 
@@ -211,9 +236,6 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             throws InvalidSettingsException {
         LineReaderConfig config = new LineReaderConfig();
         String fileS = m_filePanel.getSelectedFile();
-        if (fileS == null) {
-            throw new InvalidSettingsException("No input selected");
-        }
         config.setUrlString(fileS);
         config.setColumnHeader(m_columnHeaderField.getText());
         config.setRowPrefix(m_rowHeadPrefixField.getText());

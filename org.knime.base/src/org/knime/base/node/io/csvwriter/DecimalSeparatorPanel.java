@@ -138,6 +138,7 @@ public class DecimalSeparatorPanel extends JPanel {
         editPanel.setLayout(new BoxLayout(editPanel, BoxLayout.Y_AXIS));
 
         Box editBox = Box.createHorizontalBox();
+        editBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_decSeparator.getMaximumSize().height));
         editBox.add(new JLabel("Enter decimal separator character:"));
         editBox.add(Box.createHorizontalStrut(5));
         editBox.add(m_decSeparator);

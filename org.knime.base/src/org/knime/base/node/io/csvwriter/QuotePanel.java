@@ -48,6 +48,9 @@
 package org.knime.base.node.io.csvwriter;
 
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -222,21 +225,31 @@ class QuotePanel extends JPanel {
         neverBox.add(Box.createHorizontalGlue());
         neverBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_never.getMaximumSize().height));
 
-        Box replQuoteBox = Box.createHorizontalBox();
-        replQuoteBox.add(Box.createHorizontalStrut(leftInset + 20));
-        replQuoteBox.add(new JLabel("replace right quote in data with"));
-        replQuoteBox.add(Box.createHorizontalStrut(5));
-        replQuoteBox.add(m_quoteReplacement);
-        replQuoteBox.add(Box.createHorizontalGlue());
-//        replQuoteBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_quoteReplacement.getMaximumSize().height));
+        JPanel replacePanel = new JPanel(new GridBagLayout());
 
-        Box replSepBox = Box.createHorizontalBox();
-        replSepBox.add(Box.createHorizontalStrut(leftInset + 20));
-        replSepBox.add(new JLabel("replace separator in data with"));
-        replSepBox.add(Box.createHorizontalStrut(5));
-        replSepBox.add(m_sepReplacement);
-        replSepBox.add(Box.createHorizontalGlue());
-//        replSepBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, m_sepReplacement.getMaximumSize().height));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, leftInset, 0, 0);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        replacePanel.add(new JLabel("replace right quote in data with"), gbc);
+        gbc.gridx++;
+        gbc.insets = new Insets(10, 10, 0, 0);
+        replacePanel.add(m_quoteReplacement, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy++;
+        gbc.insets = new Insets(10, leftInset, 0, 0);
+        replacePanel.add(new JLabel("replace separator in data with"), gbc);
+        gbc.gridx++;
+        gbc.insets = new Insets(10, 10, 0, 0);
+        replacePanel.add(m_sepReplacement, gbc);
+
+        gbc.gridx++;
+        gbc.gridy++;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        replacePanel.add(new JPanel(), gbc);
 
         JPanel whenPanel = new JPanel();
         whenPanel.setLayout(new BoxLayout(whenPanel, BoxLayout.Y_AXIS));
@@ -247,9 +260,7 @@ class QuotePanel extends JPanel {
         whenPanel.add(neededBox);
         whenPanel.add(stringBox);
         whenPanel.add(neverBox);
-        whenPanel.add(replQuoteBox);
-        whenPanel.add(replSepBox);
-        whenPanel.add(Box.createVerticalGlue());
+        whenPanel.add(replacePanel);
 
         return whenPanel;
     }
