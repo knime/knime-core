@@ -343,16 +343,24 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
                         // ignore
                 }
             }
-            if (isReplace && availableFlowVariables.containsKey(newName)) {
+            if (availableFlowVariables.containsKey(newName)) {
+                isReplace = true;
                 m_replaceVariableCombo.setSelectedItem(availableFlowVariables.get(newName));
+            } else {
+                isReplace = false;
             }
         } else {
+            if (spec.containsName(newName)) {
+                isReplace = true;
+            } else {
+                isReplace = false;
+            }
             // will select newColName only if it is in the spec list
             try {
                 m_replaceColumnCombo.update(spec, newName);
             } catch (NotConfigurableException e1) {
                 NodeLogger.getLogger(getClass())
-                    .coding("Combo box throws " + "exception although content is not required", e1);
+                    .coding("Combo box throws exception although content is not required", e1);
             }
         }
 
@@ -366,6 +374,7 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
             fieldsAvailable = m_replaceColumnCombo.getNrItemsInList() > 0;
         }
 
+        m_replaceRadio.setEnabled(fieldsAvailable);
         if (isReplace && fieldsAvailable) {
             m_replaceRadio.doClick();
         } else {
@@ -373,7 +382,6 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
             String newNameString = (newName != null ? newName : defaultNewName);
             m_newNameField.setText(newNameString);
         }
-        m_replaceRadio.setEnabled(fieldsAvailable);
         m_snippetPanel.update(exp, spec, availableFlowVariables);
 
         m_compileOnCloseChecker.setSelected(isTestCompilation);
