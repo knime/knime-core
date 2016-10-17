@@ -6369,8 +6369,12 @@ public boolean canCancelAll() {
     // WFM functionality
     ////////////////////////
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     *
+     * @deprecated use {@link #getAllNodeContainers()} instead
+     */
     @Override
+    @Deprecated
     public Collection<NodeContainer> getNodeContainers() {
         return m_workflow.getNodeValues();
     }
