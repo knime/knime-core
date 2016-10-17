@@ -141,7 +141,8 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
      */
     @Override
     public final WorkflowManagerWrapper getParent() {
-        return new WorkflowManagerWrapper(m_delegate.getParent());
+        IWorkflowManager wfm = m_delegate.getParent();
+        return wfm == null ? null : new WorkflowManagerWrapper(wfm);
     }
 
     /**
@@ -679,7 +680,8 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
      */
     @Override
     public ConnectionContainerWrapper getIncomingConnectionFor(final NodeID id, final int portIdx) {
-        return new ConnectionContainerWrapper(m_delegate.getIncomingConnectionFor(id, portIdx));
+        IConnectionContainer incomingConnectionFor = m_delegate.getIncomingConnectionFor(id, portIdx);
+        return incomingConnectionFor == null ? null : new ConnectionContainerWrapper(incomingConnectionFor);
     }
 
     /**
@@ -699,7 +701,8 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
      */
     @Override
     public ConnectionContainerWrapper getConnection(final ConnectionID id) {
-        return new ConnectionContainerWrapper(m_delegate.getConnection(id));
+        IConnectionContainer connection = m_delegate.getConnection(id);
+        return connection == null ? null : new ConnectionContainerWrapper(connection);
     }
 
     /**
@@ -1575,7 +1578,8 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
      */
     @Override
     public IWorkflowAnnotation getWorkflowAnnotation(final WorkflowAnnotationID wfaID) {
-        return m_delegate.getWorkflowAnnotation(wfaID);
+        IWorkflowAnnotation anno = m_delegate.getWorkflowAnnotation(wfaID);
+        return anno == null ? null : new WorkflowAnnotationWrapper(anno);
     }
 
     /**
