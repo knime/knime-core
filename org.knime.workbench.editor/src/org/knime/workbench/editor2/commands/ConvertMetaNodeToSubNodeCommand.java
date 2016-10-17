@@ -49,10 +49,9 @@ package org.knime.workbench.editor2.commands;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.api.node.workflow.IWorkflowManager;
+import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.CastUtil;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 
 /**
  * Command to wrap a metanode into a subnode/wrappednode.
@@ -62,7 +61,7 @@ public class ConvertMetaNodeToSubNodeCommand extends AbstractKNIMECommand {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(ConvertMetaNodeToSubNodeCommand.class);
 
     private final NodeID m_id;
-    private MetaNodeToSubNodeResult m_metaNodeToSubNodeResult;
+    private IMetaNodeToSubNodeResult m_metaNodeToSubNodeResult;
 
     /**
      * @param wfm the workflow manager holding the metanode
@@ -88,7 +87,7 @@ public class ConvertMetaNodeToSubNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            m_metaNodeToSubNodeResult = CastUtil.castWFM(getHostWFM()).convertMetaNodeToSubNode(m_id);
+            m_metaNodeToSubNodeResult = getHostWFM().convertMetaNodeToSubNode(m_id);
         } catch (Exception e) {
             String error = "Converting Metanode failed: " + e.getMessage();
             LOGGER.error(error, e);

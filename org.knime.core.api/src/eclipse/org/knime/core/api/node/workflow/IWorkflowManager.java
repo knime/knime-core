@@ -62,6 +62,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.knime.core.api.node.NodeFactoryUID;
 import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.port.PortTypeUID;
+import org.knime.core.api.node.workflow.action.ICollapseIntoMetaNodeResult;
+import org.knime.core.api.node.workflow.action.IExpandMetaNodeResult;
+import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
+import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
+import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -474,39 +479,39 @@ public interface IWorkflowManager extends INodeContainer{
     String canExpandMetaNode(NodeID wfmID);
 
     /** Expand the selected metanode into a set of nodes in
-     * this WFM and remove the old metanode.
+     * this WFM and remove the old metanode (undoable operation).
      *
      * @param wfmID the id of the metanode to be expanded
-     * @return copied content containing nodes and annotations
+     * @return result object for undo plus copied content containing nodes and annotations
      * @throws IllegalArgumentException if expand cannot be done
      */
-    WorkflowCopyContent expandMetaNode(NodeID wfmID) throws IllegalArgumentException;
+    IExpandMetaNodeResult expandMetaNodeUndoable(NodeID wfmID) throws IllegalArgumentException;
 
-//    /** Expand the selected subnode into a set of nodes in this WFM and remove the old metanode.
-//     *
-//     * @param nodeID ID of the node containing the sub workflow
-//     * @return copied content containing nodes and annotations
-//     * @throws IllegalStateException if expand cannot be done
-//     * @since 2.12
-//     * @noreference This method is not intended to be referenced by clients.
-//     */
-//    ExpandSubnodeResult expandSubWorkflow(NodeID nodeID) throws IllegalStateException;
+    /** Expand the selected subnode into a set of nodes in this WFM and remove the old metanode.
+     * (undoable operation).
+     *
+     * @param nodeID ID of the node containing the sub workflow
+     * @return result object for undo and containing the expanded objects
+     * @throws IllegalStateException if expand cannot be done
+     * @since 2.12
+     */
+    IExpandSubNodeResult expandSubNodeUndoable(NodeID nodeID) throws IllegalStateException;
 
-//    /** Convert the selected metanode into a subnode.
-//     *
-//     * @param wfmID the id of the metanode to be converted.
-//     * @return ID to the created sub node.
-//     * @since 2.10
-//     */
-//    MetaNodeToSubNodeResult convertMetaNodeToSubNode(NodeID wfmID);
+    /** Convert the selected metanode into a subnode (undoable operation).
+     *
+     * @param wfmID the id of the metanode to be converted.
+     * @return result object for undo
+     * @since 2.10
+     */
+    IMetaNodeToSubNodeResult convertMetaNodeToSubNode(NodeID wfmID);
 
-//    /** Unwrap a selected subnode into a metanode.
-//     * @param subnodeID Subnode to unwrap.
-//     * @return The result object for undo.
-//     * @throws IllegalStateException If it cannot perform the operation (e.g. node executing)
-//     * @since 3.1
-//     */
-//    SubNodeToMetaNodeResult convertSubNodeToMetaNode(NodeID subnodeID);
+    /** Unwrap a selected subnode into a metanode (undoable operation).
+     * @param subnodeID Subnode to unwrap.
+     * @return The result object for undo.
+     * @throws IllegalStateException If it cannot perform the operation (e.g. node executing)
+     * @since 3.1
+     */
+    ISubNodeToMetaNodeResult convertSubNodeToMetaNode(NodeID subnodeID);
 
     /** Check if we can collapse selected set of nodes into a metanode.
      * This essentially checks if the nodes can be moved (=deleted from
@@ -519,17 +524,17 @@ public interface IWorkflowManager extends INodeContainer{
      */
     String canCollapseNodesIntoMetaNode(NodeID[] orgIDs);
 
-//    /**
-//     * Collapse selected set of nodes into a metanode. Make sure connections from and to nodes not contained in this set
-//     * are passed through appropriate ports of the new metanode.
-//     *
-//     * @param orgIDs the ids of the nodes to be moved to the new metanode.
-//     * @param orgAnnos the workflow annotations to be moved
-//     * @param name of the new metanode
-//     * @return newly create metanode
-//     * @throws IllegalArgumentException if collapse cannot be done
-//     */
-//    CollapseIntoMetaNodeResult collapseIntoMetaNode(NodeID[] orgIDs, WorkflowAnnotationID[] orgAnnos, String name);
+    /**
+     * Collapse selected set of nodes into a metanode. Make sure connections from and to nodes not contained in this set
+     * are passed through appropriate ports of the new metanode.
+     *
+     * @param orgIDs the ids of the nodes to be moved to the new metanode.
+     * @param orgAnnos the workflow annotations to be moved
+     * @param name of the new metanode
+     * @return newly create metanode
+     * @throws IllegalArgumentException if collapse cannot be done
+     */
+    ICollapseIntoMetaNodeResult collapseIntoMetaNode(NodeID[] orgIDs, WorkflowAnnotationID[] orgAnnos, String name);
 
     /**
      * Check if a node can be reset, meaning that it is executed and all of
@@ -955,12 +960,12 @@ public interface IWorkflowManager extends INodeContainer{
 //     */
 //    WorkflowCopyContent copyFromAndPasteHere(IWorkflowManager sourceManager, WorkflowCopyContent content);
 
-//    /** Copy the given content.
+//    /** Copy the given content (for within
 //     * @param content The content to copy (must exist).
 //     * @return A workflow persistor hosting the node templates, ready to be
 //     * used in the {@link #paste(WorkflowPersistor)} method.
 //     */
-//    WorkflowPersistor copy(WorkflowCopyContent content);
+//    Object copy(WorkflowCopyContent content);
 
 //    /** Copy the nodes with the given ids.
 //     * @param isUndoableDeleteCommand <code>true</code> if the returned persistor is used

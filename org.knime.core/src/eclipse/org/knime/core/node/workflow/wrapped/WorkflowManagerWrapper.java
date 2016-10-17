@@ -83,8 +83,12 @@ import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationEvent;
 import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
-import org.knime.core.api.node.workflow.WorkflowCopyContent;
 import org.knime.core.api.node.workflow.WorkflowListener;
+import org.knime.core.api.node.workflow.action.ICollapseIntoMetaNodeResult;
+import org.knime.core.api.node.workflow.action.IExpandMetaNodeResult;
+import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
+import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
+import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.workflow.NodeID;
@@ -856,14 +860,19 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     }
 
     /**
-     * @param wfmID
-     * @return
-     * @throws IllegalArgumentException
-     * @see org.knime.core.node.workflow.WorkflowManager#expandMetaNode(org.knime.core.node.workflow.NodeID)
+     * {@inheritDoc}
      */
     @Override
-    public WorkflowCopyContent expandMetaNode(final NodeID wfmID) throws IllegalArgumentException {
-        return m_delegate.expandMetaNode(wfmID);
+    public IExpandMetaNodeResult expandMetaNodeUndoable(final NodeID wfmID) throws IllegalArgumentException {
+        return m_delegate.expandMetaNodeUndoable(wfmID);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IExpandSubNodeResult expandSubNodeUndoable(final NodeID nodeID) throws IllegalStateException {
+        return m_delegate.expandSubNodeUndoable(nodeID);
     }
 
     /**
@@ -1717,6 +1726,31 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     @Override
     public void notifyTemplateConnectionChangedListener() {
         m_delegate.notifyTemplateConnectionChangedListener();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IMetaNodeToSubNodeResult convertMetaNodeToSubNode(final NodeID wfmID) {
+        return m_delegate.convertMetaNodeToSubNode(wfmID);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ISubNodeToMetaNodeResult convertSubNodeToMetaNode(final NodeID subnodeID) {
+        return m_delegate.convertSubNodeToMetaNode(subnodeID);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ICollapseIntoMetaNodeResult collapseIntoMetaNode(final NodeID[] orgIDs, final WorkflowAnnotationID[] orgAnnos,
+        final String name) {
+        return m_delegate.collapseIntoMetaNode(orgIDs, orgAnnos, name);
     }
 
 

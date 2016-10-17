@@ -44,54 +44,15 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 12, 2015 (wiswedel): created
+ *   Oct 17, 2016 (hornm): created
  */
-package org.knime.core.node.workflow.action;
-
-import org.knime.core.api.node.workflow.action.ISubNodeToMetaNodeResult;
-import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowLock;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor;
+package org.knime.core.api.node.workflow.action;
 
 /**
- * Result object of {@link WorkflowManager#convertSubNodeToMetaNode(NodeID)}.
+ * Represents the result of a conversion from a metanode to a subnode (wrapped metanode).
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @noreference This class is not intended to be referenced by clients.
- * @since 3.1
+ * @author Martin Horn, University of Konstanz
  */
-public final class SubNodeToMetaNodeResult implements ISubNodeToMetaNodeResult {
-
-    private NodeID m_nodeID;
-    private WorkflowPersistor m_undoPersistor;
-    private WorkflowManager m_wfm;
-
-    /** Construct action object - only to be called from WFM.
-     * @param wfm The workflow manager
-     * @param nodeID the id of the metanode to wrap.
-     * @param undoPersistor The persistor to undo the operation.
-     */
-    public SubNodeToMetaNodeResult(final WorkflowManager wfm, final NodeID nodeID, final WorkflowPersistor undoPersistor) {
-        m_wfm = CheckUtils.checkArgumentNotNull(wfm);
-        m_nodeID = CheckUtils.checkArgumentNotNull(nodeID);
-        m_undoPersistor = CheckUtils.checkArgumentNotNull(undoPersistor);
-    }
-
-    /** @return true if undo-able, that is node can be removed (hence converted, then removed). */
-    @Override
-    public boolean canUndo() {
-        return m_wfm.canRemoveNode(m_nodeID);
-    }
-
-    /** Perform the undo. */
-    @Override
-    public void undo() {
-        try (WorkflowLock lock = m_wfm.lock()) { // prevent events to be sent too early
-            m_wfm.removeNode(m_nodeID);
-            m_wfm.paste(m_undoPersistor);
-        }
-    }
+public interface IMetaNodeToSubNodeResult extends Undoable {
 
 }

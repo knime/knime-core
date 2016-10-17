@@ -47,8 +47,6 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import static org.knime.core.node.util.CastUtil.castWFM;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -63,10 +61,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
+import org.knime.core.api.node.workflow.action.ICollapseIntoMetaNodeResult;
+import org.knime.core.api.node.workflow.action.IMetaNodeToSubNodeResult;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
-import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -82,8 +80,8 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
     private final WorkflowAnnotationID[] m_annos;
     private final boolean m_encapsulateAsSubnode;
     private final String m_name;
-    private CollapseIntoMetaNodeResult m_collapseResult;
-    private MetaNodeToSubNodeResult m_metaNodeToSubNodeResult;
+    private ICollapseIntoMetaNodeResult m_collapseResult;
+    private IMetaNodeToSubNodeResult m_metaNodeToSubNodeResult;
 
 
     /**
@@ -117,9 +115,9 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            m_collapseResult = castWFM(getHostWFM()).collapseIntoMetaNode(m_nodes, m_annos, m_name);
+            m_collapseResult = getHostWFM().collapseIntoMetaNode(m_nodes, m_annos, m_name);
             if (m_encapsulateAsSubnode) {
-                m_metaNodeToSubNodeResult = castWFM(getHostWFM()).convertMetaNodeToSubNode(
+                m_metaNodeToSubNodeResult = getHostWFM().convertMetaNodeToSubNode(
                     m_collapseResult.getCollapsedMetanodeID());
             }
         } catch (Exception e) {

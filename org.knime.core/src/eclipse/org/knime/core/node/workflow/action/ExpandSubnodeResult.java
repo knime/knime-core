@@ -50,6 +50,8 @@ package org.knime.core.node.workflow.action;
 
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowCopyContent;
+import org.knime.core.api.node.workflow.action.IExpandMetaNodeResult;
+import org.knime.core.api.node.workflow.action.IExpandSubNodeResult;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -67,7 +69,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.12
  */
-public final class ExpandSubnodeResult {
+public final class ExpandSubnodeResult implements IExpandSubNodeResult, IExpandMetaNodeResult {
 
     private final WorkflowManager m_hostWFM;
 
@@ -88,6 +90,7 @@ public final class ExpandSubnodeResult {
     }
 
 
+    @Override
     public boolean canUndo() {
         WorkflowManager hostWFM = m_hostWFM;
         for (NodeID id : m_expandedCopyContent.getNodeIDs()) {
@@ -98,6 +101,7 @@ public final class ExpandSubnodeResult {
         return true;
     }
 
+    @Override
     public void undo() {
         WorkflowManager hostWFM = m_hostWFM;
         for (NodeID id : m_expandedCopyContent.getNodeIDs()) {
@@ -112,6 +116,7 @@ public final class ExpandSubnodeResult {
     /**
      * @return the expandedCopyContent
      */
+    @Override
     public WorkflowCopyContent getExpandedCopyContent() {
         return m_expandedCopyContent;
     }

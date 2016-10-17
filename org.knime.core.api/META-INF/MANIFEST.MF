@@ -8,7 +8,8 @@ Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.core.api,
  org.knime.core.api.node,
  org.knime.core.api.node.port,
- org.knime.core.api.node.workflow
+ org.knime.core.api.node.workflow,
+ org.knime.core.api.node.workflow.action
 Require-Bundle: com.fasterxml.jackson.core.jackson-annotations;bundle-version="[2.4.3,3.0.0)",
  com.fasterxml.jackson.core.jackson-core;bundle-version="[2.4.3,3.0.0)",
  org.apache.commons.lang3;bundle-version="[3.2.1,4.0.0)",
