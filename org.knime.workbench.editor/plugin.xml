@@ -382,8 +382,8 @@
          <action
                class="org.knime.workbench.editor2.actions.delegates.ChangeEditorUIEditorAction"
                definitionId="knime.commands.editor.workflowEditorSettings"
-               disabledIcon="icons/grid_16_bw.png"
-               icon="icons/grid_16.png"
+               disabledIcon="icons/editor_UI_settings_16_disabled.png"
+               icon="icons/editor_UI_settings_16.png"
                id="org.knime.workbench.editor.actions.gridSettings"
                label="Workflow Editor Settings..."
                menubarPath="org.knime.workbench.editor.menu/group2"
@@ -393,8 +393,8 @@
          <action
                class="org.knime.workbench.editor2.actions.delegates.ToggleGridEditorAction"
                definitionId="knime.commands.editor.toggleGrid"
-               disabledIcon="icons/grid_16_bw.png"
-               icon="icons/grid_16.png"
+               disabledIcon="icons/editor_UI_settings_16_disabled.png"
+               icon="icons/editor_UI_settings_16.png"
                id="org.knime.workbench.editor.actions.toggleGrid"
                label="Toggle Snap to Grid"
                style="push"

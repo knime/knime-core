@@ -81,7 +81,7 @@ import org.knime.workbench.KNIMEEditorPlugin;
 public class EditorUISettingsDialog extends Dialog {
 
     private static final ImageDescriptor IMG_PERMS = AbstractUIPlugin.imageDescriptorFromPlugin(
-            KNIMEEditorPlugin.PLUGIN_ID, "icons/grid2_55.png");
+            KNIMEEditorPlugin.PLUGIN_ID, "icons/editor_UI_settings_55.png");
 
     private EditorUIInformation m_settings;
 
