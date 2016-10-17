@@ -54,6 +54,8 @@ import org.eclipse.gef.requests.DirectEditRequest;
 import org.eclipse.swt.widgets.Composite;
 import org.knime.core.api.node.workflow.AnnotationData;
 import org.knime.core.api.node.workflow.IAnnotation;
+import org.knime.core.api.node.workflow.NodeAnnotationData;
+import org.knime.core.api.node.workflow.NodeAnnotationData.Builder;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 
@@ -68,13 +70,11 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
     @Override
     protected Command getDirectEditCommand(final DirectEditRequest edit) {
         StyledTextEditor ste = (StyledTextEditor)edit.getCellEditor();
-        AnnotationData.Builder newAnnoDataBuilder = AnnotationData.builder((AnnotationData)ste.getValue(), true);
+        AnnotationData oldAnnoData = (AnnotationData)ste.getValue();
         AnnotationEditPart annoPart = (AnnotationEditPart)getHost();
         IAnnotation oldAnno = annoPart.getModel();
 
         Rectangle oldFigBounds = annoPart.getFigure().getBounds().getCopy();
-        // y-coordinate is the only dimension that doesn't change
-        newAnnoDataBuilder.setY(oldFigBounds.y);
 
         // trim was never really verified (was always 0 on my platform),
         // see also StyledTextEditorLocator#relocate
@@ -82,19 +82,31 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
         org.eclipse.swt.graphics.Rectangle trim =
             compositeEditor.computeTrim(0, 0, 0, 0);
 
+        final AnnotationData newAnnoData;
         if (annoPart instanceof NodeAnnotationEditPart) {
+            Builder newAnnoDataBuilder = NodeAnnotationData.builder().copyFrom(oldAnnoData, true);
+
+            // y-coordinate is the only dimension that doesn't change
+            newAnnoDataBuilder.setY(oldFigBounds.y);
+
             // the width and height grow with the text entered
             newAnnoDataBuilder.setX(compositeEditor.getBounds().x);
             newAnnoDataBuilder.setHeight(compositeEditor.getBounds().height - trim.height);
             newAnnoDataBuilder.setWidth(compositeEditor.getBounds().width - trim.width);
+            newAnnoData = newAnnoDataBuilder.build();
         } else {
+            org.knime.core.api.node.workflow.AnnotationData.Builder newAnnoDataBuilder = AnnotationData.builder(oldAnnoData, true);
+
+            // y-coordinate is the only dimension that doesn't change
+            newAnnoDataBuilder.setY(oldFigBounds.y);
+
             // with workflow annotations only the height grows with the text
             newAnnoDataBuilder.setX(oldFigBounds.x);
             newAnnoDataBuilder.setHeight(compositeEditor.getBounds().height - trim.height);
             newAnnoDataBuilder.setWidth(oldFigBounds.width - trim.width);
-        }
 
-        AnnotationData newAnnoData = newAnnoDataBuilder.build();
+            newAnnoData = newAnnoDataBuilder.build();
+        }
         if (hasAnnotationDataChanged(oldAnno, newAnnoData)) {
             return new AnnotationEditCommand(annoPart, oldAnno, newAnnoData);
         }
