@@ -68,26 +68,37 @@ import org.knime.core.node.port.database.tablecreator.DBKey;
  */
 class KeyElement extends RowElement {
 
+    /** Default prefix of this element */
     static final String DEFAULT_PREFIX = "Key";
 
+    /** Default primary key value */
     static final boolean DEFAULT_PRIMARY_KEY_VALUE = false;
 
+    /** The column index of the key name in the table */
     static final int KEY_NAME_IDX = 0;
 
+    /** The column index of the key columns in the table */
     static final int KEY_COLUMNS_IDX = 1;
 
+    /** The column index of the primary key in the table */
     static final int PRIMARY_KEY_IDX = 2;
 
+    /** The column names */
     static final String[] COLUMN_NAMES = new String[]{"Key Name", "Key Columns", "Primary Key"};
 
+    /** The column classes */
     static final Class<?>[] COLUMN_CLASSES = new Class<?>[]{String.class, String.class, Boolean.class};
 
+    /** The configuration key for the key name */
     private static final String CFG_KEY_NAME = "keyName";
 
+    /** The configuration key for the key columns */
     private static final String CFG_KEY_COLUMNS = "keyColumns";
 
+    /** The configuration key for the primary key */
     private static final String CFG_KEY_PRIMARY = "primaryKey";
 
+    /** The underlying DBKey element */
     private DBKey m_key;
 
     /**

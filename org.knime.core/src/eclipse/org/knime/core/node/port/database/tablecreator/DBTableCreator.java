@@ -51,24 +51,37 @@ package org.knime.core.node.port.database.tablecreator;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
- *
+ * Interface that creates a new table in a database.
  * @author Budi Yanto, KNIME.com
  * @since 3.2
  */
 public interface DBTableCreator {
 
     /**
+     * Creates a new table in the database
      * @param cp {@link CredentialsProvider}
-     * @param schema schema of the table to create
-     * @param tableName name of the table to create
-     * @param isTempTable <code>true</code> if the table is a temporary table, otherwise <code>false</code>
      * @param ifNotExists option to create the table only if it does not exist
      * @param columns columns of the table
      * @param keys keys of the table
+     * @param additionalSQLStatement additional SQL statement appended to the create table statement
      * @throws Exception
      */
-    void createTable(final CredentialsProvider cp, final String schema, final String tableName,
-        final boolean isTempTable, final boolean ifNotExists, final DBColumn[] columns, final DBKey[] keys)
-                throws Exception;
+    void createTable(final CredentialsProvider cp, final boolean ifNotExists, final DBColumn[] columns,
+        final DBKey[] keys, final String additionalSQLStatement) throws Exception;
+
+    /**
+     * @return The warning given by the DBTableCreator
+     */
+    String getWarning();
+
+    /**
+     * @return the schema name used in the table creation
+     */
+    String getSchema();
+
+    /**
+     * @return the table name used in the table creation
+     */
+    String getTableName();
 
 }

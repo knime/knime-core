@@ -44,97 +44,48 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.06.2014 (thor): created
+ *   Jun 28, 2016 (oole): created
  */
 package org.knime.core.node.port.database;
 
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.tablecreator.DBTableCreator;
-
+import org.knime.core.node.port.database.tablecreator.DBTableCreatorImpl;
 
 /**
- * Database utility for MS SQL Server.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.10
+ * @author Ole Ostergaard, KNIME.com
+ * @since 3.2
  */
-public class SQLServerUtility extends DatabaseUtility {
-    private static class SQLServerStatementManipulator extends StatementManipulator {
-
-
-        /**
-         * Constructor of class {@link SQLServerStatementManipulator}.
-         */
-       public SQLServerStatementManipulator () {
-           super(true);
-       }
-
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String limitRows(final String sql, final long count) {
-            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName();
-        }
-
-
-        @Override
-        public String randomRows(final String sql, final long count) {
-            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName() + " ORDER BY NEWID()";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String[] createTableAsSelect(final String tableName, final String query) {
-            return new String[] {"SELECT * INTO " + tableName + " FROM (" + query + ") as "
-                    + getTempTableName()};
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String dropTable(final String tableName, final boolean cascade) {
-            //sql server does not support the cascade option
-            return super.dropTable(tableName, false);
-        }
-    }
-
-    private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
-
-    /**The unique database identifier.
-     * @since 2.11*/
-    public static final String DATABASE_IDENTIFIER = "sqlserver";
+public class SQLServerTableCreator extends DBTableCreatorImpl {
 
     /**
-     * Constructor.
+     * @param conn a database connection settings object
+     * @param schema schema of the table to create
+     * @param tableName name of the table to create
+     * @param isTempTable <code>true</code> if the table is a temporary table, otherwise <code>false</code>
      */
-    public SQLServerUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
+    protected SQLServerTableCreator(final DatabaseConnectionSettings conn, final String schema, final String tableName,
+            final boolean isTempTable) {
+        super(conn, schema, tableName, isTempTable);
     }
 
     @Override
-    public boolean supportsRandomSampling() {
-        return true;
+    public String getTableName() {
+        if (isTempTable()) {
+            if (super.getTableName().startsWith("#")) {
+                setWarning("Leading # does not have to be set manually. This might have an unexpected effect.");
+            }
+            return "#" + super.getTableName();
+        } else {
+            return super.getTableName();
+        }
     }
 
     /**
-     * {@inheritDoc}
+     * @param isTempTable
+     * @return temporary fragment used in create table fragment
      */
     @Override
-    public boolean supportsCase() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DBTableCreator getTableCreator(final DatabaseConnectionSettings connSettings, final String schema,
-            final String tableName, final boolean isTempTable) {
-        return new SQLServerTableCreator(connSettings, schema, tableName, isTempTable);
+    protected String getTempFragment(final boolean isTempTable) {
+            return "";
     }
 }

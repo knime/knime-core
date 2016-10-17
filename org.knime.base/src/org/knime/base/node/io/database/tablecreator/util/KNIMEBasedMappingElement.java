@@ -59,30 +59,42 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Budi Yanto, KNIME.com
  */
-class KnimeBasedMappingElement extends RowElement {
+class KNIMEBasedMappingElement extends RowElement {
 
+    /** Default prefix of this element */
     static final String DEFAULT_PREFIX = "KnimeBasedMapping";
 
+    /** The column index of the knime type in the table */
     static final int KNIME_TYPE_IDX = 0;
 
+    /** The column index of the SQL type in the table */
     static final int SQL_TYPE_IDX = 1;
 
+    /** The column index of the not null in the table */
     static final int NOT_NULL_IDX = 2;
 
+    /** The column names */
     static final String[] COLUMN_NAMES = new String[]{"KNIME Type", "SQL Type", "Not Null"};
 
+    /** The column classes */
     static final Class<?>[] COLUMN_CLASSES = new Class<?>[]{DataType.class, String.class, Boolean.class};
 
+    /** Default KNIME type */
     static final DataType DEFAULT_KNIME_TYPE = StringCell.TYPE;
 
+    /** Default SQL type */
     static final String DEFAULT_SQL_TYPE = "varchar (255)";
 
+    /** Default not null value*/
     static final boolean DEFAULT_NOT_NULL = true;
 
+    /** The configuration key for the KNIME type */
     private static final String CFG_KNIME_TYPE = "knimeType";
 
+    /** The configuration key for the SQL type */
     private static final String CFG_SQL_TYPE = "sqlType";
 
+    /** The configuration key for the not null */
     private static final String CFG_NOT_NULL = "notNull";
 
     private DataType m_knimeType;
@@ -98,7 +110,7 @@ class KnimeBasedMappingElement extends RowElement {
      * @param sqlType the SQL data type to be mapped to
      * @param notNull default not null value of the generated column
      */
-    KnimeBasedMappingElement(final DataType knimeType, final String sqlType, final boolean notNull) {
+    KNIMEBasedMappingElement(final DataType knimeType, final String sqlType, final boolean notNull) {
         super(DEFAULT_PREFIX);
         m_knimeType = knimeType;
         m_sqlType = sqlType;
@@ -110,7 +122,7 @@ class KnimeBasedMappingElement extends RowElement {
      *
      * @param settings the NodeSettingsRO instance to load from
      */
-    KnimeBasedMappingElement(final NodeSettingsRO settings) {
+    KNIMEBasedMappingElement(final NodeSettingsRO settings) {
         super(DEFAULT_PREFIX, settings);
     }
 

@@ -44,97 +44,59 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.06.2014 (thor): created
+ *   Jun 16, 2016 (budiyanto): created
  */
-package org.knime.core.node.port.database;
+package org.knime.core.node.port.database.tablecreator;
 
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
-import org.knime.core.node.port.database.tablecreator.DBTableCreator;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.sql.SQLException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
- * Database utility for MS SQL Server.
+ * {@link DBTableCreatorImpl} that supports the "IF NOT EXISTS" syntax and thus does not need to execute
+ * a check table query.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.10
+ * @author Tobias Koetter, KNIME.com
  */
-public class SQLServerUtility extends DatabaseUtility {
-    private static class SQLServerStatementManipulator extends StatementManipulator {
-
-
-        /**
-         * Constructor of class {@link SQLServerStatementManipulator}.
-         */
-       public SQLServerStatementManipulator () {
-           super(true);
-       }
-
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String limitRows(final String sql, final long count) {
-            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName();
-        }
-
-
-        @Override
-        public String randomRows(final String sql, final long count) {
-            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName() + " ORDER BY NEWID()";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String[] createTableAsSelect(final String tableName, final String query) {
-            return new String[] {"SELECT * INTO " + tableName + " FROM (" + query + ") as "
-                    + getTempTableName()};
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String dropTable(final String tableName, final boolean cascade) {
-            //sql server does not support the cascade option
-            return super.dropTable(tableName, false);
-        }
-    }
-
-    private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
-
-    /**The unique database identifier.
-     * @since 2.11*/
-    public static final String DATABASE_IDENTIFIER = "sqlserver";
+public class DBTableCreatorIfNotExistsImpl extends DBTableCreatorImpl {
 
     /**
-     * Constructor.
+     * @param conn a database connection settings object
+     * @param schema schema of the table to create
+     * @param tableName name of the table to create
+     * @param isTempTable <code>true</code> if the table is a temporary table, otherwise <code>false</code>
      */
-    public SQLServerUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
-    }
-
-    @Override
-    public boolean supportsRandomSampling() {
-        return true;
+    public DBTableCreatorIfNotExistsImpl(final DatabaseConnectionSettings conn, final String schema, final String tableName,
+        final boolean isTempTable) {
+        super(conn, schema, tableName, isTempTable);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean supportsCase() {
-        return true;
+    protected String getIfNotExistsFragment(final boolean ifNotExists) {
+        if(ifNotExists) {
+            return "IF NOT EXISTS";
+        } else {
+            return "";
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBTableCreator getTableCreator(final DatabaseConnectionSettings connSettings, final String schema,
-            final String tableName, final boolean isTempTable) {
-        return new SQLServerTableCreator(connSettings, schema, tableName, isTempTable);
+    protected boolean tableExists(final CredentialsProvider cp, final String schema, final String tableName)
+            throws SQLException, InvalidSettingsException, BadPaddingException, IllegalBlockSizeException,
+            InvalidKeyException, IOException {
+        return false;
     }
 }

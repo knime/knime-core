@@ -74,7 +74,7 @@ import org.knime.core.data.DataType;
  *
  * @author Budi Yanto, KNIME.com
  */
-public class KnimeBasedMappingPanel extends AbstractTablePanel {
+public class KNIMEBasedMappingPanel extends AbstractTablePanel {
 
     private static final long serialVersionUID = 1L;
 
@@ -88,7 +88,7 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
     private final SQLTypeCellEditor m_sqlTypeEditor;
 
     /** Cell editor used to edit Knime data type in the table **/
-    private final KnimeTypeCellEditor m_knimeTypeEditor;
+    private final KNIMETypeCellEditor m_knimeTypeEditor;
 
     /**
      * Creates a new instance of KnimeBasedMappingPanel
@@ -96,7 +96,7 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
      * @param key key used to store settings to NodeSettingsWO
      * @param config config to store all of the settings
      */
-    public KnimeBasedMappingPanel(final String key, final DBTableCreatorConfiguration config) {
+    public KNIMEBasedMappingPanel(final String key, final DBTableCreatorConfiguration config) {
         this(key, config, null, null, null);
     }
 
@@ -109,10 +109,10 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
      * @param removeButtonText text of the remove button
      * @param removeAllButtonText text of the removeAll button
      */
-    public KnimeBasedMappingPanel(final String key, final DBTableCreatorConfiguration config,
+    public KNIMEBasedMappingPanel(final String key, final DBTableCreatorConfiguration config,
         final String addButtonText, final String removeButtonText, final String removeAllButtonText) {
-        super(key, DEFAULT_TITLE, config, new TableCreatorTableModel(KnimeBasedMappingElement.COLUMN_NAMES,
-            KnimeBasedMappingElement.COLUMN_CLASSES, config.getRowElements(key)) {
+        super(key, DEFAULT_TITLE, config, new TableCreatorTableModel(KNIMEBasedMappingElement.COLUMN_NAMES,
+            KNIMEBasedMappingElement.COLUMN_CLASSES, config.getRowElements(key)) {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -120,20 +120,20 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
                 if (aValue == null) {
                     return;
                 }
-                KnimeBasedMappingElement elem = (KnimeBasedMappingElement)getElement(rowIndex);
+                KNIMEBasedMappingElement elem = (KNIMEBasedMappingElement)getElement(rowIndex);
                 switch (columnIndex) {
-                    case KnimeBasedMappingElement.KNIME_TYPE_IDX:
+                    case KNIMEBasedMappingElement.KNIME_TYPE_IDX:
                         DataType knimeType = (DataType)aValue;
                         elem.setKnimeType(knimeType);
 
                         // Change SQL-Type value to default value according to Knime-Type
                         setValueAt(DBUtil.getDefaultSQLType(knimeType), rowIndex,
-                            KnimeBasedMappingElement.SQL_TYPE_IDX);
+                            KNIMEBasedMappingElement.SQL_TYPE_IDX);
                         break;
-                    case KnimeBasedMappingElement.SQL_TYPE_IDX:
+                    case KNIMEBasedMappingElement.SQL_TYPE_IDX:
                         elem.setSqlType(aValue.toString());
                         break;
-                    case KnimeBasedMappingElement.NOT_NULL_IDX:
+                    case KNIMEBasedMappingElement.NOT_NULL_IDX:
                         elem.setNotNull((Boolean)aValue);
                         break;
                     default:
@@ -148,13 +148,13 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
 
             @Override
             protected Object getValueAtRow(final int rowIndex, final int columnIndex) {
-                KnimeBasedMappingElement elem = (KnimeBasedMappingElement)getElement(rowIndex);
+                KNIMEBasedMappingElement elem = (KNIMEBasedMappingElement)getElement(rowIndex);
                 switch (columnIndex) {
-                    case KnimeBasedMappingElement.KNIME_TYPE_IDX:
+                    case KNIMEBasedMappingElement.KNIME_TYPE_IDX:
                         return elem.getKnimeType();
-                    case KnimeBasedMappingElement.SQL_TYPE_IDX:
+                    case KNIMEBasedMappingElement.SQL_TYPE_IDX:
                         return elem.getSqlType();
-                    case KnimeBasedMappingElement.NOT_NULL_IDX:
+                    case KNIMEBasedMappingElement.NOT_NULL_IDX:
                         return elem.isNotNull();
                     default:
                         return null;
@@ -163,14 +163,14 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
         }, addButtonText, removeButtonText, removeAllButtonText);
 
         // Adapts column "SQL-Type"
-        m_sqlTypeEditor = getConfig().getSqlTypeCellEditor(key, KnimeBasedMappingElement.KNIME_TYPE_IDX);
+        m_sqlTypeEditor = getConfig().getSqlTypeCellEditor(key, KNIMEBasedMappingElement.KNIME_TYPE_IDX);
         TableColumnModel columnModel = getTable().getColumnModel();
-        columnModel.getColumn(KnimeBasedMappingElement.SQL_TYPE_IDX).setCellEditor(m_sqlTypeEditor);
+        columnModel.getColumn(KNIMEBasedMappingElement.SQL_TYPE_IDX).setCellEditor(m_sqlTypeEditor);
 
         // Adapts column "Knime-Type"
-        m_knimeTypeEditor = new KnimeTypeCellEditor(DBUtil.getSqlTypesMap().keySet());
-        columnModel.getColumn(KnimeBasedMappingElement.KNIME_TYPE_IDX).setCellEditor(m_knimeTypeEditor);
-        columnModel.getColumn(KnimeBasedMappingElement.KNIME_TYPE_IDX).setCellRenderer(new DefaultTableCellRenderer() {
+        m_knimeTypeEditor = new KNIMETypeCellEditor(DBUtil.getSqlTypesMap().keySet());
+        columnModel.getColumn(KNIMEBasedMappingElement.KNIME_TYPE_IDX).setCellEditor(m_knimeTypeEditor);
+        columnModel.getColumn(KNIMEBasedMappingElement.KNIME_TYPE_IDX).setCellRenderer(new DefaultTableCellRenderer() {
 
             private static final long serialVersionUID = 1L;
 
@@ -197,7 +197,7 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
     protected void adaptTableColumnModel(final TableColumnModel columnModel) {
 
         // Adapts column "Not Null"
-        int colIdx = KnimeBasedMappingElement.NOT_NULL_IDX;
+        int colIdx = KNIMEBasedMappingElement.NOT_NULL_IDX;
         columnModel.getColumn(colIdx).setCellRenderer(
             new BooleanCellRenderer("Tick if the columns that have the selected knime type should be not null"));
         columnModel.getColumn(colIdx).setMinWidth(NOT_NULL_SIZE);
@@ -213,12 +213,12 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
             throw new IllegalArgumentException("invalid column index");
         }
         switch (columnIndex) {
-            case KnimeBasedMappingElement.KNIME_TYPE_IDX:
-                return KnimeBasedMappingElement.DEFAULT_KNIME_TYPE;
-            case KnimeBasedMappingElement.SQL_TYPE_IDX:
-                return KnimeBasedMappingElement.DEFAULT_SQL_TYPE;
-            case KnimeBasedMappingElement.NOT_NULL_IDX:
-                return KnimeBasedMappingElement.DEFAULT_NOT_NULL;
+            case KNIMEBasedMappingElement.KNIME_TYPE_IDX:
+                return KNIMEBasedMappingElement.DEFAULT_KNIME_TYPE;
+            case KNIMEBasedMappingElement.SQL_TYPE_IDX:
+                return KNIMEBasedMappingElement.DEFAULT_SQL_TYPE;
+            case KNIMEBasedMappingElement.NOT_NULL_IDX:
+                return KNIMEBasedMappingElement.DEFAULT_NOT_NULL;
             default:
                 return null;
         }
@@ -236,8 +236,8 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
             }
 
             final String sqlType = DBUtil.getDefaultSQLType(dt);
-            return new KnimeBasedMappingElement(dt, sqlType,
-                (Boolean)getDefaultValue(KnimeBasedMappingElement.NOT_NULL_IDX));
+            return new KNIMEBasedMappingElement(dt, sqlType,
+                (Boolean)getDefaultValue(KNIMEBasedMappingElement.NOT_NULL_IDX));
         }
 
         return null;
@@ -251,7 +251,7 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
         super.onLoad();
         m_knimeTypeEditor.removeAllFromHash();
         for (RowElement elem : getTableModel().getElements()) {
-            final DataType dt = ((KnimeBasedMappingElement)elem).getKnimeType();
+            final DataType dt = ((KNIMEBasedMappingElement)elem).getKnimeType();
             m_knimeTypeEditor.addItemToHash(dt);
         }
 
@@ -266,7 +266,7 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
     @Override
     protected void onRemoveAction() {
         for (int idx : getTable().getSelectedRows()) {
-            KnimeBasedMappingElement elem = (KnimeBasedMappingElement)getTableModel().getElement(idx);
+            KNIMEBasedMappingElement elem = (KNIMEBasedMappingElement)getTableModel().getElement(idx);
             m_knimeTypeEditor.removeItemFromHash(elem.getKnimeType());
         }
         if (!isEnabledAddButton()) {
@@ -328,7 +328,7 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
         // Store all data types used in the table and their corresponding row indices
         Map<String, List<Integer>> typeRowIdxMapping = new TreeMap<>();
         for (int i = 0; i < getTableModel().getRowCount(); i++) {
-            KnimeBasedMappingElement elem = (KnimeBasedMappingElement)getTableModel().getElement(i);
+            KNIMEBasedMappingElement elem = (KNIMEBasedMappingElement)getTableModel().getElement(i);
             String type = elem.getSqlType();
             List<Integer> indices = typeRowIdxMapping.get(type);
             if (indices == null) {
@@ -370,8 +370,8 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 for (final int row : getTable().getSelectedRows()) {
-                    KnimeBasedMappingElement elem = (KnimeBasedMappingElement)getTableModel().getElement(row);
-                    getTableModel().setValueAt(!elem.isNotNull(), row, KnimeBasedMappingElement.NOT_NULL_IDX);
+                    KNIMEBasedMappingElement elem = (KNIMEBasedMappingElement)getTableModel().getElement(row);
+                    getTableModel().setValueAt(!elem.isNotNull(), row, KNIMEBasedMappingElement.NOT_NULL_IDX);
                 }
             }
         });
@@ -389,7 +389,7 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
         menu.add(subMenu);
         Set<String> typeHash = new HashSet<>();
         for (final int row : getTable().getSelectedRows()) {
-            final KnimeBasedMappingElement elem = (KnimeBasedMappingElement)getTableModel().getElement(row);
+            final KNIMEBasedMappingElement elem = (KNIMEBasedMappingElement)getTableModel().getElement(row);
             final String modelKey = elem.getKnimeType().toString();
             for (int i = 0; i < m_sqlTypeEditor.getSize(modelKey); i++) {
                 final String type = m_sqlTypeEditor.getElementAt(modelKey, i);
@@ -400,10 +400,10 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
                         @Override
                         public void actionPerformed(final ActionEvent e) {
                             for (final int idx : getTable().getSelectedRows()) {
-                                final KnimeBasedMappingElement el =
-                                    (KnimeBasedMappingElement)getTableModel().getElement(idx);
+                                final KNIMEBasedMappingElement el =
+                                    (KNIMEBasedMappingElement)getTableModel().getElement(idx);
                                 m_sqlTypeEditor.addElement(el.getKnimeType().toString(), type);
-                                getTableModel().setValueAt(type, idx, KnimeBasedMappingElement.SQL_TYPE_IDX);
+                                getTableModel().setValueAt(type, idx, KNIMEBasedMappingElement.SQL_TYPE_IDX);
                             }
                         }
                     });
@@ -438,9 +438,9 @@ public class KnimeBasedMappingPanel extends AbstractTablePanel {
                     newType = newType.trim();
 
                     for (final int row : getTable().getSelectedRows()) {
-                        final KnimeBasedMappingElement elem = (KnimeBasedMappingElement)getTableModel().getElement(row);
+                        final KNIMEBasedMappingElement elem = (KNIMEBasedMappingElement)getTableModel().getElement(row);
                         m_sqlTypeEditor.addElement(elem.getKnimeType().toString(), newType);
-                        getTableModel().setValueAt(newType, row, KnimeBasedMappingElement.SQL_TYPE_IDX);
+                        getTableModel().setValueAt(newType, row, KNIMEBasedMappingElement.SQL_TYPE_IDX);
                     }
                 }
             }

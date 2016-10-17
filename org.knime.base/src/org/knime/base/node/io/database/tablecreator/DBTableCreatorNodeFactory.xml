@@ -11,37 +11,53 @@
         <intro>
         	<p>
         	This node allows a user to create a new database table either manually or based on the data table spec of an
-        	input data table. The node supports advanced options such as null or not null, primary key or unique keys,
-        	default SQL type mapping based on column name or KNIME data type, and default key definitions based on column names.
+        	input data table (see "Use dynamic settings" below). The node supports advanced options such as null or 
+        	not null, primary key or unique keys, default SQL type mapping based on column name or KNIME data type, 
+        	and default key definitions based on column names.
         	</p>
         	<p>
-        	Tick the "Use dynamic settings" option to show the dynamic settings tabs. The dynamic type settings can be used 
-        	to dynamically define the SQL type of the columns. These settings can only be applied to the data table spec of the input data table. The
-			mappings defined in the Name-Based SQL Type Mapping have a higher
-			priority than the mappings defined in the KNIME-Based SQL Type Mapping.
-			If no mapping is defined in both Name-Based SQL Type mapping
-			and KNIME-Based SQL Type Mapping, then the default mapping is used. 
+        	Tick the <b>"Use dynamic settings"</b> option to enable the dynamic settings behavior. Once enable it allows to 
+        	dynamically define the SQL type of the columns as well as the assignment of columns to primary or unique keys. 
+        	All dynamic settings which are made via the Dynamic Type Settings and Dynamic Column Settings tab are
+        	applied to the data table specification of the input data table. 
+        	The mappings defined in the <b>Name-Based SQL Type Mapping</b> have a <b>higher priority</b> than the 
+        	mappings defined in the KNIME-Based SQL Type Mapping.
+			If no mapping is defined in both Name-Based SQL Type mapping and KNIME-Based SQL Type Mapping, then 
+			the default mapping is used.
+			<b>While in dynamic settings mode the "Columns" and "Keys" tab become read-only to allow you a preview
+            of the dynamic settings.</b> 
 			</p>
         </intro>
         <tab name="Settings">
-        	<option name="Schema">The schema of the table.</option>
+        	<option name="Schema">The optional schema of the table.</option>
         	<option name="Table name">The name of the table.</option>
         	<option name="Temporary table">If checked, a temporary table is created.</option>
-        	<option name="If not exists">If checked, the table is only created when it doesn't exist in the database.</option>
-        	<option name="Use dynamic settings">If checked, the dynamic settings tabs are shown and the dynamic settings are used. The table in "Columns" and 
-        	"Keys" tab become read-only.</option>
+        	<option name="If not exists">If checked, the table is only created when it doesn't exist in the database.
+        	If the table exists and the option isn't enabled the node will fail with a database specific error message.
+        	</option>
+        	<option name="Use dynamic settings">If checked, the dynamic settings are enabled and the dynamic settings 
+        	tabs are visible.
+        	<b>The "Columns" and "Keys" tab become read-only to allow you a preview of the dynamic settings.</b>
+        	</option>
         </tab>
         
         <tab name="Columns">
         	<option name="Column Name">The name of the column.</option>
         	<option name="Column Type">The type of the column. Double-click to edit or add a new SQL type.</option>
-        	<option name="Not Null">If checked, the column cannot be null.</option>
+        	<option name="Not Null">If checked, the column cannot be null.</option>        	
         </tab>
         
 		<tab name="Keys">
         	<option name="Key Name">The name of the key</option>
         	<option name="Key Columns">The columns used to define the key</option>
         	<option name="Primary Key">If checked, the key is a primary key. Otherwise, it is a unique key.</option>
+        </tab>
+        
+        <tab name="Additional Options">
+            <option name="SQL Statment">The sql statement to append after the regular create table statement e.g. 
+            db specific storage information. The statement gets simply appended to the automatically generated 
+            create table statement and executed as a single statement. 
+            </option>
         </tab>
         
         <tab name="Dynamic Type Settings">
@@ -51,7 +67,9 @@
 			columns based on the column names. Use the "Add" button
 			to add a new row containing the name pattern of the columns that should
 			be mapped. The name pattern can either be a string with wildcard or
-			a regular expression. 
+			a regular expression.
+			The mappings defined in the <b>Name-Based SQL Type Mapping</b> have a <b>higher priority</b> than the 
+            mappings defined in the KNIME-Based SQL Type Mapping.
 			</p>
 			<p>
 			Supported wildcards are * (matches any number of
@@ -62,8 +80,8 @@
 			</p>
         	</option>
         	<option name="KNIME-Based SQL Type Mapping">
-        	In the KNIME-based SQL Type Mapping, a user can define the default SQL type mapping based on KNIME data type. Use the "Add" button to add a new row 
-	        containing the KNIME data type that should be mapped.
+        	In the KNIME-based SQL Type Mapping, a user can define the default SQL type mapping based on KNIME data type. 
+        	Use the "Add" button to add a new row containing the KNIME data type that should be mapped.
         	</option>			
 	        <option name="Name Pattern">The name pattern of the columns.</option>
 			<option name="RegEx">Check this option if the search pattern is a regular expression, otherwise it is treated as string with wildcards ('*' and '?').</option>
@@ -89,7 +107,7 @@
     
     <ports>
         <inPort index="0" name="Database Connection">A database connection to connect to the database.</inPort>
-        <inPort index="1" name="Datatable">A data table whose data table spec should be used to create the new database table.</inPort>
+        <inPort index="1" name="Datatable">An optional data table whose data table spec should be used to create the new database table.</inPort>
         <outPort index="0" name="Schema and Table Name">The schema and table name of the new created database table</outPort>
         <!-- possibly more output ports here-->
     </ports>        

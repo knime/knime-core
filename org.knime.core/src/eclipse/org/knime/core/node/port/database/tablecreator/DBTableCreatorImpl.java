@@ -50,7 +50,6 @@ package org.knime.core.node.port.database.tablecreator;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.crypto.BadPaddingException;
@@ -70,41 +69,71 @@ import org.knime.core.node.workflow.CredentialsProvider;
 public class DBTableCreatorImpl implements DBTableCreator {
 
     private DatabaseConnectionSettings m_conn;
+    private String m_warning = null;
+    private String m_schema;
+    private String m_tableName;
+    private boolean m_isTempTable;
+    private StatementManipulator m_sm;
 
     /**
      * Constructor of DefaultDBTableCreatorStatementGenerator
      * @param conn a database connection settings object
+     * @param schema schema of the table to create
+     * @param tableName name of the table to create
+     * @param isTempTable <code>true</code> if the table is a temporary table, otherwise <code>false</code>
      */
-    public DBTableCreatorImpl (final DatabaseConnectionSettings conn) {
+    public DBTableCreatorImpl (final DatabaseConnectionSettings conn, final String schema, final String tableName,
+            final boolean isTempTable) {
         if(conn == null) {
             throw new NullPointerException("conn must not be null");
         }
         m_conn = conn;
+        m_sm = m_conn.getUtility().getStatementManipulator();
+        m_schema = schema;
+        m_tableName = tableName;
+        m_isTempTable = isTempTable;
     }
 
     /**
-     * @return the conn
+     * @return the {@link DatabaseConnectionSettings}
      */
     protected DatabaseConnectionSettings getConnection() {
         return m_conn;
     }
 
     /**
+     * @return the {@link StatementManipulator}
+     */
+    protected StatementManipulator getStatementManipulator() {
+        return m_sm;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
-    public void createTable(final CredentialsProvider cp, final String schema, final String tableName,
-        final boolean isTempTable, final boolean ifNotExists, final DBColumn[] columns, final DBKey[] keys)
-                throws Exception{
-        if (ifNotExists && tableExists(cp, schema, tableName)) {
+    public void createTable(final CredentialsProvider cp, final boolean ifNotExists, final DBColumn[] columns,
+            final DBKey[] keys, final String additionalSQLStatement) throws Exception {
+
+        if (ifNotExists && tableExists(cp, getSchema(), getTableName())) {
             return;
         }
-        final String statement = getCreateTableStatement(schema, tableName, isTempTable, ifNotExists, columns, keys);
-        @SuppressWarnings("resource") //we are not allowed to close the connection
-        final Connection sqlConn = getConnection().createConnection(cp);
-        synchronized (m_conn.syncConnection(sqlConn)) {
-            m_conn.execute(statement, cp);
-        }
+
+        final String statement = getCreateTableStatement(getSchema(), getTableName(), isTempTable(), ifNotExists,
+            columns, keys, additionalSQLStatement);
+        m_conn.execute(statement, cp);
+    }
+
+    @Override
+    public String getWarning() {
+        return m_warning;
+    }
+
+    /**
+     * @param warning the warning to be set
+     */
+    protected void setWarning(final String warning) {
+        m_warning = warning;
     }
 
     /**
@@ -119,8 +148,7 @@ public class DBTableCreatorImpl implements DBTableCreator {
      * @throws InvalidKeyException
      * @throws IOException
      */
-    protected boolean tableExists(final CredentialsProvider cp, final String schema, final String tableName)
-            throws SQLException,
+    protected boolean tableExists(final CredentialsProvider cp, final String schema, final String tableName) throws SQLException,
         InvalidSettingsException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, IOException {
         return getConnection().getUtility().tableExists(getConnection().createConnection(cp),
             createSchemaTableName(schema, tableName));
@@ -134,26 +162,40 @@ public class DBTableCreatorImpl implements DBTableCreator {
      * @param ifNotExists option to create the table only if it does not exist
      * @param columns columns of the table
      * @param keys keys of the table
+     * @param additionalSQLStatement additional SQL statement appended to the create table statement
      * @return query to create a new table
-     * @since 3.2
      */
     protected String getCreateTableStatement(final String schema, final String tableName, final boolean isTempTable,
-            final boolean ifNotExists, final DBColumn[] columns, final DBKey[] keys){
+            final boolean ifNotExists, final DBColumn[] columns, final DBKey[] keys, final String additionalSQLStatement){
 
         final StringBuilder builder = new StringBuilder();
         builder.append(getCreateTableFragment(schema, tableName, isTempTable, ifNotExists))
         .append(" (")
         .append(getColumnDefinitionFragment(columns));
         if(keys.length == 0) {
-            builder.append(");");
+            builder.append(")");
         } else {
             builder.append(", ")
             .append(getTableConstraintsFragment(keys))
-            .append(");");
+            .append(")");
         }
+
+        if(!StringUtils.isBlank(additionalSQLStatement)) {
+            builder.append(" ")
+            .append(additionalSQLStatement);
+        }
+
+        builder.append(getTerminalCharacter());
 
         return builder.toString();
 
+    }
+
+    /**
+     * @return the standard termination character
+     */
+    protected String getTerminalCharacter() {
+        return ";";
     }
 
     /**
@@ -167,7 +209,7 @@ public class DBTableCreatorImpl implements DBTableCreator {
             final boolean ifNotExists) {
         final String schemaTable = createSchemaTableName(schema, tableName);
         final StringBuilder builder = new StringBuilder();
-        builder.append("CREATE")
+        builder.append(getCreateFragment())
         .append(" ")
         .append(getTempFragment(isTempTable))
         .append(" ")
@@ -176,20 +218,28 @@ public class DBTableCreatorImpl implements DBTableCreator {
         .append(getIfNotExistsFragment(ifNotExists))
         .append(" ")
         .append(schemaTable);
+
         return builder.toString();
+    }
+
+    /**
+     * @return create fragment used in the create table fragment
+     */
+    protected String getCreateFragment() {
+        return "CREATE";
     }
 
     /**
      * @param schema the db schema name or <code>null</code> for none
      * @param tableName the table name
-     * @return the combination of table name and schema name
+     * @return the combination of table name and schema name and quotes them if necessary
      */
     protected String createSchemaTableName(final String schema, final String tableName) {
         return (StringUtils.isBlank(schema)) ? tableName : schema + "." + tableName;
     }
 
     /**
-     * @param isTempTable
+     * @param isTempTable <code>true</code> if the table is temporary table, otherwise <code>false</code>
      * @return temporary fragment used in create table fragment
      */
     protected String getTempFragment(final boolean isTempTable) {
@@ -201,7 +251,7 @@ public class DBTableCreatorImpl implements DBTableCreator {
     }
 
     /**
-     * @param ifNotExists
+     * @param ifNotExists option to create the table only if it does not exist
      * @return ifNotExists fragment used in create table fragment
      */
     protected String getIfNotExistsFragment(final boolean ifNotExists) {
@@ -218,10 +268,9 @@ public class DBTableCreatorImpl implements DBTableCreator {
         if(columns.length == 0){
             throw new IllegalArgumentException("At least one column must be defined");
         }
-        final StatementManipulator sm = m_conn.getUtility().getStatementManipulator();
         final StringBuilder builder = new StringBuilder();
         for(DBColumn col : columns){
-            builder.append(sm.quoteIdentifier(col.getName()))
+            builder.append(getStatementManipulator().quoteIdentifier(col.getName()))
             .append(" ")
             .append(col.getType())
             .append(" ")
@@ -251,17 +300,16 @@ public class DBTableCreatorImpl implements DBTableCreator {
      * @return table constraints fragment
      */
     protected String getTableConstraintsFragment(final DBKey[] keys){
-        final StatementManipulator sm = m_conn.getUtility().getStatementManipulator();
         final StringBuilder builder = new StringBuilder();
         for(DBKey key : keys){
             builder.append("CONSTRAINT")
             .append(" ")
-            .append(sm.quoteIdentifier(key.getName()))
+            .append(getStatementManipulator().quoteIdentifier(key.getName()))
             .append(" ")
             .append(getPrimaryKeyFragment(key.isPrimaryKey()))
             .append(" (");
             for(final DBColumn col : key.getColumns()) {
-                builder.append(sm.quoteIdentifier(col.getName()))
+                builder.append(getStatementManipulator().quoteIdentifier(col.getName()))
                 .append(", ");
             }
 
@@ -286,4 +334,28 @@ public class DBTableCreatorImpl implements DBTableCreator {
         }
     }
 
+    /**
+     * @return the schema name used in the query. This might differ from what was entered in the dialog.
+     */
+    @Override
+    public String getSchema() {
+        // return the used schema
+        return m_schema;
+    }
+
+    /**
+     * @return the table name used in the query. This might differ from what was entered in the dialog.
+     */
+    @Override
+    public String getTableName() {
+        // return the used table name
+        return m_tableName;
+    }
+
+    /**
+     * @return whether the table that is created is temporary
+     */
+    protected boolean isTempTable() {
+        return m_isTempTable;
+    }
 }

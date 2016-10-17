@@ -81,30 +81,41 @@ abstract class AbstractTablePanel extends JPanel {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(AbstractTablePanel.class);
 
+    /** Default text for the add button */
     private static final String ADD_BUTTON_TEXT = "Add";
 
+    /** Default text for the remove button */
     private static final String REMOVE_BUTTON_TEXT = "Remove";
 
+    /** Default text for the remove all button*/
     private static final String REMOVE_ALL_BUTTON_TEXT = "Remove All";
 
+    /** the key of the table panel */
     private final String m_key;
 
+    /** the title of the table penal */
     private final String m_title;
 
+    /** the underlying jtable component */
     private final JTable m_table;
 
+    /** the add button */
     private final JButton m_addButton;
 
+    /** the remove button */
     private final JButton m_removeButton;
 
+    /** the remove all button */
     private final JButton m_removeAllButton;
 
+    /** the underlying table model for the jtable component */
     private final TableCreatorTableModel m_tableModel;
 
+    /** the configuration */
     private final DBTableCreatorConfiguration m_config;
 
     /**
-     *
+     * Creates a new instance of AbstractTablePanel
      * @param key
      * @param tableModel
      * @param addButtonText
@@ -190,29 +201,36 @@ abstract class AbstractTablePanel extends JPanel {
     }
 
     /**
-     * @return the key of the table
+     * @return the key of this table panel
      */
     protected String getKey() {
         return m_key;
     }
 
     /**
-     * Returns the title of this panel
-     *
      * @return the title of this panel
      */
     public String getTitle() {
         return m_title;
     }
 
+    /**
+     * @return the configuration
+     */
     protected DBTableCreatorConfiguration getConfig() {
         return m_config;
     }
 
+    /**
+     * @return the underlying jtable component
+     */
     protected JTable getTable() {
         return m_table;
     }
 
+    /**
+     * @return the table model
+     */
     protected TableCreatorTableModel getTableModel() {
         return m_tableModel;
     }

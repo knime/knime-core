@@ -52,13 +52,19 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
 
         final List<DBColumn> columns = m_config.getColumns();
         final List<DBKey> keys = m_config.getKeys();
-
-        final DatabaseConnectionSettings conn = ((DatabaseConnectionPortObject)inData[0]).getConnectionSettings(getCredentialsProvider());
-        final DBTableCreator tableCreator = conn.getUtility().getTableCreator(conn);
-        tableCreator.createTable(getCredentialsProvider(), m_config.getSchema(), getTableName(), m_config.isTempTable(), m_config.ifNotExists(),
-            columns.toArray(new DBColumn[columns.size()]), keys.toArray(new DBKey[keys.size()]));
-
-        pushFlowVariables();
+        exec.setMessage("Creating table");
+        final DatabaseConnectionSettings conn =
+                ((DatabaseConnectionPortObject)inData[0]).getConnectionSettings(getCredentialsProvider());
+        final DBTableCreator tableCreator =
+                conn.getUtility().getTableCreator(conn, m_config.getSchema(), getTableName(), m_config.isTempTable());
+        tableCreator.createTable(getCredentialsProvider(), m_config.ifNotExists(),
+            columns.toArray(new DBColumn[columns.size()]), keys.toArray(new DBKey[keys.size()]),
+            m_config.getAdditionalOptions());
+        pushFlowVariables(tableCreator.getSchema(), tableCreator.getTableName());
+        final String warning = tableCreator.getWarning();
+        if (!StringUtils.isBlank(warning)) {
+            setWarningMessage(warning);
+        }
         return new PortObject[]{FlowVariablePortObject.INSTANCE};
     }
 
@@ -67,7 +73,7 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
      */
     @Override
     protected void reset() {
-        // TODO: generated method stub
+        // nothing to reset
     }
 
     /**
@@ -79,6 +85,8 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
             throw new InvalidSettingsException("No valid database connection available.");
         }
 
+        final DatabaseConnectionPortObjectSpec dbSpec = (DatabaseConnectionPortObjectSpec) inSpecs[0];
+
         m_config.setTableSpec((DataTableSpec) inSpecs[1]);
         final boolean isColumnsEmpty = m_config.getColumns().isEmpty();
 
@@ -87,10 +95,23 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
             m_config.updateKeysWithDynamicSettings();
         }
 
+        if (m_config.getTableSpec() != null && !m_config.useDynamicSettings()) {
+            setWarningMessage("Input table available. You migh want to enable dynamic settings.");
+        }
+
+        if (m_config.getTableSpec() == null && m_config.useDynamicSettings()) {
+            throw new InvalidSettingsException("Dynamic settings enabled but no input table available.");
+        }
+
         if (isColumnsEmpty) {
             throw new InvalidSettingsException("At least one column must be defined.");
         }
-        pushFlowVariables();
+
+        final DatabaseConnectionSettings conn = dbSpec.getConnectionSettings(getCredentialsProvider());
+        final DBTableCreator tableCreator = conn.getUtility().getTableCreator(conn, m_config.getSchema(), getTableName(),
+            m_config.isTempTable());
+
+        pushFlowVariables(tableCreator.getSchema(), tableCreator.getTableName());
         return new FlowVariablePortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
 
@@ -118,9 +139,14 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
         m_config.validateSettings(settings);
     }
 
-    private void pushFlowVariables() {
-        pushFlowVariableString(FLOW_VARIABLE_SCHEMA, m_config.getSchema());
-        pushFlowVariableString(FLOW_VARIABLE_TABLE_NAME, getTableName());
+    /**
+     * Push the schema and table name flow variables
+     * @param schema the schema to push
+     * @param tableName the table name to push
+     */
+    private void pushFlowVariables(final String schema, final String tableName) {
+        pushFlowVariableString(FLOW_VARIABLE_SCHEMA, schema);
+        pushFlowVariableString(FLOW_VARIABLE_TABLE_NAME, tableName);
     }
 
     private String getTableName() {

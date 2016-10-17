@@ -135,6 +135,9 @@ public class DBUtil {
         return getSqlTypes();
     }
 
+    /**
+     * @return all supported SQL types
+     */
     static List<String> getSqlTypes() {
         return Arrays.asList(new String[] {
             SQL_TYPE_BOOLEAN,
@@ -146,6 +149,10 @@ public class DBUtil {
         });
     }
 
+    /**
+     * @param knimeType the KNIME data type whose default SQL type should be returned
+     * @return the default SQL type of the given KNIME data type
+     */
     static String getDefaultSQLType(final DataType knimeType) {
         if (knimeType.isCompatible(BooleanValue.class)) {
             return SQL_TYPE_BOOLEAN;

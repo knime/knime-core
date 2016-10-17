@@ -68,7 +68,7 @@ import org.knime.core.data.DataType;
  *
  * @author Budi Yanto, KNIME.com
  */
-class KnimeTypeCellEditor extends DefaultCellEditor {
+class KNIMETypeCellEditor extends DefaultCellEditor {
 
     private static final long serialVersionUID = 1L;
 
@@ -85,11 +85,11 @@ class KnimeTypeCellEditor extends DefaultCellEditor {
      *
      * @param knimeTypes the knime data types used to initialize the cell editor
      */
-    KnimeTypeCellEditor(final Collection<DataType> knimeTypes) {
+    KNIMETypeCellEditor(final Collection<DataType> knimeTypes) {
         this(new JComboBox<DataType>(), knimeTypes);
     }
 
-    private KnimeTypeCellEditor(final JComboBox<DataType> comboBox, final Collection<DataType> knimeTypes) {
+    private KNIMETypeCellEditor(final JComboBox<DataType> comboBox, final Collection<DataType> knimeTypes) {
         super(comboBox);
         m_comboBox = comboBox;
         m_dataTypeHash = new HashSet<>();

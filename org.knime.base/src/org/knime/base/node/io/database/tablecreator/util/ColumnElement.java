@@ -60,26 +60,37 @@ import org.knime.core.node.port.database.tablecreator.DBColumn;
  */
 class ColumnElement extends RowElement {
 
+    /** Default prefix of this element */
     static final String DEFAULT_PREFIX = "Column";
 
+    /** Default not null value */
     static final boolean DEFAULT_NOT_NULL_VALUE = false;
 
+    /** The column index of the column name in the table */
     static final int COLUMN_NAME_IDX = 0;
 
+    /** The column index of the column type in the table */
     static final int COLUMN_TYPE_IDX = 1;
 
+    /** The column index of the not null in the table */
     static final int NOT_NULL_IDX = 2;
 
+    /** The column names */
     static final String[] COLUMN_NAMES = new String[]{"Column Name", "Column Type", "Not Null"};
 
+    /** The column classes */
     static final Class<?>[] COLUMN_CLASSES = new Class<?>[]{String.class, String.class, Boolean.class};
 
+    /** The configuration key for the column name */
     private static final String CFG_COLUMN_NAME = "columnName";
 
+    /** The configuration key for the column type */
     private static final String CFG_COLUMN_TYPE = "columnType";
 
+    /** The configuration key for the not null */
     private static final String CFG_COLUMN_NOT_NULL = "notNull";
 
+    /** The underlying DBColumn element */
     private DBColumn m_column;
 
     /**

@@ -59,34 +59,49 @@ import org.knime.core.node.NodeSettingsWO;
  */
 class NameBasedKeysElement extends RowElement {
 
+    /** Default prefix of this element */
     static final String DEFAULT_PREFIX = KeyElement.DEFAULT_PREFIX;
 
+    /** The column index of the name pattern in the table */
     static final int NAME_PATTERN_IDX = 0;
 
+    /** The column index of the isRegex in the table */
     static final int REGEX_IDX = 1;
 
+    /** The column index of the key name in the table */
     static final int KEY_NAME_IDX = 2;
 
+    /** The column index of the primary key in the table */
     static final int PRIMARY_KEY_IDX = 3;
 
+    /** The column names */
     static final String[] COLUMN_NAMES = new String[]{"Name Pattern", "RegEx", "Key Name", "Primary Key"};
 
+    /** The column classes */
     static final Class<?>[] COLUMN_CLASSES = new Class<?>[]{String.class, Boolean.class, String.class, Boolean.class};
 
+    /** Default name pattern */
     static final String DEFAULT_NAME_PATTERN = ".*";
 
+    /** Default isRegex value */
     static final boolean DEFAULT_IS_REGEX = true;
 
+    /** Default key name value */
     static final String DEFAULT_KEY_NAME = "";
 
+    /** Default primary key value */
     static final boolean DEFAULT_PRIMARY_KEY = false;
 
+    /** The configuration key for the name pattern */
     private static final String CFG_NAME_PATTERN = "namePattern";
 
+    /** The configuration key for the isRegex */
     private static final String CFG_IS_REGEX = "isRegex";
 
+    /** The configuration key for the key name */
     private static final String CFG_KEY_NAME = "keyName";
 
+    /** The configuration key for the primary key */
     private static final String CFG_PRIMARY_KEY = "primaryKey";
 
     private String m_namePattern;

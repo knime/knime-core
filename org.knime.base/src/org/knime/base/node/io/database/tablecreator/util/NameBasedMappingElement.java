@@ -59,32 +59,46 @@ import org.knime.core.node.NodeSettingsWO;
  */
 class NameBasedMappingElement extends RowElement {
 
+    /** Default prefix of this element */
     static final String DEFAULT_PREFIX = "NameBasedMapping";
 
+    /** The column index of the name pattern in the table */
     static final int NAME_PATTERN_IDX = 0;
 
+    /** The column index of the isRegex in the table */
     static final int REGEX_IDX = 1;
 
+    /** The column index of the SQL type in the table */
     static final int SQL_TYPE_IDX = 2;
 
+    /** The column index of the not null in the table */
     static final int NOT_NULL_IDX = 3;
 
+    /** The column names */
     static final String[] COLUMN_NAMES = new String[]{"Name Pattern", "RegEx", "SQL Type", "Not Null"};
 
+    /** The column classes */
     static final Class<?>[] COLUMN_CLASSES = new Class<?>[]{String.class, Boolean.class, String.class, Boolean.class};
 
+    /** Default name pattern */
     static final String DEFAULT_NAME_PATTERN = ".*";
 
+    /** Default isRegex value */
     static final boolean DEFAULT_IS_REGEX = true;
 
+    /** Default not null value */
     static final boolean DEFAULT_NOT_NULL = true;
 
+    /** The configuration key for the name pattern */
     private static final String CFG_NAME_PATTERN = "namePattern";
 
+    /** The configuration key for the isRegex */
     private static final String CFG_IS_REGEX = "isRegex";
 
+    /** The configuration key for the SQL type */
     private static final String CFG_SQL_TYPE = "sqlType";
 
+    /** The configuration key for the not null */
     private static final String CFG_NOT_NULL = "notNull";
 
     private String m_namePattern;

@@ -11,10 +11,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.io.database.tablecreator.util.AdditionalSQLStatementPanel;
 import org.knime.base.node.io.database.tablecreator.util.ColumnsPanel;
 import org.knime.base.node.io.database.tablecreator.util.DBTableCreatorConfiguration;
 import org.knime.base.node.io.database.tablecreator.util.KeysPanel;
-import org.knime.base.node.io.database.tablecreator.util.KnimeBasedMappingPanel;
+import org.knime.base.node.io.database.tablecreator.util.KNIMEBasedMappingPanel;
 import org.knime.base.node.io.database.tablecreator.util.NameBasedKeysPanel;
 import org.knime.base.node.io.database.tablecreator.util.NameBasedMappingPanel;
 import org.knime.core.data.DataTableSpec;
@@ -50,9 +51,11 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
 
     private final KeysPanel m_keysPanel;
 
+    private final AdditionalSQLStatementPanel m_additionalSQLStatementPanel;
+
     private final NameBasedMappingPanel m_nameBasedMappingPanel;
 
-    private final KnimeBasedMappingPanel m_knimeTypeBasedMappingPanel;
+    private final KNIMEBasedMappingPanel m_knimeTypeBasedMappingPanel;
 
     private final NameBasedKeysPanel m_nameBasedKeysPanel;
 
@@ -70,16 +73,18 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
 
         m_columnsPanel = new ColumnsPanel(DBTableCreatorConfiguration.CFG_COLUMNS_SETTINGS, m_config);
         m_keysPanel = new KeysPanel(DBTableCreatorConfiguration.CFG_KEYS_SETTINGS, m_config);
+        m_additionalSQLStatementPanel = new AdditionalSQLStatementPanel(m_config);
         m_nameBasedMappingPanel =
             new NameBasedMappingPanel(DBTableCreatorConfiguration.CFG_NAME_BASED_TYPE_MAPPING, m_config);
         m_knimeTypeBasedMappingPanel =
-            new KnimeBasedMappingPanel(DBTableCreatorConfiguration.CFG_KNIME_BASED_TYPE_MAPPING, m_config);
+            new KNIMEBasedMappingPanel(DBTableCreatorConfiguration.CFG_KNIME_BASED_TYPE_MAPPING, m_config);
         m_dynamicTypePanel = createDynamicPanel();
         m_nameBasedKeysPanel = new NameBasedKeysPanel(DBTableCreatorConfiguration.CFG_NAME_BASED_KEYS, m_config);
 
         tabs.add("Settings", createTableSettingsPanel());
         tabs.add(m_columnsPanel.getTitle(), m_columnsPanel);
         tabs.add(m_keysPanel.getTitle(), m_keysPanel);
+        tabs.add("Additional Options", m_additionalSQLStatementPanel);
         tabs.addChangeListener(new ChangeListener() {
 
             @Override
@@ -126,6 +131,9 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
 
     }
 
+    /**
+     * @return a newly created table settings panel
+     */
     private JPanel createTableSettingsPanel() {
         final JPanel panel = new JPanel(new BorderLayout());
 
@@ -168,6 +176,10 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
         return panel;
     }
 
+    /**
+     * Adds the dynamic tab to the tabbedPane
+     * @param tabbedPane the tabbedPane where the dynamic tab should be added
+     */
     private void addDynamicTabs(final JTabbedPane tabbedPane) {
         int idx = tabbedPane.indexOfComponent(m_dynamicTypePanel);
         if(idx < 0) {
@@ -179,6 +191,10 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
         }
     }
 
+    /**
+     * Removes the dynamic tab from the tabbedPane
+     * @param tabbedPane the tabbedPane from where the dynamic tabs should be removed
+     */
     private void removeDynamicTabs(final JTabbedPane tabbedPane) {
         int idx = tabbedPane.indexOfComponent(m_dynamicTypePanel);
         if(idx > -1) {
@@ -191,6 +207,10 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
         }
     }
 
+    /**
+     * Activates or deactivates the static panel
+     * @param activate <code>true</code> if the static panel should be activated, otherwise <code>false</code>
+     */
     private void activateStaticPanel(final boolean activate) {
         m_columnsPanel.setEnabledAddButton(activate);
         m_columnsPanel.setEnabledRemoveButton(activate);
@@ -199,6 +219,9 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
 
     }
 
+    /**
+     * @return a newly created dynamic panel
+     */
     private JPanel createDynamicPanel() {
         final JPanel panel = new JPanel(new BorderLayout());
         final JTabbedPane tabs = new JTabbedPane();
@@ -213,6 +236,7 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        m_additionalSQLStatementPanel.onSave();
         m_columnsPanel.onSave();
         m_keysPanel.onSave();
         m_nameBasedMappingPanel.onSave();
@@ -233,13 +257,8 @@ public class DBTableCreatorNodeDialog extends NodeDialogPane {
             throw new NotConfigurableException(
                 "Cannot open database table creator without a valid database connection");
         }
-
-        try {
-            m_config.loadSettingsForDialog(settings, specs);
-        } catch (InvalidSettingsException ex) {
-
-        }
-
+        m_config.loadSettingsForDialog(settings, specs);
+        m_additionalSQLStatementPanel.onLoad();
         m_columnsPanel.onLoad();
         m_keysPanel.onLoad();
         m_nameBasedMappingPanel.onLoad();

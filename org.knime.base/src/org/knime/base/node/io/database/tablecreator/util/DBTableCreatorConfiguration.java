@@ -64,6 +64,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
@@ -108,6 +109,9 @@ public class DBTableCreatorConfiguration {
     /** Configuration key for use dynamic settings **/
     public static final String CFG_USE_DYNAMIC_SETTINGS = "UseDynamicSettings";
 
+    /** Configuration key for additional SQL statement **/
+    public static final String CFG_ADDITIONAL_OPTIONS = "AdditionalOptions";
+
     /** Configuration key for the column definitions settings **/
     public static final String CFG_COLUMNS_SETTINGS = "Columns";
 
@@ -123,15 +127,23 @@ public class DBTableCreatorConfiguration {
     /** Configuration key for the column name based keys mapping **/
     public static final String CFG_NAME_BASED_KEYS = "NameBasedKeys";
 
+    /** SettingsModel for the schema */
     private final SettingsModelString m_schemaSettingsModel = new SettingsModelString(CFG_SCHEMA, DEF_SCHEMA);
 
+    /** SettingsModel for the table name */
     private final SettingsModelString m_tableNameSettingsModel = new SettingsModelString(CFG_TABLE_NAME, "");
 
+    /** SettingsModel for the temp table */
     private final SettingsModelBoolean m_tempTableSettingsModel = new SettingsModelBoolean(CFG_TEMP_TABLE, DEF_IS_TEMP_TABLE);
 
+    /** SettingsModel for the ifNotExisting */
     private final SettingsModelBoolean m_ifNotExistsSettingsModel = new SettingsModelBoolean(CFG_IF_NOT_EXISTS, DEF_IF_NOT_EXISTS);
 
+    /** SettingsModel for the useDynamicSettings */
     private final SettingsModelBoolean m_useDynamicSettingsModel = new SettingsModelBoolean(CFG_USE_DYNAMIC_SETTINGS, DEF_USE_DYNAMIC_SETTINGS);
+
+    /** SettingsModel for the additional SQL statement */
+    private final SettingsModelString m_additionalOptionsModel = new SettingsModelString(CFG_ADDITIONAL_OPTIONS, "");
 
     private final Map<String, List<RowElement>> m_tableMap = new HashMap<>();
 
@@ -256,6 +268,21 @@ public class DBTableCreatorConfiguration {
     }
 
     /**
+     * @return the additional options
+     */
+    public String getAdditionalOptions() {
+        return m_additionalOptionsModel.getStringValue();
+    }
+
+    /**
+     * Sets the additional options
+     * @param options the additional options to set
+     */
+    public void setAdditionalOptions(final String options) {
+        m_additionalOptionsModel.setStringValue(options);
+    }
+
+    /**
      * Returns the DataTableSpec instance
      *
      * @return the DataTableSpec instance
@@ -367,28 +394,29 @@ public class DBTableCreatorConfiguration {
      *
      * @param settings NodeSettingsRO instance to load from
      * @param specs PortObjectSpec array to load from
-     * @throws InvalidSettingsException
+     * @throws NotConfigurableException
      */
     public void loadSettingsForDialog(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-        throws InvalidSettingsException {
-        if (settings == null) {
-            throw new IllegalArgumentException("settings must not be null");
-        }
+        throws NotConfigurableException {
+        try {
+            loadSettingsForModel(settings);
 
-        loadSettingsForSettingsModel(settings);
-        loadSettingsForRowElements(CFG_NAME_BASED_TYPE_MAPPING, settings);
-        loadSettingsForRowElements(CFG_KNIME_BASED_TYPE_MAPPING, settings);
-        loadSettingsForRowElements(CFG_NAME_BASED_KEYS, settings);
+            final String dbIdentifier = ((DatabaseConnectionPortObjectSpec)specs[0]).getDatabaseIdentifier();
+            loadSettingsForSqlEditor(dbIdentifier);
 
-        final String dbIdentifier = ((DatabaseConnectionPortObjectSpec)specs[0]).getDatabaseIdentifier();
-        loadSettingsForSqlEditor(dbIdentifier);
+            m_tableSpec = (DataTableSpec) specs[1];
 
-        m_tableSpec = (DataTableSpec) specs[1];
-        if(m_tableSpec != null && (useDynamicSettings() || getColumns().isEmpty())) {
-            loadColumnSettingsFromTableSpec(m_tableSpec);
-        } else {
-            loadSettingsForRowElements(CFG_COLUMNS_SETTINGS, settings);
-            loadSettingsForRowElements(CFG_KEYS_SETTINGS, settings);
+            if(m_tableSpec != null && (useDynamicSettings() || getColumns().isEmpty())) {
+                loadColumnSettingsFromTableSpec(m_tableSpec);
+                if(useDynamicSettings()) {
+                    updateKeysWithDynamicSettings();
+                }
+            } else {
+                loadSettingsForRowElements(CFG_COLUMNS_SETTINGS, settings);
+                loadSettingsForRowElements(CFG_KEYS_SETTINGS, settings);
+            }
+        } catch (InvalidSettingsException e) {
+            throw new NotConfigurableException(e.getMessage());
         }
     }
 
@@ -405,6 +433,7 @@ public class DBTableCreatorConfiguration {
         m_schemaSettingsModel.loadSettingsFrom(settings);
         m_ifNotExistsSettingsModel.loadSettingsFrom(settings);
         m_useDynamicSettingsModel.loadSettingsFrom(settings);
+        m_additionalOptionsModel.loadSettingsFrom(settings);
         if (StringUtils.isBlank(getTableName())) {
             setTableName(DEF_TABLE_NAME);
         }
@@ -464,7 +493,7 @@ public class DBTableCreatorConfiguration {
             case CFG_NAME_BASED_TYPE_MAPPING:
                 return new NameBasedMappingElement(settings);
             case CFG_KNIME_BASED_TYPE_MAPPING:
-                return new KnimeBasedMappingElement(settings);
+                return new KNIMEBasedMappingElement(settings);
             case CFG_NAME_BASED_KEYS:
                 return new NameBasedKeysElement(settings);
             default:
@@ -499,6 +528,7 @@ public class DBTableCreatorConfiguration {
         m_tempTableSettingsModel.saveSettingsTo(settings);
         m_ifNotExistsSettingsModel.saveSettingsTo(settings);
         m_useDynamicSettingsModel.saveSettingsTo(settings);
+        m_additionalOptionsModel.saveSettingsTo(settings);
         for (Entry<String, List<RowElement>> entry : m_tableMap.entrySet()) {
             final NodeSettingsWO root = settings.addNodeSettings(entry.getKey());
             int idx = 0;
@@ -554,6 +584,7 @@ public class DBTableCreatorConfiguration {
         colElems.clear();
 
         final List<RowElement> nameBasedMappingElems = getRowElements(CFG_NAME_BASED_TYPE_MAPPING);
+        final List<RowElement> knimeBasedMappingElems = getRowElements(CFG_KNIME_BASED_TYPE_MAPPING);
         for (int colIdx = 0; colIdx < spec.getNumColumns(); colIdx++) {
             final DataColumnSpec colSpec = spec.getColumnSpec(colIdx);
             final String name = colSpec.getName();
@@ -561,28 +592,29 @@ public class DBTableCreatorConfiguration {
             String type = null;
             boolean notNull = false;
 
-            for (final RowElement el : nameBasedMappingElems) {
-                final NameBasedMappingElement elem = (NameBasedMappingElement)el;
-                final Pattern pattern =
-                    PatternUtil.compile(elem.getNamePattern(), elem.isRegex(), Pattern.CASE_INSENSITIVE);
-                final Matcher matcher = pattern.matcher(name);
-                if (matcher.matches()) {
-                    type = elem.getSqlType();
-                    notNull = elem.isNotNull();
-                    isMatched = true;
-                    break;
-                }
-            }
-
-            final List<RowElement> knimeBasedMappingElems = getRowElements(CFG_KNIME_BASED_TYPE_MAPPING);
-            if (!isMatched) { // No match on name-based mapping, try to look at Knime-based mapping
-                for (final RowElement el : knimeBasedMappingElems) {
-                    final KnimeBasedMappingElement elem = (KnimeBasedMappingElement)el;
-                    if (elem.getKnimeType().equals(colSpec.getType())) {
+            if(useDynamicSettings()) {
+                for (final RowElement el : nameBasedMappingElems) {
+                    final NameBasedMappingElement elem = (NameBasedMappingElement)el;
+                    final Pattern pattern =
+                        PatternUtil.compile(elem.getNamePattern(), elem.isRegex(), Pattern.CASE_INSENSITIVE);
+                    final Matcher matcher = pattern.matcher(name);
+                    if (matcher.matches()) {
                         type = elem.getSqlType();
                         notNull = elem.isNotNull();
                         isMatched = true;
                         break;
+                    }
+                }
+
+                if (!isMatched) { // No match on name-based mapping, try to look at Knime-based mapping
+                    for (final RowElement el : knimeBasedMappingElems) {
+                        final KNIMEBasedMappingElement elem = (KNIMEBasedMappingElement)el;
+                        if (elem.getKnimeType().equals(colSpec.getType())) {
+                            type = elem.getSqlType();
+                            notNull = elem.isNotNull();
+                            isMatched = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -594,8 +626,6 @@ public class DBTableCreatorConfiguration {
             final ColumnElement elem = new ColumnElement(name, type, notNull);
             colElems.add(elem);
         }
-
-//        updateKeys();
 
     }
 
@@ -649,7 +679,7 @@ public class DBTableCreatorConfiguration {
             case CFG_NAME_BASED_TYPE_MAPPING:
                 return NameBasedMappingElement.DEFAULT_PREFIX;
             case CFG_KNIME_BASED_TYPE_MAPPING:
-                return KnimeBasedMappingElement.DEFAULT_PREFIX;
+                return KNIMEBasedMappingElement.DEFAULT_PREFIX;
             case CFG_NAME_BASED_KEYS:
                 return NameBasedKeysElement.DEFAULT_PREFIX;
             default:

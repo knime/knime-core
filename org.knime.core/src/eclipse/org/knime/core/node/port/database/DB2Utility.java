@@ -49,6 +49,7 @@
 package org.knime.core.node.port.database;
 
 import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
+import org.knime.core.node.port.database.tablecreator.DBTableCreator;
 
 
 /**
@@ -126,5 +127,14 @@ public class DB2Utility extends DatabaseUtility {
     @Override
     public boolean supportsCase() {
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DBTableCreator getTableCreator(final DatabaseConnectionSettings connSettings, final String schema,
+            final String tableName, final boolean isTempTable) {
+        return new DB2TableCreator(connSettings, schema, tableName, isTempTable);
     }
 }
