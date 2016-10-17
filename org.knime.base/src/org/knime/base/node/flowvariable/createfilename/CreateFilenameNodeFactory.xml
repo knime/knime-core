@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./java_editvar.png" type="Manipulator">
+<knimeNode icon="createfilename.png" type="Other">
 	<name>Create File Name</name>
 	<shortDescription>Create a new file name as flow variable</shortDescription>
 	<fullDescription>
