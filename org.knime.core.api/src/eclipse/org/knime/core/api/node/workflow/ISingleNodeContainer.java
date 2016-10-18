@@ -55,7 +55,7 @@ import org.w3c.dom.Element;
  *
  * @author Martin Horn, University of Konstanz
  */
-public interface ISingleNodeContainer {
+public interface ISingleNodeContainer extends INodeContainer {
 
 //    /** Name of the sub-directory containing node-local files. These files
 //     * manually copied by the user and the node will automatically list those
