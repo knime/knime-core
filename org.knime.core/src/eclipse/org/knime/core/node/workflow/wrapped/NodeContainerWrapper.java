@@ -94,7 +94,7 @@ public class NodeContainerWrapper implements INodeContainer {
     @Override
     public IWorkflowManager getParent() {
         IWorkflowManager wm = m_delegate.getParent();
-        return wm == null ? null : wm;
+        return wm == null ? null : new WorkflowManagerWrapper(wm);
     }
 
     @Override
