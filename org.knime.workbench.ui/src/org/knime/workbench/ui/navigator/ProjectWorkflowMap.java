@@ -44,6 +44,8 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import static org.knime.core.node.util.CastUtil.castWFMOptional;
+
 import java.net.URI;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -379,10 +381,10 @@ public final class ProjectWorkflowMap {
      */
     public static void remove(final URI path) {
         MapWFKey p = new MapWFKey(path);
-        final WorkflowManager manager = (WorkflowManager)PROJECTS.get(p);
+        final IWorkflowManager manager = (IWorkflowManager)PROJECTS.get(p);
         // workflow is only in client map if there is at least one client
         if (manager != null && !WORKFLOW_CLIENTS.containsKey(p)) {
-            NodeContext.pushContext(manager);
+            castWFMOptional(manager).ifPresent(wm -> NodeContext.pushContext(wm));
             try {
                 PROJECTS.remove(p);
                 WF_LISTENER.workflowChanged(
@@ -420,7 +422,7 @@ public final class ProjectWorkflowMap {
                     }
                 }
             } finally {
-                NodeContext.removeLastContext();
+                castWFMOptional(manager).ifPresent(wm -> NodeContext.removeLastContext());
             }
         }
     }
