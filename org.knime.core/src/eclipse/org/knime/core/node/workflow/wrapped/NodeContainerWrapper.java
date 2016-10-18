@@ -56,6 +56,7 @@ import org.knime.core.api.node.workflow.INodeAnnotation;
 import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.INodeInPort;
 import org.knime.core.api.node.workflow.INodeOutPort;
+import org.knime.core.api.node.workflow.ISingleNodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.JobManagerUID;
 import org.knime.core.api.node.workflow.NodeContainerState;
@@ -74,7 +75,7 @@ import org.knime.core.node.workflow.NodeMessage;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeContainerWrapper implements INodeContainer {
+public abstract class NodeContainerWrapper implements INodeContainer {
 
     private final INodeContainer m_delegate;
 
@@ -82,8 +83,18 @@ public class NodeContainerWrapper implements INodeContainer {
      * @param delegate the implementation to delegate to
      *
      */
-    public NodeContainerWrapper(final INodeContainer delegate) {
+    protected NodeContainerWrapper(final INodeContainer delegate) {
         m_delegate = delegate;
+    }
+
+    public static final NodeContainerWrapper wrap(final INodeContainer nc) {
+        if(nc instanceof ISingleNodeContainer) {
+            return new SingleNodeContainerWrapper((ISingleNodeContainer) nc);
+        } else if(nc instanceof IWorkflowManager) {
+            return new WorkflowManagerWrapper((IWorkflowManager) nc);
+        } else {
+            throw new UnsupportedOperationException();
+        }
     }
 
     @Override

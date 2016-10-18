@@ -50,19 +50,16 @@ package org.knime.core.node.workflow.wrapped;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.knime.core.api.node.NodeFactoryUID;
-import org.knime.core.api.node.NodeType;
 import org.knime.core.api.node.port.MetaPortInfo;
 import org.knime.core.api.node.port.PortTypeUID;
 import org.knime.core.api.node.workflow.ConnectionID;
@@ -73,15 +70,8 @@ import org.knime.core.api.node.workflow.INodeContainer;
 import org.knime.core.api.node.workflow.IWorkflowAnnotation;
 import org.knime.core.api.node.workflow.IWorkflowManager;
 import org.knime.core.api.node.workflow.JobManagerUID;
-import org.knime.core.api.node.workflow.NodeContainerState;
-import org.knime.core.api.node.workflow.NodeMessageListener;
-import org.knime.core.api.node.workflow.NodeProgressEvent;
-import org.knime.core.api.node.workflow.NodeProgressListener;
-import org.knime.core.api.node.workflow.NodePropertyChangedListener;
-import org.knime.core.api.node.workflow.NodeStateChangeListener;
 import org.knime.core.api.node.workflow.NodeUIInformation;
 import org.knime.core.api.node.workflow.NodeUIInformationEvent;
-import org.knime.core.api.node.workflow.NodeUIInformationListener;
 import org.knime.core.api.node.workflow.WorkflowAnnotationID;
 import org.knime.core.api.node.workflow.WorkflowListener;
 import org.knime.core.api.node.workflow.action.ICollapseIntoMetaNodeResult;
@@ -105,7 +95,7 @@ import org.knime.core.util.Pair;
  *
  * @author Martin Horn, University of Konstanz
  */
-public class WorkflowManagerWrapper implements IWorkflowManager {
+public class WorkflowManagerWrapper extends NodeContainerWrapper implements IWorkflowManager {
 
     private final IWorkflowManager m_delegate;
 
@@ -113,6 +103,7 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
      * @param delegate the wfm to delegate all the calls to
      */
     public WorkflowManagerWrapper(final IWorkflowManager delegate) {
+        super(delegate);
         m_delegate = delegate;
     }
 
@@ -137,72 +128,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
 
     /**
      * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getParent()
-     */
-    @Override
-    public final WorkflowManagerWrapper getParent() {
-        IWorkflowManager wfm = m_delegate.getParent();
-        return wfm == null ? null : new WorkflowManagerWrapper(wfm);
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getJobManagerUID()
-     */
-    @Override
-    public final Optional<JobManagerUID> getJobManagerUID() {
-        return m_delegate.getJobManagerUID();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#findJobManagerUID()
-     */
-    @Override
-    public JobManagerUID findJobManagerUID() {
-        return m_delegate.findJobManagerUID();
-    }
-
-    /**
-     * @param l
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#addNodePropertyChangedListener(org.knime.core.api.node.workflow.NodePropertyChangedListener)
-     */
-    @Override
-    public boolean addNodePropertyChangedListener(final NodePropertyChangedListener l) {
-        return m_delegate.addNodePropertyChangedListener(l);
-    }
-
-    /**
-     * @param l
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#removeNodePropertyChangedListener(org.knime.core.api.node.workflow.NodePropertyChangedListener)
-     */
-    @Override
-    public boolean removeNodePropertyChangedListener(final NodePropertyChangedListener l) {
-        return m_delegate.removeNodePropertyChangedListener(l);
-    }
-
-    /**
-     *
-     * @see org.knime.core.node.workflow.NodeContainer#clearWaitingLoopList()
-     */
-    @Override
-    public void clearWaitingLoopList() {
-        m_delegate.clearWaitingLoopList();
-    }
-
-    /**
-     * @param pe
-     * @see org.knime.core.node.workflow.NodeContainer#progressChanged(org.knime.core.api.node.workflow.NodeProgressEvent)
-     */
-    @Override
-    public void progressChanged(final NodeProgressEvent pe) {
-        m_delegate.progressChanged(pe);
-    }
-
-    /**
-     * @return
      * @see org.knime.core.node.workflow.WorkflowManager#getReentrantLockInstance()
      */
     @Override
@@ -220,16 +145,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     }
 
     /**
-     * @param listener
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#addProgressListener(org.knime.core.api.node.workflow.NodeProgressListener)
-     */
-    @Override
-    public boolean addProgressListener(final NodeProgressListener listener) {
-        return m_delegate.addProgressListener(listener);
-    }
-
-    /**
      * @return
      * @see org.knime.core.node.workflow.WorkflowManager#getProjectWFM()
      */
@@ -239,96 +154,12 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     }
 
     /**
-     * @param listener
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#removeNodeProgressListener(org.knime.core.api.node.workflow.NodeProgressListener)
-     */
-    @Override
-    public boolean removeNodeProgressListener(final NodeProgressListener listener) {
-        return m_delegate.removeNodeProgressListener(listener);
-    }
-
-    /**
-     * @param listener
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#addNodeMessageListener(org.knime.core.api.node.workflow.NodeMessageListener)
-     */
-    @Override
-    public boolean addNodeMessageListener(final NodeMessageListener listener) {
-        return m_delegate.addNodeMessageListener(listener);
-    }
-
-    /**
-     * @param listener
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#removeNodeMessageListener(org.knime.core.api.node.workflow.NodeMessageListener)
-     */
-    @Override
-    public boolean removeNodeMessageListener(final NodeMessageListener listener) {
-        return m_delegate.removeNodeMessageListener(listener);
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getNodeMessage()
-     */
-    @Override
-    public final NodeMessage getNodeMessage() {
-        return m_delegate.getNodeMessage();
-    }
-
-    /**
-     * @param newMessage
-     * @see org.knime.core.node.workflow.NodeContainer#setNodeMessage(org.knime.core.node.workflow.NodeMessage)
-     */
-    @Override
-    public final void setNodeMessage(final NodeMessage newMessage) {
-        m_delegate.setNodeMessage(newMessage);
-    }
-
-    /**
      * @param id
      * @see org.knime.core.node.workflow.WorkflowManager#removeProject(org.knime.core.node.workflow.NodeID)
      */
     @Override
     public void removeProject(final NodeID id) {
         m_delegate.removeProject(id);
-    }
-
-    /**
-     * @param l
-     * @see org.knime.core.node.workflow.NodeContainer#addUIInformationListener(org.knime.core.api.node.workflow.NodeUIInformationListener)
-     */
-    @Override
-    public void addUIInformationListener(final NodeUIInformationListener l) {
-        m_delegate.addUIInformationListener(l);
-    }
-
-    /**
-     * @param l
-     * @see org.knime.core.node.workflow.NodeContainer#removeUIInformationListener(org.knime.core.api.node.workflow.NodeUIInformationListener)
-     */
-    @Override
-    public void removeUIInformationListener(final NodeUIInformationListener l) {
-        m_delegate.removeUIInformationListener(l);
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getUIInformation()
-     */
-    @Override
-    public NodeUIInformation getUIInformation() {
-        return m_delegate.getUIInformation();
-    }
-
-    /**
-     * @param uiInformation
-     * @see org.knime.core.node.workflow.NodeContainer#setUIInformation(org.knime.core.api.node.workflow.NodeUIInformation)
-     */
-    @Override
-    public void setUIInformation(final NodeUIInformation uiInformation) {
-        m_delegate.setUIInformation(uiInformation);
     }
 
     /**
@@ -352,35 +183,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     }
 
     /**
-     * @param listener
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#addNodeStateChangeListener(org.knime.core.api.node.workflow.NodeStateChangeListener)
-     */
-    @Override
-    public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
-        return m_delegate.addNodeStateChangeListener(listener);
-    }
-
-    /**
-     * @param listener
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#removeNodeStateChangeListener(org.knime.core.api.node.workflow.NodeStateChangeListener)
-     */
-    @Override
-    public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
-        return m_delegate.removeNodeStateChangeListener(listener);
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getNodeContainerState()
-     */
-    @Override
-    public NodeContainerState getNodeContainerState() {
-        return m_delegate.getNodeContainerState();
-    }
-
-    /**
      * @param nodeID
      * @return
      * @see org.knime.core.node.workflow.WorkflowManager#canRemoveNode(org.knime.core.node.workflow.NodeID)
@@ -400,33 +202,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     }
 
     /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#hasDataAwareDialogPane()
-     */
-    @Override
-    public boolean hasDataAwareDialogPane() {
-        return m_delegate.hasDataAwareDialogPane();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#isAllInputDataAvailable()
-     */
-    @Override
-    public final boolean isAllInputDataAvailable() {
-        return m_delegate.isAllInputDataAvailable();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#canExecuteUpToHere()
-     */
-    @Override
-    public final boolean canExecuteUpToHere() {
-        return m_delegate.canExecuteUpToHere();
-    }
-
-    /**
      * @param inPorts
      * @param outPorts
      * @param name
@@ -439,49 +214,12 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     }
 
     /**
-     * @throws InvalidSettingsException
-     * @see org.knime.core.node.workflow.NodeContainer#applySettingsFromDialog()
-     */
-    @Override
-    public void applySettingsFromDialog() throws InvalidSettingsException {
-        m_delegate.applySettingsFromDialog();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#areDialogSettingsValid()
-     */
-    @Override
-    public boolean areDialogSettingsValid() {
-        return m_delegate.areDialogSettingsValid();
-    }
-
-    /**
      * @return
      * @see org.knime.core.node.workflow.WorkflowManager#isProject()
      */
     @Override
     public boolean isProject() {
         return m_delegate.isProject();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getNrViews()
-     */
-    @Override
-    public int getNrViews() {
-        return m_delegate.getNrViews();
-    }
-
-    /**
-     * @param i
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getViewName(int)
-     */
-    @Override
-    public String getViewName(final int i) {
-        return m_delegate.getViewName(i);
     }
 
     /**
@@ -495,69 +233,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     @Override
     public ConnectionContainerWrapper addConnection(final NodeID source, final int sourcePort, final NodeID dest, final int destPort) {
         return new ConnectionContainerWrapper(m_delegate.addConnection(source, sourcePort, dest, destPort));
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getID()
-     */
-    @Override
-    public final NodeID getID() {
-        return m_delegate.getID();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getNameWithID()
-     */
-    @Override
-    public final String getNameWithID() {
-        return m_delegate.getNameWithID();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getDisplayLabel()
-     */
-    @Override
-    public String getDisplayLabel() {
-        return m_delegate.getDisplayLabel();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getCustomName()
-     */
-    @Override
-    public String getCustomName() {
-        return m_delegate.getCustomName();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getNodeAnnotation()
-     */
-    @Override
-    public NodeAnnotationWrapper getNodeAnnotation() {
-        return new NodeAnnotationWrapper(m_delegate.getNodeAnnotation());
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getCustomDescription()
-     */
-    @Override
-    public String getCustomDescription() {
-        return m_delegate.getCustomDescription();
-    }
-
-    /**
-     * @param customDescription
-     * @see org.knime.core.node.workflow.NodeContainer#setCustomDescription(java.lang.String)
-     */
-    @Override
-    public void setCustomDescription(final String customDescription) {
-        m_delegate.setCustomDescription(customDescription);
     }
 
     /**
@@ -587,33 +262,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     }
 
     /**
-     * @param value
-     * @see org.knime.core.node.workflow.NodeContainer#setDeletable(boolean)
-     */
-    @Override
-    public void setDeletable(final boolean value) {
-        m_delegate.setDeletable(value);
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#isDeletable()
-     */
-    @Override
-    public boolean isDeletable() {
-        return m_delegate.isDeletable();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#isDirty()
-     */
-    @Override
-    public final boolean isDirty() {
-        return m_delegate.isDirty();
-    }
-
-    /**
      * @param cc
      * @return
      * @see org.knime.core.node.workflow.WorkflowManager#canRemoveConnection(org.knime.core.api.node.workflow.IConnectionContainer)
@@ -630,25 +278,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     @Override
     public void removeConnection(final IConnectionContainer cc) {
         m_delegate.removeConnection(cc);
-    }
-
-    /**
-     * @param setLock
-     * @param locks
-     * @see org.knime.core.node.workflow.NodeContainer#changeNodeLocks(boolean, org.knime.core.api.node.workflow.INodeContainer.NodeLock[])
-     */
-    @Override
-    public void changeNodeLocks(final boolean setLock, final NodeLock... locks) {
-        m_delegate.changeNodeLocks(setLock, locks);
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeContainer#getNodeLocks()
-     */
-    @Override
-    public NodeLocks getNodeLocks() {
-        return m_delegate.getNodeLocks();
     }
 
     /**
@@ -1071,24 +700,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     }
 
     /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#hasDialog()
-     */
-    @Override
-    public boolean hasDialog() {
-        return m_delegate.hasDialog();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#areDialogAndNodeSettingsEqual()
-     */
-    @Override
-    public boolean areDialogAndNodeSettingsEqual() {
-        return m_delegate.areDialogAndNodeSettingsEqual();
-    }
-
-    /**
      * @param prefix
      * @param indent
      * @return
@@ -1101,20 +712,11 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
 
     /**
      * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#toString()
-     */
-    @Override
-    public String toString() {
-        return m_delegate.toString();
-    }
-
-    /**
-     * @return
      * @see org.knime.core.node.workflow.WorkflowManager#getAllNodeContainers()
      */
     @Override
     public Collection<INodeContainer> getAllNodeContainers() {
-        return m_delegate.getAllNodeContainers();
+        return m_delegate.getAllNodeContainers().stream().map(nc -> wrap(nc)).collect(Collectors.toList());
     }
 
     /**
@@ -1123,7 +725,7 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
      */
     @Override
     public Collection<IConnectionContainer> getConnectionContainers() {
-        return m_delegate.getConnectionContainers();
+        return m_delegate.getConnectionContainers().stream().map(cc -> new ConnectionContainerWrapper(cc)).collect(Collectors.toList());
     }
 
     /**
@@ -1133,7 +735,7 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
      */
     @Override
     public NodeContainerWrapper getNodeContainer(final NodeID id) {
-        return new NodeContainerWrapper(m_delegate.getNodeContainer(id));
+        return wrap(m_delegate.getNodeContainer(id));
     }
 
     /**
@@ -1314,53 +916,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     }
 
     /**
-     *
-     * @see org.knime.core.node.workflow.WorkflowManager#setDirty()
-     */
-    @Override
-    public void setDirty() {
-        m_delegate.setDirty();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getNrInPorts()
-     */
-    @Override
-    public int getNrInPorts() {
-        return m_delegate.getNrInPorts();
-    }
-
-    /**
-     * @param index
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getInPort(int)
-     */
-    @Override
-    public WorkflowInPortWrapper getInPort(final int index) {
-        return new WorkflowInPortWrapper(m_delegate.getInPort(index));
-    }
-
-    /**
-     * @param index
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getOutPort(int)
-     */
-    @Override
-    public WorkflowOutPortWrapper getOutPort(final int index) {
-        return new WorkflowOutPortWrapper(m_delegate.getOutPort(index));
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getNrOutPorts()
-     */
-    @Override
-    public int getNrOutPorts() {
-        return m_delegate.getNrOutPorts();
-    }
-
-    /**
      * @param name
      * @see org.knime.core.node.workflow.WorkflowManager#setName(java.lang.String)
      */
@@ -1381,66 +936,11 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
 
     /**
      * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getName()
-     */
-    @Override
-    public String getName() {
-        return m_delegate.getName();
-    }
-
-    /**
-     * @return
      * @see org.knime.core.node.workflow.WorkflowManager#getNameField()
      */
     @Override
     public String getNameField() {
         return m_delegate.getNameField();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getNrNodeViews()
-     */
-    @Override
-    public int getNrNodeViews() {
-        return m_delegate.getNrNodeViews();
-    }
-
-    /**
-     * @param i
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getNodeViewName(int)
-     */
-    @Override
-    public String getNodeViewName(final int i) {
-        return m_delegate.getNodeViewName(i);
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#hasInteractiveView()
-     */
-    @Override
-    public boolean hasInteractiveView() {
-        return m_delegate.hasInteractiveView();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#hasInteractiveWebView()
-     */
-    @Override
-    public boolean hasInteractiveWebView() {
-        return m_delegate.hasInteractiveWebView();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getInteractiveViewName()
-     */
-    @Override
-    public String getInteractiveViewName() {
-        return m_delegate.getInteractiveViewName();
     }
 
     /**
@@ -1459,24 +959,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     @Override
     public EditorUIInformation getEditorUIInformation() {
         return m_delegate.getEditorUIInformation();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getType()
-     */
-    @Override
-    public NodeType getType() {
-        return m_delegate.getType();
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.WorkflowManager#getIcon()
-     */
-    @Override
-    public URL getIcon() {
-        return m_delegate.getIcon();
     }
 
     /**
@@ -1551,6 +1033,22 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
     @Override
     public NodeUIInformation getOutPortsBarUIInfo() {
         return m_delegate.getOutPortsBarUIInfo();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WorkflowInPortWrapper getInPort(final int index) {
+        return new WorkflowInPortWrapper(m_delegate.getInPort(index));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WorkflowOutPortWrapper getOutPort(final int index) {
+        return new WorkflowOutPortWrapper(m_delegate.getOutPort(index));
     }
 
     /**
@@ -1674,7 +1172,7 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
      */
     @Override
     public NodeContainerWrapper findNodeContainer(final NodeID id) {
-        return new NodeContainerWrapper(m_delegate.findNodeContainer(id));
+        return NodeContainerWrapper.wrap(m_delegate.findNodeContainer(id));
     }
 
     /**
@@ -1756,7 +1254,6 @@ public class WorkflowManagerWrapper implements IWorkflowManager {
         final String name) {
         return m_delegate.collapseIntoMetaNode(orgIDs, orgAnnos, name);
     }
-
 
 
 }

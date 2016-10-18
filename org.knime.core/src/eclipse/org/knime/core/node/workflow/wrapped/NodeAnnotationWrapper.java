@@ -72,7 +72,7 @@ public class NodeAnnotationWrapper implements INodeAnnotation {
 
     @Override
     public NodeContainerWrapper getNodeContainer() {
-        return new NodeContainerWrapper(m_delegate.getNodeContainer());
+        return NodeContainerWrapper.wrap(m_delegate.getNodeContainer());
     }
 
     @Override
