@@ -86,490 +86,280 @@ public class NodeContainerWrapper implements INodeContainer {
         m_delegate = delegate;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void progressChanged(final NodeProgressEvent pe) {
-        // TODO Auto-generated method stub
-
+        m_delegate.progressChanged(pe);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public IWorkflowManager getParent() {
-        // TODO Auto-generated method stub
-        return null;
+        IWorkflowManager wm = m_delegate.getParent();
+        return wm == null ? null : wm;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Optional<JobManagerUID> getJobManagerUID() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getJobManagerUID();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public JobManagerUID findJobManagerUID() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.findJobManagerUID();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean addNodePropertyChangedListener(final NodePropertyChangedListener l) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.addNodePropertyChangedListener(l);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean removeNodePropertyChangedListener(final NodePropertyChangedListener l) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.removeNodePropertyChangedListener(l);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void clearWaitingLoopList() {
-        // TODO Auto-generated method stub
-
+        m_delegate.clearWaitingLoopList();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean addProgressListener(final NodeProgressListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.addProgressListener(listener);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean removeNodeProgressListener(final NodeProgressListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.removeNodeProgressListener(listener);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean addNodeMessageListener(final NodeMessageListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.addNodeMessageListener(listener);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean removeNodeMessageListener(final NodeMessageListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.removeNodeMessageListener(listener);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public NodeMessage getNodeMessage() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getNodeMessage();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setNodeMessage(final NodeMessage newMessage) {
-        // TODO Auto-generated method stub
-
+        m_delegate.setNodeMessage(newMessage);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addUIInformationListener(final NodeUIInformationListener l) {
-        // TODO Auto-generated method stub
-
+        m_delegate.addUIInformationListener(l);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void removeUIInformationListener(final NodeUIInformationListener l) {
-        // TODO Auto-generated method stub
-
+        m_delegate.removeUIInformationListener(l);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public NodeUIInformation getUIInformation() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getUIInformation();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setUIInformation(final NodeUIInformation uiInformation) {
-        // TODO Auto-generated method stub
-
+        m_delegate.setUIInformation(uiInformation);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.addNodeStateChangeListener(listener);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.removeNodeStateChangeListener(listener);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public NodeContainerState getNodeContainerState() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getNodeContainerState();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean hasDataAwareDialogPane() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.hasDataAwareDialogPane();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isAllInputDataAvailable() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.isAllInputDataAvailable();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean canExecuteUpToHere() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.canExecuteUpToHere();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void applySettingsFromDialog() throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        m_delegate.applySettingsFromDialog();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean areDialogSettingsValid() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.areDialogSettingsValid();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean hasDialog() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.hasDialog();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean areDialogAndNodeSettingsEqual() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.areDialogAndNodeSettingsEqual();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getNrInPorts() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_delegate.getNrInPorts();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public INodeInPort getInPort(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+        return new NodeInPortWrapper(m_delegate.getInPort(index));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public INodeOutPort getOutPort(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+        return new NodeOutPortWrapper(m_delegate.getOutPort(index));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getNrOutPorts() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_delegate.getNrOutPorts();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getNrViews() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_delegate.getNrViews();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int getNrNodeViews() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_delegate.getNrNodeViews();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getViewName(final int i) {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getViewName(i);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getNodeViewName(final int i) {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getNodeViewName(i);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean hasInteractiveView() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.hasInteractiveView();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean hasInteractiveWebView() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.hasInteractiveWebView();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getInteractiveViewName() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getInteractiveViewName();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public URL getIcon() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getIcon();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public NodeType getType() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getType();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public NodeID getID() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getID();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getName();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getNameWithID() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getNameWithID();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public String toString() {
+        return m_delegate.toString();
+    }
+
     @Override
     public String getDisplayLabel() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getDisplayLabel();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getCustomName() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getCustomName();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public INodeAnnotation getNodeAnnotation() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getNodeAnnotation();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getCustomDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getCustomDescription();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setCustomDescription(final String customDescription) {
-        // TODO Auto-generated method stub
-
+        m_delegate.setCustomDescription(customDescription);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setDeletable(final boolean value) {
-        // TODO Auto-generated method stub
-
+        m_delegate.setDeletable(value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isDeletable() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.isDeletable();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isDirty() {
-        // TODO Auto-generated method stub
-        return false;
+        return m_delegate.isDirty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setDirty() {
-        // TODO Auto-generated method stub
-
+        m_delegate.setDirty();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void changeNodeLocks(final boolean setLock, final NodeLock... locks) {
-        // TODO Auto-generated method stub
-
+        m_delegate.changeNodeLocks(setLock, locks);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public NodeLocks getNodeLocks() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_delegate.getNodeLocks();
     }
 
 }
