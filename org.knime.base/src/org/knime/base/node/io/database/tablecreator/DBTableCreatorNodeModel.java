@@ -48,38 +48,6 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
-
-        final List<DBColumn> columns = m_config.getColumns();
-        final List<DBKey> keys = m_config.getKeys();
-        exec.setMessage("Creating table");
-        final DatabaseConnectionSettings conn =
-                ((DatabaseConnectionPortObject)inData[0]).getConnectionSettings(getCredentialsProvider());
-        final DBTableCreator tableCreator =
-                conn.getUtility().getTableCreator(conn, m_config.getSchema(), getTableName(), m_config.isTempTable());
-        tableCreator.createTable(getCredentialsProvider(), m_config.ifNotExists(),
-            columns.toArray(new DBColumn[columns.size()]), keys.toArray(new DBKey[keys.size()]),
-            m_config.getAdditionalOptions());
-        pushFlowVariables(tableCreator.getSchema(), tableCreator.getTableName());
-        final String warning = tableCreator.getWarning();
-        if (!StringUtils.isBlank(warning)) {
-            setWarningMessage(warning);
-        }
-        return new PortObject[]{FlowVariablePortObject.INSTANCE};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        // nothing to reset
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         if (inSpecs[0] == null && !(inSpecs[0] instanceof DatabaseConnectionPortObjectSpec)) {
             throw new InvalidSettingsException("No valid database connection available.");
@@ -108,11 +76,43 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
         }
 
         final DatabaseConnectionSettings conn = dbSpec.getConnectionSettings(getCredentialsProvider());
-        final DBTableCreator tableCreator = conn.getUtility().getTableCreator(conn, m_config.getSchema(), getTableName(),
+        final DBTableCreator tableCreator = conn.getUtility().getTableCreator(m_config.getSchema(), getTableName(),
             m_config.isTempTable());
-
+        final List<DBColumn> columns = m_config.getColumns();
+        final List<DBKey> keys = m_config.getKeys();
+        try {
+            tableCreator.validateSettings(m_config.ifNotExists(),
+                columns.toArray(new DBColumn[columns.size()]), keys.toArray(new DBKey[keys.size()]),
+                m_config.getAdditionalOptions());
+        } catch (Exception e) {
+            throw new InvalidSettingsException(e.getMessage());
+        }
         pushFlowVariables(tableCreator.getSchema(), tableCreator.getTableName());
         return new FlowVariablePortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
+
+        exec.setMessage("Creating table");
+        final DatabaseConnectionSettings conn =
+                ((DatabaseConnectionPortObject)inData[0]).getConnectionSettings(getCredentialsProvider());
+        final DBTableCreator tableCreator =
+                conn.getUtility().getTableCreator(m_config.getSchema(), getTableName(), m_config.isTempTable());
+        final List<DBColumn> columns = m_config.getColumns();
+        final List<DBKey> keys = m_config.getKeys();
+        tableCreator.createTable(conn, getCredentialsProvider(), m_config.ifNotExists(),
+            columns.toArray(new DBColumn[columns.size()]), keys.toArray(new DBKey[keys.size()]),
+            m_config.getAdditionalOptions());
+        pushFlowVariables(tableCreator.getSchema(), tableCreator.getTableName());
+        final String warning = tableCreator.getWarning();
+        if (!StringUtils.isBlank(warning)) {
+            setWarningMessage(warning);
+        }
+        return new PortObject[]{FlowVariablePortObject.INSTANCE};
     }
 
     /**
@@ -137,6 +137,14 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_config.validateSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+        // nothing to reset
     }
 
     /**

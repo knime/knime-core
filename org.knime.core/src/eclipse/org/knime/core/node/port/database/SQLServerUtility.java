@@ -133,8 +133,7 @@ public class SQLServerUtility extends DatabaseUtility {
      * {@inheritDoc}
      */
     @Override
-    public DBTableCreator getTableCreator(final DatabaseConnectionSettings connSettings, final String schema,
-            final String tableName, final boolean isTempTable) {
-        return new SQLServerTableCreator(connSettings, schema, tableName, isTempTable);
+    public DBTableCreator getTableCreator(final String schema, final String tableName, final boolean isTempTable) {
+        return new SQLServerTableCreator(getStatementManipulator(), schema, tableName, isTempTable);
     }
 }

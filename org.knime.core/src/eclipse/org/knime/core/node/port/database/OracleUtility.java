@@ -175,8 +175,7 @@ public class OracleUtility extends DatabaseUtility {
      * {@inheritDoc}
      */
     @Override
-    public DBTableCreator getTableCreator(final DatabaseConnectionSettings connSettings, final String schema,
-            final String tableName, final boolean isTempTable) {
-        return new OracleTableCreator(connSettings, schema, tableName, isTempTable);
+    public DBTableCreator getTableCreator(final String schema, final String tableName, final boolean isTempTable) {
+        return new OracleTableCreator(getStatementManipulator(), schema, tableName, isTempTable);
     }
 }

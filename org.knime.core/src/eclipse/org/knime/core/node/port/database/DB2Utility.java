@@ -133,8 +133,7 @@ public class DB2Utility extends DatabaseUtility {
      * {@inheritDoc}
      */
     @Override
-    public DBTableCreator getTableCreator(final DatabaseConnectionSettings connSettings, final String schema,
-            final String tableName, final boolean isTempTable) {
-        return new DB2TableCreator(connSettings, schema, tableName, isTempTable);
+    public DBTableCreator getTableCreator(final String schema, final String tableName, final boolean isTempTable) {
+        return new DB2TableCreator(getStatementManipulator(), schema, tableName, isTempTable);
     }
 }

@@ -396,15 +396,13 @@ public class DatabaseUtility {
     }
 
     /**
-     * @param connSettings {@link DatabaseConnectionSettings}
      * @param schema the optional schema name
      * @param tableName the table name
      * @param isTempTable <code>true</code> if this is a temporary table
      * @return {@link DBTableCreator} to generate create table statement
      * @since 3.3
      */
-    public DBTableCreator getTableCreator(final DatabaseConnectionSettings connSettings, final String schema,
-            final String tableName, final boolean isTempTable) {
-        return new DBTableCreatorImpl(connSettings, schema, tableName, isTempTable);
+    public DBTableCreator getTableCreator(final String schema, final String tableName, final boolean isTempTable) {
+        return new DBTableCreatorImpl(getStatementManipulator(), schema, tableName, isTempTable);
     }
 }

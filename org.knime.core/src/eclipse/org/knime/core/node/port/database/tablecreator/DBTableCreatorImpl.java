@@ -48,27 +48,18 @@
  */
 package org.knime.core.node.port.database.tablecreator;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.sql.SQLException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-
 import org.apache.commons.lang3.StringUtils;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
- *
+ * Default {@link DBTableCreator} implementation.
  * @author Budi Yanto, KNIME.com
  * @since 3.2
  */
 public class DBTableCreatorImpl implements DBTableCreator {
 
-    private DatabaseConnectionSettings m_conn;
     private String m_warning = null;
     private String m_schema;
     private String m_tableName;
@@ -77,28 +68,17 @@ public class DBTableCreatorImpl implements DBTableCreator {
 
     /**
      * Constructor of DefaultDBTableCreatorStatementGenerator
-     * @param conn a database connection settings object
+     * @param sm {@link StatementManipulator} to use
      * @param schema schema of the table to create
      * @param tableName name of the table to create
      * @param isTempTable <code>true</code> if the table is a temporary table, otherwise <code>false</code>
      */
-    public DBTableCreatorImpl (final DatabaseConnectionSettings conn, final String schema, final String tableName,
+    public DBTableCreatorImpl (final StatementManipulator sm, final String schema, final String tableName,
             final boolean isTempTable) {
-        if(conn == null) {
-            throw new NullPointerException("conn must not be null");
-        }
-        m_conn = conn;
-        m_sm = m_conn.getUtility().getStatementManipulator();
+        m_sm = sm;
         m_schema = schema;
         m_tableName = tableName;
         m_isTempTable = isTempTable;
-    }
-
-    /**
-     * @return the {@link DatabaseConnectionSettings}
-     */
-    protected DatabaseConnectionSettings getConnection() {
-        return m_conn;
     }
 
     /**
@@ -112,16 +92,29 @@ public class DBTableCreatorImpl implements DBTableCreator {
      * {@inheritDoc}
      */
     @Override
-    public void createTable(final CredentialsProvider cp, final boolean ifNotExists, final DBColumn[] columns,
-            final DBKey[] keys, final String additionalSQLStatement) throws Exception {
+    public void validateSettings(final boolean ifNotExists, final DBColumn[] columns, final DBKey[] keys,
+        final String additionalSQLStatement)
+        throws Exception {
+        getCreateTableStatement(getSchema(), getTableName(), isTempTable(), ifNotExists,
+            columns, keys, additionalSQLStatement);
+    }
 
-        if (ifNotExists && tableExists(cp, getSchema(), getTableName())) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void createTable(final DatabaseConnectionSettings conn, final CredentialsProvider cp, final boolean ifNotExists, final DBColumn[] columns,
+            final DBKey[] keys, final String additionalSQLStatement) throws Exception {
+        if(conn == null) {
+            throw new NullPointerException("conn must not be null");
+        }
+        if (ifNotExists && tableExists(conn, cp, getSchema(), getTableName())) {
             return;
         }
 
         final String statement = getCreateTableStatement(getSchema(), getTableName(), isTempTable(), ifNotExists,
             columns, keys, additionalSQLStatement);
-        m_conn.execute(statement, cp);
+        conn.execute(statement, cp);
     }
 
     @Override
@@ -137,20 +130,16 @@ public class DBTableCreatorImpl implements DBTableCreator {
     }
 
     /**
+     * @param conn
      * @param cp {@link CredentialsProvider}
      * @param schema the db schema or <code>null</code> for no schema
      * @param tableName the name of the table
      * @return <code>true</code> if the table already exists in the database
-     * @throws SQLException
-     * @throws InvalidSettingsException
-     * @throws BadPaddingException
-     * @throws IllegalBlockSizeException
-     * @throws InvalidKeyException
-     * @throws IOException
+     * @throws Exception if an error occurs during checking
      */
-    protected boolean tableExists(final CredentialsProvider cp, final String schema, final String tableName) throws SQLException,
-        InvalidSettingsException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, IOException {
-        return getConnection().getUtility().tableExists(getConnection().createConnection(cp),
+    protected boolean tableExists(final DatabaseConnectionSettings conn, final CredentialsProvider cp,
+        final String schema, final String tableName) throws Exception {
+        return conn.getUtility().tableExists(conn.createConnection(cp),
             createSchemaTableName(schema, tableName));
     }
 
@@ -164,10 +153,11 @@ public class DBTableCreatorImpl implements DBTableCreator {
      * @param keys keys of the table
      * @param additionalSQLStatement additional SQL statement appended to the create table statement
      * @return query to create a new table
+     * @throws Exception if an option is not supported
      */
     protected String getCreateTableStatement(final String schema, final String tableName, final boolean isTempTable,
-            final boolean ifNotExists, final DBColumn[] columns, final DBKey[] keys, final String additionalSQLStatement){
-
+            final boolean ifNotExists, final DBColumn[] columns, final DBKey[] keys,
+            final String additionalSQLStatement) throws Exception {
         final StringBuilder builder = new StringBuilder();
         builder.append(getCreateTableFragment(schema, tableName, isTempTable, ifNotExists))
         .append(" (")
@@ -179,14 +169,11 @@ public class DBTableCreatorImpl implements DBTableCreator {
             .append(getTableConstraintsFragment(keys))
             .append(")");
         }
-
         if(!StringUtils.isBlank(additionalSQLStatement)) {
             builder.append(" ")
             .append(additionalSQLStatement);
         }
-
         builder.append(getTerminalCharacter());
-
         return builder.toString();
 
     }
@@ -204,9 +191,10 @@ public class DBTableCreatorImpl implements DBTableCreator {
      * @param isTempTable <code>true</code> if the table is temporary table, otherwise <code>false</code>
      * @param ifNotExists <code>true</code> if the "ifNotExists" flag should be used, otherwise <code>false</code>
      * @return create table fragment
+     * @throws Exception if an option is not supported
      */
     protected String getCreateTableFragment(final String schema, final String tableName, final boolean isTempTable,
-            final boolean ifNotExists) {
+            final boolean ifNotExists) throws Exception {
         final String schemaTable = createSchemaTableName(schema, tableName);
         final StringBuilder builder = new StringBuilder();
         builder.append(getCreateFragment())
@@ -241,8 +229,9 @@ public class DBTableCreatorImpl implements DBTableCreator {
     /**
      * @param isTempTable <code>true</code> if the table is temporary table, otherwise <code>false</code>
      * @return temporary fragment used in create table fragment
+     * @throws Exception if temporary tables aren't supported
      */
-    protected String getTempFragment(final boolean isTempTable) {
+    protected String getTempFragment(final boolean isTempTable) throws Exception {
         if(isTempTable) {
             return "TEMPORARY";
         }else {
@@ -263,8 +252,9 @@ public class DBTableCreatorImpl implements DBTableCreator {
      * Creates column definitions statement to create a table in database
      * @param columns columns of the table
      * @return column definitions statement
+     * @throws Exception if an option is not supported
      */
-    protected String getColumnDefinitionFragment(final DBColumn[] columns){
+    protected String getColumnDefinitionFragment(final DBColumn[] columns) throws Exception {
         if(columns.length == 0){
             throw new IllegalArgumentException("At least one column must be defined");
         }
@@ -283,10 +273,11 @@ public class DBTableCreatorImpl implements DBTableCreator {
     }
 
     /**
-     * @param isNotNull
+     * @param isNotNull <code>true</code> if the column should be defined as NOT NULL
      * @return "not null" fragment used in column definitions fragment
+     * @throws Exception if not null or null is not supported
      */
-    protected String getNotNullFragment(final boolean isNotNull) {
+    protected String getNotNullFragment(final boolean isNotNull) throws Exception {
         if(isNotNull) {
             return "NOT NULL";
         } else {
@@ -298,15 +289,16 @@ public class DBTableCreatorImpl implements DBTableCreator {
      * Creates key constraints statement to create a table in database
      * @param keys keys of the table
      * @return table constraints fragment
+     * @throws Exception if table constraints aren't supported
      */
-    protected String getTableConstraintsFragment(final DBKey[] keys){
+    protected String getTableConstraintsFragment(final DBKey[] keys) throws Exception {
         final StringBuilder builder = new StringBuilder();
         for(DBKey key : keys){
             builder.append("CONSTRAINT")
             .append(" ")
             .append(getStatementManipulator().quoteIdentifier(key.getName()))
             .append(" ")
-            .append(getPrimaryKeyFragment(key.isPrimaryKey()))
+            .append(getKeyConstraintFragment(key.isPrimaryKey()))
             .append(" (");
             for(final DBColumn col : key.getColumns()) {
                 builder.append(getStatementManipulator().quoteIdentifier(col.getName()))
@@ -325,8 +317,9 @@ public class DBTableCreatorImpl implements DBTableCreator {
     /**
      * @param isPrimaryKey
      * @return primary key fragment
+     * @throws Exception if primary and/or unique keys arent't supported
      */
-    protected String getPrimaryKeyFragment(final boolean isPrimaryKey) {
+    protected String getKeyConstraintFragment(final boolean isPrimaryKey) throws Exception {
         if(isPrimaryKey) {
             return "PRIMARY KEY";
         } else {

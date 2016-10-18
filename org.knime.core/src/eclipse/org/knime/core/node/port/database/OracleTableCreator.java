@@ -58,14 +58,14 @@ import org.knime.core.node.port.database.tablecreator.DBTableCreatorImpl;
 public class OracleTableCreator extends DBTableCreatorImpl {
 
     /**
-     * @param conn a database connection settings object
+     * @param sm {@link StatementManipulator}
      * @param schema schema of the table to create
      * @param tableName name of the table to create
      * @param isTempTable <code>true</code> if the table is a temporary table, otherwise <code>false</code>
      */
-    protected OracleTableCreator(final DatabaseConnectionSettings conn, final String schema, final String tableName,
+    protected OracleTableCreator(final StatementManipulator sm, final String schema, final String tableName,
             final boolean isTempTable) {
-        super(conn, schema, tableName, isTempTable);
+        super(sm, schema, tableName, isTempTable);
     }
 
     /**

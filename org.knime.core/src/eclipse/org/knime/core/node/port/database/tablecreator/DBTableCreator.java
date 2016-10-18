@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.port.database.tablecreator;
 
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
@@ -59,6 +60,7 @@ public interface DBTableCreator {
 
     /**
      * Creates a new table in the database
+     * @param conn a database connection settings object
      * @param cp {@link CredentialsProvider}
      * @param ifNotExists option to create the table only if it does not exist
      * @param columns columns of the table
@@ -66,7 +68,18 @@ public interface DBTableCreator {
      * @param additionalSQLStatement additional SQL statement appended to the create table statement
      * @throws Exception
      */
-    void createTable(final CredentialsProvider cp, final boolean ifNotExists, final DBColumn[] columns,
+    void createTable(final DatabaseConnectionSettings conn, final CredentialsProvider cp, final boolean ifNotExists,
+        final DBColumn[] columns, final DBKey[] keys, final String additionalSQLStatement) throws Exception;
+
+    /**
+     * Validates the create table settings.
+     * @param ifNotExists option to create the table only if it does not exist
+     * @param columns columns of the table
+     * @param keys keys of the table
+     * @param additionalSQLStatement additional SQL statement appended to the create table statement
+     * @throws Exception
+     */
+    void validateSettings(final boolean ifNotExists, final DBColumn[] columns,
         final DBKey[] keys, final String additionalSQLStatement) throws Exception;
 
     /**

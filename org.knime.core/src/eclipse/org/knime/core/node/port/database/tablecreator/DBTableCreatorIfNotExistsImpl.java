@@ -57,25 +57,26 @@ import javax.crypto.IllegalBlockSizeException;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.workflow.CredentialsProvider;
 
 /**
- * {@link DBTableCreatorImpl} that supports the "IF NOT EXISTS" syntax and thus does not need to execute
- * a check table query.
+ * {@link DBTableCreator} implementation that extends the {@link DBTableCreatorImpl} class and adds
+ * "IF NOT EXISTS" functionality to it and thus does not need to execute a check table query.
  *
  * @author Tobias Koetter, KNIME.com
  */
 public class DBTableCreatorIfNotExistsImpl extends DBTableCreatorImpl {
 
     /**
-     * @param conn a database connection settings object
+     * @param sm {@link StatementManipulator}
      * @param schema schema of the table to create
      * @param tableName name of the table to create
      * @param isTempTable <code>true</code> if the table is a temporary table, otherwise <code>false</code>
      */
-    public DBTableCreatorIfNotExistsImpl(final DatabaseConnectionSettings conn, final String schema, final String tableName,
+    public DBTableCreatorIfNotExistsImpl(final StatementManipulator sm, final String schema, final String tableName,
         final boolean isTempTable) {
-        super(conn, schema, tableName, isTempTable);
+        super(sm, schema, tableName, isTempTable);
     }
 
     /**
@@ -94,9 +95,9 @@ public class DBTableCreatorIfNotExistsImpl extends DBTableCreatorImpl {
      * {@inheritDoc}
      */
     @Override
-    protected boolean tableExists(final CredentialsProvider cp, final String schema, final String tableName)
-            throws SQLException, InvalidSettingsException, BadPaddingException, IllegalBlockSizeException,
+    protected boolean tableExists(final DatabaseConnectionSettings conn, final CredentialsProvider cp,
+        final String schema, final String tableName) throws SQLException, InvalidSettingsException, BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, IOException {
-        return false;
+         return false;
     }
 }
