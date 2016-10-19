@@ -13,8 +13,8 @@
             />
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.stringtotimestamp.String2DateNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
