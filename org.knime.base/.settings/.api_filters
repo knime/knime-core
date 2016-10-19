@@ -37,6 +37,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/data/aggregation/dialogutil/SettingsModelAggregationMethod.java" type="org.knime.base.data.aggregation.dialogutil.SettingsModelAggregationMethod">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.SettingsModelAggregationMethod"/>
+                <message_argument value="SettingsModelAggregationMethod(String, int, String, int, AggregationMethod, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.SettingsModelAggregationMethod"/>
+                <message_argument value="setValues(AggregationMethod, String, int, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/io/filereader/CharsetNamePanel.java" type="org.knime.base.node.io.filereader.CharsetNamePanel">
         <filter id="338792546">
             <message_arguments>
