@@ -231,24 +231,27 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         if (parts.size() == 1) {
             EditPart p = (EditPart)parts.get(0);
             if (p instanceof NodeContainerEditPart) {
-                NodeContainer container =
-                        (NodeContainer)((NodeContainerEditPart)p).getModel();
+                INodeContainer container =
+                        (INodeContainer)((NodeContainerEditPart)p).getModel();
                 if (container instanceof SingleNodeContainer) {
-                    SingleNodeContainer snc = (SingleNodeContainer)container;
-                    if (snc.isModelCompatibleTo(LoopEndNode.class)) {
-                        // pause loop execution
-                        action = m_actionRegistry.getAction(PauseLoopExecutionAction.ID);
-                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                        ((AbstractNodeAction)action).update();
-                        // step loop execution
-                        action = m_actionRegistry.getAction(StepLoopAction.ID);
-                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                        ((AbstractNodeAction)action).update();
-                        // resume loop execution
-                        action = m_actionRegistry.getAction(ResumeLoopAction.ID);
-                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-                        ((AbstractNodeAction)action).update();
-                    }
+                    ISingleNodeContainer snc = (ISingleNodeContainer)container;
+                    CastUtil.castOptional(snc, SingleNodeContainer.class).ifPresent(sncImpl -> {
+                        if (sncImpl.isModelCompatibleTo(LoopEndNode.class)) {
+                            // pause loop execution
+                            IAction loopAction;
+                            loopAction = m_actionRegistry.getAction(PauseLoopExecutionAction.ID);
+                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, loopAction);
+                            ((AbstractNodeAction)loopAction).update();
+                            // step loop execution
+                            loopAction = m_actionRegistry.getAction(StepLoopAction.ID);
+                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, loopAction);
+                            ((AbstractNodeAction)loopAction).update();
+                            // resume loop execution
+                            loopAction = m_actionRegistry.getAction(ResumeLoopAction.ID);
+                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, loopAction);
+                            ((AbstractNodeAction)loopAction).update();
+                        }
+                    });
                 }
             }
         }
