@@ -396,7 +396,8 @@ public class DatabaseUtility {
     }
 
     /**
-     * @param schema the optional schema name
+     * Class that creates a new table.
+     * @param schema the optional schema name (can be <code>null</code>)
      * @param tableName the table name
      * @param isTempTable <code>true</code> if this is a temporary table
      * @return {@link DBTableCreator} to generate create table statement
