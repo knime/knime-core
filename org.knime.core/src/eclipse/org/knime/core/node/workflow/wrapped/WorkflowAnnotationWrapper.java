@@ -68,8 +68,28 @@ public class WorkflowAnnotationWrapper implements IWorkflowAnnotation {
     /**
      *
      */
-    public WorkflowAnnotationWrapper(final IWorkflowAnnotation delegate) {
+    private WorkflowAnnotationWrapper(final IWorkflowAnnotation delegate) {
         m_delegate = delegate;
+    }
+
+    public static final WorkflowAnnotationWrapper wrap(final IWorkflowAnnotation wa) {
+        return WrapperMapUtil.getOrCreate(wa, o -> new WorkflowAnnotationWrapper(o), WorkflowAnnotationWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
     }
 
     @Override

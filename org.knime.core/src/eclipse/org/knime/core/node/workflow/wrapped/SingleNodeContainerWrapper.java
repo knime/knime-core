@@ -62,9 +62,29 @@ public class SingleNodeContainerWrapper extends NodeContainerWrapper implements 
     /**
      *
      */
-    public SingleNodeContainerWrapper(final ISingleNodeContainer delegate) {
+    private SingleNodeContainerWrapper(final ISingleNodeContainer delegate) {
         super(delegate);
         m_delegate = delegate;
+    }
+
+    public static final SingleNodeContainerWrapper wrap(final ISingleNodeContainer snc) {
+        return WrapperMapUtil.getOrCreate(snc, o -> new SingleNodeContainerWrapper(o), SingleNodeContainerWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
     }
 
     @Override

@@ -62,9 +62,29 @@ public class WorkflowInPortWrapper extends NodeInPortWrapper implements IWorkflo
      * @param delegate the implementation to delegate to
      *
      */
-    public WorkflowInPortWrapper(final IWorkflowInPort delegate) {
+    private WorkflowInPortWrapper(final IWorkflowInPort delegate) {
         super(delegate);
         m_delegate = delegate;
+    }
+
+    public static final WorkflowInPortWrapper wrap(final IWorkflowInPort wip) {
+        return WrapperMapUtil.getOrCreate(wip, o -> new WorkflowInPortWrapper(o), WorkflowInPortWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
     }
 
     /**
@@ -80,7 +100,7 @@ public class WorkflowInPortWrapper extends NodeInPortWrapper implements IWorkflo
      */
     @Override
     public NodeOutPortWrapper getUnderlyingPort() {
-        return new NodeOutPortWrapper(m_delegate.getUnderlyingPort());
+        return NodeOutPortWrapper.wrap(m_delegate.getUnderlyingPort());
     }
 
 

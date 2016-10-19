@@ -89,12 +89,28 @@ public abstract class NodeContainerWrapper implements INodeContainer {
 
     public static final NodeContainerWrapper wrap(final INodeContainer nc) {
         if(nc instanceof ISingleNodeContainer) {
-            return new SingleNodeContainerWrapper((ISingleNodeContainer) nc);
+            return SingleNodeContainerWrapper.wrap((ISingleNodeContainer)nc);
         } else if(nc instanceof IWorkflowManager) {
-            return new WorkflowManagerWrapper((IWorkflowManager) nc);
+            return WorkflowManagerWrapper.wrap((IWorkflowManager) nc);
         } else {
             throw new UnsupportedOperationException();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
     }
 
     @Override
@@ -104,8 +120,7 @@ public abstract class NodeContainerWrapper implements INodeContainer {
 
     @Override
     public IWorkflowManager getParent() {
-        IWorkflowManager wm = m_delegate.getParent();
-        return wm == null ? null : new WorkflowManagerWrapper(wm);
+        return WorkflowManagerWrapper.wrap(m_delegate.getParent());
     }
 
     @Override
@@ -330,7 +345,7 @@ public abstract class NodeContainerWrapper implements INodeContainer {
 
     @Override
     public INodeAnnotation getNodeAnnotation() {
-        return m_delegate.getNodeAnnotation();
+        return NodeAnnotationWrapper.wrap(m_delegate.getNodeAnnotation());
     }
 
     @Override

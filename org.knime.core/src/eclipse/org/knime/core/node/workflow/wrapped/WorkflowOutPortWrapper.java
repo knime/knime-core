@@ -66,6 +66,26 @@ public class WorkflowOutPortWrapper extends NodeOutPortWrapper implements IWorkf
         m_delegate = delegate;
     }
 
+    public static final WorkflowOutPortWrapper wrap(final IWorkflowOutPort wop) {
+        return WrapperMapUtil.getOrCreate(wop, o -> new WorkflowOutPortWrapper(o), WorkflowOutPortWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
+    }
+
     /**
      * {@inheritDoc}
      */

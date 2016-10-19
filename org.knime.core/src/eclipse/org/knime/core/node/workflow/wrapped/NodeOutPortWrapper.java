@@ -65,8 +65,28 @@ public class NodeOutPortWrapper implements INodeOutPort {
     /**
      * @param delegate the implementation to delegate to
      */
-    public NodeOutPortWrapper(final INodeOutPort delegate) {
+    protected NodeOutPortWrapper(final INodeOutPort delegate) {
         m_delegate = delegate;
+    }
+
+    public static final NodeOutPortWrapper wrap(final INodeOutPort nop) {
+        return WrapperMapUtil.getOrCreate(nop, o -> new NodeOutPortWrapper(o), NodeOutPortWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
     }
 
     @Override

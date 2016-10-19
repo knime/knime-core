@@ -68,8 +68,28 @@ public class ConnectionContainerWrapper implements IConnectionContainer {
     /**
      * @param delegate the {@link ConnectionContainer} implementation to delegate to
      */
-    public ConnectionContainerWrapper(final IConnectionContainer delegate) {
+    private ConnectionContainerWrapper(final IConnectionContainer delegate) {
         m_delegate = delegate;
+    }
+
+    public static final ConnectionContainerWrapper wrap(final IConnectionContainer cc) {
+        return WrapperMapUtil.getOrCreate(cc, o -> new ConnectionContainerWrapper(o), ConnectionContainerWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
     }
 
     @Override

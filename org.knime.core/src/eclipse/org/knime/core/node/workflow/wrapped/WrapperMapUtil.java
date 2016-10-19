@@ -44,78 +44,55 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 13, 2016 (hornm): created
+ *   Oct 19, 2016 (hornm): created
  */
 package org.knime.core.node.workflow.wrapped;
 
-import org.knime.core.api.node.port.PortTypeUID;
-import org.knime.core.api.node.workflow.INodeInPort;
+import java.util.WeakHashMap;
+import java.util.function.Function;
 
 /**
+ * Workaround for "1:1" wrappers. Within the eclipse UI very often instances are checked for object equality.
+ * Consequently, there must be exactly one wrapper class instance for a certain object to be wrapped. Two wrapper
+ * instances wrapping the same object should be avoided (this happens if, e.g. a getter method is called twice and each
+ * time a new wrapper instance is created around the same object returned).
+ *
+ * This global map keeps all instances and their wrappers (weak references) for look up.
+ *
+ * TODO rename since its functionally is probably not only limited to wrapper classes
  *
  * @author Martin Horn, University of Konstanz
  */
-public class NodeInPortWrapper implements INodeInPort {
+public class WrapperMapUtil {
 
-    private final INodeInPort m_delegate;
-
-    /**
-     * @param delegate the implementation to delegate to
-     */
-    protected NodeInPortWrapper(final INodeInPort delegate) {
-        m_delegate = delegate;
+    private WrapperMapUtil() {
+        // utility class
     }
 
-    public static final NodeInPortWrapper wrap(final INodeInPort nip) {
-        return WrapperMapUtil.getOrCreate(nip, o -> new NodeInPortWrapper(o), NodeInPortWrapper.class);
-    }
+    private static final WeakHashMap<Object, Object> MAP = new WeakHashMap<Object, Object>();
 
     /**
-     * {@inheritDoc}
+     *
+     * @param key
+     * @param fct
+     * @param wrapperClass
+     * @return TODO, <code>null</code> if the key is <code>null</code>
      */
-    @Override
-    public int hashCode() {
-        return m_delegate.hashCode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(final Object obj) {
-        return m_delegate.equals(obj);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getPortIndex() {
-        return m_delegate.getPortIndex();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PortTypeUID getPortTypeUID() {
-        return m_delegate.getPortTypeUID();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getPortName() {
-        return m_delegate.getPortName();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setPortName(final String portName) {
-        m_delegate.setPortName(portName);
+    public static <K, V> V getOrCreate(final K key, final Function<K, V> fct, final Class<V> wrapperClass) {
+        if (key == null) {
+            return null;
+        } else if (wrapperClass.isAssignableFrom(key.getClass())) {
+            //if the key is already a wrapper
+            return wrapperClass.cast(key);
+        } else {
+            V obj = (V)MAP.get(key);
+            if (obj == null) {
+                //create wrapper entry
+                obj = fct.apply(key);
+                MAP.put(key, obj);
+            }
+            return obj;
+        }
     }
 
 }

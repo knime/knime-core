@@ -66,8 +66,28 @@ public class NodeAnnotationWrapper implements INodeAnnotation {
     /**
      * @param delegate the implementation to delegate to
      */
-    public NodeAnnotationWrapper(final INodeAnnotation delegate) {
+    private NodeAnnotationWrapper(final INodeAnnotation delegate) {
         m_delegate = delegate;
+    }
+
+    public static final NodeAnnotationWrapper wrap(final INodeAnnotation na) {
+        return WrapperMapUtil.getOrCreate(na, o -> new NodeAnnotationWrapper(o), NodeAnnotationWrapper.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_delegate.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
     }
 
     @Override
