@@ -56,7 +56,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
 /**
  * Default {@link DBTableCreator} implementation.
  * @author Budi Yanto, KNIME.com
- * @since 3.2
+ * @since 3.3
  */
 public class DBTableCreatorImpl implements DBTableCreator {
 

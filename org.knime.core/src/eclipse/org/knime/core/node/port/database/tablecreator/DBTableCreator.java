@@ -54,7 +54,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
 /**
  * Interface that creates a new table in a database.
  * @author Budi Yanto, KNIME.com
- * @since 3.2
+ * @since 3.3
  */
 public interface DBTableCreator {
 
