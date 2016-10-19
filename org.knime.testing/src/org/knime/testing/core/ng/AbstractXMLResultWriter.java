@@ -147,7 +147,9 @@ public abstract class AbstractXMLResultWriter implements TestListener {
      */
     @Override
     public void startTest(final Test test) {
-        m_startTimes.put(test, System.currentTimeMillis());
+        long ts = System.currentTimeMillis();
+        m_startTimes.put(test, ts);
+        m_endTimes.put(test, ts);
     }
 
     /**
