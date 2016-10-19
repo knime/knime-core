@@ -52,7 +52,7 @@ package org.knime.core.node.port.database.tablecreator;
  * Class to represent a column in database
  *
  * @author Budi Yanto, KNIME.com
- * @since 3.2
+ * @since 3.3
  */
 public class DBColumn {
 

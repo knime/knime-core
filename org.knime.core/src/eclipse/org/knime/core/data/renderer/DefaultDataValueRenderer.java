@@ -252,6 +252,7 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
     /**
      * @param value the value to check whether it's a missing value
      * @return <code>true</code> if its regarded as a missing value
+     * @since 3.3
      */
     protected boolean isMissingValue(final Object value) {
         return value instanceof MissingValue;
@@ -267,6 +268,7 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
      * @param row
      * @param column
      * @return returns <code>this</code> since {@link DefaultTableCellRenderer} is a {@link Component} by itself
+     * @since 3.3
      */
     protected Component getTableMissingValueRendererComponent(final JTable table, final Object value, final boolean isSelected,
         final boolean hasFocus, final int row, final int column) {
@@ -283,6 +285,7 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
      * @param isSelected
      * @param cellHasFocus
      * @return returns <code>this</code> since {@link DefaultListCellRenderer} is a {@link Component} by itself
+     * @since 3.3
      */
     protected Component getListMissingValueRendererComponent(
             final JList list, final Object value, final int index,
@@ -298,6 +301,7 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
      *
      * @param value
      * @return returns <code>this</code> since the {@link DefaultDataValueRenderer} is a {@link Component} by itself
+     * @since 3.3
      */
     protected Component getMissingValueRendererComponent(final Object value) {
         setForeground(Color.RED);
@@ -314,6 +318,7 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
      *
      * This method allows one to reset the state when <code>this</code> value renderer has been used as a missing value
      * renderer before (e.g. resetting the foreground color or the tooltip text).
+     * @since 3.3
      *
      */
     protected void resetMissingValueRenderer() {

@@ -8,6 +8,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/DataRow.java" type="org.knime.core.data.DataRow">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.DataRow"/>
+                <message_argument value="stream()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
         <filter id="338792546">
             <message_arguments>

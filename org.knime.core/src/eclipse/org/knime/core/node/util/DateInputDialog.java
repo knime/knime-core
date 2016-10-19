@@ -324,6 +324,7 @@ public class DateInputDialog extends JPanel {
      * @param optional whether the whole date is optional, <code>true</code> the date field is disabled by default, <code>false</code> the date is enabled
      * @param optionalTime whether the time is optional, <code>true</code> makes time disabled by default, the spinners
      *          are then to be enabled manually, <code>false</code> the spinners can not be disabled
+     * @since 3.3
      */
     public DateInputDialog(final Mode mode, final boolean optional, final boolean optionalTime) {
         switch (mode) {

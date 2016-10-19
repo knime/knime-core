@@ -430,7 +430,7 @@ public final class CredentialsStore implements Observer {
          * been updated.
          *
          * @param workflowCredentials read-only list of workflow credentials.
-         * @since 3.2
+         * @since 3.3
          */
         public default void onWorkfowCredentialsChanged(final Collection<Credentials> workflowCredentials) {
         }

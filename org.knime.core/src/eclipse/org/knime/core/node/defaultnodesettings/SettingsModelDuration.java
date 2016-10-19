@@ -63,6 +63,7 @@ import org.knime.core.node.util.CheckUtils;
  * The SettingsModel for the default time dialog component.
  *
  * @author Ole Ostergaard, KNIME.com GmbH
+ * @since 3.3
  */
 public class SettingsModelDuration extends SettingsModel {
 

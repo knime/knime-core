@@ -54,7 +54,7 @@ import java.util.Set;
  * Class to represent a key in database
  *
  * @author Budi Yanto, KNIME.com
- * @since 3.2
+ * @since 3.3
  */
 public class DBKey {
 

@@ -65,6 +65,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * "IF NOT EXISTS" functionality to it and thus does not need to execute a check table query.
  *
  * @author Tobias Koetter, KNIME.com
+ * @since 3.3
  */
 public class DBTableCreatorIfNotExistsImpl extends DBTableCreatorImpl {
 

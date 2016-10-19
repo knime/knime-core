@@ -69,6 +69,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * StandardDialogComponent allowing the input of a user specified time values for days, hours, minutes, seconds.
  *
  * @author Ole Ostergaard, KNIME.com GmbH
+ * @since 3.3
  */
 public class DialogComponentDuration extends DialogComponent {
 

@@ -245,6 +245,7 @@ public class EditorUIInformation implements UIInformation {
 
     /**
      * @param width the width of the line connection two nodes
+     * @since 3.3
      */
     public void setConnectionLineWidth(final int width) {
         m_connectionLineWidth = width;
@@ -252,6 +253,7 @@ public class EditorUIInformation implements UIInformation {
 
     /**
      * @return the width of the line connecting two nodes
+     * @since 3.3
      */
     public int getConnectionLineWidth() {
         return m_connectionLineWidth;

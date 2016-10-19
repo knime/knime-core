@@ -184,6 +184,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      * @param namingMap The map containing the {@link AuthenticationType} as key and a pair
      *          consisting of the label and the tooltip String for the radio buttons for authentication types
      * @param supportedTypes the authentication {@link AuthenticationType}s to display
+     * @since 3.3
      */
     public DialogComponentAuthentication(final SettingsModelAuthentication authModel, final String label,
         final HashMap<AuthenticationType, Pair<String, String>> namingMap, final AuthenticationType... supportedTypes) {
@@ -607,6 +608,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      * Set the text displayed in the usernameLabel
      *
      * @param usernameLabel the label text to be set
+     * @since 3.3
      */
     public void setUsernameLabel(final String usernameLabel) {
         m_usernameLabel.setText(usernameLabel);
@@ -617,6 +619,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      * Set the text displayed in the passwordLabel
      *
      * @param passwordLabel the label text to be set
+     * @since 3.3
      */
     public void setPasswordLabel(final String passwordLabel) {
         m_passwordLabel.setText(passwordLabel);

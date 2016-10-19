@@ -704,6 +704,7 @@ public final class WizardExecutionController extends ExecutionController {
 
         /**
          * @return the pageNodeID
+         * @since 3.3
          */
         public NodeIDSuffix getPageNodeID() {
             return m_pageNodeID;

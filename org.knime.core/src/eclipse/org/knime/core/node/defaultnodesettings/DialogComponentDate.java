@@ -91,6 +91,7 @@ public class DialogComponentDate extends DialogComponent {
      * @param model to store the inputed date
      * @param label to place on the dialog
      * @param optional specifies whether the date is optional (true) or mandatory (false)
+     * @since 3.3
      */
     public DialogComponentDate(final SettingsModelDate model, final String label, final boolean optional, final boolean optionalTime) {
         super(model);

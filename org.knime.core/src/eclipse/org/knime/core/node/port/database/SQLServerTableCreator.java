@@ -53,7 +53,7 @@ import org.knime.core.node.port.database.tablecreator.DBTableCreatorImpl;
 /**
  *
  * @author Ole Ostergaard, KNIME.com
- * @since 3.2
+ * @since 3.3
  */
 public class SQLServerTableCreator extends DBTableCreatorImpl {
 

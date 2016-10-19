@@ -9045,7 +9045,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param recurseIntoMetaNodes Whether to recurse into contained metanodes.
      * @param recurseIntoSubnodes Whether to recurse into contained wrapped metanodes.
      * @return A (unsorted) list of nodes matching the class criterion
-     * @since 3.2
+     * @since 3.3
      */
     public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter,
                                         final boolean recurseIntoMetaNodes, final boolean recurseIntoSubnodes) {

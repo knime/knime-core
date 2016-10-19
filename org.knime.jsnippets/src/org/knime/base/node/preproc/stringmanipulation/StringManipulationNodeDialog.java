@@ -126,6 +126,7 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
      * Create new instance.
      *
      * @param isOnlyVariables defines if only variables should be choosable in the dialog
+     * @since 3.3
      */
     public StringManipulationNodeDialog(final boolean isOnlyVariables) {
         m_isOnlyVariables = isOnlyVariables;
@@ -139,6 +140,7 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
 
     /**
      * @return the controls for the string manipulation node
+     * @since 3.3
      */
     public Component createStringManipulationPanel() {
         m_snippetPanel =
@@ -213,6 +215,7 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
      * Create a simple provider that adds some Java-related completions.
      *
      * @return The completion provider.
+     * @since 3.3
      */
     protected KnimeCompletionProvider createCompletionProvider() {
         m_completionProvider = new JavaScriptingCompletionProvider();
@@ -228,6 +231,9 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
         return m_completionProvider;
     }
 
+    /**
+     * @since 3.3
+     */
     protected JPanel createPanel() {
         JPanel southPanel = new JPanel(new GridLayout(0, 2));
         JPanel replaceOrAppend = createAndOrReplacePanel();
