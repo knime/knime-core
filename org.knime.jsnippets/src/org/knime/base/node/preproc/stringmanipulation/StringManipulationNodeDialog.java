@@ -149,7 +149,7 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
         String radioButtonToolTip;
 
         radioButtonName = "Append " + WordUtils.capitalize(m_columnOrVariable) + ": ";
-        radioButtonToolTip = "Appends a new " + m_columnOrVariable + " to the input " + "with a given name.";
+        radioButtonToolTip = "Appends a new " + m_columnOrVariable + " to the input with a given name.";
         m_appendRadio = new JRadioButton(radioButtonName);
         m_appendRadio.setToolTipText(radioButtonToolTip);
 
@@ -157,7 +157,7 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
         if (m_isOnlyVariables) {
             radioButtonToolTip = "Replaces the " + m_columnOrVariable + " if the type stays the same.";
         } else {
-            radioButtonToolTip = "Replaces the " + m_columnOrVariable + " and changes " + "the " + m_columnOrVariable
+            radioButtonToolTip = "Replaces the " + m_columnOrVariable + " and changes the " + m_columnOrVariable
                 + " type accordingly.";
         }
         m_replaceRadio = new JRadioButton(radioButtonName);
@@ -191,11 +191,11 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
         m_replaceRadio.addActionListener(actionListener);
 
         m_compileOnCloseChecker = new JCheckBox("Syntax check on close");
-        m_compileOnCloseChecker.setToolTipText("Checks the syntax of the " + "expression on close.");
+        m_compileOnCloseChecker.setToolTipText("Checks the syntax of the expression on close.");
 
         m_insertMissingAsNullChecker = new JCheckBox("Insert Missing As Null");
         m_insertMissingAsNullChecker
-            .setToolTipText("If unselected, missing " + "values in the input will produce a missing cell result");
+            .setToolTipText("If unselected, missing values in the input will produce a missing cell result");
         return createPanel();
     }
 
@@ -343,18 +343,8 @@ public class StringManipulationNodeDialog extends NodeDialogPane {
                         // ignore
                 }
             }
-            if (availableFlowVariables.containsKey(newName)) {
-                isReplace = true;
-                m_replaceVariableCombo.setSelectedItem(availableFlowVariables.get(newName));
-            } else {
-                isReplace = false;
-            }
+            m_replaceVariableCombo.setSelectedItem(availableFlowVariables.get(newName));
         } else {
-            if (spec.containsName(newName)) {
-                isReplace = true;
-            } else {
-                isReplace = false;
-            }
             // will select newColName only if it is in the spec list
             try {
                 m_replaceColumnCombo.update(spec, newName);

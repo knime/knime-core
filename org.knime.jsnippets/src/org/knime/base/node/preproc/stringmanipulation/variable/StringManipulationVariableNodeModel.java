@@ -50,6 +50,7 @@ package org.knime.base.node.preproc.stringmanipulation.variable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings;
 import org.knime.core.data.DataCell;
@@ -71,6 +72,9 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.util.UniqueNameGenerator;
 import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
 import org.knime.ext.sun.nodes.script.calculator.FlowVariableProvider;
 import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
@@ -125,20 +129,27 @@ public class StringManipulationVariableNodeModel extends NodeModel implements Fl
         // calculate the result
         ColumnCalculator cc = new ColumnCalculator(settings, this);
         DataCell calculate = cc.calculate(new DefaultRow(new RowKey(""), new DataCell[]{}));
+        String newVariableName;
+        Map<String, FlowVariable> inputFlowVariables = getAvailableInputFlowVariables();
+        if (m_settings.isReplace()) {
+            newVariableName = m_settings.getColName();
+            CheckUtils.checkSettingNotNull(inputFlowVariables.get(newVariableName),
+                "Can't replace input variable '%s' -- it does not exist in the input", newVariableName);
+        } else {
+            newVariableName = new UniqueNameGenerator(inputFlowVariables.keySet()).newName(m_settings.getColName());
+        }
 
         // convert and push result as flow variable
-        if (!calculate.isMissing()) {
-            Class<? extends DataCell> cellType = calculate.getClass();
-            String colName = m_settings.getColName();
-            if (cellType.equals(IntCell.class)) {
-                pushFlowVariableInt(colName, ((IntCell)calculate).getIntValue());
-            } else if (cellType.equals(DoubleCell.class)) {
-                pushFlowVariableDouble(colName, ((DoubleCell)calculate).getDoubleValue());
-            } else if (cellType.equals(StringCell.class)) {
-                pushFlowVariableString(colName, ((StringCell)calculate).getStringValue());
-            } else {
-                throw new RuntimeException("Invalid variable class: " + cellType);
-            }
+        CheckUtils.checkSetting(!calculate.isMissing(), "Calculation returned missing value");
+        Class<? extends DataCell> cellType = calculate.getClass();
+        if (cellType.equals(IntCell.class)) {
+            pushFlowVariableInt(newVariableName, ((IntCell)calculate).getIntValue());
+        } else if (cellType.equals(DoubleCell.class)) {
+            pushFlowVariableDouble(newVariableName, ((DoubleCell)calculate).getDoubleValue());
+        } else if (cellType.equals(StringCell.class)) {
+            pushFlowVariableString(newVariableName, ((StringCell)calculate).getStringValue());
+        } else {
+            throw new RuntimeException("Invalid variable class: " + cellType);
         }
     }
 

@@ -134,12 +134,6 @@ public class StringManipulationNodeModel extends AbstractConditionalStreamingNod
             if (isReplace) {
                 result.replace(cc, colName);
             } else {
-                if (spec.containsName(colName)) {
-                    throw new InvalidSettingsException(
-                            "Can't create new column \""
-                            + colName
-                            + "\" as input spec already contains such column");
-                }
                 result.append(cc);
             }
             return result;
