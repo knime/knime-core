@@ -168,7 +168,7 @@ public class KNIMEBasedMappingPanel extends AbstractTablePanel {
         columnModel.getColumn(KNIMEBasedMappingElement.SQL_TYPE_IDX).setCellEditor(m_sqlTypeEditor);
 
         // Adapts column "Knime-Type"
-        m_knimeTypeEditor = new KNIMETypeCellEditor(DBUtil.getSqlTypesMap().keySet());
+        m_knimeTypeEditor = new KNIMETypeCellEditor(DBUtil.getKNIMETypeList(null));
         columnModel.getColumn(KNIMEBasedMappingElement.KNIME_TYPE_IDX).setCellEditor(m_knimeTypeEditor);
         columnModel.getColumn(KNIMEBasedMappingElement.KNIME_TYPE_IDX).setCellRenderer(new DefaultTableCellRenderer() {
 

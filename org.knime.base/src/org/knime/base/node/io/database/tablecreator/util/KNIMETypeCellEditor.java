@@ -51,8 +51,8 @@ package org.knime.base.node.io.database.tablecreator.util;
 import java.awt.Component;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JComboBox;
@@ -93,10 +93,7 @@ class KNIMETypeCellEditor extends DefaultCellEditor {
         super(comboBox);
         m_comboBox = comboBox;
         m_dataTypeHash = new HashSet<>();
-        m_sortedDataTypes = new TreeSet<>((c1, c2) -> c1.getName().compareTo(c2.getName()));
-        for (DataType dt : knimeTypes) {
-            m_sortedDataTypes.add(dt);
-        }
+        m_sortedDataTypes = new LinkedHashSet<>(knimeTypes);
         m_comboBox.setRenderer(new KnimeTypeListCellRenderer());
     }
 

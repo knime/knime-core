@@ -61,6 +61,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -609,7 +610,9 @@ public class DBTableCreatorConfiguration {
                 if (!isMatched) { // No match on name-based mapping, try to look at Knime-based mapping
                     for (final RowElement el : knimeBasedMappingElems) {
                         final KNIMEBasedMappingElement elem = (KNIMEBasedMappingElement)el;
-                        if (elem.getKnimeType().equals(colSpec.getType())) {
+                        final DataType colType = colSpec.getType();
+                        final DataType elementType = elem.getKnimeType();
+                        if (elementType.equals(colType) || elementType.isASuperTypeOf(colType)) {
                             type = elem.getSqlType();
                             notNull = elem.isNotNull();
                             isMatched = true;
