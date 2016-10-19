@@ -728,8 +728,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      *
      */
     public void openDialog() {
-        NodeContainer container = (NodeContainer)getModel();
-        if (container instanceof WorkflowManager) {
+        INodeContainer container = (INodeContainer)getModel();
+        if (container instanceof IWorkflowManager) {
             openSubWorkflowEditor();
         } else {
             openNodeDialog();
@@ -742,7 +742,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      * @since 2.6
      */
     public void openNodeDialog() {
-        final NodeContainer container = (NodeContainer)getModel();
+        final INodeContainer container = (INodeContainer)getModel();
         // if this node does not have a dialog
         if (!container.hasDialog()) {
             LOGGER.debug("No dialog for " + container.getNameWithID());
@@ -823,7 +823,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             // This is embedded in a special JFace wrapper dialog
             //
             try {
-                WrappedNodeDialog dlg = new WrappedNodeDialog(shell, container);
+                WrappedNodeDialog dlg = new WrappedNodeDialog(shell, CastUtil.cast(container, NodeContainer.class));
                 dlg.open();
             } catch (NotConfigurableException ex) {
                 MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
