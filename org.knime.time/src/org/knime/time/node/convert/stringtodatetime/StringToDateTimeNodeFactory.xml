@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
+<knimeNode icon="date_time.png" type="Manipulator">
+	<name>String to Date&amp;time</name>
+	<shortDescription>
+		Converts String to date&amp;time.
+	</shortDescription>
+	<fullDescription>
+		<intro>
+			<p>
+				
+			</p>
+		</intro>
+		<tab name="Column Selection">
+			<option name="Column Selector">
+				Only the included columns will be converted.
+			</option>
+		</tab>		
+	</fullDescription>
+	<ports>
+		<inPort index="0" name="Table to be converted">
+			Input table
+		</inPort>
+		<outPort index="0" name="Converted table">
+			Output table containing the converted
+			columns.
+		</outPort>
+	</ports>
+</knimeNode>
