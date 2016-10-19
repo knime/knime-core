@@ -422,15 +422,17 @@ public final class CredentialsStore implements Observer {
         public void doAfterLoadFromDisc(final WorkflowLoadHelper loadHelper,
             final CredentialsProvider credProvider, boolean isExecuted, boolean isInactive);
 
-        /** Called when the workflow credentials change on a workflow. Credential QF nodes in the workflow can then
+        /**
+         * Called when the workflow credentials change on a workflow. Credential QF nodes in the workflow can then
          * inherit the modified password from the workflow. Used to address AP-5974.
-         * <p>Method is only called on non-executed nodes; a configure call follows after all nodes in the workflow
-         * have been updated.
+         * <p>
+         * Method is only called on non-executed nodes; a configure call follows after all nodes in the workflow have
+         * been updated.
+         *
          * @param workflowCredentials read-only list of workflow credentials.
+         * @since 3.2
          */
         public default void onWorkfowCredentialsChanged(final Collection<Credentials> workflowCredentials) {
         }
-
     }
-
 }
