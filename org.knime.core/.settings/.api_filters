@@ -92,6 +92,12 @@
                 <message_argument value="doAfterLoadFromDisc(WorkflowLoadHelper, CredentialsProvider, boolean, boolean)"/>
             </message_arguments>
         </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.CredentialsStore.CredentialsNode"/>
+                <message_argument value="onWorkfowCredentialsChanged(Collection&lt;Credentials&gt;)"/>
+            </message_arguments>
+        </filter>
         <filter id="405901410">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.CredentialsStore.CredentialsNode"/>

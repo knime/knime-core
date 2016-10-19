@@ -473,6 +473,8 @@ public final class ViewUtils {
     /**
      * Sets the look&feel for all Swing components. This method can be called multiple times but only the first
      * invocation will change the look&feel.
+     *
+     * @since 3.2
      */
     public static void setLookAndFeel() {
         if (!LAF_SET.getAndSet(true)) {
