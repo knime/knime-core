@@ -63,10 +63,6 @@ public class DBTableCreatorNodeModel extends DBNodeModel {
             m_config.updateKeysWithDynamicSettings();
         }
 
-        if (m_config.getTableSpec() != null && !m_config.useDynamicSettings()) {
-            setWarningMessage("Input table available. You migh want to enable dynamic settings.");
-        }
-
         if (m_config.getTableSpec() == null && m_config.useDynamicSettings()) {
             throw new InvalidSettingsException("Dynamic settings enabled but no input table available.");
         }
