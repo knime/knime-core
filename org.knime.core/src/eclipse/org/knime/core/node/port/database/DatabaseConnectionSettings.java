@@ -591,34 +591,30 @@ public class DatabaseConnectionSettings {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws IOException {@link IOException}
      */
+    @SuppressWarnings("resource")
     public void execute(final String statement, final CredentialsProvider cp)
                 throws InvalidKeyException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidSettingsException,
             SQLException, IOException {
-        Connection conn = null;
-        Statement stmt = null;
-        try {
-            conn = createConnection(cp);
-            stmt = conn.createStatement();
-            LOGGER.debug("Executing SQL statement \"" + statement + "\"");
-            stmt.execute(statement);
-            if (!conn.getAutoCommit()) {
-                conn.commit();
-            }
-        } catch (SQLException ex) {
-            try {
-                if ((conn != null) && !conn.getAutoCommit()) {
-                    conn.rollback();
+        Connection conn = createConnection(cp);
+        synchronized (syncConnection(conn)) {
+            try (final Statement stmt = conn.createStatement()) {
+                LOGGER.debug("Executing SQL statement \"" + statement + "\"");
+                stmt.execute(statement);
+                if (!conn.getAutoCommit()) {
+                    conn.commit();
                 }
-            } catch (SQLException ex2) {
-                // ignore this one and throw the original exception
-                LOGGER.debug("Caught another SQL exception while rolling back transaction: " + ex2.getMessage(), ex2);
-            }
-            throw ex;
-        } finally {
-            if (stmt != null) {
-                stmt.close();
+            } catch (SQLException ex) {
+                try {
+                    if ((conn != null) && !conn.getAutoCommit()) {
+                        conn.rollback();
+                    }
+                } catch (SQLException ex2) {
+                    // ignore this one and throw the original exception
+                    LOGGER.debug("Caught another SQL exception while rolling back transaction: " + ex2.getMessage(), ex2);
+                }
+                throw ex;
             }
         }
     }
