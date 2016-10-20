@@ -101,6 +101,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/tableview/TableView.java" type="org.knime.core.node.tableview.TableView">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.tableview.TableView"/>
+                <message_argument value="find(String, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/CredentialsStore.java" type="org.knime.core.node.workflow.CredentialsStore$CredentialsNode">
         <filter id="403804204">
             <message_arguments>
@@ -169,6 +177,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NodeExecutionJobManager"/>
                 <message_argument value="canExecute(NodeContainer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WizardExecutionController.java" type="org.knime.core.node.workflow.WizardExecutionController$WizardPageContent">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WizardExecutionController.WizardPageContent"/>
+                <message_argument value="getPageNodeID()"/>
             </message_arguments>
         </filter>
     </resource>
