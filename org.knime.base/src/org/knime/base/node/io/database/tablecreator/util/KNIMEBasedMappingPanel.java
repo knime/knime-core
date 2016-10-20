@@ -68,6 +68,7 @@ import javax.swing.table.TableColumnModel;
 
 import org.knime.base.data.aggregation.dialogutil.BooleanCellRenderer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.SetCell;
 
 /**
  * Panel used to map columns to SQL data types based on the Knime data type of the columns
@@ -183,7 +184,20 @@ public class KNIMEBasedMappingPanel extends AbstractTablePanel {
                 if (dt == null) {
                     setText("");
                 } else {
-                    setText(dt.getName());
+                  //TK_TODO: WORKAROUND UNTIL THE COLLECTION CELLS HAVE A NICE NAME
+                    // Set the icon and text
+                    String name = dt.getName();
+                    if (dt.isCollectionType()) {
+                        if (dt.getCellClass() == SetCell.class) {
+                            name = "SetCell(";
+                        } else {
+                            name = "ListCell(";
+                        }
+                        name += dt.getCollectionElementType().getName() + ")";
+
+                    }
+                    setText(name);
+//                    setText(dt.getName());
                     setIcon(dt.getIcon());
                 }
             }
@@ -249,6 +263,7 @@ public class KNIMEBasedMappingPanel extends AbstractTablePanel {
     @Override
     public void onLoad() {
         super.onLoad();
+        m_knimeTypeEditor.setKNIMETypes(DBUtil.getKNIMETypeList(getConfig().getTableSpec()));
         m_knimeTypeEditor.removeAllFromHash();
         for (RowElement elem : getTableModel().getElements()) {
             final DataType dt = ((KNIMEBasedMappingElement)elem).getKnimeType();

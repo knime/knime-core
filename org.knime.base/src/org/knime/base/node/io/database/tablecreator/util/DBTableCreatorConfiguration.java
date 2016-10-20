@@ -286,7 +286,7 @@ public class DBTableCreatorConfiguration {
     /**
      * Returns the DataTableSpec instance
      *
-     * @return the DataTableSpec instance
+     * @return the DataTableSpec instance. Can be <code>null</code>
      */
     public DataTableSpec getTableSpec() {
         return m_tableSpec;

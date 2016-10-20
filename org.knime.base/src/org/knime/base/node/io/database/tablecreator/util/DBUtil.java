@@ -108,20 +108,31 @@ public class DBUtil {
      * @return the {@link List} of {@link DataType}s the user can choose from
      */
     static List<DataType> getKNIMETypeList(final DataTableSpec spec) {
-        final Set<DataType> types = new HashSet<>();
+        final Set<DataType> basicTypes = new HashSet<>();
         final DataType generalType = DataType.getType(DataCell.class);
-        types.add(generalType);
-        types.add(BooleanCell.TYPE);
-        types.add(IntCell.TYPE);
-        types.add(LongCell.TYPE);
-        types.add(DoubleCell.TYPE);
-        types.add(StringCell.TYPE);
-        types.add(DateAndTimeCell.TYPE);
-        types.add(ListCell.getCollectionType(generalType));
-        types.add(SetCell.getCollectionType(generalType));
+        basicTypes.add(generalType);
+        basicTypes.add(BooleanCell.TYPE);
+        basicTypes.add(IntCell.TYPE);
+        basicTypes.add(LongCell.TYPE);
+        basicTypes.add(DoubleCell.TYPE);
+        basicTypes.add(StringCell.TYPE);
+        basicTypes.add(DateAndTimeCell.TYPE);
+
+        final Set<DataType> types = new HashSet<>();
+        types.addAll(basicTypes);
+        for (DataType type : basicTypes) {
+            types.add(ListCell.getCollectionType(type));
+            types.add(SetCell.getCollectionType(type));
+        }
+        //also add the types from the input spec if available
         if (spec != null) {
             for (DataColumnSpec colSpec : spec) {
-                types.add(colSpec.getType());
+                final DataType type = colSpec.getType();
+                types.add(type);
+                if (!type.isCollectionType()) {
+                    types.add(ListCell.getCollectionType(type));
+                    types.add(SetCell.getCollectionType(type));
+                }
             }
         }
         final List<DataType> typeList = new ArrayList<>(types);

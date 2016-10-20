@@ -51,7 +51,6 @@ package org.knime.base.node.io.database.tablecreator.util;
 import java.awt.Component;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.swing.DefaultCellEditor;
@@ -62,6 +61,7 @@ import javax.swing.JTable;
 import javax.swing.ListCellRenderer;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.SetCell;
 
 /**
  * Cell Editor to edit the Knime data type in the table
@@ -74,7 +74,7 @@ class KNIMETypeCellEditor extends DefaultCellEditor {
 
     private final JComboBox<DataType> m_comboBox;
 
-    private final Set<DataType> m_sortedDataTypes;
+    private Collection<DataType> m_sortedDataTypes;
 
     private final Set<DataType> m_dataTypeHash;
 
@@ -93,8 +93,12 @@ class KNIMETypeCellEditor extends DefaultCellEditor {
         super(comboBox);
         m_comboBox = comboBox;
         m_dataTypeHash = new HashSet<>();
-        m_sortedDataTypes = new LinkedHashSet<>(knimeTypes);
+        m_sortedDataTypes = knimeTypes;
         m_comboBox.setRenderer(new KnimeTypeListCellRenderer());
+    }
+
+    void setKNIMETypes(final Collection<DataType> knimeTypes) {
+        m_sortedDataTypes = knimeTypes;
     }
 
     /**
@@ -181,9 +185,20 @@ class KNIMETypeCellEditor extends DefaultCellEditor {
                 setBackground(list.getBackground());
                 setForeground(list.getForeground());
             }
-
+            //TK_TODO: WORKAROUND UNTIL THE COLLECTION CELLS HAVE A NICE NAME
             // Set the icon and text
-            setText(value.getName());
+            String name = value.getName();
+            if (value.isCollectionType()) {
+                if (value.getCellClass() == SetCell.class) {
+                    name = "SetCell(";
+                } else {
+                    name = "ListCell(";
+                }
+                name += value.getCollectionElementType().getName() + ")";
+
+            }
+            setText(name);
+//            setText(value.getName());
             setIcon(value.getIcon());
 
             return this;
