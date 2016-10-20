@@ -109,7 +109,7 @@ public class OffsetArchiveFileExportOperation extends
      */
     @Override
     protected void initialize() throws IOException {
-        m_exporter = new ZipFileExporter(m_fileName, false);
+        m_exporter = new ZipFileExporter(m_fileName, false, false);
     }
 
     /**
