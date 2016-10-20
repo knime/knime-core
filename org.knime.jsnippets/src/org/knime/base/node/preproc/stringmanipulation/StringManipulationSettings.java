@@ -378,6 +378,7 @@ public class StringManipulationSettings {
      *
      * @return settings java scripting settings
      * @throws InvalidSettingsException when settings are not correct
+     * @since 3.3
      */
     public JavaScriptingSettings createJavaScriptingSettings()
         throws InvalidSettingsException {
