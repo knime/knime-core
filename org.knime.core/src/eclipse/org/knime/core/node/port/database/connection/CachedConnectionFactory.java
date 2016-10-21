@@ -71,8 +71,6 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.RegisteredDriversConnectionFactory;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.WorkflowContext;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.ThreadUtils;
 
 /**
@@ -176,7 +174,8 @@ public class CachedConnectionFactory implements DBConnectionFactory {
         final boolean kerberos = settings.useKerberos();
 
         // database connection key with user, password and database URL
-        ConnectionKey databaseConnKey = new ConnectionKey(user, pass, jdbcUrl, getWFUser());
+        ConnectionKey databaseConnKey =
+            new ConnectionKey(user, pass, jdbcUrl, NodeContext.getWorkflowUser().orElse(null));
 
         // retrieve original key and/or modify connection key map
         synchronized (CONNECTION_KEYS) {
@@ -246,31 +245,6 @@ public class CachedConnectionFactory implements DBConnectionFactory {
                 throw new IOException("Connection to database '" + jdbcUrl + "' timed out");
             }
         }
-    }
-
-    /**
-     * @return the user id of the user the workflow should be executed with
-     */
-    private static String getWFUser() {
-        LOGGER.debug("Retrieving workflow user");
-        final NodeContext context = NodeContext.getContext();
-        if (context != null) {
-            final WorkflowManager workflowManager = context.getWorkflowManager();
-            if (workflowManager != null) {
-                final WorkflowContext workflowContext = workflowManager.getContext();
-                if (workflowContext != null) {
-                    LOGGER.debug("Workflow user found: " + workflowContext.getUserid());
-                    return workflowContext.getUserid();
-                } else {
-                    LOGGER.warn("Workflow context not available");
-                }
-            } else {
-                LOGGER.warn("Workflow manager not available");
-            }
-        } else {
-            LOGGER.warn("Node context not available");
-        }
-        return null;
     }
 
     /**

@@ -49,6 +49,7 @@ package org.knime.core.node.workflow;
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Optional;
 
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
@@ -218,5 +219,32 @@ public final class NodeContext {
                 return cont.toString();
             }
         }
+    }
+
+    /**
+     * Returns the user of the current workflow. If the current workflow cannot be determined, e.g. because no context
+     * is available in the current thread, an empty optional is returned.
+     *
+     * @return the workflow user or an empty optional
+     */
+    public static Optional<String> getWorkflowUser() {
+        final NodeContext context = NodeContext.getContext();
+        if (context != null) {
+            final WorkflowManager workflowManager = context.getWorkflowManager();
+            if (workflowManager != null) {
+                final WorkflowContext workflowContext = workflowManager.getContext();
+                if (workflowContext != null) {
+                    logger.debug("Workflow user found: " + workflowContext.getUserid());
+                    return Optional.of(workflowContext.getUserid());
+                } else {
+                    logger.warn("Workflow context not available");
+                }
+            } else {
+                logger.warn("Workflow manager not available");
+            }
+        } else {
+            logger.warn("Node context not available");
+        }
+        return Optional.empty();
     }
 }
