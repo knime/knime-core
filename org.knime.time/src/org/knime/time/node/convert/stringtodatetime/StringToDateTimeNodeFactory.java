@@ -53,8 +53,9 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
+ * The node factory of the node which converts strings to the new date&time types.
  *
- * @author simon
+ * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public class StringToDateTimeNodeFactory extends NodeFactory<StringToDateTimeNodeModel> {
 
@@ -96,7 +97,7 @@ public class StringToDateTimeNodeFactory extends NodeFactory<StringToDateTimeNod
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new StringToDateTimeNodeDialog();
+        return new StringToDateTimeNodeDialog(true);
     }
 
 }

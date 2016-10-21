@@ -99,8 +99,9 @@ import org.knime.core.util.UniqueNameGenerator;
 import org.knime.time.node.convert.oldtonew.DateTimeTypes;
 
 /**
+ * The node model of the node which converts strings to the new date&time types.
  *
- * @author simon
+ * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public class StringToDateTimeNodeModel extends NodeModel {
 
@@ -148,12 +149,13 @@ public class StringToDateTimeNodeModel extends NodeModel {
         return new SettingsModelBoolean("cancel_on_fail", true);
     }
 
+    /** @return the integer model, used in both dialog and model. */
     static SettingsModelInteger createFailNumberModel() {
         return new SettingsModelInteger("max_fail_number", 100);
     }
 
     /**
-     *
+     * one in, one out
      */
     protected StringToDateTimeNodeModel() {
         super(1, 1);
@@ -192,7 +194,6 @@ public class StringToDateTimeNodeModel extends NodeModel {
         final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
         final int[] includeIndeces =
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-        //        final boolean isReplace = m_isReplace.getBooleanValue();
         int i = 0;
         for (String includedCol : includeList) {
             if (m_isReplaceOrAppend.getStringValue().equals(StringToDateTimeNodeDialog.OPTION_REPLACE)) {

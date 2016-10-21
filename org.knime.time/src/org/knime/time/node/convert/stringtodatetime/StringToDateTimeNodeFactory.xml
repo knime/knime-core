@@ -43,6 +43,7 @@
 				A format string as required by the
 				<tt>java.time.format.DateTimeFormatter </tt>
 				.
+				<br />
 				<b>Examples:</b>
 				<ul>
 					<li>"yyyy.MM.dd HH:mm:ss.SSS" parses dates like "2001.07.04
@@ -50,6 +51,9 @@
 					</li>
 					<li>"yyyy-MM-dd'T'HH:mm:ss.SSSZ" parses dates like
 						"2001-07-04T12:08:56.235-0700"
+					</li>
+					<li>"yyyy-MM-dd'T'HH:mm:ss.SSSVV'['zzzz']'" parses dates like
+						"2001-07-04T12:08:56.235+02:00[Europe/Berlin]"
 					</li>
 				</ul>
 				<b>Valid pattern elements are:</b>

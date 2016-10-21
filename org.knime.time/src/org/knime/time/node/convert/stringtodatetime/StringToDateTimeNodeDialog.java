@@ -112,8 +112,6 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
 
     private final SettingsModelString formatModel;
 
-    private boolean isCorrectFormat = true;
-
     /**
      * Predefined date formats.
      */
@@ -129,7 +127,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
     static final String OPTION_REPLACE = "Replace selected columns";
 
     /** Setting up all DialogComponents. */
-    StringToDateTimeNodeDialog() {
+    StringToDateTimeNodeDialog(final boolean canFail) {
 
         m_dialogCompColFilter = new DialogComponentColumnFilter2(StringToDateTimeNodeModel.createColSelectModel(), 0);
 
@@ -203,43 +201,48 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         gbcTypeFormat.gridy = 0;
         gbcTypeFormat.weightx = 1;
         gbcTypeFormat.weighty = 1;
-        final JPanel panelTypeList = new JPanel(new FlowLayout());
-        final JLabel label = new JLabel("New type: ");
-        panelTypeList.add(label);
         m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
-        panelTypeList.add(m_typeCombobox);
-        panelTypeFormat.add(panelTypeList, gbcTypeFormat);
-        // add format selection
-        gbcTypeFormat.gridx++;
+        if (canFail) {
+            final JPanel panelTypeList = new JPanel(new FlowLayout());
+            final JLabel label = new JLabel("New type: ");
+            panelTypeList.add(label);
+            panelTypeList.add(m_typeCombobox);
+            panelTypeFormat.add(panelTypeList, gbcTypeFormat);
+            // add format selection
+            gbcTypeFormat.gridx++;
+        }
         panelTypeFormat.add(m_dialogCompFormatSelect.getComponentPanel(), gbcTypeFormat);
-
-        gbcTypeFormat.gridx = 0;
-        gbcTypeFormat.gridy++;
-        gbcTypeFormat.gridwidth = 2;
-        gbcTypeFormat.anchor = GridBagConstraints.CENTER;
+        // add label for warning
         m_typeFormatLabel = new JLabel();
-        m_typeFormatLabel.setForeground(Color.RED);
-        panelTypeFormat.add(m_typeFormatLabel, gbcTypeFormat);
+        if (canFail) {
+            gbcTypeFormat.gridx = 0;
+            gbcTypeFormat.gridy++;
+            gbcTypeFormat.gridwidth = 2;
+            gbcTypeFormat.anchor = GridBagConstraints.CENTER;
+            m_typeFormatLabel.setForeground(Color.RED);
+            panelTypeFormat.add(m_typeFormatLabel, gbcTypeFormat);
+        }
         panel.add(panelTypeFormat, gbc);
         /*
          * add cancel on fail selection
          */
-        gbc.gridy++;
-        final JPanel panelCancelOnFail = new JPanel(new GridBagLayout());
-        panelCancelOnFail.setBorder(BorderFactory.createTitledBorder("Abort Execution"));
-        final GridBagConstraints gbcCancelOnFail = new GridBagConstraints();
-        // add check box
-        gbcCancelOnFail.fill = GridBagConstraints.BOTH;
-        gbcCancelOnFail.gridx = 0;
-        gbcCancelOnFail.gridy = 0;
-        gbcCancelOnFail.weightx = 1;
-        gbcCancelOnFail.weighty = 1;
-        panelCancelOnFail.add(m_dialogCompCancelOnFail.getComponentPanel(), gbcCancelOnFail);
-        gbcCancelOnFail.gridx++;
-        panelCancelOnFail.add(m_dialogCompFailNumber.getComponentPanel(), gbcCancelOnFail);
+        if (canFail) {
+            gbc.gridy++;
+            final JPanel panelCancelOnFail = new JPanel(new GridBagLayout());
+            panelCancelOnFail.setBorder(BorderFactory.createTitledBorder("Abort Execution"));
+            final GridBagConstraints gbcCancelOnFail = new GridBagConstraints();
+            // add check box
+            gbcCancelOnFail.fill = GridBagConstraints.BOTH;
+            gbcCancelOnFail.gridx = 0;
+            gbcCancelOnFail.gridy = 0;
+            gbcCancelOnFail.weightx = 1;
+            gbcCancelOnFail.weighty = 1;
+            panelCancelOnFail.add(m_dialogCompCancelOnFail.getComponentPanel(), gbcCancelOnFail);
+            gbcCancelOnFail.gridx++;
+            panelCancelOnFail.add(m_dialogCompFailNumber.getComponentPanel(), gbcCancelOnFail);
 
-        panel.add(panelCancelOnFail, gbc);
-
+            panel.add(panelCancelOnFail, gbc);
+        }
         /*
          * add tab
          */
@@ -268,12 +271,15 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
             }
         });
 
-        m_typeCombobox.addActionListener(e -> formatListener());
-
-        m_dialogCompFormatSelect.getModel().addChangeListener(e -> formatListener());
-
+        if (canFail) {
+            m_typeCombobox.addActionListener(e -> formatListener());
+            m_dialogCompFormatSelect.getModel().addChangeListener(e -> formatListener());
+        }
     }
 
+    /**
+     * method for change/action listener of type and date combo boxes
+     */
     private void formatListener() {
         final String format = formatModel.getStringValue();
         try {
@@ -304,16 +310,11 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
                     break;
                 }
             }
-            //            ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1)).setBorder(null);
             m_typeCombobox.setBorder(null);
             m_dialogCompFormatSelect.setToolTipText(null);
-            isCorrectFormat = true;
             m_typeFormatLabel.setText("");
         } catch (Exception exception) {
-            //            ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1))
-            //                .setBorder(BorderFactory.createLineBorder(Color.RED));
             m_dialogCompFormatSelect.setToolTipText(exception.getMessage());
-            isCorrectFormat = false;
             m_typeFormatLabel.setText("New type is not compatible with date format!");
             m_typeCombobox.setBorder(BorderFactory.createLineBorder(Color.RED));
         }
@@ -324,10 +325,6 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        formatListener();
-        if (!isCorrectFormat) {
-            throw new IllegalArgumentException("New type is not compatible with date format!");
-        }
         m_dialogCompColFilter.saveSettingsTo(settings);
         m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
@@ -362,6 +359,10 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         formats.add("yyyy-MM-dd;HH:mm:ss.S");
         formats.add("dd.MM.yyyy;HH:mm:ss.S");
         formats.add("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        formats.add("yyyy-MM-dd;HH:mm:ssVV");
+        formats.add("dd.MM.yyyy;HH:mm:ssVV");
+        formats.add("yyyy-MM-dd'T'HH:mm:ss.SSSVV");
+        formats.add("yyyy-MM-dd'T'HH:mm:ss.SSSVV'['zzzz']'");
         formats.add("yyyy/dd/MM");
         formats.add("dd.MM.yyyy");
         formats.add("yyyy-MM-dd");
