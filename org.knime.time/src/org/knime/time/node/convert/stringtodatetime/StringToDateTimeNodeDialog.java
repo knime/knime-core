@@ -70,6 +70,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -82,9 +83,11 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.StringHistory;
+import org.knime.time.node.convert.datetimetostring.DateTimeToStringNodeModel;
 import org.knime.time.node.convert.oldtonew.DateTimeTypes;
 
 /**
@@ -126,26 +129,31 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
 
     static final String OPTION_REPLACE = "Replace selected columns";
 
-    /** Setting up all DialogComponents. */
-    StringToDateTimeNodeDialog(final boolean canFail) {
+    /**
+     * Setting up all DialogComponents.
+     *
+     * @param isDateTimeToString true, if {@link StringToDateTimeNodeModel} calls it. false, if
+     *            {@link DateTimeToStringNodeModel} calls it
+     */
+    public StringToDateTimeNodeDialog(final boolean isDateTimeToString) {
 
-        m_dialogCompColFilter = new DialogComponentColumnFilter2(StringToDateTimeNodeModel.createColSelectModel(), 0);
+        m_dialogCompColFilter = new DialogComponentColumnFilter2(createColSelectModel(), 0);
 
-        final SettingsModelString replaceOrAppendModel = StringToDateTimeNodeModel.createReplaceAppendStringBool();
+        final SettingsModelString replaceOrAppendModel = createReplaceAppendStringBool();
         m_dialogCompReplaceOrAppend =
             new DialogComponentButtonGroup(replaceOrAppendModel, true, null, OPTION_APPEND, OPTION_REPLACE);
 
-        final SettingsModelString suffixModel = StringToDateTimeNodeModel.createSuffixModel();
+        final SettingsModelString suffixModel = createSuffixModel(isDateTimeToString);
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        formatModel = StringToDateTimeNodeModel.createFormatModel();
+        formatModel = createFormatModel();
         m_dialogCompFormatSelect =
             new DialogComponentStringSelection(formatModel, "Date format: ", PREDEFINED_FORMATS, true);
 
-        final SettingsModelBoolean cancelOnFailModel = StringToDateTimeNodeModel.createCancelOnFailModel();
+        final SettingsModelBoolean cancelOnFailModel = createCancelOnFailModel();
         m_dialogCompCancelOnFail = new DialogComponentBoolean(cancelOnFailModel, "Abort execution...");
 
-        final SettingsModelInteger failNumberModel = StringToDateTimeNodeModel.createFailNumberModel();
+        final SettingsModelInteger failNumberModel = createFailNumberModel();
         m_dialogCompFailNumber =
             new DialogComponentNumber(failNumberModel, "...after this number of unresolved rows", 10);
 
@@ -202,7 +210,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         gbcTypeFormat.weightx = 1;
         gbcTypeFormat.weighty = 1;
         m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
-        if (canFail) {
+        if (isDateTimeToString) {
             final JPanel panelTypeList = new JPanel(new FlowLayout());
             final JLabel label = new JLabel("New type: ");
             panelTypeList.add(label);
@@ -214,7 +222,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         panelTypeFormat.add(m_dialogCompFormatSelect.getComponentPanel(), gbcTypeFormat);
         // add label for warning
         m_typeFormatLabel = new JLabel();
-        if (canFail) {
+        if (isDateTimeToString) {
             gbcTypeFormat.gridx = 0;
             gbcTypeFormat.gridy++;
             gbcTypeFormat.gridwidth = 2;
@@ -226,7 +234,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         /*
          * add cancel on fail selection
          */
-        if (canFail) {
+        if (isDateTimeToString) {
             gbc.gridy++;
             final JPanel panelCancelOnFail = new JPanel(new GridBagLayout());
             panelCancelOnFail.setBorder(BorderFactory.createTitledBorder("Abort Execution"));
@@ -271,7 +279,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
             }
         });
 
-        if (canFail) {
+        if (isDateTimeToString) {
             m_typeCombobox.addActionListener(e -> formatListener());
             m_dialogCompFormatSelect.getModel().addChangeListener(e -> formatListener());
         }
@@ -373,6 +381,45 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
             formats.add(userFormat);
         }
         return formats;
+    }
+
+    /** @return the column select model, used in both dialog and model. */
+    @SuppressWarnings("unchecked")
+    public static SettingsModelColumnFilter2 createColSelectModel() {
+        return new SettingsModelColumnFilter2("col_select", StringValue.class);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createReplaceAppendStringBool() {
+        return new SettingsModelString("replace_or_append", StringToDateTimeNodeDialog.OPTION_REPLACE);
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    public static SettingsModelString createSuffixModel(final boolean isDateTimeToString) {
+        String defaultString;
+        if (isDateTimeToString) {
+            defaultString = "(Date&Time)";
+        } else {
+            defaultString = "(String)";
+        }
+        final SettingsModelString settingsModelString = new SettingsModelString("suffix", defaultString);
+        settingsModelString.setEnabled(false);
+        return settingsModelString;
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    public static SettingsModelString createFormatModel() {
+        return new SettingsModelString("date_format", "yyyy-MM-dd;HH:mm:ss.S");
+    }
+
+    /** @return the boolean model, used in both dialog and model. */
+    public static SettingsModelBoolean createCancelOnFailModel() {
+        return new SettingsModelBoolean("cancel_on_fail", true);
+    }
+
+    /** @return the integer model, used in both dialog and model. */
+    public static SettingsModelInteger createFailNumberModel() {
+        return new SettingsModelInteger("max_fail_number", 100);
     }
 
 }

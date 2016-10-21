@@ -105,54 +105,21 @@ import org.knime.time.node.convert.oldtonew.DateTimeTypes;
  */
 public class StringToDateTimeNodeModel extends NodeModel {
 
-    private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
+    private final SettingsModelColumnFilter2 m_colSelect = StringToDateTimeNodeDialog.createColSelectModel();
 
-    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
+    private final SettingsModelString m_isReplaceOrAppend = StringToDateTimeNodeDialog.createReplaceAppendStringBool();
 
-    private final SettingsModelString m_suffix = createSuffixModel();
+    private final SettingsModelString m_suffix = StringToDateTimeNodeDialog.createSuffixModel(true);
 
-    private final SettingsModelString m_format = createFormatModel();
+    private final SettingsModelString m_format = StringToDateTimeNodeDialog.createFormatModel();
 
-    private final SettingsModelBoolean m_cancelOnFail = createCancelOnFailModel();
+    private final SettingsModelBoolean m_cancelOnFail = StringToDateTimeNodeDialog.createCancelOnFailModel();
 
-    private final SettingsModelInteger m_failNumber = createFailNumberModel();
+    private final SettingsModelInteger m_failNumber = StringToDateTimeNodeDialog.createFailNumberModel();
 
     private String m_selectedType;
 
     private int m_failCounter;
-
-    /** @return the column select model, used in both dialog and model. */
-    @SuppressWarnings("unchecked")
-    static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", StringValue.class);
-    }
-
-    /** @return the string model, used in both dialog and model. */
-    static SettingsModelString createReplaceAppendStringBool() {
-        return new SettingsModelString("replace_or_append", StringToDateTimeNodeDialog.OPTION_REPLACE);
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createSuffixModel() {
-        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(Date&Time)");
-        settingsModelString.setEnabled(false);
-        return settingsModelString;
-    }
-
-    /** @return the string select model, used in both dialog and model. */
-    static SettingsModelString createFormatModel() {
-        return new SettingsModelString("date_format", "yyyy-MM-dd;HH:mm:ss.S");
-    }
-
-    /** @return the boolean model, used in both dialog and model. */
-    static SettingsModelBoolean createCancelOnFailModel() {
-        return new SettingsModelBoolean("cancel_on_fail", true);
-    }
-
-    /** @return the integer model, used in both dialog and model. */
-    static SettingsModelInteger createFailNumberModel() {
-        return new SettingsModelInteger("max_fail_number", 100);
-    }
 
     /**
      * one in, one out
