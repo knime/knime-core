@@ -53,15 +53,17 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
@@ -74,6 +76,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
@@ -93,17 +96,23 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 
-    private final DialogComponentBoolean m_dialogCompReplaceBool;
+    private final DialogComponentButtonGroup m_dialogCompReplaceOrAppend;
 
-    private DialogComponentString m_dialogCompSuffix;
+    private final DialogComponentString m_dialogCompSuffix;
 
     private final JComboBox<DateTimeTypes> m_typeCombobox;
 
     private final DialogComponentStringSelection m_dialogCompFormatSelect;
 
+    private final JLabel m_typeFormatLabel;
+
     private final DialogComponentBoolean m_dialogCompCancelOnFail;
 
     private final DialogComponentNumber m_dialogCompFailNumber;
+
+    private final SettingsModelString formatModel;
+
+    private boolean isCorrectFormat = true;
 
     /**
      * Predefined date formats.
@@ -113,20 +122,25 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
     /**
      * Key for the string history to re-use user entered date formats.
      */
-    public static final String FORMAT_HISTORY_KEY = "string2date-formats";
+    public static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
+
+    static final String OPTION_APPEND = "Append selected columns";
+
+    static final String OPTION_REPLACE = "Replace selected columns";
 
     /** Setting up all DialogComponents. */
     StringToDateTimeNodeDialog() {
 
         m_dialogCompColFilter = new DialogComponentColumnFilter2(StringToDateTimeNodeModel.createColSelectModel(), 0);
 
-        final SettingsModelBoolean replaceModelBool = StringToDateTimeNodeModel.createReplaceModelBool();
-        m_dialogCompReplaceBool = new DialogComponentBoolean(replaceModelBool, "Replace selected column");
+        final SettingsModelString replaceOrAppendModel = StringToDateTimeNodeModel.createReplaceAppendStringBool();
+        m_dialogCompReplaceOrAppend =
+            new DialogComponentButtonGroup(replaceOrAppendModel, true, null, OPTION_APPEND, OPTION_REPLACE);
 
         final SettingsModelString suffixModel = StringToDateTimeNodeModel.createSuffixModel();
         m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
-        final SettingsModelString formatModel = StringToDateTimeNodeModel.createFormatModel();
+        formatModel = StringToDateTimeNodeModel.createFormatModel();
         m_dialogCompFormatSelect =
             new DialogComponentStringSelection(formatModel, "Date format: ", PREDEFINED_FORMATS, true);
 
@@ -168,7 +182,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         gbcReplaceAppend.gridy = 0;
         gbcReplaceAppend.weightx = 1;
         gbcReplaceAppend.weighty = 1;
-        panelReplace.add(m_dialogCompReplaceBool.getComponentPanel(), gbcReplaceAppend);
+        panelReplace.add(m_dialogCompReplaceOrAppend.getComponentPanel(), gbcReplaceAppend);
 
         // add suffix text field
         gbcReplaceAppend.gridx++;
@@ -199,8 +213,14 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         gbcTypeFormat.gridx++;
         panelTypeFormat.add(m_dialogCompFormatSelect.getComponentPanel(), gbcTypeFormat);
 
+        gbcTypeFormat.gridx = 0;
+        gbcTypeFormat.gridy++;
+        gbcTypeFormat.gridwidth = 2;
+        gbcTypeFormat.anchor = GridBagConstraints.CENTER;
+        m_typeFormatLabel = new JLabel();
+        m_typeFormatLabel.setForeground(Color.RED);
+        panelTypeFormat.add(m_typeFormatLabel, gbcTypeFormat);
         panel.add(panelTypeFormat, gbc);
-
         /*
          * add cancel on fail selection
          */
@@ -228,11 +248,15 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         /*
          * Change and action listeners
          */
-        replaceModelBool.addChangeListener(new ChangeListener() {
+        replaceOrAppendModel.addChangeListener(new ChangeListener() {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
-                suffixModel.setEnabled(!replaceModelBool.getBooleanValue());
+                if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
+                    suffixModel.setEnabled(true);
+                } else {
+                    suffixModel.setEnabled(false);
+                }
             }
         });
 
@@ -244,18 +268,55 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
             }
         });
 
-        m_typeCombobox.addActionListener(new ActionListener() {
+        m_typeCombobox.addActionListener(e -> formatListener());
 
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                // TODO: check if format is compatible with type
-                String stringValue = formatModel.getStringValue();
-                ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1))
-                    .setBorder(BorderFactory.createLineBorder(new Color(255, 0, 0)));
+        m_dialogCompFormatSelect.getModel().addChangeListener(e -> formatListener());
 
+    }
+
+    private void formatListener() {
+        final String format = formatModel.getStringValue();
+        try {
+            switch ((DateTimeTypes)m_typeCombobox.getSelectedItem()) {
+                case LOCAL_DATE: {
+                    final LocalDate now1 = LocalDate.now();
+                    final DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern(format);
+                    LocalDate.parse(now1.format(formatter1), formatter1);
+                    break;
+                }
+                case LOCAL_TIME: {
+                    final LocalTime now2 = LocalTime.now();
+                    final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern(format);
+                    LocalTime.parse(now2.format(formatter2), formatter2);
+                    break;
+                }
+                case LOCAL_DATE_TIME: {
+                    final LocalDateTime now3 = LocalDateTime.now();
+                    final DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern(format);
+                    String format2 = now3.format(formatter3);
+                    LocalDateTime.parse(format2, formatter3);
+                    break;
+                }
+                case ZONED_DATE_TIME: {
+                    final ZonedDateTime now4 = ZonedDateTime.now();
+                    final DateTimeFormatter formatter4 = DateTimeFormatter.ofPattern(format);
+                    ZonedDateTime.parse(now4.format(formatter4), formatter4);
+                    break;
+                }
             }
-        });
-
+            //            ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1)).setBorder(null);
+            m_typeCombobox.setBorder(null);
+            m_dialogCompFormatSelect.setToolTipText(null);
+            isCorrectFormat = true;
+            m_typeFormatLabel.setText("");
+        } catch (Exception exception) {
+            //            ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1))
+            //                .setBorder(BorderFactory.createLineBorder(Color.RED));
+            m_dialogCompFormatSelect.setToolTipText(exception.getMessage());
+            isCorrectFormat = false;
+            m_typeFormatLabel.setText("New type is not compatible with date format!");
+            m_typeCombobox.setBorder(BorderFactory.createLineBorder(Color.RED));
+        }
     }
 
     /**
@@ -263,8 +324,12 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        formatListener();
+        if (!isCorrectFormat) {
+            throw new IllegalArgumentException("New type is not compatible with date format!");
+        }
         m_dialogCompColFilter.saveSettingsTo(settings);
-        m_dialogCompReplaceBool.saveSettingsTo(settings);
+        m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
         settings.addString("typeEnum", ((DateTimeTypes)m_typeCombobox.getModel().getSelectedItem()).name());
         m_dialogCompFormatSelect.saveSettingsTo(settings);
@@ -279,17 +344,16 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
-        m_dialogCompReplaceBool.loadSettingsFrom(settings, specs);
+        m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
-        m_typeCombobox
-            .setSelectedItem(DateTimeTypes.valueOf(settings.getString("typeEnum", DateTimeTypes.LOCAL_DATE.name())));
+        m_typeCombobox.setSelectedItem(
+            DateTimeTypes.valueOf(settings.getString("typeEnum", DateTimeTypes.LOCAL_DATE_TIME.name())));
         m_dialogCompFormatSelect.loadSettingsFrom(settings, specs);
         m_dialogCompCancelOnFail.loadSettingsFrom(settings, specs);
         m_dialogCompFailNumber.loadSettingsFrom(settings, specs);
         // retrieve potential new values from the StringHistory and add them
         // (if not already present) to the combo box...
-        //        m_dialogCompFormatSelect.replaceListItems(createPredefinedFormats(),
-        //            StringToDateTimeNodeModel.createFormatModel().getStringValue());
+        m_dialogCompFormatSelect.replaceListItems(createPredefinedFormats(), null);
     }
 
     private static Collection<String> createPredefinedFormats() {

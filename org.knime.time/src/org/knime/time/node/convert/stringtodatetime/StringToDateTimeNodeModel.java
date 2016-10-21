@@ -94,6 +94,7 @@ import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.UniqueNameGenerator;
 import org.knime.time.node.convert.oldtonew.DateTimeTypes;
 
@@ -105,7 +106,7 @@ public class StringToDateTimeNodeModel extends NodeModel {
 
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
-    private final SettingsModelBoolean m_isReplace = createReplaceModelBool();
+    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
 
     private final SettingsModelString m_suffix = createSuffixModel();
 
@@ -125,9 +126,9 @@ public class StringToDateTimeNodeModel extends NodeModel {
         return new SettingsModelColumnFilter2("col_select", StringValue.class);
     }
 
-    /** @return the boolean model, used in both dialog and model. */
-    static SettingsModelBoolean createReplaceModelBool() {
-        return new SettingsModelBoolean("replace_bool", true);
+    /** @return the string model, used in both dialog and model. */
+    static SettingsModelString createReplaceAppendStringBool() {
+        return new SettingsModelString("replace_or_append", StringToDateTimeNodeDialog.OPTION_REPLACE);
     }
 
     /** @return the string select model, used in both dialog and model. */
@@ -163,6 +164,9 @@ public class StringToDateTimeNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        if (m_selectedType == null) {
+            m_selectedType = DateTimeTypes.LOCAL_DATE_TIME.name();
+        }
         final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0]);
         return new DataTableSpec[]{columnRearranger.createSpec()};
     }
@@ -188,10 +192,10 @@ public class StringToDateTimeNodeModel extends NodeModel {
         final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
         final int[] includeIndeces =
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-        final boolean isReplace = m_isReplace.getBooleanValue();
+        //        final boolean isReplace = m_isReplace.getBooleanValue();
         int i = 0;
         for (String includedCol : includeList) {
-            if (isReplace) {
+            if (m_isReplaceOrAppend.getStringValue().equals(StringToDateTimeNodeDialog.OPTION_REPLACE)) {
                 final DataColumnSpecCreator dataColumnSpecCreator =
                     new DataColumnSpecCreator(includedCol, DateTimeTypes.valueOf(m_selectedType).getDataType());
                 final StringToTimeCellFactory cellFac =
@@ -236,7 +240,8 @@ public class StringToDateTimeNodeModel extends NodeModel {
                 final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
                 final int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
                     .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                final boolean isReplace = m_isReplace.getBooleanValue();
+                final boolean isReplace =
+                    m_isReplaceOrAppend.getStringValue().equals(StringToDateTimeNodeDialog.OPTION_REPLACE);
 
                 DataRow row;
                 while ((row = in.poll()) != null) {
@@ -294,7 +299,7 @@ public class StringToDateTimeNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_colSelect.saveSettingsTo(settings);
-        m_isReplace.saveSettingsTo(settings);
+        m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
         m_format.saveSettingsTo(settings);
         m_cancelOnFail.saveSettingsTo(settings);
@@ -308,11 +313,26 @@ public class StringToDateTimeNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.validateSettings(settings);
-        m_isReplace.validateSettings(settings);
+        m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
         m_format.validateSettings(settings);
         m_cancelOnFail.validateSettings(settings);
         m_failNumber.validateSettings(settings);
+        final SettingsModelString formatClone = m_format.createCloneWithValidatedValue(settings);
+        final String format = formatClone.getStringValue();
+        if (format == null || format.length() == 0) {
+            throw new InvalidSettingsException("Format must not be empty!");
+        }
+        try {
+            DateTimeFormatter.ofPattern(formatClone.getStringValue());
+        } catch (Exception e) {
+            String msg = "Invalid date format: \"" + format + "\".";
+            final String errMsg = e.getMessage();
+            if (errMsg != null && !errMsg.isEmpty()) {
+                msg += " Reason: " + errMsg;
+            }
+            throw new InvalidSettingsException(msg, e);
+        }
     }
 
     /**
@@ -321,12 +341,17 @@ public class StringToDateTimeNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.loadSettingsFrom(settings);
-        m_isReplace.loadSettingsFrom(settings);
+        m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
         m_format.loadSettingsFrom(settings);
         m_cancelOnFail.loadSettingsFrom(settings);
         m_failNumber.loadSettingsFrom(settings);
         m_selectedType = settings.getString("typeEnum");
+        final String dateformat = m_format.getStringValue();
+        // if it is not a predefined one -> store it
+        if (!StringToDateTimeNodeDialog.PREDEFINED_FORMATS.contains(dateformat)) {
+            StringHistory.getInstance(StringToDateTimeNodeDialog.FORMAT_HISTORY_KEY).add(dateformat);
+        }
     }
 
     /**
