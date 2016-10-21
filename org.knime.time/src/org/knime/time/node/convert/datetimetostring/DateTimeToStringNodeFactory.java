@@ -54,8 +54,9 @@ import org.knime.core.node.NodeView;
 import org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeDialog;
 
 /**
+ * The node factory of the node which converts the new date&time types to strings.
  *
- * @author simon
+ * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public class DateTimeToStringNodeFactory extends NodeFactory<DateTimeToStringNodeModel> {
 

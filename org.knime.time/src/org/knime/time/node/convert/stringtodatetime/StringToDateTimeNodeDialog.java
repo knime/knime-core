@@ -71,6 +71,10 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.time.localdate.LocalDateValue;
+import org.knime.core.data.time.localdatetime.LocalDateTimeValue;
+import org.knime.core.data.time.localtime.LocalTimeValue;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -91,7 +95,7 @@ import org.knime.time.node.convert.datetimetostring.DateTimeToStringNodeModel;
 import org.knime.time.node.convert.oldtonew.DateTimeTypes;
 
 /**
- * The node dialog of the node which converts strings to the new date&time types.
+ * The node dialog of the nodes which convert strings to the new date&time types and vice versa.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
@@ -125,9 +129,9 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
      */
     public static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
 
-    static final String OPTION_APPEND = "Append selected columns";
+    public static final String OPTION_APPEND = "Append selected columns";
 
-    static final String OPTION_REPLACE = "Replace selected columns";
+    public static final String OPTION_REPLACE = "Replace selected columns";
 
     /**
      * Setting up all DialogComponents.
@@ -137,7 +141,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
      */
     public StringToDateTimeNodeDialog(final boolean isDateTimeToString) {
 
-        m_dialogCompColFilter = new DialogComponentColumnFilter2(createColSelectModel(), 0);
+        m_dialogCompColFilter = new DialogComponentColumnFilter2(createColSelectModel(isDateTimeToString), 0);
 
         final SettingsModelString replaceOrAppendModel = createReplaceAppendStringBool();
         m_dialogCompReplaceOrAppend =
@@ -383,10 +387,18 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         return formats;
     }
 
-    /** @return the column select model, used in both dialog and model. */
+    /**
+     * @param isDateTimeToString
+     * @return the column select model, used in both dialog and model.
+     */
     @SuppressWarnings("unchecked")
-    public static SettingsModelColumnFilter2 createColSelectModel() {
-        return new SettingsModelColumnFilter2("col_select", StringValue.class);
+    public static SettingsModelColumnFilter2 createColSelectModel(final boolean isDateTimeToString) {
+        if (isDateTimeToString) {
+            return new SettingsModelColumnFilter2("col_select", StringValue.class);
+        } else {
+            return new SettingsModelColumnFilter2("col_select", LocalDateTimeValue.class, ZonedDateTimeValue.class,
+                LocalDateValue.class, LocalTimeValue.class);
+        }
     }
 
     /** @return the string model, used in both dialog and model. */
@@ -394,7 +406,10 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         return new SettingsModelString("replace_or_append", StringToDateTimeNodeDialog.OPTION_REPLACE);
     }
 
-    /** @return the string select model, used in both dialog and model. */
+    /**
+     * @param isDateTimeToString
+     * @return the string select model, used in both dialog and model.
+     */
     public static SettingsModelString createSuffixModel(final boolean isDateTimeToString) {
         String defaultString;
         if (isDateTimeToString) {

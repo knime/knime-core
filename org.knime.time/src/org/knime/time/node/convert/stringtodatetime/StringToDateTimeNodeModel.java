@@ -105,7 +105,7 @@ import org.knime.time.node.convert.oldtonew.DateTimeTypes;
  */
 public class StringToDateTimeNodeModel extends NodeModel {
 
-    private final SettingsModelColumnFilter2 m_colSelect = StringToDateTimeNodeDialog.createColSelectModel();
+    private final SettingsModelColumnFilter2 m_colSelect = StringToDateTimeNodeDialog.createColSelectModel(true);
 
     private final SettingsModelString m_isReplaceOrAppend = StringToDateTimeNodeDialog.createReplaceAppendStringBool();
 
