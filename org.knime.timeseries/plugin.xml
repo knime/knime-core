@@ -34,8 +34,8 @@
       </node>
       <node
             category-path="/applications/timeseries"
-            factory-class="org.knime.timeseries.node.time2string.Time2StringNodeFactory"
-            >
+            deprecated="true"
+            factory-class="org.knime.timeseries.node.time2string.Time2StringNodeFactory">
       </node>
       <node
             category-path="/applications/timeseries"
