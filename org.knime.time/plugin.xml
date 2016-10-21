@@ -18,6 +18,11 @@
             deprecated="false"
             factory-class="org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeFactory">
       </node>
+      <node
+            category-path="/applications/timeseries"
+            deprecated="false"
+            factory-class="org.knime.time.node.convert.datetimetostring.DateTimeToStringNodeFactory">
+      </node>
    </extension>
 
    <extension
