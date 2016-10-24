@@ -97,7 +97,7 @@ public class StringToDateTimeNodeFactory extends NodeFactory<StringToDateTimeNod
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new StringToDateTimeNodeDialog(true);
+        return new StringToDateTimeNodeDialog();
     }
 
 }
