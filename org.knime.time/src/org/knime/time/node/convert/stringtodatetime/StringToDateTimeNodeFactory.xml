@@ -41,7 +41,8 @@
 			</option>
 			<option name="Date format">
 				A format string as required by the
-				<tt>java.time.format.DateTimeFormatter </tt>
+				<a
+					href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">DateTimeFormatter</a>
 				.
 				<br />
 				<b>Examples:</b>
@@ -100,19 +101,9 @@
 			</option>
 		</tab>
 		<tab name="Abort Execution">
-			<option name="Abort execution...">
-				If checked the node will abort the execution
-				after the maximum number
-				of unparsable rows is reached. Check in
-				order to test whether the
-				entered pattern can be applied to the input
-				data.
-			</option>
-			<option name="...after this number of unresolved rows.">
-				The maximum number of rows where the dates could
-				not be parsed with the
-				entered pattern before the node cancels its
-				execution.
+			<option name="Fail on error">
+				If checked, the node will abort the execution and fail on
+				errors. If unchecked, missing values will be generated instead.
 			</option>
 		</tab>
 	</fullDescription>

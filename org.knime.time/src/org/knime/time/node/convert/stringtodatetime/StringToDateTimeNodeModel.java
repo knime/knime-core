@@ -83,7 +83,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.streamable.InputPortRole;
@@ -105,21 +104,19 @@ import org.knime.time.node.convert.oldtonew.DateTimeTypes;
  */
 public class StringToDateTimeNodeModel extends NodeModel {
 
-    private final SettingsModelColumnFilter2 m_colSelect = StringToDateTimeNodeDialog.createColSelectModel(true);
+    private final SettingsModelColumnFilter2 m_colSelect = StringToDateTimeNodeDialog.createColSelectModel();
 
     private final SettingsModelString m_isReplaceOrAppend = StringToDateTimeNodeDialog.createReplaceAppendStringBool();
 
-    private final SettingsModelString m_suffix = StringToDateTimeNodeDialog.createSuffixModel(true);
+    private final SettingsModelString m_suffix = StringToDateTimeNodeDialog.createSuffixModel();
 
     private final SettingsModelString m_format = StringToDateTimeNodeDialog.createFormatModel();
 
     private final SettingsModelBoolean m_cancelOnFail = StringToDateTimeNodeDialog.createCancelOnFailModel();
 
-    private final SettingsModelInteger m_failNumber = StringToDateTimeNodeDialog.createFailNumberModel();
-
     private String m_selectedType;
 
-    private int m_failCounter;
+    private int failCounter;
 
     /**
      * one in, one out
@@ -146,15 +143,18 @@ public class StringToDateTimeNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
-        m_failCounter = 0;
+        failCounter = 0;
         final ColumnRearranger columnRearranger = createColumnRearranger(inData[0].getDataTableSpec());
         final BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], columnRearranger, exec);
+        if (failCounter > 0) {
+            setWarningMessage("Number of failures: " + failCounter);
+        }
         return new BufferedDataTable[]{out};
     }
 
     /**
-     * @param inSpec Current input spec
-     * @return The CR describing the output
+     * @param inSpec table input spec
+     * @return the CR describing the output
      */
     private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
@@ -271,7 +271,6 @@ public class StringToDateTimeNodeModel extends NodeModel {
         m_suffix.saveSettingsTo(settings);
         m_format.saveSettingsTo(settings);
         m_cancelOnFail.saveSettingsTo(settings);
-        m_failNumber.saveSettingsTo(settings);
         settings.addString("typeEnum", m_selectedType);
     }
 
@@ -285,7 +284,6 @@ public class StringToDateTimeNodeModel extends NodeModel {
         m_suffix.validateSettings(settings);
         m_format.validateSettings(settings);
         m_cancelOnFail.validateSettings(settings);
-        m_failNumber.validateSettings(settings);
         final SettingsModelString formatClone = m_format.createCloneWithValidatedValue(settings);
         final String format = formatClone.getStringValue();
         if (format == null || format.length() == 0) {
@@ -313,7 +311,6 @@ public class StringToDateTimeNodeModel extends NodeModel {
         m_suffix.loadSettingsFrom(settings);
         m_format.loadSettingsFrom(settings);
         m_cancelOnFail.loadSettingsFrom(settings);
-        m_failNumber.loadSettingsFrom(settings);
         m_selectedType = settings.getString("typeEnum");
         final String dateformat = m_format.getStringValue();
         // if it is not a predefined one -> store it
@@ -330,13 +327,16 @@ public class StringToDateTimeNodeModel extends NodeModel {
         // no internals
     }
 
+    /**
+     * This cell factory converts a single Date&Time cell to a String cell.
+     */
     final class StringToTimeCellFactory extends SingleCellFactory {
 
         private final int m_colIndex;
 
         /**
-         * @param inSpec
-         * @param colIndex
+         * @param inSpec table input spec
+         * @param colIndex index of the column to work on
          */
         public StringToTimeCellFactory(final DataColumnSpec inSpec, final int colIndex) {
             super(inSpec);
@@ -375,10 +375,9 @@ public class StringToDateTimeNodeModel extends NodeModel {
                     }
                 }
             } catch (DateTimeParseException e) {
-                m_failCounter++;
-                if (m_cancelOnFail.getBooleanValue() && m_failCounter >= m_failNumber.getIntValue()) {
-                    throw new IllegalArgumentException(
-                        "Maximum number of fails reached: " + m_failNumber.getIntValue());
+                failCounter++;
+                if (m_cancelOnFail.getBooleanValue()) {
+                    throw new IllegalArgumentException("Failed to parse data cell");
                 }
                 return new MissingCell(e.getMessage());
             }
