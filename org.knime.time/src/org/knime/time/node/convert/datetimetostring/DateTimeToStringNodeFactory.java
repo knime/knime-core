@@ -51,7 +51,6 @@ package org.knime.time.node.convert.datetimetostring;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeDialog;
 
 /**
  * The node factory of the node which converts the new date&time types to strings.
@@ -98,7 +97,7 @@ public class DateTimeToStringNodeFactory extends NodeFactory<DateTimeToStringNod
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new StringToDateTimeNodeDialog(false);
+        return new DateTimeToStringNodeDialog();
     }
 
 }

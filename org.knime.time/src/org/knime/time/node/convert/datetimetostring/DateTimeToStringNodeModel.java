@@ -96,7 +96,6 @@ import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.UniqueNameGenerator;
-import org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeDialog;
 
 /**
  * The node model of the node which converts the new date&time types to strings.
@@ -105,13 +104,13 @@ import org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeDialog;
  */
 public class DateTimeToStringNodeModel extends NodeModel {
 
-    private final SettingsModelColumnFilter2 m_colSelect = StringToDateTimeNodeDialog.createColSelectModel(true);
+    private final SettingsModelColumnFilter2 m_colSelect = DateTimeToStringNodeDialog.createColSelectModel();
 
-    private final SettingsModelString m_isReplaceOrAppend = StringToDateTimeNodeDialog.createReplaceAppendStringBool();
+    private final SettingsModelString m_isReplaceOrAppend = DateTimeToStringNodeDialog.createReplaceAppendStringBool();
 
-    private final SettingsModelString m_suffix = StringToDateTimeNodeDialog.createSuffixModel(true);
+    private final SettingsModelString m_suffix = DateTimeToStringNodeDialog.createSuffixModel();
 
-    private final SettingsModelString m_format = StringToDateTimeNodeDialog.createFormatModel();
+    private final SettingsModelString m_format = DateTimeToStringNodeDialog.createFormatModel();
 
     /**
      */
@@ -150,7 +149,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
         int i = 0;
         for (String includedCol : includeList) {
-            if (m_isReplaceOrAppend.getStringValue().equals(StringToDateTimeNodeDialog.OPTION_REPLACE)) {
+            if (m_isReplaceOrAppend.getStringValue().equals(DateTimeToStringNodeDialog.OPTION_REPLACE)) {
                 final DataColumnSpecCreator dataColumnSpecCreator =
                     new DataColumnSpecCreator(includedCol, StringCell.TYPE);
                 final TimeToStringCellFactory cellFac =
@@ -196,7 +195,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
                 final int[] includeIndeces = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
                     .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
                 final boolean isReplace =
-                    m_isReplaceOrAppend.getStringValue().equals(StringToDateTimeNodeDialog.OPTION_REPLACE);
+                    m_isReplaceOrAppend.getStringValue().equals(DateTimeToStringNodeDialog.OPTION_REPLACE);
 
                 DataRow row;
                 while ((row = in.poll()) != null) {
@@ -295,8 +294,8 @@ public class DateTimeToStringNodeModel extends NodeModel {
         m_format.loadSettingsFrom(settings);
         final String dateformat = m_format.getStringValue();
         // if it is not a predefined one -> store it
-        if (!StringToDateTimeNodeDialog.PREDEFINED_FORMATS.contains(dateformat)) {
-            StringHistory.getInstance(StringToDateTimeNodeDialog.FORMAT_HISTORY_KEY).add(dateformat);
+        if (!DateTimeToStringNodeDialog.PREDEFINED_FORMATS.contains(dateformat)) {
+            StringHistory.getInstance(DateTimeToStringNodeDialog.FORMAT_HISTORY_KEY).add(dateformat);
         }
     }
 
