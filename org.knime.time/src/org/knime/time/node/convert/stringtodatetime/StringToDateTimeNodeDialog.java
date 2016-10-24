@@ -129,8 +129,10 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
      */
     public static final String FORMAT_HISTORY_KEY = "string_to_date_formats";
 
+    /** * */
     public static final String OPTION_APPEND = "Append selected columns";
 
+    /** * */
     public static final String OPTION_REPLACE = "Replace selected columns";
 
     /**
@@ -205,7 +207,11 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
          */
         gbc.gridy++;
         final JPanel panelTypeFormat = new JPanel(new GridBagLayout());
-        panelTypeFormat.setBorder(BorderFactory.createTitledBorder("Type and Format Selection"));
+        if (isDateTimeToString) {
+            panelTypeFormat.setBorder(BorderFactory.createTitledBorder("Type and Format Selection"));
+        } else {
+            panelTypeFormat.setBorder(BorderFactory.createTitledBorder("Format Selection"));
+        }
         final GridBagConstraints gbcTypeFormat = new GridBagConstraints();
         // add label and combo box for type selection
         gbcTypeFormat.fill = GridBagConstraints.BOTH;

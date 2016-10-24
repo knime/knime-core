@@ -94,6 +94,7 @@ import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.UniqueNameGenerator;
 import org.knime.time.node.convert.stringtodatetime.StringToDateTimeNodeDialog;
 
@@ -292,6 +293,11 @@ public class DateTimeToStringNodeModel extends NodeModel {
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
         m_format.loadSettingsFrom(settings);
+        final String dateformat = m_format.getStringValue();
+        // if it is not a predefined one -> store it
+        if (!StringToDateTimeNodeDialog.PREDEFINED_FORMATS.contains(dateformat)) {
+            StringHistory.getInstance(StringToDateTimeNodeDialog.FORMAT_HISTORY_KEY).add(dateformat);
+        }
     }
 
     /**

@@ -118,7 +118,7 @@
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Input table">
-			Input table
+			Input table.
 		</inPort>
 		<outPort index="0" name="Output table">
 			Output table containing the parsed
