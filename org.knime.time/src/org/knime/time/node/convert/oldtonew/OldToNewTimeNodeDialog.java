@@ -70,7 +70,9 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -85,6 +87,10 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnFilter2 m_dialogCompColFilter;
 
+    private final DialogComponentButtonGroup m_dialogCompReplaceOrAppend;
+
+    private final DialogComponentString m_dialogCompSuffix;
+
     private final DialogComponentBoolean m_dialogCompZoneBool;
 
     private final JComboBox<DateTimeTypes> m_typeCombobox;
@@ -93,6 +99,10 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
 
     private final DialogComponentStringSelection m_dialogCompTimeZoneSelec;
 
+    static final String OPTION_APPEND = "Append selected columns";
+
+    static final String OPTION_REPLACE = "Replace selected columns";
+
     /** Setting up all DialogComponents. */
     OldToNewTimeNodeDialog() {
 
@@ -100,6 +110,13 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
          * DialogComponents
          */
         m_dialogCompColFilter = new DialogComponentColumnFilter2(OldToNewTimeNodeModel.createColSelectModel(), 0);
+
+        final SettingsModelString replaceOrAppendModel = OldToNewTimeNodeModel.createReplaceAppendStringBool();
+        m_dialogCompReplaceOrAppend =
+            new DialogComponentButtonGroup(replaceOrAppendModel, true, null, OPTION_APPEND, OPTION_REPLACE);
+
+        final SettingsModelString suffixModel = OldToNewTimeNodeModel.createSuffixModel();
+        m_dialogCompSuffix = new DialogComponentString(suffixModel, "Suffix of appended columns: ");
 
         final SettingsModelBoolean typeModelBool = OldToNewTimeNodeModel.createTypeModelBool();
         m_dialogCompTypeBool =
@@ -137,6 +154,30 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         panel.add(m_dialogCompColFilter.getComponentPanel(), gbc);
 
         /*
+         * add replace/append selection
+         */
+        gbc.gridy++;
+        gbc.weighty = 0;
+        final JPanel panelReplace = new JPanel(new GridBagLayout());
+        panelReplace.setBorder(BorderFactory.createTitledBorder("Replace/Append Selection"));
+        final GridBagConstraints gbcReplaceAppend = new GridBagConstraints();
+        // add check box
+        gbcReplaceAppend.fill = GridBagConstraints.VERTICAL;
+        gbcReplaceAppend.gridx = 0;
+        gbcReplaceAppend.gridy = 0;
+        gbcReplaceAppend.weighty = 0;
+        gbcReplaceAppend.anchor = GridBagConstraints.WEST;
+        panelReplace.add(m_dialogCompReplaceOrAppend.getComponentPanel(), gbcReplaceAppend);
+
+        // add suffix text field
+        gbcReplaceAppend.gridx++;
+        gbcReplaceAppend.weightx = 1;
+        gbcReplaceAppend.insets = new Insets(2, 10, 0, 0);
+        panelReplace.add(m_dialogCompSuffix.getComponentPanel(), gbcReplaceAppend);
+
+        panel.add(panelReplace, gbc);
+
+        /*
          * add type selection
          */
         gbc.gridy++;
@@ -145,15 +186,16 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         panelTypeSelec.setBorder(BorderFactory.createTitledBorder("New Type Selection"));
         final GridBagConstraints gbcTS = new GridBagConstraints();
         // add check box
-        gbcTS.fill = GridBagConstraints.BOTH;
+        gbcTS.fill = GridBagConstraints.VERTICAL;
         gbcTS.gridx = 0;
         gbcTS.gridy = 0;
-        gbcTS.weightx = 1;
-        gbcTS.weighty = 1;
+        gbcTS.weightx = 0;
+        gbcTS.anchor = GridBagConstraints.WEST;
         panelTypeSelec.add(m_dialogCompTypeBool.getComponentPanel(), gbcTS);
 
         // add label and combo box for type selection
         gbcTS.gridx++;
+        gbcTS.weightx = 1;
         final JPanel panelTypeList = new JPanel(new FlowLayout());
         final JLabel label = new JLabel("New type: ");
         panelTypeList.add(label);
@@ -171,11 +213,12 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         final JPanel panelZoneSelec = new JPanel(new GridBagLayout());
         panelZoneSelec.setBorder(BorderFactory.createTitledBorder("Time Zone Selection"));
         final GridBagConstraints gbcZS = new GridBagConstraints();
-        gbcZS.fill = GridBagConstraints.BOTH;
+        gbcZS.fill = GridBagConstraints.VERTICAL;
         gbcZS.gridx = 0;
         gbcZS.gridy = 0;
-        gbcZS.weightx = 0.5;
+        gbcZS.anchor = GridBagConstraints.WEST;
         panelZoneSelec.add(m_dialogCompZoneBool.getComponentPanel(), gbcZS);
+        gbcZS.weightx = 1;
         gbcZS.gridx++;
         panelZoneSelec.add(m_dialogCompTimeZoneSelec.getComponentPanel(), gbcZS);
 
@@ -190,6 +233,18 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         /*
          * Change and action listeners
          */
+        replaceOrAppendModel.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (replaceOrAppendModel.getStringValue().equals(OPTION_APPEND)) {
+                    suffixModel.setEnabled(true);
+                } else {
+                    suffixModel.setEnabled(false);
+                }
+            }
+        });
+
         typeModelBool.addChangeListener(new ChangeListener() {
 
             @Override
@@ -227,6 +282,8 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         m_dialogCompColFilter.saveSettingsTo(settings);
+        m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
+        m_dialogCompSuffix.saveSettingsTo(settings);
         m_dialogCompTypeBool.saveSettingsTo(settings);
         m_dialogCompZoneBool.saveSettingsTo(settings);
         m_dialogCompTimeZoneSelec.saveSettingsTo(settings);
@@ -241,6 +298,8 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
+        m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
+        m_dialogCompSuffix.loadSettingsFrom(settings, specs);
         m_dialogCompTypeBool.loadSettingsFrom(settings, specs);
         m_typeCombobox.setEnabled(!m_dialogCompTypeBool.isSelected());
         m_typeCombobox

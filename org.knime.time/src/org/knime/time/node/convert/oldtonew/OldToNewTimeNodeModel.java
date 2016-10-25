@@ -63,6 +63,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.MissingCell;
+import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.DateAndTimeCell;
@@ -99,6 +100,7 @@ import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
+import org.knime.core.util.UniqueNameGenerator;
 import org.knime.time.node.convert.DateTimeTypes;
 
 /**
@@ -109,6 +111,10 @@ import org.knime.time.node.convert.DateTimeTypes;
 final class OldToNewTimeNodeModel extends NodeModel {
 
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
+
+    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
+
+    private final SettingsModelString m_suffix = createSuffixModel();
 
     private final SettingsModelBoolean m_autoType = createTypeModelBool();
 
@@ -124,6 +130,18 @@ final class OldToNewTimeNodeModel extends NodeModel {
     @SuppressWarnings("unchecked")
     static SettingsModelColumnFilter2 createColSelectModel() {
         return new SettingsModelColumnFilter2("col_select", DateAndTimeValue.class);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createReplaceAppendStringBool() {
+        return new SettingsModelString("replace_or_append", OldToNewTimeNodeDialog.OPTION_REPLACE);
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    public static SettingsModelString createSuffixModel() {
+        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(new Date&Time)");
+        settingsModelString.setEnabled(false);
+        return settingsModelString;
     }
 
     /** @return the boolean model, used in both dialog and model. */
@@ -162,8 +180,15 @@ final class OldToNewTimeNodeModel extends NodeModel {
         final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
         int i = 0;
         for (String includedCol : includeList) {
-            ConvertTimeCellFactory cellFac = new ConvertTimeCellFactory(newColumnSpecs[i], i, includeIndexes[i++]);
-            rearranger.replace(cellFac, includedCol);
+            if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
+                ConvertTimeCellFactory cellFac = new ConvertTimeCellFactory(newColumnSpecs[i], i, includeIndexes[i++]);
+                rearranger.replace(cellFac, includedCol);
+            } else {
+                final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
+                    .newColumn(newColumnSpecs[i].getName() + m_suffix.getStringValue(), newColumnSpecs[i].getType());
+                ConvertTimeCellFactory cellFac = new ConvertTimeCellFactory(dataColSpec, i, includeIndexes[i++]);
+                rearranger.append(cellFac);
+            }
         }
         return rearranger;
     }
@@ -254,16 +279,32 @@ final class OldToNewTimeNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpecs[0], null);
         if (newColumnSpecs != null) {
-            // merge the outspecs (included and excluded)
-            final int[] includeIndexes = Arrays.stream(m_colSelect.applyTo(inSpecs[0]).getIncludes())
-                .mapToInt(s -> inSpecs[0].findColumnIndex(s)).toArray();
-            final DataColumnSpec[] colSpecs = new DataColumnSpec[inSpecs[0].getNumColumns()];
-            for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
-                final int searchIdx = Arrays.binarySearch(includeIndexes, i);
-                if (searchIdx < 0) {
-                    colSpecs[i] = inSpecs[0].getColumnSpec(i);
-                } else {
-                    colSpecs[i] = newColumnSpecs[searchIdx];
+            DataColumnSpec[] colSpecs;
+            if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
+                // merge the outspecs (included and excluded)
+                final int[] includeIndexes = Arrays.stream(m_colSelect.applyTo(inSpecs[0]).getIncludes())
+                    .mapToInt(s -> inSpecs[0].findColumnIndex(s)).toArray();
+                colSpecs = new DataColumnSpec[inSpecs[0].getNumColumns()];
+                for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
+                    final int searchIdx = Arrays.binarySearch(includeIndexes, i);
+                    if (searchIdx < 0) {
+                        colSpecs[i] = inSpecs[0].getColumnSpec(i);
+                    } else {
+                        colSpecs[i] = newColumnSpecs[searchIdx];
+                    }
+                }
+            } else {
+                colSpecs = new DataColumnSpec[inSpecs[0].getNumColumns()
+                    + m_colSelect.applyTo(inSpecs[0]).getIncludes().length];
+                int j = 0;
+                for (int i = 0; i < colSpecs.length; i++) {
+                    if (i < inSpecs[0].getNumColumns()) {
+                        colSpecs[i] = inSpecs[0].getColumnSpec(i);
+                    } else {
+                        colSpecs[i] = new UniqueNameGenerator(inSpecs[0]).newColumn(
+                            newColumnSpecs[j].getName() + m_suffix.getStringValue(), newColumnSpecs[j].getType());
+                        j++;
+                    }
                 }
             }
 
@@ -313,6 +354,8 @@ final class OldToNewTimeNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_colSelect.saveSettingsTo(settings);
+        m_isReplaceOrAppend.saveSettingsTo(settings);
+        m_suffix.saveSettingsTo(settings);
         m_autoType.saveSettingsTo(settings);
         m_addZone.saveSettingsTo(settings);
         m_timeZone.saveSettingsTo(settings);
@@ -325,6 +368,8 @@ final class OldToNewTimeNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.validateSettings(settings);
+        m_isReplaceOrAppend.validateSettings(settings);
+        m_suffix.validateSettings(settings);
         m_autoType.validateSettings(settings);
         m_addZone.validateSettings(settings);
         m_timeZone.validateSettings(settings);
@@ -336,6 +381,8 @@ final class OldToNewTimeNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.loadSettingsFrom(settings);
+        m_isReplaceOrAppend.loadSettingsFrom(settings);
+        m_suffix.loadSettingsFrom(settings);
         m_autoType.loadSettingsFrom(settings);
         m_addZone.loadSettingsFrom(settings);
         m_timeZone.loadSettingsFrom(settings);
@@ -455,11 +502,23 @@ final class OldToNewTimeNodeModel extends NodeModel {
                     final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
                     DataCell[] datacells = new DataCell[includeIndexes.length];
                     for (int i = 0; i < includeIndexes.length; i++) {
-                        ConvertTimeCellFactory cellFac =
-                            new ConvertTimeCellFactory(newColumnSpecs[i], i, includeIndexes[i]);
-                        datacells[i] = cellFac.getCells(row)[0];
+                        if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
+                            ConvertTimeCellFactory cellFac =
+                                new ConvertTimeCellFactory(newColumnSpecs[i], i, includeIndexes[i]);
+                            datacells[i] = cellFac.getCells(row)[0];
+                        } else {
+                            final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec).newColumn(
+                                newColumnSpecs[i].getName() + m_suffix.getStringValue(), newColumnSpecs[i].getType());
+                            ConvertTimeCellFactory cellFac =
+                                new ConvertTimeCellFactory(dataColSpec, i, includeIndexes[i]);
+                            datacells[i] = cellFac.getCells(row)[0];
+                        }
                     }
-                    out.push(new ReplacedColumnsDataRow(row, datacells, includeIndexes));
+                    if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
+                        out.push(new ReplacedColumnsDataRow(row, datacells, includeIndexes));
+                    } else {
+                        out.push(new AppendedColumnRow(row, datacells));
+                    }
                 }
                 in.close();
                 out.close();
