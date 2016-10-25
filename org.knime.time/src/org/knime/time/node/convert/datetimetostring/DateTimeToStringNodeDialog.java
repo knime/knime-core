@@ -151,15 +151,16 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         panelReplace.setBorder(BorderFactory.createTitledBorder("Replace/Append Selection"));
         final GridBagConstraints gbcReplaceAppend = new GridBagConstraints();
         // add check box
-        gbcReplaceAppend.fill = GridBagConstraints.BOTH;
+        gbcReplaceAppend.fill = GridBagConstraints.VERTICAL;
         gbcReplaceAppend.gridx = 0;
         gbcReplaceAppend.gridy = 0;
-        gbcReplaceAppend.weightx = 1;
-        gbcReplaceAppend.weighty = 1;
+        gbcReplaceAppend.anchor = GridBagConstraints.WEST;
         panelReplace.add(m_dialogCompReplaceOrAppend.getComponentPanel(), gbcReplaceAppend);
 
         // add suffix text field
         gbcReplaceAppend.gridx++;
+        gbcReplaceAppend.weightx = 1;
+        gbcReplaceAppend.insets = new Insets(2, 10, 0, 0);
         panelReplace.add(m_dialogCompSuffix.getComponentPanel(), gbcReplaceAppend);
 
         panel.add(panelReplace, gbc);
@@ -172,11 +173,10 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         panelTypeFormat.setBorder(BorderFactory.createTitledBorder("Type and Format Selection"));
         final GridBagConstraints gbcTypeFormat = new GridBagConstraints();
         // add label and combo box for type selection
-        gbcTypeFormat.fill = GridBagConstraints.BOTH;
+        gbcTypeFormat.fill = GridBagConstraints.VERTICAL;
         gbcTypeFormat.gridx = 0;
         gbcTypeFormat.gridy = 0;
-        gbcTypeFormat.weightx = 1;
-        gbcTypeFormat.weighty = 1;
+        gbcTypeFormat.anchor = GridBagConstraints.WEST;
         panelTypeFormat.add(m_dialogCompFormatSelect.getComponentPanel(), gbcTypeFormat);
         panel.add(panelTypeFormat, gbc);
         /*

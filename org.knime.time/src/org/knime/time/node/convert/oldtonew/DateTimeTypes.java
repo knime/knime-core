@@ -49,20 +49,29 @@
 package org.knime.time.node.convert.oldtonew;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.time.localdate.LocalDateCell;
 import org.knime.core.data.time.localdate.LocalDateCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCell;
 import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
+import org.knime.core.data.time.localtime.LocalTimeCell;
 import org.knime.core.data.time.localtime.LocalTimeCellFactory;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCell;
 import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 
 /**
- * An enumeration that contains all different Date&Time Types.
+ * An enumeration that contains all different Date&Time data types.
  *
  * @author Simon Schmid, KNIME.com, Konstanz, Germany
  */
 public enum DateTimeTypes {
-        LOCAL_DATE("Local date", LocalDateCellFactory.TYPE), LOCAL_TIME("Local time", LocalTimeCellFactory.TYPE),
-        LOCAL_DATE_TIME("Local date&time", LocalDateTimeCellFactory.TYPE),
-        ZONED_DATE_TIME("Zoned date&time", ZonedDateTimeCellFactory.TYPE);
+    /** {@link LocalDateCell} contains only a date */
+    LOCAL_DATE("Local date", LocalDateCellFactory.TYPE),
+    /** {@link LocalTimeCell} contains only a time */
+    LOCAL_TIME("Local time", LocalTimeCellFactory.TYPE),
+    /** {@link LocalDateTimeCell} contains date and time */
+    LOCAL_DATE_TIME("Local date&time", LocalDateTimeCellFactory.TYPE),
+    /** {@link ZonedDateTimeCell} contains date, time and a time zone */
+    ZONED_DATE_TIME("Zoned date&time", ZonedDateTimeCellFactory.TYPE);
 
     private final String m_name;
 
@@ -81,6 +90,9 @@ public enum DateTimeTypes {
         return m_name;
     }
 
+    /**
+     * @return {@link DataType} of this enum constant
+     */
     public DataType getDataType() {
         return m_dataType;
     }
