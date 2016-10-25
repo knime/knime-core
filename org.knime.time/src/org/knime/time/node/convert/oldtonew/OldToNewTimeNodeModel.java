@@ -169,7 +169,7 @@ final class OldToNewTimeNodeModel extends NodeModel {
 
     /**
      * @param inSpec Current input spec
-     * @return The CR describing the output
+     * @return The CR describing the output, can be null if called by configure
      */
     private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec, final DataRow row) {
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
@@ -178,6 +178,10 @@ final class OldToNewTimeNodeModel extends NodeModel {
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
 
         final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
+        // if called by configure and automatic type detection is activated, it can be null
+        if (newColumnSpecs == null) {
+            return null;
+        }
         int i = 0;
         for (String includedCol : includeList) {
             if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
@@ -277,40 +281,11 @@ final class OldToNewTimeNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpecs[0], null);
-        if (newColumnSpecs != null) {
-            DataColumnSpec[] colSpecs;
-            if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
-                // merge the outspecs (included and excluded)
-                final int[] includeIndexes = Arrays.stream(m_colSelect.applyTo(inSpecs[0]).getIncludes())
-                    .mapToInt(s -> inSpecs[0].findColumnIndex(s)).toArray();
-                colSpecs = new DataColumnSpec[inSpecs[0].getNumColumns()];
-                for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
-                    final int searchIdx = Arrays.binarySearch(includeIndexes, i);
-                    if (searchIdx < 0) {
-                        colSpecs[i] = inSpecs[0].getColumnSpec(i);
-                    } else {
-                        colSpecs[i] = newColumnSpecs[searchIdx];
-                    }
-                }
-            } else {
-                colSpecs = new DataColumnSpec[inSpecs[0].getNumColumns()
-                    + m_colSelect.applyTo(inSpecs[0]).getIncludes().length];
-                int j = 0;
-                for (int i = 0; i < colSpecs.length; i++) {
-                    if (i < inSpecs[0].getNumColumns()) {
-                        colSpecs[i] = inSpecs[0].getColumnSpec(i);
-                    } else {
-                        colSpecs[i] = new UniqueNameGenerator(inSpecs[0]).newColumn(
-                            newColumnSpecs[j].getName() + m_suffix.getStringValue(), newColumnSpecs[j].getType());
-                        j++;
-                    }
-                }
-            }
-
-            return new DataTableSpec[]{new DataTableSpec(colSpecs)};
-        } else {
+        final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0], null);
+        if (columnRearranger == null) {
             return new DataTableSpec[]{null};
+        } else {
+            return new DataTableSpec[]{columnRearranger.createSpec()};
         }
     }
 

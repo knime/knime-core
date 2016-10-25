@@ -61,6 +61,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.append.AppendedColumnRow;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.DateAndTimeCell;
@@ -92,6 +93,7 @@ import org.knime.core.node.streamable.RowInput;
 import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
+import org.knime.core.util.UniqueNameGenerator;
 
 /**
  * The {@link NodeModel} implementation of the node which converts new to old date&time types.
@@ -106,6 +108,10 @@ final class NewToOldTimeNodeModel extends NodeModel {
 
     private final SettingsModelColumnFilter2 m_colSelect = createColSelectModel();
 
+    private final SettingsModelString m_isReplaceOrAppend = createReplaceAppendStringBool();
+
+    private final SettingsModelString m_suffix = createSuffixModel();
+
     private final SettingsModelString m_timeZoneSelect = createStringModel();
 
     /** @return the column select model, used in both dialog and model. */
@@ -113,6 +119,18 @@ final class NewToOldTimeNodeModel extends NodeModel {
     static SettingsModelColumnFilter2 createColSelectModel() {
         return new SettingsModelColumnFilter2("col_select", LocalDateTimeValue.class, ZonedDateTimeValue.class,
             LocalDateValue.class, LocalTimeValue.class);
+    }
+
+    /** @return the string model, used in both dialog and model. */
+    public static SettingsModelString createReplaceAppendStringBool() {
+        return new SettingsModelString("replace_or_append", NewToOldTimeNodeDialog.OPTION_REPLACE);
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    public static SettingsModelString createSuffixModel() {
+        final SettingsModelString settingsModelString = new SettingsModelString("suffix", "(old Date&Time)");
+        settingsModelString.setEnabled(false);
+        return settingsModelString;
     }
 
     /** @return the string model, used in both dialog and model. */
@@ -126,45 +144,29 @@ final class NewToOldTimeNodeModel extends NodeModel {
     }
 
     /**
-     *
-     * @param inSpec Current input spec
-     * @return Output spec
-     */
-    private DataTableSpec getOutSpec(final DataTableSpec inSpec) {
-        // merge the outspecs (included and excluded)
-        final int[] includeIndexes =
-            Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-        final DataColumnSpec[] colSpecs = new DataColumnSpec[inSpec.getNumColumns()];
-        for (int i = 0; i < inSpec.getNumColumns(); i++) {
-            final int searchIdx = Arrays.binarySearch(includeIndexes, i);
-            if (searchIdx < 0) {
-                colSpecs[i] = inSpec.getColumnSpec(i);
-            } else {
-                final DataColumnSpecCreator dataColumnSpecCreator =
-                    new DataColumnSpecCreator(inSpec.getColumnSpec(i).getName(), DateAndTimeCell.TYPE);
-                colSpecs[i] = dataColumnSpecCreator.createSpec();
-            }
-        }
-        return new DataTableSpec(colSpecs);
-    }
-
-    /**
      * @param inSpec Current input spec
      * @return The CR describing the output
      */
     private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec) {
         final ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         final String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-        final int[] includeIndexes =
+        final int[] includeIndeces =
             Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes()).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
 
         int i = 0;
         for (String includedCol : includeList) {
-            final DataColumnSpecCreator dataColumnSpecCreator =
-                new DataColumnSpecCreator(includedCol, DateAndTimeCell.TYPE);
-            ConvertTimeCellFactory cellFac =
-                new ConvertTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndexes[i++]);
-            rearranger.replace(cellFac, includedCol);
+            if (m_isReplaceOrAppend.getStringValue().equals(NewToOldTimeNodeDialog.OPTION_REPLACE)) {
+                final DataColumnSpecCreator dataColumnSpecCreator =
+                    new DataColumnSpecCreator(includedCol, DateAndTimeCell.TYPE);
+                final ConvertTimeCellFactory cellFac =
+                    new ConvertTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i++]);
+                rearranger.replace(cellFac, includedCol);
+            } else {
+                final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
+                    .newColumn(includedCol + m_suffix.getStringValue(), DateAndTimeCell.TYPE);
+                final ConvertTimeCellFactory cellFac = new ConvertTimeCellFactory(dataColSpec, includeIndeces[i++]);
+                rearranger.append(cellFac);
+            }
         }
         return rearranger;
     }
@@ -208,21 +210,33 @@ final class NewToOldTimeNodeModel extends NodeModel {
 
                 final DataTableSpec inSpec = in.getDataTableSpec();
                 String[] includeList = m_colSelect.applyTo(inSpec).getIncludes();
-                final int[] includeIndexes =
+                final int[] includeIndeces =
                     Arrays.stream(includeList).mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
 
                 DataRow row;
                 while ((row = in.poll()) != null) {
                     exec.checkCanceled();
-                    DataCell[] datacells = new DataCell[includeIndexes.length];
-                    for (int i = 0; i < includeIndexes.length; i++) {
-                        final DataColumnSpecCreator dataColumnSpecCreator =
-                            new DataColumnSpecCreator(includeList[i], DateAndTimeCell.TYPE);
-                        ConvertTimeCellFactory cellFac =
-                            new ConvertTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndexes[i]);
-                        datacells[i] = cellFac.getCells(row)[0];
+                    DataCell[] datacells = new DataCell[includeIndeces.length];
+                    for (int i = 0; i < includeIndeces.length; i++) {
+                        if (m_isReplaceOrAppend.getStringValue().equals(NewToOldTimeNodeDialog.OPTION_REPLACE)) {
+                            final DataColumnSpecCreator dataColumnSpecCreator =
+                                new DataColumnSpecCreator(includeList[i], DateAndTimeCell.TYPE);
+                            final ConvertTimeCellFactory cellFac =
+                                new ConvertTimeCellFactory(dataColumnSpecCreator.createSpec(), includeIndeces[i]);
+                            datacells[i] = cellFac.getCells(row)[0];
+                        } else {
+                            final DataColumnSpec dataColSpec = new UniqueNameGenerator(inSpec)
+                                .newColumn(includeList[i] + m_suffix.getStringValue(), DateAndTimeCell.TYPE);
+                            final ConvertTimeCellFactory cellFac =
+                                new ConvertTimeCellFactory(dataColSpec, includeIndeces[i]);
+                            datacells[i] = cellFac.getCells(row)[0];
+                        }
                     }
-                    out.push(new ReplacedColumnsDataRow(row, datacells, includeIndexes));
+                    if (m_isReplaceOrAppend.getStringValue().equals(NewToOldTimeNodeDialog.OPTION_REPLACE)) {
+                        out.push(new ReplacedColumnsDataRow(row, datacells, includeIndeces));
+                    } else {
+                        out.push(new AppendedColumnRow(row, datacells));
+                    }
                 }
                 in.close();
                 out.close();
@@ -235,7 +249,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        return new DataTableSpec[]{getOutSpec(inSpecs[0])};
+        final ColumnRearranger columnRearranger = createColumnRearranger(inSpecs[0]);
+        return new DataTableSpec[]{columnRearranger.createSpec()};
     }
 
     /**
@@ -262,6 +277,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_colSelect.saveSettingsTo(settings);
+        m_isReplaceOrAppend.saveSettingsTo(settings);
+        m_suffix.saveSettingsTo(settings);
         m_timeZoneSelect.saveSettingsTo(settings);
     }
 
@@ -271,6 +288,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.validateSettings(settings);
+        m_isReplaceOrAppend.validateSettings(settings);
+        m_suffix.validateSettings(settings);
         m_timeZoneSelect.validateSettings(settings);
     }
 
@@ -280,6 +299,8 @@ final class NewToOldTimeNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_colSelect.loadSettingsFrom(settings);
+        m_isReplaceOrAppend.loadSettingsFrom(settings);
+        m_suffix.loadSettingsFrom(settings);
         m_timeZoneSelect.loadSettingsFrom(settings);
     }
 
