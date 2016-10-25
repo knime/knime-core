@@ -74,6 +74,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.time.node.convert.DateTimeTypes;
 
 /**
  * The node dialog of the node which converts old to new date&time types.

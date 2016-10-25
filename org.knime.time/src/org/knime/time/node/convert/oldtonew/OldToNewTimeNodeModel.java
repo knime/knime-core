@@ -99,6 +99,7 @@ import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
+import org.knime.time.node.convert.DateTimeTypes;
 
 /**
  * The {@link NodeModel} implementation of the node which converts old to new date&time types.
