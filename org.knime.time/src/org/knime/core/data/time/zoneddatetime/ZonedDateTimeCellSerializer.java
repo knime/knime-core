@@ -49,8 +49,10 @@ package org.knime.core.data.time.zoneddatetime;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 
@@ -71,20 +73,24 @@ public final class ZonedDateTimeCellSerializer implements DataCellSerializer<Zon
     public ZonedDateTimeCell deserialize(final DataCellDataInput input) throws IOException {
         final long epochDay = input.readLong();
         final long nanoOfDay = input.readLong();
+        final int offsetTotalSeconds = input.readInt();
         final String zoneId = input.readLine();
         final ZonedDateTime zonedDateTime =
-            ZonedDateTime.of(LocalDate.ofEpochDay(epochDay), LocalTime.ofNanoOfDay(nanoOfDay), ZoneId.of(zoneId));
+            ZonedDateTime.ofInstant(LocalDateTime.of(LocalDate.ofEpochDay(epochDay), LocalTime.ofNanoOfDay(nanoOfDay)),
+                ZoneOffset.ofTotalSeconds(offsetTotalSeconds), ZoneId.of(zoneId));
         return new ZonedDateTimeCell(zonedDateTime);
     }
 
     @Override
     public void serialize(final ZonedDateTimeCell cell, final DataCellDataOutput output) throws IOException {
-        final ZonedDateTime ZonedDateTime = cell.getZonedDateTime();
-        final long epochDay = ZonedDateTime.getLong(ChronoField.EPOCH_DAY);
-        final long nanoOfDay = ZonedDateTime.getLong(ChronoField.NANO_OF_DAY);
-        final String zoneId = ZonedDateTime.getZone().getId();
+        final ZonedDateTime zonedDateTime = cell.getZonedDateTime();
+        final long epochDay = zonedDateTime.getLong(ChronoField.EPOCH_DAY);
+        final long nanoOfDay = zonedDateTime.getLong(ChronoField.NANO_OF_DAY);
+        final int offsetTotalSeconds = zonedDateTime.getOffset().get(ChronoField.OFFSET_SECONDS);
+        final String zoneId = zonedDateTime.getZone().getId();
         output.writeLong(epochDay);
         output.writeLong(nanoOfDay);
+        output.writeInt(offsetTotalSeconds);
         output.writeBytes(zoneId);
     }
 
