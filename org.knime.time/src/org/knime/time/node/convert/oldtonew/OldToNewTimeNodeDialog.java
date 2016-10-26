@@ -45,7 +45,6 @@
  */
 package org.knime.time.node.convert.oldtonew;
 
-import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -148,9 +147,6 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         /*
          * add column filter
          */
-        final JPanel panelColFilter = new JPanel(new BorderLayout());
-        panelColFilter.setBorder(BorderFactory.createTitledBorder("Column Selection"));
-        panelColFilter.add(m_dialogCompColFilter.getComponentPanel(), BorderLayout.CENTER);
         panel.add(m_dialogCompColFilter.getComponentPanel(), gbc);
 
         /*
@@ -287,7 +283,6 @@ final class OldToNewTimeNodeDialog extends NodeDialogPane {
         m_dialogCompTypeBool.saveSettingsTo(settings);
         m_dialogCompZoneBool.saveSettingsTo(settings);
         m_dialogCompTimeZoneSelec.saveSettingsTo(settings);
-        settings.addBoolean("typeBool", m_typeCombobox.isEnabled());
         settings.addString("newTypeEnum", ((DateTimeTypes)m_typeCombobox.getModel().getSelectedItem()).name());
     }
 
