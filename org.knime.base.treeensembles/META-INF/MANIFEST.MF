@@ -5,6 +5,7 @@ Bundle-SymbolicName: org.knime.base.treeensembles;singleton:=true
 Bundle-Version: 3.3.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.apache.commons.math;bundle-version="[2.1.0,3.0.0)",
+ org.knime.core.pmml;bundle-version="[3.2.0,4.0.0)",
  org.knime.base;bundle-version="[3.0.0,4.0.0)",
  org.knime.ensembles;bundle-version="[3.0.0,4.0.0)"
 Bundle-ActivationPolicy: lazy
