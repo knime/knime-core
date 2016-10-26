@@ -22,6 +22,7 @@ Export-Package: org.knime.testing,
  org.knime.testing.node.runtime,
  org.knime.testing.stacktracedumper
 Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
+ org.knime.core.pmml;bundle-version="[3.2.0,4.0.0)",
  org.knime.workbench.core;bundle-version="[3.0.0,4.0.0)",
  org.knime.workbench.repository;bundle-version="[3.0.0,4.0.0)",
  org.knime.base;bundle-version="[3.0.0,4.0.0)",
