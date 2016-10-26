@@ -65,6 +65,7 @@ import java.util.regex.Pattern;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
@@ -109,6 +110,8 @@ class TestflowConfiguration {
     private final Map<NodeID, Pattern> m_nodeErrorMessages = new HashMap<NodeID, Pattern>();
 
     private final Collection<Pattern> m_requiredDebugs = new ArrayList<Pattern>();
+
+    private LoadVersion m_requiredLoadVersion;
 
     private int m_maxHiliteRows = DEFAULT_MAX_HILITE_ROWS;
 
@@ -208,6 +211,7 @@ class TestflowConfiguration {
             }
         }
 
+        m_requiredLoadVersion = settings.requiredLoadVersion();
         m_timeout = settings.timeout();
         m_maxHiliteRows = settings.maxHiliteRows();
         m_streamingTest = settings.streamingTest();
@@ -533,6 +537,14 @@ class TestflowConfiguration {
     public boolean runStreamingTest() {
         return m_streamingTest;
     }
+
+    /** As per {@link TestConfigSettings#requiredLoadVersion()}.
+     * @return version ...
+     */
+    public LoadVersion requiredLoadVersion() {
+        return m_requiredLoadVersion;
+    }
+
 
     private static Pattern createPatternFromMessage(String message) {
         int index = message.indexOf(REGEX_PATTERN);

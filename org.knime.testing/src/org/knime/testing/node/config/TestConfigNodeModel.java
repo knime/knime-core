@@ -64,12 +64,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.NodeContext;
 import org.knime.testing.core.TestrunJanitor;
-
-import junit.framework.AssertionFailedError;
 
 /**
  * This is the node model for the testflow configuration node. The model
@@ -188,15 +184,6 @@ public class TestConfigNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-
-        if (m_settings.requiredLoadVersion() != null) {
-            LoadVersion loadVersion = NodeContext.getContext().getWorkflowManager().getLoadVersion();
-            if (m_settings.requiredLoadVersion().isOlderThan(loadVersion)) {
-                throw new AssertionFailedError(String.format("Workflow was required to stay in an older version than it"
-                    + " is now (required: %s, actual: %s). It may have been accidentally saved with a newer version.",
-                    m_settings.requiredLoadVersion(), loadVersion));
-            }
-        }
 
         final double max = m_janitors.size();
         int i = 0;

@@ -50,13 +50,12 @@ package org.knime.testing.core.ng;
 import java.io.File;
 import java.io.IOException;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestResult;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
@@ -65,6 +64,9 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResult
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LockFailedException;
 import org.knime.testing.core.TestrunConfiguration;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.TestResult;
 
 /**
  * Testcase that monitors loading a workflow. Errors and if desired also warnings during load are reported as failures.
@@ -145,6 +147,18 @@ class WorkflowLoadTest extends WorkflowTest {
         }
 
         WorkflowManager wfm = loadRes.getWorkflowManager();
+
+        LoadVersion requiredLoadVersion = test.m_context.getTestflowConfiguration().requiredLoadVersion();
+        if (requiredLoadVersion != null) {
+            LoadVersion loadVersion = NodeContext.getContext().getWorkflowManager().getLoadVersion();
+            if (requiredLoadVersion.isOlderThan(loadVersion)) {
+                result.addFailure(test,  new AssertionFailedError(String.format("Workflow was required to stay in an older version than it"
+                    + " is now (required: %s, actual: %s). It may have been accidentally saved with a newer version.",
+                    requiredLoadVersion, loadVersion)));
+            }
+        }
+
+
         wfm.addWorkflowVariables(true, runConfig.getFlowVariables());
         return wfm;
     }
