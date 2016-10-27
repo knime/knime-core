@@ -212,7 +212,6 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         gbcTypeFormat.fill = GridBagConstraints.VERTICAL;
         gbcTypeFormat.gridx = 0;
         gbcTypeFormat.gridy = 0;
-        gbcTypeFormat.weightx = 0;
         gbcTypeFormat.weighty = 0;
         gbcTypeFormat.anchor = GridBagConstraints.WEST;
         m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
@@ -223,26 +222,17 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         panelTypeFormat.add(panelTypeList, gbcTypeFormat);
         // add format selection
         gbcTypeFormat.gridx++;
-        gbcTypeFormat.weightx = 0;
         panelTypeFormat.add(m_dialogCompFormatSelect.getComponentPanel(), gbcTypeFormat);
         // add label and combo box for locale selection
         gbcTypeFormat.gridx++;
         gbcTypeFormat.weightx = 1;
-        //        final Locale[] availableLocales = Locale.getAvailableLocales();
-        //        Arrays.sort(availableLocales);
-        //        m_localeCombobox = new JComboBox<Locale>(availableLocales);
-        //        final JPanel panelLocaleList = new JPanel(new FlowLayout());
-        //        final JLabel labelLocale = new JLabel("New type: ");
-        //        panelLocaleList.add(labelLocale);
-        //        panelLocaleList.add(m_localeCombobox);
         panelTypeFormat.add(m_dialogCompLocale.getComponentPanel(), gbcTypeFormat);
-
         // add label for warning
         m_typeFormatLabel = new JLabel();
         gbcTypeFormat.gridx = 0;
         gbcTypeFormat.gridy++;
-        gbcTypeFormat.weightx = 1;
-        gbcTypeFormat.gridwidth = 2;
+        gbcTypeFormat.weightx = 0;
+        gbcTypeFormat.gridwidth = 3;
         gbcTypeFormat.anchor = GridBagConstraints.CENTER;
         m_typeFormatLabel.setForeground(Color.RED);
         panelTypeFormat.add(m_typeFormatLabel, gbcTypeFormat);
