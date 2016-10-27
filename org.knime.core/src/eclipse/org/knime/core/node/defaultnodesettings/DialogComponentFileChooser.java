@@ -48,9 +48,11 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import java.awt.FlowLayout;
+import java.awt.Dimension;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.border.TitledBorder;
@@ -72,6 +74,16 @@ import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentFileChooser extends DialogComponent {
+
+    /**
+     * Type value indicating that the FileChooser is for a Reader-Node.
+     */
+    public static final int READER_DIALOG = JFileChooser.OPEN_DIALOG;
+    /**
+     * Type value indicating that the FileChooser is for a Writer-Node.
+     */
+    public static final int WRITER_DIALOG = JFileChooser.SAVE_DIALOG;
+
     private final TitledBorder m_border;
 
     private final FilesHistoryPanel m_filesPanel;
@@ -184,7 +196,7 @@ public class DialogComponentFileChooser extends DialogComponent {
             final String... validExtensions) {
         super(stringModel);
 
-        getComponentPanel().setLayout(new FlowLayout());
+        getComponentPanel().setLayout(new BoxLayout(getComponentPanel(), BoxLayout.X_AXIS));
         int selectionMode;
         LocationValidation locationValidation;
         if (directoryOnly) {
@@ -220,9 +232,12 @@ public class DialogComponentFileChooser extends DialogComponent {
 
 
         final String title = directoryOnly ? "Selected Directory:" : "Selected File:";
-        m_border = BorderFactory.createTitledBorder(title);
-        m_filesPanel.setBorder(m_border);
+        m_border = BorderFactory.createTitledBorder(BorderFactory
+            .createEtchedBorder(), title);
+        getComponentPanel().setBorder(m_border);
+        getComponentPanel().setMaximumSize(new Dimension(Integer.MAX_VALUE, 74));
         getComponentPanel().add(m_filesPanel);
+        getComponentPanel().add(Box.createHorizontalGlue());
 
         getModel().prependChangeListener(new ChangeListener() {
             @Override

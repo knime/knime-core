@@ -63,10 +63,11 @@ public class PortObjectReaderNodeDialog extends DefaultNodeSettingsPane {
      * chooser entry.
      */
     public PortObjectReaderNodeDialog() {
-        addDialogComponent(new DialogComponentFileChooser(
-                new SettingsModelString(PortObjectReaderNodeModel.FILENAME, ""),
-                        PortObjectReaderNodeDialog.class.getName(),
-                        ".zip"));
+        SettingsModelString settingsModelString = new SettingsModelString(PortObjectReaderNodeModel.FILENAME, "");
+        addDialogComponent(
+            new DialogComponentFileChooser(settingsModelString, PortObjectReaderNodeDialog.class.getName(),
+                DialogComponentFileChooser.READER_DIALOG, false, createFlowVariableModel(settingsModelString), ".zip"));
+        finishTab();
     }
 
 }

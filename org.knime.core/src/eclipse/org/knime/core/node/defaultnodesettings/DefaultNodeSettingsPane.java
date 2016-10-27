@@ -48,6 +48,9 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -385,5 +388,21 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
             box.add(Box.createHorizontalGlue());
         }
          return box;
+    }
+
+    /**
+     * Finishes the tab. Necessary for a coherent layout. 
+     */
+    public void finishTab(){
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.FIRST_LINE_START;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        p.add(new JPanel(), gbc);
+        m_compositePanel.add(p);
     }
 }
