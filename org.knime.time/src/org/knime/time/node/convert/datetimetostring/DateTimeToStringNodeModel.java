@@ -54,6 +54,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Arrays;
 
+import org.apache.commons.lang3.LocaleUtils;
 import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -111,6 +112,8 @@ public class DateTimeToStringNodeModel extends NodeModel {
     private final SettingsModelString m_suffix = DateTimeToStringNodeDialog.createSuffixModel();
 
     private final SettingsModelString m_format = DateTimeToStringNodeDialog.createFormatModel();
+
+    private final SettingsModelString m_locale = DateTimeToStringNodeDialog.createLocaleModel();
 
     /**
      */
@@ -255,6 +258,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
         m_format.saveSettingsTo(settings);
+        m_locale.saveSettingsTo(settings);
     }
 
     /**
@@ -266,6 +270,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
         m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
         m_format.validateSettings(settings);
+        m_locale.validateSettings(settings);
         final SettingsModelString formatClone = m_format.createCloneWithValidatedValue(settings);
         final String format = formatClone.getStringValue();
         if (format == null || format.length() == 0) {
@@ -292,6 +297,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
         m_format.loadSettingsFrom(settings);
+        m_locale.loadSettingsFrom(settings);
         final String dateformat = m_format.getStringValue();
         // if it is not a predefined one -> store it
         if (!DateTimeToStringNodeDialog.PREDEFINED_FORMATS.contains(dateformat)) {
@@ -330,7 +336,8 @@ public class DateTimeToStringNodeModel extends NodeModel {
                 return cell;
             }
             try {
-                final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_format.getStringValue());
+                final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_format.getStringValue(),
+                    LocaleUtils.toLocale(m_locale.getStringValue()));
                 final DataType type = cell.getType();
                 if (type.equals(LocalDateCellFactory.TYPE)) {
                     final String result = ((LocalDateCell)cell).getLocalDate().format(formatter);
@@ -348,7 +355,7 @@ public class DateTimeToStringNodeModel extends NodeModel {
             } catch (UnsupportedTemporalTypeException e) {
                 return new MissingCell(e.getMessage());
             }
-            return null;
+            throw new IllegalStateException("Data type of cell is not compatible.");
         }
     }
 }

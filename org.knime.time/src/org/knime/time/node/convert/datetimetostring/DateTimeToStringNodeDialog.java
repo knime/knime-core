@@ -48,20 +48,36 @@
  */
 package org.knime.time.node.convert.datetimetostring;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.time.localdate.LocalDateCellFactory;
+import org.knime.core.data.time.localdatetime.LocalDateTimeCellFactory;
+import org.knime.core.data.time.localtime.LocalTimeCellFactory;
+import org.knime.core.data.time.zoneddatetime.ZonedDateTimeCellFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -91,7 +107,11 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
 
     private final DialogComponentStringSelection m_dialogCompFormatSelect;
 
+    private final DialogComponentStringSelection m_dialogCompLocale;
+
     private final SettingsModelString formatModel;
+
+    private DataTableSpec spec;
 
     /**
      * Predefined date formats.
@@ -111,8 +131,8 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
      * Setting up all DialogComponents.
      */
     public DateTimeToStringNodeDialog() {
-
-        m_dialogCompColFilter = new DialogComponentColumnFilter2(createColSelectModel(), 0);
+        final SettingsModelColumnFilter2 colSelectModel = createColSelectModel();
+        m_dialogCompColFilter = new DialogComponentColumnFilter2(colSelectModel, 0);
 
         final SettingsModelString replaceOrAppendModel = createReplaceAppendStringBool();
         m_dialogCompReplaceOrAppend =
@@ -124,6 +144,16 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         formatModel = createFormatModel();
         m_dialogCompFormatSelect =
             new DialogComponentStringSelection(formatModel, "Date format: ", PREDEFINED_FORMATS, true);
+
+        final Locale[] availableLocales = Locale.getAvailableLocales();
+        final String[] availableLocalesString = new String[availableLocales.length];
+        for (int i = 0; i < availableLocales.length; i++) {
+            availableLocalesString[i] = availableLocales[i].toString();
+        }
+        Arrays.sort(availableLocalesString);
+
+        m_dialogCompLocale =
+            new DialogComponentStringSelection(createLocaleModel(), "Locale: ", availableLocalesString);
 
         /*
          * create panel with gbc
@@ -178,6 +208,19 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         gbcTypeFormat.gridy = 0;
         gbcTypeFormat.anchor = GridBagConstraints.WEST;
         panelTypeFormat.add(m_dialogCompFormatSelect.getComponentPanel(), gbcTypeFormat);
+        // add label and combo box for locale selection
+        gbcTypeFormat.gridx++;
+        gbcTypeFormat.weightx = 1;
+        panelTypeFormat.add(m_dialogCompLocale.getComponentPanel(), gbcTypeFormat);
+        // add label for warning
+        final JLabel typeFormatLabel = new JLabel();
+        gbcTypeFormat.gridx = 0;
+        gbcTypeFormat.gridy++;
+        gbcTypeFormat.weightx = 0;
+        gbcTypeFormat.gridwidth = 3;
+        gbcTypeFormat.anchor = GridBagConstraints.CENTER;
+        typeFormatLabel.setForeground(Color.RED);
+        panelTypeFormat.add(typeFormatLabel, gbcTypeFormat);
         panel.add(panelTypeFormat, gbc);
         /*
          * add tab
@@ -199,6 +242,54 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
             }
         });
 
+        final ChangeListener listener = new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                final String[] includes = colSelectModel.applyTo(spec).getIncludes();
+
+                final String format = formatModel.getStringValue();
+                int i = 0;
+                try {
+                    for (String include : includes) {
+                        final DataType type = spec.getColumnSpec(include).getType();
+                        if (type.equals(LocalDateCellFactory.TYPE)) {
+                            final LocalDate now1 = LocalDate.now();
+                            final DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern(format);
+                            LocalDate.parse(now1.format(formatter1), formatter1);
+                        } else if (type.equals(LocalTimeCellFactory.TYPE)) {
+                            final LocalTime now2 = LocalTime.now();
+                            final DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern(format);
+                            LocalTime.parse(now2.format(formatter2), formatter2);
+                        } else if (type.equals(LocalDateTimeCellFactory.TYPE)) {
+                            final LocalDateTime now3 = LocalDateTime.now();
+                            final DateTimeFormatter formatter3 = DateTimeFormatter.ofPattern(format);
+                            String format2 = now3.format(formatter3);
+                            LocalDateTime.parse(format2, formatter3);
+                        } else if (type.equals(ZonedDateTimeCellFactory.TYPE)) {
+                            final ZonedDateTime now4 = ZonedDateTime.now();
+                            final DateTimeFormatter formatter4 = DateTimeFormatter.ofPattern(format);
+                            ZonedDateTime.parse(now4.format(formatter4), formatter4);
+                        } else {
+                            throw new IllegalStateException("Unhandled date&time type: " + type.getName());
+                        }
+                        i++;
+                    }
+                    m_dialogCompFormatSelect.setToolTipText(null);
+                    ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1)).setBorder(null);
+                    typeFormatLabel.setText("");
+                } catch (IllegalArgumentException | DateTimeException exception) {
+                    m_dialogCompFormatSelect.setToolTipText(exception.getMessage());
+                    typeFormatLabel
+                        .setText("Data type of column '" + includes[i] + "' is not compatible with date format!");
+                    ((JComponent)m_dialogCompFormatSelect.getComponentPanel().getComponent(1))
+                        .setBorder(BorderFactory.createLineBorder(Color.RED));
+                }
+            }
+        };
+        colSelectModel.addChangeListener(listener);
+        formatModel.addChangeListener(listener);
+
     }
 
     /**
@@ -210,6 +301,7 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         m_dialogCompReplaceOrAppend.saveSettingsTo(settings);
         m_dialogCompSuffix.saveSettingsTo(settings);
         m_dialogCompFormatSelect.saveSettingsTo(settings);
+        m_dialogCompLocale.saveSettingsTo(settings);
     }
 
     /**
@@ -218,10 +310,12 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
+        spec = specs[0];
         m_dialogCompColFilter.loadSettingsFrom(settings, specs);
         m_dialogCompReplaceOrAppend.loadSettingsFrom(settings, specs);
         m_dialogCompSuffix.loadSettingsFrom(settings, specs);
         m_dialogCompFormatSelect.loadSettingsFrom(settings, specs);
+        m_dialogCompLocale.loadSettingsFrom(settings, specs);
         // retrieve potential new values from the StringHistory and add them
         // (if not already present) to the combo box...
         m_dialogCompFormatSelect.replaceListItems(createPredefinedFormats(), null);
@@ -280,4 +374,8 @@ public class DateTimeToStringNodeDialog extends NodeDialogPane {
         return new SettingsModelBoolean("cancel_on_fail", true);
     }
 
+    /** @return the string select model, used in both dialog and model. */
+    public static SettingsModelString createLocaleModel() {
+        return new SettingsModelString("locale", Locale.getDefault().toString());
+    }
 }
