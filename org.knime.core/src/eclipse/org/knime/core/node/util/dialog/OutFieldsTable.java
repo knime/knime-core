@@ -229,8 +229,9 @@ public class OutFieldsTable extends ConfigTablePanel {
                     if (null == value) {
                         return;
                     } else {
-                        if (m_model.getValueAt(r, Column.TARGET_FIELD) == null) {
-                            m_model.setValueAt(getTargetFieldName(r), r, Column.TARGET_FIELD);
+                        String targetName = getTargetFieldName(r);
+                        if (!targetName.equals(m_model.getValueAt(r, Column.TARGET_FIELD))) {
+                            m_model.setValueAt(targetName, r, Column.TARGET_FIELD);
                         }
                     }
                 }
