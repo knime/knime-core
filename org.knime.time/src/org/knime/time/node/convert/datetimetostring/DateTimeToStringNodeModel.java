@@ -271,6 +271,14 @@ public class DateTimeToStringNodeModel extends NodeModel {
         m_suffix.validateSettings(settings);
         m_format.validateSettings(settings);
         m_locale.validateSettings(settings);
+
+        try {
+            LocaleUtils.toLocale(m_locale.getStringValue());
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidSettingsException(
+                "Unsupported locale in setting (" + m_locale.getStringValue() + "): " + ex.getMessage(), ex);
+        }
+
         final SettingsModelString formatClone = m_format.createCloneWithValidatedValue(settings);
         final String format = formatClone.getStringValue();
         if (format == null || format.length() == 0) {

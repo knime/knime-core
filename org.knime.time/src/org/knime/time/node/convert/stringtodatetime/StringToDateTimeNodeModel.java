@@ -288,6 +288,12 @@ public class StringToDateTimeNodeModel extends NodeModel {
         m_suffix.validateSettings(settings);
         m_format.validateSettings(settings);
         m_locale.validateSettings(settings);
+        try {
+            LocaleUtils.toLocale(m_locale.getStringValue());
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidSettingsException(
+                "Unsupported locale in setting (" + m_locale.getStringValue() + "): " + ex.getMessage(), ex);
+        }
         m_cancelOnFail.validateSettings(settings);
         final SettingsModelString formatClone = m_format.createCloneWithValidatedValue(settings);
         final String format = formatClone.getStringValue();
@@ -316,13 +322,6 @@ public class StringToDateTimeNodeModel extends NodeModel {
         m_suffix.loadSettingsFrom(settings);
         m_format.loadSettingsFrom(settings);
         m_locale.loadSettingsFrom(settings);
-        try {
-            LocaleUtils.toLocale(m_locale.getStringValue());
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidSettingsException(
-                "Unsupported locale in setting (" + m_locale.getStringValue() + "): " + ex.getMessage(), ex);
-        }
-
         m_cancelOnFail.loadSettingsFrom(settings);
         m_selectedType = settings.getString("typeEnum");
         final String dateformat = m_format.getStringValue();
