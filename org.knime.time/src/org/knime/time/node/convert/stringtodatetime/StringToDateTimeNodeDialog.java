@@ -59,8 +59,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -103,6 +105,8 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
 
     private final JComboBox<DateTimeTypes> m_typeCombobox;
 
+    private final DialogComponentStringSelection m_dialogCompLocale;
+
     private final DialogComponentStringSelection m_dialogCompFormatSelect;
 
     private final JLabel m_typeFormatLabel;
@@ -142,6 +146,16 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         formatModel = createFormatModel();
         m_dialogCompFormatSelect =
             new DialogComponentStringSelection(formatModel, "Date format: ", PREDEFINED_FORMATS, true);
+
+        final Locale[] availableLocales = Locale.getAvailableLocales();
+        final String[] availableLocalesString = new String[availableLocales.length];
+        for (int i = 0; i < availableLocales.length; i++) {
+            availableLocalesString[i] = availableLocales[i].toString();
+        }
+        Arrays.sort(availableLocalesString);
+
+        m_dialogCompLocale =
+            new DialogComponentStringSelection(createLocaleModel(), "Locale: ", availableLocalesString);
 
         final SettingsModelBoolean cancelOnFailModel = createCancelOnFailModel();
         m_dialogCompCancelOnFail = new DialogComponentBoolean(cancelOnFailModel, "Fail on error");
@@ -203,14 +217,26 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         gbcTypeFormat.anchor = GridBagConstraints.WEST;
         m_typeCombobox = new JComboBox<DateTimeTypes>(DateTimeTypes.values());
         final JPanel panelTypeList = new JPanel(new FlowLayout());
-        final JLabel label = new JLabel("New type: ");
-        panelTypeList.add(label);
+        final JLabel labelType = new JLabel("New type: ");
+        panelTypeList.add(labelType);
         panelTypeList.add(m_typeCombobox);
         panelTypeFormat.add(panelTypeList, gbcTypeFormat);
         // add format selection
         gbcTypeFormat.gridx++;
-        gbcTypeFormat.weightx = 1;
+        gbcTypeFormat.weightx = 0;
         panelTypeFormat.add(m_dialogCompFormatSelect.getComponentPanel(), gbcTypeFormat);
+        // add label and combo box for locale selection
+        gbcTypeFormat.gridx++;
+        gbcTypeFormat.weightx = 1;
+        //        final Locale[] availableLocales = Locale.getAvailableLocales();
+        //        Arrays.sort(availableLocales);
+        //        m_localeCombobox = new JComboBox<Locale>(availableLocales);
+        //        final JPanel panelLocaleList = new JPanel(new FlowLayout());
+        //        final JLabel labelLocale = new JLabel("New type: ");
+        //        panelLocaleList.add(labelLocale);
+        //        panelLocaleList.add(m_localeCombobox);
+        panelTypeFormat.add(m_dialogCompLocale.getComponentPanel(), gbcTypeFormat);
+
         // add label for warning
         m_typeFormatLabel = new JLabel();
         gbcTypeFormat.gridx = 0;
@@ -317,6 +343,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         m_dialogCompSuffix.saveSettingsTo(settings);
         settings.addString("typeEnum", ((DateTimeTypes)m_typeCombobox.getModel().getSelectedItem()).name());
         m_dialogCompFormatSelect.saveSettingsTo(settings);
+        m_dialogCompLocale.saveSettingsTo(settings);
         m_dialogCompCancelOnFail.saveSettingsTo(settings);
     }
 
@@ -332,6 +359,7 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         m_typeCombobox.setSelectedItem(
             DateTimeTypes.valueOf(settings.getString("typeEnum", DateTimeTypes.LOCAL_DATE_TIME.name())));
         m_dialogCompFormatSelect.loadSettingsFrom(settings, specs);
+        m_dialogCompLocale.loadSettingsFrom(settings, specs);
         m_dialogCompCancelOnFail.loadSettingsFrom(settings, specs);
         // retrieve potential new values from the StringHistory and add them
         // (if not already present) to the combo box...
@@ -384,6 +412,11 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
     /** @return the string select model, used in both dialog and model. */
     public static SettingsModelString createFormatModel() {
         return new SettingsModelString("date_format", "yyyy-MM-dd;HH:mm:ss.S");
+    }
+
+    /** @return the string select model, used in both dialog and model. */
+    public static SettingsModelString createLocaleModel() {
+        return new SettingsModelString("locale", Locale.getDefault().toString());
     }
 
     /** @return the boolean model, used in both dialog and model. */

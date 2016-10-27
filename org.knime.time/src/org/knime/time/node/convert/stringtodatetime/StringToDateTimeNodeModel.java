@@ -58,6 +58,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 
+import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.core.data.DataCell;
@@ -112,6 +113,8 @@ public class StringToDateTimeNodeModel extends NodeModel {
     private final SettingsModelString m_suffix = StringToDateTimeNodeDialog.createSuffixModel();
 
     private final SettingsModelString m_format = StringToDateTimeNodeDialog.createFormatModel();
+
+    private final SettingsModelString m_locale = StringToDateTimeNodeDialog.createLocaleModel();
 
     private final SettingsModelBoolean m_cancelOnFail = StringToDateTimeNodeDialog.createCancelOnFailModel();
 
@@ -270,6 +273,7 @@ public class StringToDateTimeNodeModel extends NodeModel {
         m_isReplaceOrAppend.saveSettingsTo(settings);
         m_suffix.saveSettingsTo(settings);
         m_format.saveSettingsTo(settings);
+        m_locale.saveSettingsTo(settings);
         m_cancelOnFail.saveSettingsTo(settings);
         settings.addString("typeEnum", m_selectedType);
     }
@@ -283,6 +287,7 @@ public class StringToDateTimeNodeModel extends NodeModel {
         m_isReplaceOrAppend.validateSettings(settings);
         m_suffix.validateSettings(settings);
         m_format.validateSettings(settings);
+        m_locale.validateSettings(settings);
         m_cancelOnFail.validateSettings(settings);
         final SettingsModelString formatClone = m_format.createCloneWithValidatedValue(settings);
         final String format = formatClone.getStringValue();
@@ -310,6 +315,7 @@ public class StringToDateTimeNodeModel extends NodeModel {
         m_isReplaceOrAppend.loadSettingsFrom(settings);
         m_suffix.loadSettingsFrom(settings);
         m_format.loadSettingsFrom(settings);
+        m_locale.loadSettingsFrom(settings);
         m_cancelOnFail.loadSettingsFrom(settings);
         m_selectedType = settings.getString("typeEnum");
         final String dateformat = m_format.getStringValue();
@@ -353,7 +359,8 @@ public class StringToDateTimeNodeModel extends NodeModel {
             }
             try {
                 final String input = ((StringValue)cell).getStringValue();
-                final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_format.getStringValue());
+                final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(m_format.getStringValue(),
+                    LocaleUtils.toLocale(m_locale.getStringValue()));
 
                 switch (DateTimeTypes.valueOf(m_selectedType)) {
                     case LOCAL_DATE: {

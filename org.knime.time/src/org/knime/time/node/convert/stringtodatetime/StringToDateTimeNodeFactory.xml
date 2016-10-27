@@ -99,6 +99,9 @@
 					<li>]: optional section end</li>
 				</ul>
 			</option>
+			<option name="Locale">
+			A <i>locale</i> can be chosen, which determines the language and geographic region.
+			</option>
 		</tab>
 		<tab name="Abort Execution">
 			<option name="Fail on error">
