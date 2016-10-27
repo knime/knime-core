@@ -59,7 +59,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.container.ColumnRearranger;
@@ -576,16 +575,6 @@ public class StringToNumberNodeModel extends SimpleStreamableFunctionWithInterna
             }
             return newcolspecs;
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void setProgress(final int curRowNr, final int rowCount,
-                final RowKey lastKey, final ExecutionMonitor exec) {
-            exec.setProgress((double)curRowNr / (double)rowCount, "Converting");
-        }
-
 
         /**
          * {@inheritDoc}
