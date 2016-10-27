@@ -222,10 +222,12 @@ public class StringToDateTimeNodeDialog extends NodeDialogPane {
         panelTypeFormat.add(panelTypeList, gbcTypeFormat);
         // add format selection
         gbcTypeFormat.gridx++;
+        gbcTypeFormat.weightx = 1;
         panelTypeFormat.add(m_dialogCompFormatSelect.getComponentPanel(), gbcTypeFormat);
         // add label and combo box for locale selection
-        gbcTypeFormat.gridx++;
-        gbcTypeFormat.weightx = 1;
+        gbcTypeFormat.gridx = 0;
+        gbcTypeFormat.gridy++;
+        gbcTypeFormat.weightx = 0;
         panelTypeFormat.add(m_dialogCompLocale.getComponentPanel(), gbcTypeFormat);
         // add label for warning
         m_typeFormatLabel = new JLabel();

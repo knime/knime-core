@@ -316,6 +316,13 @@ public class StringToDateTimeNodeModel extends NodeModel {
         m_suffix.loadSettingsFrom(settings);
         m_format.loadSettingsFrom(settings);
         m_locale.loadSettingsFrom(settings);
+        try {
+            LocaleUtils.toLocale(m_locale.getStringValue());
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidSettingsException(
+                "Unsupported locale in setting (" + m_locale.getStringValue() + "): " + ex.getMessage(), ex);
+        }
+
         m_cancelOnFail.loadSettingsFrom(settings);
         m_selectedType = settings.getString("typeEnum");
         final String dateformat = m_format.getStringValue();
@@ -385,7 +392,8 @@ public class StringToDateTimeNodeModel extends NodeModel {
             } catch (DateTimeParseException e) {
                 m_failCounter++;
                 if (m_cancelOnFail.getBooleanValue()) {
-                    throw new IllegalArgumentException("Failed to parse data cell");
+                    throw new IllegalArgumentException(
+                        "Failed to parse date in row '" + row.getKey() + ": " + e.getMessage());
                 }
                 return new MissingCell(e.getMessage());
             }
