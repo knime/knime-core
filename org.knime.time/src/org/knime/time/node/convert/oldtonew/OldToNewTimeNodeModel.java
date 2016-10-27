@@ -425,29 +425,53 @@ final class OldToNewTimeNodeModel extends NodeModel {
             @Override
             public void runIntermediate(final PortInput[] inputs, final ExecutionContext exec) throws Exception {
                 if (partitionInfo.getPartitionIndex() == 0) {
-                    RowInput rowInput = (RowInput)inputs[0];
-                    DataRow row = rowInput.poll();
+                    final RowInput rowInput = (RowInput)inputs[0];
+                    final DataRow row = rowInput.poll();
                     if (row != null) {
-                        DataColumnSpec[] colSpecs = new DataColumnSpec[row.getNumCells()];
-                        DataTableSpec inSpec = rowInput.getDataTableSpec();
-                        DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
-                        final int[] includeIndexes = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
-                            .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
-                        for (int i = 0; i < inSpec.getNumColumns(); i++) {
-                            final int searchIdx = Arrays.binarySearch(includeIndexes, i);
-                            if (searchIdx < 0) {
-                                colSpecs[i] = inSpec.getColumnSpec(i);
-                            } else {
-                                colSpecs[i] = newColumnSpecs[searchIdx];
+                        if (m_isReplaceOrAppend.getStringValue().equals(OldToNewTimeNodeDialog.OPTION_REPLACE)) {
+                            final DataColumnSpec[] colSpecs = new DataColumnSpec[row.getNumCells()];
+                            final DataTableSpec inSpec = rowInput.getDataTableSpec();
+                            final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
+                            final int[] includeIndexes = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
+                                .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
+                            for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                                final int searchIdx = Arrays.binarySearch(includeIndexes, i);
+                                if (searchIdx < 0) {
+                                    colSpecs[i] = inSpec.getColumnSpec(i);
+                                } else {
+                                    colSpecs[i] = newColumnSpecs[searchIdx];
+                                }
                             }
+                            final Config config = m_internals.getConfig();
+                            config.addBoolean("hasIterated", false);
+                            for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                                config.addDataType("type" + i, colSpecs[i].getType());
+                                config.addString("colname" + i, colSpecs[i].getName());
+                            }
+                            config.addInt("sizeRow", colSpecs.length);
+                        } else {
+                            final DataTableSpec inSpec = rowInput.getDataTableSpec();
+                            final DataColumnSpec[] newColumnSpecs = getNewIncludedColumnSpecs(inSpec, row);
+                            final int[] includeIndexes = Arrays.stream(m_colSelect.applyTo(inSpec).getIncludes())
+                                .mapToInt(s -> inSpec.findColumnIndex(s)).toArray();
+                            final DataColumnSpec[] colSpecs =
+                                new DataColumnSpec[row.getNumCells() + includeIndexes.length];
+                            for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                                colSpecs[i] = inSpec.getColumnSpec(i);
+                            }
+                            for (int i = 0; i < newColumnSpecs.length; i++) {
+                                colSpecs[i + inSpec.getNumColumns()] = new UniqueNameGenerator(inSpec).newColumn(
+                                    newColumnSpecs[i].getName() + m_suffix.getStringValue(),
+                                    newColumnSpecs[i].getType());
+                            }
+                            final Config config = m_internals.getConfig();
+                            config.addBoolean("hasIterated", false);
+                            for (int i = 0; i < colSpecs.length; i++) {
+                                config.addDataType("type" + i, colSpecs[i].getType());
+                                config.addString("colname" + i, colSpecs[i].getName());
+                            }
+                            config.addInt("sizeRow", colSpecs.length);
                         }
-                        Config config = m_internals.getConfig();
-                        config.addBoolean("hasIterated", false);
-                        for (int i = 0; i < inSpec.getNumColumns(); i++) {
-                            config.addDataType("type" + i, colSpecs[i].getType());
-                            config.addString("colname" + i, colSpecs[i].getName());
-                        }
-                        config.addInt("sizeRow", colSpecs.length);
                     } else {
                         m_internals.getConfig().addInt("sizeRow", 0);
                     }
@@ -525,11 +549,11 @@ final class OldToNewTimeNodeModel extends NodeModel {
     public PortObjectSpec[] computeFinalOutputSpecs(final StreamableOperatorInternals internals,
         final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         if (m_autoType.getBooleanValue()) {
-            SimpleStreamableOperatorInternals simpleInternals = (SimpleStreamableOperatorInternals)internals;
-            Config config = simpleInternals.getConfig();
-            DataColumnSpec[] colSpecs = new DataColumnSpec[config.getInt("sizeRow")];
+            final SimpleStreamableOperatorInternals simpleInternals = (SimpleStreamableOperatorInternals)internals;
+            final Config config = simpleInternals.getConfig();
+            final DataColumnSpec[] colSpecs = new DataColumnSpec[config.getInt("sizeRow")];
             for (int i = 0; i < colSpecs.length; i++) {
-                DataColumnSpecCreator dataColumnSpecCreator =
+                final DataColumnSpecCreator dataColumnSpecCreator =
                     new DataColumnSpecCreator(config.getString("colname" + i), config.getDataType("type" + i));
                 colSpecs[i] = dataColumnSpecCreator.createSpec();
             }
