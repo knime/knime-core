@@ -111,7 +111,7 @@ class TestflowConfiguration {
 
     private final Collection<Pattern> m_requiredDebugs = new ArrayList<Pattern>();
 
-    private LoadVersion m_requiredLoadVersion;
+    private LoadVersion m_requiredLoadVersion = LoadVersion.FUTURE;
 
     private int m_maxHiliteRows = DEFAULT_MAX_HILITE_ROWS;
 
