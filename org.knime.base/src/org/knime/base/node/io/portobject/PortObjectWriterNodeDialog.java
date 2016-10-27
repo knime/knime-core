@@ -53,7 +53,6 @@ import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
-import javax.swing.JFileChooser;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -79,7 +78,7 @@ public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
     public PortObjectWriterNodeDialog() {
         final DialogComponentFileChooser fileChooser =
             new DialogComponentFileChooser(new SettingsModelString(PortObjectWriterNodeModel.FILENAME, ""),
-                PortObjectWriterNodeDialog.class.getName(), JFileChooser.SAVE_DIALOG, false, createFlowVariableModel(
+                PortObjectWriterNodeDialog.class.getName(), DialogComponentFileChooser.WRITER_DIALOG, false, createFlowVariableModel(
                     PortObjectWriterNodeModel.FILENAME, Type.STRING), ".zip");
 
         final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(new SettingsModelBoolean(

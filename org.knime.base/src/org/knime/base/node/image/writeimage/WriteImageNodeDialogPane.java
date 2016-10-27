@@ -51,7 +51,6 @@ import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
-import javax.swing.JFileChooser;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -82,7 +81,7 @@ final class WriteImageNodeDialogPane extends DefaultNodeSettingsPane {
             WriteImageNodeModel.createOverwriteOKSettings();
 
         final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(fileOutSettings,
-            "write_png", JFileChooser.SAVE_DIALOG, false,
+            "write_png", DialogComponentFileChooser.WRITER_DIALOG, false,
             fvmModel);
         final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(
             overwriteOKSettings, "Overwrite OK");

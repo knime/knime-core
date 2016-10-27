@@ -278,7 +278,7 @@ public class ReadTableNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        CheckUtils.checkSettingNotNull(m_fileName.getStringValue(), "No file set.");
+        CheckUtils.checkSourceFile(m_fileName.getStringValue());
         InputStream in = null;
         try {
             in = openInputStream();

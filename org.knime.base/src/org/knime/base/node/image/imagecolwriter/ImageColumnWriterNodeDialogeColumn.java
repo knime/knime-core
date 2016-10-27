@@ -53,7 +53,6 @@ import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
-import javax.swing.JFileChooser;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -82,7 +81,7 @@ public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane 
     private final DialogComponentFileChooser m_dirChooser =
             new DialogComponentFileChooser(new SettingsModelString("directory",
                     null), ImageColumnWriterNodeDialogeColumn.class.getName(),
-                    JFileChooser.SAVE_DIALOG, true, createFlowVariableModel("directory", Type.STRING));
+                DialogComponentFileChooser.WRITER_DIALOG, true, createFlowVariableModel("directory", Type.STRING));
 
     private final DialogComponentBoolean m_overwrite =
             new DialogComponentBoolean(new SettingsModelBoolean("overwrite",
@@ -108,8 +107,8 @@ public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane 
             }
         });
 
-        addDialogComponent(m_imageColumn);
         addDialogComponent(m_dirChooser);
         addDialogComponent(m_overwrite);
+        addDialogComponent(m_imageColumn);
     }
 }

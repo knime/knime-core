@@ -50,7 +50,6 @@ import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
-import javax.swing.JFileChooser;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -71,9 +70,10 @@ public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
      *
      */
     public PMMLWriterNodeDialog() {
+        SettingsModelString fileModel = createFileModel();
         final DialogComponentFileChooser fileChooser =
-            new DialogComponentFileChooser(createFileModel(), "pmml.writer.history", JFileChooser.SAVE_DIALOG, false,
-                createFlowVariableModel(createFileModel()), ".pmml", ".xml");
+            new DialogComponentFileChooser(fileModel, "pmml.writer.history", DialogComponentFileChooser.WRITER_DIALOG, false,
+                createFlowVariableModel(fileModel), ".pmml", ".xml");
 
         DialogComponentBoolean validateComponent = new DialogComponentBoolean(
             createValidateModel(), "Validate PMML before export.");

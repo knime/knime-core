@@ -47,8 +47,6 @@
  */
 package org.knime.base.node.io.table.read;
 
-import javax.swing.JFileChooser;
-
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
@@ -68,7 +66,7 @@ public class ReadTableNodeDialogPane extends DefaultNodeSettingsPane {
     public ReadTableNodeDialogPane() {
         final SettingsModelString stringModel = new SettingsModelString(ReadTableNodeModel.CFG_FILENAME, "");
         addDialogComponent(new DialogComponentFileChooser(stringModel, ReadTableNodeDialogPane.class.getName(),
-                JFileChooser.OPEN_DIALOG, false, createFlowVariableModel(stringModel),
+            DialogComponentFileChooser.READER_DIALOG, false, createFlowVariableModel(stringModel),
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
         setHorizontalPlacement(true);
         final SettingsModelBoolean limitCheckerModel = ReadTableNodeModel.createLimitCheckerModel();

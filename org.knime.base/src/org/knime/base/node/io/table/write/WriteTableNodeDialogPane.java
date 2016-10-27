@@ -53,7 +53,6 @@ import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
-import javax.swing.JFileChooser;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -80,7 +79,7 @@ public class WriteTableNodeDialogPane extends DefaultNodeSettingsPane {
     public WriteTableNodeDialogPane() {
         final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(
             new SettingsModelString(WriteTableNodeModel.CFG_FILENAME, ""),
-            ReadTableNodeDialogPane.class.getName(), JFileChooser.SAVE_DIALOG, false,
+            ReadTableNodeDialogPane.class.getName(), DialogComponentFileChooser.WRITER_DIALOG, false,
             createFlowVariableModel(WriteTableNodeModel.CFG_FILENAME, Type.STRING),
             ReadTableNodeModel.PREFERRED_FILE_EXTENSION);
 
